@@ -1,9 +1,7 @@
-import { TileType, Biome } from "battletribes-shared/tiles";
+import { TileType, Biome, SubtileType } from "battletribes-shared/tiles";
 
-export interface TileGenerationInfo {
-   readonly tileType: TileType;
-   readonly isWall: boolean;
-   readonly noiseRequirements?: {
+export interface TileGenerationRequirements {
+   readonly noise?: {
       readonly scale: number;
       readonly minWeight?: number;
       readonly maxWeight?: number;
@@ -13,6 +11,20 @@ export interface TileGenerationInfo {
    /** The maximum number of tiles from the end of the biome */
    readonly maxDist?: number;
 }
+
+export interface FloorTileGenerationInfo {
+   readonly tileType: TileType;
+   /** Requirements for the tile generation info to be used */
+   readonly requirements?: TileGenerationRequirements;
+}
+
+export interface WallTileGenerationInfo {
+   readonly subtileType: SubtileType;
+   /** Requirements for the tile generation info to be used */
+   readonly requirements?: TileGenerationRequirements;
+}
+
+export type TileGenerationInfo = FloorTileGenerationInfo | WallTileGenerationInfo;
 
 export interface BiomeSpawnRequirements {
    readonly minHeight?: number;
@@ -25,7 +37,8 @@ export interface BiomeSpawnRequirements {
 
 export interface BiomeGenerationInfo {
    readonly spawnRequirements: BiomeSpawnRequirements | null;
-   readonly tiles: ReadonlyArray<TileGenerationInfo>;
+   readonly floorTiles: ReadonlyArray<FloorTileGenerationInfo>;
+   readonly wallTiles: ReadonlyArray<WallTileGenerationInfo>;
 }
 
 export const BIOME_GENERATION_PRIORITY = [
@@ -41,167 +54,185 @@ export const BIOME_GENERATION_PRIORITY = [
 const BIOME_GENERATION_INFO: Record<Biome, BiomeGenerationInfo> = {
    [Biome.magmaFields]: {
       spawnRequirements: null,
-      tiles: [
+      floorTiles: [
          {
             tileType: TileType.lava,
-            isWall: false,
-            noiseRequirements: {
-               scale: 7,
-               minWeight: 0.2
-            },
-            minDist: 3
+            requirements: {
+               noise: {
+                  scale: 7,
+                  minWeight: 0.2
+               },
+               minDist: 3
+            }
          },
          {
-            tileType: TileType.magma,
-            isWall: false
+            tileType: TileType.magma
          }
-      ]
+      ],
+      wallTiles: []
    },
+
    [Biome.river]: {
       spawnRequirements: null,
-      tiles: [
+      floorTiles: [
          {
-            tileType: TileType.water,
-            isWall: false
+            tileType: TileType.water
          }
-      ]
+      ],
+      wallTiles: []
    },
+
    [Biome.tundra]: {
       spawnRequirements: {
          maxTemperature: 0.4,
          maxHumidity: 0.8
       },
-      tiles: [
+      floorTiles: [
+         {
+            tileType: TileType.ice,
+            requirements: {
+               noise: {
+                  scale: 5,
+                  minWeight: 0.8,
+               },
+               minDist: 8
+            }
+         },
          {
             tileType: TileType.fimbultur,
-            isWall: false,
-            noiseRequirements: {
-               scale: 8,
-               minWeight: 0.2
-            },
-            minDist: 20
-         },
-         {
-            tileType: TileType.ice,
-            isWall: false,
-            noiseRequirements: {
-               scale: 5,
-               minWeight: 0.8,
-            },
-            minDist: 8
+            requirements: {
+               noise: {
+                  scale: 8,
+                  minWeight: 0.2
+               },
+               minDist: 20
+            }
          },
          {
             tileType: TileType.permafrost,
-            isWall: false,
-            noiseRequirements: {
-               scale: 7,
-               minWeight: 0.2,
-            },
-            minDist: 12
+            requirements: {
+               noise: {
+                  scale: 7,
+                  minWeight: 0.2,
+               },
+               minDist: 12
+            }
          },
          {
             tileType: TileType.permafrost,
-            isWall: false,
-            noiseRequirements: {
-               scale: 7,
-               minWeight: 0.65,
-            },
-            minDist: 8
+            requirements: {
+               noise: {
+                  scale: 7,
+                  minWeight: 0.65,
+               },
+               minDist: 8
+            }
          },
          {
             tileType: TileType.ice,
-            isWall: false,
-            noiseRequirements: {
-               scale: 7,
-               minWeight: 0.65,
-            },
-            minDist: 1
+            requirements: {
+               noise: {
+                  scale: 7,
+                  minWeight: 0.65,
+               },
+               minDist: 1
+            }
          },
          {
-            tileType: TileType.snow,
-            isWall: false
+            tileType: TileType.snow
          }
-      ]
+      ],
+      wallTiles: []
    },
+
    [Biome.desert]: {
       spawnRequirements: {
          minTemperature: 0.6,
          maxHumidity: 0.4
       },
-      tiles: [
-         // {
-         //    tileType: TileType.sandstone,
-         //    isWall: true,
-         //    noiseRequirements: {
-         //       scale: 7,
-         //       minWeight: 0.7
-         //    },
-         //    minDist: 2
-         // },
+      floorTiles: [
          {
-            tileType: TileType.sand,
-            isWall: false
+            tileType: TileType.sand
+         }
+      ],
+      wallTiles: [
+         {
+            subtileType: SubtileType.sandstoneWall,
+            requirements: {
+               noise: {
+                  scale: 7,
+                  minWeight: 0.7
+               },
+               minDist: 2
+            }
          }
       ]
    },
+
    [Biome.mountains]: {
       spawnRequirements: {
          minHeight: 0.7
       },
-      tiles: [
+      floorTiles: [
          {
-            tileType: TileType.darkRock,
-            isWall: true,
-            noiseRequirements: {
-               scale: 7,
-               minWeight: 0.8,
-            },
-            minDist: 4
-         },
+            tileType: TileType.rock
+         }
+      ],
+      wallTiles: [
          {
-            tileType: TileType.rock,
-            isWall: false
+            subtileType: SubtileType.rockWall,
+            requirements: {
+               noise: {
+                  scale: 7,
+                  minWeight: 0.8,
+               },
+               minDist: 4
+            }
          }
       ]
    },
+   
    [Biome.swamp]: {
       spawnRequirements: {
          minTemperature: 0.55,
          minHumidity: 0.8
       },
-      tiles: [
+      floorTiles: [
          {
             tileType: TileType.slime,
-            isWall: false,
-            noiseRequirements: {
-               scale: 2.5,
-               minWeight: 0.2
-            },
-            minDist: 4
+            requirements: {
+               noise: {
+                  scale: 2.5,
+                  minWeight: 0.2
+               },
+               minDist: 4
+            }
          },
          {
             tileType: TileType.slime,
-            isWall: false,
-            noiseRequirements: {
-               scale: 2.5,
-               minWeight: 0.6
-            },
-            minDist: 2
+            requirements: {
+               noise: {
+                  scale: 2.5,
+                  minWeight: 0.6
+               },
+               minDist: 2
+            }
          },
          {
-            tileType: TileType.sludge,
-            isWall: false
+            tileType: TileType.sludge
          }
-      ]
+      ],
+      wallTiles: []
    },
+
    [Biome.grasslands]: {
       spawnRequirements: {},
-      tiles: [
+      floorTiles: [
          {
-            tileType: TileType.grass,
-            isWall: false
+            tileType: TileType.grass
          }
-      ]
+      ],
+      wallTiles: []
    }
 };
 

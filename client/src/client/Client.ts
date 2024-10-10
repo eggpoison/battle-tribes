@@ -434,7 +434,6 @@ abstract class Client {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          const tile = layer.getTile(tileIndex);
          tile.type = tileUpdate.type;
-         tile.isWall = tileUpdate.isWall;
          
          updateRenderChunkFromTileUpdate(tileUpdate);
       }

@@ -15,7 +15,7 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { destroyEntity, getEntityType } from "../../world";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { CactusComponent } from "../../components/CactusComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

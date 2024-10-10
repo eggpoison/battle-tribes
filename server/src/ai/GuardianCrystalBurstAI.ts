@@ -1,7 +1,7 @@
-import { GuardianCrystalBurstStage, ServerComponentType } from "../../../shared/src/components";
-import { EntityID } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { lerp, randFloat, randSign, UtilVars } from "../../../shared/src/utils";
+import { GuardianCrystalBurstStage, ServerComponentType } from "battletribes-shared/components";
+import { EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { lerp, randFloat, randSign, UtilVars } from "battletribes-shared/utils";
 import { stopEntity, turnToPosition } from "../ai-shared";
 import { GuardianComponent, GuardianComponentArray, GuardianVars } from "../components/GuardianComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";

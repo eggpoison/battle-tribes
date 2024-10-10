@@ -265,7 +265,7 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
    if (physicsComponent.positionIsDirty) {
       physicsComponent.positionIsDirty = false;
 
-      transformComponent.resolveWallTileCollisions(entity);
+      transformComponent.resolveWallCollisions(entity);
 
       // If the object moved due to resolving wall tile collisions, recalculate
       if (physicsComponent.positionIsDirty) {

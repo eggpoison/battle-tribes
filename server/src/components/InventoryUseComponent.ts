@@ -2,14 +2,14 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID, LimbAction } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { ComponentArray } from "./ComponentArray";
-import { getItemAttackInfo, Inventory, InventoryName, Item, ITEM_TYPE_RECORD } from "battletribes-shared/items/items";
+import { getItemAttackInfo, Inventory, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, PickaxeItemInfo } from "battletribes-shared/items/items";
 import { Packet } from "battletribes-shared/packets";
 import { getInventory, InventoryComponentArray } from "./InventoryComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { lerp, Point } from "battletribes-shared/utils";
 import { DamageBoxComponentArray } from "./DamageBoxComponent";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
-import { assertBoxIsRectangular, BlockType, updateBox } from "battletribes-shared/boxes/boxes";
+import { assertBoxIsRectangular, BlockType, Box, updateBox } from "battletribes-shared/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { AttackVars, BLOCKING_LIMB_STATE, copyLimbState, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_DAMAGE_BOX_INFO, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity } from "../server/player-clients";
@@ -18,7 +18,9 @@ import { HealthComponentArray } from "./HealthComponent";
 import { attemptAttack, calculateItemKnockback } from "../entities/tribes/limb-use";
 import { ProjectileComponentArray } from "./ProjectileComponent";
 import { applyKnockback } from "./PhysicsComponent";
-import { destroyEntity, getGameTicks } from "../world";
+import { destroyEntity, getEntityLayer, getGameTicks } from "../world";
+import Layer from "../Layer";
+import { getSubtileIndex } from "../world-generation/terrain-generation-utils";
 
 // @Cleanup: Make into class Limb with getHeldItem method
 export interface LimbInfo {
@@ -283,6 +285,53 @@ export function onDamageBoxCollision(attacker: EntityID, victim: EntityID, limb:
    }
 }
 
+const boxIsCollidingWithSubtile = (box: Box, subtileX: number, subtileY: number): boolean => {
+   // @Speed
+   const tileBox = new RectangularBox(new Point(0, 0), Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, 0);
+   updateBox(tileBox, (subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0);
+   
+   return box.isColliding(tileBox);
+}
+
+const getBoxCollidingWallSubtiles = (layer: Layer, box: Box): ReadonlyArray<number> => {
+   const boundsMinX = box.calculateBoundsMinX();
+   const boundsMaxX = box.calculateBoundsMaxX();
+   const boundsMinY = box.calculateBoundsMinY();
+   const boundsMaxY = box.calculateBoundsMaxY();
+
+   const minSubtileX = Math.max(Math.floor(boundsMinX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+   const maxSubtileX = Math.min(Math.floor(boundsMaxX / Settings.SUBTILE_SIZE), (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
+   const minSubtileY = Math.max(Math.floor(boundsMinY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+   const maxSubtileY = Math.min(Math.floor(boundsMaxY / Settings.SUBTILE_SIZE), (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
+
+   const collidingWallSubtiles = new Array<number>();
+   for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+         if (layer.subtileIsWall(subtileX, subtileY) && boxIsCollidingWithSubtile(box, subtileX, subtileY)) {
+            const subtileIndex = getSubtileIndex(subtileX, subtileY);
+            collidingWallSubtiles.push(subtileIndex);
+         }
+      }
+   }
+   return collidingWallSubtiles;
+}
+
+const cancelAttack = (limb: LimbInfo): void => {
+   const heldItem = getHeldItem(limb);
+   const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
+
+   limb.action = LimbAction.returnAttackToRest;
+   limb.currentActionElapsedTicks = 0;
+   limb.currentActionDurationTicks = heldItemAttackInfo.attackTimings.returnTimeTicks;
+   // @Speed: Garbage collection
+   limb.currentActionStartLimbState = copyLimbState(heldItemAttackInfo.attackPattern!.swung);
+   // @Speed: Garbage collection
+   limb.currentActionEndLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
+
+   limb.limbDamageBox.isActive = false;
+   limb.heldItemDamageBox.isActive = false;
+}
+
 function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID): void {
    if (inventoryUseComponent.globalAttackCooldown > 0) {
       inventoryUseComponent.globalAttackCooldown--;
@@ -406,19 +455,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                break;
             }
             case LimbAction.attack: {
-               const heldItem = getHeldItem(limb);
-               const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
-
-               limb.action = LimbAction.returnAttackToRest;
-               limb.currentActionElapsedTicks = 0;
-               limb.currentActionDurationTicks = heldItemAttackInfo.attackTimings.returnTimeTicks;
-               // @Speed: Garbage collection
-               limb.currentActionStartLimbState = copyLimbState(heldItemAttackInfo.attackPattern!.swung);
-               // @Speed: Garbage collection
-               limb.currentActionEndLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
-
-               limb.limbDamageBox.isActive = false;
-               limb.heldItemDamageBox.isActive = false;
+               cancelAttack(limb);
                break;
             }
             case LimbAction.returnAttackToRest: {
@@ -436,6 +473,41 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
       if (limb.action === LimbAction.attack) {
          const swingProgress = limb.currentActionElapsedTicks / limb.currentActionDurationTicks;
          lerpLimbBetweenStates(entity, limb, limb.currentActionStartLimbState, limb.currentActionEndLimbState, swingProgress, isFlipped);
+
+         // If the attack collides with a wall, cancel it
+
+         const layer = getEntityLayer(entity);
+
+         if (limb.limbDamageBox.isActive) {
+            const limbCollidingSubtiles = getBoxCollidingWallSubtiles(layer, limb.limbDamageBox.box);
+            if (limbCollidingSubtiles.length > 0) {
+               cancelAttack(limb);
+            }
+         }
+         
+         if (limb.heldItemDamageBox.isActive) {
+            const heldItemCollidingSubtiles = getBoxCollidingWallSubtiles(layer, limb.heldItemDamageBox.box);
+            if (heldItemCollidingSubtiles.length > 0) {
+               cancelAttack(limb);
+
+               // Damage the subtiles with the pickaxe
+               const heldItem = getHeldItem(limb)!;
+               if (ITEM_TYPE_RECORD[heldItem.type] === "pickaxe") {
+                  const itemInfo = ITEM_INFO_RECORD[heldItem.type] as PickaxeItemInfo;
+
+                  for (let i = 0; i < heldItemCollidingSubtiles.length; i++) {
+                     if (limb.heldItemDamageBox.wallSubtileDamageGiven >= itemInfo.wallDamage) {
+                        break;
+                     }
+                     
+                     const subtileIndex = heldItemCollidingSubtiles[i];
+                     const damageDealt = layer.damageWallSubtitle(subtileIndex, itemInfo.wallDamage);
+
+                     limb.heldItemDamageBox.wallSubtileDamageGiven += damageDealt;
+                  }
+               }
+            }
+         }
       }
       // @Copynpaste
       // Update damage box for shield bashes

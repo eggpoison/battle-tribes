@@ -16,7 +16,7 @@ import { PhysicsComponent } from "../../components/PhysicsComponent";
 import Tribe from "../../Tribe";
 import { ProjectileComponent } from "../../components/ProjectileComponent";
 import { IceArrowComponent } from "../../components/IceArrowComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

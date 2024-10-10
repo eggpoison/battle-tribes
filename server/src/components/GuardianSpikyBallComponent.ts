@@ -2,14 +2,14 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
-import { Hitbox } from "../../../shared/src/boxes/boxes";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point, randFloat } from "../../../shared/src/utils";
+import { Hitbox } from "battletribes-shared/boxes/boxes";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { Point, randFloat } from "battletribes-shared/utils";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
 import { applyKnockback } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world";
-import { Settings } from "../../../shared/src/settings";
+import { Settings } from "battletribes-shared/settings";
 
 export class GuardianSpikyBallComponent {
    public lifetime = Math.floor(Settings.TPS * randFloat(5, 6.5));

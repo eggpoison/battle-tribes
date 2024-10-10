@@ -8,7 +8,7 @@ import { TransformComponent } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { IceShardComponent } from "../../components/IceShardComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

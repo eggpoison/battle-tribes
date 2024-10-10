@@ -1,7 +1,7 @@
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point, lerp, randItem, angle, TileIndex } from "battletribes-shared/utils";
-import Layer, { getTileIndexIncludingEdges, getTileX, getTileY } from "./Layer";
+import { getTileIndexIncludingEdges, getTileX, getTileY } from "./Layer";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { Biome } from "battletribes-shared/tiles";
 import { TransformComponentArray } from "./components/TransformComponent";
@@ -81,8 +81,9 @@ const getTileWanderTargets = (itemEntity: EntityID): Array<TileIndex> => {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          
+         // @Incomplete
          // Don't try to wander to wall tiles
-         if (layer.tileIsWalls[tileIndex]) continue;
+         // if (layer.tileIsWalls[tileIndex]) continue;
          
          const position = new Point((tileX + Math.random()) * Settings.TILE_SIZE, (tileY + Math.random()) * Settings.TILE_SIZE);
          const distance = transformComponent.position.calculateDistanceBetween(position);

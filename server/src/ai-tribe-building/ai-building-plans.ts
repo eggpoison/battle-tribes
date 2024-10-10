@@ -102,10 +102,11 @@ const wallSpaceIsFree = (layer: Layer, wallPosition: Point, wallRotation: number
    const maxTileY = Math.min(Math.floor((wallPosition.y + Settings.TILE_SIZE) / Settings.TILE_SIZE), Settings.TILES_IN_WORLD_WIDTH - 1);
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const isWall = layer.tileXYIsWall(tileX, tileY);
-         if (!isWall) {
-            continue;
-         }
+         // @Incomplete
+         // const isWall = layer.tileXYIsWall(tileX, tileY);
+         // if (!isWall) {
+         //    continue;
+         // }
          
          // @Speed
          

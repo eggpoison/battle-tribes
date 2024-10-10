@@ -11,7 +11,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { StructureComponent } from "../../components/StructureComponent";
 import { TribeComponent } from "../../components/TribeComponent";
 import { FenceGateComponent } from "../../components/FenceGateComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

@@ -1,11 +1,12 @@
-import { RiverSteppingStoneData, WaterRockData } from "../../../shared/src/client-server-types";
-import { Settings } from "../../../shared/src/settings";
-import { Biome, TileType } from "../../../shared/src/tiles";
-import { distance, smoothstep } from "../../../shared/src/utils";
+import { RiverSteppingStoneData, WaterRockData } from "battletribes-shared/client-server-types";
+import { Settings } from "battletribes-shared/settings";
+import { Biome, SubtileType, TileType } from "battletribes-shared/tiles";
+import { distance, smoothstep } from "battletribes-shared/utils";
 import { getTileIndexIncludingEdges } from "../Layer";
 import { generateOctavePerlinNoise } from "../perlin-noise";
 import { WaterTileGenerationInfo } from "./river-generation";
 import { TerrainGenerationInfo } from "./surface-terrain-generation";
+import { setWallInSubtiles } from "./terrain-generation-utils";
 
 const enum Vars {
    DROPDOWN_TILE_WEIGHT_REDUCTION_RANGE = 9
@@ -55,31 +56,31 @@ const generateDropdownClosenessArray = (surfaceTerrainGenerationInfo: TerrainGen
 export function generateUndergroundTerrain(surfaceTerrainGenerationInfo: TerrainGenerationInfo): TerrainGenerationInfo {
    const tileBiomes = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS);
    const tileTypes = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS);
-   const tileIsWalls = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS);
    const riverFlowDirections = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS);
    const tileTemperatures = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS);
    const tileHumidities = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS);
 
-   const weightMap = generateOctavePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 20, 12, 1.75, 0.6);
+   const subtileTypes = new Float32Array(16 * Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS);
+
+   const weightMap = generateOctavePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 40, 12, 1.75, 0.65);
    const dropdownClosenessArray = generateDropdownClosenessArray(surfaceTerrainGenerationInfo);
    
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
-         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-         
          let weight = weightMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
-
+         
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          const dropdownCloseness = dropdownClosenessArray[tileIndex];
+
          weight *= 1 - dropdownCloseness;
          
          tileBiomes[tileIndex] = Biome.mountains;
 
          if (weight > 0.55) {
-            tileTypes[tileIndex] = TileType.stoneWall;
-            tileIsWalls[tileIndex] = 1;
+            tileTypes[tileIndex] = TileType.stoneWallFloor;
+            setWallInSubtiles(subtileTypes, tileX, tileY, SubtileType.stoneWall);
          } else {
             tileTypes[tileIndex] = TileType.stone;
-            tileIsWalls[tileIndex] = 0;
          }
       }
    }
@@ -91,7 +92,7 @@ export function generateUndergroundTerrain(surfaceTerrainGenerationInfo: Terrain
    return {
       tileTypes: tileTypes,
       tileBiomes: tileBiomes,
-      tileIsWalls: tileIsWalls,
+      subtileTypes: subtileTypes,
       riverFlowDirections: riverFlowDirections,
       tileTemperatures: tileTemperatures,
       tileHumidities: tileHumidities,

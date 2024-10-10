@@ -2,7 +2,7 @@ import { RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData, ServerTileUpdateDat
 import { Settings } from "battletribes-shared/settings";
 import { createTileRenderChunks, recalculateSolidTileRenderChunkData } from "./webgl/solid-tile-rendering";
 import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
-import { calculateTileShadowInfo, TileShadowType } from "./webgl/tile-shadow-rendering";
+import { calculateShadowInfo, TileShadowType } from "./webgl/tile-shadow-rendering";
 import { calculateWallBorderInfo } from "./webgl/wall-border-rendering";
 import Board from "../Board";
 import Layer from "../Layer";
@@ -40,12 +40,16 @@ export interface RenderChunkRiverInfo {
 
 export interface RenderChunkTileShadowInfo {
    readonly vao: WebGLVertexArrayObject;
-   readonly vertexCount: number;
+   readonly buffer: WebGLBuffer;
+   // @Hack: make readonly
+   vertexData: Float32Array;
 }
 
 export interface RenderChunkWallBorderInfo {
    readonly vao: WebGLVertexArrayObject;
-   readonly vertexCount: number;
+   readonly buffer: WebGLBuffer;
+   // @Hack: make readonly
+   vertexData: Float32Array;
 }
 
 // @Speed: Polymorphism
@@ -146,8 +150,8 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    };
    for (let renderChunkY = -RENDER_CHUNK_EDGE_GENERATION; renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
       for (let renderChunkX = -RENDER_CHUNK_EDGE_GENERATION; renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
-         tileShadowInfoArray[TileShadowType.dropdownShadow].push(calculateTileShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.dropdownShadow));
-         tileShadowInfoArray[TileShadowType.wallShadow].push(calculateTileShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.wallShadow));
+         tileShadowInfoArray[TileShadowType.dropdownShadow].push(calculateShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.dropdownShadow));
+         tileShadowInfoArray[TileShadowType.wallShadow].push(calculateShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.wallShadow));
       }
    }
    // @Speed: makes it unpacked

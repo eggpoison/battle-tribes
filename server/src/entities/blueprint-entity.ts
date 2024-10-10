@@ -8,8 +8,8 @@ import { HealthComponent } from "../components/HealthComponent";
 import { BlueprintComponent } from "../components/BlueprintComponent";
 import Tribe from "../Tribe";
 import { TribeComponent } from "../components/TribeComponent";
-import { createEntityHitboxes } from "../../../shared/src/boxes/entity-hitbox-creation";
-import { CollisionGroup } from "../../../shared/src/collision-groups";
+import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

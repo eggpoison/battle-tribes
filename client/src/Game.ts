@@ -66,6 +66,7 @@ import { getCurrentLayer, getEntityByID, getEntityLayer, layers } from "./world"
 import Layer from "./Layer";
 import { createDarkeningShaders, renderDarkening } from "./rendering/webgl/darkening-rendering";
 import { createLightDebugShaders, renderLightingDebug } from "./rendering/webgl/light-debug-rendering";
+import { createTileBreakProgressShaders, renderTileBreakProgress } from "./rendering/webgl/tile-break-progress-rendering";
 
 // @Cleanup: remove.
 let _frameProgress = Number.EPSILON;
@@ -170,8 +171,6 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    if (nerdVisionIsVisible() && entityDebugData !== null && typeof getEntityByID(entityDebugData.entityID) !== "undefined") {
       renderTriangleDebugData(entityDebugData);
    }
-   renderForcefield();
-   renderWorldBorder();
    renderRestrictedBuildingAreas();
    if (nerdVisionIsVisible() && OPTIONS.showChunkBorders) {
       renderChunkBorders(Camera.minVisibleChunkX, Camera.maxVisibleChunkX, Camera.minVisibleChunkY, Camera.maxVisibleChunkY, Settings.CHUNK_SIZE, 1);
@@ -201,9 +200,13 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
 
    renderTileShadows(layer, TileShadowType.wallShadow);
    renderSolidTiles(layer, true);
+   renderTileBreakProgress(layer);
    renderWallBorders(layer);
 
    renderEntitySelection();
+   
+   renderForcefield();
+   renderWorldBorder();
    
    if (OPTIONS.showParticles) {
       renderMonocolourParticles(ParticleRenderLayer.high);
@@ -376,6 +379,7 @@ abstract class Game {
             createHealingBeamShaders();
             createGrassBlockerShaders();
             createLightDebugShaders();
+            createTileBreakProgressShaders();
             if (isDev()) {
                setupFrameGraph();
             }

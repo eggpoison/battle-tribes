@@ -1,10 +1,10 @@
-import { createHitbox, HitboxCollisionType } from "../../../shared/src/boxes/boxes";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
-import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "../../../shared/src/collision";
-import { CollisionGroup } from "../../../shared/src/collision-groups";
-import { ServerComponentType } from "../../../shared/src/components";
-import { EntityType } from "../../../shared/src/entities";
-import { Point } from "../../../shared/src/utils";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "battletribes-shared/collision";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { Point } from "battletribes-shared/utils";
 import { EntityConfig } from "../components";
 import { GuardianGemQuakeComponent } from "../components/GuardianGemQuakeComponent";
 import { PhysicsComponent } from "../components/PhysicsComponent";

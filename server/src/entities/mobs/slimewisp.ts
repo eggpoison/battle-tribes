@@ -8,14 +8,14 @@ import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/box
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import WanderAI from "../../ai/WanderAI";
-import { Biome } from "../../../../shared/src/tiles";
+import { Biome } from "battletribes-shared/tiles";
 import Layer from "../../Layer";
 import { TransformComponent } from "../../components/TransformComponent";
 import { PhysicsComponent } from "../../components/PhysicsComponent";
 import { HealthComponent } from "../../components/HealthComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { SlimewispComponent } from "../../components/SlimewispComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -26,8 +26,8 @@ type ComponentTypes = ServerComponentType.transform
 
 const RADIUS = 16;
 
-function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
-   return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.swamp;
+function positionIsValidCallback(_entity: EntityID, layer: Layer, x: number, y: number): boolean {
+   return !layer.positionHasWall(x, y) && layer.getBiomeAtPosition(x, y) === Biome.swamp;
 }
 
 export function createSlimewispConfig(): EntityConfig<ComponentTypes> {
@@ -42,7 +42,7 @@ export function createSlimewispConfig(): EntityConfig<ComponentTypes> {
    const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned);
    
    const aiHelperComponent = new AIHelperComponent(100);
-   aiHelperComponent.ais[AIType.wander] = new WanderAI(100, Math.PI, 99999, tileIsValidCallback);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(100, Math.PI, 99999, positionIsValidCallback);
    
    const slimewispComponent = new SlimewispComponent();
    

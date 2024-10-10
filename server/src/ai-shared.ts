@@ -325,11 +325,12 @@ export function getPositionRadialTiles(layer: Layer, position: Point, radius: nu
 
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+         // @Incomplete: don't allow wandering into subtiles, but still allow wandering into where subtiles aren't (e.g. when there is only 1 subtile in a tile)
          // Don't try to wander to wall tiles
-         const isWall = layer.tileXYIsWall(tileX, tileY);
-         if (isWall) {
-            continue;
-         }
+         // const isWall = layer.tileXYIsWall(tileX, tileY);
+         // if (isWall) {
+         //    continue;
+         // }
          
          // Don't try to wander to water
          const tileType = layer.getTileXYType(tileX, tileY);
@@ -361,11 +362,12 @@ export function getAllowedPositionRadialTiles(layer: Layer, position: Point, rad
 
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+         // @Incomplete: don't allow wandering into subtiles, but still allow wandering into where subtiles aren't (e.g. when there is only 1 subtile in a tile)
          // Don't try to wander to wall tiles
-         const isWall = layer.tileXYIsWall(tileX, tileY);
-         if (isWall) {
-            continue;
-         }
+         // const isWall = layer.tileXYIsWall(tileX, tileY);
+         // if (isWall) {
+         //    continue;
+         // }
          
          // Don't try to wander to disallowed tiles
          const tileType = layer.getTileXYType(tileX, tileY);
@@ -686,7 +688,7 @@ export function entityIsInLineOfSight(originEntity: EntityID, targetEntity: Enti
    }
    
    // Check for walls in between
-   if (layer.raytraceHasWallTile(originEntityTransformComponent.position.x, originEntityTransformComponent.position.y, targetEntityTransformComponent.position.x, targetEntityTransformComponent.position.y)) {
+   if (layer.raytraceHasWallSubtile(originEntityTransformComponent.position.x, originEntityTransformComponent.position.y, targetEntityTransformComponent.position.x, targetEntityTransformComponent.position.y)) {
       return false;
    }
 

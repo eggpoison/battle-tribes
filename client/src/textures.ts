@@ -1,6 +1,7 @@
 import { gl } from "./webgl";
 import { imageIsLoaded } from "./utils";
-import { TILE_TYPE_TEXTURE_SOURCES } from "./tile-type-texture-sources";
+import { FLOOR_TILE_TEXTURE_SOURCE_RECORD, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
+import { BREAK_PROGRESS_TEXTURE_SOURCES } from "./rendering/webgl/tile-break-progress-rendering";
 
 let TEXTURES: { [key: string]: WebGLTexture } = {};
 
@@ -38,8 +39,20 @@ export function createImage(imageSrc: string): Promise<HTMLImageElement> {
 }
 
 export function preloadTextureImages(): Array<HTMLImageElement> {
-   // Add solid tile textures
-   for (const textureSource of TILE_TYPE_TEXTURE_SOURCES) {
+   // Add floor tile textures
+   for (const textureSource of Object.values(FLOOR_TILE_TEXTURE_SOURCE_RECORD)) {
+      if (textureSource !== null && !TEXTURE_SOURCES.includes(textureSource)) {
+         TEXTURE_SOURCES.push(textureSource);
+      }
+   }
+   for (const textureSources of Object.values(WALL_TILE_TEXTURE_SOURCE_RECORD)) {
+      for (const textureSource of textureSources) {
+         if (!TEXTURE_SOURCES.includes(textureSource)) {
+            TEXTURE_SOURCES.push(textureSource);
+         }
+      }
+   }
+   for (const textureSource of BREAK_PROGRESS_TEXTURE_SOURCES) {
       if (!TEXTURE_SOURCES.includes(textureSource)) {
          TEXTURE_SOURCES.push(textureSource);
       }

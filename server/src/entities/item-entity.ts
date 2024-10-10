@@ -10,7 +10,7 @@ import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/box
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { TransformComponent } from "../components/TransformComponent";
 import { PhysicsComponent } from "../components/PhysicsComponent";
-import { CollisionGroup } from "../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

@@ -1,10 +1,10 @@
-import { Hitbox, HitboxFlag } from "../../../shared/src/boxes/boxes";
-import { GuardianAttackType, ServerComponentType } from "../../../shared/src/components";
-import { EntityID, PlayerCauseOfDeath } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Packet } from "../../../shared/src/packets";
-import { Settings } from "../../../shared/src/settings";
-import { getAngleDiff, lerp, Point, randInt, TileIndex, UtilVars } from "../../../shared/src/utils";
+import { Hitbox, HitboxFlag } from "battletribes-shared/boxes/boxes";
+import { GuardianAttackType, ServerComponentType } from "battletribes-shared/components";
+import { EntityID, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { Packet } from "battletribes-shared/packets";
+import { Settings } from "battletribes-shared/settings";
+import { getAngleDiff, lerp, Point, randInt, TileIndex, UtilVars } from "battletribes-shared/utils";
 import { stopEntity } from "../ai-shared";
 import { registerDirtyEntity } from "../server/player-clients";
 import { AIHelperComponentArray, AIType } from "./AIHelperComponent";
@@ -384,8 +384,8 @@ function onHitboxCollision(guardian: EntityID, collidingEntity: EntityID, acting
       return;
    }
 
-   // Don't attack spiky balls
-   if (GuardianSpikyBallComponentArray.hasComponent(collidingEntity)) {
+   // Don't attack spiky balls or other guardians
+   if (GuardianSpikyBallComponentArray.hasComponent(collidingEntity) || GuardianComponentArray.hasComponent(collidingEntity)) {
       return;
    }
    

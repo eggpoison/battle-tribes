@@ -164,25 +164,17 @@ function getDataLength(entity: EntityID): number {
    let lengthBytes = 5 * Float32Array.BYTES_PER_ELEMENT;
    
    for (const damageBox of damageBoxComponent.damageBoxes) {
-      if (!damageBox.isActive) {
-         continue;
-      }
-      
       if (boxIsCircular(damageBox.box)) {
-         lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
       } else {
-         lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 12 * Float32Array.BYTES_PER_ELEMENT;
       }
    }
    for (const blockBox of damageBoxComponent.blockBoxes) {
-      if (!blockBox.isActive) {
-         continue;
-      }
-      
       if (boxIsCircular(blockBox.box)) {
-         lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
       } else {
-         lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 12 * Float32Array.BYTES_PER_ELEMENT;
       }
    }
 
@@ -197,10 +189,6 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    let numCircularDamageBoxes = 0;
    let numRectangularDamageBoxes = 0;
    for (const damageBox of damageBoxComponent.damageBoxes) {
-      if (!damageBox.isActive) {
-         continue;
-      }
-      
       if (boxIsCircular(damageBox.box)) {
          numCircularDamageBoxes++;
       } else {
@@ -211,10 +199,6 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    let numCircularBlockBoxes = 0;
    let numRectangularBlockBoxes = 0;
    for (const blockBox of damageBoxComponent.blockBoxes) {
-      if (!blockBox.isActive) {
-         continue;
-      }
-      
       if (boxIsCircular(blockBox.box)) {
          numCircularBlockBoxes++;
       } else {
@@ -226,9 +210,6 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    packet.addNumber(numCircularDamageBoxes);
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
-      if (!damageBox.isActive) {
-         continue;
-      }
       
       const box = damageBox.box;
       // @Speed
@@ -247,15 +228,14 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(localID);
       packet.addNumber(box.radius);
       packet.addNumber(damageBox.associatedLimbInventoryName);
+      packet.addBoolean(damageBox.isActive);
+      packet.padOffset(3);
    }
 
    // Rectangular
    packet.addNumber(numRectangularDamageBoxes);
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
-      if (!damageBox.isActive) {
-         continue;
-      }
       
       const box = damageBox.box;
       // @Speed
@@ -276,15 +256,14 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.height);
       packet.addNumber(box.relativeRotation);
       packet.addNumber(damageBox.associatedLimbInventoryName);
+      packet.addBoolean(damageBox.isActive);
+      packet.padOffset(3);
    }
    
    // Circular
    packet.addNumber(numCircularBlockBoxes);
    for (let i = 0; i < damageBoxComponent.blockBoxes.length; i++) {
       const blockBox = damageBoxComponent.blockBoxes[i];
-      if (!blockBox.isActive) {
-         continue;
-      }
       
       const box = blockBox.box;
       // @Speed
@@ -303,15 +282,14 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(localID);
       packet.addNumber(box.radius);
       packet.addNumber(blockBox.associatedLimbInventoryName);
+      packet.addBoolean(blockBox.isActive);
+      packet.padOffset(3);
    }
 
    // Rectangular
    packet.addNumber(numRectangularBlockBoxes);
    for (let i = 0; i < damageBoxComponent.blockBoxes.length; i++) {
       const blockBox = damageBoxComponent.blockBoxes[i];
-      if (!blockBox.isActive) {
-         continue;
-      }
       
       const box = blockBox.box;
       // @Speed
@@ -332,5 +310,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.height);
       packet.addNumber(box.relativeRotation);
       packet.addNumber(blockBox.associatedLimbInventoryName);
+      packet.addBoolean(blockBox.isActive);
+      packet.padOffset(3);
    }
 }

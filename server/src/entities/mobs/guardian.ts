@@ -1,10 +1,10 @@
-import { createHitbox, HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import CircularBox from "../../../../shared/src/boxes/CircularBox";
-import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "../../../../shared/src/collision";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityID, EntityType } from "../../../../shared/src/entities";
-import { Point, TileIndex } from "../../../../shared/src/utils";
+import { createHitbox, HitboxCollisionType, HitboxFlag } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Point, TileIndex } from "battletribes-shared/utils";
 import GuardianAI from "../../ai/GuardianAI";
 import GuardianCrystalBurstAI from "../../ai/GuardianCrystalBurstAI";
 import GuardianCrystalSlamAI from "../../ai/GuardianCrystalSlamAI";

@@ -222,32 +222,36 @@ export function resolvePlayerCollisions(): void {
    resolveCollisionPairs(collisionPairs, true);
 }
 
-export function resolveWallTileCollisions(entity: Entity): void {
+export function resolveWallCollisions(entity: Entity): void {
    const layer = getEntityLayer(entity.id);
    const transformComponent = entity.getServerComponent(ServerComponentType.transform);
    for (let i = 0; i < transformComponent.hitboxes.length; i++) {
       const hitbox = transformComponent.hitboxes[i];
       const box = hitbox.box;
       
+      const boundsMinX = transformComponent.position.x - 32;
+      const boundsMaxX = transformComponent.position.x + 32;
+      const boundsMinY = transformComponent.position.y - 32;
+      const boundsMaxY = transformComponent.position.y + 32;
+      
       // @Hack: use actual bounding area
-      const minTileX = clampToBoardDimensions(Math.floor((transformComponent.position.x - 32) / Settings.TILE_SIZE));
-      const maxTileX = clampToBoardDimensions(Math.floor((transformComponent.position.x + 32) / Settings.TILE_SIZE));
-      const minTileY = clampToBoardDimensions(Math.floor((transformComponent.position.y - 32) / Settings.TILE_SIZE));
-      const maxTileY = clampToBoardDimensions(Math.floor((transformComponent.position.y + 32) / Settings.TILE_SIZE));
+      const minSubtileX = Math.max(Math.floor(boundsMinX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+      const maxSubtileX = Math.min(Math.floor(boundsMaxX / Settings.SUBTILE_SIZE), (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
+      const minSubtileY = Math.max(Math.floor(boundsMinY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+      const maxSubtileY = Math.min(Math.floor(boundsMaxY / Settings.SUBTILE_SIZE), (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
    
       // @Incomplete
-      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-         for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-            const tile = layer.getTileFromCoords(tileX, tileY);
-            if (!tile.isWall) {
+      for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+         for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+            if (!layer.subtileIsWall(subtileX, subtileY)) {
                continue;
             }
 
             // Check if the tile is colliding
-            const tileCenterX = (tileX + 0.5) * Settings.TILE_SIZE;
-            const tileCenterY = (tileY + 0.5) * Settings.TILE_SIZE;
+            const tileCenterX = (subtileX + 0.5) * Settings.SUBTILE_SIZE;
+            const tileCenterY = (subtileY + 0.5) * Settings.SUBTILE_SIZE;
 
-            const tileBox = new RectangularBox(new Point(0, 0), Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
+            const tileBox = new RectangularBox(new Point(0, 0), Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, 0);
             updateBox(tileBox, tileCenterX, tileCenterY, 0);
 
             if (box.isColliding(tileBox)) {

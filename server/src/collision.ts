@@ -194,10 +194,10 @@ export function collide(pushedEntity: EntityID, pushingEntity: EntityID, collidi
 }
 
 /** If no collision is found, does nothing. */
-export function resolveWallTileCollision(entity: EntityID, hitbox: Hitbox, tileX: number, tileY: number): void {
+export function resolveWallCollision(entity: EntityID, hitbox: Hitbox, subtileX: number, subtileY: number): void {
    // @Speed
-   const tileBox = new RectangularBox(new Point(0, 0), Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
-   updateBox(tileBox, (tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0);
+   const tileBox = new RectangularBox(new Point(0, 0), Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, 0);
+   updateBox(tileBox, (subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0);
    
    if (!hitbox.box.isColliding(tileBox)) {
       return;

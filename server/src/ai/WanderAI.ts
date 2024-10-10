@@ -1,6 +1,6 @@
-import { EntityID } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { randInt } from "../../../shared/src/utils";
+import { EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { randInt } from "battletribes-shared/utils";
 import { entityHasReachedPosition, moveEntityToPosition, stopEntity } from "../ai-shared";
 import { AIHelperComponentArray } from "../components/AIHelperComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../components/PhysicsComponent";

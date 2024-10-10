@@ -3,14 +3,19 @@ import { GrassTileInfo, RiverFlowDirectionsRecord, RiverSteppingStoneData, Water
 import { EntityID } from "../../shared/src/entities";
 import { Settings } from "../../shared/src/settings";
 import { WorldInfo } from "../../shared/src/structures";
+import { SubtileType } from "../../shared/src/tiles";
 import { TileIndex } from "../../shared/src/utils";
 import Chunk from "./Chunk";
 import Entity from "./Entity";
 import { TransformComponentArray } from "./entity-components/TransformComponent";
 import { getEntityRenderLayer } from "./render-layers";
+import { RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
 import { addRenderable, removeRenderable, RenderableType } from "./rendering/render-loop";
 import { removeEntityFromDirtyArray } from "./rendering/render-part-matrices";
 import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity } from "./rendering/webgl/chunked-entity-rendering";
+import { recalculateWallSubtileRenderData, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
+import { recalculateTileShadows, TileShadowType } from "./rendering/webgl/tile-shadow-rendering";
+import { recalculateWallBorders } from "./rendering/webgl/wall-border-rendering";
 import { Tile } from "./Tile";
 import { getEntityType } from "./world";
 
@@ -30,10 +35,28 @@ export function tileIsInWorld(tileX: number, tileY: number): boolean {
    return tileX >= 0 && tileX < Settings.BOARD_DIMENSIONS && tileY >= 0 && tileY < Settings.BOARD_DIMENSIONS;
 }
 
+export function getSubtileIndex(subtileX: number, subtileY: number): number {
+   return (subtileY + Settings.EDGE_GENERATION_DISTANCE * 4) * Settings.FULL_BOARD_DIMENSIONS * 4 + subtileX + Settings.EDGE_GENERATION_DISTANCE * 4;
+}
+
+export function getSubtileX(subtileIndex: number): number {
+   return subtileIndex % (Settings.FULL_BOARD_DIMENSIONS * 4) - Settings.EDGE_GENERATION_DISTANCE * 4;
+}
+
+export function getSubtileY(subtileIndex: number): number {
+   return Math.floor(subtileIndex / (Settings.FULL_BOARD_DIMENSIONS * 4)) - Settings.EDGE_GENERATION_DISTANCE * 4;
+}
+
+export function subtileIsInWorld(subtileX: number, subtileY: number): boolean {
+   return subtileX >= -Settings.EDGE_GENERATION_DISTANCE * 4 && subtileX < (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 && subtileY >= -Settings.EDGE_GENERATION_DISTANCE * 4 && subtileY < (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4;
+}
+
 export default class Layer {
    public readonly idx: number;
    
    public readonly tiles: ReadonlyArray<Tile>;
+   public readonly wallSubtileTypes: Float32Array;
+   public readonly wallSubtileDamageTakenMap: Map<number, number>;
    public readonly riverFlowDirections: RiverFlowDirectionsRecord;
    public readonly waterRocks: Array<WaterRockData>;
    public readonly riverSteppingStones: Array<RiverSteppingStoneData>;
@@ -41,8 +64,12 @@ export default class Layer {
 
    public readonly chunks: ReadonlyArray<Chunk>;
 
-   constructor(idx: number, tiles: ReadonlyArray<Tile>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, riverSteppingStones: Array<RiverSteppingStoneData>, grassInfo: Record<number, Record<number, GrassTileInfo>>) {
+   public readonly wallSubtileVariants: Partial<Record<TileIndex, number>> = {};
+
+   constructor(idx: number, tiles: ReadonlyArray<Tile>, wallSubtileTypes: Float32Array, wallSubtileDamageTakenMap: Map<number, number>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, riverSteppingStones: Array<RiverSteppingStoneData>, grassInfo: Record<number, Record<number, GrassTileInfo>>) {
       this.idx = idx;
+      this.wallSubtileTypes = wallSubtileTypes;
+      this.wallSubtileDamageTakenMap = wallSubtileDamageTakenMap;
       this.tiles = tiles;
       this.riverFlowDirections = riverFlowDirections;
       this.waterRocks = waterRocks;
@@ -58,6 +85,56 @@ export default class Layer {
          }
       }
       this.chunks = chunks;
+
+      // Create subtile variants
+      for (let subtileX = -Settings.EDGE_GENERATION_DISTANCE * 4; subtileX < (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4; subtileX++) {
+         for (let subtileY = -Settings.EDGE_GENERATION_DISTANCE * 4; subtileY < (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4; subtileY++) {
+            const subtileIndex = getSubtileIndex(subtileX, subtileY);
+            const subtileType = wallSubtileTypes[subtileIndex] as SubtileType;
+            if (subtileType !== SubtileType.none) {
+               const textureSources = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
+               if (typeof textureSources === "undefined") {
+                  throw new Error();
+               }
+   
+               const tileX = Math.floor(subtileX / 4);
+               const tileY = Math.floor(subtileY / 4);
+               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+               this.wallSubtileVariants[tileIndex] = Math.floor(Math.random() * textureSources.length);
+            }
+         }
+      }
+   }
+
+   private recalculateRenderChunkWalls(renderChunkX: number, renderChunkY: number): void {
+      recalculateWallSubtileRenderData(this, renderChunkX, renderChunkY);
+      recalculateTileShadows(this, renderChunkX, renderChunkY, TileShadowType.wallShadow);
+      recalculateWallBorders(this, renderChunkX, renderChunkY);
+   }
+
+   public registerSubtileUpdate(subtileIndex: number, subtileType: SubtileType, damageTaken: number): void {
+      this.wallSubtileTypes[subtileIndex] = subtileType;
+
+      if (damageTaken > 0) {
+         this.wallSubtileDamageTakenMap.set(subtileIndex, damageTaken);
+      } else {
+         this.wallSubtileDamageTakenMap.delete(subtileIndex);
+      }
+
+      const subtileX = getSubtileX(subtileIndex);
+      const subtileY = getSubtileY(subtileIndex);
+
+      const minRenderChunkX = Math.floor((subtileX - 1) / 4 / RENDER_CHUNK_SIZE);
+      const maxRenderChunkX = Math.floor((subtileX + 1) / 4 / RENDER_CHUNK_SIZE);
+      const minRenderChunkY = Math.floor((subtileY - 1) / 4 / RENDER_CHUNK_SIZE);
+      const maxRenderChunkY = Math.floor((subtileY + 1) / 4 / RENDER_CHUNK_SIZE);
+
+      // @Speed: We can probably batch these together
+      for (let renderChunkX = minRenderChunkX; renderChunkX <= maxRenderChunkX; renderChunkX++) {
+         for (let renderChunkY = minRenderChunkY; renderChunkY <= maxRenderChunkY; renderChunkY++) {
+            this.recalculateRenderChunkWalls(renderChunkX, renderChunkY);
+         }
+      }
    }
 
    public getTile(tileIndex: TileIndex): Tile {
@@ -69,13 +146,14 @@ export default class Layer {
       return this.tiles[tileIndex];
    }
 
-   public tileIsWallFromCoords(tileX: number, tileY: number): boolean {
-      if (!tileIsInWorld(tileX, tileY)) {
-         return false;
-      }
+   public subtileIsWall(subtileX: number, subtileY: number): boolean {
+      const subtileIndex = getSubtileIndex(subtileX, subtileY);
+      return this.wallSubtileTypes[subtileIndex] !== SubtileType.none;
+   }
 
-      const tile = this.getTileFromCoords(tileX, tileY);
-      return tile.isWall;
+   public getWallSubtileType(subtileX: number, subtileY: number): SubtileType {
+      const subtileIndex = getSubtileIndex(subtileX, subtileY);
+      return this.wallSubtileTypes[subtileIndex];
    }
 
    public getChunk(chunkX: number, chunkY: number): Chunk {

@@ -13,14 +13,14 @@ import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/box
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import WanderAI from "../../ai/WanderAI";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { Biome, TileType } from "../../../../shared/src/tiles";
+import { Biome, TileType } from "battletribes-shared/tiles";
 import Layer, { getTileIndexFromPos } from "../../Layer";
-import { Settings } from "../../../../shared/src/settings";
+import { Settings } from "battletribes-shared/settings";
 import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { PhysicsComponent } from "../../components/PhysicsComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { EscapeAIComponent } from "../../components/EscapeAIComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 const enum Vars {
    TILE_VALIDATION_PADDING = 20
@@ -59,8 +59,7 @@ const positionIsOnlyNearWater = (layer: Layer, x: number, y: number): boolean =>
 }
 
 function tileIsValidCallback(entity: EntityID, layer: Layer, x: number, y: number): boolean {
-   const tileIndex = getTileIndexFromPos(x, y);
-   if (layer.tileIsWall(tileIndex) || layer.getTileBiome(tileIndex) !== Biome.river) {
+   if (!layer.positionHasWall(x, y) || layer.getBiomeAtPosition(x, y) !== Biome.river) {
       return false;
    }
 

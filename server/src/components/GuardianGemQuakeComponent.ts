@@ -1,10 +1,10 @@
-import { Hitbox } from "../../../shared/src/boxes/boxes";
-import { ServerComponentType } from "../../../shared/src/components";
-import { EntityID, PlayerCauseOfDeath } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Packet } from "../../../shared/src/packets";
-import { Settings } from "../../../shared/src/settings";
-import { Point } from "../../../shared/src/utils";
+import { Hitbox } from "battletribes-shared/boxes/boxes";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { Packet } from "battletribes-shared/packets";
+import { Settings } from "battletribes-shared/settings";
+import { Point } from "battletribes-shared/utils";
 import { destroyEntity, getEntityAgeTicks } from "../world";
 import { ComponentArray } from "./ComponentArray";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";

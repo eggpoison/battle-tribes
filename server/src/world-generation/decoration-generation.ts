@@ -1,6 +1,6 @@
 import { DecorationType, ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
+import { TileType, TileTypeString } from "battletribes-shared/tiles";
 import { randInt, randFloat, TileIndex } from "battletribes-shared/utils";
 import { getTileIndexIncludingEdges, getTilesInRange, getTileX, getTileY, tileIsInWorldIncludingEdges } from "../Layer";
 import { createDecorationConfig } from "../entities/decoration";

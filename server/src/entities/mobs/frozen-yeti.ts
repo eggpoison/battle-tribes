@@ -16,11 +16,11 @@ import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/box
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
 import Layer from "../../Layer";
-import { TileType } from "../../../../shared/src/tiles";
+import { TileType } from "battletribes-shared/tiles";
 import WanderAI from "../../ai/WanderAI";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 export const enum FrozenYetiVars {
    VISION_RANGE = 350,
@@ -57,8 +57,8 @@ export interface FrozenYetiRockSpikeInfo {
    readonly size: number;
 }
 
-function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
-   return !layer.tileIsWall(tileIndex) && layer.getTileType(tileIndex) === TileType.fimbultur;
+function positionIsValidCallback(_entity: EntityID, layer: Layer, x: number, y: number): boolean {
+   return !layer.positionHasWall(x, y) && layer.getTileTypeAtPosition(x, y) === TileType.fimbultur;
 }
 
 export function createFrozenYetiConfig(): EntityConfig<ComponentTypes> {
@@ -84,7 +84,7 @@ export function createFrozenYetiConfig(): EntityConfig<ComponentTypes> {
    const statusEffectComponent = new StatusEffectComponent(StatusEffect.freezing);
    
    const aiHelperComponent = new AIHelperComponent(FrozenYetiVars.VISION_RANGE);
-   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, Math.PI * 0.7, 0.6, tileIsValidCallback);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, Math.PI * 0.7, 0.6, positionIsValidCallback);
    
    const frozenYetiComponent = new FrozenYetiComponent();
    

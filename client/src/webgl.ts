@@ -1,6 +1,7 @@
 import { Point } from "battletribes-shared/utils";
 import { isDev } from "./utils";
 import { updateTechTreeCanvasSize } from "./rendering/webgl/tech-tree-rendering";
+import { TEXTURE_IMAGE_RECORD } from "./textures";
 
 export const CIRCLE_VERTEX_COUNT = 50;
 
@@ -195,4 +196,25 @@ export function createTexture(width: number, height: number): WebGLTexture {
    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
    return texture;
+}
+
+export function createTextureArray(textureSources: ReadonlyArray<string>, width: number, height: number, numLevels: number): WebGLTexture {
+   const textureArray = gl.createTexture()!;
+   gl.bindTexture(gl.TEXTURE_2D_ARRAY, textureArray);
+   gl.texStorage3D(gl.TEXTURE_2D_ARRAY, numLevels, gl.RGBA8, width, height, textureSources.length);
+
+   gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+   gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+   
+   // Set all texture units
+   for (let i = 0; i < textureSources.length; i++) {
+      const textureSource = textureSources[i];
+      const image = TEXTURE_IMAGE_RECORD[textureSource];
+      gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, i, width, height, 1, gl.RGBA, gl.UNSIGNED_BYTE, image);
+   }
+
+   // @Cleanup: why do we do this? shouldn't we not need mipmaps?
+   gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+
+   return textureArray;
 }

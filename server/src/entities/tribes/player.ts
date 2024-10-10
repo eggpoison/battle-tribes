@@ -24,8 +24,8 @@ import Tribe from "../../Tribe";
 import { TribeMemberComponent } from "../../components/TribeMemberComponent";
 import { PlayerComponent } from "../../components/PlayerComponent";
 import { DamageBoxComponent } from "../../components/DamageBoxComponent";
-import { TRIBE_INFO_RECORD } from "../../../../shared/src/tribes";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { TRIBE_INFO_RECORD } from "battletribes-shared/tribes";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

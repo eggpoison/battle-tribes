@@ -1,4 +1,4 @@
-import { EntityID } from "../../../shared/src/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { moveEntityToEntity } from "../ai-shared";
 import { AIHelperComponent, AIHelperComponentArray } from "../components/AIHelperComponent";
 import { GuardianComponent, GuardianComponentArray } from "../components/GuardianComponent";

@@ -32,7 +32,6 @@ import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./me
 import { TransformComponentArray } from "../../entity-components/TransformComponent";
 import { AttackVars, copyCurrentLimbState, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
 import { PhysicsComponentArray } from "../../entity-components/PhysicsComponent";
-import { PlayerComponentArray } from "../../entity-components/PlayerComponent";
 import { getEntityLayer } from "../../world";
 
 export interface ItemRestTime {
@@ -158,6 +157,18 @@ const itemIsResting = (itemSlot: number): boolean => {
    return restTime.remainingTimeTicks > 0;
 }
 
+export function cancelAttack(limb: LimbInfo): void {
+   const attackInfo = getItemAttackInfo(limb.heldItemType);
+
+   limb.action = LimbAction.returnAttackToRest;
+   limb.currentActionElapsedTicks = 0;
+   limb.currentActionDurationTicks = attackInfo.attackTimings.returnTimeTicks * getAttackTimeMultiplier(limb.heldItemType);
+
+   limb.currentActionStartLimbState = limb.currentActionEndLimbState;
+   // @Speed: Garbage collection
+   limb.currentActionEndLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
+}
+
 // @Cleanup: bad name. mostly updating limbs
 export function updatePlayerItems(): void {
    if (Player.instance === null) {
@@ -231,15 +242,7 @@ export function updatePlayerItems(): void {
 
       // If finished attacking, go to rest
       if (limb.action === LimbAction.attack && getElapsedTimeInSeconds(limb.currentActionElapsedTicks) * Settings.TPS >= limb.currentActionDurationTicks) {
-         const attackInfo = getItemAttackInfo(limb.heldItemType);
-
-         limb.action = LimbAction.returnAttackToRest;
-         limb.currentActionElapsedTicks = 0;
-         limb.currentActionDurationTicks = attackInfo.attackTimings.returnTimeTicks * getAttackTimeMultiplier(limb.heldItemType);
-
-         limb.currentActionStartLimbState = limb.currentActionEndLimbState;
-         // @Speed: Garbage collection
-         limb.currentActionEndLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
+         cancelAttack(limb);
       }
 
       // If finished going to rest, set to default

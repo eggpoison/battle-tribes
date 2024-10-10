@@ -3,7 +3,7 @@ import Camera from "../../Camera";
 import { createWebGLProgram, gl } from "../../webgl";
 import { RenderChunkTileShadowInfo, getRenderChunkTileShadowInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import Layer, { tileIsWithinEdge } from "../../Layer";
+import Layer, { subtileIsInWorld, tileIsWithinEdge } from "../../Layer";
 import { TileType } from "../../../../shared/src/tiles";
 
 export const enum TileShadowType {
@@ -12,8 +12,14 @@ export const enum TileShadowType {
 }
 
 interface TileShadowInfo {
-   readonly tileX: number;
-   readonly tileY: number;
+   readonly x1: number;
+   readonly x2: number;
+   readonly y1: number;
+   readonly y2: number;
+   readonly u1: number;
+   readonly u2: number;
+   readonly v1: number;
+   readonly v2: number;
    readonly bottomLeftMarker: number;
    readonly bottomRightMarker: number;
    readonly topLeftMarker: number;
@@ -90,44 +96,45 @@ export function createTileShadowShaders(): void {
    out vec4 outputColour;
    
    void main() {
-      float dist = 0.0;
+      float edgeCloseness = 0.0;
       if (v_topLeftMarker > 0.5) {
-         float topLeftDist = 1.0 - distance(vec2(0.0, 1.0), v_texCoord);
-         dist = max(dist, topLeftDist - 0.5);
+         float topLeftCloseness = 1.0 - distance(vec2(0.0, 1.0), v_texCoord);
+         edgeCloseness = max(edgeCloseness, topLeftCloseness);
       }
       if (v_topRightMarker > 0.5) {
-         float topRightDist = 1.0 - distance(vec2(1.0, 1.0), v_texCoord);
-         dist = max(dist, topRightDist - 0.5);
+         float topRightCloseness = 1.0 - distance(vec2(1.0, 1.0), v_texCoord);
+         edgeCloseness = max(edgeCloseness, topRightCloseness);
       }
       if (v_bottomLeftMarker > 0.5) {
-         float bottomLeftDist = 1.0 - distance(vec2(0.0, 0.0), v_texCoord);
-         dist = max(dist, bottomLeftDist - 0.5);
+         float bottomLeftCloseness = 1.0 - distance(vec2(0.0, 0.0), v_texCoord);
+         edgeCloseness = max(edgeCloseness, bottomLeftCloseness);
       }
       if (v_bottomRightMarker > 0.5) {
-         float bottomRightDist = 1.0 - distance(vec2(1.0, 0.0), v_texCoord);
-         dist = max(dist, bottomRightDist - 0.5);
+         float bottomRightCloseness = 1.0 - distance(vec2(1.0, 0.0), v_texCoord);
+         edgeCloseness = max(edgeCloseness, bottomRightCloseness);
       }
    
       if (v_topMarker > 0.5) {
-         float topDist = v_texCoord.y;
-         dist = max(dist, topDist - 0.5);
+         float topCloseness = v_texCoord.y;
+         edgeCloseness = max(edgeCloseness, topCloseness);
       }
       if (v_rightMarker > 0.5) {
-         float rightDist = v_texCoord.x;
-         dist = max(dist, rightDist - 0.5);
+         float rightCloseness = v_texCoord.x;
+         edgeCloseness = max(edgeCloseness, rightCloseness);
       }
       if (v_leftMarker > 0.5) {
-         float leftDist = 1.0 - v_texCoord.x;
-         dist = max(dist, leftDist - 0.5);
+         float leftCloseness = 1.0 - v_texCoord.x;
+         edgeCloseness = max(edgeCloseness, leftCloseness);
       }
       if (v_bottomMarker > 0.5) {
-         float bottomDist = (1.0 - v_texCoord.y);
-         dist = max(dist, bottomDist - 0.5);
+         float bottomCloseness = (1.0 - v_texCoord.y);
+         edgeCloseness = max(edgeCloseness, bottomCloseness);
       }
-   
-      dist -= 0.2;
-   
-      outputColour = vec4(0.0, 0.0, 0.0, dist);
+
+      edgeCloseness *= edgeCloseness;
+      
+      float alpha = edgeCloseness * 0.4;
+      outputColour = vec4(0.0, 0.0, 0.0, alpha);
    }
    `;
 
@@ -135,13 +142,8 @@ export function createTileShadowShaders(): void {
    bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 }
 
-const tileIsWallInt = (layer: Layer, tileX: number, tileY: number): number => {
-   if (tileIsWithinEdge(tileX, tileY)) {
-      const tile = layer.getTileFromCoords(tileX, tileY);
-      return tile.isWall ? 1 : 0;
-   }
-
-   return 0;
+const subtileIsWallInt = (layer: Layer, subtileX: number, subtileY: number): number => {
+   return (subtileIsInWorld(subtileX, subtileY) && layer.subtileIsWall(subtileX, subtileY)) ? 1 : 0;
 }
 
 const tileIsNotDropdownInt = (layer: Layer, tileX: number, tileY: number): number => {
@@ -153,78 +155,96 @@ const tileIsNotDropdownInt = (layer: Layer, tileX: number, tileY: number): numbe
    return 0;
 }
 
-const getChunkTileShadows = (layer: Layer, renderChunkX: number, renderChunkY: number, tileShadowType: TileShadowType): ReadonlyArray<TileShadowInfo> => {
+const getChunkWallShadows = (layer: Layer, renderChunkX: number, renderChunkY: number): ReadonlyArray<TileShadowInfo> => {
    const minTileX = getRenderChunkMinTileX(renderChunkX);
    const maxTileX = getRenderChunkMaxTileX(renderChunkX);
    const minTileY = getRenderChunkMinTileY(renderChunkY);
    const maxTileY = getRenderChunkMaxTileY(renderChunkY);
+   
+   const minSubtileX = minTileX * 4;
+   const maxSubtileX = maxTileX * 4 + 3;
+   const minSubtileY = minTileY * 4;
+   const maxSubtileY = maxTileY * 4 + 3;
 
    const tileShadows = new Array<TileShadowInfo>();
 
-   if (tileShadowType === TileShadowType.wallShadow) {
-      // Find all tiles bordering a wall in the render chunk
-      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-         for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-            const tile = layer.getTileFromCoords(tileX, tileY);
-            if (!tile.isWall && tile.bordersWall) {
-               const bottomLeftMarker = tileIsWallInt(layer, tile.x - 1, tile.y - 1);
-               const bottomRightMarker = tileIsWallInt(layer, tile.x + 1, tile.y - 1);
-               const topLeftMarker = tileIsWallInt(layer, tile.x - 1, tile.y + 1);
-               const topRightMarker = tileIsWallInt(layer, tile.x + 1, tile.y + 1);
-         
-               const topMarker = tileIsWallInt(layer, tile.x, tile.y + 1);
-               const rightMarker = tileIsWallInt(layer, tile.x + 1, tile.y);
-               const leftMarker = tileIsWallInt(layer, tile.x - 1, tile.y);
-               const bottomMarker = tileIsWallInt(layer, tile.x, tile.y - 1);
-   
-               tileShadows.push({
-                  tileX: tileX,
-                  tileY: tileY,
-                  bottomLeftMarker: bottomLeftMarker,
-                  bottomRightMarker: bottomRightMarker,
-                  topLeftMarker: topLeftMarker,
-                  topRightMarker: topRightMarker,
-                  topMarker: topMarker,
-                  rightMarker: rightMarker,
-                  leftMarker: leftMarker,
-                  bottomMarker: bottomMarker
-               });
-            }
+   // Find all tiles bordering a wall in the render chunk
+   for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+         if (layer.subtileIsWall(subtileX, subtileY)) {
+            continue;
          }
-      }
-   } else {
-      // Find all dropdown shadows
-      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-         for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-            const tile = layer.getTileFromCoords(tileX, tileY);
-            if (tile.type !== TileType.dropdown) {
-               continue;
-            }
 
-            const bottomLeftMarker = tileIsNotDropdownInt(layer, tile.x - 1, tile.y - 1);
-            const bottomRightMarker = tileIsNotDropdownInt(layer, tile.x + 1, tile.y - 1);
-            const topLeftMarker = tileIsNotDropdownInt(layer, tile.x - 1, tile.y + 1);
-            const topRightMarker = tileIsNotDropdownInt(layer, tile.x + 1, tile.y + 1);
-      
-            const topMarker = tileIsNotDropdownInt(layer, tile.x, tile.y + 1);
-            const rightMarker = tileIsNotDropdownInt(layer, tile.x + 1, tile.y);
-            const leftMarker = tileIsNotDropdownInt(layer, tile.x - 1, tile.y);
-            const bottomMarker = tileIsNotDropdownInt(layer, tile.x, tile.y - 1);
+         const bottomLeftMarker = subtileIsWallInt(layer, subtileX - 1, subtileY - 1);
+         const bottomRightMarker = subtileIsWallInt(layer, subtileX + 1, subtileY - 1);
+         const topLeftMarker = subtileIsWallInt(layer, subtileX - 1, subtileY + 1);
+         const topRightMarker = subtileIsWallInt(layer, subtileX + 1, subtileY + 1);
+   
+         const topMarker = subtileIsWallInt(layer, subtileX, subtileY + 1);
+         const rightMarker = subtileIsWallInt(layer, subtileX + 1, subtileY);
+         const leftMarker = subtileIsWallInt(layer, subtileX - 1, subtileY);
+         const bottomMarker = subtileIsWallInt(layer, subtileX, subtileY - 1);
 
-            if (bottomLeftMarker || bottomRightMarker || topLeftMarker || topRightMarker || topMarker || rightMarker || leftMarker || bottomMarker) {
-               tileShadows.push({
-                  tileX: tileX,
-                  tileY: tileY,
-                  bottomLeftMarker: bottomLeftMarker,
-                  bottomRightMarker: bottomRightMarker,
-                  topLeftMarker: topLeftMarker,
-                  topRightMarker: topRightMarker,
-                  topMarker: topMarker,
-                  rightMarker: rightMarker,
-                  leftMarker: leftMarker,
-                  bottomMarker: bottomMarker
-               });
-            }
+         if (bottomLeftMarker !== 0
+          || bottomRightMarker !== 0
+          || topLeftMarker !== 0
+          || topRightMarker !== 0
+          || topMarker !== 0
+          || rightMarker !== 0
+          || leftMarker !== 0
+          || bottomMarker !== 0) {
+            let u1 = 0;
+            let u2 = 1;
+            let v1 = 0;
+            let v2 = 1;
+
+            // if (bottomMarker === 0 && leftMarker === 0 && bottomLeftMarker !== 0) {
+            //    u2 = 0.25;
+            //    v2 = 0.25;
+            // }
+            // if (bottomMarker === 0 && rightMarker === 0 && bottomRightMarker !== 0) {
+            //    u1 = 0.75;
+            //    v2 = 0.25;
+            // }
+            // if (topMarker === 0 && leftMarker === 0 && topLeftMarker !== 0) {
+            //    u2 = 0.25;
+            //    v1 = 0.75;
+            // }
+            // if (topMarker === 0 && rightMarker === 0 && topRightMarker !== 0) {
+            //    u1 = 0.75;
+            //    v1 = 0.75;
+            // }
+            // if (rightMarker !== 0) {
+            //    u1 = 0.75;
+            // }
+            // if (leftMarker !== 0) {
+            //    u2 = 0.25;
+            // }
+            // if (topMarker !== 0) {
+            //    v1 = 0.75;
+            // }
+            // if (bottomMarker !== 0) {
+            //    v2 = 0.25;
+            // }
+            
+            tileShadows.push({
+               x1: subtileX * Settings.SUBTILE_SIZE,
+               x2: (subtileX + 1) * Settings.SUBTILE_SIZE,
+               y1: subtileY * Settings.SUBTILE_SIZE,
+               y2: (subtileY + 1) * Settings.SUBTILE_SIZE,
+               u1: u1,
+               u2: u2,
+               v1: v1,
+               v2: v2,
+               bottomLeftMarker: bottomLeftMarker,
+               bottomRightMarker: bottomRightMarker,
+               topLeftMarker: topLeftMarker,
+               topRightMarker: topRightMarker,
+               topMarker: topMarker,
+               rightMarker: rightMarker,
+               leftMarker: leftMarker,
+               bottomMarker: bottomMarker
+            });
          }
       }
    }
@@ -232,27 +252,70 @@ const getChunkTileShadows = (layer: Layer, renderChunkX: number, renderChunkY: n
    return tileShadows;
 }
 
-export function calculateTileShadowInfo(layer: Layer, renderChunkX: number, renderChunkY: number, tileShadowType: TileShadowType): RenderChunkTileShadowInfo | null {
-   const tileShadows = getChunkTileShadows(layer, renderChunkX, renderChunkY, tileShadowType);
-   if (tileShadows.length === 0) {
-      return null;
+const getChunkDropdownShadows = (layer: Layer, renderChunkX: number, renderChunkY: number): ReadonlyArray<TileShadowInfo> => {
+   const minTileX = getRenderChunkMinTileX(renderChunkX);
+   const maxTileX = getRenderChunkMaxTileX(renderChunkX);
+   const minTileY = getRenderChunkMinTileY(renderChunkY);
+   const maxTileY = getRenderChunkMaxTileY(renderChunkY);
+
+   const tileShadows = new Array<TileShadowInfo>();
+
+   // Find all dropdown shadows
+   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+         const tile = layer.getTileFromCoords(tileX, tileY);
+         if (tile.type !== TileType.dropdown) {
+            continue;
+         }
+
+         const bottomLeftMarker = tileIsNotDropdownInt(layer, tile.x - 1, tile.y - 1);
+         const bottomRightMarker = tileIsNotDropdownInt(layer, tile.x + 1, tile.y - 1);
+         const topLeftMarker = tileIsNotDropdownInt(layer, tile.x - 1, tile.y + 1);
+         const topRightMarker = tileIsNotDropdownInt(layer, tile.x + 1, tile.y + 1);
+   
+         const topMarker = tileIsNotDropdownInt(layer, tile.x, tile.y + 1);
+         const rightMarker = tileIsNotDropdownInt(layer, tile.x + 1, tile.y);
+         const leftMarker = tileIsNotDropdownInt(layer, tile.x - 1, tile.y);
+         const bottomMarker = tileIsNotDropdownInt(layer, tile.x, tile.y - 1);
+
+         if (bottomLeftMarker || bottomRightMarker || topLeftMarker || topRightMarker || topMarker || rightMarker || leftMarker || bottomMarker) {
+            tileShadows.push({
+               x1: tile.x * Settings.TILE_SIZE,
+               x2: (tile.x + 1) * Settings.TILE_SIZE,
+               y1: tile.y * Settings.TILE_SIZE,
+               y2: (tile.y + 1) * Settings.TILE_SIZE,
+               u1: 0,
+               u2: 1,
+               v1: 0,
+               v2: 1,
+               bottomLeftMarker: bottomLeftMarker,
+               bottomRightMarker: bottomRightMarker,
+               topLeftMarker: topLeftMarker,
+               topRightMarker: topRightMarker,
+               topMarker: topMarker,
+               rightMarker: rightMarker,
+               leftMarker: leftMarker,
+               bottomMarker: bottomMarker
+            });
+         }
+      }
    }
 
-   const vertexData = new Float32Array(tileShadows.length * 6 * 12);
+   return tileShadows;
+}
+
+const calculateVertexData = (tileShadows: ReadonlyArray<TileShadowInfo>): Float32Array => {
+   const vertexData = new Float32Array(tileShadows.length * 72);
+   
    for (let i = 0; i < tileShadows.length; i++) {
       const tileShadowInfo = tileShadows[i];
 
-      let x1 = tileShadowInfo.tileX * Settings.TILE_SIZE;
-      let x2 = (tileShadowInfo.tileX + 1) * Settings.TILE_SIZE;
-      let y1 = tileShadowInfo.tileY * Settings.TILE_SIZE;
-      let y2 = (tileShadowInfo.tileY + 1) * Settings.TILE_SIZE;
-      
       const dataOffset = i * 6 * 12;
 
-      vertexData[dataOffset] = x1;
-      vertexData[dataOffset + 1] = y1;
-      vertexData[dataOffset + 2] = 0;
-      vertexData[dataOffset + 3] = 0;
+      vertexData[dataOffset] = tileShadowInfo.x1;
+      vertexData[dataOffset + 1] = tileShadowInfo.y1;
+      vertexData[dataOffset + 2] = tileShadowInfo.u1;
+      vertexData[dataOffset + 3] = tileShadowInfo.v1;
       vertexData[dataOffset + 4] = tileShadowInfo.topLeftMarker;
       vertexData[dataOffset + 5] = tileShadowInfo.topRightMarker;
       vertexData[dataOffset + 6] = tileShadowInfo.bottomLeftMarker;
@@ -262,10 +325,10 @@ export function calculateTileShadowInfo(layer: Layer, renderChunkX: number, rend
       vertexData[dataOffset + 10] = tileShadowInfo.leftMarker;
       vertexData[dataOffset + 11] = tileShadowInfo.bottomMarker;
 
-      vertexData[dataOffset + 12] = x2;
-      vertexData[dataOffset + 13] = y1;
-      vertexData[dataOffset + 14] = 1;
-      vertexData[dataOffset + 15] = 0;
+      vertexData[dataOffset + 12] = tileShadowInfo.x2;
+      vertexData[dataOffset + 13] = tileShadowInfo.y1;
+      vertexData[dataOffset + 14] = tileShadowInfo.u2;
+      vertexData[dataOffset + 15] = tileShadowInfo.v1;
       vertexData[dataOffset + 16] = tileShadowInfo.topLeftMarker;
       vertexData[dataOffset + 17] = tileShadowInfo.topRightMarker;
       vertexData[dataOffset + 18] = tileShadowInfo.bottomLeftMarker;
@@ -275,10 +338,10 @@ export function calculateTileShadowInfo(layer: Layer, renderChunkX: number, rend
       vertexData[dataOffset + 22] = tileShadowInfo.leftMarker;
       vertexData[dataOffset + 23] = tileShadowInfo.bottomMarker;
 
-      vertexData[dataOffset + 24] = x1;
-      vertexData[dataOffset + 25] = y2;
-      vertexData[dataOffset + 26] = 0;
-      vertexData[dataOffset + 27] = 1;
+      vertexData[dataOffset + 24] = tileShadowInfo.x1;
+      vertexData[dataOffset + 25] = tileShadowInfo.y2;
+      vertexData[dataOffset + 26] = tileShadowInfo.u1;
+      vertexData[dataOffset + 27] = tileShadowInfo.v2;
       vertexData[dataOffset + 28] = tileShadowInfo.topLeftMarker;
       vertexData[dataOffset + 29] = tileShadowInfo.topRightMarker;
       vertexData[dataOffset + 30] = tileShadowInfo.bottomLeftMarker;
@@ -288,10 +351,10 @@ export function calculateTileShadowInfo(layer: Layer, renderChunkX: number, rend
       vertexData[dataOffset + 34] = tileShadowInfo.leftMarker;
       vertexData[dataOffset + 35] = tileShadowInfo.bottomMarker;
 
-      vertexData[dataOffset + 36] = x1;
-      vertexData[dataOffset + 37] = y2;
-      vertexData[dataOffset + 38] = 0;
-      vertexData[dataOffset + 39] = 1;
+      vertexData[dataOffset + 36] = tileShadowInfo.x1;
+      vertexData[dataOffset + 37] = tileShadowInfo.y2;
+      vertexData[dataOffset + 38] = tileShadowInfo.u1;
+      vertexData[dataOffset + 39] = tileShadowInfo.v2;
       vertexData[dataOffset + 40] = tileShadowInfo.topLeftMarker;
       vertexData[dataOffset + 41] = tileShadowInfo.topRightMarker;
       vertexData[dataOffset + 42] = tileShadowInfo.bottomLeftMarker;
@@ -301,10 +364,10 @@ export function calculateTileShadowInfo(layer: Layer, renderChunkX: number, rend
       vertexData[dataOffset + 46] = tileShadowInfo.leftMarker;
       vertexData[dataOffset + 47] = tileShadowInfo.bottomMarker;
 
-      vertexData[dataOffset + 48] = x2;
-      vertexData[dataOffset + 49] = y1;
-      vertexData[dataOffset + 50] = 1;
-      vertexData[dataOffset + 51] = 0;
+      vertexData[dataOffset + 48] = tileShadowInfo.x2;
+      vertexData[dataOffset + 49] = tileShadowInfo.y1;
+      vertexData[dataOffset + 50] = tileShadowInfo.u2;
+      vertexData[dataOffset + 51] = tileShadowInfo.v1;
       vertexData[dataOffset + 52] = tileShadowInfo.topLeftMarker;
       vertexData[dataOffset + 53] = tileShadowInfo.topRightMarker;
       vertexData[dataOffset + 54] = tileShadowInfo.bottomLeftMarker;
@@ -314,10 +377,10 @@ export function calculateTileShadowInfo(layer: Layer, renderChunkX: number, rend
       vertexData[dataOffset + 58] = tileShadowInfo.leftMarker;
       vertexData[dataOffset + 59] = tileShadowInfo.bottomMarker;
 
-      vertexData[dataOffset + 60] = x2;
-      vertexData[dataOffset + 61] = y2;
-      vertexData[dataOffset + 62] = 1;
-      vertexData[dataOffset + 63] = 1;
+      vertexData[dataOffset + 60] = tileShadowInfo.x2;
+      vertexData[dataOffset + 61] = tileShadowInfo.y2;
+      vertexData[dataOffset + 62] = tileShadowInfo.u2;
+      vertexData[dataOffset + 63] = tileShadowInfo.v2;
       vertexData[dataOffset + 64] = tileShadowInfo.topLeftMarker;
       vertexData[dataOffset + 65] = tileShadowInfo.topRightMarker;
       vertexData[dataOffset + 66] = tileShadowInfo.bottomLeftMarker;
@@ -327,6 +390,13 @@ export function calculateTileShadowInfo(layer: Layer, renderChunkX: number, rend
       vertexData[dataOffset + 70] = tileShadowInfo.leftMarker;
       vertexData[dataOffset + 71] = tileShadowInfo.bottomMarker;
    }
+
+   return vertexData;
+}
+
+export function calculateShadowInfo(layer: Layer, renderChunkX: number, renderChunkY: number, tileShadowType: TileShadowType): RenderChunkTileShadowInfo | null {
+   const tileShadows = tileShadowType === TileShadowType.wallShadow ? getChunkWallShadows(layer, renderChunkX, renderChunkY) : getChunkDropdownShadows(layer, renderChunkX, renderChunkY);
+   const vertexData = calculateVertexData(tileShadows);
 
    const vao = gl.createVertexArray()!;
    gl.bindVertexArray(vao);
@@ -361,8 +431,26 @@ export function calculateTileShadowInfo(layer: Layer, renderChunkX: number, rend
 
    return {
       vao: vao,
-      vertexCount: tileShadows.length * 6
+      buffer: buffer,
+      vertexData: vertexData
    };
+}
+
+export function recalculateTileShadows(layer: Layer, renderChunkX: number, renderChunkY: number, shadowType: TileShadowType): void {
+   const renderChunkShadowInfo = getRenderChunkTileShadowInfo(layer, renderChunkX, renderChunkY, shadowType);
+   if (renderChunkShadowInfo === null) {
+      throw new Error();
+   }
+
+   const tileShadows = shadowType === TileShadowType.wallShadow ? getChunkWallShadows(layer, renderChunkX, renderChunkY) : getChunkDropdownShadows(layer, renderChunkX, renderChunkY);
+   renderChunkShadowInfo.vertexData = calculateVertexData(tileShadows);
+
+   gl.bindVertexArray(renderChunkShadowInfo.vao);
+   
+   gl.bindBuffer(gl.ARRAY_BUFFER, renderChunkShadowInfo.buffer);
+   gl.bufferData(gl.ARRAY_BUFFER, renderChunkShadowInfo.vertexData, gl.STATIC_DRAW);
+   
+   gl.bindVertexArray(null);
 }
 
 export function renderTileShadows(layer: Layer, tileShadowType: TileShadowType): void {
@@ -380,7 +468,7 @@ export function renderTileShadows(layer: Layer, tileShadowType: TileShadowType):
 
          gl.bindVertexArray(ambientOcclusionInfo.vao);
 
-         gl.drawArrays(gl.TRIANGLES, 0, ambientOcclusionInfo.vertexCount);
+         gl.drawArrays(gl.TRIANGLES, 0, ambientOcclusionInfo.vertexData.length / 12);
       }
    }
 

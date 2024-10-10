@@ -16,7 +16,7 @@ import { TransformComponent } from "../../components/TransformComponent";
 import { StructureComponent } from "../../components/StructureComponent";
 import Tribe from "../../Tribe";
 import { PunjiSticksComponent } from "../../components/PunjiSticksComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

@@ -4,7 +4,7 @@ import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { Point } from "battletribes-shared/utils";
-import { BoxType, updateVertexPositionsAndSideAxes } from "battletribes-shared/boxes/boxes";
+import { Box, BoxType, updateBox, updateVertexPositionsAndSideAxes } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { ClientBlockBox, ClientDamageBox } from "../boxes";
 import { EntityID } from "battletribes-shared/entities";
@@ -12,9 +12,10 @@ import { Settings } from "battletribes-shared/settings";
 import { InventoryName } from "battletribes-shared/items/items";
 import Player from "../entities/Player";
 import { InventoryUseComponentArray, LimbInfo } from "./InventoryUseComponent";
-import { discombobulate, GameInteractableLayer_setItemRestTime } from "../components/game/GameInteractableLayer";
+import { cancelAttack, discombobulate, GameInteractableLayer_setItemRestTime } from "../components/game/GameInteractableLayer";
 import { AttackVars } from "../../../shared/src/attack-patterns";
 import { getEntityLayer } from "../world";
+import Layer, { getSubtileIndex } from "../Layer";
 
 interface DamageBoxCollisionInfo {
    readonly collidingEntity: EntityID;
@@ -78,9 +79,9 @@ class DamageBoxComponent extends ServerComponent {
 
    public padData(reader: PacketReader): void {
       const numCircular = reader.readNumber();
-      reader.padOffset(9 * Float32Array.BYTES_PER_ELEMENT * numCircular);
+      reader.padOffset(10 * Float32Array.BYTES_PER_ELEMENT * numCircular);
       const numRectangular = reader.readNumber();
-      reader.padOffset(11 * Float32Array.BYTES_PER_ELEMENT * numRectangular);
+      reader.padOffset(12 * Float32Array.BYTES_PER_ELEMENT * numRectangular);
    }
 
    public updateFromData(reader: PacketReader): void {
@@ -98,17 +99,21 @@ class DamageBoxComponent extends ServerComponent {
          const localID = reader.readNumber();
          const radius = reader.readNumber();
          const associatedLimbInventoryName = reader.readNumber() as InventoryName;
+         const isActive = reader.readBoolean();
+         reader.padOffset(3);
 
          let damageBox = this.damageBoxesRecord[localID] as ClientDamageBox<BoxType.circular> | undefined;
          if (typeof damageBox === "undefined") {
             const box = new CircularBox(new Point(offsetX, offsetY), 0, radius);
-            damageBox = new ClientDamageBox(box, associatedLimbInventoryName);
+            damageBox = new ClientDamageBox(box, associatedLimbInventoryName, isActive);
 
             this.damageBoxes.push(damageBox);
             this.damageBoxLocalIDs.push(localID);
             this.damageBoxesRecord[localID] = damageBox;
          } else {
             missingDamageBoxLocalIDs.splice(missingDamageBoxLocalIDs.indexOf(localID), 1);
+
+            damageBox.isActive = isActive;
          }
          
          damageBox.box.position.x = positionX;
@@ -133,17 +138,21 @@ class DamageBoxComponent extends ServerComponent {
          const height = reader.readNumber();
          const relativeRotation = reader.readNumber();
          const associatedLimbInventoryName = reader.readNumber() as InventoryName;
+         const isActive = reader.readBoolean();
+         reader.padOffset(3);
 
          let damageBox = this.damageBoxesRecord[localID] as ClientDamageBox<BoxType.rectangular> | undefined;
          if (typeof damageBox === "undefined") {
             const box = new RectangularBox(new Point(offsetX, offsetY), width, height, relativeRotation);
-            damageBox = new ClientDamageBox(box, associatedLimbInventoryName);
+            damageBox = new ClientDamageBox(box, associatedLimbInventoryName, isActive);
 
             this.damageBoxes.push(damageBox);
             this.damageBoxLocalIDs.push(localID);
             this.damageBoxesRecord[localID] = damageBox;
          } else {
             missingDamageBoxLocalIDs.splice(missingDamageBoxLocalIDs.indexOf(localID), 1);
+
+            damageBox.isActive = isActive;
          }
 
          damageBox.box.position.x = positionX;
@@ -171,17 +180,21 @@ class DamageBoxComponent extends ServerComponent {
          const localID = reader.readNumber();
          const radius = reader.readNumber();
          const associatedLimbInventoryName = reader.readNumber() as InventoryName;
+         const isActive = reader.readBoolean();
+         reader.padOffset(3);
 
          let blockBox = this.blockBoxesRecord[localID] as ClientBlockBox<BoxType.circular> | undefined;
          if (typeof blockBox === "undefined") {
             const box = new CircularBox(new Point(offsetX, offsetY), 0, radius);
-            blockBox = new ClientBlockBox(box, associatedLimbInventoryName);
+            blockBox = new ClientBlockBox(box, associatedLimbInventoryName, isActive);
 
             this.blockBoxes.push(blockBox);
             this.blockBoxLocalIDs.push(localID);
             this.blockBoxesRecord[localID] = blockBox;
          } else {
             missingBlockBoxLocalIDs.splice(missingBlockBoxLocalIDs.indexOf(localID), 1);
+
+            blockBox.isActive = isActive;
          }
          
          blockBox.box.position.x = positionX;
@@ -206,17 +219,21 @@ class DamageBoxComponent extends ServerComponent {
          const height = reader.readNumber();
          const relativeRotation = reader.readNumber();
          const associatedLimbInventoryName = reader.readNumber() as InventoryName;
+         const isActive = reader.readBoolean();
+         reader.padOffset(3);
 
          let blockBox = this.blockBoxesRecord[localID] as ClientBlockBox<BoxType.rectangular> | undefined;
          if (typeof blockBox === "undefined") {
             const box = new RectangularBox(new Point(offsetX, offsetY), width, height, relativeRotation);
-            blockBox = new ClientBlockBox(box, associatedLimbInventoryName);
+            blockBox = new ClientBlockBox(box, associatedLimbInventoryName, isActive);
 
             this.blockBoxes.push(blockBox);
             this.blockBoxLocalIDs.push(localID);
             this.blockBoxesRecord[localID] = blockBox;
          } else {
             missingBlockBoxLocalIDs.splice(missingBlockBoxLocalIDs.indexOf(localID), 1);
+
+            blockBox.isActive = isActive;
          }
 
          blockBox.box.position.x = positionX;
@@ -261,6 +278,37 @@ export const DamageBoxComponentArray = new ComponentArray<DamageBoxComponent>(Co
    onTick: onTick
 });
 
+const boxIsCollidingWithSubtile = (box: Box, subtileX: number, subtileY: number): boolean => {
+   // @Speed
+   const tileBox = new RectangularBox(new Point(0, 0), Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, 0);
+   updateBox(tileBox, (subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0);
+   
+   return box.isColliding(tileBox);
+}
+
+const getBoxCollidingWallSubtiles = (layer: Layer, box: Box): ReadonlyArray<number> => {
+   const boundsMinX = box.calculateBoundsMinX();
+   const boundsMaxX = box.calculateBoundsMaxX();
+   const boundsMinY = box.calculateBoundsMinY();
+   const boundsMaxY = box.calculateBoundsMaxY();
+
+   const minSubtileX = Math.max(Math.floor(boundsMinX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+   const maxSubtileX = Math.min(Math.floor(boundsMaxX / Settings.SUBTILE_SIZE), (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
+   const minSubtileY = Math.max(Math.floor(boundsMinY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+   const maxSubtileY = Math.min(Math.floor(boundsMaxY / Settings.SUBTILE_SIZE), (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
+
+   const collidingWallSubtiles = new Array<number>();
+   for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+         if (layer.subtileIsWall(subtileX, subtileY) && boxIsCollidingWithSubtile(box, subtileX, subtileY)) {
+            const subtileIndex = getSubtileIndex(subtileX, subtileY);
+            collidingWallSubtiles.push(subtileIndex);
+         }
+      }
+   }
+   return collidingWallSubtiles;
+}
+
 const blockPlayerAttack = (damageBox: ClientDamageBox): void => {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
    const limb = inventoryUseComponent.getLimbInfoByInventoryName(damageBox.associatedLimbInventoryName);
@@ -281,8 +329,19 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       return;
    }
    
+   const layer = getEntityLayer(Player.instance.id);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
+   
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
+      
+      const collidingSubtiles = getBoxCollidingWallSubtiles(layer, damageBox.box);
+      if (collidingSubtiles.length > 0) {
+         console.log("A");
+         // Cancel the attack
+         const limb = inventoryUseComponent.getLimbInfoByInventoryName(damageBox.associatedLimbInventoryName);
+         cancelAttack(limb);
+      }
       
       // Check if the attacking hitbox is blocked
       const collisionInfo = getCollidingBox(entity, damageBox);
@@ -296,7 +355,6 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       }
    }
    
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    for (let i = 0; i < damageBoxComponent.blockBoxes.length; i++) {
       const blockBox = damageBoxComponent.blockBoxes[i];
       

@@ -3,7 +3,7 @@ import { EntityID } from "battletribes-shared/entities";
 import { EntityConfig } from "../components";
 import { Packet } from "battletribes-shared/packets";
 import { Hitbox } from "battletribes-shared/boxes/boxes";
-import { Point } from "../../../shared/src/utils";
+import { Point } from "battletribes-shared/utils";
 
 const enum ComponentArrayPriority {
    low,

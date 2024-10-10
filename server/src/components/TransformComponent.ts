@@ -11,11 +11,11 @@ import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent
 import { TileType } from "battletribes-shared/tiles";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding";
-import { resolveWallTileCollision } from "../collision";
+import { resolveWallCollision } from "../collision";
 import { Packet } from "battletribes-shared/packets";
 import { boxIsCircular, Hitbox, HitboxFlag, updateBox } from "battletribes-shared/boxes/boxes";
 import { getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which could take advantage of that extraction?)
 
@@ -324,7 +324,7 @@ export class TransformComponent {
       }
    }
 
-   public resolveWallTileCollisions(entity: EntityID): void {
+   public resolveWallCollisions(entity: EntityID): void {
       // Looser check that there are any wall tiles in any of the entities' chunks
       let hasWallTiles = false;
       for (let i = 0; i < this.chunks.length; i++) {
@@ -352,16 +352,15 @@ export class TransformComponent {
          const boundsMinY = box.calculateBoundsMinY();
          const boundsMaxY = box.calculateBoundsMaxY();
 
-         const minTileX = clampToBoardDimensions(Math.floor(boundsMinX / Settings.TILE_SIZE));
-         const maxTileX = clampToBoardDimensions(Math.floor(boundsMaxX / Settings.TILE_SIZE));
-         const minTileY = clampToBoardDimensions(Math.floor(boundsMinY / Settings.TILE_SIZE));
-         const maxTileY = clampToBoardDimensions(Math.floor(boundsMaxY / Settings.TILE_SIZE));
+         const minSubtileX = Math.max(Math.floor(boundsMinX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+         const maxSubtileX = Math.min(Math.floor(boundsMaxX / Settings.SUBTILE_SIZE), (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
+         const minSubtileY = Math.max(Math.floor(boundsMinY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+         const maxSubtileY = Math.min(Math.floor(boundsMaxY / Settings.SUBTILE_SIZE), (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
 
-         for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-            for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-               const isWall = layer.tileXYIsWall(tileX, tileY);
-               if (isWall) {
-                  resolveWallTileCollision(entity, hitbox, tileX, tileY);
+         for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+            for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+               if (layer.subtileIsWall(subtileX, subtileY)) {
+                  resolveWallCollision(entity, hitbox, subtileX, subtileY);
                }
             }
          }

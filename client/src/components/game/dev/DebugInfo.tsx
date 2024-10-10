@@ -10,6 +10,7 @@ import CLIENT_ENTITY_INFO_RECORD from "../../../client-entity-info";
 import Layer from "../../../Layer";
 import { getEntityLayer, getEntityType } from "../../../world";
 import Player from "../../../entities/Player";
+import { RENDER_CHUNK_SIZE } from "../../../rendering/render-chunks";
 
 export let updateDebugInfoTile: (tile: Tile | null) => void = () => {};
 
@@ -27,12 +28,16 @@ const TileDebugInfo = ({ layer, tile }: TileDebugInfoProps) => {
    const chunkX = Math.floor(tile.x / Settings.CHUNK_SIZE);
    const chunkY = Math.floor(tile.y / Settings.CHUNK_SIZE);
 
+   const renderChunkX = Math.floor(chunkX * Settings.CHUNK_SIZE / RENDER_CHUNK_SIZE);
+   const renderChunkY = Math.floor(chunkY * Settings.CHUNK_SIZE / RENDER_CHUNK_SIZE);
+   
    return <>
-      <div className="title"><span className="highlight">{TileTypeString[tile.type]}</span> tile {tile.isWall ? <span>(Wall)</span> : undefined}</div>
+      <div className="title"><span className="highlight">{TileTypeString[tile.type]}</span> tile</div>
       
       <p>x: <span className="highlight">{tile.x}</span>, y: <span className="highlight">{tile.y}</span></p>
 
       <p>Chunk: <span className="highlight">{chunkX}-{chunkY}</span></p>
+      <p>Render chunk: <span className="highlight">{renderChunkX}-{renderChunkY}</span></p>
 
       <p>Biome: <span className="highlight">{tile.biome}</span></p>
 

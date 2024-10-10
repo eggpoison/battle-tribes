@@ -1,6 +1,6 @@
 import { EntityType, EntityTypeString, NUM_ENTITY_TYPES } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
+import { TileType, TileTypeString } from "battletribes-shared/tiles";
 import { Point, randInt, randFloat, TileIndex } from "battletribes-shared/utils";
 import Layer, { getTileIndexIncludingEdges } from "./Layer";
 import { addEntityToCensus, getEntityCount, getTilesOfType } from "./census";
@@ -29,7 +29,7 @@ import { createFishConfig } from "./entities/mobs/fish";
 import { createLilypadConfig } from "./entities/lilypad";
 import { createGolemConfig } from "./entities/mobs/golem";
 import { createTribeWorkerConfig } from "./entities/tribes/tribe-worker";
-import { TribeType } from "../../shared/src/tribes";
+import { TribeType } from "battletribes-shared/tribes";
 import Tribe from "./Tribe";
 import { createTreeConfig } from "./entities/resources/tree";
 

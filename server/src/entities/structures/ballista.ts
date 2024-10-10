@@ -15,7 +15,7 @@ import { TurretComponent } from "../../components/TurretComponent";
 import { AIHelperComponent } from "../../components/AIHelperComponent";
 import { AmmoBoxComponent } from "../../components/AmmoBoxComponent";
 import { addInventoryToInventoryComponent, InventoryComponent } from "../../components/InventoryComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

@@ -10,7 +10,7 @@ import { TransformComponent } from "../../components/TransformComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import { IceSpikesComponent } from "../../components/IceSpikesComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

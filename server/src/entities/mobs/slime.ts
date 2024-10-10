@@ -21,11 +21,11 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { destroyEntity, entityIsFlaggedForDestruction, getEntityLayer, getEntityType, getGameTicks } from "../../world";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import WanderAI from "../../ai/WanderAI";
-import { Biome } from "../../../../shared/src/tiles";
+import { Biome } from "battletribes-shared/tiles";
 import { PhysicsComponent } from "../../components/PhysicsComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { CraftingStationComponent } from "../../components/CraftingStationComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -66,8 +66,8 @@ const MAX_HEALTH: ReadonlyArray<number> = [10, 20, 35];
 export const SLIME_SPEED_MULTIPLIERS: ReadonlyArray<number> = [2.5, 1.75, 1];
 const VISION_RANGES = [200, 250, 300];
 
-function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
-   return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.swamp;
+function positionIsValidCallback(_entity: EntityID, layer: Layer, x: number, y: number): boolean {
+   return !layer.positionHasWall(x, y) && layer.getBiomeAtPosition(x, y) === Biome.swamp;
 }
 
 export function createSlimeConfig(size: SlimeSize): EntityConfig<ComponentTypes> {
@@ -82,7 +82,7 @@ export function createSlimeConfig(size: SlimeSize): EntityConfig<ComponentTypes>
    const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned);
    
    const aiHelperComponent = new AIHelperComponent(VISION_RANGES[size])
-   aiHelperComponent.ais[AIType.wander] = new WanderAI(150 * SLIME_SPEED_MULTIPLIERS[size], 2 * Math.PI, 0.5, tileIsValidCallback)
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(150 * SLIME_SPEED_MULTIPLIERS[size], 2 * Math.PI, 0.5, positionIsValidCallback)
    
    const slimeComponent = new SlimeComponent(size);
 

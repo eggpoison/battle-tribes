@@ -14,7 +14,7 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { validateEntity } from "../../world";
 import Tribe from "../../Tribe";
 import { BattleaxeProjectileComponent } from "../../components/BattleaxeProjectileComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

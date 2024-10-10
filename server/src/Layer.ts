@@ -1,7 +1,7 @@
 import { WaterRockData, RiverSteppingStoneData, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData } from "battletribes-shared/client-server-types";
 import { EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { Biome, TileType } from "battletribes-shared/tiles";
+import { Biome, SubtileType, TileType } from "battletribes-shared/tiles";
 import { distance, Point, TileIndex } from "battletribes-shared/utils";
 import Chunk from "./Chunk";
 import { addTileToCensus } from "./census";
@@ -13,15 +13,22 @@ import { WorldInfo } from "battletribes-shared/structures";
 import { EntityInfo } from "battletribes-shared/board-interface";
 import { boxIsWithinRange } from "battletribes-shared/boxes/boxes";
 import { getEntityType, getGameTicks, layers } from "./world";
-import { CollisionGroup } from "../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 import CollisionChunk from "./CollisionChunk";
 import { EntityPairCollisionInfo, GlobalCollisionInfo } from "./collision-detection";
+import { getSubtileIndex, getSubtileX, getSubtileY, tileHasWallSubtile } from "./world-generation/terrain-generation-utils";
 
 // @Cleanup: same as WaterTileGenerationInfo
 export interface RiverFlowDirection {
    readonly tileX: number;
    readonly tileY: number;
    readonly flowDirection: number;
+}
+
+interface WallSubtileUpdate {
+   readonly subtileIndex: number;
+   readonly subtileType: SubtileType;
+   readonly damageTaken: number;
 }
 
 export function getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
@@ -74,17 +81,20 @@ const createCollisionGroupChunks = (): Record<CollisionGroup, ReadonlyArray<Coll
 }
 
 export default class Layer {
-   public tileTypes: Float32Array;
-   public tileBiomes: Float32Array;
-   public tileIsWalls: Float32Array;
-   public riverFlowDirections: Float32Array;
-   public tileTemperatures: Float32Array;
-   public tileHumidities: Float32Array;
+   public readonly tileTypes: Float32Array;
+   public readonly tileBiomes: Float32Array;
+   private readonly subtileTypes: Float32Array;
+   public readonly riverFlowDirections: Float32Array;
+   public readonly tileTemperatures: Float32Array;
+   public readonly tileHumidities: Float32Array;
+
+   public readonly wallSubtileDamageTakenMap = new Map<number, number>();
 
    public waterRocks: ReadonlyArray<WaterRockData>;
    public riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
 
    private tileUpdateCoordinates: Set<number>;
+   public wallSubtileUpdates = new Array<WallSubtileUpdate>();
 
    /** Stores all entities collectively in each chunk */
    private chunks = new Array<Chunk>();
@@ -96,7 +106,7 @@ export default class Layer {
    constructor(generationInfo: TerrainGenerationInfo) {
       this.tileTypes = generationInfo.tileTypes;
       this.tileBiomes = generationInfo.tileBiomes;
-      this.tileIsWalls = generationInfo.tileIsWalls;
+      this.subtileTypes = generationInfo.subtileTypes;
       this.riverFlowDirections = generationInfo.riverFlowDirections;
       this.tileTemperatures = generationInfo.tileTemperatures;
       this.tileHumidities = generationInfo.tileHumidities;
@@ -120,16 +130,14 @@ export default class Layer {
       if (OPTIONS.generateWalls) {
          for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
             for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
-               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-
-               const isWall = this.tileIsWalls[tileIndex];
-               if (isWall) {
+               if (tileHasWallSubtile(this.subtileTypes, tileX, tileY)) {
                   // Mark which chunks have wall tiles
                   const chunkX = Math.floor(tileX / Settings.CHUNK_SIZE);
                   const chunkY = Math.floor(tileY / Settings.CHUNK_SIZE);
                   const chunk = this.getChunk(chunkX, chunkY);
                   chunk.hasWallTiles = true;
                   
+                  // @Incomplete: This system is outdated! Should account for wall subtiles
                   // Mark inaccessible pathfinding nodes
                   markWallTileInPathfinding(tileX, tileY);
                }
@@ -156,6 +164,42 @@ export default class Layer {
       }
    }
 
+   public getSubtileTypes(): Readonly<Float32Array> {
+      return this.subtileTypes;
+   }
+
+   public damageWallSubtitle(subtileIndex: number, damage: number): number {
+      let damageDealt: number;
+      if (!this.wallSubtileDamageTakenMap.has(subtileIndex)) {
+         damageDealt = Math.min(damage, 3);
+         this.wallSubtileDamageTakenMap.set(subtileIndex, damageDealt);
+      } else {
+         const previousDamageTaken = this.wallSubtileDamageTakenMap.get(subtileIndex)!;
+         damageDealt = Math.min(damage, 3 - previousDamageTaken);
+         this.wallSubtileDamageTakenMap.set(subtileIndex, previousDamageTaken + damageDealt);
+      }
+
+      if (this.wallSubtileDamageTakenMap.get(subtileIndex)! >= 3) {
+         this.subtileTypes[subtileIndex] = SubtileType.none;
+         
+         this.wallSubtileDamageTakenMap.delete(subtileIndex);
+
+         this.wallSubtileUpdates.push({
+            subtileIndex: subtileIndex,
+            subtileType: SubtileType.none,
+            damageTaken: 0
+         });
+      } else {
+         this.wallSubtileUpdates.push({
+            subtileIndex: subtileIndex,
+            subtileType: this.subtileTypes[subtileIndex],
+            damageTaken: this.wallSubtileDamageTakenMap.get(subtileIndex)!
+         });
+      }
+
+      return damageDealt;
+   }
+
    public static tickIntervalHasPassed(intervalSeconds: number): boolean {
       const ticksPerInterval = intervalSeconds * Settings.TPS;
       
@@ -168,19 +212,27 @@ export default class Layer {
    public getTileType(tileIndex: number): TileType {
       return this.tileTypes[tileIndex];
    }
-
+   
    public getTileXYType(tileX: number, tileY: number): TileType {
       const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
       return this.tileTypes[tileIndex];
    }
-
-   public tileIsWall(tileIndex: TileIndex): boolean {
-      return this.tileIsWalls[tileIndex] === 1 ? true : false;
+   
+   public getTileTypeAtPosition(x: number, y: number): TileType {
+      const tileX = Math.floor(x / Settings.TILE_SIZE);
+      const tileY = Math.floor(y / Settings.TILE_SIZE);
+      return this.getTileXYType(tileX, tileY);
    }
 
-   public tileXYIsWall(tileX: number, tileY: number): boolean {
-      const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-      return this.tileIsWalls[tileIndex] === 1 ? true : false;
+   public subtileIsWall(subtileX: number, subtileY: number): boolean {
+      const subtileIndex = getSubtileIndex(subtileX, subtileY);
+      return this.subtileTypes[subtileIndex] !== SubtileType.none;
+   }
+
+   public positionHasWall(x: number, y: number): boolean {
+      const subtileX = Math.floor(x / Settings.SUBTILE_SIZE);
+      const subtileY = Math.floor(y / Settings.SUBTILE_SIZE);
+      return this.subtileIsWall(subtileX, subtileY);
    }
 
    public getTileBiome(tileIndex: TileIndex): Biome {
@@ -190,6 +242,13 @@ export default class Layer {
    public getTileXYBiome(tileX: number, tileY: number): Biome {
       const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
       return this.tileBiomes[tileIndex];
+   }
+
+   public getBiomeAtPosition(x: number, y: number): Biome {
+      const tileX = Math.floor(x / Settings.TILE_SIZE);
+      const tileY = Math.floor(y / Settings.TILE_SIZE);
+
+      return this.getTileXYBiome(tileX, tileY);
    }
 
    public getChunk(chunkX: number, chunkY: number): Chunk {
@@ -235,8 +294,7 @@ export default class Layer {
          tileUpdates.push({
             layerIdx: layers.indexOf(this),
             tileIndex: tileIndex,
-            type: this.getTileXYType(tileX, tileY),
-            isWall: this.tileXYIsWall(tileX, tileY)
+            type: this.getTileXYType(tileX, tileY)
          });
       }
 
@@ -445,21 +503,21 @@ export default class Layer {
    }
    
    // @Cleanup: Copy and paste
-   public raytraceHasWallTile(startX: number, startY: number, endX: number, endY: number): boolean {
+   public raytraceHasWallSubtile(startX: number, startY: number, endX: number, endY: number): boolean {
       /*
       Kindly yoinked from https://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
       */
       
-      // Convert to tile coordinates
-      const x0 = startX / Settings.TILE_SIZE;
-      const x1 = endX / Settings.TILE_SIZE;
-      const y0 = startY / Settings.TILE_SIZE;
-      const y1 = endY / Settings.TILE_SIZE;
+      // Convert to subtile coordinates
+      const x0 = startX / Settings.SUBTILE_SIZE;
+      const y0 = startY / Settings.SUBTILE_SIZE;
+      const x1 = endX / Settings.SUBTILE_SIZE;
+      const y1 = endY / Settings.SUBTILE_SIZE;
       
       const dx = Math.abs(x0 - x1);
       const dy = Math.abs(y0 - y1);
    
-      // Starting tile coordinates
+      // Starting subtile coordinates
       let x = Math.floor(x0);
       let y = Math.floor(y0);
    
@@ -497,8 +555,7 @@ export default class Layer {
       }
    
       for (; n > 0; n--) {
-         const tileIsWall = this.tileXYIsWall(x, y);
-         if (tileIsWall) {
+         if (this.subtileIsWall(x, y)) {
             return true;
          }
    

@@ -1,7 +1,7 @@
-import { CollisionGroup, collisionGroupsCanCollide } from "../../shared/src/collision-groups";
-import { EntityID, EntityType, EntityTypeString } from "../../shared/src/entities";
-import { collisionBitsAreCompatible } from "../../shared/src/hitbox-collision";
-import { Settings } from "../../shared/src/settings";
+import { CollisionGroup, collisionGroupsCanCollide } from "battletribes-shared/collision-groups";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
+import { collisionBitsAreCompatible } from "battletribes-shared/hitbox-collision";
+import { Settings } from "battletribes-shared/settings";
 import { collide } from "./collision";
 import { TransformComponentArray } from "./components/TransformComponent";
 import Layer from "./Layer";

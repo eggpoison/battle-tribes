@@ -1,5 +1,5 @@
-import { EntityID, EntityType } from "../../shared/src/entities";
-import { Settings } from "../../shared/src/settings";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
 import { tickTribes } from "./ai-tribe-building/ai-building";
 import Layer, { getChunkIndex } from "./Layer";
 import { removeEntityFromCensus } from "./census";
@@ -17,7 +17,7 @@ import Tribe from "./Tribe";
 import { TerrainGenerationInfo } from "./world-generation/surface-terrain-generation";
 import Chunk from "./Chunk";
 import { TransformComponentArray } from "./components/TransformComponent";
-import { ServerComponentType } from "../../shared/src/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 const enum Vars {
    START_TIME = 6

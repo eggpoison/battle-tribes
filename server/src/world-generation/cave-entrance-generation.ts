@@ -1,8 +1,8 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { EntityType } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { Biome, TileType } from "../../../shared/src/tiles";
-import { lerp, randInt, randItem, TileIndex } from "../../../shared/src/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { Biome, SubtileType, TileType } from "battletribes-shared/tiles";
+import { lerp, randInt, randItem, TileIndex } from "battletribes-shared/utils";
 import { getEntitiesInRange } from "../ai-shared";
 import { createGuardianConfig } from "../entities/mobs/guardian";
 import { createEntityFromConfig } from "../Entity";
@@ -10,6 +10,7 @@ import { markTileAsUnspawnable } from "../entity-spawning";
 import { getTileIndexIncludingEdges, getTileX, getTileY } from "../Layer";
 import { getEntityType, surfaceLayer } from "../world";
 import { getTileDist, LocalBiomeInfo } from "./surface-terrain-generation";
+import { tileHasWallSubtile, setWallInSubtiles } from "./terrain-generation-utils";
 
 const enum Vars {
    /** Minimum number of tiles in a mountain biome that will allow a cave to be generated */
@@ -19,7 +20,7 @@ const enum Vars {
 
 const guardianSpawnZones = new Array<Array<TileIndex>>();
 
-export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float32Array, tileIsWalls: Float32Array, localBiomes: ReadonlyArray<LocalBiomeInfo>): void {
+export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float32Array, subtileTypes: Float32Array, localBiomes: ReadonlyArray<LocalBiomeInfo>): void {
    // @Temporary
    let first = true;
    for (let i = 0; i < localBiomes.length; i++) {
@@ -64,7 +65,7 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
 
       const caveDirection = 2 * Math.PI * Math.random();
 
-      // Clear any existing dark rocks in the cave generation area
+      // Clear any existing walls in the cave generation area
       for (let xOffset = -4; xOffset <= 4; xOffset++) {
          for (let yOffset = -4; yOffset <= 20; yOffset++) {
             let x = originX;
@@ -78,11 +79,7 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
 
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
-            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-            if (tileTypes[tileIndex] === TileType.darkRock) {
-               tileTypes[tileIndex] = TileType.rock;
-               tileIsWalls[tileIndex] = 0;
-            }
+            setWallInSubtiles(subtileTypes, tileX, tileY, SubtileType.none);
          }
       }
 
@@ -128,8 +125,10 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
             const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-            tileTypes[tileIndex] = TileType.darkRock;
-            tileIsWalls[tileIndex] = 1;
+            // @Incomplete: make into rough rock
+            tileTypes[tileIndex] = TileType.rock;
+
+            setWallInSubtiles(subtileTypes, tileX, tileY, SubtileType.rockWall);
          }
       }
 
@@ -159,14 +158,14 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
    
                const tileX = Math.floor(x / Settings.TILE_SIZE);
                const tileY = Math.floor(y / Settings.TILE_SIZE);
-               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-               tileTypes[tileIndex] = TileType.darkRock;
-               tileIsWalls[tileIndex] = 1;
+               
+               // @Incomplete: make floor into rough rock
+               setWallInSubtiles(subtileTypes, tileX, tileY, SubtileType.rockWall);
             }
          }
       }
 
-      // Mark cave tiles
+      // Mark guardian spawn tiles
       const tiles = new Array<TileIndex>();
       for (let xOffset = -4; xOffset <= 3; xOffset++) {
          for (let yOffset = -4; yOffset <= 13; yOffset++) {
@@ -182,8 +181,7 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
             const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-            // @Hack: Should use the layer isWall function
-            if (tileIsWalls[tileIndex] === 0) {
+            if (!tileHasWallSubtile(subtileTypes, tileX, tileY)) {
                tiles.push(tileIndex);
             }
          }

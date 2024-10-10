@@ -66,7 +66,7 @@ import { GuardianComponent } from "./components/GuardianComponent";
 import { GuardianGemQuakeComponent } from "./components/GuardianGemQuakeComponent";
 import { GuardianGemFragmentProjectileComponent } from "./components/GuardianGemFragmentProjectileComponent";
 import { GuardianSpikyBallComponent } from "./components/GuardianSpikyBallComponent";
-import { EntityType } from "../../shared/src/entities";
+import { EntityType } from "battletribes-shared/entities";
 
 // @Cleanup @Robustness: find better way to do this
 // @Cleanup: see if you can remove the arrow functions

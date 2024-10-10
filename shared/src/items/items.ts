@@ -211,6 +211,7 @@ export interface AxeItemInfo extends ToolItemInfo {
 
 export interface PickaxeItemInfo extends ToolItemInfo {
    readonly toolType: "pickaxe";
+   readonly wallDamage: number;
 }
 
 export interface HammerItemInfo extends ToolItemInfo {
@@ -479,7 +480,8 @@ export const ITEM_INFO_RECORD = {
       knockback: 100,
       // @Incomplete
       // attackCooldown: 0.5,
-      level: 1
+      level: 1,
+      wallDamage: 1
    },
    [ItemType.wooden_hammer]: {
       stackSize: 1,
@@ -538,7 +540,8 @@ export const ITEM_INFO_RECORD = {
       knockback: 100,
       // @Incomplete
       // attackCooldown: 0.5,
-      level: 2
+      level: 2,
+      wallDamage: 2
    },
    [ItemType.stone_hammer]: {
       stackSize: 1,
@@ -662,7 +665,8 @@ export const ITEM_INFO_RECORD = {
       knockback: 100,
       // @Incomplete
       // attackCooldown: 0.5,
-      level: 3
+      level: 3,
+      wallDamage: 3
    },
    [ItemType.deepfrost_axe]: {
       stackSize: 1,

@@ -20,7 +20,7 @@ import { TribeMemberComponent } from "../../components/TribeMemberComponent";
 import Tribe from "../../Tribe";
 import { TribeWarriorComponent } from "../../components/TribeWarriorComponent";
 import { AIHelperComponent } from "../../components/AIHelperComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

@@ -206,6 +206,12 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * playerClient.orbCompletes.length;
    // Tile updates
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * tileUpdates.length;
+
+   // Wall subtile updates
+   for (const layer of layers) {
+      lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * layer.wallSubtileUpdates.length * Float32Array.BYTES_PER_ELEMENT;
+   }
+   
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
 
    // Has debug data boolean
@@ -363,8 +369,16 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
       const tileUpdate = tileUpdates[i];
       packet.addNumber(tileUpdate.tileIndex);
       packet.addNumber(tileUpdate.type);
-      packet.addBoolean(tileUpdate.isWall);
-      packet.padOffset(3);
+   }
+
+   // Wall subtile updates
+   for (const layer of layers) {
+      packet.addNumber(layer.wallSubtileUpdates.length);
+      for (const subtileUpdate of layer.wallSubtileUpdates) {
+         packet.addNumber(subtileUpdate.subtileIndex);
+         packet.addNumber(subtileUpdate.subtileType);
+         packet.addNumber(subtileUpdate.damageTaken);
+      }
    }
 
    packet.addNumber(playerIsAlive ? HealthComponentArray.getComponent(player).health : 0);
@@ -457,7 +471,14 @@ export function createInitialGameDataPacket(player: EntityID, spawnLayer: Layer,
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 5;
    // Layers
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   // Per-tile data
    lengthBytes += layers.length * Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS * 6 * Float32Array.BYTES_PER_ELEMENT;
+   // Subtile data
+   lengthBytes += layers.length * Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS * 16 * Float32Array.BYTES_PER_ELEMENT;
+   // Subtile damage taken
+   for (const layer of layers) {
+      lengthBytes += Float32Array.BYTES_PER_ELEMENT + layer.wallSubtileDamageTakenMap.size * 2 * Float32Array.BYTES_PER_ELEMENT;
+   }
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + spawnLayer.waterRocks.length * 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + spawnLayer.riverSteppingStones.length * 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes = alignLengthBytes(lengthBytes);
@@ -477,14 +498,26 @@ export function createInitialGameDataPacket(player: EntityID, spawnLayer: Layer,
    packet.addNumber(layers.length);
    for (let layerIdx = 0; layerIdx < layers.length; layerIdx++) {
       const layer = layers[layerIdx];
+      // Per-tile data
       for (let tileIndex = 0; tileIndex < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS; tileIndex++) {
          packet.addNumber(layer.tileTypes[tileIndex]);
          packet.addNumber(layer.tileBiomes[tileIndex]);
-         packet.addBoolean(layer.tileIsWalls[tileIndex] === 1 ? true : false);
-         packet.padOffset(3);
          packet.addNumber(layer.riverFlowDirections[tileIndex]);
          packet.addNumber(layer.tileTemperatures[tileIndex]);
          packet.addNumber(layer.tileHumidities[tileIndex]);
+      }
+
+      // Subtiles
+      const subtiles = layer.getSubtileTypes();
+      for (let i = 0; i < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS * 16; i++) {
+         packet.addNumber(subtiles[i]);
+      }
+
+      // Subtile damage taken
+      packet.addNumber(layer.wallSubtileDamageTakenMap.size);
+      for (const [subtileIndex, damageTaken] of layer.wallSubtileDamageTakenMap) {
+         packet.addNumber(subtileIndex);
+         packet.addNumber(damageTaken);
       }
    }
 

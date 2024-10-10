@@ -3,8 +3,8 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { Packet } from "battletribes-shared/packets";
 import { destroyEntity, getEntityAgeTicks } from "../world";
-import { Settings } from "../../../shared/src/settings";
-import { randFloat } from "../../../shared/src/utils";
+import { Settings } from "battletribes-shared/settings";
+import { randFloat } from "battletribes-shared/utils";
 
 export class RockSpikeComponent {
    public readonly size: RockSpikeProjectileSize;

@@ -1,13 +1,12 @@
-import { GuardianSpikyBallSummonStage, ServerComponentType } from "../../../shared/src/components";
-import { EntityID } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { UtilVars, randFloat, randInt } from "../../../shared/src/utils";
+import { GuardianSpikyBallSummonStage, ServerComponentType } from "battletribes-shared/components";
+import { EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { UtilVars, randFloat, randInt } from "battletribes-shared/utils";
 import { stopEntity, turnToPosition } from "../ai-shared";
 import { GuardianComponentArray } from "../components/GuardianComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { createGuardianSpikyBallConfig } from "../entities/projectiles/guardian-spiky-ball";
 import { createEntityFromConfig } from "../Entity";
-import { getTileIndexFromPos } from "../Layer";
 import { getEntityLayer, getGameTicks } from "../world";
 
 const enum Vars {
@@ -31,8 +30,8 @@ const createSpikyBall = (guardian: EntityID, targetX: number, targetY: number): 
       x = targetX + offsetMagnitude * Math.sin(offsetDirection);
       y = targetY + offsetMagnitude * Math.cos(offsetDirection);
 
-      const tileIndex = getTileIndexFromPos(x, y);
-      if (!layer.tileIsWall(tileIndex)) {
+      // @Incomplete: will let the spiky ball spawn partially in a wall: shouldn't allow
+      if (!layer.positionHasWall(x, y)) {
          hasFound = true;
          break;
       }

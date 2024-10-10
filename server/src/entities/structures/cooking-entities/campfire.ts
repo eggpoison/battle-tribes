@@ -13,7 +13,7 @@ import Tribe from "../../../Tribe";
 import { TribeComponent } from "../../../components/TribeComponent";
 import { addInventoryToInventoryComponent, InventoryComponent } from "../../../components/InventoryComponent";
 import { CookingComponent } from "../../../components/CookingComponent";
-import { CollisionGroup } from "../../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

@@ -380,6 +380,11 @@ class GameServer {
          playerClient.visibleDirtiedEntities = [];
       }
 
+      // @Hack?
+      for (const layer of layers) {
+         layer.wallSubtileUpdates = [];
+      }
+
       resetDirtyEntities();
    }
 }

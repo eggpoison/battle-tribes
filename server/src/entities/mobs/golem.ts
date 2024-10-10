@@ -16,7 +16,7 @@ import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/b
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getGameTicks } from "../../world";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 export const enum GolemVars {
    PEBBLUM_SUMMON_COOLDOWN_TICKS = 10 * Settings.TPS

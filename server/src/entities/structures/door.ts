@@ -13,7 +13,7 @@ import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
 import { DoorComponent } from "../../components/DoorComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

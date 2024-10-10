@@ -14,7 +14,7 @@ import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/box
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityAgeTicks, getEntityType } from "../world";
 import { StatusEffectComponent } from "../components/StatusEffectComponent";
-import { CollisionGroup } from "../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

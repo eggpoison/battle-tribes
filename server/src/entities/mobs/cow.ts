@@ -11,7 +11,7 @@ import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/box
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import WanderAI from "../../ai/WanderAI";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { Biome } from "../../../../shared/src/tiles";
+import { Biome } from "battletribes-shared/tiles";
 import Layer from "../../Layer";
 import { TransformComponent } from "../../components/TransformComponent";
 import { PhysicsComponent } from "../../components/PhysicsComponent";
@@ -20,7 +20,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { EscapeAIComponent } from "../../components/EscapeAIComponent";
 import { CowComponent } from "../../components/CowComponent";
 import { FollowAIComponent } from "../../components/FollowAIComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 export const enum CowVars {
    VISION_RANGE = 256,
@@ -45,8 +45,8 @@ const FOLLOW_CHANCE_PER_SECOND = 0.2;
 
 export const COW_GRAZE_TIME_TICKS = 5 * Settings.TPS;
 
-function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
-   return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.grasslands;
+function positionIsValidCallback(_entity: EntityID, layer: Layer, x: number, y: number): boolean {
+   return !layer.positionHasWall(x, y) && layer.getBiomeAtPosition(x, y) === Biome.grasslands;
 }
 
 export function createCowConfig(): EntityConfig<ComponentTypes> {
@@ -61,7 +61,7 @@ export function createCowConfig(): EntityConfig<ComponentTypes> {
    const statusEffectComponent = new StatusEffectComponent(0);
 
    const aiHelperComponent = new AIHelperComponent(CowVars.VISION_RANGE);
-   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, Math.PI, 0.6, tileIsValidCallback)
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, Math.PI, 0.6, positionIsValidCallback)
    
    const escapeAIComponent = new EscapeAIComponent();
 

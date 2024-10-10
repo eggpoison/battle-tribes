@@ -1,10 +1,10 @@
-import { createHitbox, HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
-import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "../../../../shared/src/collision";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityID, EntityType } from "../../../../shared/src/entities";
-import { Point } from "../../../../shared/src/utils";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "battletribes-shared/collision";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Point } from "battletribes-shared/utils";
 import { EntityConfig } from "../../components";
 import { GuardianGemFragmentProjectileComponent } from "../../components/GuardianGemFragmentProjectileComponent";
 import { PhysicsComponent } from "../../components/PhysicsComponent";

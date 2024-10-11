@@ -9,7 +9,7 @@ import { EntityConfig } from "../../components";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import WanderAI from "../../ai/WanderAI";
-import { Biome } from "../../../../shared/src/tiles";
+import { Biome } from "battletribes-shared/tiles";
 import Layer from "../../Layer";
 import { TransformComponent } from "../../components/TransformComponent";
 import { PhysicsComponent } from "../../components/PhysicsComponent";
@@ -19,7 +19,7 @@ import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import { EscapeAIComponent } from "../../components/EscapeAIComponent";
 import { FollowAIComponent } from "../../components/FollowAIComponent";
 import { KrumblidComponent } from "../../components/KrumblidComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 export const enum KrumblidVars {
    VISION_RANGE = 224,
@@ -41,8 +41,8 @@ const KRUMBLID_SIZE = 48;
 
 const FOLLOW_CHANCE_PER_SECOND = 0.3;
 
-function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
-   return layer.tileIsWalls[tileIndex] === 0 && layer.tileBiomes[tileIndex] === Biome.desert;
+function positionIsValidCallback(_entity: EntityID, layer: Layer, x: number, y: number): boolean {
+   return !layer.positionHasWall(x, y) && layer.getBiomeAtPosition(x, y) === Biome.desert;
 }
 
 export function createKrumblidConfig(): EntityConfig<ComponentTypes> {
@@ -57,7 +57,7 @@ export function createKrumblidConfig(): EntityConfig<ComponentTypes> {
    const statusEffectComponent = new StatusEffectComponent(0);
 
    const aiHelperComponent = new AIHelperComponent(KrumblidVars.VISION_RANGE);
-   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, 2 * Math.PI, 0.25, tileIsValidCallback);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, 2 * Math.PI, 0.25, positionIsValidCallback);
 
    const escapeAIComponent = new EscapeAIComponent();
    

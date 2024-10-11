@@ -55,7 +55,12 @@ abstract class Camera {
    public static position = new Point(0, 0);
    
    public static isFree = false;
-   
+
+   public static minVisibleX = 0;
+   public static maxVisibleX = 0;
+   public static minVisibleY = 0;
+   public static maxVisibleY = 0;
+
    public static minVisibleChunkX = 0;
    public static maxVisibleChunkX = 0;
    public static minVisibleChunkY = 0;
@@ -82,10 +87,15 @@ abstract class Camera {
    public static updateVisibleChunkBounds(layer: Layer): void {
       const previousChunks = getChunksFromRange(layer, this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
       
-      this.minVisibleChunkX = Math.max(Math.floor((this.position.x - halfWindowWidth / this.zoom) / Settings.CHUNK_UNITS), 0);
-      this.maxVisibleChunkX = Math.min(Math.floor((this.position.x + halfWindowWidth / this.zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-      this.minVisibleChunkY = Math.max(Math.floor((this.position.y - halfWindowHeight / this.zoom) / Settings.CHUNK_UNITS), 0);
-      this.maxVisibleChunkY = Math.min(Math.floor((this.position.y + halfWindowHeight / this.zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+      this.minVisibleX = this.position.x - halfWindowWidth / this.zoom;
+      this.maxVisibleX = this.position.x + halfWindowWidth / this.zoom;
+      this.minVisibleY = this.position.y - halfWindowHeight / this.zoom;
+      this.maxVisibleY = this.position.y + halfWindowHeight / this.zoom;
+      
+      this.minVisibleChunkX = Math.max(Math.floor(this.minVisibleX / Settings.CHUNK_UNITS), 0);
+      this.maxVisibleChunkX = Math.min(Math.floor(this.maxVisibleX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+      this.minVisibleChunkY = Math.max(Math.floor(this.minVisibleY / Settings.CHUNK_UNITS), 0);
+      this.maxVisibleChunkY = Math.min(Math.floor(this.maxVisibleY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
 
       const newChunks = getChunksFromRange(layer, this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
 

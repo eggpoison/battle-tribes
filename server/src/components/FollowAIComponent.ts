@@ -75,7 +75,7 @@ export function continueFollowingEntity(entity: EntityID, followTarget: EntityID
    const distance = getDistanceFromPointToEntity(followTargetTransformComponent.position, entity) - 32;
    if (willStopAtDesiredDistance(physicsComponent, followAIComponent.followDistance, distance)) {
       stopEntity(physicsComponent);
-      turnToPosition(entity, followTargetTransformComponent.position, turnSpeed);
+      turnToPosition(entity, followTargetTransformComponent.position.x, followTargetTransformComponent.position.y, turnSpeed);
    } else {
       moveEntityToPosition(entity, followTargetTransformComponent.position.x, followTargetTransformComponent.position.y, acceleration, turnSpeed);
    }

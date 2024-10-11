@@ -5,8 +5,10 @@ import { CircularBox } from "./CircularBox";
 import RectangularBox from "./RectangularBox";
 
 export const enum HitboxFlag {
-   NON_GRASS_BLOCKING = 0,
-   GUARDIAN_LIMB_HITBOX = 1
+   NON_GRASS_BLOCKING,
+   // @Cleanup @Speed: This seems like it's central collision logic, perhaps instead change into a "collidesWithWalls" boolean on hitbox objects?
+   IGNORES_WALL_COLLISIONS,
+   GUARDIAN_LIMB_HITBOX
 }
 
 export const enum HitboxCollisionType {

@@ -1,25 +1,23 @@
-import { Biome, TileInfo } from "battletribes-shared/tiles";
+import { Biome } from "battletribes-shared/tiles";
 import { TileType } from "battletribes-shared/tiles";
 
-export class Tile implements TileInfo {
+export class Tile {
    public readonly x: number;
    public readonly y: number;
 
    public type: TileType;
    public biome: Biome;
-   public isWall: boolean;
 
+   // @Memory: only used tor creating the initial river rendering data, not necessary after that!
    public bordersWater = false;
-   public bordersWall = false;
 
    public flowOffset = Math.random();
 
-   constructor(x: number, y: number, tileType: TileType, biome: Biome, isWall: boolean) {
+   constructor(x: number, y: number, tileType: TileType, biome: Biome) {
       this.x = x;
       this.y = y;
 
       this.type = tileType;
       this.biome = biome;
-      this.isWall = isWall;
    }
 }

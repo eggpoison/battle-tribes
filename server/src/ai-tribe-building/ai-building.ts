@@ -387,9 +387,9 @@ const getBorderNodes = (layer: Layer, buildingInfo: TribeLayerBuildingInfo, insi
 }
 
 export function safetyNodeIsInWall(layer: Layer, nodeX: number, nodeY: number): boolean {
-   const tileX = Math.floor(nodeX * Settings.SAFETY_NODE_SEPARATION / Settings.TILE_SIZE);
-   const tileY = Math.floor(nodeY * Settings.SAFETY_NODE_SEPARATION / Settings.TILE_SIZE);
-   return layer.tileXYIsWall(tileX, tileY);
+   const subtileX = Math.floor(nodeX * Settings.SAFETY_NODE_SEPARATION / Settings.SUBTILE_SIZE);
+   const subtileY = Math.floor(nodeY * Settings.SAFETY_NODE_SEPARATION / Settings.SUBTILE_SIZE);
+   return layer.subtileIsWall(subtileX, subtileY);
 }
 
 const createPaddingNodes = (tribe: Tribe, layer: Layer, buildingInfo: TribeLayerBuildingInfo, outmostPaddingNodes: Set<SafetyNode>, borderNodes: ReadonlySet<SafetyNode>, paddingNodes: Set<SafetyNode>): void => {

@@ -1,6 +1,6 @@
 import { DecorationType, ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
+import { TileType, TileTypeString } from "battletribes-shared/tiles";
 import { randInt, randFloat, TileIndex } from "battletribes-shared/utils";
 import { getTileIndexIncludingEdges, getTilesInRange, getTileX, getTileY, tileIsInWorldIncludingEdges } from "../Layer";
 import { createDecorationConfig } from "../entities/decoration";
@@ -30,7 +30,7 @@ const createDecoration = (x: number, y: number, decorationType: DecorationType):
    config.components[ServerComponentType.decoration].decorationType = decorationType;
    createEntityFromConfig(config, surfaceLayer, 0);
 
-   pushJoinBuffer();
+   pushJoinBuffer(false);
 }
 
 const generateRiversideDecorations = (): void => {

@@ -1,6 +1,6 @@
 import { Packet, PacketReader, PacketType } from "battletribes-shared/packets";
 import PlayerClient from "./PlayerClient";
-import { EntityID, LimbAction } from "battletribes-shared/entities";
+import { EntityID, EntityType, LimbAction } from "battletribes-shared/entities";
 import { BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { TribeType } from "battletribes-shared/tribes";
 import Layer from "../Layer";
@@ -20,6 +20,10 @@ import { generatePlayerSpawnPosition, registerDirtyEntity } from "./player-clien
 import { addEntityDataToPacket, getEntityDataLength } from "./game-data-packets";
 import { createItem } from "../items";
 import { entityExists, getEntityLayer, surfaceLayer } from "../world";
+import { createCowConfig } from "../entities/mobs/cow";
+import { SERVER } from "./server";
+import { EntityConfig } from "../components";
+import { createKrumblidConfig } from "../entities/mobs/krumblid";
 
 /** How far away from the entity the attack is done */
 const ATTACK_OFFSET = 50;
@@ -402,4 +406,38 @@ export function processItemReleasePacket(playerClient: PlayerClient, reader: Pac
 
    // If all of the item was added, clear the held item
    consumeItemTypeFromInventory(inventoryComponent, InventoryName.heldItemSlot, heldItem.type, amountAdded);
+}
+
+export function processEntitySummonPacket(playerClient: PlayerClient, reader: PacketReader): void {
+   const entityType = reader.readNumber() as EntityType;
+   const x = reader.readNumber();
+   const y = reader.readNumber();
+   const rotation = reader.readNumber();
+
+   // @Hack
+   let config: EntityConfig<ServerComponentType.transform>;
+   switch (entityType) {
+      case EntityType.cow: {
+         config = createCowConfig();
+         break;
+      }
+      case EntityType.krumblid: {
+         config = createKrumblidConfig();
+         break;
+      }
+      default: {
+         console.warn("Can't summon entity!");
+         return;
+      }
+   }
+   config.components[ServerComponentType.transform].position.x = x;
+   config.components[ServerComponentType.transform].position.y = y;
+   config.components[ServerComponentType.transform].rotation = rotation;
+   createEntityFromConfig(config, playerClient.lastLayer, 0);
+}
+
+export function processToggleSimulationPacket(playerClient: PlayerClient, reader: PacketReader): void {
+   const isSimulating = reader.readBoolean();
+   reader.padOffset(3);
+   SERVER.isSimulating = isSimulating;
 }

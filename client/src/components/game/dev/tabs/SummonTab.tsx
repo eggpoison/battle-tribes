@@ -14,6 +14,10 @@ import { GameInteractState } from "../../GameScreen";
 
 type EntityTypeTuple = [EntityType, string];
 
+interface ComponentDataInputsProps {
+   readonly componentType: ServerComponentType;
+}
+
 interface SummonTabProps {
    readonly summonPacketRef: MutableRefObject<Mutable<EntitySummonPacket> | null>;
    setGameInteractState(state: GameInteractState): void;
@@ -97,6 +101,14 @@ const getInputElement = (componentType: ServerComponentType, entityType: EntityT
    }
 }
 
+const ComponentDataInputs = (props: ComponentDataInputsProps) => {
+   switch (props.componentType) {
+      case ServerComponentType.transform: {
+         
+      }
+   }
+}
+
 const SummonTab = (props: SummonTabProps) => {
    const [selectedEntityType, setSelectedEntityType] = useState(alphabeticalEntityTypes[0]);
 
@@ -119,7 +131,7 @@ const SummonTab = (props: SummonTabProps) => {
       const packet: EntitySummonPacket = {
          // The position and rotation values are overriden with the actual values when the packet is sent
          position: [0, 0],
-         rotation: 0,
+         rotation: 2 * Math.PI * Math.random(),
          entityType: selectedEntityType,
          summonData: summonData
       };

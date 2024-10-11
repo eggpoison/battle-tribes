@@ -14,7 +14,7 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityLayer } from "../world";
 import { HealthComponent } from "../components/HealthComponent";
 import { StatusEffectComponent } from "../components/StatusEffectComponent";
-import { CollisionGroup } from "../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 import { createIceShardExplosion } from "../components/IceSpikesComponent";
    
 type ComponentTypes = ServerComponentType.transform

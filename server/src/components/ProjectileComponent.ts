@@ -1,9 +1,9 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "battletribes-shared/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { Settings } from "battletribes-shared/settings";
-import { destroyEntity, getEntityAgeTicks } from "../world";
+import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world";
 
 const ARROW_WIDTH = 12;
 const ARROW_HEIGHT = 64;
@@ -30,10 +30,14 @@ export const ProjectileComponentArray = new ComponentArray<ProjectileComponent>(
 });
 
 function onTick(_projectileComponent: ProjectileComponent, projectile: EntityID): void {
-   const ageTicks = getEntityAgeTicks(projectile);
-   if (ageTicks >= 1.5 * Settings.TPS) {
-      destroyEntity(projectile);
-      return;
+   // @Hack
+   const entityType = getEntityType(projectile);
+   if (entityType !== EntityType.guardianSpikyBall) {
+      const ageTicks = getEntityAgeTicks(projectile);
+      if (ageTicks >= 1.5 * Settings.TPS) {
+         destroyEntity(projectile);
+         return;
+      }
    }
    
    // @Hack

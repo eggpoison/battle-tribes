@@ -35,7 +35,7 @@ import { createWoodenArrowConfig } from "../projectiles/wooden-arrow";
 import { EntityConfig } from "../../components";
 import { createSpearProjectileConfig } from "../projectiles/spear-projectile";
 import { createBlueprintEntityConfig } from "../blueprint-entity";
-import { AttackVars } from "../../../../shared/src/attack-patterns";
+import { AttackVars } from "battletribes-shared/attack-patterns";
 import { destroyEntity, getEntityLayer, getEntityType, getGameTicks } from "../../world";
 import { createWallConfig } from "../structures/wall";
 import { createDoorConfig } from "../structures/door";

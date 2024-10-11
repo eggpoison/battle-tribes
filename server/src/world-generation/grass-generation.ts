@@ -104,7 +104,7 @@ export function generateGrassStrands(): void {
             createEntityFromConfig(config, surfaceLayer, 0);
 
             // Since the entity spawning has to find a place to insert the entity, we force push it to prevent it from taking forever
-            pushJoinBuffer();
+            pushJoinBuffer(false);
          }
       }
    }

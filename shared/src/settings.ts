@@ -3,7 +3,10 @@ export const enum Settings {
    TPS = 60,
    I_TPS = 1 / TPS,
    TILE_SIZE = 64,
+   SUBTILE_SIZE = TILE_SIZE / 4,
+   /** Number of chunks in the world's width and height */
    BOARD_SIZE = 64,
+   /** Number of tiles in a chunk's width and height */
    CHUNK_SIZE = 4,
    CHUNK_UNITS = CHUNK_SIZE * TILE_SIZE,
    BOARD_DIMENSIONS = BOARD_SIZE * CHUNK_SIZE,

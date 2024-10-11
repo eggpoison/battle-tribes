@@ -9,7 +9,7 @@ import { TransformComponent } from "../../components/TransformComponent";
 import { HealthComponent } from "../../components/HealthComponent";
 import { TREE_RADII, TreeComponent } from "../../components/TreeComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

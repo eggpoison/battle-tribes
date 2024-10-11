@@ -10,7 +10,7 @@ import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../re
 import { playSound, AudioFilePath } from "../sound";
 import Player from "../entities/Player";
 import { keyIsPressed } from "../keyboard-input";
-import { resolveWallTileCollisions } from "../collision";
+import { resolveWallCollisions } from "../collision";
 import { PacketReader } from "battletribes-shared/packets";
 import { createWaterSplashParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
@@ -238,7 +238,7 @@ function onUpdate(physicsComponent: PhysicsComponent): void {
    
    // Don't resolve wall tile collisions in lightspeed mode
    if (Player.instance === null || physicsComponent.entity.id !== Player.instance.id || !keyIsPressed("l")) { 
-      resolveWallTileCollisions(physicsComponent.entity);
+      resolveWallCollisions(physicsComponent.entity);
    }
 
    resolveBorderCollisions(physicsComponent);

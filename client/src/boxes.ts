@@ -5,10 +5,12 @@ class GenericCollisionBox<T extends BoxType> implements GenericCollisionBoxInfo<
    public box: BoxFromType[T];
    public readonly associatedLimbInventoryName: InventoryName;
    public collidingBox: ClientDamageBox | ClientBlockBox | null = null;
+   public isActive: boolean;
    
-   constructor(box: BoxFromType[T], associatedLimbInventoryName: InventoryName) {
+   constructor(box: BoxFromType[T], associatedLimbInventoryName: InventoryName, isActive: boolean) {
       this.box = box;
       this.associatedLimbInventoryName = associatedLimbInventoryName;
+      this.isActive = isActive;
    }
 }
 

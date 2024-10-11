@@ -6,7 +6,6 @@ import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { TribesmanTitle } from "battletribes-shared/titles";
 import { Point } from "battletribes-shared/utils";
-import Layer from "../../Layer";
 import { damageEntity, HealthComponentArray } from "../../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../../components/InventoryComponent";
 import { getHeldItem, InventoryUseComponentArray, LimbInfo } from "../../components/InventoryUseComponent";
@@ -23,7 +22,7 @@ import { createEntityFromConfig } from "../../Entity";
 import { createItemEntityConfig } from "../item-entity";
 import { dropBerryOverEntity, BERRY_BUSH_RADIUS } from "../resources/berry-bush";
 import { getEntityRelationship, EntityRelationship } from "../../components/TribeComponent";
-import { AttackVars, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
+import { AttackVars, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import { getEntityLayer, getEntityType } from "../../world";
 
 const enum Vars {
@@ -255,6 +254,8 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
    limb.currentActionStartLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
    // @Speed: Garbage collection
    limb.currentActionEndLimbState = copyLimbState(heldItemAttackInfo.attackPattern.windedBack);
+
+   limb.heldItemDamageBox.wallSubtileDamageGiven = 0;
 
    const physicsComponent = PhysicsComponentArray.getComponent(attackingEntity);
 

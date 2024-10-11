@@ -171,3 +171,23 @@ export function sendItemReleasePacket(entityID: number, inventoryName: Inventory
 
    Client.sendPacket(packet.buffer);
 }
+
+export function sendEntitySummonPacket(entityType: EntityType, x: number, y: number, rotation: number): void {
+   const packet = new Packet(PacketType.summonEntity, 5 * Float32Array.BYTES_PER_ELEMENT);
+
+   packet.addNumber(entityType);
+   packet.addNumber(x);
+   packet.addNumber(y);
+   packet.addNumber(rotation);
+
+   Client.sendPacket(packet.buffer);
+}
+
+export function sendToggleSimulationPacket(isSimulating: boolean): void {
+   const packet = new Packet(PacketType.toggleSimulation, 2 * Float32Array.BYTES_PER_ELEMENT);
+
+   packet.addBoolean(isSimulating);
+   packet.padOffset(3);
+
+   Client.sendPacket(packet.buffer);
+}

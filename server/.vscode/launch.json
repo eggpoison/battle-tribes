@@ -9,11 +9,11 @@
          "type": "node",
          "request": "launch",
          "args": [
-            "${workspaceRoot}/src/server.ts"
+            "${workspaceRoot}/src/server/server"
          ],
          "runtimeArgs": [
-            "-r",
-            "ts-node/register"
+            "-r", "ts-node/register",
+            "-r", "tsconfig-paths/register"
          ],
          "cwd": "${workspaceRoot}",
          "internalConsoleOptions": "openOnSessionStart"

@@ -25,6 +25,7 @@ class GenericCollisionBox<T extends BoxType> implements GenericCollisionBoxInfo<
 
 export class ServerDamageBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements DamageBox<T> {
    public isBlocked = false;
+   public wallSubtileDamageGiven = 0;
 }
 export class ServerBlockBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements BlockBox<T> {
    public hasBlocked = false;

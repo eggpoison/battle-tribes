@@ -18,6 +18,8 @@ export const enum PacketType {
    dropItem,
    itemPickup,
    itemRelease,
+   summonEntity,
+   toggleSimulation,
    devGiveItem, // ((DEV))
    // -----------------
    // SERVER-TO-CLIENT
@@ -156,6 +158,7 @@ export class PacketReader extends BasePacketObject {
       const stringLength = this.readNumber();
       
       const decodeBuffer = this.uint8View.subarray(this.currentByteOffset, this.currentByteOffset + stringLength);
+      // @Speed? @Garbage
       const string = new TextDecoder().decode(decodeBuffer);
 
       this.currentByteOffset += lengthBytes;

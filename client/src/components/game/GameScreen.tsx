@@ -21,6 +21,7 @@ import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "..
 import Client from "../../client/Client";
 import AttackChargeBar from "./AttackChargeBar";
 import GameInteractableLayer from "./GameInteractableLayer";
+import { sendEntitySummonPacket } from "../../client/packet-creation";
 
 export const enum GameInteractState {
    none,
@@ -59,11 +60,11 @@ const GameScreen = (props: GameScreenProps) => {
       }
       
       if (e.button === 0) {
-         summonPacket.position[0] = calculateCursorWorldPositionX(e.clientX)!;
-         summonPacket.position[1] = calculateCursorWorldPositionY(e.clientY)!;
-         summonPacket.rotation = 2 * Math.PI * Math.random();
+         const x = calculateCursorWorldPositionX(e.clientX)!;
+         const y = calculateCursorWorldPositionY(e.clientY)!;
          
-         Client.sendEntitySummonPacket(summonPacket);
+         // @Hack
+         sendEntitySummonPacket(summonPacket.entityType, x, y, 2 * Math.PI * Math.random());
       } else if (e.button === 2) {
          // Get out of summon entity mode
          setInteractState(GameInteractState.none);

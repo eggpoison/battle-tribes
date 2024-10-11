@@ -3,7 +3,11 @@ import Camera from "../../Camera";
 import { createWebGLProgram, gl } from "../../webgl";
 import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import Layer, { tileIsInWorld, tileIsWithinEdge } from "../../Layer";
+import Layer, { subtileIsInWorld } from "../../Layer";
+
+const enum Vars {
+   ATTRIBUTES_PER_VERTEX = 3
+}
 
 const BORDER_THICKNESS = 4;
 
@@ -45,7 +49,7 @@ export function createWallBorderShaders(): void {
          outputColour = vec4(0.15, 0.15, 0.15, 1.0);
       } else {
       //  @Temporary
-         outputColour = vec4(0.15, 0.15, 0.15, 0.4);
+         outputColour = vec4(0.15, 0.15, 0.15, 0.3);
          // outputColour = vec4(1.0, 0.0, 0.0, 0.);
       }
    }
@@ -67,22 +71,22 @@ const addVertices = (vertices: Array<number>, tlX: number, tlY: number, trX: num
    );
 }
 
-const addTopVertices = (vertices: Array<number>, layer: Layer, tileX: number, tileY: number, isBackColour: boolean): void => {
-   const leftOvershoot = tileIsInWorld(tileX - 1, tileY) && layer.getTileFromCoords(tileX - 1, tileY).isWall ? BORDER_THICKNESS : 0;
-   const rightOvershoot = tileIsInWorld(tileX + 1, tileY) && layer.getTileFromCoords(tileX + 1, tileY).isWall ? BORDER_THICKNESS : 0;
+const addTopVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
+   const leftOvershoot = subtileIsInWorld(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : 0;
+   const rightOvershoot = subtileIsInWorld(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : 0;
 
-   let tlX = tileX * Settings.TILE_SIZE - leftOvershoot;
+   let tlX = subtileX * Settings.SUBTILE_SIZE - leftOvershoot;
    let blX = tlX;
-   let trX = (tileX + 1) * Settings.TILE_SIZE + rightOvershoot;
+   let trX = (subtileX + 1) * Settings.SUBTILE_SIZE + rightOvershoot;
    let brX = trX
-   let blY = (tileY + 1) * Settings.TILE_SIZE - BORDER_THICKNESS;
+   let blY = (subtileY + 1) * Settings.SUBTILE_SIZE - BORDER_THICKNESS;
    let brY = blY;
-   let tlY = (tileY + 1) * Settings.TILE_SIZE;
+   let tlY = (subtileY + 1) * Settings.SUBTILE_SIZE;
    let trY = tlY;
 
    if (isBackColour) {
-      const leftOvershoot = tileIsInWorld(tileX - 1, tileY) && layer.getTileFromCoords(tileX - 1, tileY).isWall ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const rightOvershoot = tileIsInWorld(tileX + 1, tileY) && layer.getTileFromCoords(tileX + 1, tileY).isWall ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const leftOvershoot = subtileIsInWorld(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const rightOvershoot = subtileIsInWorld(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
 
       tlX -= leftOvershoot;
       blX -= leftOvershoot;
@@ -94,10 +98,10 @@ const addTopVertices = (vertices: Array<number>, layer: Layer, tileX: number, ti
       trY -= BORDER_THICKNESS;
 
       // If no wall to the left, create an indent
-      if (!layer.tileIsWallFromCoords(tileX - 1, tileY)) {
+      if (!layer.subtileIsWall(subtileX - 1, subtileY)) {
          blX += BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the left
-      } else if (!layer.tileIsWallFromCoords(tileX - 1, tileY + 1)) {
+      } else if (!layer.subtileIsWall(subtileX - 1, subtileY + 1)) {
          // Don't overlap with wall to the left
          blX += BORDER_THICKNESS * 2;
          tlX += BORDER_THICKNESS * 2;
@@ -107,10 +111,10 @@ const addTopVertices = (vertices: Array<number>, layer: Layer, tileX: number, ti
       }
 
       // If no wall to the right, create an indent
-      if (!layer.tileIsWallFromCoords(tileX + 1, tileY)) {
+      if (!layer.subtileIsWall(subtileX + 1, subtileY)) {
          brX -= BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the right
-      } else if (!layer.tileIsWallFromCoords(tileX + 1, tileY + 1)) {
+      } else if (!layer.subtileIsWall(subtileX + 1, subtileY + 1)) {
          // Don't overlap with wall to the right
          brX -= BORDER_THICKNESS * 2;
          trX -= BORDER_THICKNESS * 2;
@@ -122,21 +126,21 @@ const addTopVertices = (vertices: Array<number>, layer: Layer, tileX: number, ti
    addVertices(vertices, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
 }
 
-const addRightVertices = (vertices: Array<number>, layer: Layer, tileX: number, tileY: number, isBackColour: boolean): void => {
-   const topOvershoot = tileIsWithinEdge(tileX, tileY + 1) && layer.getTileFromCoords(tileX, tileY + 1)?.isWall ? BORDER_THICKNESS : 0;
-   const bottomOvershoot = tileIsWithinEdge(tileX, tileY - 1) && layer.getTileFromCoords(tileX, tileY - 1)?.isWall ? BORDER_THICKNESS : 0;
+const addRightVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
+   const topOvershoot = subtileIsInWorld(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : 0;
+   const bottomOvershoot = subtileIsInWorld(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : 0;
 
-   let tlX = (tileX + 1) * Settings.TILE_SIZE - BORDER_THICKNESS;
+   let tlX = (subtileX + 1) * Settings.SUBTILE_SIZE - BORDER_THICKNESS;
    let blX = tlX;
-   let trX = (tileX + 1) * Settings.TILE_SIZE;
+   let trX = (subtileX + 1) * Settings.SUBTILE_SIZE;
    let brX = trX;
-   let blY = tileY * Settings.TILE_SIZE - bottomOvershoot;
+   let blY = subtileY * Settings.SUBTILE_SIZE - bottomOvershoot;
    let brY = blY;
-   let tlY = (tileY + 1) * Settings.TILE_SIZE + topOvershoot;
+   let tlY = (subtileY + 1) * Settings.SUBTILE_SIZE + topOvershoot;
    let trY = tlY;
    if (isBackColour) {
-      const topOvershoot = tileIsWithinEdge(tileX, tileY + 1) && layer.getTileFromCoords(tileX, tileY + 1)?.isWall ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const bottomOvershoot = tileIsWithinEdge(tileX, tileY - 1) && layer.getTileFromCoords(tileX, tileY - 1)?.isWall ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const topOvershoot = subtileIsInWorld(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const bottomOvershoot = subtileIsInWorld(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
 
       tlX -= BORDER_THICKNESS;
       blX -= BORDER_THICKNESS;
@@ -148,10 +152,10 @@ const addRightVertices = (vertices: Array<number>, layer: Layer, tileX: number, 
       trY += topOvershoot;
 
       // If no wall to the bottom, create an indent
-      if (!layer.tileIsWallFromCoords(tileX, tileY - 1)) {
+      if (!layer.subtileIsWall(subtileX, subtileY - 1)) {
          blY += BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the bottom
-      } else if (!layer.tileIsWallFromCoords(tileX + 1, tileY - 1)) {
+      } else if (!layer.subtileIsWall(subtileX + 1, subtileY - 1)) {
          blY += BORDER_THICKNESS * 2;
          brY += BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
@@ -160,10 +164,10 @@ const addRightVertices = (vertices: Array<number>, layer: Layer, tileX: number, 
       }
 
       // If no wall to the top, create an indent
-      if (!layer.tileIsWallFromCoords(tileX, tileY + 1)) {
+      if (!layer.subtileIsWall(subtileX, subtileY + 1)) {
          tlY -= BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the top
-      } else if (!layer.tileIsWallFromCoords(tileX + 1, tileY + 1)) {
+      } else if (!layer.subtileIsWall(subtileX + 1, subtileY + 1)) {
          tlY -= BORDER_THICKNESS * 2;
          trY -= BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
@@ -174,21 +178,21 @@ const addRightVertices = (vertices: Array<number>, layer: Layer, tileX: number, 
    addVertices(vertices, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
 }
 
-const addBottomVertices = (vertices: Array<number>, layer: Layer, tileX: number, tileY: number, isBackColour: boolean): void => {
-   const leftOvershoot = tileIsWithinEdge(tileX - 1, tileY) && layer.getTileFromCoords(tileX - 1, tileY)?.isWall ? BORDER_THICKNESS : 0;
-   const rightOvershoot = tileIsWithinEdge(tileX + 1, tileY) && layer.getTileFromCoords(tileX + 1, tileY)?.isWall ? BORDER_THICKNESS : 0;
+const addBottomVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
+   const leftOvershoot = subtileIsInWorld(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : 0;
+   const rightOvershoot = subtileIsInWorld(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : 0;
 
-   let tlX = tileX * Settings.TILE_SIZE - leftOvershoot;
+   let tlX = subtileX * Settings.SUBTILE_SIZE - leftOvershoot;
    let blX = tlX;
-   let trX = (tileX + 1) * Settings.TILE_SIZE + rightOvershoot;
+   let trX = (subtileX + 1) * Settings.SUBTILE_SIZE + rightOvershoot;
    let brX = trX;
-   let blY = tileY * Settings.TILE_SIZE;
+   let blY = subtileY * Settings.SUBTILE_SIZE;
    let brY = blY;
-   let tlY = tileY * Settings.TILE_SIZE + BORDER_THICKNESS;
+   let tlY = subtileY * Settings.SUBTILE_SIZE + BORDER_THICKNESS;
    let trY = tlY;
    if (isBackColour) {
-      const leftOvershoot = tileIsWithinEdge(tileX - 1, tileY) && layer.getTileFromCoords(tileX - 1, tileY)?.isWall ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const rightOvershoot = tileIsWithinEdge(tileX + 1, tileY) && layer.getTileFromCoords(tileX + 1, tileY)?.isWall ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const leftOvershoot = subtileIsInWorld(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const rightOvershoot = subtileIsInWorld(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
 
       tlX -= leftOvershoot;
       blX -= leftOvershoot;
@@ -200,10 +204,10 @@ const addBottomVertices = (vertices: Array<number>, layer: Layer, tileX: number,
       trY += BORDER_THICKNESS;
 
       // If no wall to the left, create an indent
-      if (!layer.tileIsWallFromCoords(tileX - 1, tileY)) {
+      if (!layer.subtileIsWall(subtileX - 1, subtileY)) {
          tlX += BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the left
-      } else if (!layer.tileIsWallFromCoords(tileX - 1, tileY - 1)) {
+      } else if (!layer.subtileIsWall(subtileX - 1, subtileY - 1)) {
          tlX += BORDER_THICKNESS * 2;
          blX += BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
@@ -212,10 +216,10 @@ const addBottomVertices = (vertices: Array<number>, layer: Layer, tileX: number,
       }
 
       // If no wall to the right, create an indent
-      if (!layer.tileIsWallFromCoords(tileX + 1, tileY)) {
+      if (!layer.subtileIsWall(subtileX + 1, subtileY)) {
          trX -= BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the right
-      } else if (!layer.tileIsWallFromCoords(tileX + 1, tileY - 1)) {
+      } else if (!layer.subtileIsWall(subtileX + 1, subtileY - 1)) {
          trX -= BORDER_THICKNESS * 2;
          brX -= BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
@@ -226,21 +230,21 @@ const addBottomVertices = (vertices: Array<number>, layer: Layer, tileX: number,
    addVertices(vertices, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
 }
 
-const addLeftVertices = (vertices: Array<number>, layer: Layer, tileX: number, tileY: number, isBackColour: boolean): void => {
-   const topOvershoot = tileIsInWorld(tileX, tileY + 1) && layer.getTileFromCoords(tileX, tileY + 1).isWall ? BORDER_THICKNESS : 0;
-   const bottomOvershoot = tileIsInWorld(tileX, tileY - 1) && layer.getTileFromCoords(tileX, tileY - 1).isWall ? BORDER_THICKNESS : 0;
+const addLeftVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
+   const topOvershoot = subtileIsInWorld(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : 0;
+   const bottomOvershoot = subtileIsInWorld(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : 0;
 
-   let tlX = tileX * Settings.TILE_SIZE;
+   let tlX = subtileX * Settings.SUBTILE_SIZE;
    let blX = tlX;
-   let trX = tileX * Settings.TILE_SIZE + BORDER_THICKNESS;
+   let trX = subtileX * Settings.SUBTILE_SIZE + BORDER_THICKNESS;
    let brX = trX;
-   let blY = tileY * Settings.TILE_SIZE - bottomOvershoot;
+   let blY = subtileY * Settings.SUBTILE_SIZE - bottomOvershoot;
    let brY = blY;
-   let tlY = (tileY + 1) * Settings.TILE_SIZE + topOvershoot;
+   let tlY = (subtileY + 1) * Settings.SUBTILE_SIZE + topOvershoot;
    let trY = tlY;
    if (isBackColour) {
-      const topOvershoot = tileIsInWorld(tileX, tileY + 1) && layer.getTileFromCoords(tileX, tileY + 1).isWall ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const bottomOvershoot = tileIsInWorld(tileX, tileY - 1) && layer.getTileFromCoords(tileX, tileY - 1).isWall ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const topOvershoot = subtileIsInWorld(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const bottomOvershoot = subtileIsInWorld(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
 
       tlX += BORDER_THICKNESS;
       blX += BORDER_THICKNESS;
@@ -252,10 +256,10 @@ const addLeftVertices = (vertices: Array<number>, layer: Layer, tileX: number, t
       trY += topOvershoot;
 
       // If no wall to the bottom, create an indent
-      if (!layer.tileIsWallFromCoords(tileX, tileY - 1)) {
+      if (!layer.subtileIsWall(subtileX, subtileY - 1)) {
          brY += BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the bottom
-      } else if (!layer.tileIsWallFromCoords(tileX - 1, tileY - 1)) {
+      } else if (!layer.subtileIsWall(subtileX - 1, subtileY - 1)) {
          brY += BORDER_THICKNESS * 2;
          blY += BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
@@ -264,10 +268,10 @@ const addLeftVertices = (vertices: Array<number>, layer: Layer, tileX: number, t
       }
 
       // If no wall to the top, create an indent
-      if (!layer.tileIsWallFromCoords(tileX, tileY + 1)) {
+      if (!layer.subtileIsWall(subtileX, subtileY + 1)) {
          trY -= BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the top
-      } else if (!layer.tileIsWallFromCoords(tileX - 1, tileY + 1)) {
+      } else if (!layer.subtileIsWall(subtileX - 1, subtileY + 1)) {
          trY -= BORDER_THICKNESS * 2;
          tlY -= BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
@@ -278,45 +282,53 @@ const addLeftVertices = (vertices: Array<number>, layer: Layer, tileX: number, t
    addVertices(vertices, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
 }
 
-export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo {
+const calculateVertexData = (layer: Layer, renderChunkX: number, renderChunkY: number): Float32Array => {
    const minTileX = getRenderChunkMinTileX(renderChunkX);
    const maxTileX = getRenderChunkMaxTileX(renderChunkX);
    const minTileY = getRenderChunkMinTileY(renderChunkY);
    const maxTileY = getRenderChunkMaxTileY(renderChunkY);
+   
+   const minSubtileX = minTileX * 4;
+   const maxSubtileX = maxTileX * 4 + 3;
+   const minSubtileY = minTileY * 4;
+   const maxSubtileY = maxTileY * 4 + 3;
 
    // Find all wall tiles in the render chunk, and categorise them based on what borders they have
    const vertices = new Array<number>();
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = layer.getTileFromCoords(tileX, tileY);
-         if (!tile.isWall) {
+   for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+         if (!layer.subtileIsWall(subtileX, subtileY)) {
             continue;
          }
 
          // Top border
-         if (tileIsWithinEdge(tileX, tileY + 1) && !layer.getTileFromCoords(tileX, tileY + 1).isWall) {
-            addTopVertices(vertices, layer, tile.x, tile.y, true);
-            addTopVertices(vertices, layer, tile.x, tile.y, false);
+         if (subtileIsInWorld(subtileX, subtileY + 1) && !layer.subtileIsWall(subtileX, subtileY + 1)) {
+            addTopVertices(vertices, layer, subtileX, subtileY, true);
+            addTopVertices(vertices, layer, subtileX, subtileY, false);
          }
          // Right border
-         if (tileIsWithinEdge(tileX + 1, tileY) && !layer.getTileFromCoords(tileX + 1, tileY).isWall) {
-            addRightVertices(vertices, layer, tile.x, tile.y, true);
-            addRightVertices(vertices, layer, tile.x, tile.y, false);
+         if (subtileIsInWorld(subtileX + 1, subtileY) && !layer.subtileIsWall(subtileX + 1, subtileY)) {
+            addRightVertices(vertices, layer, subtileX, subtileY, true);
+            addRightVertices(vertices, layer, subtileX, subtileY, false);
          }
          // Bottom border
-         if (tileIsWithinEdge(tileX, tileY - 1) && !layer.getTileFromCoords(tileX, tileY - 1).isWall) {
-            addBottomVertices(vertices, layer, tile.x, tile.y, true);
-            addBottomVertices(vertices, layer, tile.x, tile.y, false);
+         if (subtileIsInWorld(subtileX, subtileY - 1) && !layer.subtileIsWall(subtileX, subtileY - 1)) {
+            addBottomVertices(vertices, layer, subtileX, subtileY, true);
+            addBottomVertices(vertices, layer, subtileX, subtileY, false);
          }
          // Left border
-         if (tileIsWithinEdge(tileX - 1, tileY) && !layer.getTileFromCoords(tileX - 1, tileY).isWall) {
-            addLeftVertices(vertices, layer, tile.x, tile.y, true);
-            addLeftVertices(vertices, layer, tile.x, tile.y, false);
+         if (subtileIsInWorld(subtileX - 1, subtileY) && !layer.subtileIsWall(subtileX - 1, subtileY)) {
+            addLeftVertices(vertices, layer, subtileX, subtileY, true);
+            addLeftVertices(vertices, layer, subtileX, subtileY, false);
          }
       }
    }
 
-   const vertexData = new Float32Array(vertices);
+   return new Float32Array(vertices);
+}
+
+export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo {
+   const vertexData = calculateVertexData(layer, renderChunkX, renderChunkY);
 
    const vao = gl.createVertexArray()!;
    gl.bindVertexArray(vao);
@@ -330,10 +342,27 @@ export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, rend
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
 
+   gl.bindVertexArray(null);
+
    return {
       vao: vao,
-      vertexCount: vertices.length / 3
+      buffer: buffer,
+      vertexData: vertexData
    };
+}
+
+export function recalculateWallBorders(layer: Layer, renderChunkX: number, renderChunkY: number): void {
+   const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY);
+
+   wallBorderInfo.vertexData = calculateVertexData(layer, renderChunkX, renderChunkY);;
+
+   gl.bindVertexArray(wallBorderInfo.vao);
+
+   gl.bindBuffer(gl.ARRAY_BUFFER, wallBorderInfo.buffer);
+   // @Speed
+   gl.bufferData(gl.ARRAY_BUFFER, wallBorderInfo.vertexData, gl.STATIC_DRAW);
+   
+   gl.bindVertexArray(null);
 }
 
 export function renderWallBorders(layer: Layer): void {
@@ -351,7 +380,7 @@ export function renderWallBorders(layer: Layer): void {
          }
 
          gl.bindVertexArray(wallBorderInfo.vao);
-         gl.drawArrays(gl.TRIANGLES, 0, wallBorderInfo.vertexCount);
+         gl.drawArrays(gl.TRIANGLES, 0, wallBorderInfo.vertexData.length / Vars.ATTRIBUTES_PER_VERTEX);
       }
    }
 

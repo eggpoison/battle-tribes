@@ -11,7 +11,7 @@ import { StructureComponent } from "../../components/StructureComponent";
 import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import { HealingTotemComponent } from "../../components/HealingTotemComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

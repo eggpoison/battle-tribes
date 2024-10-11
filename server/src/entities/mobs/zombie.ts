@@ -1,7 +1,7 @@
 import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { Point, randInt, TileIndex } from "battletribes-shared/utils";
+import { Point, randInt } from "battletribes-shared/utils";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { ZombieComponent, ZombieComponentArray, zombieShouldAttackEntity } from "../../components/ZombieComponent";
 import { addInventoryToInventoryComponent, InventoryComponent, pickupItemEntity } from "../../components/InventoryComponent";
@@ -19,11 +19,11 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
 import WanderAI from "../../ai/WanderAI";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { Biome } from "../../../../shared/src/tiles";
+import { Biome } from "battletribes-shared/tiles";
 import Layer from "../../Layer";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { InventoryUseComponent } from "../../components/InventoryUseComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 export const enum ZombieVars {
    CHASE_PURSUE_TIME_TICKS = 5 * Settings.TPS,
@@ -41,8 +41,8 @@ type ComponentTypes = ServerComponentType.transform
 
 const MAX_HEALTH = 20;
 
-function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
-   return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.grasslands;
+function positionIsValidCallback(_entity: EntityID, layer: Layer, x: number, y: number): boolean {
+   return !layer.positionHasWall(x, y) && layer.getBiomeAtPosition(x, y) === Biome.grasslands;
 }
 
 export function createZombieConfig(isGolden: boolean, tombstone: EntityID): EntityConfig<ComponentTypes> {
@@ -61,7 +61,7 @@ export function createZombieConfig(isGolden: boolean, tombstone: EntityID): Enti
    const zombieComponent = new ZombieComponent(zombieType, tombstone);
 
    const aiHelperComponent = new AIHelperComponent(ZombieVars.VISION_RANGE);
-   aiHelperComponent.ais[AIType.wander] = new WanderAI(150, Math.PI * 3, 0.4, tileIsValidCallback);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(150, Math.PI * 3, 0.4, positionIsValidCallback);
    
    const inventoryComponent = new InventoryComponent();
    const inventoryUseComponent = new InventoryUseComponent();

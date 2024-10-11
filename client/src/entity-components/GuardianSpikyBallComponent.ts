@@ -1,11 +1,13 @@
 import { ServerComponentType } from "../../../shared/src/components";
 import { PacketReader } from "../../../shared/src/packets";
 import { Point } from "../../../shared/src/utils";
-import { Light, addLight, attachLightToEntity, attachLightToRenderPart } from "../lights";
+import { Light, addLight, attachLightToEntity } from "../lights";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { playSound } from "../sound";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import ServerComponent from "./ServerComponent";
+import { TransformComponentArray } from "./TransformComponent";
 
 export class GuardianSpikyBallComponent extends ServerComponent {
    public onLoad(): void {
@@ -28,6 +30,12 @@ export class GuardianSpikyBallComponent extends ServerComponent {
       };
       const lightID = addLight(light);
       attachLightToEntity(lightID, this.entity.id);
+
+      // @Hack
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
+      if (transformComponent.ageTicks === 0) {
+         playSound("guardian-spiky-ball-spawn.mp3", 0.4, 1, transformComponent.position);
+      }
    }
    
    public padData(reader: PacketReader): void {}

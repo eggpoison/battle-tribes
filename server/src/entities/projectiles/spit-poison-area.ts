@@ -13,7 +13,7 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
 import { TransformComponent } from "../../components/TransformComponent";
 import { SpitPoisonAreaComponent } from "../../components/SpitPoisonAreaComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.spitPoisonArea;

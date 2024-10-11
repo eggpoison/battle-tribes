@@ -47,30 +47,31 @@ const tp = (player: EntityID, x: number, y: number): void => {
    forcePlayerTeleport(player, newPosition);
 }
 
-const tpBiome = (player: EntityID, biomeName: Biome): void => {
-   const potentialTiles = getTilesOfBiome(biomeName);
-   if (potentialTiles.length === 0) {
-      console.warn(`No available tiles of biome '${biomeName}' to teleport to.`);
-      return;
-   }
+// @Incomplete
+// const tpBiome = (player: EntityID, biomeName: Biome): void => {
+//    const potentialTiles = getTilesOfBiome(biomeName);
+//    if (potentialTiles.length === 0) {
+//       console.warn(`No available tiles of biome '${biomeName}' to teleport to.`);
+//       return;
+//    }
 
-   let numAttempts = 0;
-   let tileIndex: TileIndex;
-   do {
-      tileIndex = randItem(potentialTiles);
-      if (++numAttempts === 999) {
-         return;
-      }
-   } while (surfaceLayer.tileIsWalls[tileIndex] === 1);
+//    let numAttempts = 0;
+//    let tileIndex: TileIndex;
+//    do {
+//       tileIndex = randItem(potentialTiles);
+//       if (++numAttempts === 999) {
+//          return;
+//       }
+//    } while (surfaceLayer.tileIsWalls[tileIndex] === 1);
    
-   const tileX = getTileX(tileIndex);
-   const tileY = getTileY(tileIndex);
-   const x = (tileX + Math.random()) * Settings.TILE_SIZE;
-   const y = (tileY + Math.random()) * Settings.TILE_SIZE;
+//    const tileX = getTileX(tileIndex);
+//    const tileY = getTileY(tileIndex);
+//    const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+//    const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 
-   const newPosition = new Point(x, y);
-   forcePlayerTeleport(player, newPosition);
-}
+//    const newPosition = new Point(x, y);
+//    forcePlayerTeleport(player, newPosition);
+// }
 
 export function registerCommand(command: string, player: EntityID): void {
    const commandComponents = parseCommand(command);
@@ -157,7 +158,7 @@ export function registerCommand(command: string, player: EntityID): void {
       }
       case "tpbiome": {
          const biomeName = commandComponents[1] as Biome;
-         tpBiome(player, biomeName);
+         // tpBiome(player, biomeName);
          break;
       }
       case "unlockall": {

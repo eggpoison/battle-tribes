@@ -5,7 +5,7 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import { randFloat, randSign } from "battletribes-shared/utils";
 import { Packet } from "battletribes-shared/packets";
 import { destroyEntity, getEntityAgeTicks } from "../world";
-import { Settings } from "../../../shared/src/settings";
+import { Settings } from "battletribes-shared/settings";
 
 export class SnowballComponent {
    public readonly yeti: EntityID;

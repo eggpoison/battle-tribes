@@ -5,8 +5,8 @@ import { Point } from "battletribes-shared/utils";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { TransformComponent } from "../components/TransformComponent";
-import { EntityType } from "../../../shared/src/entities";
-import { CollisionGroup } from "../../../shared/src/collision-groups";
+import { EntityType } from "battletribes-shared/entities";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform;
 

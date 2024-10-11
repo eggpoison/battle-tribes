@@ -15,7 +15,7 @@ import { getEntityLayer } from "../world";
 import { HealthComponent } from "../components/HealthComponent";
 import { StatusEffectComponent } from "../components/StatusEffectComponent";
 import { TombstoneComponent, TombstoneComponentArray } from "../components/TombstoneComponent";
-import { CollisionGroup } from "../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

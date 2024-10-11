@@ -5,7 +5,7 @@ import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { YetiComponent, YetiComponentArray } from "../../components/YetiComponent";
-import Layer from "../../Layer";
+import Layer, { getTileIndexIncludingEdges } from "../../Layer";
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback, PhysicsComponent } from "../../components/PhysicsComponent";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -19,9 +19,9 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
 import WanderAI from "../../ai/WanderAI";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { Biome } from "../../../../shared/src/tiles";
+import { Biome } from "battletribes-shared/tiles";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { CollisionGroup } from "../../../../shared/src/collision-groups";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -42,9 +42,13 @@ export enum SnowThrowStage {
    return
 }
 
-function tileIsValidCallback(entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
+function positionIsValidCallback(entity: EntityID, layer: Layer, x: number, y: number): boolean {
+   const tileX = Math.floor(x / Settings.TILE_SIZE);
+   const tileY = Math.floor(y / Settings.TILE_SIZE);
+   const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+
    const yetiComponent = YetiComponentArray.getComponent(entity);
-   return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.tundra && yetiComponent.territory.includes(tileIndex);
+   return !layer.positionHasWall(x, y) && layer.getBiomeAtPosition(x, y) === Biome.tundra && yetiComponent.territory.includes(tileIndex);
 }
 
 export function createYetiConfig(): EntityConfig<ComponentTypes> {
@@ -59,7 +63,7 @@ export function createYetiConfig(): EntityConfig<ComponentTypes> {
    const statusEffectComponent = new StatusEffectComponent(0);
    
    const aiHelperComponent = new AIHelperComponent(500);
-   aiHelperComponent.ais[AIType.wander] = new WanderAI(100, Math.PI * 1.5, 0.6, tileIsValidCallback);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(100, Math.PI * 1.5, 0.6, positionIsValidCallback);
    
    // @Incomplete?
    const yetiComponent = new YetiComponent([]);

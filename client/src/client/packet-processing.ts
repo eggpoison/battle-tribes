@@ -1,10 +1,10 @@
 import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
-import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
-import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ItemType } from "battletribes-shared/items/items";
 import { PacketReader } from "battletribes-shared/packets";
 import { Settings } from "battletribes-shared/settings";
-import { Biome, TileType } from "battletribes-shared/tiles";
+import { Biome, SubtileType, TileType } from "battletribes-shared/tiles";
 import { readCrossbowLoadProgressRecord } from "../entity-components/InventoryUseComponent";
 import { TribesmanTitle } from "battletribes-shared/titles";
 import { ItemRequirements } from "battletribes-shared/items/crafting-recipes";
@@ -53,8 +53,6 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
       for (let tileIndex = 0; tileIndex < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS; tileIndex++) {
          const tileType = reader.readNumber() as TileType;
          const tileBiome = reader.readNumber() as Biome;
-         const isWall = reader.readBoolean();
-         reader.padOffset(3);
          const flowDirection = reader.readNumber();
          const temperature = reader.readNumber();
          const humidity = reader.readNumber();
@@ -62,7 +60,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
          const tileX = Board.getTileX(tileIndex);
          const tileY = Board.getTileY(tileIndex);
    
-         const tile = new Tile(tileX, tileY, tileType, tileBiome, isWall);
+         const tile = new Tile(tileX, tileY, tileType, tileBiome);
          tiles.push(tile);
    
          if (typeof flowDirections[tileX] === "undefined") {
@@ -82,25 +80,26 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
          grassInfoRecord[tileX]![tileY] = grassInfo;
       }
 
-      // Flag all tiles which border water or walls
+      // Read in subtiles
+      const wallSubtileTypes = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS * 16);
+      for (let i = 0; i < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS * 16; i++) {
+         const subtileType = reader.readNumber();
+         wallSubtileTypes[i] = subtileType;
+      }
+
+      // Read subtile damages taken
+      const numEntries = reader.readNumber();
+      const wallSubtileDamageTakenMap = new Map<number, number>();
+      for (let i = 0; i < numEntries; i++) {
+         const subtileIndex = reader.readNumber();
+         const damageTaken = reader.readNumber();
+
+         wallSubtileDamageTakenMap.set(subtileIndex, damageTaken);
+      }
+
+      // Flag all tiles which border water
       for (let i = 0; i < tiles.length; i++) {
          const tile = tiles[i];
-         if (tile.isWall) {
-            const tileX = i % (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2) - Settings.EDGE_GENERATION_DISTANCE;
-            const tileY = Math.floor(i / (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2)) - Settings.EDGE_GENERATION_DISTANCE;
-
-            for (let j = 0; j < NEIGHBOUR_OFFSETS.length; j++) {
-               const neighbourTileX = tileX + NEIGHBOUR_OFFSETS[j][0];
-               const neighbourTileY = tileY + NEIGHBOUR_OFFSETS[j][1];
-
-               if (tileIsWithinEdge(neighbourTileX, neighbourTileY)) {
-                  const tileIndex = getTileIndexIncludingEdges(neighbourTileX, neighbourTileY);
-                  const neighbourTile = tiles[tileIndex];
-                  neighbourTile.bordersWall = true;
-               }
-            }
-         }
-
          if (tile.type === TileType.water) {
             const tileX = i % (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2) - Settings.EDGE_GENERATION_DISTANCE;
             const tileY = Math.floor(i / (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2)) - Settings.EDGE_GENERATION_DISTANCE;
@@ -118,7 +117,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
          }
       }
 
-      const layer = new Layer(i, tiles, flowDirections, [], [], grassInfoRecord);
+      const layer = new Layer(i, tiles, wallSubtileTypes, wallSubtileDamageTakenMap, flowDirections, [], [], grassInfoRecord);
       addLayer(layer);
    }
 
@@ -677,15 +676,23 @@ export function processGameDataPacket(reader: PacketReader): void {
       const layerIdx = reader.readNumber();
       const tileIndex = reader.readNumber();
       const tileType = reader.readNumber();
-      const isWall = reader.readBoolean();
-      reader.padOffset(3);
 
       tileUpdates.push({
          layerIdx: layerIdx,
          tileIndex: tileIndex,
-         type: tileType,
-         isWall: isWall
+         type: tileType
       });
+   }
+
+   // Wall subtile updates
+   for (const layer of layers) {
+      const numUpdates = reader.readNumber();
+      for (let i = 0; i < numUpdates; i++) {
+         const subtileIndex = reader.readNumber();
+         const subtileType = reader.readNumber() as SubtileType;
+         const damageTaken = reader.readNumber();
+         layer.registerSubtileUpdate(subtileIndex, subtileType, damageTaken);
+      }
    }
 
    const playerHealth = reader.readNumber();

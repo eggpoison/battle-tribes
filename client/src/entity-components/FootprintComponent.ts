@@ -50,7 +50,7 @@ const createFootstepSound = (footprintComponent: FootprintComponent): void => {
          break;
       }
       case TileType.snow: {
-         playSound(("snow-walk-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.07, 1, transformComponent.position);
+         playSound(("snow-walk-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.1, 1, transformComponent.position);
          break;
       }
       case TileType.rock: {

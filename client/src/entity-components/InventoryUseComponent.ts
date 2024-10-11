@@ -569,7 +569,7 @@ class InventoryUseComponent extends ServerComponent{
    }
 
    private playBlockEffects(x: number, y: number, blockType: BlockType): void {
-      playSound(blockType === BlockType.full ? "shield-block.mp3" : "block.mp3", blockType === BlockType.partial ? 0.8 : 0.5, 1, new Point(x, y));
+      playSound(blockType === BlockType.shieldBlock ? "shield-block.mp3" : "block.mp3", blockType === BlockType.toolBlock ? 0.8 : 0.5, 1, new Point(x, y));
       
       for (let i = 0; i < 8; i++) {
          const offsetMagnitude = randFloat(0, 18);

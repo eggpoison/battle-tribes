@@ -334,10 +334,12 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
    
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
+      if (!damageBox.isActive) {
+         continue;
+      }
       
       const collidingSubtiles = getBoxCollidingWallSubtiles(layer, damageBox.box);
       if (collidingSubtiles.length > 0) {
-         console.log("A");
          // Cancel the attack
          const limb = inventoryUseComponent.getLimbInfoByInventoryName(damageBox.associatedLimbInventoryName);
          cancelAttack(limb);
@@ -357,6 +359,9 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
    
    for (let i = 0; i < damageBoxComponent.blockBoxes.length; i++) {
       const blockBox = damageBoxComponent.blockBoxes[i];
+      if (!blockBox.isActive) {
+         continue;
+      }
       
       // Check for blocks
       const collisionInfo = getCollidingBox(entity, blockBox);

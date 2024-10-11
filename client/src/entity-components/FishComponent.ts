@@ -7,6 +7,8 @@ import { TileType } from "battletribes-shared/tiles";
 import Board from "../Board";
 import { createWaterSplashParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { getEntityLayer } from "../world";
+import { getEntityTile } from "./TransformComponent";
 
 class FishComponent extends ServerComponent {
    public colour: FishColour = 0;
@@ -29,7 +31,10 @@ export const FishComponentArray = new ComponentArray<FishComponent>(ComponentArr
 
 function onTick(fishComponent: FishComponent): void {
    const transformComponent = fishComponent.entity.getServerComponent(ServerComponentType.transform);
-   if (transformComponent.tile.type !== TileType.water && Board.tickIntervalHasPassed(0.4)) {
+   const layer = getEntityLayer(fishComponent.entity.id);
+   
+   const tile = getEntityTile(layer, transformComponent);
+   if (tile.type !== TileType.water && Board.tickIntervalHasPassed(0.4)) {
       for (let i = 0; i < 8; i++) {
          const spawnOffsetDirection = 2 * Math.PI * Math.random();
          const spawnPositionX = transformComponent.position.x + 8 * Math.sin(spawnOffsetDirection);

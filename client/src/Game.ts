@@ -34,7 +34,7 @@ import { createPlaceableItemProgram, renderGhostEntities } from "./rendering/web
 import { setupFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { createTextureAtlases } from "./texture-atlases/texture-atlases";
 import { createForcefieldShaders, renderForcefield } from "./rendering/webgl/world-border-forcefield-rendering";
-import { playRiverSounds, setupAudio, updateSoundEffectVolumes } from "./sound";
+import { playRiverSounds, loadSoundEffects, updateSoundEffectVolumes } from "./sound";
 import { createTechTreeGLContext, createTechTreeShaders, renderTechTree } from "./rendering/webgl/tech-tree-rendering";
 import { createResearchOrbShaders, renderResearchOrb } from "./rendering/webgl/research-orb-rendering";
 import { attemptToResearch, updateActiveResearchBench, updateResearchOrb } from "./research";
@@ -329,7 +329,7 @@ abstract class Game {
             console.log("preloading images",performance.now() - l);
             l = performance.now();
             // @Speed
-            await setupAudio();
+            await loadSoundEffects();
             
             console.log("audio",performance.now() - l);
             l = performance.now();

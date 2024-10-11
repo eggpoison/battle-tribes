@@ -6,7 +6,7 @@ import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import { createSnowParticle, createWhiteSmokeParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { AudioFilePath, playSound } from "../sound";
+import { playSound } from "../sound";
 import { RandomSoundComponentArray } from "./client-components/RandomSoundComponent";
 import { Settings } from "../../../shared/src/settings";
 import { TransformComponentArray } from "./TransformComponent";
@@ -20,10 +20,10 @@ export const YETI_SIZE = 128;
 const YETI_PAW_START_ANGLE = Math.PI/3;
 const YETI_PAW_END_ANGLE = Math.PI/6;
 
-const AMBIENT_SOUNDS: ReadonlyArray<AudioFilePath> = ["yeti-ambient-1.mp3", "yeti-ambient-2.mp3", "yeti-ambient-3.mp3", "yeti-ambient-4.mp3", "yeti-ambient-5.mp3", "yeti-ambient-6.mp3"];
-const ANGRY_SOUNDS: ReadonlyArray<AudioFilePath> = ["yeti-angry-1.mp3", "yeti-angry-2.mp3", "yeti-angry-3.mp3", "yeti-angry-4.mp3", "yeti-angry-5.mp3"];
-const HURT_SOUNDS: ReadonlyArray<AudioFilePath> = ["yeti-hurt-1.mp3", "yeti-hurt-2.mp3", "yeti-hurt-3.mp3", "yeti-hurt-4.mp3", "yeti-hurt-5.mp3"];
-const DEATH_SOUNDS: ReadonlyArray<AudioFilePath> = ["yeti-death-1.mp3", "yeti-death-2.mp3"];
+const AMBIENT_SOUNDS: ReadonlyArray<string> = ["yeti-ambient-1.mp3", "yeti-ambient-2.mp3", "yeti-ambient-3.mp3", "yeti-ambient-4.mp3", "yeti-ambient-5.mp3", "yeti-ambient-6.mp3"];
+const ANGRY_SOUNDS: ReadonlyArray<string> = ["yeti-angry-1.mp3", "yeti-angry-2.mp3", "yeti-angry-3.mp3", "yeti-angry-4.mp3", "yeti-angry-5.mp3"];
+const HURT_SOUNDS: ReadonlyArray<string> = ["yeti-hurt-1.mp3", "yeti-hurt-2.mp3", "yeti-hurt-3.mp3", "yeti-hurt-4.mp3", "yeti-hurt-5.mp3"];
+const DEATH_SOUNDS: ReadonlyArray<string> = ["yeti-death-1.mp3", "yeti-death-2.mp3"];
 
 class YetiComponent extends ServerComponent {
    public pawRenderParts: ReadonlyArray<RenderPart>;

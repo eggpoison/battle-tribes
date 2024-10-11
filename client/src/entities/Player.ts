@@ -1,4 +1,3 @@
-import { EntityType } from "battletribes-shared/entities";
 import Camera from "../Camera";
 import { halfWindowHeight, halfWindowWidth } from "../webgl";
 import TribeMember, { addTribeMemberRenderParts } from "./TribeMember";

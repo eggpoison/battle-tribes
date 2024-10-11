@@ -1,12 +1,10 @@
 import { randFloat, randInt } from "battletribes-shared/utils";
-import { EntityType, FishColour } from "battletribes-shared/entities";
+import { FishColour } from "battletribes-shared/entities";
 import { ServerComponentType } from "battletribes-shared/components";
 import { HitData } from "battletribes-shared/client-server-types";
-import { TileType } from "battletribes-shared/tiles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import Board from "../Board";
-import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../particles";
-import { AudioFilePath, playSound } from "../sound";
+import { BloodParticleSize, createBloodParticle, createBloodParticleFountain } from "../particles";
+import { playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
@@ -44,7 +42,7 @@ class Fish extends Entity {
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, position.x, position.y, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
       }
 
-      playSound(("fish-hurt-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+      playSound("fish-hurt-" + randInt(1, 4) + ".mp3", 0.4, 1, transformComponent.position);
    }
 
    public onDie(): void {

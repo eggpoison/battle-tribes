@@ -15,9 +15,11 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { getEntityType } from "../world";
 
 export function getTribesmanRadius(tribesman: Entity): number {
-   switch (tribesman.type) {
+   const entityType = getEntityType(tribesman.id);
+   switch (entityType) {
       case EntityType.player:
       case EntityType.tribeWarrior: {
          return 32;
@@ -26,7 +28,7 @@ export function getTribesmanRadius(tribesman: Entity): number {
          return 28;
       }
       default: {
-         throw new Error("Unknown radius for entity type " + EntityTypeString[tribesman.type]);
+         throw new Error("Unknown radius for entity type " + EntityTypeString[entityType]);
       }
    }
 }
@@ -188,7 +190,7 @@ class TribeMemberComponent extends ServerComponent {
                   // @Hack
                   let xo: number;
                   let yo: number;
-                  if (this.entity.type === EntityType.tribeWorker) {
+                  if (getEntityType(this.entity.id) === EntityType.tribeWorker) {
                      xo = 28;
                      yo = 24;
                   } else {

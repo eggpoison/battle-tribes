@@ -124,7 +124,7 @@ export class InventoryUseComponent {
          lastBlockTick: 0,
          blockPositionX: 0,
          blockPositionY: 0,
-         blockType: BlockType.partial
+         blockType: BlockType.toolBlock
       };
       
       this.limbInfos.push(useInfo);
@@ -226,8 +226,8 @@ export function onBlockBoxCollisionWithDamageBox(attacker: EntityID, victim: Ent
 
    attackerLimb.limbDamageBox.isBlocked = true;
    attackerLimb.heldItemDamageBox.isBlocked = true;
-   // If the attack is blocked fully, just deactivate the attack boxes
-   if (blockBox.blockType === BlockType.full) {
+   // If the block box is a shield, just deactivate the attack boxes
+   if (blockBox.blockType === BlockType.shieldBlock) {
       attackerLimb.limbDamageBox.isActive = false;
       attackerLimb.heldItemDamageBox.isActive = false;
 
@@ -258,7 +258,7 @@ export function onBlockBoxCollisionWithProjectile(blockingEntity: EntityID, proj
    blockBoxLimb.blockPositionY = blockBox.box.position.y;
    blockBoxLimb.blockType = blockBox.blockType;
 
-   if (blockBox.blockType === BlockType.full) {
+   if (blockBox.blockType === BlockType.shieldBlock) {
       const blockingEntityTransformComponent = TransformComponentArray.getComponent(blockingEntity);
       const projectileTransformComponent = TransformComponentArray.getComponent(projectile);
       
@@ -361,7 +361,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
 
                limb.limbDamageBox.isActive = false;
                limb.blockBox.isActive = true;
-               limb.blockBox.blockType = heldItem !== null && ITEM_TYPE_RECORD[heldItem.type] === "shield" ? BlockType.full : BlockType.partial;
+               limb.blockBox.blockType = heldItem !== null && ITEM_TYPE_RECORD[heldItem.type] === "shield" ? BlockType.shieldBlock : BlockType.toolBlock;
 
                const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
                const damageBoxInfo = heldItemAttackInfo.heldItemDamageBoxInfo!;

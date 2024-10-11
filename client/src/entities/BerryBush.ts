@@ -1,7 +1,7 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { randFloat, randInt } from "battletribes-shared/utils";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
-import { AudioFilePath, playSound } from "../sound";
+import { playSound } from "../sound";
 import Entity from "../Entity";
 
 class BerryBush extends Entity {
@@ -25,7 +25,7 @@ class BerryBush extends Entity {
          createLeafSpeckParticle(transformComponent.position.x, transformComponent.position.y, BerryBush.RADIUS, BerryBush.LEAF_SPECK_COLOUR_LOW, BerryBush.LEAF_SPECK_COLOUR_HIGH);
       }
 
-      playSound(("berry-bush-hit-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+      playSound("berry-bush-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, transformComponent.position);
    }
 
    public onDie(): void {

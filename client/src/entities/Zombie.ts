@@ -1,10 +1,9 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { angle, randFloat, randInt } from "battletribes-shared/utils";
 import { HitData } from "battletribes-shared/client-server-types";
-import { EntityType } from "battletribes-shared/entities";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import { AudioFilePath, playSound } from "../sound";
+import { playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
@@ -68,7 +67,7 @@ class Zombie extends Entity {
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
       }
 
-      playSound(("zombie-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+      playSound("zombie-hurt-" + randInt(1, 3) + ".mp3", 0.4, 1, transformComponent.position);
    }
 
    public onDie(): void {

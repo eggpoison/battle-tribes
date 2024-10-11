@@ -1,7 +1,7 @@
 import { EntityID } from "../../../../shared/src/entities";
 import { randFloat, randItem } from "../../../../shared/src/utils";
 import Entity from "../../Entity";
-import { AudioFilePath, playSound } from "../../sound";
+import { playSound } from "../../sound";
 import Component from "../Component";
 import { ComponentArray, ComponentArrayType } from "../ComponentArray";
 import { ClientComponentType } from "../components";
@@ -15,7 +15,7 @@ export default class RandomSoundComponent extends Component {
 
    public soundTimerTicks = 0;
 
-   public sounds: ReadonlyArray<AudioFilePath> = [];
+   public sounds: ReadonlyArray<string> = [];
    
    constructor(entity: Entity) {
       super(entity);
@@ -24,7 +24,7 @@ export default class RandomSoundComponent extends Component {
       RandomSoundComponentArray.addComponent(entity.id, this);
    }
 
-   public updateSounds(minSoundIntervalTicks: number, maxSoundIntervalTicks: number, sounds: ReadonlyArray<AudioFilePath>, volume: number) {
+   public updateSounds(minSoundIntervalTicks: number, maxSoundIntervalTicks: number, sounds: ReadonlyArray<string>, volume: number) {
       // Don't update if already updated
       if (this.sounds === sounds) {
          return;

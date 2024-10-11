@@ -1,14 +1,10 @@
-import { EntityID, EntityType, EntityTypeString } from "../../shared/src/entities";
+import { EntityID, EntityType } from "../../shared/src/entities";
 import { Settings } from "../../shared/src/settings";
 import Chunk from "./Chunk";
 import Entity from "./Entity";
 import { getComponentArrays } from "./entity-components/ComponentArray";
 import { TransformComponentArray } from "./entity-components/TransformComponent";
 import Layer from "./Layer";
-import { getEntityRenderLayer } from "./render-layers";
-import { addRenderable, RenderableType, removeRenderable } from "./rendering/render-loop";
-import { removeEntityFromDirtyArray } from "./rendering/render-part-matrices";
-import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity } from "./rendering/webgl/chunked-entity-rendering";
 import { addEntityToRenderHeightMap } from "./rendering/webgl/entity-rendering";
 
 export const layers = new Array<Layer>();
@@ -140,7 +136,10 @@ export function changeEntityLayer(entityID: EntityID, newLayer: Layer): void {
          }
       }
    }
-   transformComponent.chunks = newChunks;
+   transformComponent.chunks.clear();
+   for (const chunk of newChunks) {
+      transformComponent.chunks.add(chunk);
+   }
 
    entityLayers[entityID] = newLayer;
 }

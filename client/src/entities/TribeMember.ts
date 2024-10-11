@@ -8,14 +8,15 @@ import { TileType } from "battletribes-shared/tiles";
 import Entity from "../Entity";
 import { BloodParticleSize, LeafParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import { AudioFilePath, playSound } from "../sound";
+import { playSound } from "../sound";
 import { getTribesmanRadius, TribeMemberComponentArray } from "../entity-components/TribeMemberComponent";
 import { getTribeType, TribeComponentArray } from "../entity-components/TribeComponent";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
-import { getEntityType } from "../world";
+import { getEntityLayer, getEntityType } from "../world";
+import { getEntityTile } from "../entity-components/TransformComponent";
 
 export const TRIBE_MEMBER_Z_INDEXES: Record<string, number> = {
    hand: 1,
@@ -25,8 +26,9 @@ export const TRIBE_MEMBER_Z_INDEXES: Record<string, number> = {
 const GOBLIN_EAR_OFFSET = 4;
 const GOBLIN_EAR_ANGLE = Math.PI / 3;
 
-const GOBLIN_HURT_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-hurt-1.mp3", "goblin-hurt-2.mp3", "goblin-hurt-3.mp3", "goblin-hurt-4.mp3", "goblin-hurt-5.mp3"];
-const GOBLIN_DIE_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-die-1.mp3", "goblin-die-2.mp3", "goblin-die-3.mp3", "goblin-die-4.mp3"];
+// @Memory
+const GOBLIN_HURT_SOUNDS: ReadonlyArray<string> = ["goblin-hurt-1.mp3", "goblin-hurt-2.mp3", "goblin-hurt-3.mp3", "goblin-hurt-4.mp3", "goblin-hurt-5.mp3"];
+const GOBLIN_DIE_SOUNDS: ReadonlyArray<string> = ["goblin-die-1.mp3", "goblin-die-2.mp3", "goblin-die-3.mp3", "goblin-die-4.mp3"];
 
 const getFistTextureSource = (entityType: EntityType, tribeType: TribeType): string => {
    switch (entityType) {
@@ -268,15 +270,15 @@ abstract class TribeMember extends Entity {
             break;
          }
          case TribeType.plainspeople: {
-            playSound(("plainsperson-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+            playSound("plainsperson-hurt-" + randInt(1, 3) + ".mp3", 0.4, 1, transformComponent.position);
             break;
          }
          case TribeType.barbarians: {
-            playSound(("barbarian-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+            playSound("barbarian-hurt-" + randInt(1, 3) + ".mp3", 0.4, 1, transformComponent.position);
             break;
          }
          case TribeType.frostlings: {
-            playSound(("frostling-hurt-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+            playSound("frostling-hurt-" + randInt(1, 4) + ".mp3", 0.4, 1, transformComponent.position);
             break;
          }
       }
@@ -332,13 +334,15 @@ abstract class TribeMember extends Entity {
       const armour = armourSlotInventory.itemSlots[1];
       if (typeof armour !== "undefined") {
          const transformComponent = this.getServerComponent(ServerComponentType.transform);
+         const layer = getEntityLayer(transformComponent.entity.id);
+         const tile = getEntityTile(layer, transformComponent);
 
          // If snow armour is equipped, move at normal speed on snow tiles
-         if ((armour.type === ItemType.frost_armour || armour.type === ItemType.deepfrost_armour) && transformComponent.tile.type === TileType.snow) {
+         if ((armour.type === ItemType.frost_armour || armour.type === ItemType.deepfrost_armour) && tile.type === TileType.snow) {
             return 1;
          }
          // If fishlord suit is equipped, move at normal speed on snow tiles
-         if (armour.type === ItemType.fishlord_suit && transformComponent.tile.type === TileType.water) {
+         if (armour.type === ItemType.fishlord_suit && tile.type === TileType.water) {
             return 1;
          }
       }

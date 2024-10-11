@@ -1784,9 +1784,9 @@ export function createBlockParticle(x: number, y: number, blockType: BlockType):
       0,
       0,
       0,
-      blockType === BlockType.partial ? 255/255 : 210/255,
-      blockType === BlockType.partial ? 249/255 : 210/255,
-      blockType === BlockType.partial ? 201/255 : 210/255
+      blockType === BlockType.toolBlock ? 255/255 : 210/255,
+      blockType === BlockType.toolBlock ? 249/255 : 210/255,
+      blockType === BlockType.toolBlock ? 201/255 : 210/255
    );
    Board.highMonocolourParticles.push(particle);
 }

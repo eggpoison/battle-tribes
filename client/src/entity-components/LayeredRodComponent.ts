@@ -9,7 +9,7 @@ import { PacketReader } from "battletribes-shared/packets";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { Hitbox } from "battletribes-shared/boxes/boxes";
-import { getEntityLayer, getEntityType } from "../world";
+import { getEntityByID, getEntityLayer, getEntityType } from "../world";
 import { TransformComponentArray } from "./TransformComponent";
 
 const enum Vars {
@@ -110,8 +110,6 @@ const getLayerColour = (entity: EntityID, r: number, g: number, b: number, layer
 }
 
 class LayeredRodComponent extends ServerComponent {
-   public readonly renderParts = new Array<RenderPart>();
-
    public numLayers = 0;
    
    public naturalBendX = 0;
@@ -143,7 +141,6 @@ class LayeredRodComponent extends ServerComponent {
          renderPart.offset.x = bendX * layer;
          renderPart.offset.y = bendY * layer;
 
-         this.renderParts.push(renderPart);
          this.entity.attachRenderThing(renderPart);
       }
    }
@@ -217,8 +214,9 @@ const updateOffsets = (layeredRodComponent: LayeredRodComponent): void => {
    const bendX = layeredRodComponent.naturalBendX * naturalBendMultiplier + layeredRodComponent.bendX;
    const bendY = layeredRodComponent.naturalBendY * naturalBendMultiplier + layeredRodComponent.bendY;
    
+   const entity = getEntityByID(layeredRodComponent.entity.id)!;
    for (let layer = 1; layer <= layeredRodComponent.numLayers; layer++) {
-      const renderPart = layeredRodComponent.renderParts[layer - 1];
+      const renderPart = entity.allRenderThings[layer - 1];
 
       renderPart.offset.x = bendX * layer;
       renderPart.offset.y = bendY * layer;

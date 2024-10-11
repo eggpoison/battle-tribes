@@ -5,6 +5,8 @@ import Entity from "../Entity";
 import { TileType } from "battletribes-shared/tiles";
 import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityTile } from "../entity-components/TransformComponent";
+import { getEntityLayer } from "../world";
 
 class Slimewisp extends Entity {
    private static readonly RADIUS = 16;
@@ -24,9 +26,11 @@ class Slimewisp extends Entity {
 
    public overrideTileMoveSpeedMultiplier(): number | null {
       const transformComponent = this.getServerComponent(ServerComponentType.transform);
-
+      const layer = getEntityLayer(this.id);
+      
       // Slimewisps move at normal speed on slime blocks
-      if (transformComponent.tile.type === TileType.slime) {
+      const tile = getEntityTile(layer, transformComponent);
+      if (tile.type === TileType.slime) {
          return 1;
       }
       return null;

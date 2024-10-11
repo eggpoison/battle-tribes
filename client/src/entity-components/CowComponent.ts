@@ -1,15 +1,16 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { randInt } from "battletribes-shared/utils";
-import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
 import Board from "../Board";
 import { createDirtParticle } from "../particles";
-import { AudioFilePath, playSound } from "../sound";
+import { playSound } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { CowSpecies } from "battletribes-shared/entities";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { getEntityLayer } from "../world";
+import { getEntityTile } from "./TransformComponent";
 
 class CowComponent extends ServerComponent {
    public species = CowSpecies.black;
@@ -26,9 +27,12 @@ class CowComponent extends ServerComponent {
       // When the cow has finished grazing, create a bunch of dirt particles
       if (grazeProgress < this.grazeProgress) {
          const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+         const layer = getEntityLayer(transformComponent.entity.id);
+         
+         const tile = getEntityTile(layer, transformComponent);
          for (let i = 0; i < 15; i++) {
-            const x = (transformComponent.tile.x + Math.random()) * Settings.TILE_SIZE;
-            const y = (transformComponent.tile.y + Math.random()) * Settings.TILE_SIZE;
+            const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
+            const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
             createDirtParticle(x, y, ParticleRenderLayer.low);
          }
       }
@@ -54,6 +58,6 @@ function onTick(cowComponent: CowComponent): void {
    }
 
    if (Math.random() < 0.1 / Settings.TPS) {
-      playSound(("cow-ambient-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.2, 1, transformComponent.position);
+      playSound("cow-ambient-" + randInt(1, 3) + ".mp3", 0.2, 1, transformComponent.position);
    }
 }

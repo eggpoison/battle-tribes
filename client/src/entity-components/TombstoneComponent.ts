@@ -3,9 +3,8 @@ import { DeathInfo, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point, randInt } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { createDirtParticle } from "../particles";
-import { playSound, AudioFilePath } from "../sound";
+import { playSound } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
@@ -70,7 +69,7 @@ function onTick(tombstoneComponent: TombstoneComponent): void {
 
       const transformComponent = tombstoneComponent.entity.getServerComponent(ServerComponentType.transform);
       if (transformComponent.ageTicks % 6 === 0) {
-         playSound(("zombie-dig-" + randInt(1, 5) + ".mp3") as AudioFilePath, 0.15, 1, new Point(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY));
+         playSound("zombie-dig-" + randInt(1, 5) + ".mp3", 0.15, 1, new Point(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY));
       }
    }
 }

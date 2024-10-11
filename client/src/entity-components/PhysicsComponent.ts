@@ -7,7 +7,7 @@ import Board from "../Board";
 import { EntityType } from "battletribes-shared/entities";
 import Particle from "../Particle";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
-import { playSound, AudioFilePath } from "../sound";
+import { playSound } from "../sound";
 import Player from "../entities/Player";
 import { keyIsPressed } from "../keyboard-input";
 import { resolveWallCollisions } from "../collision";
@@ -15,6 +15,7 @@ import { PacketReader } from "battletribes-shared/packets";
 import { createWaterSplashParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { getEntityLayer, getEntityType } from "../world";
+import { getEntityTile } from "./TransformComponent";
 
 const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    if (isNaN(physicsComponent.selfVelocity.x)) {
@@ -29,6 +30,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
 
    const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
    const layer = getEntityLayer(physicsComponent.entity.id);
+   const tile = getEntityTile(layer, transformComponent);
    
    if (isNaN(transformComponent.position.x)) {
       throw new Error("Position was NaN.");
@@ -36,12 +38,12 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    
    // Apply acceleration (to self-velocity)
    if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
-      let tileMoveSpeedMultiplier = TILE_MOVE_SPEED_MULTIPLIERS[transformComponent.tile.type];
-      if (transformComponent.tile.type === TileType.water && !transformComponent.isInRiver()) {
+      let tileMoveSpeedMultiplier = TILE_MOVE_SPEED_MULTIPLIERS[tile.type];
+      if (tile.type === TileType.water && !transformComponent.isInRiver()) {
          tileMoveSpeedMultiplier = 1;
       }
 
-      const friction = TILE_FRICTIONS[transformComponent.tile.type];
+      const friction = TILE_FRICTIONS[tile.type];
       
       // Calculate the desired velocity based on acceleration
       const desiredVelocityX = physicsComponent.acceleration.x * friction * tileMoveSpeedMultiplier;
@@ -56,7 +58,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    // Apply river flow to external velocity
    const moveSpeedIsOverridden = typeof physicsComponent.entity.overrideTileMoveSpeedMultiplier !== "undefined" && physicsComponent.entity.overrideTileMoveSpeedMultiplier() !== null;
    if (transformComponent.isInRiver() && !moveSpeedIsOverridden) {
-      const flowDirection = layer.getRiverFlowDirection(transformComponent.tile.x, transformComponent.tile.y);
+      const flowDirection = layer.getRiverFlowDirection(tile.x, tile.y);
       physicsComponent.selfVelocity.x += 240 / Settings.TPS * Math.sin(flowDirection);
       physicsComponent.selfVelocity.y += 240 / Settings.TPS * Math.cos(flowDirection);
    }
@@ -65,7 +67,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    
    // Apply friction to self-velocity
    if (physicsComponent.selfVelocity.x !== 0 || physicsComponent.selfVelocity.y !== 0) {
-      const friction = TILE_FRICTIONS[transformComponent.tile.type];
+      const friction = TILE_FRICTIONS[tile.type];
       
       // Apply air and ground friction to selfVelocity
       physicsComponent.selfVelocity.x *= 1 - friction * Settings.I_TPS * 2;
@@ -83,7 +85,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
 
    // Apply friction to external velocity
    if (physicsComponent.externalVelocity.x !== 0 || physicsComponent.externalVelocity.y !== 0) {
-      const friction = TILE_FRICTIONS[transformComponent.tile.type];
+      const friction = TILE_FRICTIONS[tile.type];
       
       // Apply air and ground friction to externalVelocity
       physicsComponent.externalVelocity.x *= 1 - friction * Settings.I_TPS * 2;
@@ -229,7 +231,7 @@ function onTick(physicsComponent: PhysicsComponent): void {
       );
       Board.lowTexturedParticles.push(particle);
 
-      playSound(("water-splash-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.25, 1, transformComponent.position);
+      playSound("water-splash-" + randInt(1, 3) + ".mp3", 0.25, 1, transformComponent.position);
    }
 }
 

@@ -1,10 +1,10 @@
-import { EntityType, TreeSize } from "battletribes-shared/entities";
+import { TreeSize } from "battletribes-shared/entities";
 import { angle, randFloat, randInt, randItem } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
 import { HitData, HitFlags } from "battletribes-shared/client-server-types";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import { AudioFilePath, playSound } from "../sound";
+import { playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
@@ -13,8 +13,8 @@ const treeTextures: { [T in TreeSize]: string } = {
    [TreeSize.large]: "entities/tree/tree-large.png"
 };
 
-export const TREE_HIT_SOUNDS: ReadonlyArray<AudioFilePath> = ["tree-hit-1.mp3", "tree-hit-2.mp3", "tree-hit-3.mp3", "tree-hit-4.mp3"];
-export const TREE_DESTROY_SOUNDS: ReadonlyArray<AudioFilePath> = ["tree-destroy-1.mp3", "tree-destroy-2.mp3", "tree-destroy-3.mp3", "tree-destroy-4.mp3"];
+export const TREE_HIT_SOUNDS: ReadonlyArray<string> = ["tree-hit-1.mp3", "tree-hit-2.mp3", "tree-hit-3.mp3", "tree-hit-4.mp3"];
+export const TREE_DESTROY_SOUNDS: ReadonlyArray<string> = ["tree-destroy-1.mp3", "tree-destroy-2.mp3", "tree-destroy-3.mp3", "tree-destroy-4.mp3"];
 
 const getRadius = (treeSize: TreeSize): number => {
    return 40 + treeSize * 10;
@@ -78,7 +78,7 @@ class Tree extends Entity {
          playSound(randItem(TREE_HIT_SOUNDS), 0.4, 1, transformComponent.position);
       } else {
          // @Temporary
-         playSound(("berry-bush-hit-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+         playSound("berry-bush-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, transformComponent.position);
       }
    }
 

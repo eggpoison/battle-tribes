@@ -52,8 +52,9 @@ export interface DamageBox<T extends BoxType = BoxType> extends GenericCollision
 export interface BlockBox<T extends BoxType = BoxType> extends GenericCollisionBoxInfo<T> {}
 
 export const enum BlockType {
-   partial,
-   full
+   toolBlock,
+   shieldBlock,
+   wallBlock
 }
 
 export const enum GenericCollisionBoxType {

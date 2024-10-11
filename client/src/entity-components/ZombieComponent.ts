@@ -1,7 +1,7 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { randInt } from "battletribes-shared/utils";
-import { playSound, AudioFilePath } from "../sound";
+import { playSound } from "../sound";
 import ServerComponent from "./ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
@@ -27,6 +27,6 @@ export const ZombieComponentArray = new ComponentArray<ZombieComponent>(Componen
 function onTick(zombieComponent: ZombieComponent): void {
    if (Math.random() < 0.1 / Settings.TPS) {
       const transformComponent = zombieComponent.entity.getServerComponent(ServerComponentType.transform);
-      playSound(("zombie-ambient-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+      playSound("zombie-ambient-" + randInt(1, 3) + ".mp3", 0.4, 1, transformComponent.position);
    }
 }

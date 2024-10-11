@@ -29,7 +29,7 @@ export class ServerDamageBox<T extends BoxType = BoxType> extends GenericCollisi
 }
 export class ServerBlockBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements BlockBox<T> {
    public hasBlocked = false;
-   public blockType = BlockType.partial;
+   public blockType = BlockType.toolBlock;
    public collidingEntity: EntityID | null = null;
 }
 

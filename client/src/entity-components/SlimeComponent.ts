@@ -7,7 +7,7 @@ import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
-import { playSound, AudioFilePath } from "../sound";
+import { playSound } from "../sound";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const SLIME_SIZES: ReadonlyArray<number> = [
@@ -169,7 +169,7 @@ export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ComponentA
 function onTick(slimeComponent: SlimeComponent): void {
    if (Math.random() < 0.2 / Settings.TPS) {
       const transformComponent = slimeComponent.entity.getServerComponent(ServerComponentType.transform);
-      playSound(("slime-ambient-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+      playSound("slime-ambient-" + randInt(1, 4) + ".mp3", 0.4, 1, transformComponent.position);
    }
 
    for (let i = 0; i < slimeComponent.orbs.length; i++) {

@@ -4,31 +4,34 @@ import { distance, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battl
 import { Tile } from "../Tile";
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
-import { CircularHitboxData, RectangularHitboxData, RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
+import { RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
 import Chunk from "../Chunk";
 import { randInt } from "battletribes-shared/utils";
 import { randFloat } from "battletribes-shared/utils";
-import { createCircularHitboxFromData, createRectangularHitboxFromData } from "../client/Client";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
-import { boxIsCircular, hitboxIsCircular, Hitbox, updateBox, HitboxFlag } from "battletribes-shared/boxes/boxes";
+import { boxIsCircular, hitboxIsCircular, updateBox, HitboxFlag } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import Layer, { getTileIndexIncludingEdges } from "../Layer";
 import { getEntityLayer } from "../world";
+import { ClientHitbox } from "../boxes";
+import Board from "../Board";
 
-const getTile = (layer: Layer, position: Point): Tile => {
-   const tileX = Math.floor(position.x / Settings.TILE_SIZE);
-   const tileY = Math.floor(position.y / Settings.TILE_SIZE);
+export function getEntityTile(layer: Layer, transformComponent: TransformComponent): Tile {
+   const tileX = Math.floor(transformComponent.position.x / Settings.TILE_SIZE);
+   const tileY = Math.floor(transformComponent.position.y / Settings.TILE_SIZE);
    
    const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
    return layer.getTile(tileIndex);
 }
 
+// @Memory: grass strands don't need a lot of this
 class TransformComponent extends ServerComponent {
    // @Hack
    public ageTicks = 0;
+
    public totalMass = 0;
    
    public readonly position = new Point(-1, -1);
@@ -36,14 +39,10 @@ class TransformComponent extends ServerComponent {
    /** Angle the object is facing, taken counterclockwise from the positive x axis (radians) */
    public rotation = 0;
 
-   // @Memory: Shouldn't even store this
-   // @Cleanup: Shouldn't be undefined at first!
-   public tile!: Tile;
-   
-   public chunks = new Set<Chunk>();
+   public readonly chunks = new Set<Chunk>();
 
-   public hitboxes = new Array<Hitbox>();
-   public readonly hitboxLocalIDs = new Array<number>();
+   public hitboxes = new Array<ClientHitbox>();
+   public readonly hitboxMap = new Map<number, ClientHitbox>();
 
    public collisionBit = 0;
    public collisionMask = 0;
@@ -56,14 +55,13 @@ class TransformComponent extends ServerComponent {
    public boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
 
    public onLoad(): void {
-      const layer = getEntityLayer(this.entity.id);
-      this.tile = getTile(layer, this.position);
-
       this.updatePosition();
    }
 
    public isInRiver(): boolean {
-      if (this.tile.type !== TileType.water) {
+      const layer = getEntityLayer(this.entity.id);
+      const tile = getEntityTile(layer, this);
+      if (tile.type !== TileType.water) {
          return false;
       }
 
@@ -82,10 +80,10 @@ class TransformComponent extends ServerComponent {
       return true;
    }
 
-   public addHitbox(hitbox: Hitbox, localID: number): void {
+   public addHitbox(hitbox: ClientHitbox, localID: number): void {
       updateBox(hitbox.box, this.position.x, this.position.y, this.rotation);
       this.hitboxes.push(hitbox);
-      this.hitboxLocalIDs.push(localID);
+      this.hitboxMap.set(localID, hitbox);
    }
 
    private updateHitboxes(): void {
@@ -173,9 +171,17 @@ class TransformComponent extends ServerComponent {
       reader.padOffset(12 * Float32Array.BYTES_PER_ELEMENT * numRectangularHitboxes);
    }
 
+   private getHitboxLocalID(hitbox: ClientHitbox): number {
+      for (const pair of this.hitboxMap) {
+         if (pair[1] === hitbox) {
+            return pair[0];
+         }
+      }
+
+      throw new Error();
+   }
+
    public updatePosition(): void {
-      const layer = getEntityLayer(this.entity.id);
-      this.tile = getTile(layer, this.position);
       this.updateHitboxes();
       this.updateContainingChunks();
    }
@@ -198,15 +204,21 @@ class TransformComponent extends ServerComponent {
       this.collisionBit = reader.readNumber();
       this.collisionMask = reader.readNumber();
 
-      // @Hack
-      // @Hack
-      // @Hack
+      // @Speed: would be faster if we split the hitboxes array
+      let numExistingCircular = 0;
+      let numExistingRectangular = 0;
+      for (let i = 0; i < this.hitboxes.length; i++) {
+         const hitbox = this.hitboxes[i];
+         if (hitboxIsCircular(hitbox)) {
+            numExistingCircular++;
+         } else {
+            numExistingRectangular++;
+         }
+      }
 
-      // @Speed: Garbage collection
-      
-      // @Garbage
-      const circularHitboxes = new Array<CircularHitboxData>();
+      // Update circular hitboxes
       const numCircularHitboxes = reader.readNumber();
+      let couldBeRemovedCircularHitboxes = numCircularHitboxes !== numExistingCircular;
       for (let i = 0; i < numCircularHitboxes; i++) {
          const mass = reader.readNumber();
          const offsetX = reader.readNumber();
@@ -217,30 +229,42 @@ class TransformComponent extends ServerComponent {
          const collisionMask = reader.readNumber();
          const localID = reader.readNumber();
          const numFlags = reader.readNumber();
+         // @Speed @Garbage
          const flags = new Array<HitboxFlag>();
          for (let i = 0; i < numFlags; i++) {
             flags.push(reader.readNumber());
          }
          const radius = reader.readNumber();
 
-         const data: CircularHitboxData = {
-            mass: mass,
-            offsetX: offsetX,
-            offsetY: offsetY,
-            scale: scale,
-            collisionType: collisionType,
-            collisionBit: collisionBit,
-            collisionMask: collisionMask,
-            localID: localID,
-            flags: flags,
-            radius: radius
-         };
-         circularHitboxes.push(data);
+         // If the hitbox is new, create it
+         const hitbox = this.hitboxMap.get(localID);
+         if (typeof hitbox === "undefined") {
+            const offset = new Point(offsetX, offsetY);
+            const box = new CircularBox(offset, 0, radius);
+            box.scale = scale;
+            const hitbox = new ClientHitbox(box, mass, collisionType, collisionBit, collisionMask, flags);
+            this.addHitbox(hitbox, localID);
+
+            couldBeRemovedCircularHitboxes = true;
+
+         // Otherwise, update it
+         } else {
+            const box = hitbox.box as CircularBox;
+            
+            // Update the existing hitbox
+            box.radius = radius;
+            box.offset.x = offsetX;
+            box.offset.y = offsetY;
+            box.scale = scale;
+            hitbox.collisionType = collisionType;
+            hitbox.lastUpdateTicks = Board.serverTicks;
+            updateBox(box, this.position.x, this.position.y, this.rotation);
+         }
       }
 
-      // @Garbage
-      const rectangularHitboxes = new Array<RectangularHitboxData>();
+      // Update rectangular hitboxes
       const numRectangularHitboxes = reader.readNumber();
+      let couldBeRemovedRectangularHitboxes = numRectangularHitboxes !== numExistingRectangular;
       for (let i = 0; i < numRectangularHitboxes; i++) {
          const mass = reader.readNumber();
          const offsetX = reader.readNumber();
@@ -251,6 +275,7 @@ class TransformComponent extends ServerComponent {
          const collisionMask = reader.readNumber();
          const localID = reader.readNumber();
          const numFlags = reader.readNumber();
+         // @Speed @Garbage
          const flags = new Array<HitboxFlag>();
          for (let i = 0; i < numFlags; i++) {
             flags.push(reader.readNumber());
@@ -259,129 +284,45 @@ class TransformComponent extends ServerComponent {
          const height = reader.readNumber();
          const rotation = reader.readNumber();
 
-         const data: RectangularHitboxData = {
-            mass: mass,
-            offsetX: offsetX,
-            offsetY: offsetY,
-            scale: scale,
-            collisionType: collisionType,
-            collisionBit: collisionBit,
-            collisionMask: collisionMask,
-            localID: localID,
-            flags: flags,
-            width: width,
-            height: height,
-            rotation: rotation
-         };
-         rectangularHitboxes.push(data);
-      }
-      
-      // 
-      // Update hitboxes
-      // 
+         // If the hitbox is new, create it
+         const hitbox = this.hitboxMap.get(localID);
+         if (typeof hitbox === "undefined") {
+            const offset = new Point(offsetX, offsetY);
+            const box = new RectangularBox(offset, width, height, rotation);
+            box.scale = scale;
+            const hitbox = new ClientHitbox(box, mass, collisionType, collisionBit, collisionMask, flags);
+            this.addHitbox(hitbox, localID);
 
-      // Remove hitboxes which are no longer exist
-      for (let i = 0; i < this.hitboxes.length; i++) {
-         const hitbox = this.hitboxes[i];
-         const localID = this.hitboxLocalIDs[i];
+            couldBeRemovedRectangularHitboxes = true;
 
-         // @Speed
-         let localIDExists = false;
-         for (let j = 0; j < circularHitboxes.length; j++) {
-            const hitboxData = circularHitboxes[j];
-            if (hitboxData.localID === localID) {
-               localIDExists = true;
-               break;
-            }
-         }
-         for (let j = 0; j < rectangularHitboxes.length; j++) {
-            const hitboxData = rectangularHitboxes[j];
-            if (hitboxData.localID === localID) {
-               localIDExists = true;
-               break;
-            }
-         }
-
-         if (!localIDExists) {
-            this.hitboxes.splice(i, 1);
-            this.hitboxLocalIDs.splice(i, 1);
-            i--;
-         }
-      }
-
-      for (let i = 0; i < circularHitboxes.length; i++) {
-         const hitboxData = circularHitboxes[i];
-
-         // Check for an existing hitbox
-         // @Speed
-         let existingHitboxIdx = 99999;
-         for (let j = 0; j < this.hitboxes.length; j++) {
-            const hitbox = this.hitboxes[j];
-            if (!hitboxIsCircular(hitbox)) {
-               continue;
-            }
-
-            const localID = this.hitboxLocalIDs[j];
-            if (localID === hitboxData.localID) {
-               existingHitboxIdx = j;
-               break;
-            }
-         }
-         
-         if (existingHitboxIdx !== 99999) {
-            const hitbox = this.hitboxes[existingHitboxIdx];
-            const box = hitbox.box as CircularBox;
-            
-            // Update the existing hitbox
-            box.radius = hitboxData.radius;
-            box.offset.x = hitboxData.offsetX;
-            box.offset.y = hitboxData.offsetY;
-            box.scale = hitboxData.scale;
-            hitbox.collisionType = hitboxData.collisionType;
-            updateBox(box, this.position.x, this.position.y, this.rotation);
+         // Otherwise, update it
          } else {
-            // Create new hitbox
-            const hitbox = createCircularHitboxFromData(hitboxData);
-            this.addHitbox(hitbox, hitboxData.localID);
-         }
-      }
-      // @Cleanup: Copy and paste
-      for (let i = 0; i < rectangularHitboxes.length; i++) {
-         const hitboxData = rectangularHitboxes[i];
-
-         // Check for an existing hitbox
-         // @Speed
-         let existingHitboxIdx = 99999;
-         for (let j = 0; j < this.hitboxes.length; j++) {
-            const hitbox = this.hitboxes[j];
-            if (hitboxIsCircular(hitbox)) {
-               continue;
-            }
-            
-            const localID = this.hitboxLocalIDs[j];
-            if (localID === hitboxData.localID) {
-               existingHitboxIdx = j;
-               break;
-            }
-         }
-         
-         if (existingHitboxIdx !== 99999) {
-            // Update the existing hitbox
-            const hitbox = this.hitboxes[existingHitboxIdx];
             const box = hitbox.box as RectangularBox;
-
-            box.width = hitboxData.width;
-            box.height = hitboxData.height;
-            box.relativeRotation = hitboxData.rotation;
-            box.offset.x = hitboxData.offsetX;
-            box.offset.y = hitboxData.offsetY;
-            box.scale = hitboxData.scale;
-            hitbox.collisionType = hitboxData.collisionType;
+            
+            // Update the existing hitbox
+            box.width = width;
+            box.height = height;
+            box.relativeRotation = rotation;
+            box.offset.x = offsetX;
+            box.offset.y = offsetY;
+            box.scale = scale;
+            hitbox.collisionType = collisionType;
+            hitbox.lastUpdateTicks = Board.serverTicks;
             updateBox(box, this.position.x, this.position.y, this.rotation);
-         } else {
-            // Create new hitbox
-            const hitbox = createRectangularHitboxFromData(hitboxData);
-            this.addHitbox(hitbox, hitboxData.localID);
+         }
+      }
+
+      // Remove hitboxes which no longer exist
+      if (couldBeRemovedCircularHitboxes || couldBeRemovedRectangularHitboxes) {
+         for (let i = 0; i < this.hitboxes.length; i++) {
+            const hitbox = this.hitboxes[i];
+            if (hitbox.lastUpdateTicks !== Board.serverTicks) {
+               // Hitbox is removed!
+               this.hitboxes.splice(i, 1);
+               const localID = this.getHitboxLocalID(hitbox);
+               this.hitboxMap.delete(localID);
+               i--;
+            }
          }
       }
 

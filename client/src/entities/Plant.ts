@@ -1,11 +1,10 @@
 import { angle, randFloat, randInt, randItem } from "battletribes-shared/utils";
 import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
 import { HitData, HitFlags } from "battletribes-shared/client-server-types";
 import Entity from "../Entity";
 import { LeafParticleSize, createDirtParticle, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import Tree, { TREE_DESTROY_SOUNDS, TREE_HIT_SOUNDS } from "./Tree";
-import { playSound, AudioFilePath } from "../sound";
+import { playSound } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 
 class Plant extends Entity {
@@ -73,16 +72,16 @@ class Plant extends Entity {
                playSound(randItem(TREE_HIT_SOUNDS), 0.4, 1, transformComponent.position);
             } else {
                // @Temporary
-               playSound(("berry-bush-hit-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+               playSound("berry-bush-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, transformComponent.position);
             }
             break;
          }
          case PlanterBoxPlant.berryBush: {
-            playSound(("berry-bush-hit-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+            playSound("berry-bush-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, transformComponent.position);
             break;
          }
          case PlanterBoxPlant.iceSpikes: {
-            playSound(("ice-spikes-hit-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+            playSound("ice-spikes-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, transformComponent.position);
             break;
          }
       }

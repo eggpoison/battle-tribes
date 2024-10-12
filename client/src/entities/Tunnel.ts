@@ -1,17 +1,12 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
-import { TUNNEL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
+import { BuildingMaterialComponentArray, TUNNEL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
 
 class Tunnel extends Entity {
-   constructor(id: number) {
-      super(id);
-   }
-
    public onLoad(): void {
-      const buildingMaterialComponent = this.getServerComponent(ServerComponentType.buildingMaterial);
+      const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(this.id);
 
       const renderPart = new TexturedRenderPart(
          null,
@@ -19,7 +14,9 @@ class Tunnel extends Entity {
          0,
          getTextureArrayIndex(TUNNEL_TEXTURE_SOURCES[buildingMaterialComponent.material])
       );
-      this.attachRenderThing(renderPart);
+
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(renderPart);
    }
 }
 

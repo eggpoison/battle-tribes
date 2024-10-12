@@ -47,7 +47,6 @@ export interface LimbHeldItemDamageBoxInfo {
    readonly rotation: number;
    readonly offsetX: number;
    offsetY: number;
-   readonly showLargeTexture: boolean;
 }
 
 /* --------------- */
@@ -66,6 +65,23 @@ export const DEFAULT_ATTACK_PATTERN: AttackPatternInfo = {
       direction: 0,
       extraOffset: 16,
       rotation: Math.PI * -2/3,
+      extraOffsetX: 0,
+      extraOffsetY: 0
+   }
+};
+
+export const PICKAXE_ATTACK_PATTERN: AttackPatternInfo = {
+   windedBack: {
+      direction: Math.PI * 0.6,
+      extraOffset: 0,
+      rotation: Math.PI * 1/3,
+      extraOffsetX: 0,
+      extraOffsetY: 0
+   },
+   swung: {
+      direction: 0,
+      extraOffset: 16,
+      rotation: 0,
       extraOffsetX: 0,
       extraOffsetY: 0
    }
@@ -109,8 +125,8 @@ export const AXE_ATTACK_TIMINGS: AttackTimingsInfo = {
 };
 
 export const PICKAXE_ATTACK_TIMINGS: AttackTimingsInfo = {
-   windupTimeTicks: Math.floor(0.2 * Settings.TPS),
-   swingTimeTicks: Math.floor(0.25 * Settings.TPS),
+   windupTimeTicks: Math.floor(0.3 * Settings.TPS),
+   swingTimeTicks: Math.floor(0.2 * Settings.TPS),
    returnTimeTicks: Math.floor(0.35 * Settings.TPS),
    restTimeTicks: Math.floor(0.35 * Settings.TPS),
    blockTimeTicks: Math.floor(0.3 * Settings.TPS)
@@ -183,8 +199,7 @@ export const DEFAULT_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    height: 20,
    rotation: 0,
    offsetX: 8,
-   offsetY: 8,
-   showLargeTexture: false
+   offsetY: 8
 };
 
 export const SWORD_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
@@ -192,8 +207,7 @@ export const SWORD_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    height: 72,
    rotation: Math.PI / 4, // 45 degrees to the right
    offsetX: 28,
-   offsetY: 28,
-   showLargeTexture: true
+   offsetY: 28
 };
 
 export const SHIELD_BLOCKING_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
@@ -201,8 +215,7 @@ export const SHIELD_BLOCKING_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    height: 24,
    rotation: Math.PI * 0.25,
    offsetX: 8,
-   offsetY: 10,
-   showLargeTexture: true
+   offsetY: 10
 };
 
 export const TOOL_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
@@ -210,8 +223,15 @@ export const TOOL_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    height: 48,
    rotation: Math.PI / 4, // 45 degrees to the right
    offsetX: 20,
-   offsetY: 20,
-   showLargeTexture: true
+   offsetY: 20
+};
+
+export const PICKAXE_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
+   width: 54,
+   height: 16,
+   rotation: Math.PI * 0.155,
+   offsetX: 26,
+   offsetY: 33
 };
 
 export const SPEAR_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
@@ -219,8 +239,7 @@ export const SPEAR_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    height: 96,
    rotation: 0,
    offsetX: 5,
-   offsetY: 22,
-   showLargeTexture: true
+   offsetY: 22
 };
 
 export function createZeroedLimbState(): LimbState {
@@ -250,16 +269,5 @@ export function copyCurrentLimbState(startLimbState: LimbState, endLimbState: Li
       rotation: lerp(startLimbState.rotation, endLimbState.rotation, progress),
       extraOffsetX: lerp(startLimbState.extraOffsetX, endLimbState.extraOffsetX, progress),
       extraOffsetY: lerp(startLimbState.extraOffsetY, endLimbState.extraOffsetY, progress)
-   };
-}
-
-function copyDamageBoxInfo(damageBoxInfo: LimbHeldItemDamageBoxInfo): LimbHeldItemDamageBoxInfo {
-   return {
-      width: damageBoxInfo.width,
-      height: damageBoxInfo.height,
-      rotation: damageBoxInfo.rotation,
-      offsetX: damageBoxInfo.offsetX,
-      offsetY: damageBoxInfo.offsetY,
-      showLargeTexture: damageBoxInfo.showLargeTexture
    };
 }

@@ -82,7 +82,8 @@ export enum ServerComponentType {
    guardian,
    guardianGemQuake,
    guardianGemFragmentProjectile,
-   guardianSpikyBall
+   guardianSpikyBall,
+   bracings
 }
 
 export const ServerComponentTypeString: Record<ServerComponentType, string> = {
@@ -152,7 +153,8 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.guardian]: "guardian",
    [ServerComponentType.guardianGemQuake]: "guardian gem quake",
    [ServerComponentType.guardianGemFragmentProjectile]: "Guardian Gem Fragment Projectile",
-   [ServerComponentType.guardianSpikyBall]: "Guardian Spiky Ball"
+   [ServerComponentType.guardianSpikyBall]: "Guardian Spiky Ball",
+   [ServerComponentType.bracings]: "Bracings"
 };
 
 export const NUM_COMPONENTS = Object.keys(ServerComponentTypeString).length;
@@ -227,7 +229,8 @@ export const EntityComponents = {
    [EntityType.guardian]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.statusEffect, ServerComponentType.health, ServerComponentType.aiHelper, ServerComponentType.guardian],
    [EntityType.guardianGemQuake]: [ServerComponentType.transform, ServerComponentType.guardianGemQuake],
    [EntityType.guardianGemFragmentProjectile]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.guardianGemFragmentProjectile],
-   [EntityType.guardianSpikyBall]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.statusEffect, ServerComponentType.health, ServerComponentType.guardianSpikyBall]
+   [EntityType.guardianSpikyBall]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.statusEffect, ServerComponentType.health, ServerComponentType.guardianSpikyBall],
+   [EntityType.bracings]: [ServerComponentType.transform, ServerComponentType.bracings]
 } satisfies Record<EntityType, ReadonlyArray<ServerComponentType>>;
 
 export type EntityComponentTypes<T extends EntityType> = typeof EntityComponents[T];

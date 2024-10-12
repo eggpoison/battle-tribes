@@ -1,9 +1,9 @@
-import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class Barrel extends Entity {
    public static readonly SIZE = 80;
@@ -11,7 +11,8 @@ class Barrel extends Entity {
    constructor(id: number) {
       super(id);
 
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,
@@ -22,19 +23,19 @@ class Barrel extends Entity {
    }
 
    public onLoad(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       if (transformComponent.ageTicks <= 0) {
          playSound("barrel-place.mp3", 0.4, 1, transformComponent.position);
       }
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playBuildingHitSound(transformComponent.position);
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playSound("building-destroy-1.mp3", 0.4, 1, transformComponent.position);
    }
 }

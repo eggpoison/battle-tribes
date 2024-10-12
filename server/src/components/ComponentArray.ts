@@ -307,6 +307,7 @@ export function sortComponentArrays(): void {
       [ServerComponentType.guardianGemQuake]: ComponentArrayPriority.medium,
       [ServerComponentType.guardianGemFragmentProjectile]: ComponentArrayPriority.medium,
       [ServerComponentType.guardianSpikyBall]: ComponentArrayPriority.medium,
+      [ServerComponentType.bracings]: ComponentArrayPriority.medium,
       [ServerComponentType.health]: ComponentArrayPriority.high,
       // The physics component ticking must be done at the end so there is time for the positionIsDirty and hitboxesAreDirty flags to collect
       [ServerComponentType.physics]: ComponentArrayPriority.high

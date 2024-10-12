@@ -5,9 +5,10 @@ import Board from "../Board";
 import { createRockParticle } from "../particles";
 import Entity from "../Entity";
 import { randFloat, randInt } from "battletribes-shared/utils";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { RockSpikeComponentArray } from "../entity-components/RockSpikeComponent";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class RockSpikeProjectile extends Entity {
    private static readonly SIZES = [12 * 4, 16 * 4, 20 * 4];
@@ -22,14 +23,12 @@ class RockSpikeProjectile extends Entity {
 
    public static readonly EXIT_SHAKE_AMOUNTS = [1.25, 2.25, 3.25];
 
-   constructor(id: number) {
-      super(id);
-   }
-
    public onLoad(): void {
-      const rockSpikeComponent = this.getServerComponent(ServerComponentType.rockSpike);
+      const rockSpikeComponent = RockSpikeComponentArray.getComponent(this.id);
       
-      this.shakeAmount = RockSpikeProjectile.ENTRANCE_SHAKE_AMOUNTS[rockSpikeComponent.size];
+      const renderInfo = getEntityRenderInfo(this.id);
+      
+      renderInfo.shakeAmount = RockSpikeProjectile.ENTRANCE_SHAKE_AMOUNTS[rockSpikeComponent.size];
       
       const renderPart = new TexturedRenderPart(
          null,
@@ -39,7 +38,7 @@ class RockSpikeProjectile extends Entity {
       );
       renderPart.addTag("rockSpikeProjectile:part");
       renderPart.scale = RockSpikeProjectile.ENTRANCE_SCALE;
-      this.attachRenderThing(renderPart);
+      renderInfo.attachRenderThing(renderPart);
 
       // 
       // Create debris particles
@@ -65,7 +64,7 @@ class RockSpikeProjectile extends Entity {
          }
       }
 
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       for (let i = 0; i < numSpeckParticles; i++) {
          // @Cleanup: Move to particles file
          const spawnOffsetDirection = 2 * Math.PI * Math.random();

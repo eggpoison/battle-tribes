@@ -1,8 +1,8 @@
 import { Chunks, EntityInfo, getChunk } from "./board-interface";
 import { EntityID, EntityType } from "./entities";
-import { estimateCollidingEntities } from "./hitbox-collision";
-import { createEntityHitboxes } from "./boxes/entity-hitbox-creation";
-import { boxIsCircular } from "./boxes/boxes";
+import { estimateCollidingEntities, getBoxesCollidingEntities } from "./hitbox-collision";
+import { createBracingHitboxes, createNormalStructureHitboxes } from "./boxes/entity-hitbox-creation";
+import { boxIsCircular, Hitbox, updateBox } from "./boxes/boxes";
 import { Settings } from "./settings";
 import { Point, distance, getAbsAngleDiff } from "./utils";
 
@@ -21,7 +21,7 @@ const enum Vars {
    COLLISION_EPSILON = 0.01
 }
 
-export const STRUCTURE_TYPES = [EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.ballista, EntityType.slingTurret, EntityType.tunnel, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel, EntityType.workbench, EntityType.researchBench, EntityType.healingTotem, EntityType.planterBox, EntityType.furnace, EntityType.campfire, EntityType.fence, EntityType.fenceGate, EntityType.frostshaper, EntityType.stonecarvingTable] as const;
+export const STRUCTURE_TYPES = [EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.ballista, EntityType.slingTurret, EntityType.tunnel, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel, EntityType.workbench, EntityType.researchBench, EntityType.healingTotem, EntityType.planterBox, EntityType.furnace, EntityType.campfire, EntityType.fence, EntityType.fenceGate, EntityType.frostshaper, EntityType.stonecarvingTable, EntityType.bracings] as const;
 export type StructureType = typeof STRUCTURE_TYPES[number];
 
 export const enum SnapDirection {
@@ -47,6 +47,7 @@ export interface StructurePlaceInfo {
    readonly entityType: StructureType;
    readonly connectedSidesBitset: number;
    readonly connectedEntityIDs: ConnectedEntityIDs;
+   readonly hitboxes: ReadonlyArray<Hitbox>;
    readonly isValid: boolean;
 }
 
@@ -82,7 +83,14 @@ const structurePlaceIsValid = (entityType: StructureType, x: number, y: number, 
 }
 
 const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityRotation: number, structureType: StructureType): Point => {
-   const hitboxes = createEntityHitboxes(structureType);
+   // @Hack?
+   if (structureType === EntityType.bracings) {
+      const placePosition = Point.fromVectorForm(Vars.STRUCTURE_PLACE_DISTANCE, placingEntityRotation);
+      placePosition.add(placeOrigin);
+      return placePosition;
+   }
+   
+   const hitboxes = createNormalStructureHitboxes(structureType);
 
    let entityMinX = Number.MAX_SAFE_INTEGER;
    let entityMaxX = Number.MIN_SAFE_INTEGER;
@@ -186,7 +194,7 @@ export function getSnapDirection(directionToSnappingEntity: number, structureRot
 }
 
 const getPositionsOffEntity = (snapOrigin: Readonly<Point>, connectingEntity: EntityInfo<StructureType>, placeRotation: number, structureType: StructureType, worldInfo: WorldInfo): ReadonlyArray<StructureTransformInfo> => {
-   const placingEntityHitboxes = createEntityHitboxes(structureType);
+   const placingEntityHitboxes = createNormalStructureHitboxes(structureType);
    
    const snapPositions = new Array<StructureTransformInfo>();
 
@@ -356,6 +364,7 @@ const groupTransforms = (transforms: ReadonlyArray<StructureTransformInfo>, stru
          connectedSidesBitset: connectedSidesBitset,
          connectedEntityIDs: connectedEntityIDs,
          entityType: structureType,
+         hitboxes: [],
          isValid: structurePlaceIsValid(structureType, firstTransform.position.x, firstTransform.position.y, firstTransform.rotation, worldInfo)
       };
       placeInfos.push(placeInfo);
@@ -375,13 +384,78 @@ const filterCandidatePositions = (candidates: Array<StructureTransformInfo>, reg
    }
 }
 
-const calculatePlaceInfo = (position: Point, rotation: number, structureType: StructureType, worldInfo: WorldInfo): StructurePlaceInfo => {
+const getNearbyTileCorners = (position: Point): ReadonlyArray<Point> => {
+   const minTileX = Math.floor(position.x / Settings.TILE_SIZE - 1);
+   const maxTileX = Math.ceil(position.x / Settings.TILE_SIZE + 1);
+   const minTileY = Math.floor(position.y / Settings.TILE_SIZE - 1);
+   const maxTileY = Math.ceil(position.y / Settings.TILE_SIZE + 1);
+
+   const tileCornerPositions = new Array<Point>();
+   for (let tileCornerX = minTileX; tileCornerX <= maxTileX; tileCornerX++) {
+      for (let tileCornerY = minTileY; tileCornerY <= maxTileY; tileCornerY++) {
+         const x = tileCornerX / Settings.TILE_SIZE;
+         const y = tileCornerY / Settings.TILE_SIZE;
+         tileCornerPositions.push(new Point(x, y));
+      }
+   }
+   return tileCornerPositions;
+}
+
+const getBracingsPlaceInfo = (position: Point, rotation: number, entityType: StructureType, worldInfo: WorldInfo): StructurePlaceInfo => {
+   const nearbyTileCorners = getNearbyTileCorners(position);
+
+   let closestTileCorner: Point | undefined;
+   let secondClosestTileCorner: Point | undefined;
+
+   let minDist = Number.MAX_SAFE_INTEGER;
+
+   for (let i = 0; i < nearbyTileCorners.length; i++) {
+      const corner = nearbyTileCorners[i];
+
+      const dist = corner.calculateDistanceBetween(position);
+
+      if (dist < minDist) {
+         secondClosestTileCorner = closestTileCorner;
+         closestTileCorner = corner;
+      }
+   }
+
+   if (typeof closestTileCorner === "undefined" || typeof secondClosestTileCorner === "undefined") {
+      throw new Error();
+   }
+
+   const hitboxes = createBracingHitboxes(closestTileCorner.x - position.x, closestTileCorner.y - position.y, secondClosestTileCorner.x - position.x, secondClosestTileCorner.y - position.y);
+
+   // // @Incomplete: Make sure that the hitboxes being updated before created won't mess stuff up
+   // for (const hitbox of hitboxes) {
+   //    updateBox(hitbox.box, position.x, position.y, rotation);
+   // }
+   
+   // // @Hack: should use the structurePlaceIsValid function
+   // const collidingHitboxes = getBoxesCollidingEntities(worldInfo, hitboxes, epsilon);
+   
+   return {
+      position: position,
+      rotation: rotation,
+      connectedSidesBitset: 0,
+      connectedEntityIDs: [0, 0, 0, 0],
+      entityType: entityType,
+      hitboxes: hitboxes,
+      isValid: true
+   }
+}
+
+const calculatePlaceInfo = (position: Point, rotation: number, entityType: StructureType, worldInfo: WorldInfo): StructurePlaceInfo => {
+   if (entityType === EntityType.bracings) {
+      return getBracingsPlaceInfo(position, rotation, entityType, worldInfo);
+   }
+   
    const nearbyStructures = getNearbyStructures(position, worldInfo);
    
-   const candidatePositions = findCandidatePlacePositions(nearbyStructures, structureType, rotation, worldInfo);
+   const candidatePositions = findCandidatePlacePositions(nearbyStructures, entityType, rotation, worldInfo);
    filterCandidatePositions(candidatePositions, position);
    
-   const placeInfos = groupTransforms(candidatePositions, structureType, worldInfo);
+   const placeInfos = groupTransforms(candidatePositions, entityType, worldInfo);
    if (placeInfos.length === 0) {
       // If no connections are found, use the regular place position
       return {
@@ -389,8 +463,9 @@ const calculatePlaceInfo = (position: Point, rotation: number, structureType: St
          rotation: rotation,
          connectedSidesBitset: 0,
          connectedEntityIDs: [0, 0, 0, 0],
-         entityType: structureType,
-         isValid: structurePlaceIsValid(structureType, position.x, position.y, rotation, worldInfo)
+         entityType: entityType,
+         hitboxes: [],
+         isValid: structurePlaceIsValid(entityType, position.x, position.y, rotation, worldInfo)
       };
    } else {
       // @Incomplete:

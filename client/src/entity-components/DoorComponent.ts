@@ -4,6 +4,7 @@ import ServerComponent from "./ServerComponent";
 import { playSound } from "../sound";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
 
 class DoorComponent extends ServerComponent {
    public toggleType = DoorToggleType.close;
@@ -17,7 +18,7 @@ class DoorComponent extends ServerComponent {
       const toggleType = reader.readNumber();
       const openProgress = reader.readNumber();
       
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
 
       if (toggleType === DoorToggleType.open && this.toggleType === DoorToggleType.none) {
          playSound("door-open.mp3", 0.4, 1, transformComponent.position);

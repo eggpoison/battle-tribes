@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import AttackChargeBar from "./AttackChargeBar";
-import { ServerComponentType } from "../../../../shared/src/components";
 import { LimbAction } from "../../../../shared/src/entities";
 import { Item, InventoryName, getItemAttackInfo, ITEM_TYPE_RECORD, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo } from "../../../../shared/src/items/items";
 import { Settings } from "../../../../shared/src/settings";
@@ -33,6 +32,9 @@ import { TransformComponentArray } from "../../entity-components/TransformCompon
 import { AttackVars, copyCurrentLimbState, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
 import { PhysicsComponentArray } from "../../entity-components/PhysicsComponent";
 import { getEntityLayer } from "../../world";
+import { TribeMemberComponentArray } from "../../entity-components/TribeMemberComponent";
+import { SpikesComponentArray } from "../../entity-components/SpikesComponent";
+import { StatusEffectComponentArray } from "../../entity-components/StatusEffectComponent";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -377,7 +379,7 @@ export function updatePlayerItems(): void {
 }
 
 const tryToSwing = (inventoryName: InventoryName): boolean => {
-   const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
 
    const limb = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
    const attackInfo = getItemAttackInfo(limb.heldItemType);
@@ -431,7 +433,7 @@ const getAttackTimeMultiplier = (itemType: ItemType | null): number => {
    }
 
    // Builders swing hammers 30% faster
-   const tribeMemberComponent = Player.instance!.getServerComponent(ServerComponentType.tribeMember);
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(Player.instance!.id);
    if (tribeMemberComponent.hasTitle(TribesmanTitle.builder) && itemType !== null && ITEM_TYPE_RECORD[itemType] === "hammer") {
       swingTimeMultiplier /= 1.3;
    }
@@ -468,36 +470,6 @@ const getAttackTimeMultiplier = (itemType: ItemType | null): number => {
 //    let attackCooldown = getBaseAttackCooldown(item, itemLimbInfo, inventoryComponent);
 //    attackCooldown *= getSwingTimeMultiplier(item);
 //    return attackCooldown;
-// }
-
-// @Incomplete
-// const attemptInventoryAttack = (inventory: Inventory): boolean => {
-//    const isOffhand = inventory.name !== InventoryName.hotbar;
-
-//    const inventoryComponent = Player.instance!.getServerComponent(ServerComponentType.inventory);
-//    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-   
-//    const useInfo = inventoryUseComponent.useInfos[isOffhand ? 1 : 0];
-   
-//    const attackCooldowns = isOffhand ? offhandItemAttackCooldowns : hotbarItemAttackCooldowns;
-//    const selectedItemSlot = useInfo.selectedItemSlot;
-
-//    // If on cooldown, don't swing
-//    if (typeof attackCooldowns[selectedItemSlot] !== "undefined") {
-//       return false;
-//    }
-
-//    const selectedItem = inventory.itemSlots[selectedItemSlot];
-
-//    let attackCooldown = getBaseAttackCooldown(selectedItem, useInfo, inventoryComponent);
-//    attackCooldown *= getSwingTimeMultiplier(selectedItem);
-      
-//    // @Cleanup: Should be done in attack function
-//    attackCooldowns[selectedItemSlot] = attackCooldown;
-
-//    swing(isOffhand, attackCooldown);
-
-//    return true;
 // }
 
 const attemptAttack = (): void => {
@@ -612,7 +584,7 @@ const createHotbarKeyListeners = (): void => {
 
 const throwHeldItem = (): void => {
    if (Player.instance !== null) {
-      const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(Player.instance.id);
       Client.sendHeldItemDropPacket(99999, transformComponent.rotation);
    }
 }
@@ -691,7 +663,7 @@ export function createPlayerInputListeners(): void {
          }
 
          const isOffhand = selectedItemInfo.inventoryName === InventoryName.offhand;
-         const playerTransformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+         const playerTransformComponent = TransformComponentArray.getComponent(Player.instance.id);
          const dropAmount = keyIsPressed("shift") ? 99999 : 1;
          sendItemDropPacket(isOffhand, hotbarSelectedItemSlot, dropAmount, playerTransformComponent.rotation);
       }
@@ -699,13 +671,13 @@ export function createPlayerInputListeners(): void {
 }
 
 const isCollidingWithCoveredSpikes = (): boolean => {
-   const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
    
    for (let i = 0; i < transformComponent.collidingEntities.length; i++) {
       const entity = transformComponent.collidingEntities[i];
 
-      if (entity.hasServerComponent(ServerComponentType.spikes)) {
-         const spikesComponent = entity.getServerComponent(ServerComponentType.spikes);
+      if (SpikesComponentArray.hasComponent(entity.id)) {
+         const spikesComponent = SpikesComponentArray.getComponent(entity.id);
          if (spikesComponent.isCovered) {
             return true;
          }
@@ -718,14 +690,14 @@ const isCollidingWithCoveredSpikes = (): boolean => {
 const getPlayerMoveSpeedMultiplier = (moveDirection: number): number => {
    let moveSpeedMultiplier = 1;
 
-   const statusEffectComponent = Player.instance!.getServerComponent(ServerComponentType.statusEffect);
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(Player.instance!.id);
    for (const statusEffect of statusEffectComponent.statusEffects) {
       moveSpeedMultiplier *= STATUS_EFFECT_MODIFIERS[statusEffect.type].moveSpeedMultiplier;
    }
 
    moveSpeedMultiplier *= TRIBE_INFO_RECORD[Game.tribe.tribeType].moveSpeedMultiplier;
 
-   const tribeMemberComponent = Player.instance!.getServerComponent(ServerComponentType.tribeMember);
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(Player.instance!.id);
    if (tribeMemberComponent.hasTitle(TribesmanTitle.sprinter)) {
       moveSpeedMultiplier *= 1.2;
    }
@@ -780,7 +752,7 @@ export function updatePlayerMovement(): void {
       case 15: moveDirection = null;          break;
    }
 
-   const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
+   const physicsComponent = PhysicsComponentArray.getComponent(Player.instance.id);
 
    if (moveDirection !== null) {
       const playerAction = getInstancePlayerAction(InventoryName.hotbar);
@@ -815,7 +787,7 @@ export function updatePlayerMovement(): void {
 }
 
 const deselectItem = (item: Item, isOffhand: boolean): void => {
-   const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
    const limb = inventoryUseComponent.limbInfos[isOffhand ? 1 : 0];
 
    const itemCategory = ITEM_TYPE_RECORD[item.type];
@@ -854,7 +826,7 @@ const selectItem = (item: Item): void => {
 const unuseItem = (itemType: ItemType): void => {
    switch (ITEM_TYPE_RECORD[itemType]) {
       case "healing": {
-         const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
          const useInfo = inventoryUseComponent.limbInfos[0];
          
          useInfo.action = LimbAction.none;
@@ -875,8 +847,8 @@ const unuseItem = (itemType: ItemType): void => {
 }
 
 const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryName, itemSlot: number): void => {
-   const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
-   const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+   const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
 
    const attackInfo = getItemAttackInfo(itemType);
    if (attackInfo.attackTimings.blockTimeTicks !== null) {
@@ -1023,7 +995,7 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
 }
 
 const onItemRightClickUp = (item: Item, inventoryName: InventoryName): void => {
-   const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
    const limb = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
 
    const itemCategory = ITEM_TYPE_RECORD[item.type];
@@ -1079,7 +1051,7 @@ const onItemRightClickUp = (item: Item, inventoryName: InventoryName): void => {
          
          sendItemUsePacket();
          // @Incomplete: Don't play if bow didn't actually fire an arrow
-         playBowFireSound(Player.instance!, item.type);
+         playBowFireSound(Player.instance!.id, item.type);
 
          break;
       }
@@ -1125,7 +1097,7 @@ export function selectItemSlot(itemSlot: number): void {
       }
    }
 
-   const playerInventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
+   const playerInventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance.id);
    const hotbarUseInfo = playerInventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);
    hotbarUseInfo.selectedItemSlot = itemSlot;
 
@@ -1167,7 +1139,7 @@ const tickItem = (itemType: ItemType): void => {
          // 
 
          const layer = getEntityLayer(Player.instance!.id);
-         const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+         const playerTransformComponent = TransformComponentArray.getComponent(Player.instance!.id);
          const structureType = ITEM_INFO_RECORD[itemType as PlaceableItemType].entityType;
          const placeInfo = calculateStructurePlaceInfo(Camera.position, playerTransformComponent.rotation, structureType, layer.getWorldInfo());
          

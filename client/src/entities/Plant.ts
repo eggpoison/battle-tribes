@@ -1,21 +1,19 @@
 import { angle, randFloat, randInt, randItem } from "battletribes-shared/utils";
-import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
+import { PlanterBoxPlant } from "battletribes-shared/components";
 import { HitData, HitFlags } from "battletribes-shared/client-server-types";
 import Entity from "../Entity";
 import { LeafParticleSize, createDirtParticle, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import Tree, { TREE_DESTROY_SOUNDS, TREE_HIT_SOUNDS } from "./Tree";
 import { playSound } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { PlantComponentArray } from "../entity-components/PlantComponent";
 
 class Plant extends Entity {
    public static readonly SIZE = 80;
 
-   constructor(id: number) {
-      super(id);
-   }
-
    public onLoad(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       if (transformComponent.ageTicks <= 0) {
          // Create dirt particles
 
@@ -31,8 +29,8 @@ class Plant extends Entity {
 
    // @Cleanup: move to plant component file
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      const plantComponent = this.getServerComponent(ServerComponentType.plant);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
+      const plantComponent = PlantComponentArray.getComponent(this.id);
 
       switch (plantComponent.plant) {
          case PlanterBoxPlant.tree: {
@@ -88,8 +86,8 @@ class Plant extends Entity {
    }
 
    protected onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      const plantComponent = this.getServerComponent(ServerComponentType.plant);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
+      const plantComponent = PlantComponentArray.getComponent(this.id);
 
       switch (plantComponent.plant) {
          case PlanterBoxPlant.tree: {

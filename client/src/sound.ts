@@ -2,9 +2,9 @@ import { Settings } from "battletribes-shared/settings";
 import { Point, randInt } from "battletribes-shared/utils";
 import { TileType } from "battletribes-shared/tiles";
 import Camera from "./Camera";
-import Entity from "./Entity";
-import { ServerComponentType } from "battletribes-shared/components";
 import { getCurrentLayer } from "./world";
+import { TransformComponentArray } from "./entity-components/TransformComponent";
+import { EntityID } from "../../shared/src/entities";
 
 // @Memory
 export const ROCK_HIT_SOUNDS: ReadonlyArray<string> = ["rock-hit-1.mp3", "rock-hit-2.mp3", "rock-hit-3.mp3", "rock-hit-4.mp3", "rock-hit-5.mp3", "rock-hit-6.mp3"];
@@ -21,7 +21,7 @@ export interface Sound {
 
 interface SoundAttachInfo {
    readonly sound: Sound;
-   readonly entity: Entity;
+   readonly entity: EntityID;
 }
 
 const activeSounds = new Array<Sound>();
@@ -233,7 +233,13 @@ export async function loadSoundEffects(): Promise<void> {
       "guardian-gem-fragment-death.mp3",
       "guardian-spiky-ball-spawn.mp3",
       "guardian-spiky-ball-death.mp3",
-      "guardian-summon-focus.mp3"
+      "guardian-summon-focus.mp3",
+      "stone-mine-1.mp3",
+      "stone-mine-2.mp3",
+      "stone-mine-3.mp3",
+      "stone-mine-4.mp3",
+      "stone-destroy-1.mp3",
+      "stone-destroy-2.mp3"
    ];
 
    const tempAudioBuffers: Partial<Record<string, AudioBuffer>> = {};
@@ -311,7 +317,7 @@ export function playSound(filePath: string, volume: number, pitchMultiplier: num
    };
 }
 
-export function attachSoundToEntity(sound: Sound, entity: Entity): void {
+export function attachSoundToEntity(sound: Sound, entity: EntityID): void {
    entityAttachedSounds.push({
       sound: sound,
       entity: entity
@@ -322,7 +328,7 @@ export function updateSoundEffectVolumes(): void {
    for (let i = 0; i < entityAttachedSounds.length; i++) {
       const attachedSoundInfo = entityAttachedSounds[i];
 
-      const transformComponent = attachedSoundInfo.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(attachedSoundInfo.entity);
 
       attachedSoundInfo.sound.position.x = transformComponent.position.x;
       attachedSoundInfo.sound.position.y = transformComponent.position.y;

@@ -1,10 +1,11 @@
 import { customTickIntervalHasPassed } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import { createPaperParticle } from "../particles";
-import { getRandomPointInEntity } from "./TransformComponent";
+import { getRandomPointInEntity, TransformComponentArray } from "./TransformComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { EntityID } from "../../../shared/src/entities";
 
 class ResearchBenchComponent extends ServerComponent {
    public isOccupied = false;
@@ -25,8 +26,8 @@ export const ResearchBenchComponentArray = new ComponentArray<ResearchBenchCompo
    onTick: onTick
 });
 
-function onTick(researchBenchComponent: ResearchBenchComponent): void {
-   const transformComponent = researchBenchComponent.entity.getServerComponent(ServerComponentType.transform);
+function onTick(researchBenchComponent: ResearchBenchComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
    if (researchBenchComponent.isOccupied && customTickIntervalHasPassed(transformComponent.ageTicks, 0.3)) {
       const pos = getRandomPointInEntity(transformComponent);
       createPaperParticle(pos.x, pos.y);

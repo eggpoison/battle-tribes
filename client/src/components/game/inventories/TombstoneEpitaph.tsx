@@ -1,8 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import { veryBadHash } from "battletribes-shared/utils";
 import { PlayerCauseOfDeath } from "battletribes-shared/entities";
 import Tombstone from "../../../entities/Tombstone";
 import { getSelectedEntity } from "../../../entity-selection";
+import { TombstoneComponentArray } from "../../../entity-components/TombstoneComponent";
 
 // __NAME__'s brain exploded.
 
@@ -33,13 +33,13 @@ const TOMBSTONE_DEATH_MESSAGES: Record<PlayerCauseOfDeath, string> = {
 };
 
 const TombstoneEpitaph = () => {
-   const tombstone = getSelectedEntity() as Tombstone;
+   const tombstone = getSelectedEntity();
 
-   const tombstoneComponent = tombstone.getServerComponent(ServerComponentType.tombstone);
+   const tombstoneComponent = TombstoneComponentArray.getComponent(tombstone);
    const causeOfDeath = TOMBSTONE_DEATH_MESSAGES[tombstoneComponent.deathInfo!.causeOfDeath];
 
    // Choose a random life message based off the entity's id
-   const hash = veryBadHash(tombstone.id.toString());
+   const hash = veryBadHash(tombstone.toString());
    const lifeMessage = LIFE_MESSAGES[hash % LIFE_MESSAGES.length];
 
    return <div id="tombstone-epitaph">

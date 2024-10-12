@@ -1,4 +1,3 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import Entity from "../Entity";
 import Component from "./Component";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -7,6 +6,10 @@ import { ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName 
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ClientComponentType } from "./components";
+import { TransformComponentArray } from "./TransformComponent";
+import { InventoryComponentArray } from "./InventoryComponent";
+import { getEntityRenderInfo } from "../world";
+import { InventoryUseComponentArray } from "./InventoryUseComponent";
 
 // @Incomplete
 // public genericUpdateFromData(entityData: EntityData<EntityType.player> | EntityData<EntityType.tribeWorker> | EntityData<EntityType.tribeWarrior>): void {
@@ -84,7 +87,7 @@ class EquipmentComponent extends Component {
    }
 
    public createFrostShieldBreakParticles(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
       for (let i = 0; i < 17; i++) {
          createFrostShieldBreakParticle(transformComponent.position.x, transformComponent.position.y);
       }
@@ -99,7 +102,7 @@ export const EquipmentComponentArray = new ComponentArray<EquipmentComponent>(Co
 
 /** Updates the current armour render part based on the entity's inventory component */
 const updateArmourRenderPart = (equipmentComponent: EquipmentComponent): void => {
-   const inventoryComponent = equipmentComponent.entity.getServerComponent(ServerComponentType.inventory);
+   const inventoryComponent = InventoryComponentArray.getComponent(equipmentComponent.entity.id);
    const armourInventory = inventoryComponent.getInventory(InventoryName.armourSlot)!;
    
    const armour = armourInventory.itemSlots[1];
@@ -112,25 +115,28 @@ const updateArmourRenderPart = (equipmentComponent: EquipmentComponent): void =>
             0,
             getTextureArrayIndex(getArmourTextureSource(armour.type))
          );
-         equipmentComponent.entity.attachRenderThing(equipmentComponent.armourRenderPart);
+
+         const renderInfo = getEntityRenderInfo(equipmentComponent.entity.id);
+         renderInfo.attachRenderThing(equipmentComponent.armourRenderPart);
       } else {
          equipmentComponent.armourRenderPart.switchTextureSource(getArmourTextureSource(armour.type));
       }
    } else if (equipmentComponent.armourRenderPart !== null) {
-      equipmentComponent.entity.removeRenderPart(equipmentComponent.armourRenderPart);
+      const renderInfo = getEntityRenderInfo(equipmentComponent.entity.id);
+      renderInfo.removeRenderPart(equipmentComponent.armourRenderPart);
       equipmentComponent.armourRenderPart = null;
    }
 }
 
 // @Cleanup: Copy and paste from armour
 const updateGloveRenderParts = (equipmentComponent: EquipmentComponent): void => {
-   const inventoryComponent = equipmentComponent.entity.getServerComponent(ServerComponentType.inventory);
+   const inventoryComponent = InventoryComponentArray.getComponent(equipmentComponent.entity.id);
    const gloveInventory = inventoryComponent.getInventory(InventoryName.gloveSlot)!;
    
    // @Incomplete: Make a glove for every hand
    const glove = gloveInventory.itemSlots[1];
    if (typeof glove !== "undefined") {
-      const inventoryUseComponent = equipmentComponent.entity.getServerComponent(ServerComponentType.inventoryUse);
+      const inventoryUseComponent = InventoryUseComponentArray.getComponent(equipmentComponent.entity.id);
 
       if (equipmentComponent.gloveRenderParts.length === 0) {
          for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
@@ -140,8 +146,10 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent): void =>
                0,
                getTextureArrayIndex(getGloveTextureSource(glove.type))
             );
-            equipmentComponent.entity.attachRenderThing(gloveRenderPart);
             equipmentComponent.gloveRenderParts.push(gloveRenderPart);
+
+            const renderInfo = getEntityRenderInfo(equipmentComponent.entity.id);
+            renderInfo.attachRenderThing(gloveRenderPart);
          }
       } else {
          for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
@@ -150,7 +158,8 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent): void =>
       }
    } else {
       while (equipmentComponent.gloveRenderParts.length > 0) {
-         equipmentComponent.entity.removeRenderPart(equipmentComponent.gloveRenderParts[0]);
+         const renderInfo = getEntityRenderInfo(equipmentComponent.entity.id);
+         renderInfo.removeRenderPart(equipmentComponent.gloveRenderParts[0]);
          equipmentComponent.gloveRenderParts.splice(0, 1);
       }
    }

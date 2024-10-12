@@ -1,11 +1,12 @@
-import { AMMO_INFO_RECORD, ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
+import { AMMO_INFO_RECORD, TurretAmmoType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
-import Ballista from "../../../entities/Ballista";
 import { getSelectedEntity } from "../../../entity-selection";
 import InventoryContainer from "./InventoryContainer";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-info";
 import { CLIENT_STATUS_EFFECT_INFO_RECORD } from "../../../status-effects";
 import { Inventory, ItemType, InventoryName } from "battletribes-shared/items/items";
+import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
+import { AmmoBoxComponentArray } from "../../../entity-components/AmmoBoxComponent";
 
 const getAmmoSlot = (ammoBoxInventory: Inventory): number => {
    for (let itemSlot = 1; itemSlot <= ammoBoxInventory.width * ammoBoxInventory.height; itemSlot++) {
@@ -42,13 +43,13 @@ const RemainingAmmoSlider = (props: RemainingAmmoSliderProps) => {
 }
 
 const AmmoBoxInventory = () => {
-   const ballista = getSelectedEntity() as Ballista;
+   const ballista = getSelectedEntity();
    
-   const inventoryComponent = ballista.getServerComponent(ServerComponentType.inventory);
+   const inventoryComponent = InventoryComponentArray.getComponent(ballista);
    const inventory = inventoryComponent.getInventory(InventoryName.ammoBoxInventory)!;
    
    const nextAmmoSlot = getAmmoSlot(inventory);
-   const ammoBoxComponent = ballista.getServerComponent(ServerComponentType.ammoBox);
+   const ammoBoxComponent = AmmoBoxComponentArray.getComponent(ballista);
    
    return <>
       <div id="ammo-box-menu" className="menu" onContextMenu={(e) => e.nativeEvent.preventDefault()}>
@@ -65,7 +66,7 @@ const AmmoBoxInventory = () => {
                </label>
             </div>
          </div>
-         <InventoryContainer entityID={ballista.id} inventory={inventory} selectedItemSlot={nextAmmoSlot !== -1 ? nextAmmoSlot : undefined} />
+         <InventoryContainer entityID={ballista} inventory={inventory} selectedItemSlot={nextAmmoSlot !== -1 ? nextAmmoSlot : undefined} />
       </div>
       <div id="ammo-guide" className="menu">
          <h2 className="menu-title">Ammo Guide</h2>

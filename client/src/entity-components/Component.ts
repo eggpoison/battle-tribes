@@ -1,5 +1,6 @@
 import { Hitbox } from "battletribes-shared/boxes/boxes";
 import Entity from "../Entity";
+import { EntityID } from "../../../shared/src/entities";
 
 abstract class Component {
    // @Memory: remove
@@ -15,7 +16,7 @@ abstract class Component {
    public onHit?(isDamagingHit: boolean): void;
    public onDie?(): void;
    public onRemove?(): void;
-   public onCollision?(collidingEntity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
+   public onCollision?(collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
 }
 
 export default Component;

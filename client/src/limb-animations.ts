@@ -1,18 +1,19 @@
 import { Settings } from "battletribes-shared/settings";
 import { Point, customTickIntervalHasPassed, lerp, randFloat, randInt, randItem, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import { ServerComponentType } from "battletribes-shared/components";
-import { LimbAction } from "battletribes-shared/entities";
-import { LimbInfo } from "./entity-components/InventoryUseComponent";
+import { EntityID, LimbAction } from "battletribes-shared/entities";
+import { InventoryUseComponentArray, LimbInfo } from "./entity-components/InventoryUseComponent";
 import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
 import { ParticleColour } from "./rendering/webgl/particle-rendering";
 import { createColouredParticle, createSawdustCloud } from "./particles";
-import Entity from "./Entity";
 import Board from "./Board";
 import { getItemRecipe } from "battletribes-shared/items/crafting-recipes";
 import { ItemType, ITEM_INFO_RECORD, ConsumableItemInfo } from "battletribes-shared/items/items";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
 import { RenderPart } from "./render-parts/render-parts";
+import { TribesmanAIComponentArray } from "./entity-components/TribesmanAIComponent";
+import { TransformComponentArray } from "./entity-components/TransformComponent";
+import { getEntityRenderInfo } from "./world";
 
 enum CustomItemState {
    usingMedicine,
@@ -46,8 +47,8 @@ export function generateRandomLimbPosition(limbIdx: number): Point {
    return new Point(x, y);
 }
 
-export function createCraftingAnimationParticles(entity: Entity, limbIdx: number): void {
-   const tribesmanComponent = entity.getServerComponent(ServerComponentType.tribesmanAI);
+export function createCraftingAnimationParticles(entity: EntityID, limbIdx: number): void {
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
    
    const recipe = getItemRecipe(tribesmanComponent.craftingItemType);
    if (recipe === null) {
@@ -55,7 +56,7 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
       return;
    }
    
-   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    for (const itemTypeString of Object.keys(recipe.ingredients)) {
       const ingredientType = Number(itemTypeString) as ItemType;
@@ -86,7 +87,7 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
    }
 }
 
-const createBandageRenderPart = (entity: Entity): void => {
+const createBandageRenderPart = (entity: EntityID): void => {
    const renderPart = new TexturedRenderPart(
       null,
       6,
@@ -99,19 +100,21 @@ const createBandageRenderPart = (entity: Entity): void => {
    renderPart.offset.x = offsetMagnitude * Math.sin(offsetDirection);
    renderPart.offset.y = offsetMagnitude * Math.cos(offsetDirection);
 
-   entity.attachRenderThing(renderPart);
+   const renderInfo = getEntityRenderInfo(entity);
+   renderInfo.attachRenderThing(renderPart);
 
-   const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    inventoryUseComponent.bandageRenderParts.push(renderPart);
 }
 
-export function updateBandageRenderPart(entity: Entity, renderPart: RenderPart): void {
+export function updateBandageRenderPart(entity: EntityID, renderPart: RenderPart): void {
    const renderPartAge = renderPart.getAge();
    
    if (renderPartAge >= BANDAGE_LIFETIME_TICKS) {
-      entity.removeRenderPart(renderPart);
+      const renderInfo = getEntityRenderInfo(entity);
+      renderInfo.removeRenderPart(renderPart);
 
-      const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
+      const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
       const idx = inventoryUseComponent.bandageRenderParts.indexOf(renderPart);
       if (idx !== -1) {
          inventoryUseComponent.bandageRenderParts.splice(idx, 1);
@@ -123,8 +126,8 @@ export function updateBandageRenderPart(entity: Entity, renderPart: RenderPart):
    renderPart.opacity = 1 - progress * progress;
 }
 
-export function createMedicineAnimationParticles(entity: Entity, limbIdx: number): void {
-   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+export function createMedicineAnimationParticles(entity: EntityID, limbIdx: number): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    if (Math.random() < 5 / Settings.TPS) {
       const colour = randItem(MEDICINE_PARTICLE_COLOURS);
@@ -143,22 +146,22 @@ export function createMedicineAnimationParticles(entity: Entity, limbIdx: number
    }
 }
 
-const getCustomItemRenderPartTextureSource = (entity: Entity, state: CustomItemState): string => {
+const getCustomItemRenderPartTextureSource = (entity: EntityID, state: CustomItemState): string => {
    switch (state) {
       case CustomItemState.usingMedicine: {
          return CLIENT_ITEM_INFO_RECORD[ItemType.herbal_medicine].entityTextureSource;
       }
       case CustomItemState.crafting: {
-         const tribesmanComponent = entity.getServerComponent(ServerComponentType.tribesmanAI);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
          return CLIENT_ITEM_INFO_RECORD[tribesmanComponent.craftingItemType].entityTextureSource;
       }
    }
 }
 
-const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState): number => {
+const getCustomItemRenderPartOpacity = (entity: EntityID, state: CustomItemState): number => {
    switch (state) {
       case CustomItemState.usingMedicine: {
-         const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
          // @Hack
          let lastEatTicks: number | undefined;
@@ -180,14 +183,14 @@ const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState):
          return 1 - useProgress;
       }
       case CustomItemState.crafting: {
-         const tribesmanComponent = entity.getServerComponent(ServerComponentType.tribesmanAI);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
          return tribesmanComponent.craftingProgress * 0.8;
       }
    }
 }
 
-const getCustomItemRenderPartState = (entity: Entity): CustomItemState | null => {
-   const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
+const getCustomItemRenderPartState = (entity: EntityID): CustomItemState | null => {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    
    for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
       const limbInfo = inventoryUseComponent.limbInfos[i];
@@ -202,10 +205,10 @@ const getCustomItemRenderPartState = (entity: Entity): CustomItemState | null =>
    return null;
 }
 
-export function updateCustomItemRenderPart(entity: Entity): void {
+export function updateCustomItemRenderPart(entity: EntityID): void {
    const customItemState = getCustomItemRenderPartState(entity);
    
-   const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    if (customItemState !== null) {
       if (inventoryUseComponent.customItemRenderPart === null) {
          inventoryUseComponent.customItemRenderPart = new TexturedRenderPart(
@@ -215,13 +218,16 @@ export function updateCustomItemRenderPart(entity: Entity): void {
             0
          );
          inventoryUseComponent.customItemRenderPart.offset.y = 38;
-         inventoryUseComponent.entity.attachRenderThing(inventoryUseComponent.customItemRenderPart);
+
+         const renderInfo = getEntityRenderInfo(entity);
+         renderInfo.attachRenderThing(inventoryUseComponent.customItemRenderPart);
       }
       
       inventoryUseComponent.customItemRenderPart.opacity = getCustomItemRenderPartOpacity(entity, customItemState);
    } else {
       if (inventoryUseComponent.customItemRenderPart !== null) {
-         inventoryUseComponent.entity.removeRenderPart(inventoryUseComponent.customItemRenderPart);
+         const renderInfo = getEntityRenderInfo(entity);
+         renderInfo.removeRenderPart(inventoryUseComponent.customItemRenderPart);
          inventoryUseComponent.customItemRenderPart = null;
       }
    }

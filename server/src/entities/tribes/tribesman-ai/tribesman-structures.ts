@@ -4,7 +4,6 @@ import { PathfindingSettings } from "battletribes-shared/settings";
 import { calculateStructureConnectionInfo } from "battletribes-shared/structures";
 import { TribesmanTitle } from "battletribes-shared/titles";
 import { angle, getAngleDiff } from "battletribes-shared/utils";
-import Layer from "../../../Layer";
 import Tribe from "../../../Tribe";
 import { getDistanceFromPointToEntity, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
 import { HealthComponentArray } from "../../../components/HealthComponent";
@@ -25,7 +24,7 @@ import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
 import { getBoxesCollidingEntities } from "battletribes-shared/hitbox-collision";
 import { Inventory, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../../../components/TransformComponent";
-import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
+import { createNormalStructureHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { updateBox } from "battletribes-shared/boxes/boxes";
 import { getEntityLayer, getGameTicks } from "../../../world";
 
@@ -37,7 +36,7 @@ export function goPlaceBuilding(tribesman: EntityID, hotbarInventory: Inventory,
    const plan = goal.plan;
    
    const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
-   const hitboxes = createEntityHitboxes(entityType);
+   const hitboxes = createNormalStructureHitboxes(entityType);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
       updateBox(hitbox.box, plan.position.x, plan.position.y, plan.rotation);
@@ -103,7 +102,7 @@ export function goPlaceBuilding(tribesman: EntityID, hotbarInventory: Inventory,
          const placingEntityType = (ITEM_INFO_RECORD[item.type] as PlaceableItemInfo).entityType;
          
          const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, placingEntityType, layer.getWorldInfo());
-         placeBuilding(tribe, getEntityLayer(tribesman), plan.position, plan.rotation, placingEntityType, connectionInfo);
+         placeBuilding(tribe, getEntityLayer(tribesman), plan.position, plan.rotation, placingEntityType, connectionInfo, []);
 
          if (Math.random() < TITLE_REWARD_CHANCES.BUILDER_REWARD_CHANCE) {
             awardTitle(tribesman, TribesmanTitle.builder);

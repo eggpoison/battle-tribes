@@ -1,16 +1,15 @@
 import { EntityType } from "battletribes-shared/entities";
 import { angle } from "battletribes-shared/utils";
-import { ServerComponentType } from "battletribes-shared/components";
 import { HitData } from "battletribes-shared/client-server-types";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
-import { WALL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
-import Board from "../Board";
+import { BuildingMaterialComponentArray, WALL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { getEntityByID, getEntityType } from "../world";
+import { getEntityRenderInfo, getEntityType } from "../world";
 import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { HealthComponentArray } from "../entity-components/HealthComponent";
 
 class Wall extends Entity {
    private static readonly NUM_DAMAGE_STAGES = 6;
@@ -22,8 +21,8 @@ class Wall extends Entity {
    }
 
    public onLoad(): void {
-      const buildingMaterialComponent = this.getServerComponent(ServerComponentType.buildingMaterial);
-      const healthComponentData = this.getServerComponent(ServerComponentType.health);
+      const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(this.id);
+      const healthComponentData = HealthComponentArray.getComponent(this.id);
       
       const renderPart = new TexturedRenderPart(
          null,
@@ -32,11 +31,14 @@ class Wall extends Entity {
          getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponent.material])
       );
       renderPart.addTag("buildingMaterialComponent:material");
-      this.attachRenderThing(renderPart);
+
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(renderPart);
 
       this.updateDamageRenderPart(healthComponentData.health, healthComponentData.maxHealth);
 
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      // @Hack
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       if (transformComponent.ageTicks <= 0) {
          playSound("wooden-wall-place.mp3", 0.3, 1, transformComponent.position);
       }
@@ -46,7 +48,8 @@ class Wall extends Entity {
       let damageStage = Math.ceil((1 - health / maxHealth) * Wall.NUM_DAMAGE_STAGES);
       if (damageStage === 0) {
          if (this.damageRenderPart !== null) {
-            this.removeRenderPart(this.damageRenderPart);
+            const renderInfo = getEntityRenderInfo(this.id);
+            renderInfo.removeRenderPart(this.damageRenderPart);
             this.damageRenderPart = null;
          }
          return;
@@ -64,7 +67,8 @@ class Wall extends Entity {
             0,
             getTextureArrayIndex(textureSource)
          );
-         this.attachRenderThing(this.damageRenderPart);
+         const renderInfo = getEntityRenderInfo(this.id);
+         renderInfo.attachRenderThing(this.damageRenderPart);
       } else {
          this.damageRenderPart.switchTextureSource(textureSource);
       }
@@ -73,12 +77,12 @@ class Wall extends Entity {
    // public updateFromData(data: EntityData): void {
    //    super.updateFromData(data);
 
-   //    const healthComponent = this.getServerComponent(ServerComponentType.health);
+   //    const healthComponent = this.getServerComponentA(ServerComponentType.health);
    //    this.updateDamageRenderPart(healthComponent.health, healthComponent.maxHealth);
    // }
 
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       playSound("wooden-wall-hit.mp3", 0.3, 1, transformComponent.position);
 
@@ -98,7 +102,7 @@ class Wall extends Entity {
    
    // @Incomplete: doesn't play when removed by deconstruction
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       // @Speed @Hack
       // Don't play death effects if the wall was replaced by a blueprint

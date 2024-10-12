@@ -4,9 +4,10 @@ import { playSound, ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS } from "../sound";
 import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { randFloat, randItem } from "battletribes-shared/utils";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { TombstoneComponentArray } from "../entity-components/TombstoneComponent";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class Tombstone extends Entity {
    private static readonly HITBOX_WIDTH = 48;
@@ -17,9 +18,10 @@ class Tombstone extends Entity {
    }
 
    public onLoad(): void {
-      const tombstoneComponent = this.getServerComponent(ServerComponentType.tombstone);
+      const tombstoneComponent = TombstoneComponentArray.getComponent(this.id);
 
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,
@@ -30,7 +32,7 @@ class Tombstone extends Entity {
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       for (let i = 0; i < 4; i++) {
          const spawnPositionX = transformComponent.position.x + randFloat(-Tombstone.HITBOX_WIDTH/2, Tombstone.HITBOX_WIDTH/2);
@@ -53,7 +55,7 @@ class Tombstone extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       for (let i = 0; i < 8; i++) {
          const spawnPositionX = transformComponent.position.x + randFloat(-Tombstone.HITBOX_WIDTH/2, Tombstone.HITBOX_WIDTH/2);

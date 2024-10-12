@@ -1,10 +1,10 @@
 import { EntityType } from "battletribes-shared/entities";
 import { playSound } from "../sound";
 import Entity from "../Entity";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import { getEntityType } from "../world";
+import { getEntityRenderInfo, getEntityType } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class PunjiSticks extends Entity {
    constructor(id: number) {
@@ -25,22 +25,23 @@ class PunjiSticks extends Entity {
          0,
          0,
          textureArrayIndex
-      )
-      this.attachRenderThing(renderPart);
+      );
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(renderPart);
 
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       if (transformComponent.ageTicks <= 0) {
          playSound("spike-place.mp3", 0.5, 1, transformComponent.position);
       }
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playSound("wooden-spikes-hit.mp3", 0.3, 1, transformComponent.position);
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playSound("wooden-spikes-destroy.mp3", 0.4, 1, transformComponent.position);
    }
 }

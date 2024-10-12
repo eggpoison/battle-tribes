@@ -1,13 +1,13 @@
 import { angle, randFloat } from "battletribes-shared/utils";
-import { EntityType } from "battletribes-shared/entities";
 import { HitData } from "battletribes-shared/client-server-types";
 import { BloodParticleSize, createBlueBloodParticle, createBlueBloodParticleFountain, createBlueBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { FROZEN_YETI_HEAD_DISTANCE } from "../entity-components/FrozenYetiComponent";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class FrozenYeti extends Entity {
    private static readonly SIZE = 152;
@@ -15,7 +15,8 @@ class FrozenYeti extends Entity {
    constructor(id: number) {
       super(id);
 
-      this.attachRenderThing(new TexturedRenderPart(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(new TexturedRenderPart(
          null,
          1,
          0,
@@ -30,7 +31,7 @@ class FrozenYeti extends Entity {
       );
       headRenderPart.addTag("frozenYetiComponent:head");
       headRenderPart.offset.y = FROZEN_YETI_HEAD_DISTANCE;
-      this.attachRenderThing(headRenderPart);
+      renderInfo.attachRenderThing(headRenderPart);
 
       // Create paw render parts
       const pawRenderParts = new Array<RenderPart>();
@@ -43,13 +44,13 @@ class FrozenYeti extends Entity {
          );
          paw.addTag("frozenYetiComponent:paw");
 
-         this.attachRenderThing(paw);
+         renderInfo.attachRenderThing(paw);
          pawRenderParts.push(paw);
       }
    }
 
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       // Blood pool particle
       createBlueBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, FrozenYeti.SIZE / 2);
@@ -65,7 +66,7 @@ class FrozenYeti extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       
       for (let i = 0; i < 4; i++) {
          createBlueBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, FrozenYeti.SIZE / 2);

@@ -8,7 +8,7 @@ import { HealthComponent } from "../components/HealthComponent";
 import { BlueprintComponent } from "../components/BlueprintComponent";
 import Tribe from "../Tribe";
 import { TribeComponent } from "../components/TribeComponent";
-import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
+import { createNormalStructureHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { CollisionGroup } from "battletribes-shared/collision-groups";
    
 type ComponentTypes = ServerComponentType.transform
@@ -45,7 +45,7 @@ export function createBlueprintEntityConfig(tribe: Tribe, blueprintType: Bluepri
    transformComponent.collisionMask = 0;
 
    const entityType = getBlueprintEntityType(blueprintType);
-   const hitboxes = createEntityHitboxes(entityType);
+   const hitboxes = createNormalStructureHitboxes(entityType);
    transformComponent.addHitboxes(hitboxes, null);
    
    const healthComponent = new HealthComponent(5);

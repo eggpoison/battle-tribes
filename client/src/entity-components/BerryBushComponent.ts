@@ -4,6 +4,7 @@ import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import { getEntityRenderInfo } from "../world";
 
 const BERRY_BUSH_TEXTURE_SOURCES = [
    "entities/berry-bush1.png",
@@ -33,13 +34,15 @@ class BerryBushComponent extends ServerComponent {
             getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[numBerries])
          );
          this.renderPart.addTag("berryBushComponent:renderPart");
-         this.entity.attachRenderThing(this.renderPart);
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         renderInfo.attachRenderThing(this.renderPart);
       } else if (numBerries !== this.numBerries) {
          this.numBerries = numBerries;
 
          this.renderPart.switchTextureSource(BERRY_BUSH_TEXTURE_SOURCES[this.numBerries]);
          // @Bug: not working!
-         this.entity.dirty();
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         renderInfo.dirty();
       }
    }
 }

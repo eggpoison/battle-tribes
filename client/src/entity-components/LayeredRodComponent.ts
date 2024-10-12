@@ -1,7 +1,5 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import Entity from "../Entity";
 import ColouredRenderPart, { RenderPartColour } from "../render-parts/ColouredRenderPart";
-import { RenderPart } from "../render-parts/render-parts";
 import ServerComponent from "./ServerComponent";
 import { Colour, hueShift, lerp, multiColourLerp } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
@@ -9,7 +7,7 @@ import { PacketReader } from "battletribes-shared/packets";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { Hitbox } from "battletribes-shared/boxes/boxes";
-import { getEntityByID, getEntityLayer, getEntityType } from "../world";
+import { getEntityLayer, getEntityRenderInfo, getEntityType } from "../world";
 import { TransformComponentArray } from "./TransformComponent";
 
 const enum Vars {
@@ -127,6 +125,7 @@ class LayeredRodComponent extends ServerComponent {
       const bendY = this.naturalBendY;
       
       // Create layers
+      const renderInfo = getEntityRenderInfo(this.entity.id);
       for (let layer = 1; layer <= this.numLayers; layer++) {
          const colour = getLayerColour(this.entity.id, this.r, this.g, this.b, layer, this.numLayers);
 
@@ -141,20 +140,19 @@ class LayeredRodComponent extends ServerComponent {
          renderPart.offset.x = bendX * layer;
          renderPart.offset.y = bendY * layer;
 
-         this.entity.attachRenderThing(renderPart);
+         renderInfo.attachRenderThing(renderPart);
       }
    }
 
-   public onCollision(collidingEntity: Entity, _pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
-      if (getEntityType(collidingEntity.id) === EntityType.tree) {
+   public onCollision(collidingEntity: EntityID, _pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
+      if (getEntityType(collidingEntity) === EntityType.tree) {
          return;
       }
       
       LayeredRodComponentArray.activateComponent(this, this.entity.id);
       
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
    
-      // const distance = transformComponent.position.calculateDistanceBetween(pushingHitbox.position);
       const directionFromCollidingEntity = pushingHitbox.box.position.calculateAngleBetween(transformComponent.position);
    
       let existingPushX = bendToPushAmount(this.bendX);
@@ -181,7 +179,9 @@ class LayeredRodComponent extends ServerComponent {
       this.bendY = bendY;
       
       updateOffsets(this);
-      this.entity.dirty();
+
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      renderInfo.dirty();
    }
 
    public padData(reader: PacketReader): void {
@@ -214,9 +214,9 @@ const updateOffsets = (layeredRodComponent: LayeredRodComponent): void => {
    const bendX = layeredRodComponent.naturalBendX * naturalBendMultiplier + layeredRodComponent.bendX;
    const bendY = layeredRodComponent.naturalBendY * naturalBendMultiplier + layeredRodComponent.bendY;
    
-   const entity = getEntityByID(layeredRodComponent.entity.id)!;
+   const renderInfo = getEntityRenderInfo(layeredRodComponent.entity.id);
    for (let layer = 1; layer <= layeredRodComponent.numLayers; layer++) {
-      const renderPart = entity.allRenderThings[layer - 1];
+      const renderPart = renderInfo.allRenderThings[layer - 1];
 
       renderPart.offset.x = bendX * layer;
       renderPart.offset.y = bendY * layer;
@@ -242,5 +242,7 @@ function onTick(layeredRodComponent: LayeredRodComponent, entity: EntityID): voi
    layeredRodComponent.bendY -= Vars.NATURAL_DRIFT * bendSmoothnessMultiplier * layeredRodComponent.bendY / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
 
    updateOffsets(layeredRodComponent);
-   layeredRodComponent.entity.dirty();
+
+   const renderInfo = getEntityRenderInfo(layeredRodComponent.entity.id);
+   renderInfo.dirty();
 }

@@ -1,9 +1,8 @@
 import { distance } from "battletribes-shared/utils";
 import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "battletribes-shared/research";
-import { EntityType } from "battletribes-shared/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { TribesmanTitle } from "battletribes-shared/titles";
-import { ServerComponentType } from "battletribes-shared/components";
 import Player from "./entities/Player";
 import Board from "./Board";
 import Game from "./Game";
@@ -11,9 +10,10 @@ import Client from "./client/Client";
 import { getSelectedEntityID } from "./entity-selection";
 import { playSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
-import Entity from "./Entity";
-import { getRandomPointInEntity } from "./entity-components/TransformComponent";
-import { getEntityByID, getEntityType } from "./world";
+import { getRandomPointInEntity, TransformComponentArray } from "./entity-components/TransformComponent";
+import { entityExists, getEntityType } from "./world";
+import { InventoryUseComponentArray } from "./entity-components/InventoryUseComponent";
+import { TribeMemberComponentArray } from "./entity-components/TribeMemberComponent";
 
 export interface ResearchOrb {
    /* X position of the node in the world */
@@ -33,8 +33,8 @@ const ORB_NUM_PARTICLES = [2, 4, 7];
 const ORB_COMPLETE_SOUND_PITCHES = [1, 0.85, 0.7];
 const ORB_PARTICLES_PER_SECOND = [2, 3.5, 6];
 
-const generateResearchOrb = (researchBench: Entity): ResearchOrb => {
-   const transformComponent = researchBench.getServerComponent(ServerComponentType.transform);
+const generateResearchOrb = (researchBench: EntityID): ResearchOrb => {
+   const transformComponent = TransformComponentArray.getComponent(researchBench);
 
    const position = getRandomPointInEntity(transformComponent);
    position.subtract(transformComponent.position);
@@ -59,21 +59,20 @@ export function getResearchOrbCompleteProgress(): number {
 }
 
 export function updateActiveResearchBench(): void {
-   const selectedStructureID = getSelectedEntityID();
-   const structure = getEntityByID(selectedStructureID);
-   if (typeof structure === "undefined") {
+   const selectedStructure = getSelectedEntityID();
+   if (!entityExists(selectedStructure)) {
       currentResearchOrb = null;
       currentBenchID = -1;
       return;
    }
 
-   if (getEntityType(structure.id) !== EntityType.researchBench) {
+   if (getEntityType(selectedStructure) !== EntityType.researchBench) {
       return;
    }
 
-   currentBenchID = selectedStructureID;
+   currentBenchID = selectedStructure;
    if (currentResearchOrb === null) {
-      currentResearchOrb = generateResearchOrb(structure);
+      currentResearchOrb = generateResearchOrb(selectedStructure);
    }
 }
 
@@ -103,25 +102,24 @@ const completeOrb = (): void => {
       createStarParticle(x, y);
    }
 
-   const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+   const playerTransformComponent = TransformComponentArray.getComponent(Player.instance!.id);
 
    playSound("orb-complete.mp3", 0.3, ORB_COMPLETE_SOUND_PITCHES[currentResearchOrb!.size], playerTransformComponent.position);
 
    // Make the player smack to the bench
-   const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
    const useInfo = inventoryUseComponent.limbInfos[0];
    useInfo.lastAttackTicks = Board.serverTicks;
    
-   const selectedStructureID = getSelectedEntityID();
-   const structure = getEntityByID(selectedStructureID)!;
-   currentResearchOrb = generateResearchOrb(structure);
+   const selectedStructure = getSelectedEntityID();
+   currentResearchOrb = generateResearchOrb(selectedStructure);
    orbCompleteProgress = 0;
 }
 
 const getResearchSpeedMultiplier = (): number => {
    let multiplier = 1;
 
-   const tribeMemberComponent = Player.instance!.getServerComponent(ServerComponentType.tribeMember);
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(Player.instance!.id);
    if (tribeMemberComponent.hasTitle(TribesmanTitle.shrewd)) {
       multiplier *= 1.5;
    }

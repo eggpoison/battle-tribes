@@ -1,8 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import { randFloat, randInt } from "battletribes-shared/utils";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
 import { playSound } from "../sound";
 import Entity from "../Entity";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class BerryBush extends Entity {
    private static readonly RADIUS = 40;
@@ -11,7 +11,7 @@ class BerryBush extends Entity {
    private static readonly LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       const moveDirection = 2 * Math.PI * Math.random();
       
@@ -29,7 +29,7 @@ class BerryBush extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       for (let i = 0; i < 6; i++) {
          const offsetMagnitude = BerryBush.RADIUS * Math.random();

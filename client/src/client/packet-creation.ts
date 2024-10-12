@@ -1,6 +1,5 @@
 import { alignLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
 import Player from "../entities/Player";
-import { ServerComponentType } from "battletribes-shared/components";
 import { getSelectedEntityID } from "../entity-selection";
 import { EntityType } from "battletribes-shared/entities";
 import { GameDataPacketOptions } from "battletribes-shared/client-server-types";
@@ -10,6 +9,8 @@ import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import Client from "./Client";
 import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../components/game/GameInteractableLayer";
 import { getEntityByID, getEntityType } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
 
 export function createPlayerDataPacket(): ArrayBuffer {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -23,12 +24,12 @@ export function createPlayerDataPacket(): ArrayBuffer {
    
    const packet = new Packet(PacketType.playerData, lengthBytes);
    
-   const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
    packet.addNumber(transformComponent.position.x);
    packet.addNumber(transformComponent.position.y);
    packet.addNumber(transformComponent.rotation);
 
-   const physicsComponent = Player.instance!.getServerComponent(ServerComponentType.physics);
+   const physicsComponent = PhysicsComponentArray.getComponent(Player.instance!.id);
    packet.addNumber(physicsComponent.selfVelocity.x);
    packet.addNumber(physicsComponent.selfVelocity.y);
    packet.addNumber(physicsComponent.externalVelocity.x);
@@ -92,7 +93,7 @@ export function createSyncRequestPacket(): ArrayBuffer {
 }
 
 export function createAttackPacket(): ArrayBuffer {
-   const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
    
    const packet = new Packet(PacketType.attack, 3 * Float32Array.BYTES_PER_ELEMENT);
 

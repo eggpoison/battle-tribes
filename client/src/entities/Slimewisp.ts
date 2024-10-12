@@ -1,12 +1,10 @@
-import { EntityType } from "battletribes-shared/entities";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { TileType } from "battletribes-shared/tiles";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { getEntityTile } from "../entity-components/TransformComponent";
-import { getEntityLayer } from "../world";
+import { getEntityTile, TransformComponentArray } from "../entity-components/TransformComponent";
+import { getEntityLayer, getEntityRenderInfo } from "../world";
 
 class Slimewisp extends Entity {
    private static readonly RADIUS = 16;
@@ -21,11 +19,13 @@ class Slimewisp extends Entity {
          getTextureArrayIndex(`entities/slimewisp/slimewisp.png`)
       );
       renderPart.opacity = 0.8;
-      this.attachRenderThing(renderPart);
+
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(renderPart);
    }
 
    public overrideTileMoveSpeedMultiplier(): number | null {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       const layer = getEntityLayer(this.id);
       
       // Slimewisps move at normal speed on slime blocks
@@ -37,7 +37,7 @@ class Slimewisp extends Entity {
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       createSlimePoolParticle(transformComponent.position.x, transformComponent.position.y, Slimewisp.RADIUS);
 
@@ -47,7 +47,7 @@ class Slimewisp extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       createSlimePoolParticle(transformComponent.position.x, transformComponent.position.y, Slimewisp.RADIUS);
 

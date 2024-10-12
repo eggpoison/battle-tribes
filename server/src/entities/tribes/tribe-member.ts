@@ -20,10 +20,9 @@ import { TribeComponentArray } from "../../components/TribeComponent";
 import { PhysicsComponentArray } from "../../components/PhysicsComponent";
 import Tribe from "../../Tribe";
 import { entityIsResource } from "./tribesman-ai/tribesman-resource-gathering";
-import { TribesmanAIComponentArray, adjustTribesmanRelationsAfterGift } from "../../components/TribesmanAIComponent";
+import { TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "../../components/TribeMemberComponent";
 import { createItemEntityConfig } from "../item-entity";
-import { ItemComponentArray } from "../../components/ItemComponent";
 import { StructureComponentArray } from "../../components/StructureComponent";
 import { BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
 import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
@@ -59,6 +58,8 @@ import { createFenceConfig } from "../structures/fence";
 import { createFenceGateConfig } from "../structures/fence-gate";
 import { createFrostshaperConfig } from "../structures/frostshaper";
 import { createStonecarvingTableConfig } from "../structures/stonecarving-table";
+import { createBracingsConfig } from "../structures/bracings";
+import { Hitbox } from "../../../../shared/src/boxes/boxes";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -277,7 +278,8 @@ export function calculateRadialAttackTargets(entity: EntityID, attackOffset: num
    return attackedEntities;
 }
 
-export function placeBuilding(tribe: Tribe, layer: Layer, position: Point, rotation: number, entityType: StructureType, connectionInfo: StructureConnectionInfo): void {
+// @Incomplete: make this require place info
+export function placeBuilding(tribe: Tribe, layer: Layer, position: Point, rotation: number, entityType: StructureType, connectionInfo: StructureConnectionInfo, hitboxes: ReadonlyArray<Hitbox>): void {
    let config: EntityConfig<ServerComponentType.transform>;
    switch (entityType) {
       case EntityType.wall: config = createWallConfig(tribe, BuildingMaterial.wood, connectionInfo); break;
@@ -304,10 +306,7 @@ export function placeBuilding(tribe: Tribe, layer: Layer, position: Point, rotat
       case EntityType.fenceGate: config = createFenceGateConfig(tribe, connectionInfo); break;
       case EntityType.frostshaper: config = createFrostshaperConfig(tribe, connectionInfo); break;
       case EntityType.stonecarvingTable: config = createStonecarvingTableConfig(tribe, connectionInfo); break;
-      default: {
-         const unreachable: never = entityType;
-         return unreachable;
-      }
+      case EntityType.bracings: config = createBracingsConfig(hitboxes, tribe, BuildingMaterial.wood);
    }
    
    config.components[ServerComponentType.transform].position.x = position.x;
@@ -414,7 +413,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          };
          
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
-         placeBuilding(tribeComponent.tribe, getEntityLayer(tribeMember), placeInfo.position, placeInfo.rotation, placeInfo.entityType, structureInfo);
+         placeBuilding(tribeComponent.tribe, getEntityLayer(tribeMember), placeInfo.position, placeInfo.rotation, placeInfo.entityType, structureInfo, placeInfo.hitboxes);
 
          const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
          consumeItemFromSlot(inventory, itemSlot, 1);

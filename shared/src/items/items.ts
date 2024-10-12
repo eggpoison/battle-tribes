@@ -1,4 +1,4 @@
-import { AttackPatternInfo, AttackTimingsInfo, AXE_ATTACK_TIMINGS, DEFAULT_ATTACK_PATTERN, DEFAULT_ATTACK_TIMINGS, DEFAULT_ITEM_DAMAGE_BOX_INFO, LimbHeldItemDamageBoxInfo, PICKAXE_ATTACK_TIMINGS, SHIELD_BLOCKING_DAMAGE_BOX_INFO, SPEAR_ATTACK_PATTERN, SPEAR_ATTACK_TIMINGS, SPEAR_DAMAGE_BOX_INFO, SWORD_ATTACK_TIMINGS, SWORD_ITEM_DAMAGE_BOX_INFO, TOOL_ITEM_DAMAGE_BOX_INFO } from "../attack-patterns";
+import { AttackPatternInfo, AttackTimingsInfo, AXE_ATTACK_TIMINGS, DEFAULT_ATTACK_PATTERN, DEFAULT_ATTACK_TIMINGS, DEFAULT_ITEM_DAMAGE_BOX_INFO, LimbHeldItemDamageBoxInfo, PICKAXE_ATTACK_PATTERN, PICKAXE_ATTACK_TIMINGS, PICKAXE_ITEM_DAMAGE_BOX_INFO, SHIELD_BLOCKING_DAMAGE_BOX_INFO, SPEAR_ATTACK_PATTERN, SPEAR_ATTACK_TIMINGS, SPEAR_DAMAGE_BOX_INFO, SWORD_ATTACK_TIMINGS, SWORD_ITEM_DAMAGE_BOX_INFO, TOOL_ITEM_DAMAGE_BOX_INFO } from "../attack-patterns";
 import { EntityType } from "../entities";
 import { Settings } from "../settings";
 import { StructureType } from "../structures";
@@ -71,7 +71,8 @@ export const enum ItemType {
    frostshaper,
    stonecarvingTable,
    woodenShield,
-   slingshot
+   slingshot,
+   woodenBracings
 }
 
 export const ItemTypeString: Record<ItemType, string> = {
@@ -142,7 +143,8 @@ export const ItemTypeString: Record<ItemType, string> = {
    [ItemType.frostshaper]: "frostshaper",
    [ItemType.stonecarvingTable]: "stonecarving_table",
    [ItemType.woodenShield]: "Wooden Shield",
-   [ItemType.slingshot]: "Slingshot"
+   [ItemType.slingshot]: "Slingshot",
+   [ItemType.woodenBracings]: "Wooden Bracings"
 };
 
 const numItemTypes = Object.keys(ItemTypeString).length;
@@ -311,9 +313,9 @@ const ITEM_CATEGORY_ATTACK_INFO_RECORD: Record<keyof ItemInfoRecord, AttackInfo>
       heldItemDamageBoxInfo: TOOL_ITEM_DAMAGE_BOX_INFO
    },
    pickaxe: {
-      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackPattern: PICKAXE_ATTACK_PATTERN,
       attackTimings: PICKAXE_ATTACK_TIMINGS,
-      heldItemDamageBoxInfo: TOOL_ITEM_DAMAGE_BOX_INFO
+      heldItemDamageBoxInfo: PICKAXE_ITEM_DAMAGE_BOX_INFO
    },
    placeable: {
       attackPattern: DEFAULT_ATTACK_PATTERN,
@@ -442,7 +444,8 @@ export const ITEM_TYPE_RECORD = {
    [ItemType.frostshaper]: "placeable",
    [ItemType.stonecarvingTable]: "placeable",
    [ItemType.woodenShield]: "shield",
-   [ItemType.slingshot]: "slingshot"
+   [ItemType.slingshot]: "slingshot",
+   [ItemType.woodenBracings]: "placeable"
 } satisfies Record<ItemType, keyof ItemInfoRecord>;
 
 export type ItemInfo<T extends ItemType> = ItemInfoRecord[typeof ITEM_TYPE_RECORD[T]];
@@ -809,7 +812,11 @@ export const ITEM_INFO_RECORD = {
       entityType: EntityType.stonecarvingTable
    },
    [ItemType.woodenShield]: {},
-   [ItemType.slingshot]: {}
+   [ItemType.slingshot]: {},
+   [ItemType.woodenBracings]: {
+      stackSize: 99,
+      entityType: EntityType.bracings
+   }
 } satisfies { [T in ItemType]: ItemInfo<T> };
 
 // Some typescript wizardry

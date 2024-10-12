@@ -7,6 +7,8 @@ import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TribeComponentArray } from "./TribeComponent";
+import { getEntityRenderInfo } from "../world";
 
 const BANNER_LAYER_DISTANCES = [34, 52, 65];
 
@@ -56,15 +58,16 @@ class TotemBannerComponent extends ServerComponent {
       }
       
       // Remove banners which are no longer there
+      const renderInfo = getEntityRenderInfo(this.entity.id);
       for (const hutNum of removedBannerNums) {
-         this.entity.removeRenderPart(this.bannerRenderParts[hutNum]);
+         renderInfo.removeRenderPart(this.bannerRenderParts[hutNum]);
          delete this.bannerRenderParts[hutNum];
          delete this.banners[hutNum];
       }
    }
 
    private createBannerRenderPart(banner: TribeTotemBanner): void {
-      const tribeComponent = this.entity.getServerComponent(ServerComponentType.tribe);
+      const tribeComponent = TribeComponentArray.getComponent(this.entity.id);
       
       let totemTextureSourceID: string;
       switch (tribeComponent.tribeType) {
@@ -95,8 +98,10 @@ class TotemBannerComponent extends ServerComponent {
       const bannerOffsetAmount = BANNER_LAYER_DISTANCES[banner.layer];
       renderPart.offset.x = bannerOffsetAmount * Math.sin(banner.direction);
       renderPart.offset.y = bannerOffsetAmount * Math.cos(banner.direction);
-      this.entity.attachRenderThing(renderPart);
       this.bannerRenderParts[banner.hutNum] = renderPart;
+
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      renderInfo.attachRenderThing(renderPart);
    }
 }
 

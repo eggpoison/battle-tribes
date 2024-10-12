@@ -1,9 +1,9 @@
-import { EntityType } from "battletribes-shared/entities";
-import { ServerComponentType } from "battletribes-shared/components";
 import Entity from "../Entity";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { ItemComponentArray } from "../entity-components/ItemComponent";
+import { getEntityRenderInfo } from "../world";
 
 class ItemEntity extends Entity {
    constructor(id: number) {
@@ -11,9 +11,10 @@ class ItemEntity extends Entity {
    }
 
    public onLoad(): void {
-      const itemComponent = this.getServerComponent(ServerComponentType.item);
+      const itemComponent = ItemComponentArray.getComponent(this.id);
       
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,

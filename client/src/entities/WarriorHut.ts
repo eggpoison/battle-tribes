@@ -1,14 +1,16 @@
-import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class WarriorHut extends Entity {
    constructor(id: number) {
       super(id);
+      
+      const renderInfo = getEntityRenderInfo(this.id);
       
       // Hut
       const hutRenderPart = new TexturedRenderPart(
@@ -17,7 +19,7 @@ class WarriorHut extends Entity {
          0,
          getTextureArrayIndex("entities/warrior-hut/warrior-hut.png")
       );
-      this.attachRenderThing(hutRenderPart);
+      renderInfo.attachRenderThing(hutRenderPart);
 
       // Doors
       const doorRenderParts = new Array<RenderPart>();
@@ -29,18 +31,18 @@ class WarriorHut extends Entity {
             getTextureArrayIndex("entities/warrior-hut/warrior-hut-door.png")
          );
          doorRenderPart.addTag("hutComponent:door");
-         this.attachRenderThing(doorRenderPart);
+         renderInfo.attachRenderThing(doorRenderPart);
          doorRenderParts.push(doorRenderPart);
       }
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playBuildingHitSound(transformComponent.position);
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playSound("building-destroy-1.mp3", 0.4, 1, transformComponent.position);
    }
 }

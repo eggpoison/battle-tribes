@@ -2,8 +2,7 @@ import { Settings } from "battletribes-shared/settings";
 import Entity from "./Entity";
 import { ServerComponentType } from "battletribes-shared/components";
 import { collisionBitsAreCompatible, CollisionPushInfo, getCollisionPushInfo } from "battletribes-shared/hitbox-collision";
-import { clampToBoardDimensions, Point } from "battletribes-shared/utils";
-import Board from "./Board";
+import { Point } from "battletribes-shared/utils";
 import { HitboxCollisionType, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { EntityID } from "battletribes-shared/entities";
@@ -11,8 +10,9 @@ import { TransformComponentArray } from "./entity-components/TransformComponent"
 import Chunk from "./Chunk";
 import Player from "./entities/Player";
 import { PhysicsComponentArray } from "./entity-components/PhysicsComponent";
-import { getEntityByID, getEntityLayer } from "./world";
+import { getEntityLayer } from "./world";
 import Layer from "./Layer";
+import { getComponentArrays } from "./entity-components/ComponentArray";
 
 interface EntityPairCollisionInfo {
    readonly minEntityInvolvedHitboxes: Array<Hitbox>;
@@ -34,14 +34,14 @@ type CollisionPairs = Record<number, Record<number, EntityPairCollisionInfo | nu
 //    break;
 // }
 
-const resolveHardCollision = (entity: Entity, pushInfo: CollisionPushInfo): void => {
-   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+const resolveHardCollision = (entity: EntityID, pushInfo: CollisionPushInfo): void => {
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    // Transform the entity out of the hitbox
    transformComponent.position.x += pushInfo.amountIn * Math.sin(pushInfo.direction);
    transformComponent.position.y += pushInfo.amountIn * Math.cos(pushInfo.direction);
 
-   const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
+   const physicsComponent = PhysicsComponentArray.getComponent(entity);
 
    // Kill all the velocity going into the hitbox
    const bx = Math.sin(pushInfo.direction + Math.PI/2);
@@ -68,20 +68,25 @@ const resolveSoftCollision = (entity: EntityID, pushingHitbox: Hitbox, pushInfo:
    }
 }
 
-export function collide(entity: Entity, collidingEntity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox, isPushed: boolean): void {
-   if (isPushed && entity.hasServerComponent(ServerComponentType.physics)) {
+export function collide(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, isPushed: boolean): void {
+   if (isPushed && PhysicsComponentArray.hasComponent(entity)) {
       const pushInfo = getCollisionPushInfo(pushedHitbox.box, pushingHitbox.box);
       if (pushingHitbox.collisionType === HitboxCollisionType.hard) {
          resolveHardCollision(entity, pushInfo);
       } else {
-         resolveSoftCollision(entity.id, pushingHitbox, pushInfo);
+         resolveSoftCollision(entity, pushingHitbox, pushInfo);
       }
    }
 
-   for (let i = 0; i < entity.components.length; i++) {
-      const component = entity.components[i];
-      if (typeof component.onCollision !== "undefined") {
-         component.onCollision(collidingEntity, pushedHitbox, pushingHitbox);
+   // @Speed
+   const componentArrays = getComponentArrays();
+   for (let i = 0; i < componentArrays.length; i++) {
+      const componentArray = componentArrays[i];
+      if (componentArray.hasComponent(entity)) {
+         const component = componentArray.getComponent(entity);
+         if (typeof component.onCollision !== "undefined") {
+            component.onCollision(collidingEntity, pushedHitbox, pushingHitbox);
+         }
       }
    }
 }
@@ -165,25 +170,22 @@ const collectEntityCollisionsWithChunk = (collisionPairs: CollisionPairs, entity
 }
 
 const resolveCollisionPairs = (collisionPairs: CollisionPairs, onlyResolvePlayerCollisions: boolean): void => {
-   // @Speed: garbage collection
-   for (const entity1ID of Object.keys(collisionPairs).map(Number)) {
-      for (const entity2ID of Object.keys(collisionPairs[entity1ID]).map(Number)) {
-         const collisionInfo = collisionPairs[entity1ID][entity2ID];
+   // @Speed @Garbage
+   for (const entity1 of Object.keys(collisionPairs).map(Number)) {
+      for (const entity2 of Object.keys(collisionPairs[entity1]).map(Number)) {
+         const collisionInfo = collisionPairs[entity1][entity2];
          if (collisionInfo === null) {
             continue;
          }
 
-         // Note: from here, entity1ID < entity2ID (by definition)
-
-         const entity1 = getEntityByID(entity1ID)!;
-         const entity2 = getEntityByID(entity2ID)!;
+         // Note: from here, entity1 < entity2 (by definition)
 
          for (let i = 0; i < collisionInfo.minEntityInvolvedHitboxes.length; i++) {
             const entity1Hitbox = collisionInfo.minEntityInvolvedHitboxes[i];
             const entity2Hitbox = collisionInfo.maxEntityInvolvedHitboxes[i];
 
-            collide(entity1, entity2, entity1Hitbox, entity2Hitbox, !onlyResolvePlayerCollisions || entity1ID === Player.instance!.id);
-            collide(entity2, entity1, entity2Hitbox, entity1Hitbox, !onlyResolvePlayerCollisions || entity2ID === Player.instance!.id);
+            collide(entity1, entity2, entity1Hitbox, entity2Hitbox, !onlyResolvePlayerCollisions || entity1 === Player.instance!.id);
+            collide(entity2, entity1, entity2Hitbox, entity1Hitbox, !onlyResolvePlayerCollisions || entity2 === Player.instance!.id);
          }
       }
    }
@@ -213,7 +215,7 @@ export function resolvePlayerCollisions(): void {
    const collisionPairs: CollisionPairs = {};
 
    const player = Player.instance!;
-   const transformComponent = player.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(player.id);
 
    for (const chunk of transformComponent.chunks) {
       collectEntityCollisionsWithChunk(collisionPairs, Player.instance!.id, chunk);
@@ -222,9 +224,9 @@ export function resolvePlayerCollisions(): void {
    resolveCollisionPairs(collisionPairs, true);
 }
 
-export function resolveWallCollisions(entity: Entity): void {
-   const layer = getEntityLayer(entity.id);
-   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+export function resolveWallCollisions(entity: EntityID): void {
+   const layer = getEntityLayer(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    for (let i = 0; i < transformComponent.hitboxes.length; i++) {
       const hitbox = transformComponent.hitboxes[i];
       const box = hitbox.box;

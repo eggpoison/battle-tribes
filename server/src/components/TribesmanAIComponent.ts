@@ -7,7 +7,7 @@ import Tribe, { BuildingPlan } from "../Tribe";
 import { EntityRelationship, TribeComponentArray } from "./TribeComponent";
 import { TribesmanGoal } from "../entities/tribes/tribesman-ai/tribesman-goals";
 import { CRAFTING_RECIPES } from "battletribes-shared/items/crafting-recipes";
-import { ItemType } from "battletribes-shared/items/items";
+import { Item, ItemType } from "battletribes-shared/items/items";
 import { EntityID } from "battletribes-shared/entities";
 import { tickTribesman } from "../entities/tribes/tribesman-ai/tribesman-ai";
 import { Packet } from "battletribes-shared/packets";
@@ -91,7 +91,8 @@ const GIFT_APPRECIATION_WEIGHTS: Record<ItemType, number> = {
    [ItemType.frostshaper]: 5,
    [ItemType.stonecarvingTable]: 6,
    [ItemType.woodenShield]: 3,
-   [ItemType.slingshot]: 1
+   [ItemType.slingshot]: 1,
+   [ItemType.woodenBracings]: 1
 };
 
 export const enum TribesmanPathType {

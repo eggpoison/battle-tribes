@@ -1,6 +1,5 @@
-import { EntityType, SNOWBALL_SIZES, SnowballSize } from "battletribes-shared/entities";
+import { SNOWBALL_SIZES, SnowballSize } from "battletribes-shared/entities";
 import { randFloat, randInt } from "battletribes-shared/utils";
-import { ServerComponentType } from "battletribes-shared/components";
 import { HitData } from "battletribes-shared/client-server-types";
 import Board from "../Board";
 import Particle from "../Particle";
@@ -8,6 +7,9 @@ import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { SnowballComponentArray } from "../entity-components/SnowballComponent";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 const getTextureSource = (size: SnowballSize): string => {
    switch (size) {
@@ -26,9 +28,10 @@ class Snowball extends Entity {
    }
 
    public onLoad(): void {
-      const snowballComponentData = this.getServerComponent(ServerComponentType.snowball);
+      const snowballComponentData = SnowballComponentArray.getComponent(this.id);
 
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,
@@ -39,8 +42,8 @@ class Snowball extends Entity {
    }
 
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      const snowballComponent = this.getServerComponent(ServerComponentType.snowball);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
+      const snowballComponent = SnowballComponentArray.getComponent(this.id);
       
       // Create a bunch of snow particles at the point of hit
       const numParticles = snowballComponent.size === SnowballSize.large ? 10 : 7;
@@ -53,8 +56,8 @@ class Snowball extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      const snowballComponent = this.getServerComponent(ServerComponentType.snowball);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
+      const snowballComponent = SnowballComponentArray.getComponent(this.id);
 
       // Create a bunch of snow particles throughout the snowball
       const numParticles = snowballComponent.size === SnowballSize.large ? 25 : 15;

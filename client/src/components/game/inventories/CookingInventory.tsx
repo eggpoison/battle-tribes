@@ -1,15 +1,16 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import { EntityType } from "battletribes-shared/entities";
 import { COOKING_INGREDIENT_ITEM_TYPES, FUEL_SOURCE_ITEM_TYPES } from "battletribes-shared/items/cooking-info";
 import ItemSlot from "./ItemSlot";
 import { getSelectedEntity } from "../../../entity-selection";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { getEntityType } from "../../../world";
+import { CookingComponentArray } from "../../../entity-components/CookingComponent";
+import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
 
 const CookingInventory = () => {
    const cookingEntity = getSelectedEntity();
-   const cookingComponent = cookingEntity.getServerComponent(ServerComponentType.cooking);
-   const inventoryComponent = cookingEntity.getServerComponent(ServerComponentType.inventory);
+   const cookingComponent = CookingComponentArray.getComponent(cookingEntity);
+   const inventoryComponent = InventoryComponentArray.getComponent(cookingEntity);
 
    const fuelInventory = inventoryComponent.getInventory(InventoryName.fuelInventory)!;
    const ingredientInventory = inventoryComponent.getInventory(InventoryName.ingredientInventory)!;
@@ -17,13 +18,13 @@ const CookingInventory = () => {
 
    const heatingBarProgress = cookingComponent.heatingProgress !== -1 ? cookingComponent.heatingProgress : 0;
 
-   const entityType = getEntityType(cookingEntity.id);
+   const entityType = getEntityType(cookingEntity);
    return <div id="cooking-inventory" className={`heating-inventory inventory${entityType !== EntityType.campfire ? " with-fuel" : ""}`}>
-      <ItemSlot validItemSpecifier={(COOKING_INGREDIENT_ITEM_TYPES as unknown as Array<ItemType>).includes} className="ingredient-inventory" entityID={cookingEntity.id} inventory={ingredientInventory} itemSlot={1} />
+      <ItemSlot validItemSpecifier={(COOKING_INGREDIENT_ITEM_TYPES as unknown as Array<ItemType>).includes} className="ingredient-inventory" entityID={cookingEntity} inventory={ingredientInventory} itemSlot={1} />
       {entityType !== EntityType.campfire ? (
-         <ItemSlot validItemSpecifier={(FUEL_SOURCE_ITEM_TYPES as unknown as Array<ItemType>).includes} className="fuel-inventory" entityID={cookingEntity.id} inventory={fuelInventory} itemSlot={1} />
+         <ItemSlot validItemSpecifier={(FUEL_SOURCE_ITEM_TYPES as unknown as Array<ItemType>).includes} className="fuel-inventory" entityID={cookingEntity} inventory={fuelInventory} itemSlot={1} />
       ) : undefined}
-      <ItemSlot validItemSpecifier={() => false} className="output-inventory" entityID={cookingEntity.id} inventory={outputInventory} itemSlot={1} />
+      <ItemSlot validItemSpecifier={() => false} className="output-inventory" entityID={cookingEntity} inventory={outputInventory} itemSlot={1} />
 
       <div className="heating-progress-bar">
          {/* @Cleanup: Hardcoded */}

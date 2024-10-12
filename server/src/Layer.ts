@@ -16,7 +16,8 @@ import { getEntityType, getGameTicks, layers } from "./world";
 import { CollisionGroup } from "battletribes-shared/collision-groups";
 import CollisionChunk from "./CollisionChunk";
 import { EntityPairCollisionInfo, GlobalCollisionInfo } from "./collision-detection";
-import { getSubtileIndex, getSubtileX, getSubtileY, tileHasWallSubtile } from "./world-generation/terrain-generation-utils";
+import { getSubtileIndex, tileHasWallSubtile } from "./world-generation/terrain-generation-utils";
+import { addMinedSubtileToSupportNetwork } from "./collapses";
 
 // @Cleanup: same as WaterTileGenerationInfo
 export interface RiverFlowDirection {
@@ -183,6 +184,7 @@ export default class Layer {
          this.subtileTypes[subtileIndex] = SubtileType.none;
          
          this.wallSubtileDamageTakenMap.delete(subtileIndex);
+         addMinedSubtileToSupportNetwork(subtileIndex);
 
          this.wallSubtileUpdates.push({
             subtileIndex: subtileIndex,

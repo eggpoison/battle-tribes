@@ -13,7 +13,7 @@ import { TribeArea, areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-bui
 import { getItemRecipe } from "battletribes-shared/items/crafting-recipes";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
-import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
+import { createNormalStructureHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { boxIsCircular, updateBox } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { getBoxesCollidingEntities } from "battletribes-shared/hitbox-collision";
@@ -21,7 +21,7 @@ import { LayerType, surfaceLayer } from "../world";
 
 const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallHitbox: RectangularBox): boolean => {
    // @Speed: cache when virutal entity is first created
-   const hitboxes = createEntityHitboxes(virtualBuilding.entityType);
+   const hitboxes = createNormalStructureHitboxes(virtualBuilding.entityType);
    
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
@@ -450,7 +450,7 @@ const tribeHasWorkbench = (tribe: Tribe): boolean => {
 }
 
 const buildingPositionIsValid = (tribe: Tribe, layer: Layer, x: number, y: number, rotation: number, entityType: StructureType): boolean => {
-   const hitboxes = createEntityHitboxes(entityType);
+   const hitboxes = createNormalStructureHitboxes(entityType);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
       updateBox(hitbox.box, x, y, rotation);
@@ -514,7 +514,7 @@ export function generateBuildingPosition(tribe: Tribe, layerType: LayerType, ent
       const y = randFloat(minY, maxY);
       const rotation = 2 * Math.PI * Math.random();
       
-      const hitboxes = createEntityHitboxes(entityType);
+      const hitboxes = createNormalStructureHitboxes(entityType);
       for (let i = 0; i < hitboxes.length; i++) {
          const hitbox = hitboxes[i];
          const box = hitbox.box;
@@ -705,7 +705,7 @@ export function forceBuildPlans(tribe: Tribe): void {
             const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, entityType, surfaceLayer.getWorldInfo());
 
             // @Hack
-            placeBuilding(tribe, surfaceLayer, plan.position, plan.rotation, entityType, connectionInfo);
+            placeBuilding(tribe, surfaceLayer, plan.position, plan.rotation, entityType, connectionInfo, []);
             break;
          }
       }

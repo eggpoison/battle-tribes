@@ -234,13 +234,27 @@ export function createCampfireHitboxes(): ReadonlyArray<Hitbox> {
    return [hitbox];
 }
 
+export function createBracingHitboxes(corner1OffsetX: number, corner1OffsetY: number, corner2OffsetX: number, corner2OffsetY: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
+
+   hitboxes.push(
+      createHitbox(new RectangularBox(new Point(corner1OffsetX, corner1OffsetY), 16, 16, 0), 0.8, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])
+   );
+
+   hitboxes.push(
+      createHitbox(new RectangularBox(new Point(corner2OffsetX, corner2OffsetY), 16, 16, 0), 0.8, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])
+   );
+   
+   return hitboxes;
+}
+
 
 /*
 Generic creation functions
 */
 
 // @Incomplete: Include all entity types not just structures
-export function createEntityHitboxes(entityType: StructureType): ReadonlyArray<Hitbox> {
+export function createNormalStructureHitboxes(entityType: StructureType): ReadonlyArray<Hitbox> {
    switch (entityType) {
       case EntityType.wall:              return createWallHitboxes();
       case EntityType.workbench:         return createWorkbenchHitboxes();
@@ -266,9 +280,8 @@ export function createEntityHitboxes(entityType: StructureType): ReadonlyArray<H
       case EntityType.campfire:          return createCampfireHitboxes();
       case EntityType.frostshaper:       return createFrostshaperHitboxes();
       case EntityType.stonecarvingTable: return createStonecarvingTableHitboxes();
-      default: {
-         const unreachable: never = entityType;
-         return unreachable;
+      case EntityType.bracings: {
+         throw new Error();
       }
    }
 }

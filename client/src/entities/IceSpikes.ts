@@ -5,8 +5,9 @@ import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferConta
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity from "../Entity";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class IceSpikes extends Entity {
    private static readonly ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];
@@ -16,7 +17,8 @@ class IceSpikes extends Entity {
    constructor(id: number) {
       super(id);
 
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,
@@ -32,7 +34,7 @@ class IceSpikes extends Entity {
          this.createIceSpeckProjectile();
       }
       
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playSound("ice-spikes-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, transformComponent.position);
    }
 
@@ -41,12 +43,12 @@ class IceSpikes extends Entity {
          this.createIceSpeckProjectile();
       }
       
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playSound("ice-spikes-destroy.mp3", 0.4, 1, transformComponent.position);
    }
 
    private createIceSpeckProjectile(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       const spawnOffsetDirection = 2 * Math.PI * Math.random();
       const spawnPositionX = transformComponent.position.x + IceSpikes.SIZE / 2 * Math.sin(spawnOffsetDirection);

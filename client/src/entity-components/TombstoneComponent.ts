@@ -1,5 +1,5 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import { DeathInfo, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { DeathInfo, EntityID, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point, randInt } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
@@ -8,6 +8,7 @@ import { playSound } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
 
 class TombstoneComponent extends ServerComponent {
    public tombstoneType = 0;
@@ -54,7 +55,7 @@ export const TombstoneComponentArray = new ComponentArray<TombstoneComponent>(Co
    onTick: onTick
 });
 
-function onTick(tombstoneComponent: TombstoneComponent): void {
+function onTick(tombstoneComponent: TombstoneComponent, entity: EntityID): void {
    if (tombstoneComponent.zombieSpawnProgress !== -1) {
       // Create zombie digging particles
       if (tombstoneComponent.zombieSpawnProgress < 0.8) {
@@ -67,7 +68,7 @@ function onTick(tombstoneComponent: TombstoneComponent): void {
          }
       }
 
-      const transformComponent = tombstoneComponent.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       if (transformComponent.ageTicks % 6 === 0) {
          playSound("zombie-dig-" + randInt(1, 5) + ".mp3", 0.15, 1, new Point(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY));
       }

@@ -2,7 +2,6 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { Point } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { createRockSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
@@ -13,6 +12,10 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { TransformComponentArray } from "./TransformComponent";
+import { getEntityRenderInfo } from "../world";
+import { EntityID } from "../../../shared/src/entities";
+import { PhysicsComponentArray } from "./PhysicsComponent";
 
 const ANGRY_SOUND_INTERVAL_TICKS = Settings.TPS * 3;
 
@@ -86,8 +89,10 @@ class GolemComponent extends ServerComponent {
    public wakeProgress = 0;
 
    public onLoad(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
 
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      
       // Add new rocks
       for (let i = this.rockRenderParts.length; i < transformComponent.hitboxes.length; i++) {
          const hitbox = transformComponent.hitboxes[i];
@@ -103,7 +108,7 @@ class GolemComponent extends ServerComponent {
          );
          renderPart.offset.x = box.offset.x;
          renderPart.offset.y = box.offset.y;
-         this.entity.attachRenderThing(renderPart);
+         renderInfo.attachRenderThing(renderPart);
          this.rockRenderParts.push(renderPart);
    
          if (size === GolemRockSize.large) {
@@ -118,7 +123,7 @@ class GolemComponent extends ServerComponent {
                eyeRenderPart.offset.x = 20 * (i === 0 ? -1 : 1);
                eyeRenderPart.offset.y = 17;
                eyeRenderPart.inheritParentRotation = false;
-               this.entity.attachRenderThing(eyeRenderPart);
+               renderInfo.attachRenderThing(eyeRenderPart);
                this.eyeRenderParts.push(eyeRenderPart);
    
                // Create eye light
@@ -150,7 +155,7 @@ class GolemComponent extends ServerComponent {
       reader.padOffset(3);
 
       if (!isInitialData) {
-         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+         const transformComponent = TransformComponentArray.getComponent(this.entity.id);
    
          if (isAwake && ticksAwake % ANGRY_SOUND_INTERVAL_TICKS === 0) {
             playSound("golem-angry.mp3", 0.4, 1, transformComponent.position);
@@ -184,9 +189,9 @@ export const GolemComponentArray = new ComponentArray<GolemComponent>(ComponentA
    onTick: onTick
 });
 
-function onTick(golemComponent: GolemComponent): void {
-   const transformComponent = golemComponent.entity.getServerComponent(ServerComponentType.transform);
-   const physicsComponent = golemComponent.entity.getServerComponent(ServerComponentType.physics);
+function onTick(golemComponent: GolemComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const physicsComponent = PhysicsComponentArray.getComponent(entity);
 
    if (golemComponent.wakeProgress > 0 && golemComponent.wakeProgress < 1) {
       for (let i = 0; i < transformComponent.hitboxes.length; i++) {

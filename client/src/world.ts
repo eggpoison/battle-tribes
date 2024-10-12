@@ -1,7 +1,7 @@
 import { EntityID, EntityType } from "../../shared/src/entities";
 import { Settings } from "../../shared/src/settings";
 import Chunk from "./Chunk";
-import Entity from "./Entity";
+import Entity, { EntityRenderInfo } from "./Entity";
 import { getComponentArrays } from "./entity-components/ComponentArray";
 import { TransformComponentArray } from "./entity-components/TransformComponent";
 import Layer from "./Layer";
@@ -14,6 +14,7 @@ let currentLayer: Layer;
 const entityRecord: Partial<Record<number, Entity>> = {};
 const entityTypes: Partial<Record<EntityID, EntityType>> = {};
 const entityLayers: Partial<Record<EntityID, Layer>> = {};
+const entityRenderInfos: Partial<Record<EntityID, EntityRenderInfo>> = {};
 
 export function addLayer(layer: Layer): void {
    layers.push(layer);
@@ -39,6 +40,10 @@ export function getEntityType(entity: EntityID): EntityType {
    return entityType;
 }
 
+export function getEntityRenderInfo(entity: EntityID): EntityRenderInfo {
+   return entityRenderInfos[entity]!;
+}
+
 export function entityExists(entity: EntityID): boolean {
    return typeof entityLayers[entity] !== "undefined";
 }
@@ -48,10 +53,11 @@ export function getEntityByID(entityID: number): Entity | undefined {
    return entityRecord[entityID];
 }
 
-export function registerBasicEntityInfo(entity: Entity, entityType: EntityType, layer: Layer): void {
+export function registerBasicEntityInfo(entity: Entity, entityType: EntityType, layer: Layer, renderInfo: EntityRenderInfo): void {
    entityRecord[entity.id] = entity;
    entityTypes[entity.id] = entityType;
    entityLayers[entity.id] = layer;
+   entityRenderInfos[entity.id] = renderInfo;
 }
 
 export function addEntity(entity: Entity): void {
@@ -72,15 +78,16 @@ export function addEntity(entity: Entity): void {
    }
 
    // @Temporary? useless now?
-   addEntityToRenderHeightMap(entity);
+   const renderInfo = getEntityRenderInfo(entity.id);
+   addEntityToRenderHeightMap(renderInfo);
 
    const layer = getEntityLayer(entity.id);
-   layer.addEntity(entity);
+   layer.addEntity(entity.id);
 }
 
 export function removeEntity(entity: Entity, isDeath: boolean): void {
    const layer = getEntityLayer(entity.id);
-   layer.removeEntity(entity);
+   layer.removeEntity(entity.id);
 
    if (isDeath) {
       entity.die();
@@ -108,11 +115,10 @@ export function removeEntity(entity: Entity, isDeath: boolean): void {
    delete entityLayers[entity.id];
 }
 
-export function changeEntityLayer(entityID: EntityID, newLayer: Layer): void {
-   const transformComponent = TransformComponentArray.getComponent(entityID);
-   const previousLayer = getEntityLayer(entityID);
+export function changeEntityLayer(entity: EntityID, newLayer: Layer): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const previousLayer = getEntityLayer(entity);
 
-   const entity = getEntityByID(entityID)!;
    previousLayer.removeEntity(entity);
    newLayer.addEntity(entity);
 
@@ -127,11 +133,11 @@ export function changeEntityLayer(entityID: EntityID, newLayer: Layer): void {
          const chunk = previousLayer.getChunk(chunkX, chunkY);
 
          if (transformComponent.chunks.has(chunk)) {
-            chunk.removeEntity(entityID);
+            chunk.removeEntity(entity);
             transformComponent.chunks.delete(chunk);
 
             const newChunk = newLayer.getChunk(chunkX, chunkY);
-            newChunk.addEntity(entityID);
+            newChunk.addEntity(entity);
             newChunks.add(newChunk);
          }
       }
@@ -141,5 +147,5 @@ export function changeEntityLayer(entityID: EntityID, newLayer: Layer): void {
       transformComponent.chunks.add(chunk);
    }
 
-   entityLayers[entityID] = newLayer;
+   entityLayers[entity] = newLayer;
 }

@@ -11,6 +11,7 @@ import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolou
 import { Light, addLight, attachLightToEntity, removeLight } from "../lights";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
 
 const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [
    [255/255, 102/255, 0],
@@ -49,7 +50,7 @@ class StatusEffectComponent extends ServerComponent {
             if (!this.hasStatusEffect(statusEffectData.type)) {
                switch (statusEffectData.type) {
                   case StatusEffect.freezing: {
-                     const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+                     const transformComponent = TransformComponentArray.getComponent(this.entity.id);
                      playSound("freezing.mp3", 0.4, 1, transformComponent.position)
                      break;
                   }
@@ -97,7 +98,7 @@ function onTick(statusEffectComponent: StatusEffectComponent): void {
       statusEffectComponent.setTint(0, 0, 0);
    }
 
-   const transformComponent = statusEffectComponent.entity.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(statusEffectComponent.entity.id);
    
    const poisonStatusEffect = statusEffectComponent.getStatusEffect(StatusEffect.poisoned);
    if (poisonStatusEffect !== null) {

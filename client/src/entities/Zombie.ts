@@ -1,4 +1,3 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import { angle, randFloat, randInt } from "battletribes-shared/utils";
 import { HitData } from "battletribes-shared/client-server-types";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
@@ -7,6 +6,9 @@ import { playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
+import { ZombieComponentArray } from "../entity-components/ZombieComponent";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 const ZOMBIE_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/zombie1.png", "entities/zombie/zombie2.png", "entities/zombie/zombie3.png", "entities/zombie/zombie-golden.png"];
 const ZOMBIE_HAND_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/fist-1.png", "entities/zombie/fist-2.png", "entities/zombie/fist-3.png", "entities/zombie/fist-4.png"];
@@ -22,10 +24,12 @@ class Zombie extends Entity {
    }
 
    public onLoad(): void {
-      const zombieComponent = this.getServerComponent(ServerComponentType.zombie);
+      const zombieComponent = ZombieComponentArray.getComponent(this.id);
+
+      const renderInfo = getEntityRenderInfo(this.id);
 
       // Body render part
-      this.attachRenderThing(
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             2,
@@ -45,13 +49,13 @@ class Zombie extends Entity {
             getTextureArrayIndex(handTextureSource)
          );
          renderPart.addTag("inventoryUseComponent:hand");
-         this.attachRenderThing(renderPart);
+         renderInfo.attachRenderThing(renderPart);
          handRenderParts.push(renderPart);
       }
    }
 
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       // Blood pool particle
       createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, 20);
@@ -71,10 +75,10 @@ class Zombie extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, 20);
-      createBloodParticleFountain(this, Zombie.BLOOD_FOUNTAIN_INTERVAL, 1);
+      createBloodParticleFountain(this.id, Zombie.BLOOD_FOUNTAIN_INTERVAL, 1);
 
       playSound("zombie-die-1.mp3", 0.4, 1, transformComponent.position);
    }

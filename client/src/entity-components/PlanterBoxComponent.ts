@@ -4,11 +4,13 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { customTickIntervalHasPassed, randInt } from "battletribes-shared/utils";
 import { createGrowthParticle } from "../particles";
-import { getRandomPointInEntity } from "./TransformComponent";
+import TransformComponent, { getRandomPointInEntity, TransformComponentArray } from "./TransformComponent";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { getEntityRenderInfo } from "../world";
+import { EntityID } from "../../../shared/src/entities";
 
 class PlanterBoxComponent extends ServerComponent {
    private moundRenderPart: RenderPart | null = null;
@@ -26,11 +28,11 @@ class PlanterBoxComponent extends ServerComponent {
       reader.padOffset(3);
       
       if (isFertilised && !this.isFertilised) {
+         const transformComponent = TransformComponentArray.getComponent(this.entity.id);
          for (let i = 0; i < 25; i++) {
-            createGrowthParticleInEntity(this);
+            createGrowthParticleInEntity(transformComponent);
          }
 
-         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
          playSound("fertiliser.mp3", 0.6, 1, transformComponent.position);
       }
       this.isFertilised = isFertilised;
@@ -38,7 +40,7 @@ class PlanterBoxComponent extends ServerComponent {
       const hasPlant = plantType !== -1;
       if (hasPlant && this.hasPlant !== hasPlant) {
          // Plant sound effect
-         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+         const transformComponent = TransformComponentArray.getComponent(this.entity.id);
          playSound("plant.mp3", 0.4, 1, transformComponent.position);
       }
       this.hasPlant = hasPlant;
@@ -54,10 +56,12 @@ class PlanterBoxComponent extends ServerComponent {
                Math.PI / 2 * randInt(0, 3),
                getTextureArrayIndex(textureSource)
             );
-            this.entity.attachRenderThing(this.moundRenderPart);
+            const renderInfo = getEntityRenderInfo(this.entity.id);
+            renderInfo.attachRenderThing(this.moundRenderPart);
          }
       } else if (this.moundRenderPart !== null) {
-         this.entity.removeRenderPart(this.moundRenderPart);
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         renderInfo.removeRenderPart(this.moundRenderPart);
          this.moundRenderPart = null;
       }
    }
@@ -69,16 +73,14 @@ export const PlanterBoxComponentArray = new ComponentArray<PlanterBoxComponent>(
    onTick: onTick
 });
 
-const createGrowthParticleInEntity = (planterBoxComponent: PlanterBoxComponent): void => {
-   const transformComponent = planterBoxComponent.entity.getServerComponent(ServerComponentType.transform);
-
+const createGrowthParticleInEntity = (transformComponent: TransformComponent): void => {
    const pos = getRandomPointInEntity(transformComponent);
    createGrowthParticle(pos.x, pos.y);
 }
    
-function onTick(planterBoxComponent: PlanterBoxComponent): void {
-   const transformComponent = planterBoxComponent.entity.getServerComponent(ServerComponentType.transform);
+function onTick(planterBoxComponent: PlanterBoxComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
    if (planterBoxComponent.isFertilised && customTickIntervalHasPassed(transformComponent.ageTicks, 0.35)) {
-      createGrowthParticleInEntity(planterBoxComponent);
+      createGrowthParticleInEntity(transformComponent);
    }
 }

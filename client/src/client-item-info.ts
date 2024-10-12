@@ -484,11 +484,19 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
       description: "Blocks projectiles and melee attacks, poorly."
    },
    [ItemType.slingshot]: {
+      // @Incomplete
       entityTextureSource: "items/small/wooden-shield.png",
       textureSource: "items/large/slingshot.png",
       toolTextureSource: "entities/shield-items/wooden-shield.png",
       name: "Slingshot",
       description: "Slings rocks at people you don't like."
+   },
+   [ItemType.woodenBracings]: {
+      entityTextureSource: "items/small/wooden-bracings.png",
+      textureSource: "items/large/wooden-bracings.png",
+      toolTextureSource: "",
+      name: "Wooden Bracings",
+      description: "Supports the surrounding stone's mental health, preventing them from collapsing."
    }
 };
 

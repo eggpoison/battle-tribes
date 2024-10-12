@@ -256,6 +256,9 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
    limb.currentActionEndLimbState = copyLimbState(heldItemAttackInfo.attackPattern.windedBack);
 
    limb.heldItemDamageBox.wallSubtileDamageGiven = 0;
+   
+   limb.limbDamageBox.isBlockedByWall = false;
+   limb.heldItemDamageBox.isBlockedByWall = false;
 
    const physicsComponent = PhysicsComponentArray.getComponent(attackingEntity);
 

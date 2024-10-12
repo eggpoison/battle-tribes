@@ -1,12 +1,11 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import { randInt } from "battletribes-shared/utils";
 import { TileType } from "battletribes-shared/tiles";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
 import Entity from "../Entity";
 import { playSound } from "../sound";
-import { SLIME_SIZES } from "../entity-components/SlimeComponent";
+import { SLIME_SIZES, SlimeComponentArray } from "../entity-components/SlimeComponent";
 import { getEntityLayer } from "../world";
-import { getEntityTile } from "../entity-components/TransformComponent";
+import { getEntityTile, TransformComponentArray } from "../entity-components/TransformComponent";
 
 class Slime extends Entity {
    private static readonly NUM_PUDDLE_PARTICLES_ON_HIT: ReadonlyArray<number> = [1, 2, 3];
@@ -19,7 +18,7 @@ class Slime extends Entity {
    }
 
    public overrideTileMoveSpeedMultiplier(): number | null {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       const layer = getEntityLayer(this.id);
 
       // Slimes move at normal speed on slime blocks
@@ -31,8 +30,8 @@ class Slime extends Entity {
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      const slimeComponent = this.getServerComponent(ServerComponentType.slime);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
+      const slimeComponent = SlimeComponentArray.getComponent(this.id);
 
       const radius = SLIME_SIZES[slimeComponent.size] / 2;
       
@@ -48,8 +47,8 @@ class Slime extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      const slimeComponent = this.getServerComponent(ServerComponentType.slime);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
+      const slimeComponent = SlimeComponentArray.getComponent(this.id);
 
       const radius = SLIME_SIZES[slimeComponent.size] / 2;
 

@@ -3,10 +3,12 @@ import { Settings } from "battletribes-shared/settings";
 import { createIceSpeckProjectile, createSnowflakeParticle } from "../particles";
 import ServerComponent from "./ServerComponent";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
+import { EntityID } from "../../../shared/src/entities";
 
 class IceArrowComponent extends ServerComponent {
    public onRemove(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id)
       for (let i = 0; i < 6; i++) {
          createIceSpeckProjectile(transformComponent);
       }
@@ -22,8 +24,8 @@ export const IceArrowComponentArray = new ComponentArray<IceArrowComponent>(Comp
    onTick: onTick
 });
 
-function onTick(iceArrowComponent: IceArrowComponent): void {
-   const transformComponent = iceArrowComponent.entity.getServerComponent(ServerComponentType.transform);
+function onTick(_iceArrowComponent: IceArrowComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    if (Math.random() < 30 / Settings.TPS) {
       createSnowflakeParticle(transformComponent.position.x, transformComponent.position.y);

@@ -15,7 +15,7 @@ import { boxIsCircular, hitboxIsCircular, updateBox, HitboxFlag } from "battletr
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import Layer, { getTileIndexIncludingEdges } from "../Layer";
-import { getEntityLayer } from "../world";
+import { getEntityLayer, getEntityRenderInfo } from "../world";
 import { ClientHitbox } from "../boxes";
 import Board from "../Board";
 
@@ -197,7 +197,9 @@ class TransformComponent extends ServerComponent {
          this.rotation = rotation;
          
          this.updatePosition();
-         this.entity.dirty();
+
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         renderInfo.dirty();
       }
       
       this.ageTicks = reader.readNumber();

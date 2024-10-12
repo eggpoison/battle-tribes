@@ -1,5 +1,5 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import { FrozenYetiAttackType } from "battletribes-shared/entities";
+import { EntityID, FrozenYetiAttackType } from "battletribes-shared/entities";
 import { lerp, randFloat, randInt } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
 import ServerComponent from "./ServerComponent";
@@ -12,6 +12,9 @@ import Player from "../entities/Player";
 import { RenderPart } from "../render-parts/render-parts";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "./TransformComponent";
+import { PhysicsComponentArray } from "./PhysicsComponent";
 
 const HEAD_SIZE = 80;
 export const FROZEN_YETI_HEAD_DISTANCE = 60;
@@ -36,8 +39,9 @@ class FrozenYetiComponent extends ServerComponent {
    constructor(entity: Entity) {
       super(entity);
 
-      this.headRenderPart = this.entity.getRenderThing("frozenYetiComponent:head") as RenderPart;
-      this.pawRenderParts = this.entity.getRenderThings("frozenYetiComponent:paw", 2) as Array<RenderPart>;
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      this.headRenderPart = renderInfo.getRenderThing("frozenYetiComponent:head") as RenderPart;
+      this.pawRenderParts = renderInfo.getRenderThings("frozenYetiComponent:paw", 2) as Array<RenderPart>;
    }
 
    private readRockSpikes(reader: PacketReader): void {
@@ -111,7 +115,7 @@ class FrozenYetiComponent extends ServerComponent {
       const stageProgress = reader.readNumber();
       this.readRockSpikes(reader);
 
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
       
       // If the yeti did a bite attack, create a bite particle
       if (this.attackType === FrozenYetiAttackType.bite && attackStage === 2 && this.attackStage === 1) {
@@ -166,7 +170,7 @@ const setPawRotationAndOffset = (frozenYetiComponent: FrozenYetiComponent, rotat
 }
 
 const createRoarParticles = (frozenYetiComponent: FrozenYetiComponent): void => {
-   const transformComponent = frozenYetiComponent.entity.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(frozenYetiComponent.entity.id);
 
    for (let i = 0; i < 2; i++) {
       const direction = randFloat(transformComponent.rotation - ROAR_ARC / 2, transformComponent.rotation + ROAR_ARC / 2);
@@ -250,12 +254,12 @@ const createRoarParticles = (frozenYetiComponent: FrozenYetiComponent): void => 
    }
 }
 
-function onTick(frozenYetiComponent: FrozenYetiComponent): void {
+function onTick(frozenYetiComponent: FrozenYetiComponent, entity: EntityID): void {
    if (Player.instance === null) {
       return;
    }
 
-   const transformComponent = frozenYetiComponent.entity.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    switch (frozenYetiComponent.attackType) {
       case FrozenYetiAttackType.stomp: {
@@ -344,7 +348,7 @@ function onTick(frozenYetiComponent: FrozenYetiComponent): void {
                
                createRoarParticles(frozenYetiComponent);
 
-               const playerTransformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+               const playerTransformComponent = TransformComponentArray.getComponent(Player.instance.id);
 
                const distanceToPlayer = transformComponent.position.calculateDistanceBetween(playerTransformComponent.position);
 
@@ -357,7 +361,7 @@ function onTick(frozenYetiComponent: FrozenYetiComponent): void {
                   angleDifference += Math.PI * 2;
                }
                if (Math.abs(angleDifference) <= ROAR_ARC / 2 && distanceToPlayer <= ROAR_REACH) {
-                  const physicsComponent = frozenYetiComponent.entity.getServerComponent(ServerComponentType.physics);
+                  const physicsComponent = PhysicsComponentArray.getComponent(frozenYetiComponent.entity.id);
                   physicsComponent.selfVelocity.x += 50 * Math.sin(angleToPlayer);
                   physicsComponent.selfVelocity.y += 50 * Math.cos(angleToPlayer);
                }

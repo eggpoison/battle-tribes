@@ -7,6 +7,7 @@ import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import { createSmokeParticle, createEmberParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
 
 class CookingComponent extends ServerComponent {
    public heatingProgress = 0;
@@ -53,7 +54,7 @@ function onTick(cookingComponent: CookingComponent): void {
    }
 
    if (cookingComponent.isCooking) {
-      const transformComponent = cookingComponent.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(cookingComponent.entity.id);
 
       // Smoke particles
       if (Board.tickIntervalHasPassed(0.1)) {

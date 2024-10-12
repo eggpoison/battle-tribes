@@ -10,6 +10,10 @@ import { playSound } from "../sound";
 import { RandomSoundComponentArray } from "./client-components/RandomSoundComponent";
 import { Settings } from "../../../shared/src/settings";
 import { TransformComponentArray } from "./TransformComponent";
+import { EntityID } from "../../../shared/src/entities";
+import { getEntityRenderInfo } from "../world";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 
 const enum Vars {
    SNOW_THROW_OFFSET = 64
@@ -26,15 +30,37 @@ const HURT_SOUNDS: ReadonlyArray<string> = ["yeti-hurt-1.mp3", "yeti-hurt-2.mp3"
 const DEATH_SOUNDS: ReadonlyArray<string> = ["yeti-death-1.mp3", "yeti-death-2.mp3"];
 
 class YetiComponent extends ServerComponent {
-   public pawRenderParts: ReadonlyArray<RenderPart>;
+   public pawRenderParts!: ReadonlyArray<RenderPart>;
    
    public lastAttackProgress = 0;
    public attackProgress = 0;
 
    constructor(entity: Entity) {
       super(entity);
+      
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      
+      renderInfo.attachRenderThing(
+         new TexturedRenderPart(
+            null,
+            1,
+            0,
+            getTextureArrayIndex("entities/yeti/yeti.png")
+         )
+      );
 
-      this.pawRenderParts = this.entity.getRenderThings("yetiComponent:paw", 2) as Array<RenderPart>;
+      for (let i = 0; i < 2; i++) {
+         const paw = new TexturedRenderPart(
+            null,
+            0,
+            0,
+            getTextureArrayIndex("entities/yeti/yeti-paw.png")
+         );
+         paw.addTag("yetiComponent:paw");
+         renderInfo.attachRenderThing(paw);
+      }
+
+      this.pawRenderParts = renderInfo.getRenderThings("yetiComponent:paw", 2) as Array<RenderPart>;
    }
 
    private updatePaws(): void {
@@ -84,8 +110,8 @@ export const YetiComponentArray = new ComponentArray<YetiComponent>(ComponentArr
    onTick: onTick
 });
 
-function onTick(yetiComponent: YetiComponent): void {
-   const transformComponent = yetiComponent.entity.getServerComponent(ServerComponentType.transform);
+function onTick(yetiComponent: YetiComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    // Create snow impact particles when the Yeti does a throw attack
    if (yetiComponent.attackProgress === 0 && yetiComponent.lastAttackProgress !== 0) {

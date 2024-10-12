@@ -1,12 +1,14 @@
 import { randFloat, randInt } from "battletribes-shared/utils";
 import { FishColour } from "battletribes-shared/entities";
-import { ServerComponentType } from "battletribes-shared/components";
 import { HitData } from "battletribes-shared/client-server-types";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain } from "../particles";
 import { playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { FishComponentArray } from "../entity-components/FishComponent";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 const TEXTURE_SOURCES: Record<FishColour, string> = {
    [FishColour.blue]: "entities/fish/fish-blue.png",
@@ -21,9 +23,10 @@ class Fish extends Entity {
    }
 
    public onLoad(): void {
-      const fishComponent = this.getServerComponent(ServerComponentType.fish);
+      const fishComponent = FishComponentArray.getComponent(this.id);
 
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,
@@ -34,7 +37,7 @@ class Fish extends Entity {
    }
 
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       // Blood particles
       for (let i = 0; i < 5; i++) {
@@ -46,9 +49,9 @@ class Fish extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
-      createBloodParticleFountain(this, 0.1, 0.8);
+      createBloodParticleFountain(this.id, 0.1, 0.8);
       
       playSound("fish-die-1.mp3", 0.4, 1, transformComponent.position);
    }

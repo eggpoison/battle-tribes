@@ -1,9 +1,11 @@
 import { createWebGLProgram, gl } from "../../webgl";
 import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";
-import Entity from "../../Entity";
+import { EntityRenderInfo } from "../../Entity";
 import { RenderPart, renderPartIsTextured, thingIsRenderPart } from "../../render-parts/render-parts";
 import { calculateEntityRenderHeight } from "../../render-layers";
+import { getEntityRenderInfo } from "../../world";
+import { EntityID } from "../../../../shared/src/entities";
 
 const enum Vars {
    ATTRIBUTES_PER_VERTEX = 17,
@@ -24,7 +26,8 @@ let indicesData: Uint16Array;
 let vertexBuffer: WebGLBuffer;
 let vertexData: Float32Array;
 
-const entityRenderHeightMap = new WeakMap<Entity, number>();
+// @Hack @Cleanup: remove
+const entityRenderHeightMap = new WeakMap<EntityRenderInfo, number>();
 
 export function getEntityRenderingProgram(): WebGLProgram {
    return program;
@@ -206,36 +209,36 @@ export function createEntityShaders(): void {
    gl.bindVertexArray(null);
 }
 
-export function addEntityToRenderHeightMap(entity: Entity): void {
-   const renderHeight = calculateEntityRenderHeight(entity.id);
-   entityRenderHeightMap.set(entity, renderHeight);
+export function addEntityToRenderHeightMap(renderInfo: EntityRenderInfo): void {
+   const renderHeight = calculateEntityRenderHeight(renderInfo.associatedEntity);
+   entityRenderHeightMap.set(renderInfo, renderHeight);
 }
 
-export function getEntityHeight(entity: Entity): number {
-   const height = entityRenderHeightMap.get(entity);
+export function getEntityHeight(renderInfo: EntityRenderInfo): number {
+   const height = entityRenderHeightMap.get(renderInfo);
    if (typeof height === "undefined") {
       throw new Error();
    }
    return height;
 }
 
-export function calculateRenderPartDepth(renderPart: RenderPart, entity: Entity): number {
-   const renderHeight = entityRenderHeightMap.get(entity)!;
+export function calculateRenderPartDepth(renderPart: RenderPart, renderInfo: EntityRenderInfo): number {
+   const renderHeight = entityRenderHeightMap.get(renderInfo)!;
    return renderHeight + renderPart.zIndex * 0.0001;
 }
 
-export function setEntityInVertexData(entity: Entity, vertexData: Float32Array, indicesData: Uint16Array | null, renderPartIdx: number): number {
-   const baseTintR = entity.tintR;
-   const baseTintG = entity.tintG;
-   const baseTintB = entity.tintB;
+export function setEntityInVertexData(renderInfo: EntityRenderInfo, vertexData: Float32Array, indicesData: Uint16Array | null, renderPartIdx: number): number {
+   const baseTintR = renderInfo.tintR;
+   const baseTintG = renderInfo.tintG;
+   const baseTintB = renderInfo.tintB;
 
-   for (let j = 0; j < entity.allRenderThings.length; j++) {
-      const renderPart = entity.allRenderThings[j];
+   for (let j = 0; j < renderInfo.allRenderThings.length; j++) {
+      const renderPart = renderInfo.allRenderThings[j];
       if (!thingIsRenderPart(renderPart)) {
          continue;
       }
       
-      const depth = calculateRenderPartDepth(renderPart, entity);
+      const depth = calculateRenderPartDepth(renderPart, renderInfo);
       
       const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
 
@@ -416,9 +419,9 @@ const clearRenderPartInVertexData = (vertexData: Float32Array, renderPartIdx: nu
    vertexData[vertexDataOffset + 67] = 0;
 }
 
-export function clearEntityInVertexData(entity: Entity, vertexData: Float32Array, renderPartIdx: number): void {
-   for (let j = 0; j < entity.allRenderThings.length; j++) {
-      const renderPart = entity.allRenderThings[j];
+export function clearEntityInVertexData(renderInfo: EntityRenderInfo, vertexData: Float32Array, renderPartIdx: number): void {
+   for (let j = 0; j < renderInfo.allRenderThings.length; j++) {
+      const renderPart = renderInfo.allRenderThings[j];
       if (!thingIsRenderPart(renderPart)) {
          continue;
       }
@@ -428,13 +431,14 @@ export function clearEntityInVertexData(entity: Entity, vertexData: Float32Array
    }
 }
 
-export function renderEntities(entities: ReadonlyArray<Entity>): void {
+export function renderEntities(entities: ReadonlyArray<EntityID>): void {
    const textureAtlas = getEntityTextureAtlas();
 
    // Set data
    let renderPartIdx = 0;
    for (const entity of entities) {
-      renderPartIdx = setEntityInVertexData(entity, vertexData, null, renderPartIdx);
+      const renderInfo = getEntityRenderInfo(entity);
+      renderPartIdx = setEntityInVertexData(renderInfo, vertexData, null, renderPartIdx);
    }
 
    // renderPartIdx is now the idx of the final render part we want to render + 1. A.k.a the number of render parts we're rendering

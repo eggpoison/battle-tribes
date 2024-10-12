@@ -1,13 +1,14 @@
 import { angle, lerp } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
+import { getEntityRenderInfo } from "../world";
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 48 * 48) / 2;
 const angleToCenter = angle(16, 48);
@@ -44,7 +45,7 @@ class TunnelComponent extends ServerComponent {
    public bottomDoorOpenProgress = 0;
 
    private addDoor(doorBit: number): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
       
       const renderPart = new TexturedRenderPart(
          null,
@@ -55,7 +56,9 @@ class TunnelComponent extends ServerComponent {
       renderPart.offset.y = doorBit === 0b10 ? -32 : 32;
       
       this.doorRenderParts[doorBit] = renderPart;
-      this.entity.attachRenderThing(renderPart);
+
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      renderInfo.attachRenderThing(renderPart);
 
       // @Temporary
       playSound("spike-place.mp3", 0.5, 1, transformComponent.position);
@@ -79,7 +82,7 @@ class TunnelComponent extends ServerComponent {
       const topDoorOpenProgress = reader.readNumber();
       const bottomDoorOpenProgress = reader.readNumber();
 
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
 
       if ((doorBitset & 0b01) !== (this.doorBitset & 0b01)) {
          this.addDoor(0b01);

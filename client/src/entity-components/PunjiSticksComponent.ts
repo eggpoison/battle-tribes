@@ -5,6 +5,8 @@ import { randFloat } from "battletribes-shared/utils";
 import { createFlyParticle } from "../particles";
 import { playSound } from "../sound";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { EntityID } from "../../../shared/src/entities";
+import { TransformComponentArray } from "./TransformComponent";
 
 class PunjiSticksComponent extends ServerComponent {
    public ticksSinceLastFly = 0;
@@ -20,8 +22,8 @@ export const PunjiSticksComponentArray = new ComponentArray<PunjiSticksComponent
    onTick: onTick
 });
    
-function onTick(punjiSticksComponent: PunjiSticksComponent): void {
-   const transformComponent = punjiSticksComponent.entity.getServerComponent(ServerComponentType.transform);
+function onTick(punjiSticksComponent: PunjiSticksComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    punjiSticksComponent.ticksSinceLastFly++;
    const flyChance = ((punjiSticksComponent.ticksSinceLastFly / Settings.TPS) - 0.25) * 0.2;

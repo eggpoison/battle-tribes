@@ -1,4 +1,4 @@
-import { BlueprintType, BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
+import { BlueprintType, BuildingMaterial } from "battletribes-shared/components";
 import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { deselectSelectedEntity, getSelectedEntityID } from "../../entity-selection";
@@ -6,7 +6,6 @@ import Camera from "../../Camera";
 import Client from "../../client/Client";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "../../rendering/webgl/entity-ghost-rendering";
 import { getItemTypeImage } from "../../client-item-info";
-import Entity from "../../Entity";
 import { countItemTypesInInventory } from "../../inventory-manipulation";
 import { playSound } from "../../sound";
 import Player from "../../entities/Player";
@@ -15,10 +14,15 @@ import { InventoryName, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/i
 import { addMenuCloseFunction } from "../../menus";
 import { InventoryComponentArray } from "../../entity-components/InventoryComponent";
 import { getPlayerSelectedItem } from "./GameInteractableLayer";
-import { getEntityByID, getEntityType } from "../../world";
+import { entityExists, getEntityByID, getEntityType } from "../../world";
 import { StructureComponentArray } from "../../entity-components/StructureComponent";
 import { TribeComponentArray } from "../../entity-components/TribeComponent";
 import { BuildingMaterialComponentArray } from "../../entity-components/BuildingMaterialComponent";
+import { TunnelComponentArray } from "../../entity-components/TunnelComponent";
+import { SpikesComponentArray } from "../../entity-components/SpikesComponent";
+import { HutComponentArray } from "../../entity-components/HutComponent";
+import { PlanterBoxComponentArray } from "../../entity-components/PlanterBoxComponent";
+import { TransformComponentArray } from "../../entity-components/TransformComponent";
 
 /*
 // @Incomplete
@@ -64,9 +68,9 @@ interface MenuOption {
    readonly ghostType: GhostType;
    readonly optionType: OptionType;
    readonly costs: ReadonlyArray<OptionCost>;
-   readonly blueprintType: BlueprintType | ((entity: Entity) => BlueprintType) | null;
-   readonly isClickable?: (entity: Entity) => boolean;
-   readonly isHighlighted?: (entity: Entity) => boolean;
+   readonly blueprintType: BlueprintType | ((entity: EntityID) => BlueprintType) | null;
+   readonly isClickable?: (entity: EntityID) => boolean;
+   readonly isHighlighted?: (entity: EntityID) => boolean;
    readonly deselectsOnClick: boolean;
 }
 
@@ -180,9 +184,9 @@ const getMenuOptions = (entity: EntityID): ReadonlyArray<MenuOption> => {
          imageHeight: 24,
          ghostType: DOOR_GHOST_TYPES[wallComponent.material],
          optionType: OptionType.placeBlueprint,
-         blueprintType: (wall: Entity) => {
-            const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
-            return DOOR_BLUEPRINT_TYPES[wallComponent.material];
+         blueprintType: (wall: EntityID) => {
+            const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(wall);
+            return DOOR_BLUEPRINT_TYPES[buildingMaterialComponent.material];
          },
          costs: [],
          deselectsOnClick: true
@@ -194,9 +198,9 @@ const getMenuOptions = (entity: EntityID): ReadonlyArray<MenuOption> => {
          imageHeight: 20,
          ghostType: EMBRASURE_GHOST_TYPES[wallComponent.material],
          optionType: OptionType.placeBlueprint,
-         blueprintType: (wall: Entity) => {
-            const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
-            return EMBRASURE_BLUEPRINT_TYPES[wallComponent.material];
+         blueprintType: (wall: EntityID) => {
+            const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(wall);
+            return EMBRASURE_BLUEPRINT_TYPES[buildingMaterialComponent.material];
          },
          costs: [],
          deselectsOnClick: true
@@ -208,9 +212,9 @@ const getMenuOptions = (entity: EntityID): ReadonlyArray<MenuOption> => {
          imageHeight: 64,
          ghostType: TUNNEL_GHOST_TYPES[wallComponent.material],
          optionType: OptionType.placeBlueprint,
-         blueprintType: (wall: Entity) => {
-            const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
-            return TUNNEL_BLUEPRINT_TYPES[wallComponent.material];
+         blueprintType: (wall: EntityID) => {
+            const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(wall);
+            return TUNNEL_BLUEPRINT_TYPES[buildingMaterialComponent.material];
          },
          costs: [],
          deselectsOnClick: true
@@ -232,8 +236,8 @@ const getMenuOptions = (entity: EntityID): ReadonlyArray<MenuOption> => {
             itemType: ItemType.wood,
             amount: 2
          }],
-         isClickable: (tunnel: Entity): boolean => {
-            const tunnelComponent = tunnel.getServerComponent(ServerComponentType.tunnel);
+         isClickable: (tunnel: EntityID): boolean => {
+            const tunnelComponent = TunnelComponentArray.getComponent(tunnel);
             return tunnelComponent.doorBitset < 0b11;
          },
          deselectsOnClick: true
@@ -250,8 +254,8 @@ const getMenuOptions = (entity: EntityID): ReadonlyArray<MenuOption> => {
          ghostType: GhostType.coverLeaves,
          optionType: OptionType.modify,
          blueprintType: null,
-         isClickable: (entity: Entity): boolean => {
-            const spikesComponent = entity.getServerComponent(ServerComponentType.spikes);
+         isClickable: (entity: EntityID): boolean => {
+            const spikesComponent = SpikesComponentArray.getComponent(entity);
             return !spikesComponent.isCovered;
          },
          costs: [{
@@ -311,8 +315,8 @@ const getMenuOptions = (entity: EntityID): ReadonlyArray<MenuOption> => {
          optionType: OptionType.modify,
          blueprintType: null,
          costs: [],
-         isHighlighted: (hut: Entity): boolean => {
-            const hutComponent = hut.getServerComponent(ServerComponentType.hut);
+         isHighlighted: (hut: EntityID): boolean => {
+            const hutComponent = HutComponentArray.getComponent(hut);
             return hutComponent.isRecalling;
          },
          deselectsOnClick: false
@@ -331,8 +335,8 @@ const getMenuOptions = (entity: EntityID): ReadonlyArray<MenuOption> => {
          optionType: OptionType.modify,
          blueprintType: null,
          costs: [],
-         isClickable: (entity: Entity): boolean => {
-            const planterBoxComponent = entity.getServerComponent(ServerComponentType.planterBox);
+         isClickable: (entity: EntityID): boolean => {
+            const planterBoxComponent = PlanterBoxComponentArray.getComponent(entity);
             return planterBoxComponent.hasPlant;
          },
          deselectsOnClick: true
@@ -366,9 +370,9 @@ export function entityCanOpenBuildMenu(entity: EntityID): boolean {
 }
 
 // @Cleanup: copy paste of shared function
-const snapRotationToPlayer = (structure: Entity, rotation: number): number => {
-   const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
-   const entityTransformComponent = structure.getServerComponent(ServerComponentType.transform);
+const snapRotationToPlayer = (structure: EntityID, rotation: number): number => {
+   const playerTransformComponent = TransformComponentArray.getComponent(Player.instance!.id);
+   const entityTransformComponent = TransformComponentArray.getComponent(structure);
 
    const playerDirection = playerTransformComponent.position.calculateAngleBetween(entityTransformComponent.position);
    let snapRotation = playerDirection - rotation;
@@ -380,14 +384,14 @@ const snapRotationToPlayer = (structure: Entity, rotation: number): number => {
    return snapRotation;
 }
 
-const getGhostRotation = (building: Entity, ghostType: GhostType): number => {
-   const buildingTransformComponent = building.getServerComponent(ServerComponentType.transform);
+const getGhostRotation = (building: EntityID, ghostType: GhostType): number => {
+   const buildingTransformComponent = TransformComponentArray.getComponent(building);
    switch (ghostType) {
       case GhostType.tunnelDoor: {
-         const tunnelComponent = building.getServerComponent(ServerComponentType.tunnel);
+         const tunnelComponent = TunnelComponentArray.getComponent(building);
          switch (tunnelComponent.doorBitset) {
             case 0b00: {
-               const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+               const playerTransformComponent = TransformComponentArray.getComponent(Player.instance!.id);
 
                // Show the door closest to the player
                const dirToPlayer = buildingTransformComponent.position.calculateAngleBetween(playerTransformComponent.position);
@@ -457,13 +461,12 @@ const BuildMenu = () => {
          setBuildingID(0);
       }
 
-      BuildMenu_updateBuilding = (id?: number): void => {
-         const building = getEntityByID(typeof id !== "undefined" ? id : buildingID);
-         if (typeof building === "undefined") {
+      BuildMenu_updateBuilding = (building?: number): void => {
+         if (typeof building === "undefined" || !entityExists(building)) {
             return;
          }
 
-         const transformComponent = building.getServerComponent(ServerComponentType.transform);
+         const transformComponent = TransformComponentArray.getComponent(building);
 
          const screenX = Camera.calculateXScreenPos(transformComponent.position.x);
          const screenY = Camera.calculateYScreenPos(transformComponent.position.y);
@@ -483,24 +486,18 @@ const BuildMenu = () => {
 
    // Blueprint ghost type
    useEffect(() => {
-      if (hoveredOptionIdx === null) {
+      if (hoveredOptionIdx === null || !entityExists(buildingID)) {
          setGhostInfo(null);
          return;
       }
       
       const option = options[hoveredOptionIdx];
 
-      const building = getEntityByID(buildingID);
-      if (typeof building === "undefined") {
-         setGhostInfo(null);
-         return;
-      }
-
-      const transformComponent = building.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(buildingID);
 
       const ghostInfo: GhostInfo = {
          position: transformComponent.position.copy(),
-         rotation: getGhostRotation(building, option.ghostType),
+         rotation: getGhostRotation(buildingID, option.ghostType),
          ghostType: option.ghostType,
          tint: [1, 1, 1],
          opacity: hoveredGhostType === GhostType.deconstructMarker ? 0.8 : PARTIAL_OPACITY
@@ -516,7 +513,7 @@ const BuildMenu = () => {
       hoveredGhostType = null;
    }
 
-   const click = useCallback((building: Entity, options: ReadonlyArray<MenuOption>): void => {
+   const click = useCallback((building: EntityID, options: ReadonlyArray<MenuOption>): void => {
       if (hoveredOptionIdx === null || building === null) {
          return;
       }
@@ -536,7 +533,7 @@ const BuildMenu = () => {
             }
    
             if (count < cost.amount) {
-               const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+               const playerTransformComponent = TransformComponentArray.getComponent(Player.instance!.id);
                playSound("error.mp3", 0.4, 1, playerTransformComponent.position);
                return;
             }
@@ -579,8 +576,7 @@ const BuildMenu = () => {
       }
    }, [hoveredOptionIdx]);
 
-   const building = getEntityByID(buildingID);
-   if (typeof building === "undefined") {
+   if (!entityExists(buildingID)) {
       return null;
    }
 
@@ -611,7 +607,7 @@ const BuildMenu = () => {
 
       const direction = 2 * Math.PI * i / options.length;
 
-      const isHighlighted = typeof option.isHighlighted !== "undefined" && option.isHighlighted(building);
+      const isHighlighted = typeof option.isHighlighted !== "undefined" && option.isHighlighted(buildingID);
 
       segments.push(
          <div key={i} className={`segment${i === hoveredOptionIdx ? " hovered" : ""}${isHighlighted ? " highlighted" : ""}`} style={{"--direction": (direction).toString(), "--coverage": segmentCoverage.toString()} as React.CSSProperties}></div>
@@ -622,7 +618,7 @@ const BuildMenu = () => {
    for (let i = 0; i < options.length; i++) {
       const option = options[i];
 
-      const isUnclickable = typeof option.isClickable !== "undefined" && !option.isClickable(building);
+      const isUnclickable = typeof option.isClickable !== "undefined" && !option.isClickable(buildingID);
 
       let direction = 2 * Math.PI * i / options.length;
       direction = -direction + Math.PI/2;
@@ -702,7 +698,7 @@ const BuildMenu = () => {
       if (optionIdx !== null) {
          const option = options[optionIdx];
          
-         if (typeof option.isClickable === "undefined" || option.isClickable(building)) {
+         if (typeof option.isClickable === "undefined" || option.isClickable(buildingID)) {
             setHoveredGhostType(option.ghostType);
          } else {
             clearHoveredGhostType();
@@ -712,7 +708,7 @@ const BuildMenu = () => {
       }
    }
 
-   return <div ref={blueprintRef} id="blueprint-menu" onMouseDown={() => click(building, options)} onMouseMove={e => mouseMove(e.nativeEvent)} onMouseEnter={() => {isHovering = true}} onMouseLeave={() => {isHovering = false; setHoveredOptionIdx(null); clearHoveredGhostType()}}  style={{"--x": x.toString(), "--y": y.toString()} as React.CSSProperties} onContextMenu={e => { e.preventDefault() }}>
+   return <div ref={blueprintRef} id="blueprint-menu" onMouseDown={() => click(buildingID, options)} onMouseMove={e => mouseMove(e.nativeEvent)} onMouseEnter={() => {isHovering = true}} onMouseLeave={() => {isHovering = false; setHoveredOptionIdx(null); clearHoveredGhostType()}}  style={{"--x": x.toString(), "--y": y.toString()} as React.CSSProperties} onContextMenu={e => { e.preventDefault() }}>
       <div className="inner-ring"></div>
       {separators}
       {segments}

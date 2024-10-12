@@ -1,11 +1,11 @@
 import { rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "battletribes-shared/utils";
 import { getHighlightedEntityID, getSelectedEntityID } from "../../entity-selection";
 import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";
-import Entity from "../../Entity";
 import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";
 import { renderPartIsTextured, thingIsRenderPart } from "../../render-parts/render-parts";
-import { getEntityByID } from "../../world";
+import { entityExists, getEntityRenderInfo } from "../../world";
+import { EntityID } from "../../../../shared/src/entities";
 
 let framebufferProgram: WebGLProgram;
 let renderProgram: WebGLProgram;
@@ -46,7 +46,7 @@ let framebufferVertexData: Float32Array;
 // }
 
 // @Temporary
-export function getClosestGroupNum(entity: Entity): number {
+export function getClosestGroupNum(entity: EntityID): number {
    return 1;
 }
 
@@ -256,11 +256,12 @@ export function createStructureHighlightShaders(): void {
    framebufferVertexData = new Float32Array(framebufferVertices);
 }
 
-const addVertices = (vertices: Array<number>, entity: Entity, offsetX: number, offsetY: number, lightness: number): void => {
+const addVertices = (vertices: Array<number>, entity: EntityID, offsetX: number, offsetY: number, lightness: number): void => {
    const textureAtlas = getEntityTextureAtlas();
    
-   for (let i = 0; i < entity.allRenderThings.length; i++) {
-      const renderPart = entity.allRenderThings[i];
+   const renderInfo = getEntityRenderInfo(entity);
+   for (let i = 0; i < renderInfo.allRenderThings.length; i++) {
+      const renderPart = renderInfo.allRenderThings[i];
       if (!thingIsRenderPart(renderPart)) {
          continue;
       }
@@ -307,7 +308,7 @@ const addVertices = (vertices: Array<number>, entity: Entity, offsetX: number, o
    }
 }
 
-const calculateVertices = (entity: Entity): ReadonlyArray<number> => {
+const calculateVertices = (entity: EntityID): ReadonlyArray<number> => {
    const vertices = new Array<number>();
    
    addVertices(vertices, entity, -4, 4, 1); // Top left
@@ -408,10 +409,11 @@ const calculateVertices = (entity: Entity): ReadonlyArray<number> => {
 
 export function renderEntitySelection(): void {
    const highlightedStructureID = getHighlightedEntityID();
-   const highlightedEntity = getEntityByID(highlightedStructureID);
-   if (typeof highlightedEntity === "undefined") {
+   if (!entityExists(highlightedStructureID)) {
       return;
    }
+
+   const highlightedEntityRenderInfo = getEntityRenderInfo(highlightedStructureID);
 
    if (lastTextureWidth !== windowWidth || lastTextureHeight !== windowHeight) {
       frameBufferTexture = createTexture(windowWidth, windowHeight);
@@ -420,7 +422,7 @@ export function renderEntitySelection(): void {
       lastTextureHeight = windowHeight;
    }
 
-   const vertices = calculateVertices(highlightedEntity);
+   const vertices = calculateVertices(highlightedStructureID);
 
    // 
    // Framebuffer Program
@@ -486,7 +488,7 @@ export function renderEntitySelection(): void {
    gl.enableVertexAttribArray(0);
    
    gl.uniform1f(isSelectedUniformLocation, highlightedStructureID === getSelectedEntityID() ? 1 : 0);
-   gl.uniform2f(originPositionUniformLocation, highlightedEntity.renderPosition.x, highlightedEntity.renderPosition.y);
+   gl.uniform2f(originPositionUniformLocation, highlightedEntityRenderInfo.renderPosition.x, highlightedEntityRenderInfo.renderPosition.y);
 
    gl.activeTexture(gl.TEXTURE0);
    gl.bindTexture(gl.TEXTURE_2D, frameBufferTexture);

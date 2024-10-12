@@ -1,11 +1,11 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import InventoryContainer from "./InventoryContainer";
 import { getSelectedEntity } from "../../../entity-selection";
 import { InventoryName } from "battletribes-shared/items/items";
+import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
 
 const BarrelInventory = () => {
    const barrel = getSelectedEntity();
-   const inventoryComponent = barrel.getServerComponent(ServerComponentType.inventory);
+   const inventoryComponent = InventoryComponentArray.getComponent(barrel);
    
    return <>
       <div id="barrel-inventory" className="menu">
@@ -21,7 +21,7 @@ const BarrelInventory = () => {
             </label>
          </div>
          <div className="flex-container center">
-            <InventoryContainer entityID={barrel.id} inventory={inventoryComponent.getInventory(InventoryName.inventory)!} />
+            <InventoryContainer entityID={barrel} inventory={inventoryComponent.getInventory(InventoryName.inventory)!} />
          </div>
       </div>
    </>;

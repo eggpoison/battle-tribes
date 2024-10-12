@@ -1,8 +1,8 @@
 import { Settings } from "battletribes-shared/settings";
-import { ServerComponentType } from "battletribes-shared/components";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Client from "../../client/Client";
 import Player from "../../entities/Player";
+import { PlayerComponentArray } from "../../entity-components/PlayerComponent";
 
 interface SpamFilter {
    readonly testDuration: number;
@@ -119,7 +119,7 @@ const ChatBox = () => {
             if (chatMessage !== "") {
                Client.sendChatMessage(chatMessage);
 
-               const playerComponent = Player.instance!.getServerComponent(ServerComponentType.player);
+               const playerComponent = PlayerComponentArray.getComponent(Player.instance!.id);
                addChatMessage(playerComponent.username, chatMessage);
             }
 

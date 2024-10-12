@@ -7,6 +7,9 @@ import { playSound } from "../sound";
 import { ItemType } from "battletribes-shared/items/items";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
+import { EntityID } from "../../../shared/src/entities";
+import { TribeComponentArray } from "./TribeComponent";
 
 const GOBLIN_ANGRY_SOUNDS: ReadonlyArray<string> = ["goblin-angry-1.mp3", "goblin-angry-2.mp3", "goblin-angry-3.mp3", "goblin-angry-4.mp3"];
 const GOBLIN_ESCAPE_SOUNDS: ReadonlyArray<string> = ["goblin-escape-1.mp3", "goblin-escape-2.mp3", "goblin-escape-3.mp3"];
@@ -41,9 +44,9 @@ export const TribesmanAIComponentArray = new ComponentArray<TribesmanAIComponent
    onTick: onTick
 });
 
-function onTick(tribesmanAIComponent: TribesmanAIComponent): void {
-   const transformComponent = tribesmanAIComponent.entity.getServerComponent(ServerComponentType.transform);
-   const tribeComponent = tribesmanAIComponent.entity.getServerComponent(ServerComponentType.tribe);
+function onTick(tribesmanAIComponent: TribesmanAIComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const tribeComponent = TribeComponentArray.getComponent(entity);
 
    // Sounds
    switch (tribesmanAIComponent.aiType) {

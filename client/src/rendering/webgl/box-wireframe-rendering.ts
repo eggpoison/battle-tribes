@@ -5,7 +5,7 @@ import { Box, boxIsCircular, HitboxCollisionType } from "battletribes-shared/box
 import { DamageBoxComponentArray } from "../../entity-components/DamageBoxComponent";
 import { TransformComponentArray } from "../../entity-components/TransformComponent";
 import { EntityID } from "battletribes-shared/entities";
-import { getEntityByID } from "../../world";
+import { getEntityRenderInfo } from "../../world";
 
 const BORDER_THICKNESS = 3;
 const HALF_BORDER_THICKNESS = BORDER_THICKNESS / 2;
@@ -55,11 +55,11 @@ export function createHitboxShaders(): void {
    buffer = gl.createBuffer()!;
 }
 
-const calculateBoxAdjustment = (entityID: EntityID): Point => {
-   const entity = getEntityByID(entityID)!;
-   const transformComponent = TransformComponentArray.getComponent(entityID);
+const calculateBoxAdjustment = (entity: EntityID): Point => {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const renderInfo = getEntityRenderInfo(entity);
 
-   const adjustment = entity.renderPosition.copy();
+   const adjustment = renderInfo.renderPosition.copy();
    adjustment.x -= transformComponent.position.x;
    adjustment.y -= transformComponent.position.y;
    return adjustment;
@@ -253,11 +253,13 @@ export function renderDamageBoxes(): void {
 
       for (let j = 0; j < damageBoxComponent.damageBoxes.length; j++) {
          const damageBox = damageBoxComponent.damageBoxes[j];
-         addBoxVertices(vertices, damageBox.box, adjustment, 1, 0.6, 0);
+         const b = damageBox.isActive ? 0 : 1;
+         addBoxVertices(vertices, damageBox.box, adjustment, 1, 0.6, b);
       }
       for (let j = 0; j < damageBoxComponent.blockBoxes.length; j++) {
          const blockBox = damageBoxComponent.blockBoxes[j];
-         addBoxVertices(vertices, blockBox.box, adjustment, 1, 0.6, 0);
+         const b = blockBox.isActive ? 0 : 1;
+         addBoxVertices(vertices, blockBox.box, adjustment, 1, 0.6, b);
       }
    }
 

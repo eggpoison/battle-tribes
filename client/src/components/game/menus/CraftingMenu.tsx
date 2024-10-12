@@ -14,8 +14,8 @@ import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemT
 import InventoryContainer from "../inventories/InventoryContainer";
 import { deselectHighlightedEntity } from "../../../entity-selection";
 import { addMenuCloseFunction } from "../../../menus";
-import { ServerComponentType } from "battletribes-shared/components";
 import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
+import { TransformComponentArray } from "../../../entity-components/TransformComponent";
 
 interface RecipeViewerProps {
    readonly recipe: CraftingRecipe;
@@ -191,7 +191,7 @@ const CraftingMenu = () => {
          return;
       }
 
-      const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+      const playerTransformComponent = TransformComponentArray.getComponent(Player.instance!.id);
 
       playSound("craft.mp3", 0.25, 1, playerTransformComponent.position);
       Client.sendCraftingPacket(selectedRecipeIndex.current);

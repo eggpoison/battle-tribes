@@ -8,9 +8,9 @@ import { updateTribePlans } from "./ai-building-plans";
 import { assertHitboxIsRectangular, BoxType, createHitbox, hitboxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { HitboxCollisionBit } from "battletribes-shared/collision";
-import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { getGameTicks, getTribes, LayerType, surfaceLayer, undergroundLayer } from "../world";
 import Layer from "../Layer";
+import { createNormalStructureHitboxes } from "../../../shared/src/boxes/entity-hitbox-creation";
 
 const enum Vars {
    /** How much safety increases when moving in a node */
@@ -23,8 +23,7 @@ const enum Vars {
 export type SafetyNode = number;
 
 // @Incomplete: investigate only adding an entity's safety once. (so that it doesn't vary between placements as much)
-// @Cleanup: don't hardcode these. Instead just do it based on the entity's health.
-
+// @Cleanup @Robustness: don't hardcode these. Instead just do it based on the entity's health.
 const BUILDING_SAFETY: Record<StructureType, number> = {
    [EntityType.wall]: 10,
    [EntityType.tribeTotem]: 10,
@@ -49,7 +48,8 @@ const BUILDING_SAFETY: Record<StructureType, number> = {
    [EntityType.campfire]: 10,
    [EntityType.furnace]: 10,
    [EntityType.frostshaper]: 10,
-   [EntityType.stonecarvingTable]: 10
+   [EntityType.stonecarvingTable]: 10,
+   [EntityType.bracings]: 3
 };
 
 export function createRestrictedBuildingArea(position: Point, width: number, height: number, rotation: number, associatedBuildingID: number): RestrictedBuildingArea {
@@ -655,7 +655,7 @@ export function tickTribes(): void {
 }
 
 export function placeVirtualBuilding(tribe: Tribe, position: Readonly<Point>, rotation: number, entityType: StructureType, virtualEntityID: number): VirtualBuilding {
-   const hitboxes = createEntityHitboxes(entityType);
+   const hitboxes = createNormalStructureHitboxes(entityType);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
       updateBox(hitbox.box, position.x, position.y, rotation);

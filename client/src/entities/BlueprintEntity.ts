@@ -1,6 +1,5 @@
-import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
+import { BlueprintType } from "battletribes-shared/components";
 import { assertUnreachable, randFloat } from "battletribes-shared/utils";
-import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
@@ -9,6 +8,9 @@ import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { WARRIOR_HUT_SIZE } from "../entity-components/HutComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { BlueprintComponentArray } from "../entity-components/BlueprintComponent";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 // @Cleanup: Move all this logic to the blueprint component file
 
@@ -328,10 +330,11 @@ class BlueprintEntity extends Entity {
    }
 
    public onLoad(): void {
-      const blueprintComponent = this.getServerComponent(ServerComponentType.blueprint);
+      const blueprintComponent = BlueprintComponentArray.getComponent(this.id);
       
       // Create completed render parts
       const progressTextureInfoArray = BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponent.blueprintType];
+      const renderInfo = getEntityRenderInfo(this.id);
       for (let i = 0; i < progressTextureInfoArray.length; i++) {
          const progressTextureInfo = progressTextureInfoArray[i];
 
@@ -347,10 +350,11 @@ class BlueprintEntity extends Entity {
          renderPart.tintR = 0.2;
          renderPart.tintG = 0.1;
          renderPart.tintB = 0.8;
-         this.attachRenderThing(renderPart);
+         renderInfo.attachRenderThing(renderPart);
       }
 
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      // @Hack
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       if (transformComponent.ageTicks <= 0) {
          playSound("blueprint-place.mp3", 0.4, 1, transformComponent.position);
       }
@@ -364,13 +368,13 @@ class BlueprintEntity extends Entity {
    }
 
    public onRemove(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       playSound("blueprint-work.mp3", 0.4, 1, transformComponent.position);
       playSound("structure-shaping.mp3", 0.4, 1, transformComponent.position);
 
       // @Cleanup: Copy and pasted from blueprint component
-      const blueprintComponent = this.getServerComponent(ServerComponentType.blueprint);
+      const blueprintComponent = BlueprintComponentArray.getComponent(this.id);
       switch (blueprintComponent.blueprintType) {
          case BlueprintType.woodenDoor:
          case BlueprintType.woodenEmbrasure:
@@ -429,7 +433,7 @@ class BlueprintEntity extends Entity {
    // }
 
    private updatePartialTexture(): void {
-      const blueprintComponent = this.getServerComponent(ServerComponentType.blueprint);
+      const blueprintComponent = BlueprintComponentArray.getComponent(this.id);
       const blueprintType = blueprintComponent.blueprintType;
       const blueprintProgress = blueprintComponent.lastBlueprintProgress;
       
@@ -462,7 +466,9 @@ class BlueprintEntity extends Entity {
             );
             renderPart.offset.x = progressTextureInfo.offsetX
             renderPart.offset.y = progressTextureInfo.offsetY;
-            this.attachRenderThing(renderPart);
+
+            const renderInfo = getEntityRenderInfo(this.id);
+            renderInfo.attachRenderThing(renderPart);
             blueprintComponent.partialRenderParts.push(renderPart);
          } else {
             // Existing render part

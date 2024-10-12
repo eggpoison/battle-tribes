@@ -1,14 +1,13 @@
 import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity-events";
-import Entity from "./Entity";
 import { randFloat } from "battletribes-shared/utils";
 import { playSound } from "./sound";
 import { ItemType } from "battletribes-shared/items/items";
-import Board from "./Board";
-import { ServerComponentType } from "battletribes-shared/components";
-import { getEntityByID } from "./world";
+import { entityExists } from "./world";
+import { EntityID } from "../../shared/src/entities";
+import { TransformComponentArray } from "./entity-components/TransformComponent";
 
-export function playBowFireSound(sourceEntity: Entity, bowItemType: ItemType): void {
-   const transformComponent = sourceEntity.getServerComponent(ServerComponentType.transform);
+export function playBowFireSound(sourceEntity: EntityID, bowItemType: ItemType): void {
+   const transformComponent = TransformComponentArray.getComponent(sourceEntity);
    
    switch (bowItemType) {
       case ItemType.wooden_bow: {
@@ -26,8 +25,8 @@ export function playBowFireSound(sourceEntity: Entity, bowItemType: ItemType): v
    }
 }
 
-const processTickEvent = (entity: Entity, tickEvent: EntityTickEvent): void => {
-   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+const processTickEvent = (entity: EntityID, tickEvent: EntityTickEvent): void => {
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    switch (tickEvent.type) {
       case EntityTickEventType.cowFart: {
@@ -46,9 +45,8 @@ export function processTickEvents(tickEvents: ReadonlyArray<EntityTickEvent>): v
    for (let i = 0; i < tickEvents.length; i++) {
       const entityTickEvent = tickEvents[i];
       
-      const entity = getEntityByID(entityTickEvent.entityID);
-      if (typeof entity !== "undefined") {
-         processTickEvent(entity, entityTickEvent);
+      if (entityExists(entityTickEvent.entityID)) {
+         processTickEvent(entityTickEvent.entityID, entityTickEvent);
       }
    }
 }

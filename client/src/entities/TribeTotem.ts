@@ -1,9 +1,9 @@
-import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class TribeTotem extends Entity {
    public static readonly SIZE = 120;
@@ -17,16 +17,18 @@ class TribeTotem extends Entity {
          0,
          getTextureArrayIndex(`entities/tribe-totem/tribe-totem.png`)
       );
-      this.attachRenderThing(renderPart);
+
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(renderPart);
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playBuildingHitSound(transformComponent.position);
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playSound("building-destroy-1.mp3", 0.4, 1, transformComponent.position);
    }
 }

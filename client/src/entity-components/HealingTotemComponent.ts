@@ -6,6 +6,7 @@ import { createHealingParticle } from "../particles";
 import { Light, addLight, attachLightToEntity, removeLight } from "../lights";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
 
 const EYE_LIGHTS_TRANSFORM_TICKS = Math.floor(0.5 / Settings.TPS);
 const BASELINE_EYE_LIGHT_INTENSITY = 0.5;
@@ -111,7 +112,7 @@ function onTick(healingTotemComponent: HealingTotemComponent): void {
       }
    }
    
-   const transformComponent = healingTotemComponent.entity.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(healingTotemComponent.entity.id);
    
    for (let i = 0; i < healingTotemComponent.healingTargetsData.length; i++) {    
       const targetData = healingTotemComponent.healingTargetsData[i];

@@ -47,14 +47,16 @@ export interface GenericCollisionBoxInfo<T extends BoxType = BoxType> extends Bo
 
 // @Cleanup: rename to AttackBox
 /** Boxes which can damage hitboxes they collide with */
-export interface DamageBox<T extends BoxType = BoxType> extends GenericCollisionBoxInfo<T> {}
+export interface DamageBox<T extends BoxType = BoxType> extends GenericCollisionBoxInfo<T> {
+   isBlockedByWall: boolean;
+   blockingSubtileIndex: number;
+}
 
 export interface BlockBox<T extends BoxType = BoxType> extends GenericCollisionBoxInfo<T> {}
 
 export const enum BlockType {
    toolBlock,
-   shieldBlock,
-   wallBlock
+   shieldBlock
 }
 
 export const enum GenericCollisionBoxType {

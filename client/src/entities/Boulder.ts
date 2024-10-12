@@ -3,10 +3,11 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS, playSound } from "../sound";
 import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
 import { randFloat, randItem } from "battletribes-shared/utils";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { BoulderComponentArray } from "../entity-components/BoulderComponent";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class Boulder extends Entity {
    private static readonly RADIUS = 40;
@@ -16,14 +17,11 @@ class Boulder extends Entity {
       "entities/boulder/boulder2.png"
    ];
 
-   constructor(id: number) {
-      super(id);
-   }
-
    public onLoad(): void {
-      const boulderComponent = this.getServerComponent(ServerComponentType.boulder);
+      const boulderComponent = BoulderComponentArray.getComponent(this.id);
 
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,
@@ -34,7 +32,7 @@ class Boulder extends Entity {
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       for (let i = 0; i < 2; i++) {
          let moveDirection = 2 * Math.PI * Math.random();
@@ -55,7 +53,7 @@ class Boulder extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       for (let i = 0; i < 5; i++) {
          const spawnOffsetMagnitude = Boulder.RADIUS * Math.random();

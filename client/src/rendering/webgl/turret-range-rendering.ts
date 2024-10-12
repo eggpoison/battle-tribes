@@ -1,15 +1,15 @@
-import { EntityType } from "battletribes-shared/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import Player from "../../entities/Player";
 import { createWebGLProgram, gl } from "../../webgl";
-import Entity from "../../Entity";
 import { getHoveredEntityID } from "../../entity-selection";
 import { calculateStructurePlaceInfo } from "battletribes-shared/structures";
 import Camera from "../../Camera";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "battletribes-shared/items/items";
-import { ServerComponentType } from "battletribes-shared/components";
 import { getPlayerSelectedItem } from "../../components/game/GameInteractableLayer";
-import { getEntityByID, getEntityLayer } from "../../world";
+import { entityExists, getEntityLayer, getEntityType } from "../../world";
+import { TransformComponentArray } from "../../entity-components/TransformComponent";
+import { TurretComponentArray } from "../../entity-components/TurretComponent";
 
 const CIRCLE_DETAIL = 300;
 
@@ -131,8 +131,8 @@ const calculateVertices = (renderingInfo: TurretRangeRenderingInfo): ReadonlyArr
    return vertices;
 }
 
-const getTurretItemType = (turret: Entity): ItemType => {
-   switch (turret.type) {
+const getTurretItemType = (turret: EntityID): ItemType => {
+   switch (getEntityType(turret)) {
       case EntityType.ballista: return ItemType.ballista;
       case EntityType.slingTurret: return ItemType.sling_turret;
       default: throw new Error();
@@ -143,7 +143,7 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
    // @Cleanup: shouldn't call structure place info func. should have it passed in probably
    const playerSelectedItem = getPlayerSelectedItem();
    if (playerSelectedItem !== null && (playerSelectedItem.type === ItemType.ballista || playerSelectedItem.type === ItemType.sling_turret)) {
-      const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+      const playerTransformComponent = TransformComponentArray.getComponent(Player.instance!.id);
 
       const layer = getEntityLayer(Player.instance!.id);
       const structureType = ITEM_INFO_RECORD[playerSelectedItem.type as PlaceableItemType].entityType;
@@ -158,26 +158,17 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
       }
    }
 
-   const hoveredEntityID = getHoveredEntityID();
-   if (hoveredEntityID !== -1) {
-      const hoveredEntity = getEntityByID(hoveredEntityID);
-      // @Temporary
-      if (typeof hoveredEntity === "undefined") {
-         console.warn("no hovered entity when id is not -1");
-         return null;
-      }
-
-      if (hoveredEntity.type === EntityType.ballista || hoveredEntity.type === EntityType.slingTurret) {
-         const hoveredEntityTransformComponent = hoveredEntity.getServerComponent(ServerComponentType.transform);
-         
-         const itemType = getTurretItemType(hoveredEntity);
-         return {
-            x: hoveredEntityTransformComponent.position.x,
-            y: hoveredEntityTransformComponent.position.y,
-            rotation: hoveredEntityTransformComponent.rotation,
-            itemType: itemType,
-            rangeInfo: TURRET_RANGE_INFO_RECORD[itemType]!
-         }
+   const hoveredEntity = getHoveredEntityID();
+   if (entityExists(hoveredEntity) && TurretComponentArray.hasComponent(hoveredEntity)) {
+      const hoveredEntityTransformComponent = TransformComponentArray.getComponent(hoveredEntity);
+      
+      const itemType = getTurretItemType(hoveredEntity);
+      return {
+         x: hoveredEntityTransformComponent.position.x,
+         y: hoveredEntityTransformComponent.position.y,
+         rotation: hoveredEntityTransformComponent.rotation,
+         itemType: itemType,
+         rangeInfo: TURRET_RANGE_INFO_RECORD[itemType]!
       }
    }
 

@@ -23,6 +23,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { adjustTribesmanRelationsAfterGift, TribesmanAIComponentArray } from "./TribesmanAIComponent";
 import { getEntityLayer, getEntityType, getGameTicks } from "../world";
 import { registerPlayerDroppedItemPickup } from "../server/player-clients";
+import { createItem } from "../items";
 
 const enum Vars {
    VACUUM_STRENGTH = 25
@@ -86,6 +87,7 @@ function onInitialise(config: EntityConfig<ServerComponentType.health | ServerCo
 
    // Hotbar
    const hotbarInventory = new Inventory(getHotbarSize(config.entityType as TribesmanEntityType), 1, InventoryName.hotbar);
+   hotbarInventory.addItem(createItem(ItemType.woodenBracings, 99), 2);
    addInventoryToInventoryComponent(inventoryComponent, hotbarInventory, { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
    
    // Offhand

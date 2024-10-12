@@ -6,11 +6,12 @@ import { playSound } from "../sound";
 import Board from "../Board";
 import { createFootprintParticle } from "../particles";
 import Entity from "../Entity";
-import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ClientComponentType } from "./components";
 import { getEntityLayer } from "../world";
-import { getEntityTile } from "./TransformComponent";
+import { getEntityTile, TransformComponentArray } from "./TransformComponent";
+import { EntityID } from "../../../shared/src/entities";
+import { PhysicsComponentArray } from "./PhysicsComponent";
 
 export class FootprintComponent extends Component {
    public readonly footstepParticleIntervalSeconds: number;
@@ -40,7 +41,7 @@ export const FootprintComponentArray = new ComponentArray<FootprintComponent>(Co
 });
 
 const createFootstepSound = (footprintComponent: FootprintComponent): void => {
-   const transformComponent = footprintComponent.entity.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(footprintComponent.entity.id);
    const layer = getEntityLayer(footprintComponent.entity.id);
    
    const tile = getEntityTile(layer, transformComponent);
@@ -70,13 +71,13 @@ const createFootstepSound = (footprintComponent: FootprintComponent): void => {
    }
 }
 
-function onTick(footprintComponent: FootprintComponent): void {
-   const transformComponent = footprintComponent.entity.getServerComponent(ServerComponentType.transform);
-   const physicsComponent = footprintComponent.entity.getServerComponent(ServerComponentType.physics);
+function onTick(footprintComponent: FootprintComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const physicsComponent = PhysicsComponentArray.getComponent(entity);
 
    // Footsteps
    if (physicsComponent.selfVelocity.lengthSquared() >= 2500 && !transformComponent.isInRiver() && Board.tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds)) {
-      createFootprintParticle(footprintComponent.entity, footprintComponent.numFootstepsTaken, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
+      createFootprintParticle(entity, footprintComponent.numFootstepsTaken, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
       footprintComponent.numFootstepsTaken++;
    }
    footprintComponent.distanceTracker += physicsComponent.selfVelocity.length() / Settings.TPS;

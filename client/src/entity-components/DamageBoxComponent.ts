@@ -3,7 +3,7 @@ import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
-import { Point } from "battletribes-shared/utils";
+import { angle, Point, randFloat, randInt } from "battletribes-shared/utils";
 import { Box, BoxType, updateBox, updateVertexPositionsAndSideAxes } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { ClientBlockBox, ClientDamageBox } from "../boxes";
@@ -15,7 +15,13 @@ import { InventoryUseComponentArray, LimbInfo } from "./InventoryUseComponent";
 import { cancelAttack, discombobulate, GameInteractableLayer_setItemRestTime } from "../components/game/GameInteractableLayer";
 import { AttackVars } from "../../../shared/src/attack-patterns";
 import { getEntityLayer } from "../world";
-import Layer, { getSubtileIndex } from "../Layer";
+import Layer, { getSubtileIndex, getSubtileX, getSubtileY } from "../Layer";
+import { createSparkParticle } from "../particles";
+import { playSound } from "../sound";
+import { TransformComponentArray } from "./TransformComponent";
+import Particle from "../Particle";
+import { addMonocolourParticleToBufferContainer, ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
+import Board from "../Board";
 
 interface DamageBoxCollisionInfo {
    readonly collidingEntity: EntityID;
@@ -23,15 +29,15 @@ interface DamageBoxCollisionInfo {
 }
 
 // @Hack: this whole thing is cursed
-const getCollidingBox = (entity: EntityID, damageBox: ClientDamageBox): DamageBoxCollisionInfo | null => {
+const getCollidingBox = (entity: EntityID, box: Box): DamageBoxCollisionInfo | null => {
    const layer = getEntityLayer(entity);
    
    // @Hack
    const CHECK_PADDING = 200;
-   const minChunkX = Math.max(Math.min(Math.floor((damageBox.box.position.x - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor((damageBox.box.position.x + CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor((damageBox.box.position.y - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor((damageBox.box.position.y + CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const minChunkX = Math.max(Math.min(Math.floor((box.position.x - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const maxChunkX = Math.max(Math.min(Math.floor((box.position.x + CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const minChunkY = Math.max(Math.min(Math.floor((box.position.y - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const maxChunkY = Math.max(Math.min(Math.floor((box.position.y + CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
 
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -43,7 +49,7 @@ const getCollidingBox = (entity: EntityID, damageBox: ClientDamageBox): DamageBo
 
             const damageBoxComponent = DamageBoxComponentArray.getComponent(currentEntity);
             for (const currentDamageBox of damageBoxComponent.damageBoxes) { 
-               if (damageBox.box.isColliding(currentDamageBox.box)) {
+               if (box.isColliding(currentDamageBox.box)) {
                   return {
                      collidingEntity: currentEntity,
                      collidingBox: currentDamageBox
@@ -51,7 +57,7 @@ const getCollidingBox = (entity: EntityID, damageBox: ClientDamageBox): DamageBo
                }
             }
             for (const currentBlockBox of damageBoxComponent.blockBoxes) {
-               if (damageBox.box.isColliding(currentBlockBox.box)) {
+               if (box.isColliding(currentBlockBox.box)) {
                   return {
                      collidingEntity: currentEntity,
                      collidingBox: currentBlockBox
@@ -78,10 +84,14 @@ class DamageBoxComponent extends ServerComponent {
    public nextBlockBoxLocalID = 1;
 
    public padData(reader: PacketReader): void {
-      const numCircular = reader.readNumber();
-      reader.padOffset(10 * Float32Array.BYTES_PER_ELEMENT * numCircular);
-      const numRectangular = reader.readNumber();
-      reader.padOffset(12 * Float32Array.BYTES_PER_ELEMENT * numRectangular);
+      const numCircularDamageBoxes = reader.readNumber();
+      reader.padOffset(12 * Float32Array.BYTES_PER_ELEMENT * numCircularDamageBoxes);
+      const numRectangularDamageBoxes = reader.readNumber();
+      reader.padOffset(14 * Float32Array.BYTES_PER_ELEMENT * numRectangularDamageBoxes);
+      const numCircularBlockBoxes = reader.readNumber();
+      reader.padOffset(10 * Float32Array.BYTES_PER_ELEMENT * numCircularBlockBoxes);
+      const numRectangularBlockBoxes = reader.readNumber();
+      reader.padOffset(12 * Float32Array.BYTES_PER_ELEMENT * numRectangularBlockBoxes);
    }
 
    public updateFromData(reader: PacketReader): void {
@@ -101,6 +111,9 @@ class DamageBoxComponent extends ServerComponent {
          const associatedLimbInventoryName = reader.readNumber() as InventoryName;
          const isActive = reader.readBoolean();
          reader.padOffset(3);
+         const isBlockedByWall = reader.readBoolean();
+         reader.padOffset(3);
+         const blockingSubtileIndex = reader.readNumber();
 
          let damageBox = this.damageBoxesRecord[localID] as ClientDamageBox<BoxType.circular> | undefined;
          if (typeof damageBox === "undefined") {
@@ -114,6 +127,8 @@ class DamageBoxComponent extends ServerComponent {
             missingDamageBoxLocalIDs.splice(missingDamageBoxLocalIDs.indexOf(localID), 1);
 
             damageBox.isActive = isActive;
+
+            damageBox.isBlockedByWall = isBlockedByWall;
          }
          
          damageBox.box.position.x = positionX;
@@ -140,6 +155,9 @@ class DamageBoxComponent extends ServerComponent {
          const associatedLimbInventoryName = reader.readNumber() as InventoryName;
          const isActive = reader.readBoolean();
          reader.padOffset(3);
+         const isBlockedByWall = reader.readBoolean();
+         reader.padOffset(3);
+         const blockingSubtileIndex = reader.readNumber();
 
          let damageBox = this.damageBoxesRecord[localID] as ClientDamageBox<BoxType.rectangular> | undefined;
          if (typeof damageBox === "undefined") {
@@ -153,6 +171,11 @@ class DamageBoxComponent extends ServerComponent {
             missingDamageBoxLocalIDs.splice(missingDamageBoxLocalIDs.indexOf(localID), 1);
 
             damageBox.isActive = isActive;
+
+            if (isBlockedByWall && !damageBox.isBlockedByWall) {
+               wallBlockPlayerAttack(damageBox, blockingSubtileIndex);
+            }
+            damageBox.isBlockedByWall = isBlockedByWall;
          }
 
          damageBox.box.position.x = positionX;
@@ -278,37 +301,6 @@ export const DamageBoxComponentArray = new ComponentArray<DamageBoxComponent>(Co
    onTick: onTick
 });
 
-const boxIsCollidingWithSubtile = (box: Box, subtileX: number, subtileY: number): boolean => {
-   // @Speed
-   const tileBox = new RectangularBox(new Point(0, 0), Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, 0);
-   updateBox(tileBox, (subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0);
-   
-   return box.isColliding(tileBox);
-}
-
-const getBoxCollidingWallSubtiles = (layer: Layer, box: Box): ReadonlyArray<number> => {
-   const boundsMinX = box.calculateBoundsMinX();
-   const boundsMaxX = box.calculateBoundsMaxX();
-   const boundsMinY = box.calculateBoundsMinY();
-   const boundsMaxY = box.calculateBoundsMaxY();
-
-   const minSubtileX = Math.max(Math.floor(boundsMinX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
-   const maxSubtileX = Math.min(Math.floor(boundsMaxX / Settings.SUBTILE_SIZE), (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
-   const minSubtileY = Math.max(Math.floor(boundsMinY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
-   const maxSubtileY = Math.min(Math.floor(boundsMaxY / Settings.SUBTILE_SIZE), (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
-
-   const collidingWallSubtiles = new Array<number>();
-   for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
-      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
-         if (layer.subtileIsWall(subtileX, subtileY) && boxIsCollidingWithSubtile(box, subtileX, subtileY)) {
-            const subtileIndex = getSubtileIndex(subtileX, subtileY);
-            collidingWallSubtiles.push(subtileIndex);
-         }
-      }
-   }
-   return collidingWallSubtiles;
-}
-
 const blockPlayerAttack = (damageBox: ClientDamageBox): void => {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
    const limb = inventoryUseComponent.getLimbInfoByInventoryName(damageBox.associatedLimbInventoryName);
@@ -320,6 +312,64 @@ const blockPlayerAttack = (damageBox: ClientDamageBox): void => {
    discombobulate(0.2);
 }
 
+const wallBlockPlayerAttack = (damageBox: ClientDamageBox, blockingSubtileIndex: number): void => {
+   const subtileX = getSubtileX(blockingSubtileIndex);
+   const subtileY = getSubtileY(blockingSubtileIndex);
+
+   const originX = (subtileX + 0.5) * Settings.SUBTILE_SIZE;
+   const originY = (subtileY + 0.5) * Settings.SUBTILE_SIZE;
+
+   for (let i = 0; i < 5; i++) {
+      createSparkParticle(originX, originY);
+   }
+
+   playSound("stone-mine-" + randInt(1, 4) + ".mp3", 0.85, 1, new Point(originX, originY));
+
+   // Create rock debris particles moving towards the player on hit
+   const playerTransformComponent = TransformComponentArray.getComponent(Player.instance!.id);
+   const angleToPlayer = angle(playerTransformComponent.position.x - originX, playerTransformComponent.position.y - originY);
+   for (let i = 0; i < 7; i++) {
+      const spawnOffsetDirection = 2 * Math.PI * Math.random();
+      const spawnPositionX = originX + 12 * Math.sin(spawnOffsetDirection);
+      const spawnPositionY = originY + 12 * Math.cos(spawnOffsetDirection);
+   
+      const velocityMagnitude = randFloat(50, 70);
+      const velocityDirection = angleToPlayer + randFloat(1, -1);
+      const velocityX = velocityMagnitude * Math.sin(velocityDirection);
+      const velocityY = velocityMagnitude * Math.cos(velocityDirection);
+   
+      const lifetime = randFloat(0.9, 1.5);
+      
+      const particle = new Particle(lifetime);
+      particle.getOpacity = (): number => {
+         return Math.pow(1 - particle.age / lifetime, 0.3);
+      }
+      
+      const angularVelocity = randFloat(-Math.PI, Math.PI) * 2;
+      
+      const colour = randFloat(0.5, 0.75);
+      const scale = randFloat(1, 1.35);
+   
+      const baseSize = Math.random() < 0.6 ? 4 : 6;
+   
+      addMonocolourParticleToBufferContainer(
+         particle,
+         ParticleRenderLayer.low,
+         baseSize * scale, baseSize * scale,
+         spawnPositionX, spawnPositionY,
+         velocityX, velocityY,
+         0, 0,
+         velocityMagnitude / lifetime / 0.7,
+         2 * Math.PI * Math.random(),
+         angularVelocity,
+         0,
+         Math.abs(angularVelocity) / lifetime / 1.5,
+         colour, colour, colour
+      );
+      Board.lowMonocolourParticles.push(particle);
+   }
+ }
+
 const onPlayerBlock = (limb: LimbInfo): void => {
    GameInteractableLayer_setItemRestTime(limb.inventoryName, limb.selectedItemSlot, AttackVars.SHIELD_BLOCK_REST_TIME_TICKS);
 }
@@ -329,7 +379,6 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       return;
    }
    
-   const layer = getEntityLayer(Player.instance.id);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
@@ -338,15 +387,8 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
          continue;
       }
       
-      const collidingSubtiles = getBoxCollidingWallSubtiles(layer, damageBox.box);
-      if (collidingSubtiles.length > 0) {
-         // Cancel the attack
-         const limb = inventoryUseComponent.getLimbInfoByInventoryName(damageBox.associatedLimbInventoryName);
-         cancelAttack(limb);
-      }
-      
       // Check if the attacking hitbox is blocked
-      const collisionInfo = getCollidingBox(entity, damageBox);
+      const collisionInfo = getCollidingBox(entity, damageBox.box);
       if (collisionInfo !== null && collisionInfo.collidingBox instanceof ClientBlockBox) {
          if (damageBox.collidingBox !== collisionInfo.collidingBox) {
             blockPlayerAttack(damageBox);
@@ -364,7 +406,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       }
       
       // Check for blocks
-      const collisionInfo = getCollidingBox(entity, blockBox);
+      const collisionInfo = getCollidingBox(entity, blockBox.box);
       if (collisionInfo !== null && collisionInfo.collidingBox instanceof ClientDamageBox) {
          if (blockBox.collidingBox !== collisionInfo.collidingBox) {
             blockBox.hasBlocked = true;

@@ -1,12 +1,12 @@
 import { randInt } from "battletribes-shared/utils";
-import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { createCactusSpineParticle } from "../particles";
 import Entity from "../Entity";
 import { CACTUS_RADIUS } from "../entity-components/CactusComponent";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class Cactus extends Entity {
    constructor(id: number) {
@@ -18,7 +18,9 @@ class Cactus extends Entity {
          0,
          getTextureArrayIndex("entities/cactus/cactus.png")
       );
-      this.attachRenderThing(baseRenderPart);
+
+      const renderInfo = getEntityRenderInfo(id);
+      renderInfo.attachRenderThing(baseRenderPart);
    }
 
    protected onHit(): void {
@@ -28,12 +30,12 @@ class Cactus extends Entity {
          createCactusSpineParticle(this, CACTUS_RADIUS - 5, 2 * Math.PI * Math.random());
       }
 
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playSound("cactus-hit.mp3", 0.4, 1, transformComponent.position);
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playSound("cactus-destroy.mp3", 0.4, 1, transformComponent.position);
    }
 }

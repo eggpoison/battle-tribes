@@ -1,7 +1,7 @@
 import { getChunk } from "./board-interface";
 import { rectanglesAreColliding } from "./collision";
 import { EntityID } from "./entities";
-import { createEntityHitboxes } from "./boxes/entity-hitbox-creation";
+import { createNormalStructureHitboxes } from "./boxes/entity-hitbox-creation";
 import { Box, boxIsCircular, assertBoxIsRectangular, updateBox, BoxWrapper, Hitbox } from "./boxes/boxes";
 import { Settings } from "./settings";
 import { StructureType, WorldInfo } from "./structures";
@@ -201,7 +201,7 @@ export function getBoxesCollidingEntities(worldInfo: WorldInfo, boxWrappers: Rea
 
 // @Cleanup: broaden to EntityType instead of StructureType
 export function estimateCollidingEntities(worldInfo: WorldInfo, entityType: StructureType, x: number, y: number, rotation: number, epsilon: number): Array<EntityID> {
-   const testHitboxes = createEntityHitboxes(entityType);
+   const testHitboxes = createNormalStructureHitboxes(entityType);
    for (let i = 0; i < testHitboxes.length; i++) {
       const hitbox = testHitboxes[i];
       updateBox(hitbox.box, x, y, rotation);

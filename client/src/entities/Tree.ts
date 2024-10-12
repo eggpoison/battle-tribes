@@ -1,12 +1,14 @@
 import { TreeSize } from "battletribes-shared/entities";
 import { angle, randFloat, randInt, randItem } from "battletribes-shared/utils";
-import { ServerComponentType } from "battletribes-shared/components";
 import { HitData, HitFlags } from "battletribes-shared/client-server-types";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
+import { TreeComponentArray } from "../entity-components/TreeComponent";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 const treeTextures: { [T in TreeSize]: string } = {
    [TreeSize.small]: "entities/tree/tree-small.png",
@@ -29,9 +31,10 @@ class Tree extends Entity {
    }
 
    public onLoad(): void {
-      const treeComponent = this.getServerComponent(ServerComponentType.tree);
+      const treeComponent = TreeComponentArray.getComponent(this.id);
       
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,
@@ -42,9 +45,9 @@ class Tree extends Entity {
    }
 
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
+      const treeComponent = TreeComponentArray.getComponent(this.id);
 
-      const treeComponent = this.getServerComponent(ServerComponentType.tree);
       const radius = getRadius(treeComponent.treeSize);
 
       // @Cleanup: copy and paste
@@ -83,8 +86,8 @@ class Tree extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      const treeComponent = this.getServerComponent(ServerComponentType.tree);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
+      const treeComponent = TreeComponentArray.getComponent(this.id);
 
       const radius = getRadius(treeComponent.treeSize);
 

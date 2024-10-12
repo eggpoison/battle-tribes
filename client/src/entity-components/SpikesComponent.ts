@@ -9,6 +9,8 @@ import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
+import { getEntityRenderInfo } from "../world";
 
 export const NUM_SMALL_COVER_LEAVES = 8;
 export const NUM_LARGE_COVER_LEAVES = 3;
@@ -57,7 +59,8 @@ class SpikesComponent extends ServerComponent {
       renderPart.offset.x = randFloat(-spawnRange, spawnRange);
       renderPart.offset.y = randFloat(-spawnRange, spawnRange);
    
-      this.entity.attachRenderThing(renderPart);
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      renderInfo.attachRenderThing(renderPart);
    
       return renderPart;
    }
@@ -85,7 +88,7 @@ class SpikesComponent extends ServerComponent {
       reader.padOffset(3);
       
       if (isCoveredBefore !== this.isCovered) {
-         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+         const transformComponent = TransformComponentArray.getComponent(this.entity.id);
 
          if (this.isCovered) {
             // When covering trap

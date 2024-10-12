@@ -1,11 +1,12 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
 import { angle, randFloat } from "battletribes-shared/utils";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createRockParticle, createRockSpeckParticle } from "../particles";
 import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class Furnace extends Entity {
    public static readonly SIZE = 80;
@@ -13,7 +14,8 @@ class Furnace extends Entity {
    constructor(id: number) {
       super(id);
 
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,
@@ -24,7 +26,7 @@ class Furnace extends Entity {
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       for (let i = 0; i < 2; i++) {
          let spawnPositionX: number;
@@ -50,7 +52,7 @@ class Furnace extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       for (let i = 0; i < 5; i++) {
          const spawnPositionX = transformComponent.position.x + randFloat(-0.5, 0.5) * Furnace.SIZE;

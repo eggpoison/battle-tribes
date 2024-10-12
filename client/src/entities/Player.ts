@@ -4,9 +4,10 @@ import TribeMember, { addTribeMemberRenderParts } from "./TribeMember";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
-import { ServerComponentType } from "battletribes-shared/components";
 import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
 import { Settings } from "battletribes-shared/settings";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { getEntityRenderInfo } from "../world";
 
 /** Updates the rotation of the player to match the cursor position */
 export function updatePlayerRotation(cursorX: number, cursorY: number): void {
@@ -18,7 +19,7 @@ export function updatePlayerRotation(cursorX: number, cursorY: number): void {
    let cursorDirection = Math.atan2(relativeCursorY, relativeCursorX);
    cursorDirection = Math.PI/2 - cursorDirection;
 
-   const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(Player.instance.id);
    const physicsComponent = PhysicsComponentArray.getComponent(Player.instance.id);
    
    const previousRotation = transformComponent.rotation;
@@ -27,7 +28,8 @@ export function updatePlayerRotation(cursorX: number, cursorY: number): void {
    // Angular velocity
    physicsComponent.angularVelocity = (transformComponent.rotation - previousRotation) * Settings.TPS;
 
-   Player.instance.dirty();
+   const renderInfo = getEntityRenderInfo(Player.instance.id);
+   renderInfo.dirty();
 }
 
 // export function updateAvailableCraftingRecipes(): void {
@@ -110,7 +112,7 @@ export default class Player extends TribeMember {
    }
 
    public onLoad(): void {
-      addTribeMemberRenderParts(this);
+      addTribeMemberRenderParts(this.id);
    }
 
    public static createInstancePlayer(player: Player): void {

@@ -1,14 +1,16 @@
-import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class WorkerHut extends Entity {
    constructor(id: number) {
       super(id);
 
+      const renderInfo = getEntityRenderInfo(this.id);
+      
       // Hut
       const hutRenderPart = new TexturedRenderPart(
          null,
@@ -16,7 +18,7 @@ class WorkerHut extends Entity {
          0,
          getTextureArrayIndex("entities/worker-hut/worker-hut.png")
       );
-      this.attachRenderThing(hutRenderPart);
+      renderInfo.attachRenderThing(hutRenderPart);
 
       // Door
       const doorRenderPart = new TexturedRenderPart(
@@ -26,16 +28,16 @@ class WorkerHut extends Entity {
          getTextureArrayIndex("entities/worker-hut/worker-hut-door.png")
       );
       doorRenderPart.addTag("hutComponent:door");
-      this.attachRenderThing(doorRenderPart);
+      renderInfo.attachRenderThing(doorRenderPart);
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playBuildingHitSound(transformComponent.position);
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       playSound("building-destroy-1.mp3", 0.4, 1, transformComponent.position);
    }
 }

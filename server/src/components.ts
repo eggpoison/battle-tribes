@@ -67,6 +67,7 @@ import { GuardianGemQuakeComponent } from "./components/GuardianGemQuakeComponen
 import { GuardianGemFragmentProjectileComponent } from "./components/GuardianGemFragmentProjectileComponent";
 import { GuardianSpikyBallComponent } from "./components/GuardianSpikyBallComponent";
 import { EntityType } from "battletribes-shared/entities";
+import { BracingsComponent } from "./components/BracingsComponent";
 
 // @Cleanup @Robustness: find better way to do this
 // @Cleanup: see if you can remove the arrow functions
@@ -137,7 +138,8 @@ const ComponentClassRecord = {
    [ServerComponentType.guardian]: () => GuardianComponent,
    [ServerComponentType.guardianGemQuake]: () => GuardianGemQuakeComponent,
    [ServerComponentType.guardianGemFragmentProjectile]: () => GuardianGemFragmentProjectileComponent,
-   [ServerComponentType.guardianSpikyBall]: () => GuardianSpikyBallComponent
+   [ServerComponentType.guardianSpikyBall]: () => GuardianSpikyBallComponent,
+   [ServerComponentType.bracings]: () => BracingsComponent
 } satisfies {
    [T in ServerComponentType]: () => {
       new (...args: any): unknown;

@@ -6,11 +6,11 @@ import Board from "../Board";
 import { createDirtParticle } from "../particles";
 import { playSound } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
-import { CowSpecies } from "battletribes-shared/entities";
+import { CowSpecies, EntityID } from "battletribes-shared/entities";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { getEntityLayer } from "../world";
-import { getEntityTile } from "./TransformComponent";
+import { getEntityTile, TransformComponentArray } from "./TransformComponent";
 
 class CowComponent extends ServerComponent {
    public species = CowSpecies.black;
@@ -26,7 +26,7 @@ class CowComponent extends ServerComponent {
       
       // When the cow has finished grazing, create a bunch of dirt particles
       if (grazeProgress < this.grazeProgress) {
-         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+         const transformComponent = TransformComponentArray.getComponent(this.entity.id);
          const layer = getEntityLayer(transformComponent.entity.id);
          
          const tile = getEntityTile(layer, transformComponent);
@@ -46,8 +46,8 @@ export const CowComponentArray = new ComponentArray<CowComponent>(ComponentArray
    onTick: onTick
 });
 
-function onTick(cowComponent: CowComponent): void {
-   const transformComponent = cowComponent.entity.getServerComponent(ServerComponentType.transform);
+function onTick(cowComponent: CowComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    if (cowComponent.grazeProgress !== -1 && Board.tickIntervalHasPassed(0.1)) {
       const spawnOffsetMagnitude = 30 * Math.random();

@@ -1,20 +1,22 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import { EntityDebugData } from "battletribes-shared/client-server-types";
 import { roundNum } from "battletribes-shared/utils";
 import { TileType, TileTypeString } from "battletribes-shared/tiles";
 import { Settings } from "battletribes-shared/settings";
 import { useEffect, useReducer, useRef, useState } from "react";
-import Entity from "../../../Entity";
 import { Tile } from "../../../Tile";
 import CLIENT_ENTITY_INFO_RECORD from "../../../client-entity-info";
 import Layer from "../../../Layer";
 import { getEntityLayer, getEntityType } from "../../../world";
 import Player from "../../../entities/Player";
 import { RENDER_CHUNK_SIZE } from "../../../rendering/render-chunks";
+import { EntityID } from "../../../../../shared/src/entities";
+import { TransformComponentArray } from "../../../entity-components/TransformComponent";
+import { PhysicsComponentArray } from "../../../entity-components/PhysicsComponent";
+import { HealthComponentArray } from "../../../entity-components/HealthComponent";
 
 export let updateDebugInfoTile: (tile: Tile | null) => void = () => {};
 
-export let updateDebugInfoEntity: (entity: Entity | null) => void = () => {};
+export let updateDebugInfoEntity: (entity: EntityID | null) => void = () => {};
 
 export let setDebugInfoDebugData: (debugData: EntityDebugData | null) => void = () => {};
 
@@ -55,19 +57,19 @@ const TileDebugInfo = ({ layer, tile }: TileDebugInfoProps) => {
 }
 
 interface EntityDebugInfoProps {
-   readonly entity: Entity;
+   readonly entity: EntityID;
    readonly debugData: EntityDebugData | null;
 }
 const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
-   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    const displayX = roundNum(transformComponent.position.x, 0);
    const displayY = roundNum(transformComponent.position.y, 0);
 
    let displayVelocityMagnitude: number | undefined;
    let displayAccelerationMagnitude: number | undefined;
-   if (entity.hasServerComponent(ServerComponentType.physics)) {
-      const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
+   if (PhysicsComponentArray.hasComponent(entity)) {
+      const physicsComponent = PhysicsComponentArray.getComponent(entity);
 
       displayVelocityMagnitude = roundNum(physicsComponent.selfVelocity.length(), 0);
       displayAccelerationMagnitude = roundNum(physicsComponent.acceleration.length(), 0);
@@ -90,7 +92,7 @@ const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
    }, [] as Array<JSX.Element | string>);
 
    return <>
-      <div className="title">{CLIENT_ENTITY_INFO_RECORD[getEntityType(entity.id)].name}<span className="id">#{entity.id}</span></div>
+      <div className="title">{CLIENT_ENTITY_INFO_RECORD[getEntityType(entity)].name}<span className="id">#{entity}</span></div>
       
       <p>x: <span className="highlight">{displayX}</span>, y: <span className="highlight">{displayY}</span></p>
 
@@ -105,8 +107,8 @@ const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
 
       <p>Chunks: {chunkDisplayText}</p>
 
-      {entity.hasServerComponent(ServerComponentType.health) ? (() => {
-         const healthComponent = entity.getServerComponent(ServerComponentType.health);
+      {HealthComponentArray.hasComponent(entity) ? (() => {
+         const healthComponent = HealthComponentArray.getComponent(entity);
 
          return <>
             <p>Health: <span className="highlight">{healthComponent.health}/{healthComponent.maxHealth}</span></p>
@@ -123,7 +125,7 @@ const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
 
 const DebugInfo = () => {
    const [tile, setTile] = useState<Tile | null>(null);
-   const [entity, setEntity] = useState<Entity | null>(null);
+   const [entity, setEntity] = useState<EntityID | null>(null);
    const debugData = useRef<EntityDebugData | null>(null);
    const [, forceUpdate] = useReducer(x => x + 1, 0);
 
@@ -135,7 +137,7 @@ const DebugInfo = () => {
          setTile(tile);
       }
       
-      updateDebugInfoEntity = (entity: Entity | null): void => {
+      updateDebugInfoEntity = (entity: EntityID | null): void => {
          setEntity(entity);
       }
 

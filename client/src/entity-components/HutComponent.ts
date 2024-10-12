@@ -11,7 +11,8 @@ import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { getEntityType } from "../world";
+import { getEntityRenderInfo, getEntityType } from "../world";
+import { TransformComponentArray } from "./TransformComponent";
 
 export const WORKER_HUT_SIZE = 88;
 export const WARRIOR_HUT_SIZE = 104;
@@ -69,7 +70,8 @@ class HutComponent extends ServerComponent {
    constructor(entity: Entity) {
       super(entity);
       
-      this.doorRenderParts = this.entity.getRenderThings("hutComponent:door") as Array<RenderPart>;
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      this.doorRenderParts = renderInfo.getRenderThings("hutComponent:door") as Array<RenderPart>;
    }
 
    private updateDoors(): void {
@@ -106,7 +108,7 @@ class HutComponent extends ServerComponent {
       const isRecalling = reader.readBoolean();
       reader.padOffset(3);
 
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
       
       // @Incomplete: What if this packet is skipped?
       if (lastDoorSwingTicks === Board.serverTicks) {
@@ -126,7 +128,8 @@ class HutComponent extends ServerComponent {
                getTextureArrayIndex("entities/recall-marker.png")
             );
             this.recallMarker.inheritParentRotation = false;
-            this.entity.attachRenderThing(this.recallMarker);
+            const renderInfo = getEntityRenderInfo(this.entity.id);
+            renderInfo.attachRenderThing(this.recallMarker);
          }
 
          let opacity = Math.sin(transformComponent.ageTicks / Settings.TPS * 5) * 0.5 + 0.5;
@@ -134,7 +137,8 @@ class HutComponent extends ServerComponent {
          this.recallMarker.opacity = lerp(0.3, 0.8, opacity);
       } else {
          if (this.recallMarker !== null) {
-            this.entity.removeRenderPart(this.recallMarker);
+            const renderInfo = getEntityRenderInfo(this.entity.id);
+            renderInfo.removeRenderPart(this.recallMarker);
             this.recallMarker = null;
          }
       }

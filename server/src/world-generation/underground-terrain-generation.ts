@@ -76,7 +76,7 @@ export function generateUndergroundTerrain(surfaceTerrainGenerationInfo: Terrain
          
          tileBiomes[tileIndex] = Biome.mountains;
 
-         if (weight > 0.55) {
+         if (weight > 0.58) {
             tileTypes[tileIndex] = TileType.stoneWallFloor;
             setWallInSubtiles(subtileTypes, tileX, tileY, SubtileType.stoneWall);
          } else {

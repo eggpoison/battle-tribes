@@ -71,6 +71,7 @@ import GuardianComponent from "./GuardianComponent";
 import { GuardianGemQuakeComponent } from "./GuardianGemQuakeComponent";
 import { GuardianGemFragmentProjectileComponent } from "./GuardianGemFragmentProjectileComponent";
 import { GuardianSpikyBallComponent } from "./GuardianSpikyBallComponent";
+import { BracingsComponent } from "./BracingsComponent";
 
 export enum ClientComponentType {
    equipment,
@@ -145,7 +146,8 @@ const ServerComponents = {
    [ServerComponentType.guardian]: (): GuardianComponent => 0 as any,
    [ServerComponentType.guardianGemQuake]: (): GuardianGemQuakeComponent => 0 as any,
    [ServerComponentType.guardianGemFragmentProjectile]: (): GuardianGemFragmentProjectileComponent => 0 as any,
-   [ServerComponentType.guardianSpikyBall]: (): GuardianSpikyBallComponent => 0 as any
+   [ServerComponentType.guardianSpikyBall]: (): GuardianSpikyBallComponent => 0 as any,
+   [ServerComponentType.bracings]: (): BracingsComponent => 0 as any
 } satisfies Record<ServerComponentType, () => ServerComponent>;
 
 export const ClientComponents = {

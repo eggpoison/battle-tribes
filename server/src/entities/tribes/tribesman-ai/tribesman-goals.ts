@@ -13,7 +13,7 @@ import { getBestToolItemSlot } from "./tribesman-ai-utils";
 import { CraftingRecipe, CRAFTING_STATION_ITEM_TYPE_RECORD, getRecipeProductChain, forceGetItemRecipe } from "battletribes-shared/items/crafting-recipes";
 import { ItemType, ToolType, Inventory, InventoryName, PlaceableItemType, ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../../../components/TransformComponent";
-import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
+import { createNormalStructureHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { updateBox } from "battletribes-shared/boxes/boxes";
 import { getEntityType, LayerType } from "../../../world";
 
@@ -87,7 +87,8 @@ const TOOL_TYPE_FOR_MATERIAL_RECORD: Record<ItemType, ToolType | null> = {
    [ItemType.frostshaper]: null,
    [ItemType.stonecarvingTable]: null,
    [ItemType.woodenShield]: null,
-   [ItemType.slingshot]: null
+   [ItemType.slingshot]: null,
+   [ItemType.woodenBracings]: null
 };
 
 export const enum TribesmanGoalType {
@@ -224,7 +225,7 @@ const generateRandomNearbyPosition = (tribesman: EntityID, entityType: Structure
       const rotation = 2 * Math.PI * Math.random();
 
       // Make sure the hitboxes would be in a valid position
-      const hitboxes = createEntityHitboxes(entityType);
+      const hitboxes = createNormalStructureHitboxes(entityType);
       for (let i = 0; i < hitboxes.length; i++) {
          const hitbox = hitboxes[i];
          const box = hitbox.box;

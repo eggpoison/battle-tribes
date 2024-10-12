@@ -1,10 +1,9 @@
-import { EntityType, EntityTypeString } from "battletribes-shared/entities";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { TitleGenerationInfo, TribesmanTitle } from "battletribes-shared/titles";
 import { Point, lerp, randFloat, veryBadHash } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { Light, addLight, attachLightToEntity, removeLightsAttachedToEntity } from "../lights";
 import Board from "../Board";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -15,10 +14,13 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { getEntityType } from "../world";
+import { getEntityRenderInfo, getEntityType } from "../world";
+import { InventoryUseComponentArray } from "./InventoryUseComponent";
+import { TransformComponentArray } from "./TransformComponent";
+import { PhysicsComponentArray } from "./PhysicsComponent";
 
-export function getTribesmanRadius(tribesman: Entity): number {
-   const entityType = getEntityType(tribesman.id);
+export function getTribesmanRadius(tribesman: EntityID): number {
+   const entityType = getEntityType(tribesman);
    switch (entityType) {
       case EntityType.player:
       case EntityType.tribeWarrior: {
@@ -33,8 +35,8 @@ export function getTribesmanRadius(tribesman: Entity): number {
    }
 }
 
-const getSecondsSinceLastAttack = (entity: Entity): number => {
-   const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
+const getSecondsSinceLastAttack = (entity: EntityID): number => {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
    let maxLastTicks = 0;
    for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
@@ -93,8 +95,9 @@ class TribeMemberComponent extends ServerComponent {
    }
 
    public onLoad(): void {
-      this.bodyRenderPart = this.entity.getRenderThing("tribeMemberComponent:body") as RenderPart;
-      this.handRenderParts = this.entity.getRenderThings("tribeMemberComponent:hand", 2) as Array<RenderPart>;
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      this.bodyRenderPart = renderInfo.getRenderThing("tribeMemberComponent:body") as RenderPart;
+      this.handRenderParts = renderInfo.getRenderThings("tribeMemberComponent:hand", 2) as Array<RenderPart>;
    }
 
    public getTitles(): Array<TribesmanTitle> {
@@ -108,14 +111,15 @@ class TribeMemberComponent extends ServerComponent {
 
    private regenerateTitleEffects(): void {
       // Remove previous effects
-      const previousRenderParts = this.entity.getRenderThings("tribeMemberComponent:fromTitle") as Array<RenderPart>;
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      const previousRenderParts = renderInfo.getRenderThings("tribeMemberComponent:fromTitle") as Array<RenderPart>;
       for (let i = 0; i < previousRenderParts.length; i++) {
          const renderPart = previousRenderParts[i];
-         this.entity.removeRenderPart(renderPart);
+         renderInfo.removeRenderPart(renderPart);
       }
-      for (let i = this.entity.renderPartOverlayGroups.length - 1; i >= 0; i--) {
-         const overlayGroup = this.entity.renderPartOverlayGroups[i];
-         this.entity.removeOverlayGroup(overlayGroup);
+      for (let i = renderInfo.renderPartOverlayGroups.length - 1; i >= 0; i--) {
+         const overlayGroup = renderInfo.renderPartOverlayGroups[i];
+         renderInfo.removeOverlayGroup(overlayGroup);
       }
       // @Hack @Incomplete: only remove lights added by titles
       removeLightsAttachedToEntity(this.entity.id);
@@ -168,7 +172,7 @@ class TribeMemberComponent extends ServerComponent {
                renderPart.offset.x = offsetX;
                renderPart.offset.y = offsetY;
 
-               this.entity.attachRenderThing(renderPart);
+               renderInfo.attachRenderThing(renderPart);
                break;
             }
             // Create shrewd eyes
@@ -201,7 +205,7 @@ class TribeMemberComponent extends ServerComponent {
                   renderPart.offset.x = (xo - 5 * 4 / 2) * (i === 1 ? 1 : -1);
                   renderPart.offset.y = yo - 5 * 4 / 2;
 
-                  this.entity.attachRenderThing(renderPart);
+                  renderInfo.attachRenderThing(renderPart);
                }
                
                break;
@@ -223,11 +227,11 @@ class TribeMemberComponent extends ServerComponent {
 
                   const radiusAdd = lerp(-3, -6, Math.abs(i - (numLeaves - 1) / 2) / ((numLeaves - 1) / 2));
 
-                  const radius = getTribesmanRadius(this.entity);
+                  const radius = getTribesmanRadius(this.entity.id);
                   renderPart.offset.x = (radius + radiusAdd) * Math.sin(angle);
                   renderPart.offset.y = (radius + radiusAdd) * Math.cos(angle);
 
-                  this.entity.attachRenderThing(renderPart);
+                  renderInfo.attachRenderThing(renderPart);
                }
                break;
             }
@@ -240,10 +244,10 @@ class TribeMemberComponent extends ServerComponent {
                );
                renderPart.addTag("tribeMemberComponent:fromTitle");
 
-               const radius = getTribesmanRadius(this.entity);
+               const radius = getTribesmanRadius(this.entity.id);
                renderPart.offset.y = radius - 2;
 
-               this.entity.attachRenderThing(renderPart);
+               renderInfo.attachRenderThing(renderPart);
                break;
             }
             case TribesmanTitle.builder: {
@@ -251,15 +255,15 @@ class TribeMemberComponent extends ServerComponent {
                // Create a dirty shine on body render parts
                // 
                
-               const bodyRenderPart = this.entity.getRenderThing("tribeMemberComponent:body") as RenderPart;
+               const bodyRenderPart = renderInfo.getRenderThing("tribeMemberComponent:body") as RenderPart;
                const bodyOverlayGroup = createRenderPartOverlayGroup(this.entity, "overlays/dirt.png", [bodyRenderPart]);
-               this.entity.renderPartOverlayGroups.push(bodyOverlayGroup);
+               renderInfo.renderPartOverlayGroups.push(bodyOverlayGroup);
 
-               const handRenderParts = this.entity.getRenderThings("tribeMemberComponent:hand", 2) as Array<RenderPart>;
+               const handRenderParts = renderInfo.getRenderThings("tribeMemberComponent:hand", 2) as Array<RenderPart>;
                for (let i = 0; i < handRenderParts.length; i++) {
                   const renderPart = handRenderParts[i];
                   const handOverlayGroup = createRenderPartOverlayGroup(this.entity, "overlays/dirt.png", [renderPart]);
-                  this.entity.renderPartOverlayGroups.push(handOverlayGroup);
+                  renderInfo.renderPartOverlayGroups.push(handOverlayGroup);
                }
 
                break;
@@ -272,7 +276,8 @@ class TribeMemberComponent extends ServerComponent {
                   getTextureArrayIndex("entities/miscellaneous/tribesman-health-patch.png")
                );
                renderPart.addTag("tribeMemberComponent:fromTitle");
-               this.entity.attachRenderThing(renderPart);
+               renderInfo.attachRenderThing(renderPart);
+               break;
             }
          }
       }
@@ -293,7 +298,7 @@ class TribeMemberComponent extends ServerComponent {
       if (titlesAreDifferent(this.titles, newTitles)) {
          // If at least 1 title is added, do particle effects
          if (titlesArrayHasExtra(newTitles, this.titles)) {
-            const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+            const transformComponent = TransformComponentArray.getComponent(this.entity.id);
             for (let i = 0; i < 25; i++) {
                const offsetMagnitude = randFloat(12, 34);
                const offsetDirection = 2 * Math.PI * Math.random();
@@ -350,9 +355,9 @@ export default TribeMemberComponent;
 
 export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent>(ComponentArrayType.server, ServerComponentType.tribeMember, true, {});
 
-function onTick(tribeMemberComponent: TribeMemberComponent): void {
+function onTick(tribeMemberComponent: TribeMemberComponent, entity: EntityID): void {
    if (tribeMemberComponent.deathbringerEyeLights.length > 0) {
-      const eyeFlashProgress = Math.min(getSecondsSinceLastAttack(tribeMemberComponent.entity) / 0.5, 1)
+      const eyeFlashProgress = Math.min(getSecondsSinceLastAttack(entity) / 0.5, 1)
       const intensity = lerp(0.6, 0.5, eyeFlashProgress);
       const r = lerp(2, 1.75, eyeFlashProgress);
       for (let i = 0; i < tribeMemberComponent.deathbringerEyeLights.length; i++) {
@@ -362,8 +367,8 @@ function onTick(tribeMemberComponent: TribeMemberComponent): void {
       }
    }
 
-   const transformComponent = tribeMemberComponent.entity.getServerComponent(ServerComponentType.transform);
-   const physicsComponent = tribeMemberComponent.entity.getServerComponent(ServerComponentType.physics);
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const physicsComponent = PhysicsComponentArray.getComponent(entity);
 
    // Sprinter particles
    if (tribeMemberComponent.hasTitle(TribesmanTitle.sprinter) && physicsComponent.selfVelocity.length() > 100) {

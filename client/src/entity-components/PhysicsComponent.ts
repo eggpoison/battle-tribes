@@ -4,7 +4,7 @@ import { Point, customTickIntervalHasPassed, lerp, randInt } from "battletribes-
 import { Settings } from "battletribes-shared/settings";
 import { TILE_MOVE_SPEED_MULTIPLIERS, TileType, TILE_FRICTIONS } from "battletribes-shared/tiles";
 import Board from "../Board";
-import { EntityType } from "battletribes-shared/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import Particle from "../Particle";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { playSound } from "../sound";
@@ -14,8 +14,8 @@ import { resolveWallCollisions } from "../collision";
 import { PacketReader } from "battletribes-shared/packets";
 import { createWaterSplashParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { getEntityLayer, getEntityType } from "../world";
-import { getEntityTile } from "./TransformComponent";
+import { getEntityLayer, getEntityRenderInfo, getEntityType } from "../world";
+import { getEntityTile, TransformComponentArray } from "./TransformComponent";
 
 const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    if (isNaN(physicsComponent.selfVelocity.x)) {
@@ -28,7 +28,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
       throw new Error("External velocity is infinite.");
    }
 
-   const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(physicsComponent.entity.id);
    const layer = getEntityLayer(physicsComponent.entity.id);
    const tile = getEntityTile(layer, transformComponent);
    
@@ -108,7 +108,8 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
 
       // Mark entity's position as updated
       transformComponent.updatePosition();
-      transformComponent.entity.dirty();
+      const renderInfo = getEntityRenderInfo(transformComponent.entity.id);
+      renderInfo.dirty();
    }
 
    if (isNaN(transformComponent.position.x)) {
@@ -118,7 +119,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
 }
 
 const resolveBorderCollisions = (physicsComponent: PhysicsComponent): void => {
-   const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(physicsComponent.entity.id);
    
    for (const hitbox of transformComponent.hitboxes) {
       const box = hitbox.box;
@@ -192,8 +193,8 @@ export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(Compon
    onUpdate: onUpdate
 });
 
-function onTick(physicsComponent: PhysicsComponent): void {
-   const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
+function onTick(physicsComponent: PhysicsComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    // Water droplet particles
    // @Cleanup: Don't hardcode fish condition
@@ -240,7 +241,7 @@ function onUpdate(physicsComponent: PhysicsComponent): void {
    
    // Don't resolve wall tile collisions in lightspeed mode
    if (Player.instance === null || physicsComponent.entity.id !== Player.instance.id || !keyIsPressed("l")) { 
-      resolveWallCollisions(physicsComponent.entity);
+      resolveWallCollisions(physicsComponent.entity.id);
    }
 
    resolveBorderCollisions(physicsComponent);

@@ -3,16 +3,19 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS, playSound } from "../sound";
 import Entity from "../Entity";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { getEntityRenderInfo } from "../world";
 
 class Ballista extends Entity {
    constructor(id: number) {
       super(id);
 
+      const renderInfo = getEntityRenderInfo(id);
+      
       // Base
-      this.attachRenderThing(
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,
@@ -30,7 +33,7 @@ class Ballista extends Entity {
       );
       ammoBoxRenderPart.offset.x = BALLISTA_AMMO_BOX_OFFSET_X;
       ammoBoxRenderPart.offset.y = BALLISTA_AMMO_BOX_OFFSET_Y;
-      this.attachRenderThing(ammoBoxRenderPart);
+      renderInfo.attachRenderThing(ammoBoxRenderPart);
 
       // Plate
       const plateRenderPart = new TexturedRenderPart(
@@ -40,7 +43,7 @@ class Ballista extends Entity {
          getTextureArrayIndex("entities/ballista/plate.png")
       );
       plateRenderPart.addTag("turretComponent:pivoting");
-      this.attachRenderThing(plateRenderPart);
+      renderInfo.attachRenderThing(plateRenderPart);
 
       // Shaft
       const shaftRenderPart = new TexturedRenderPart(
@@ -49,7 +52,7 @@ class Ballista extends Entity {
          0,
          getTextureArrayIndex("entities/ballista/shaft.png")
       );
-      this.attachRenderThing(shaftRenderPart);
+      renderInfo.attachRenderThing(shaftRenderPart);
 
       // Gears
       const gearRenderParts = new Array<RenderPart>();
@@ -64,7 +67,7 @@ class Ballista extends Entity {
          // @Speed: Garbage collection
          renderPart.offset.x = i === 0 ? BALLISTA_GEAR_X : -BALLISTA_GEAR_X;
          renderPart.offset.y = BALLISTA_GEAR_Y;
-         this.attachRenderThing(renderPart);
+         renderInfo.attachRenderThing(renderPart);
          gearRenderParts.push(renderPart);
       }
 
@@ -76,18 +79,18 @@ class Ballista extends Entity {
          getTextureArrayIndex("entities/ballista/crossbow-1.png")
       );
       crossbowRenderPart.addTag("turretComponent:aiming");
-      this.attachRenderThing(crossbowRenderPart);
+      renderInfo.attachRenderThing(crossbowRenderPart);
    }
 
    protected onHit(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       
       // @Temporary
       playSound(randItem(ROCK_HIT_SOUNDS), 0.3, 1, transformComponent.position);
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       
       // @Temporary
       playSound(randItem(ROCK_DESTROY_SOUNDS), 0.4, 1, transformComponent.position);

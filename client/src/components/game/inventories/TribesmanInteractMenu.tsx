@@ -1,8 +1,6 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import { TRIBESMAN_TITLE_RECORD, TitleGenerationInfo, TribesmanTitle } from "battletribes-shared/titles";
 import { Settings } from "battletribes-shared/settings";
 import { TribeType } from "battletribes-shared/tribes";
-import Tribesman from "../../../entities/Tribesman";
 import InventoryContainer from "./InventoryContainer";
 import ItemSlot from "./ItemSlot";
 import { getSelectedEntity } from "../../../entity-selection";
@@ -10,6 +8,13 @@ import Game from "../../../Game";
 import Client from "../../../client/Client";
 import { InventoryName, itemTypeIsArmour, itemTypeIsBackpack } from "battletribes-shared/items/items";
 import Player from "../../../entities/Player";
+import { TribeComponentArray } from "../../../entity-components/TribeComponent";
+import { TribeMemberComponentArray } from "../../../entity-components/TribeMemberComponent";
+import { EntityID } from "../../../../../shared/src/entities";
+import { TribesmanAIComponentArray } from "../../../entity-components/TribesmanAIComponent";
+import { TransformComponentArray } from "../../../entity-components/TransformComponent";
+import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
+import { InventoryUseComponentArray } from "../../../entity-components/InventoryUseComponent";
 
 const PLAINSPEOPLE_NAMES: ReadonlyArray<string> = [
    "Oda",
@@ -119,13 +124,13 @@ const RelationSlider = (props: RelationSliderProps) => {
 }
 
 interface TribesmanInfocardProps {
-   readonly tribesman: Tribesman;
+   readonly tribesman: EntityID;
 }
 
 const TribesmanInfocard = ({ tribesman }: TribesmanInfocardProps) => {
-   const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
-   const tribeMemberComponent = tribesman.getServerComponent(ServerComponentType.tribeMember);
-   const tribesmanComponent = tribesman.getServerComponent(ServerComponentType.tribesmanAI);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesman);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
    
    let nameArray: ReadonlyArray<string>;
    switch (tribeComponent.tribeType) {
@@ -179,7 +184,7 @@ const TribesmanInfocard = ({ tribesman }: TribesmanInfocardProps) => {
       }
    }
 
-   const transformComponent = tribesman.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
    const ageDays = transformComponent.ageTicks / Settings.TIME_PASS_RATE * Settings.TPS / 3600;
 
    let tribeName: string;
@@ -194,7 +199,7 @@ const TribesmanInfocard = ({ tribesman }: TribesmanInfocardProps) => {
 
    const recruit = (): void => {
       if (canRecruit) {
-         Client.sendRecruitTribesman(tribesman.id);
+         Client.sendRecruitTribesman(tribesman);
       }
    }
    
@@ -224,10 +229,10 @@ const TribesmanInfocard = ({ tribesman }: TribesmanInfocardProps) => {
 }
 
 const TribesmanInteractMenu = () => {
-   const tribesman = getSelectedEntity() as Tribesman;
-   const inventoryComponent = tribesman.getServerComponent(ServerComponentType.inventory);
-   const inventoryUseComponent = tribesman.getServerComponent(ServerComponentType.inventoryUse);
-   const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
+   const tribesman = getSelectedEntity();
+   const inventoryComponent = InventoryComponentArray.getComponent(tribesman);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
 
    const backpackSlotInventory = inventoryComponent.getInventory(InventoryName.backpackSlot)!;
    const armourSlotInventory = inventoryComponent.getInventory(InventoryName.armourSlot)!;
@@ -243,7 +248,7 @@ const TribesmanInteractMenu = () => {
       <div className="flex-container space-around">
          {backpackSlotInventory.itemSlots.hasOwnProperty(1) ? (
             <div>
-               <InventoryContainer isBordered className="backapck" entityID={tribesman.id} inventory={inventoryComponent.getInventory(InventoryName.backpack)!} />
+               <InventoryContainer isBordered className="backapck" entityID={tribesman} inventory={inventoryComponent.getInventory(InventoryName.backpack)!} />
             </div>
          ) : undefined}
          <div>
@@ -253,7 +258,7 @@ const TribesmanInteractMenu = () => {
 
       {tribeComponent.tribeID === Game.tribe.id ? (
          <div className="hotbar-container">
-            <InventoryContainer isBordered className="hotbar" entityID={tribesman.id} inventory={inventoryComponent.getInventory(InventoryName.hotbar)!} selectedItemSlot={inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar).selectedItemSlot} />
+            <InventoryContainer isBordered className="hotbar" entityID={tribesman} inventory={inventoryComponent.getInventory(InventoryName.hotbar)!} selectedItemSlot={inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar).selectedItemSlot} />
             <div className="inventory">
                {backpackSlotElement}
                {armourItemSlotElement}

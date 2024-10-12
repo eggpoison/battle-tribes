@@ -165,9 +165,9 @@ function getDataLength(entity: EntityID): number {
    
    for (const damageBox of damageBoxComponent.damageBoxes) {
       if (boxIsCircular(damageBox.box)) {
-         lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
-      } else {
          lengthBytes += 12 * Float32Array.BYTES_PER_ELEMENT;
+      } else {
+         lengthBytes += 14 * Float32Array.BYTES_PER_ELEMENT;
       }
    }
    for (const blockBox of damageBoxComponent.blockBoxes) {
@@ -230,6 +230,9 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(damageBox.associatedLimbInventoryName);
       packet.addBoolean(damageBox.isActive);
       packet.padOffset(3);
+      packet.addBoolean(damageBox.isBlockedByWall);
+      packet.padOffset(3);
+      packet.addNumber(damageBox.blockingSubtileIndex);
    }
 
    // Rectangular
@@ -258,6 +261,9 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(damageBox.associatedLimbInventoryName);
       packet.addBoolean(damageBox.isActive);
       packet.padOffset(3);
+      packet.addBoolean(damageBox.isBlockedByWall);
+      packet.padOffset(3);
+      packet.addNumber(damageBox.blockingSubtileIndex);
    }
    
    // Circular

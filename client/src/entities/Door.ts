@@ -1,12 +1,12 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
 import { HitData } from "battletribes-shared/client-server-types";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
-import { DOOR_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
+import { BuildingMaterialComponentArray, DOOR_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class Door extends Entity {
    constructor(id: number) {
@@ -14,7 +14,7 @@ class Door extends Entity {
    }
 
    public onLoad(): void {
-      const buildingMaterialComponent = this.getServerComponent(ServerComponentType.buildingMaterial);
+      const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(this.id);
 
       const renderPart = new TexturedRenderPart(
          null,
@@ -23,11 +23,13 @@ class Door extends Entity {
          getTextureArrayIndex(DOOR_TEXTURE_SOURCES[buildingMaterialComponent.material])
       );
       renderPart.addTag("buildingMaterialComponent:material");
-      this.attachRenderThing(renderPart);
+
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(renderPart);
    }
 
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       playSound("wooden-wall-hit.mp3", 0.3, 1, transformComponent.position);
 
@@ -42,7 +44,7 @@ class Door extends Entity {
    }
    
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       playSound("wooden-wall-break.mp3", 0.4, 1, transformComponent.position);
 

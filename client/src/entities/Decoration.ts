@@ -1,7 +1,9 @@
-import { DecorationType, ServerComponentType } from "battletribes-shared/components";
+import { DecorationType } from "battletribes-shared/components";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import { DecorationComponentArray } from "../entity-components/DecorationComponent";
+import { getEntityRenderInfo } from "../world";
 
 const DECORATION_RENDER_INFO: Record<DecorationType, string> = {
    [DecorationType.pebble]: "decorations/pebble.png",
@@ -24,9 +26,10 @@ class Decoration extends Entity {
    }
 
    public onLoad(): void {
-      const decorationComponent = this.getServerComponent(ServerComponentType.decoration);
+      const decorationComponent = DecorationComponentArray.getComponent(this.id);
       
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,

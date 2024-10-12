@@ -6,11 +6,11 @@ import Camera from "./Camera";
 import { updateDebugInfoEntity, updateDebugInfoTile } from "./components/game/dev/DebugInfo";
 import { isDev } from "./utils";
 import { Tile } from "./Tile";
-import Entity from "./Entity";
 import { updateCursorTooltip } from "./components/game/dev/CursorTooltip";
 import { TransformComponentArray } from "./entity-components/TransformComponent";
 import { getTileIndexIncludingEdges, tileIsInWorld } from "./Layer";
-import { getCurrentLayer, getEntityByID } from "./world";
+import { getCurrentLayer, getEntityRenderInfo } from "./world";
+import { EntityID } from "../../shared/src/entities";
 
 export let cursorX: number | null = null;
 export let cursorY: number | null = null;
@@ -62,7 +62,7 @@ export function getMouseTargetTile(): Tile | null {
  */
 // @Speed
 // @Cleanup: Use the highlighted entity system instead of having this custom function
-export function getMouseTargetEntity(): Entity | null {
+export function getMouseTargetEntity(): EntityID | null {
    if (Game.cursorPositionX === null || Game.cursorPositionY === null) return null;
 
    const layer = getCurrentLayer();
@@ -72,15 +72,13 @@ export function getMouseTargetEntity(): Entity | null {
    const minChunkY = Math.max(Math.min(Math.floor((Game.cursorPositionY - CLIENT_SETTINGS.CURSOR_TOOLTIP_HOVER_RANGE / Camera.zoom) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
    const maxChunkY = Math.max(Math.min(Math.floor((Game.cursorPositionY + CLIENT_SETTINGS.CURSOR_TOOLTIP_HOVER_RANGE / Camera.zoom) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
 
-   let closestEntity: Entity | null = null;
+   let closestEntity: EntityID | null = null;
    let minDistance = Number.MAX_SAFE_INTEGER;
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);
-         for (const entityID of chunk.nonGrassEntities) {
-            const entity = getEntityByID(entityID)!;
-
-            const transformComponent = TransformComponentArray.getComponent(entity.id);
+         for (const entity of chunk.nonGrassEntities) {
+            const transformComponent = TransformComponentArray.getComponent(entity);
             
             const distanceFromCursor = Math.sqrt(Math.pow(Game.cursorPositionX - transformComponent.position.x, 2) + Math.pow(Game.cursorPositionY - transformComponent.position.y, 2))
             if (distanceFromCursor <= CLIENT_SETTINGS.CURSOR_TOOLTIP_HOVER_RANGE && distanceFromCursor < minDistance) {
@@ -120,11 +118,12 @@ export function renderCursorTooltip(): void {
    }
 
    // Update the cursor tooltip
-   const entityScreenPositionX = Camera.calculateXScreenPos(targetEntity.renderPosition.x);
-   const entityScreenPositionY = Camera.calculateYScreenPos(targetEntity.renderPosition.y);
+   const renderInfo = getEntityRenderInfo(targetEntity);
+   const entityScreenPositionX = Camera.calculateXScreenPos(renderInfo.renderPosition.x);
+   const entityScreenPositionY = Camera.calculateYScreenPos(renderInfo.renderPosition.y);
 
    const debugData = Game.getEntityDebugData();
-   if (debugData === null || targetEntity.id === debugData.entityID) {
+   if (debugData === null || targetEntity === debugData.entityID) {
       updateCursorTooltip(debugData, entityScreenPositionX, entityScreenPositionY);
    }
 }

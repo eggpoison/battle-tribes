@@ -1,14 +1,11 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import { angle, randFloat } from "battletribes-shared/utils";
-import { EntityType } from "battletribes-shared/entities";
 import { HitData } from "battletribes-shared/client-server-types";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
-import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { YETI_SIZE } from "../entity-components/YetiComponent";
-import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { ClientComponentType } from "../entity-components/components";
 import RandomSoundComponent from "../entity-components/client-components/RandomSoundComponent";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class Yeti extends Entity {
    private static readonly BLOOD_POOL_SIZE = 30;
@@ -18,30 +15,10 @@ class Yeti extends Entity {
       super(id);
 
       this.addClientComponent(ClientComponentType.randomSound, new RandomSoundComponent(this));
-
-      this.attachRenderThing(
-         new TexturedRenderPart(
-            null,
-            1,
-            0,
-            getTextureArrayIndex("entities/yeti/yeti.png")
-         )
-      );
-
-      for (let i = 0; i < 2; i++) {
-         const paw = new TexturedRenderPart(
-            null,
-            0,
-            0,
-            getTextureArrayIndex("entities/yeti/yeti-paw.png")
-         );
-         paw.addTag("yetiComponent:paw");
-         this.attachRenderThing(paw);
-      }
    }
 
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       // Blood pool particle
       createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, Yeti.BLOOD_POOL_SIZE);
@@ -58,11 +35,11 @@ class Yeti extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
 
       createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, Yeti.BLOOD_POOL_SIZE);
 
-      createBloodParticleFountain(this, Yeti.BLOOD_FOUNTAIN_INTERVAL, 1.6);
+      createBloodParticleFountain(this.id, Yeti.BLOOD_FOUNTAIN_INTERVAL, 1.6);
    }
 }
 

@@ -191,16 +191,11 @@ const setLimb = (entity: EntityID, limb: LimbInfo, limbDirection: number, extraO
    limbBox.offset.y = offset * Math.cos(limbDirection * flipMultiplier) + extraOffsetY;
    limbBox.relativeRotation = limbRotation * flipMultiplier;
 
-   // Update limb
    const transformComponent = TransformComponentArray.getComponent(entity);
    updateBox(limbBox, transformComponent.position.x, transformComponent.position.y, transformComponent.rotation);
-
-   if (limb.heldItemDamageBox.isActive) {
-      updateBox(limb.heldItemDamageBox.box, limbBox.position.x, limbBox.position.y, limbBox.rotation);
-   }
-   if (limb.blockBox.isActive) {
-      updateBox(limb.blockBox.box, limbBox.position.x, limbBox.position.y, limbBox.rotation);
-   }
+   
+   updateBox(limb.heldItemDamageBox.box, limbBox.position.x, limbBox.position.y, limbBox.rotation);
+   updateBox(limb.blockBox.box, limbBox.position.x, limbBox.position.y, limbBox.rotation);
 }
 
 const lerpLimbBetweenStates = (entity: EntityID, limbInfo: LimbInfo, startingLimbState: LimbState, targetLimbState: LimbState, progress: number, isFlipped: boolean): void => {
@@ -220,12 +215,14 @@ export function onBlockBoxCollisionWithDamageBox(attacker: EntityID, victim: Ent
    const victimInventoryUseComponent = InventoryUseComponentArray.getComponent(attacker);
    const attackerLimb = victimInventoryUseComponent.getLimbInfo(collidingDamageBox.associatedLimbInventoryName);
 
-   // Pause the attack for a brief period
+   // Pause the attacker's attack for a brief period
    attackerLimb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
    attackerLimb.currentActionRate = 0.4;
 
    attackerLimb.limbDamageBox.isBlocked = true;
    attackerLimb.heldItemDamageBox.isBlocked = true;
+   registerDirtyEntity(attacker);
+
    // If the block box is a shield, just deactivate the attack boxes
    if (blockBox.blockType === BlockType.shieldBlock) {
       attackerLimb.limbDamageBox.isActive = false;
@@ -247,7 +244,6 @@ export function onBlockBoxCollisionWithDamageBox(attacker: EntityID, victim: Ent
    blockBoxLimb.blockPositionX = blockBox.box.position.x;
    blockBoxLimb.blockPositionY = blockBox.box.position.y;
    blockBoxLimb.blockType = blockBox.blockType;
-   registerDirtyEntity(attacker);
 }
 
 export function onBlockBoxCollisionWithProjectile(blockingEntity: EntityID, projectile: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox): void {
@@ -469,26 +465,27 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
          }
       }
 
-      // Update damage box for limb attacks
+      let swingProgress: number;
+      if (limb.currentActionDurationTicks === 0) {
+         swingProgress = 0;
+      } else if (limb.currentActionElapsedTicks >= limb.currentActionDurationTicks) {
+         swingProgress = 1;
+      } else {
+         swingProgress = limb.currentActionElapsedTicks / limb.currentActionDurationTicks;
+      }
+         
+      lerpLimbBetweenStates(entity, limb, limb.currentActionStartLimbState, limb.currentActionEndLimbState, swingProgress, isFlipped);
+
+      // If the attack collides with a wall, cancel it
       if (limb.action === LimbAction.attack) {
-         const swingProgress = limb.currentActionElapsedTicks / limb.currentActionDurationTicks;
-         lerpLimbBetweenStates(entity, limb, limb.currentActionStartLimbState, limb.currentActionEndLimbState, swingProgress, isFlipped);
-
-         // If the attack collides with a wall, cancel it
-
          const layer = getEntityLayer(entity);
-
-         if (limb.limbDamageBox.isActive) {
-            const limbCollidingSubtiles = getBoxCollidingWallSubtiles(layer, limb.limbDamageBox.box);
-            if (limbCollidingSubtiles.length > 0) {
-               cancelAttack(limb);
-            }
-         }
          
          if (limb.heldItemDamageBox.isActive) {
             const heldItemCollidingSubtiles = getBoxCollidingWallSubtiles(layer, limb.heldItemDamageBox.box);
             if (heldItemCollidingSubtiles.length > 0) {
                cancelAttack(limb);
+               limb.heldItemDamageBox.isBlockedByWall = true;
+               limb.heldItemDamageBox.blockingSubtileIndex = heldItemCollidingSubtiles[0];
 
                // Damage the subtiles with the pickaxe
                const heldItem = getHeldItem(limb)!;
@@ -506,6 +503,13 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                      limb.heldItemDamageBox.wallSubtileDamageGiven += damageDealt;
                   }
                }
+            }
+         } else if (limb.limbDamageBox.isActive) {
+            const limbCollidingSubtiles = getBoxCollidingWallSubtiles(layer, limb.limbDamageBox.box);
+            if (limbCollidingSubtiles.length > 0) {
+               cancelAttack(limb);
+               limb.limbDamageBox.isBlockedByWall = true;
+               limb.limbDamageBox.blockingSubtileIndex = limbCollidingSubtiles[0];
             }
          }
       }

@@ -8,6 +8,7 @@ import RenderPart from "../render-parts/RenderPart";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { playSound } from "../sound";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import { getEntityRenderInfo } from "../world";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import ServerComponent from "./ServerComponent";
 import { TransformComponentArray } from "./TransformComponent";
@@ -43,6 +44,8 @@ export default class GuardianComponent extends ServerComponent {
    constructor(entity: Entity) {
       super(entity);
 
+      const renderInfo = getEntityRenderInfo(entity.id);
+
       // Head
       
       const headRenderPart = new TexturedRenderPart(
@@ -52,7 +55,7 @@ export default class GuardianComponent extends ServerComponent {
          getTextureArrayIndex("entities/guardian/guardian-head.png")
       );
       headRenderPart.offset.y = 28;
-      this.entity.attachRenderThing(headRenderPart);
+      renderInfo.attachRenderThing(headRenderPart);
       
       const headRubies = new TexturedRenderPart(
          headRenderPart,
@@ -60,7 +63,7 @@ export default class GuardianComponent extends ServerComponent {
          0,
          getTextureArrayIndex("entities/guardian/guardian-head-rubies.png")
       );
-      this.entity.attachRenderThing(headRubies);
+      renderInfo.attachRenderThing(headRubies);
       this.rubyRenderParts.push(headRubies);
 
       // Body
@@ -71,7 +74,7 @@ export default class GuardianComponent extends ServerComponent {
          0,
          getTextureArrayIndex("entities/guardian/guardian-body.png")
       );
-      this.entity.attachRenderThing(bodyRenderPart);
+      renderInfo.attachRenderThing(bodyRenderPart);
 
       const bodyAmethystsRenderPart = new TexturedRenderPart(
          bodyRenderPart,
@@ -79,7 +82,7 @@ export default class GuardianComponent extends ServerComponent {
          0,
          getTextureArrayIndex("entities/guardian/guardian-body-amethysts.png")
       );
-      this.entity.attachRenderThing(bodyAmethystsRenderPart);
+      renderInfo.attachRenderThing(bodyAmethystsRenderPart);
       this.amethystRenderParts.push(bodyAmethystsRenderPart);
 
       const bodyEmeraldsRenderPart = new TexturedRenderPart(
@@ -88,7 +91,7 @@ export default class GuardianComponent extends ServerComponent {
          0,
          getTextureArrayIndex("entities/guardian/guardian-body-emeralds.png")
       );
-      this.entity.attachRenderThing(bodyEmeraldsRenderPart);
+      renderInfo.attachRenderThing(bodyEmeraldsRenderPart);
       this.emeraldRenderParts.push(bodyEmeraldsRenderPart);
 
       // Red lights
@@ -285,6 +288,7 @@ export default class GuardianComponent extends ServerComponent {
    
    public onLoad(): void {
       // Attach limb render parts
+      const renderInfo = getEntityRenderInfo(this.entity.id);
       const transformComponent = TransformComponentArray.getComponent(this.entity.id);
       for (let i = 0; i < transformComponent.hitboxes.length; i++) {
          const hitbox = transformComponent.hitboxes[i];
@@ -295,7 +299,7 @@ export default class GuardianComponent extends ServerComponent {
                0,
                getTextureArrayIndex("entities/guardian/guardian-limb.png")
             );
-            this.entity.attachRenderThing(limbRenderPart);
+            renderInfo.attachRenderThing(limbRenderPart);
             this.limbRenderParts.push(limbRenderPart);
 
             const cracksRenderPart = new TexturedRenderPart(
@@ -304,7 +308,7 @@ export default class GuardianComponent extends ServerComponent {
                0,
                getTextureArrayIndex("entities/guardian/guardian-limb-gem-cracks.png")
             );
-            this.entity.attachRenderThing(cracksRenderPart);
+            renderInfo.attachRenderThing(cracksRenderPart);
             this.limbCrackRenderParts.push(cracksRenderPart);
 
             const light: Light = {
@@ -360,17 +364,20 @@ export default class GuardianComponent extends ServerComponent {
       const actualRubyGemActivation = lerp(rubyGemActivation, 1, limbRubyGemActivation);
       if (actualRubyGemActivation !== this.rubyGemActivation) {
          this.setColours(this.rubyRenderParts, this.rubyLights, actualRubyGemActivation, actualRubyGemActivation, 0, 0);
-         this.entity.dirty();
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         renderInfo.dirty();
       }
       const actualEmeraldGemActivation = lerp(emeraldGemActivation, 1, limbEmeraldGemActivation);
       if (actualEmeraldGemActivation !== this.emeraldGemActivation) {
          this.setColours(this.emeraldRenderParts, this.emeraldLights, actualEmeraldGemActivation, 0, actualEmeraldGemActivation, 0);
-         this.entity.dirty();
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         renderInfo.dirty();
       }
       const actualAmethystGemActivation = lerp(amethystGemActivation, 1, limbAmethystGemActivation);
       if (actualAmethystGemActivation !== this.amethystGemActivation) {
          this.setColours(this.amethystRenderParts, this.amethystLights, actualAmethystGemActivation, actualAmethystGemActivation * 0.9, actualAmethystGemActivation * 0.2, actualAmethystGemActivation * 0.9);
-         this.entity.dirty();
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         renderInfo.dirty();
       }
 
       this.rubyGemActivation = actualRubyGemActivation;
@@ -417,7 +424,8 @@ export default class GuardianComponent extends ServerComponent {
             light.g += limbAmethystGemActivation * 0.2;
             light.b += limbAmethystGemActivation * 0.5;
          }
-         this.entity.dirty();
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         renderInfo.dirty();
       }
 
       this.limbRubyGemActivation = limbRubyGemActivation;

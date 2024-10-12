@@ -8,6 +8,8 @@ import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
+import { getEntityRenderInfo } from "../world";
 
 class AmmoBoxComponent extends ServerComponent {
    public ammoType: TurretAmmoType | null = null;
@@ -20,7 +22,7 @@ class AmmoBoxComponent extends ServerComponent {
          this.ammoType = null;
 
          if (this.ammoWarningRenderPart === null) {
-            const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+            const transformComponent = TransformComponentArray.getComponent(this.entity.id);
             
             this.ammoWarningRenderPart = new TexturedRenderPart(
                null,
@@ -31,7 +33,9 @@ class AmmoBoxComponent extends ServerComponent {
             this.ammoWarningRenderPart.offset.x = rotateXAroundOrigin(BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, transformComponent.rotation);
             this.ammoWarningRenderPart.offset.y = rotateYAroundOrigin(BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, transformComponent.rotation);
             this.ammoWarningRenderPart.inheritParentRotation = false;
-            this.entity.attachRenderThing(this.ammoWarningRenderPart);
+
+            const renderInfo = getEntityRenderInfo(this.entity.id);
+            renderInfo.attachRenderThing(this.ammoWarningRenderPart);
          }
 
          this.ammoWarningRenderPart.opacity = (Math.sin(Board.serverTicks / 15) * 0.5 + 0.5) * 0.4 + 0.4;
@@ -40,7 +44,8 @@ class AmmoBoxComponent extends ServerComponent {
       }
 
       if (this.ammoWarningRenderPart !== null) {
-         this.entity.removeRenderPart(this.ammoWarningRenderPart);
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         renderInfo.removeRenderPart(this.ammoWarningRenderPart);
          this.ammoWarningRenderPart = null;
       }
       

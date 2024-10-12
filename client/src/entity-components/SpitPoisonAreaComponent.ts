@@ -6,6 +6,8 @@ import { lerp } from "battletribes-shared/utils";
 import { createAcidParticle, createPoisonBubble } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { TransformComponentArray } from "./TransformComponent";
+import { EntityID } from "../../../shared/src/entities";
 
 const enum Vars {
    MAX_RANGE = 55
@@ -16,7 +18,7 @@ class SpitPoisonAreaComponent extends ServerComponent {
    public sound!: Sound;
 
    public onLoad(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
 
       const audioInfo = playSound("acid-burn.mp3", 0.25, 1, transformComponent.position);
       this.trackSource = audioInfo.trackSource;
@@ -39,8 +41,8 @@ export const SpitPoisonAreaComponentArray = new ComponentArray<SpitPoisonAreaCom
    onTick: onTick
 });
 
-function onTick(spitPoisonAreaComponent: SpitPoisonAreaComponent): void {
-   const transformComponent = spitPoisonAreaComponent.entity.getServerComponent(ServerComponentType.transform);
+function onTick(spitPoisonAreaComponent: SpitPoisonAreaComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    const hitbox = transformComponent.hitboxes[0];
    const box = hitbox.box as CircularBox;

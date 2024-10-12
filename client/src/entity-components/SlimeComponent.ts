@@ -1,5 +1,5 @@
 import { lerp, randFloat, randInt } from "battletribes-shared/utils";
-import { SlimeSize } from "battletribes-shared/entities";
+import { EntityID, SlimeSize } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import ServerComponent from "./ServerComponent";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -9,6 +9,8 @@ import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import { playSound } from "../sound";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
+import { getEntityRenderInfo } from "../world";
 
 export const SLIME_SIZES: ReadonlyArray<number> = [
    64, // small
@@ -71,8 +73,10 @@ class SlimeComponent extends ServerComponent {
       );
       renderPart.offset.x = offsetMagnitude * Math.sin(orbInfo.rotation);
       renderPart.offset.y = offsetMagnitude * Math.cos(orbInfo.rotation);
-      this.entity.attachRenderThing(renderPart);
       this.orbRenderParts.push(renderPart);
+
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      renderInfo.attachRenderThing(renderPart);
    }
 
    public padData(reader: PacketReader): void {
@@ -91,6 +95,8 @@ class SlimeComponent extends ServerComponent {
       if (isInitialData) {
          const sizeString = SIZE_STRINGS[this.size];
 
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         
          // Body
          this.bodyRenderPart = new TexturedRenderPart(
             null,
@@ -98,10 +104,10 @@ class SlimeComponent extends ServerComponent {
             0,
             getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
          );
-         this.entity.attachRenderThing(this.bodyRenderPart);
+         renderInfo.attachRenderThing(this.bodyRenderPart);
 
          // Shading
-         this.entity.attachRenderThing(new TexturedRenderPart(
+         renderInfo.attachRenderThing(new TexturedRenderPart(
             null,
             0,
             0,
@@ -116,7 +122,7 @@ class SlimeComponent extends ServerComponent {
             getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
          );
          this.eyeRenderPart.inheritParentRotation = false;
-         this.entity.attachRenderThing(this.eyeRenderPart);
+         renderInfo.attachRenderThing(this.eyeRenderPart);
       }
       
       // 
@@ -166,9 +172,9 @@ export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ComponentA
    onTick: onTick
 });
 
-function onTick(slimeComponent: SlimeComponent): void {
+function onTick(slimeComponent: SlimeComponent, entity: EntityID): void {
    if (Math.random() < 0.2 / Settings.TPS) {
-      const transformComponent = slimeComponent.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       playSound("slime-ambient-" + randInt(1, 4) + ".mp3", 0.4, 1, transformComponent.position);
    }
 

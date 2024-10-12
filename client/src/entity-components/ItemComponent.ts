@@ -4,6 +4,7 @@ import { createDeepFrostHeartBloodParticles } from "../particles";
 import { ItemType } from "battletribes-shared/items/items";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
 
 class ItemComponent extends ServerComponent {
    public itemType = ItemType.wood;
@@ -26,7 +27,7 @@ export const ItemComponentArray = new ComponentArray<ItemComponent>(ComponentArr
 function onTick(itemComponent: ItemComponent): void {
    // Make the deep frost heart item spew blue blood particles
    if (itemComponent.itemType === ItemType.deepfrost_heart) {
-      const transformComponent = itemComponent.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(itemComponent.entity.id);
       createDeepFrostHeartBloodParticles(transformComponent.position.x, transformComponent.position.y, 0, 0);
    }
 }

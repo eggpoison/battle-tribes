@@ -18,7 +18,7 @@ import { createHitboxShaders, renderDamageBoxes, renderHitboxes } from "./render
 import { clearServerTicks, updateDebugScreenFPS, updateDebugScreenRenderTime } from "./components/game/dev/GameInfoDisplay";
 import { createWorldBorderShaders, renderWorldBorder } from "./rendering/webgl/world-border-rendering";
 import { clearSolidTileRenderingData, createSolidTileShaders, renderSolidTiles } from "./rendering/webgl/solid-tile-rendering";
-import { calculateVisibleRiverInfo, createRiverShaders, createRiverSteppingStoneData, renderLowerRiverFeatures, renderUpperRiverFeatures } from "./rendering/webgl/river-rendering";
+import { calculateVisibleRiverInfo, createRiverShaders, renderLowerRiverFeatures, renderUpperRiverFeatures } from "./rendering/webgl/river-rendering";
 import { createChunkBorderShaders, renderChunkBorders } from "./rendering/webgl/chunk-border-rendering";
 import { nerdVisionIsVisible } from "./components/game/dev/NerdVision";
 import { createDebugDataShaders, renderLineDebugData, renderTriangleDebugData } from "./rendering/webgl/debug-data-rendering";
@@ -53,7 +53,7 @@ import { createGrassBlockerShaders, renderGrassBlockers } from "./rendering/webg
 import { createTechTreeItemShaders, renderTechTreeItems, updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
 import { createUBOs, updateUBOs } from "./rendering/ubos";
 import { createEntityOverlayShaders } from "./rendering/webgl/overlay-rendering";
-import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
+import { updateEntityRenderPosition, updateRenderPartMatrices } from "./rendering/render-part-matrices";
 import { renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
 import { processGameDataPacket } from "./client/packet-processing";
 import { MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
@@ -62,7 +62,7 @@ import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
 import { preloadTextureAtlasImages } from "./texture-atlases/texture-atlas-stitching";
 import { updatePlayerMovement, updatePlayerItems } from "./components/game/GameInteractableLayer";
 import { refreshChunkedEntityRenderingBuffers } from "./rendering/webgl/chunked-entity-rendering";
-import { getCurrentLayer, getEntityByID, getEntityLayer, layers } from "./world";
+import { getCurrentLayer, getEntityByID, getEntityLayer, getEntityRenderInfo, layers } from "./world";
 import Layer from "./Layer";
 import { createDarkeningShaders, renderDarkening } from "./rendering/webgl/darkening-rendering";
 import { createLightDebugShaders, renderLightingDebug } from "./rendering/webgl/light-debug-rendering";
@@ -462,7 +462,8 @@ abstract class Game {
       // Update the camera
       if (Player.instance !== null) {
          const frameProgress = getFrameProgress();
-         Player.instance.updateRenderPosition(frameProgress);
+         const playerRenderInfo = getEntityRenderInfo(Player.instance.id);
+         updateEntityRenderPosition(playerRenderInfo, frameProgress);
          Camera.updatePosition();
          Camera.updateVisibleChunkBounds(getEntityLayer(Player.instance.id));
          Camera.updateVisibleRenderChunkBounds();
@@ -487,7 +488,7 @@ abstract class Game {
             Client.sendTrackEntity(Camera.trackedEntityID);
          } else if (nerdVisionIsVisible()) {
             const targettedEntity = getMouseTargetEntity();
-            Client.sendTrackEntity(targettedEntity !== null ? targettedEntity.id : 0);
+            Client.sendTrackEntity(targettedEntity !== null ? targettedEntity : 0);
          } else {
             Client.sendTrackEntity(0);
          }

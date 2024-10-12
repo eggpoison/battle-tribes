@@ -5,10 +5,11 @@ import { randFloat } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Game from "../Game";
 import { playSound } from "../sound";
-import { getTribesmanRadius } from "./TribeMemberComponent";
+import { getTribesmanRadius, TribeMemberComponentArray } from "./TribeMemberComponent";
 import { createConversionParticle } from "../particles";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
 
 export function getTribeType(tribeID: number): TribeType {
    if (tribeID === Game.tribe.id) {
@@ -42,12 +43,12 @@ class TribeComponent extends ServerComponent {
       const tribeID = reader.readNumber();
       
       // Tribesman conversion
-      if (!isInitialData && tribeID !== this.tribeID && this.entity.hasServerComponent(ServerComponentType.tribeMember)) {
-         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      if (!isInitialData && tribeID !== this.tribeID && TribeMemberComponentArray.hasComponent(this.entity.id)) {
+         const transformComponent = TransformComponentArray.getComponent(this.entity.id);
 
          playSound("conversion.mp3", 0.4, 1, transformComponent.position);
 
-         const radius = getTribesmanRadius(this.entity);
+         const radius = getTribesmanRadius(this.entity.id);
          for (let i = 0; i < 10; i++) {
             const offsetDirection = 2 * Math.PI * Math.random();
             const offsetMagnitude = radius + randFloat(0, 4);

@@ -1,6 +1,5 @@
 import { CowSpecies } from "battletribes-shared/entities";
 import { angle, randFloat, randInt } from "battletribes-shared/utils";
-import { ServerComponentType } from "battletribes-shared/components";
 import { HitData } from "battletribes-shared/client-server-types";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -9,6 +8,9 @@ import Entity from "../Entity";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { CowComponentArray } from "../entity-components/CowComponent";
+import { getEntityRenderInfo } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class Cow extends Entity {
    private static readonly HEAD_SIZE = 64;
@@ -18,14 +20,12 @@ class Cow extends Entity {
 
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.1;
 
-   constructor(id: number) {
-      super(id);
-   }
-
    public onLoad(): void {
-      const cowComponent = this.getServerComponent(ServerComponentType.cow);
+      const cowComponent = CowComponentArray.getComponent(this.id);
       const cowNum = cowComponent.species === CowSpecies.brown ? 1 : 2;
 
+      const renderInfo = getEntityRenderInfo(this.id);
+      
       // Body
       const bodyRenderPart = new TexturedRenderPart(
          null,
@@ -34,7 +34,7 @@ class Cow extends Entity {
          getTextureArrayIndex(`entities/cow/cow-body-${cowNum}.png`)
       );
       bodyRenderPart.offset.y = -(Cow.HEAD_SIZE - Cow.HEAD_OVERLAP) / 2;
-      this.attachRenderThing(bodyRenderPart);
+      renderInfo.attachRenderThing(bodyRenderPart);
 
       // Head
       const headRenderPart = new TexturedRenderPart(
@@ -44,13 +44,13 @@ class Cow extends Entity {
          getTextureArrayIndex(`entities/cow/cow-head-${cowNum}.png`)
       );
       headRenderPart.offset.y = (Cow.BODY_HEIGHT - Cow.HEAD_OVERLAP) / 2;
-      this.attachRenderThing(headRenderPart);
+      renderInfo.attachRenderThing(headRenderPart);
 
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.3, 20, 64, 5, 40));
    }
 
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
             
       // Blood pool particles
       for (let i = 0; i < 2; i++) {
@@ -71,12 +71,12 @@ class Cow extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       for (let i = 0; i < 3; i++) {
          createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, 35);
       }
 
-      createBloodParticleFountain(this, Cow.BLOOD_FOUNTAIN_INTERVAL, 1.1);
+      createBloodParticleFountain(this.id, Cow.BLOOD_FOUNTAIN_INTERVAL, 1.1);
 
       playSound("cow-die-1.mp3", 0.2, 1, transformComponent.position);
    }

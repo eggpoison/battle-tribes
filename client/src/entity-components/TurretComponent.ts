@@ -1,4 +1,4 @@
-import { EntityType } from "battletribes-shared/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
 import { lerp } from "battletribes-shared/utils";
 import Entity from "../Entity";
@@ -10,6 +10,9 @@ import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { getEntityRenderInfo, getEntityType } from "../world";
+import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
+import { TransformComponentArray } from "./TransformComponent";
 
 type TurretType = EntityType.slingTurret | EntityType.ballista;
 
@@ -67,23 +70,23 @@ const getChargeTextureSource = (entityType: TurretType, chargeProgress: number):
    }
 }
 
-const getProjectilePullbackAmount = (entity: Entity, chargeProgress: number): number => {
-   switch (entity.type as TurretType) {
+const getProjectilePullbackAmount = (entity: EntityID, chargeProgress: number): number => {
+   switch (getEntityType(entity) as TurretType) {
       case EntityType.slingTurret: {
          return lerp(0, -21, chargeProgress);
       }
       case EntityType.ballista: {
-         const turretComponent = entity.getServerComponent(ServerComponentType.ammoBox);
-         const ammoRenderInfo = AMMO_RENDER_INFO_RECORD[turretComponent.ammoType!];
+         const ammoBoxComponent = AmmoBoxComponentArray.getComponent(entity);
+         const ammoRenderInfo = AMMO_RENDER_INFO_RECORD[ammoBoxComponent.ammoType!];
          return lerp(48, 0, chargeProgress) + ammoRenderInfo.drawOffset;
       }
    }
 }
 
-const playFireSound = (entity: Entity): void => {
-   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+const playFireSound = (entity: EntityID): void => {
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
-   switch (entity.type as TurretType) {
+   switch (getEntityType(entity) as TurretType) {
       case EntityType.slingTurret: {
          playSound("sling-turret-fire.mp3", 0.2, 1, transformComponent.position);
          break;
@@ -95,13 +98,13 @@ const playFireSound = (entity: Entity): void => {
    }
 }
 
-const getProjectileTextureSource = (entity: Entity): string => {
-   switch (entity.type as TurretType) {
+const getProjectileTextureSource = (entity: EntityID): string => {
+   switch (getEntityType(entity) as TurretType) {
       case EntityType.slingTurret: {
          return "projectiles/sling-rock.png";
       }
       case EntityType.ballista: {
-         const ammoBoxComponent = entity.getServerComponent(ServerComponentType.ammoBox);
+         const ammoBoxComponent = AmmoBoxComponentArray.getComponent(entity);
          const ammoRenderInfo = AMMO_RENDER_INFO_RECORD[ammoBoxComponent.ammoType!];
          return ammoRenderInfo.projectileTextureSource;
       }
@@ -129,9 +132,10 @@ class TurretComponent extends ServerComponent {
    constructor(entity: Entity) {
       super(entity);
 
-      this.aimingRenderPart = this.entity.getRenderThing("turretComponent:aiming") as TexturedRenderPart;
-      this.pivotingRenderPart = this.entity.getRenderThing("turretComponent:pivoting") as RenderPart;
-      this.gearRenderParts = this.entity.getRenderThings("turretComponent:gear") as Array<RenderPart>;
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      this.aimingRenderPart = renderInfo.getRenderThing("turretComponent:aiming") as TexturedRenderPart;
+      this.pivotingRenderPart = renderInfo.getRenderThing("turretComponent:pivoting") as RenderPart;
+      this.gearRenderParts = renderInfo.getRenderThings("turretComponent:gear") as Array<RenderPart>;
    }
 
    private updateAimDirection(aimDirection: number, chargeProgress: number): void {
@@ -144,9 +148,9 @@ class TurretComponent extends ServerComponent {
    }
 
    private shouldShowProjectile(chargeProgress: number, reloadProgress: number): boolean {
-      switch (this.entity.type) {
+      switch (getEntityType(this.entity.id)) {
          case EntityType.ballista: {
-            const ammoBoxComponent = this.entity.getServerComponent(ServerComponentType.ammoBox);
+            const ammoBoxComponent = AmmoBoxComponentArray.getComponent(this.entity.id);
             return ammoBoxComponent.ammoType !== null;
          }
          case EntityType.slingTurret: {
@@ -157,9 +161,9 @@ class TurretComponent extends ServerComponent {
    }
 
    private projectileHasRandomRotation(): boolean {
-      switch (this.entity.type) {
+      switch (getEntityType(this.entity.id)) {
          case EntityType.ballista: {
-            const ammoBoxComponent = this.entity.getServerComponent(ServerComponentType.ammoBox);
+            const ammoBoxComponent = AmmoBoxComponentArray.getComponent(this.entity.id);
             return ammoBoxComponent.ammoType === ItemType.rock || ammoBoxComponent.ammoType === ItemType.slimeball;
          }
          case EntityType.slingTurret: {
@@ -171,11 +175,11 @@ class TurretComponent extends ServerComponent {
 
    private updateProjectileRenderPart(chargeProgress: number, reloadProgress: number): void {
       if (this.shouldShowProjectile(chargeProgress, reloadProgress)) {
-         const textureSource = getProjectileTextureSource(this.entity);
+         const textureSource = getProjectileTextureSource(this.entity.id);
          if (this.projectileRenderPart === null) {
             this.projectileRenderPart = new TexturedRenderPart(
                this.pivotingRenderPart,
-               getProjectileZIndex(this.entity.type as TurretType),
+               getProjectileZIndex(getEntityType(this.entity.id) as TurretType),
                0,
                getTextureArrayIndex(textureSource)
             );
@@ -184,12 +188,13 @@ class TurretComponent extends ServerComponent {
                this.projectileRenderPart.rotation = 2 * Math.PI * Math.random();
             }
 
-            this.entity.attachRenderThing(this.projectileRenderPart);
+            const renderInfo = getEntityRenderInfo(this.entity.id);
+            renderInfo.attachRenderThing(this.projectileRenderPart);
          } else {
             this.projectileRenderPart.switchTextureSource(textureSource);
          }
       
-         this.projectileRenderPart.offset.y = getProjectilePullbackAmount(this.entity, chargeProgress);
+         this.projectileRenderPart.offset.y = getProjectilePullbackAmount(this.entity.id, chargeProgress);
 
          if (reloadProgress > 0) {
             this.projectileRenderPart.opacity = reloadProgress;
@@ -197,7 +202,8 @@ class TurretComponent extends ServerComponent {
             this.projectileRenderPart.opacity = 1;
          }
       } else if (this.projectileRenderPart !== null) {
-         this.entity.removeRenderPart(this.projectileRenderPart);
+         const renderInfo = getEntityRenderInfo(this.entity.id);
+         renderInfo.removeRenderPart(this.projectileRenderPart);
          this.projectileRenderPart = null;
       }
    }
@@ -211,11 +217,11 @@ class TurretComponent extends ServerComponent {
       const reloadProgress = reader.readNumber();
       
       if (chargeProgress < this.chargeProgress) {
-         playFireSound(this.entity);
+         playFireSound(this.entity.id);
       }
       this.chargeProgress = chargeProgress;
 
-      this.aimingRenderPart.switchTextureSource(getChargeTextureSource(this.entity.type as TurretType, chargeProgress));
+      this.aimingRenderPart.switchTextureSource(getChargeTextureSource(getEntityType(this.entity.id) as TurretType, chargeProgress));
       
       this.updateAimDirection(aimDirection, chargeProgress);
       this.updateProjectileRenderPart(chargeProgress, reloadProgress);

@@ -4,8 +4,9 @@ import { calculateRenderPartDepth, getEntityHeight, renderEntities } from "./web
 import { RenderPartOverlayGroup, renderEntityOverlay } from "./webgl/overlay-rendering";
 import { NUM_RENDER_LAYERS, RenderLayer } from "../render-layers";
 import { renderChunkedEntities, renderLayerIsChunkRendered } from "./webgl/chunked-entity-rendering";
-import { layers } from "../world";
+import { getEntityRenderInfo, layers } from "../world";
 import Layer from "../Layer";
+import { EntityID } from "../../../shared/src/entities";
 
 export const enum RenderableType {
    entity,
@@ -13,7 +14,7 @@ export const enum RenderableType {
    overlay
 }
 
-type Renderable = Entity | Particle | RenderPartOverlayGroup;
+type Renderable = EntityID | Particle | RenderPartOverlayGroup;
 
 type RenderableArrays = Array<Array<RenderableInfo>>;
 
@@ -40,7 +41,8 @@ const getRenderableRenderHeight = (type: RenderableType, renderable: Renderable)
    switch (type) {
       case RenderableType.entity: {
          // @Cleanup: remove cast
-         return getEntityHeight(renderable as Entity);
+         const renderInfo = getEntityRenderInfo(renderable as EntityID);
+         return getEntityHeight(renderInfo);
       }
       // @Incomplete
       case RenderableType.particle: {
@@ -53,7 +55,8 @@ const getRenderableRenderHeight = (type: RenderableType, renderable: Renderable)
          let minDepth = 999999;
          for (let i = 0; i < overlay.renderParts.length; i++) {
             const renderPart = overlay.renderParts[i];
-            const depth = calculateRenderPartDepth(renderPart, overlay.entity);
+            const renderInfo = getEntityRenderInfo(overlay.entity.id);
+            const depth = calculateRenderPartDepth(renderPart, renderInfo);
             if (depth < minDepth) {
                minDepth = depth;
             }
@@ -147,7 +150,7 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
             renderChunkedEntities(renderLayer);
          } else {
             // @Cleanup: remove need for cast
-            renderEntities(renderables as Array<Entity>);
+            renderEntities(renderables as Array<EntityID>);
          }
          break;
       }

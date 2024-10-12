@@ -5,7 +5,7 @@ import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
 import Chunk from "./Chunk";
 import Layer from "./Layer";
-import { getEntityByID } from "./world";
+import { entityExists, getEntityRenderInfo } from "./world";
 
 export type VisiblePositionBounds = [minX: number, maxX: number, minY: number, maxY: number];
 
@@ -138,10 +138,10 @@ abstract class Camera {
          return;
       }
       
-      const entity = getEntityByID(this.trackedEntityID);
-      if (typeof entity !== "undefined") {
-         this.position.x = entity.renderPosition.x;
-         this.position.y = entity.renderPosition.y;
+      if (entityExists(this.trackedEntityID)) {
+         const renderInfo = getEntityRenderInfo(this.trackedEntityID);
+         this.position.x = renderInfo.renderPosition.x;
+         this.position.y = renderInfo.renderPosition.y;
       }
    }
 

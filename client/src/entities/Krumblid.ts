@@ -1,13 +1,13 @@
 import { HitData } from "battletribes-shared/client-server-types";
-import { EntityType } from "battletribes-shared/entities";
 import { angle, randFloat } from "battletribes-shared/utils";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import Entity from "../Entity";
-import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { getEntityRenderInfo } from "../world";
 
 class Krumblid extends Entity {
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.1;
@@ -15,7 +15,8 @@ class Krumblid extends Entity {
    constructor(id: number) {
       super(id);
 
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             0,
@@ -28,7 +29,7 @@ class Krumblid extends Entity {
    }
 
    protected onHit(hitData: HitData): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       
       createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, 20);
       
@@ -44,12 +45,12 @@ class Krumblid extends Entity {
    }
 
    public onDie(): void {
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.id);
       for (let i = 0; i < 2; i++) {
          createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, 35);
       }
 
-      createBloodParticleFountain(this, Krumblid.BLOOD_FOUNTAIN_INTERVAL, 0.8);
+      createBloodParticleFountain(this.id, Krumblid.BLOOD_FOUNTAIN_INTERVAL, 0.8);
    }
 }
 

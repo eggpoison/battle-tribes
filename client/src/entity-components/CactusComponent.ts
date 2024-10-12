@@ -6,6 +6,8 @@ import { createFlowerParticle } from "../particles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
+import { getEntityRenderInfo } from "../world";
 
 export const CACTUS_RADIUS = 40;
 
@@ -39,6 +41,7 @@ class CactusComponent extends ServerComponent {
       }
    }
 
+   // @Garbage
    public updateFromData(reader: PacketReader): void {
       const flowers = new Array<CactusBodyFlowerData>();
       const numFlowers = reader.readNumber();
@@ -94,6 +97,8 @@ class CactusComponent extends ServerComponent {
          }
       }
 
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+
       // Attach flower render parts
       for (let i = 0; i < flowers.length; i++) {
          const flowerInfo = flowers[i];
@@ -107,7 +112,7 @@ class CactusComponent extends ServerComponent {
          const offsetDirection = flowerInfo.column * Math.PI / 4;
          renderPart.offset.x = flowerInfo.height * Math.sin(offsetDirection);
          renderPart.offset.y = flowerInfo.height * Math.cos(offsetDirection);
-         this.entity.attachRenderThing(renderPart);
+         renderInfo.attachRenderThing(renderPart);
       }
 
       // Limbs
@@ -122,7 +127,7 @@ class CactusComponent extends ServerComponent {
          )
          limbRenderPart.offset.x = CACTUS_RADIUS * Math.sin(limbInfo.direction);
          limbRenderPart.offset.y = CACTUS_RADIUS * Math.cos(limbInfo.direction);
-         this.entity.attachRenderThing(limbRenderPart);
+         renderInfo.attachRenderThing(limbRenderPart);
          
          if (typeof limbInfo.flower !== "undefined") {
             const flowerInfo = limbInfo.flower;
@@ -135,13 +140,13 @@ class CactusComponent extends ServerComponent {
             )
             flowerRenderPart.offset.x = flowerInfo.height * Math.sin(flowerInfo.direction);
             flowerRenderPart.offset.y = flowerInfo.height * Math.cos(flowerInfo.direction);
-            this.entity.attachRenderThing(flowerRenderPart);
+            renderInfo.attachRenderThing(flowerRenderPart);
          }
       }
    }
 
    onDie(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
       
       for (const flower of this.flowerData) {
          const offsetDirection = flower.column * Math.PI / 4;

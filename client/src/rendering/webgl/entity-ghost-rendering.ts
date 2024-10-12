@@ -21,7 +21,7 @@ import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 // }
 // type GhostEntityType = PlaceableItemEntityRecord[PlaceableItemType];
 
-// @Cleanup: a lot of these are just mirrors of entity textures. Is there some way to utilise the existing render part definnitions?
+// @Cleanup @Robustness: a lot of these are just mirrors of entity textures. Is there some way to utilise the existing render part definitions?
 export enum GhostType {
    deconstructMarker,
    recallMarker,
@@ -107,7 +107,9 @@ export const ENTITY_TYPE_TO_GHOST_TYPE_MAP: Record<StructureType, GhostType> = {
    [EntityType.fence]: GhostType.fence,
    [EntityType.fenceGate]: GhostType.fenceGate,
    [EntityType.frostshaper]: GhostType.frostshaper,
-   [EntityType.stonecarvingTable]: GhostType.stonecarvingTable
+   [EntityType.stonecarvingTable]: GhostType.stonecarvingTable,
+   // @Hack
+   [EntityType.bracings]: GhostType.stonecarvingTable
 };
 
 let ghostInfo: GhostInfo | null = null;

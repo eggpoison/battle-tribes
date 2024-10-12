@@ -10,7 +10,7 @@ import Particle from "../Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
 import { createBlockParticle, createDeepFrostHeartBloodParticles } from "../particles";
-import { InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool, getItemAttackInfo } from "battletribes-shared/items/items";
+import { InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool } from "battletribes-shared/items/items";
 import { RenderPart, RenderThing } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
@@ -20,7 +20,10 @@ import { BLOCKING_LIMB_STATE, createZeroedLimbState, LimbState, SHIELD_BASH_PUSH
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 import { playSound } from "../sound";
 import { BlockType } from "../../../shared/src/boxes/boxes";
-import { getEntityType } from "../world";
+import { getEntityRenderInfo, getEntityType } from "../world";
+import { TribesmanAIComponentArray } from "./TribesmanAIComponent";
+import { PhysicsComponentArray } from "./PhysicsComponent";
+import { TransformComponentArray } from "./TransformComponent";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -273,7 +276,8 @@ const lerpThingBetweenStates = (thing: RenderThing, startState: LimbState, endSt
 
 const removeHeldItemRenderPart = (inventoryUseComponent: InventoryUseComponent, limbIdx: number): void => {
    if (inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
-      inventoryUseComponent.entity.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
+      const renderInfo = getEntityRenderInfo(inventoryUseComponent.entity.id);
+      renderInfo.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
       delete inventoryUseComponent.activeItemRenderParts[limbIdx];
    }
 }
@@ -292,7 +296,9 @@ const updateHeldItemRenderPart = (inventoryUseComponent: InventoryUseComponent, 
          0,
          getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[heldItemType].entityTextureSource)
       );
-      inventoryUseComponent.entity.attachRenderThing(renderPart);
+
+      const renderInfo = getEntityRenderInfo(inventoryUseComponent.entity.id);
+      renderInfo.attachRenderThing(renderPart);
       inventoryUseComponent.activeItemRenderParts[limbIdx] = renderPart;
    }
 
@@ -309,19 +315,54 @@ const updateHeldItemRenderPart = (inventoryUseComponent: InventoryUseComponent, 
 }
 
 const updateHeldItemRenderPartForAttack = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, heldItemType: ItemType | null): void => {
-   const attackInfo = getItemAttackInfo(heldItemType);
-   const heldItemDamageBoxInfo = attackInfo.heldItemDamageBoxInfo;
-   if (heldItemDamageBoxInfo !== null) {
-      const rotation = heldItemType !== null && ITEM_TYPE_RECORD[heldItemType] === "shield" ? Math.PI * 0.25 : 0;
-      updateHeldItemRenderPart(inventoryUseComponent, limbIdx, heldItemType, heldItemDamageBoxInfo.offsetX, heldItemDamageBoxInfo.offsetY, rotation, heldItemDamageBoxInfo.showLargeTexture || (heldItemType !== null && ITEM_TYPE_RECORD[heldItemType] === "bow"));
-   } else {
+   if (heldItemType === null) {
       removeHeldItemRenderPart(inventoryUseComponent, limbIdx);
+      return;
    }
+   
+   let offsetX: number;
+   let offsetY: number;
+   let rotation: number;
+   let showLargeTexture: boolean;
+
+   switch (ITEM_TYPE_RECORD[heldItemType]) {
+      case "shield": {
+         offsetX = 8;
+         offsetY = 10;
+         rotation = Math.PI * 0.25;
+         showLargeTexture = true;
+         break;
+      }
+      case "pickaxe": {
+         offsetX = 20;
+         offsetY = 24;
+         rotation = 0;
+         showLargeTexture = true;
+         break;
+      }
+      case "bow": {
+         offsetX = 8;
+         offsetY = 8;
+         rotation = 0;
+         showLargeTexture = true;
+         break;
+      }
+      default: {
+         offsetX = 8;
+         offsetY = 8;
+         rotation = 0;
+         showLargeTexture = false;
+         break;
+      }
+   }
+
+   updateHeldItemRenderPart(inventoryUseComponent, limbIdx, heldItemType, offsetX, offsetY, rotation, showLargeTexture);
 }
 
 const removeArrowRenderPart = (inventoryUseComponent: InventoryUseComponent, limbIdx: number): void => {
    if (inventoryUseComponent.arrowRenderParts.hasOwnProperty(limbIdx)) {
-      inventoryUseComponent.entity.removeRenderPart(inventoryUseComponent.arrowRenderParts[limbIdx]);
+      const renderInfo = getEntityRenderInfo(inventoryUseComponent.entity.id);
+      renderInfo.removeRenderPart(inventoryUseComponent.arrowRenderParts[limbIdx]);
       delete inventoryUseComponent.arrowRenderParts[limbIdx];
    }
 }
@@ -376,13 +417,15 @@ class InventoryUseComponent extends ServerComponent{
    public readonly bandageRenderParts = new Array<RenderPart>();
 
    public onLoad(): void {
-      const attachPoints = this.entity.getRenderThings("inventoryUseComponent:attachPoint", 2) as Array<RenderAttachPoint>;
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+
+      const attachPoints = renderInfo.getRenderThings("inventoryUseComponent:attachPoint", 2) as Array<RenderAttachPoint>;
       for (let limbIdx = 0; limbIdx < this.limbInfos.length; limbIdx++) {
          this.limbAttachPoints.push(attachPoints[limbIdx]);
       }
       
       // @Cleanup
-      const handRenderParts = this.entity.getRenderThings("inventoryUseComponent:hand", 2) as Array<RenderPart>;
+      const handRenderParts = renderInfo.getRenderThings("inventoryUseComponent:hand", 2) as Array<RenderPart>;
       for (let limbIdx = 0; limbIdx < this.limbInfos.length; limbIdx++) {
          this.limbRenderParts.push(handRenderParts[limbIdx]);
       }
@@ -391,7 +434,7 @@ class InventoryUseComponent extends ServerComponent{
          updateLimb(this, i, this.limbInfos[i]);
       }
 
-      updateCustomItemRenderPart(this.entity);
+      updateCustomItemRenderPart(this.entity.id);
    }
 
    public padData(reader: PacketReader): void {
@@ -623,7 +666,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent): void {
          continue;
       }
 
-      const physicsComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.physics);
+      const physicsComponent = PhysicsComponentArray.getComponent(inventoryUseComponent.entity.id);
 
       // Make the deep frost heart item spew blue blood particles
       if (limbInfo.heldItemType === ItemType.deepfrost_heart) {
@@ -632,7 +675,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent): void {
       }
 
       if (limbInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[limbInfo.heldItemType] === "healing") {
-         const transformComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.transform);
+         const transformComponent = TransformComponentArray.getComponent(inventoryUseComponent.entity.id);
 
          // Create food eating particles
          for (let i = 0; i < 3; i++) {
@@ -681,10 +724,10 @@ function onTick(inventoryUseComponent: InventoryUseComponent): void {
 
    for (let i = 0; i < inventoryUseComponent.bandageRenderParts.length; i++) {
       const renderPart = inventoryUseComponent.bandageRenderParts[i];
-      updateBandageRenderPart(inventoryUseComponent.entity, renderPart);
+      updateBandageRenderPart(inventoryUseComponent.entity.id, renderPart);
    }
 
-   updateCustomItemRenderPart(inventoryUseComponent.entity);
+   updateCustomItemRenderPart(inventoryUseComponent.entity.id);
 }
 
 // @Cleanup: unused
@@ -753,7 +796,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent): void {
 //                   break;
 //                }
 //                default: {
-//                   const tribesmanComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.tribesmanAI);
+//                   const tribesmanComponent = inventoryUseComponent.entity.getServerComponentA(ServerComponentType.tribesmanAI);
 //                   console.log(tribesmanComponent.aiType);
 //                   console.log(limbIdx);
 //                   console.log(activeItem);
@@ -883,7 +926,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
                   break;
                }
                default: {
-                  const tribesmanComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.tribesmanAI);
+                  const tribesmanComponent = TribesmanAIComponentArray.getComponent(inventoryUseComponent.entity.id);
                   console.log(tribesmanComponent.aiType);
                   console.log(limbIdx);
                   console.log(heldItemType);
@@ -898,7 +941,9 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
                   Math.PI/4,
                   getTextureArrayIndex(arrowTextureSource)
                );
-               inventoryUseComponent.entity.attachRenderThing(inventoryUseComponent.arrowRenderParts[limbIdx]);
+
+               const renderInfo = getEntityRenderInfo(inventoryUseComponent.entity.id);
+               renderInfo.attachRenderThing(inventoryUseComponent.arrowRenderParts[limbIdx]);
             }
 
             const pullbackOffset = lerp(10, -8, Math.min(chargeProgress, 1));
@@ -1091,14 +1136,14 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       // }
       case LimbAction.craft: {
          animateLimb(limbRenderPart, limbIdx, limb);
-         createCraftingAnimationParticles(inventoryUseComponent.entity, limbIdx);
+         createCraftingAnimationParticles(inventoryUseComponent.entity.id, limbIdx);
          // @Incomplete
          // shouldShowActiveItemRenderPart = false;
          break;
       }
       case LimbAction.useMedicine: {
          animateLimb(limbRenderPart, limbIdx, limb);
-         createMedicineAnimationParticles(inventoryUseComponent.entity, limbIdx);
+         createMedicineAnimationParticles(inventoryUseComponent.entity.id, limbIdx);
          // @Incomplete
          // shouldShowActiveItemRenderPart = false;
          break;

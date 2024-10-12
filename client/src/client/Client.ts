@@ -43,6 +43,7 @@ import { AppState } from "../components/App";
 import { LoadingScreenStatus } from "../components/LoadingScreen";
 import { getEntityByID, getEntityType, layers, removeEntity } from "../world";
 import { getTileIndexIncludingEdges } from "../Layer";
+import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
 
 export type GameData = {
    readonly gameTicks: number;
@@ -262,7 +263,6 @@ abstract class Client {
 
          //    this.socket.on("force_position_update", (position: [number, number]): void => {
          //       if (Player.instance !== null) {
-         //          const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
          //          transformComponent.position.x = position[0];
          //          transformComponent.position.y = position[1];
          //       }
@@ -345,7 +345,7 @@ abstract class Client {
       }
 
       if (Player.instance !== null) {
-         const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
+         const physicsComponent = PhysicsComponentArray.getComponent(Player.instance.id);
          // Register player knockback
          for (let i = 0; i < gameDataPacket.playerKnockbacks.length; i++) {
             const knockbackData = gameDataPacket.playerKnockbacks[i];

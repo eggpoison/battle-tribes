@@ -1,7 +1,6 @@
 import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
 import { assertUnreachable, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { playSound } from "../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../particles";
 import { getCurrentBlueprintProgressTexture } from "../entities/BlueprintEntity";
@@ -10,9 +9,11 @@ import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { EntityID } from "../../../shared/src/entities";
+import { TransformComponentArray } from "./TransformComponent";
 
-const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
-   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+const createWoodenBlueprintWorkParticleEffects = (entity: EntityID): void => {
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    for (let i = 0; i < 2; i++) {
       createWoodShardParticle(transformComponent.position.x, transformComponent.position.y, 24);
@@ -69,7 +70,7 @@ class BlueprintComponent extends ServerComponent {
       this.associatedEntityID = reader.readNumber();
 
       if (blueprintProgress !== this.lastBlueprintProgress) {
-         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+         const transformComponent = TransformComponentArray.getComponent(this.entity.id);
 
          playSound("blueprint-work.mp3", 0.4, randFloat(0.9, 1.1), transformComponent.position);
 
@@ -93,7 +94,7 @@ class BlueprintComponent extends ServerComponent {
             case BlueprintType.ballista:
             case BlueprintType.warriorHutUpgrade:
             case BlueprintType.fenceGate: {
-               createWoodenBlueprintWorkParticleEffects(this.entity);
+               createWoodenBlueprintWorkParticleEffects(this.entity.id);
                break;
             }
             case BlueprintType.stoneDoorUpgrade:

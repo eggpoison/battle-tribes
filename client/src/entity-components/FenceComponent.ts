@@ -5,6 +5,8 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { StructureComponentArray } from "./StructureComponent";
+import { getEntityRenderInfo } from "../world";
 
 type RailBit = 0b0001 | 0b0010 | 0b0100 | 0b1000;
 
@@ -68,7 +70,8 @@ class FenceComponent extends ServerComponent {
       renderPart.offset.x = offsetX;
       renderPart.offset.y = offsetY;
 
-      this.entity.attachRenderThing(renderPart);
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      renderInfo.attachRenderThing(renderPart);
 
       const idx = getRailIdx(railBit);
       this.railRenderParts[idx] = renderPart;
@@ -82,7 +85,8 @@ class FenceComponent extends ServerComponent {
          throw new Error();
       }
       
-      this.entity.removeRenderPart(renderPart);
+      const renderInfo = getEntityRenderInfo(this.entity.id);
+      renderInfo.removeRenderPart(renderPart);
       this.railRenderParts[idx] = null;
    }
 
@@ -97,7 +101,7 @@ class FenceComponent extends ServerComponent {
    }
 
    private updateRails(): void {
-      const structureComponent = this.entity.getServerComponent(ServerComponentType.structure);
+      const structureComponent = StructureComponentArray.getComponent(this.entity.id);
       const connectedSidesBitset = structureComponent.connectedSidesBitset;
       
       this.checkBit(0b0001, connectedSidesBitset);

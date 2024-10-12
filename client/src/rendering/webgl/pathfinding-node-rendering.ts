@@ -1,5 +1,4 @@
 import { createWebGLProgram, gl } from "../../webgl";
-import Board from "../../Board";
 import Game from "../../Game";
 import OPTIONS from "../../options";
 import Camera from "../../Camera";
@@ -8,8 +7,8 @@ import { angle } from "battletribes-shared/utils";
 import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { nerdVisionIsVisible } from "../../components/game/dev/NerdVision";
-import { ServerComponentType } from "battletribes-shared/components";
-import { getEntityByID } from "../../world";
+import { entityExists, getEntityByID } from "../../world";
+import { TransformComponentArray } from "../../entity-components/TransformComponent";
 
 enum NodeType {
    occupied,
@@ -120,12 +119,12 @@ export function createPathfindNodeShaders(): void {
 }
 
 const renderConnectors = (mainPathNodes: ReadonlyArray<PathfindingNodeIndex>): void => {
-   const debugEntity = getEntityByID(Game.getEntityDebugData()!.entityID);
-   if (typeof debugEntity === "undefined") {
+   const debugEntity = Game.getEntityDebugData()!.entityID;
+   if (!entityExists(debugEntity)) {
       return;
    }
 
-   const transformComponent = debugEntity.getServerComponent(ServerComponentType.transform);
+   const transformComponent = TransformComponentArray.getComponent(debugEntity);
    
    const vertices = new Array<number>();
    let lastNodeX = transformComponent.position.x;

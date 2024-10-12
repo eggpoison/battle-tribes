@@ -1,5 +1,3 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
 import Tribesman from "./Tribesman";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import { ClientComponentType } from "../entity-components/components";
@@ -7,6 +5,8 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
 import { addTribeMemberRenderParts } from "./TribeMember";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { TribeWarriorComponentArray } from "../entity-components/TribeWarriorComponent";
+import { getEntityRenderInfo } from "../world";
 
 class TribeWarrior extends Tribesman {
    constructor(id: number) {
@@ -17,10 +17,10 @@ class TribeWarrior extends Tribesman {
    }
 
    public onLoad(): void {
-      addTribeMemberRenderParts(this);
+      addTribeMemberRenderParts(this.id);
 
       // @Cleanup: Do in warrior component
-      const tribeWarriorComponent = this.getServerComponent(ServerComponentType.tribeWarrior);
+      const tribeWarriorComponent = TribeWarriorComponentArray.getComponent(this.id);
       for (let i = 0; i < tribeWarriorComponent.scars.length; i++) {
          const scarInfo = tribeWarriorComponent.scars[i];
 
@@ -32,7 +32,9 @@ class TribeWarrior extends Tribesman {
          );
          renderPart.offset.x = scarInfo.offsetX;
          renderPart.offset.y = scarInfo.offsetY;
-         this.attachRenderThing(renderPart);
+
+         const renderInfo = getEntityRenderInfo(this.id);
+         renderInfo.attachRenderThing(renderPart);
       }
    }
 }

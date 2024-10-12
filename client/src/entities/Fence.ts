@@ -1,13 +1,14 @@
-import { EntityType } from "battletribes-shared/entities";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
 
 class Fence extends Entity {
    constructor(id: number) {
       super(id);
 
-      this.attachRenderThing(
+      const renderInfo = getEntityRenderInfo(this.id);
+      renderInfo.attachRenderThing(
          new TexturedRenderPart(
             null,
             1,

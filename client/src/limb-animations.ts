@@ -1,7 +1,7 @@
 import { Settings } from "battletribes-shared/settings";
 import { Point, customTickIntervalHasPassed, lerp, randFloat, randInt, randItem, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import { EntityID, LimbAction } from "battletribes-shared/entities";
-import { InventoryUseComponentArray, LimbInfo } from "./entity-components/InventoryUseComponent";
+import { InventoryUseComponentArray, LimbInfo } from "./entity-components/server-components/InventoryUseComponent";
 import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
 import { ParticleColour } from "./rendering/webgl/particle-rendering";
@@ -11,9 +11,9 @@ import { getItemRecipe } from "battletribes-shared/items/crafting-recipes";
 import { ItemType, ITEM_INFO_RECORD, ConsumableItemInfo } from "battletribes-shared/items/items";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
 import { RenderPart } from "./render-parts/render-parts";
-import { TribesmanAIComponentArray } from "./entity-components/TribesmanAIComponent";
-import { TransformComponentArray } from "./entity-components/TransformComponent";
-import { getEntityRenderInfo } from "./world";
+import { TribesmanAIComponentArray } from "./entity-components/server-components/TribesmanAIComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { getEntityAgeTicks, getEntityRenderInfo } from "./world";
 
 enum CustomItemState {
    usingMedicine,
@@ -127,9 +127,9 @@ export function updateBandageRenderPart(entity: EntityID, renderPart: RenderPart
 }
 
 export function createMedicineAnimationParticles(entity: EntityID, limbIdx: number): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-
    if (Math.random() < 5 / Settings.TPS) {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+
       const colour = randItem(MEDICINE_PARTICLE_COLOURS);
       const pos = generateRandomLimbPosition(limbIdx);
       
@@ -141,7 +141,7 @@ export function createMedicineAnimationParticles(entity: EntityID, limbIdx: numb
 
    // @Hack: limbIdx
    // Bandages
-   if (limbIdx === 0 && customTickIntervalHasPassed(transformComponent.ageTicks, 0.4)) {
+   if (limbIdx === 0 && customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.4)) {
       createBandageRenderPart(entity);
    }
 }

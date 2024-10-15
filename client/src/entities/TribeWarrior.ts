@@ -1,19 +1,18 @@
 import Tribesman from "./Tribesman";
-import FootprintComponent from "../entity-components/FootprintComponent";
-import { ClientComponentType } from "../entity-components/components";
+import FootprintComponent, { FootprintComponentArray } from "../entity-components/server-components/FootprintComponent";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import EquipmentComponent from "../entity-components/EquipmentComponent";
+import EquipmentComponent, { EquipmentComponentArray } from "../entity-components/server-components/EquipmentComponent";
 import { addTribeMemberRenderParts } from "./TribeMember";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { TribeWarriorComponentArray } from "../entity-components/TribeWarriorComponent";
+import { TribeWarriorComponentArray } from "../entity-components/server-components/TribeWarriorComponent";
 import { getEntityRenderInfo } from "../world";
 
 class TribeWarrior extends Tribesman {
    constructor(id: number) {
       super(id);
       
-      this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.15, 20, 64, 4, 64));
-      this.addClientComponent(ClientComponentType.equipment, new EquipmentComponent(this));
+      FootprintComponentArray.addComponent(this.id, new FootprintComponent(this, 0.15, 20, 64, 4, 64));
+      EquipmentComponentArray.addComponent(this.id, new EquipmentComponent(this));
    }
 
    public onLoad(): void {

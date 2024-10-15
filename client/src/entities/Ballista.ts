@@ -5,7 +5,7 @@ import Entity from "../Entity";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { getEntityRenderInfo } from "../world";
 
 class Ballista extends Entity {

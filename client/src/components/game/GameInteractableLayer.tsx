@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import AttackChargeBar from "./AttackChargeBar";
-import { LimbAction } from "../../../../shared/src/entities";
-import { Item, InventoryName, getItemAttackInfo, ITEM_TYPE_RECORD, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo } from "../../../../shared/src/items/items";
+import { EntityID, EntityType, LimbAction } from "../../../../shared/src/entities";
+import { Item, InventoryName, getItemAttackInfo, ITEM_TYPE_RECORD, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, PlaceableItemInfo } from "../../../../shared/src/items/items";
 import { Settings } from "../../../../shared/src/settings";
 import { STATUS_EFFECT_MODIFIERS } from "../../../../shared/src/status-effects";
 import { calculateStructurePlaceInfo } from "../../../../shared/src/structures";
@@ -12,29 +12,38 @@ import Camera from "../../Camera";
 import Client from "../../client/Client";
 import { sendStopItemUsePacket, createAttackPacket, sendItemDropPacket, sendItemUsePacket, sendStartItemUsePacket } from "../../client/packet-creation";
 import Player from "../../entities/Player";
-import { DamageBoxComponentArray } from "../../entity-components/DamageBoxComponent";
-import { HealthComponentArray } from "../../entity-components/HealthComponent";
-import { InventoryComponentArray } from "../../entity-components/InventoryComponent";
-import { InventoryUseComponentArray, LimbInfo } from "../../entity-components/InventoryUseComponent";
+import { DamageBoxComponentArray } from "../../entity-components/server-components/DamageBoxComponent";
+import { HealthComponentArray } from "../../entity-components/server-components/HealthComponent";
+import { InventoryComponentArray } from "../../entity-components/server-components/InventoryComponent";
+import { InventoryUseComponentArray, LimbInfo } from "../../entity-components/server-components/InventoryUseComponent";
 import { attemptEntitySelection } from "../../entity-selection";
 import { playBowFireSound } from "../../entity-tick-events";
 import Game from "../../Game";
 import { latencyGameState, definiteGameState } from "../../game-state/game-states";
 import { addKeyListener, keyIsPressed } from "../../keyboard-input";
 import { closeCurrentMenu } from "../../menus";
-import { setGhostInfo, GhostInfo, ENTITY_TYPE_TO_GHOST_TYPE_MAP } from "../../rendering/webgl/entity-ghost-rendering";
+import { setGhostInfo, GhostInfo, ENTITY_TYPE_TO_GHOST_TYPE_MAP, createEntityGhost, removeEntityGhost } from "../../rendering/webgl/entity-ghost-rendering";
 import { attemptToCompleteNode } from "../../research";
 import { playSound } from "../../sound";
 import { BackpackInventoryMenu_setIsVisible } from "./inventories/BackpackInventory";
 import Hotbar, { Hotbar_updateLeftThrownBattleaxeItemID, Hotbar_updateRightThrownBattleaxeItemID, Hotbar_setHotbarSelectedItemSlot } from "./inventories/Hotbar";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./menus/CraftingMenu";
-import { TransformComponentArray } from "../../entity-components/TransformComponent";
+import TransformComponent, { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { AttackVars, copyCurrentLimbState, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
-import { PhysicsComponentArray } from "../../entity-components/PhysicsComponent";
-import { getEntityLayer } from "../../world";
-import { TribeMemberComponentArray } from "../../entity-components/TribeMemberComponent";
-import { SpikesComponentArray } from "../../entity-components/SpikesComponent";
-import { StatusEffectComponentArray } from "../../entity-components/StatusEffectComponent";
+import { PhysicsComponentArray } from "../../entity-components/server-components/PhysicsComponent";
+import { getCurrentLayer, getEntityLayer, getEntityRenderInfo, getEntityType, registerBasicEntityInfo, removeBasicEntityInfo } from "../../world";
+import { TribeMemberComponentArray } from "../../entity-components/server-components/TribeMemberComponent";
+import { SpikesComponentArray } from "../../entity-components/server-components/SpikesComponent";
+import { StatusEffectComponentArray } from "../../entity-components/server-components/StatusEffectComponent";
+import { EntityComponents, ServerComponentType } from "../../../../shared/src/components";
+import { createEntity } from "../../entity-class-record";
+import { createComponent } from "../../entity-components/component-creation";
+import { getServerComponentArray } from "../../entity-components/ComponentArray";
+import { EntityRenderInfo } from "../../Entity";
+import { addEntityToRenderHeightMap } from "../../rendering/webgl/entity-rendering";
+import { registerDirtyEntity } from "../../rendering/render-part-matrices";
+import { thingIsRenderPart } from "../../render-parts/render-parts";
+import { ClientHitbox } from "../../boxes";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -102,6 +111,8 @@ let discombobulationTimer = 0;
 let attackBufferTime = 0;
 let bufferedInputType = BufferedInputType.attack;
 let bufferedInputInventory = InventoryName.hotbar;
+
+let placeableEntityGhost: EntityID = 0;
 
 const createItemRestTimes = (num: number): Array<ItemRestTime> => {
    const restTimes = new Array<ItemRestTime>();
@@ -786,6 +797,84 @@ export function updatePlayerMovement(): void {
    }
 }
 
+const selectItem = (item: Item): void => {
+   const itemCategory = ITEM_TYPE_RECORD[item.type];
+   switch (itemCategory) {
+      case "placeable": {
+         latencyGameState.playerIsPlacingEntity = true;
+
+         // Create a ghost entity
+
+         // @Incomplete: Will miss out on any client components
+         // @Incomplete: Make sure this will work when the player changes layers
+         
+         const layer = getCurrentLayer();
+         const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
+         
+         const itemInfo = ITEM_INFO_RECORD[item.type] as PlaceableItemInfo;
+         const entityType = itemInfo.entityType;
+         
+         const placeInfo = calculateStructurePlaceInfo(transformComponent.position, transformComponent.rotation, entityType, layer.getWorldInfo());
+
+         // @Incomplete: Fix conflicts with server entities
+         // @Incomplete: Make sure there can be an arbitrary amount of entity ghosts
+         const entityID = 1;
+         const entity = createEntity(entityID, entityType);
+         
+         const renderInfo = new EntityRenderInfo(entityID);
+         registerBasicEntityInfo(entity, entityType, 0, layer, renderInfo);
+
+         const componentTypes = EntityComponents[entityType];
+         for (let i = 0; i < componentTypes.length; i++) {
+            const componentType = componentTypes[i];
+
+            const component = createComponent(entityID, componentType);
+
+            switch (componentType) {
+               case ServerComponentType.transform: {
+                  // @Hack
+                  (component as TransformComponent).position.x = placeInfo.position.x;
+                  (component as TransformComponent).position.y = placeInfo.position.y;
+                  (component as TransformComponent).rotation = 0;
+
+                  // @Hack
+                  if (entityType === EntityType.bracings) {
+                     for (let i = 0; i < placeInfo.hitboxes.length; i++) {
+                        const hitbox = placeInfo.hitboxes[i];
+                        const clientHitbox = new ClientHitbox(hitbox.box, hitbox.mass, hitbox.collisionType, hitbox.collisionBit, hitbox.collisionMask, hitbox.flags);
+                        (component as TransformComponent).addHitbox(clientHitbox, i);
+                     }
+                  }
+                  break;
+               }
+            }
+
+            const componentArray = getServerComponentArray(componentType);
+            componentArray.addComponent(entityID, component);
+         }
+
+         entity.callOnLoadFunctions();
+
+         // @Incomplete: why does this compound? it's because all the ghosts are stacking and not being removed
+         for (let i = 0; i < renderInfo.allRenderThings.length; i++) {
+            const renderThing = renderInfo.allRenderThings[i];
+            if (thingIsRenderPart(renderThing)) {
+               renderThing.opacity *= 0.5;
+            }
+         }
+         
+         // @Hack @Copynpaste from addEntity
+         addEntityToRenderHeightMap(renderInfo);
+         
+         placeableEntityGhost = entityID;
+         createEntityGhost(entityID);
+         
+         registerDirtyEntity(entityID);
+         break;
+      }
+   }
+}
+
 const deselectItem = (item: Item, isOffhand: boolean): void => {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
    const limb = inventoryUseComponent.limbInfos[isOffhand ? 1 : 0];
@@ -805,19 +894,41 @@ const deselectItem = (item: Item, isOffhand: boolean): void => {
       }
       case "placeable": {
          latencyGameState.playerIsPlacingEntity = false;
+
+         // Clear entity ghost
+         if (placeableEntityGhost !== 0) {
+            const entityType = getEntityType(placeableEntityGhost);
+            const componentTypes = EntityComponents[entityType];
+
+            // @Hack @Copynpaste from addEntity
+            for (let i = 0; i < componentTypes.length; i++) {
+               const componentType = componentTypes[i];
+               const componentArray = getServerComponentArray(componentType);
+               if (typeof componentArray.onRemove !== "undefined" && componentArray.hasComponent(placeableEntityGhost)) {
+                  componentArray.onRemove(placeableEntityGhost);
+               }
+            }
+
+            // Remove components
+            for (let i = 0; i < componentTypes.length; i++) {
+               const componentType = componentTypes[i];
+               const componentArray = getServerComponentArray(componentType);
+               componentArray.removeComponent(placeableEntityGhost);
+            }
+         
+            // @Hack @Copynpaste from addEntity
+            const renderInfo = getEntityRenderInfo(placeableEntityGhost);
+            addEntityToRenderHeightMap(renderInfo);
+   
+            removeBasicEntityInfo(placeableEntityGhost);
+
+            removeEntityGhost(placeableEntityGhost);
+            
+            placeableEntityGhost = 0;
+         }
          
          // Clear placeable item ghost
          setGhostInfo(null);
-         break;
-      }
-   }
-}
-
-const selectItem = (item: Item): void => {
-   const itemCategory = ITEM_TYPE_RECORD[item.type];
-   switch (itemCategory) {
-      case "placeable": {
-         latencyGameState.playerIsPlacingEntity = true;
          break;
       }
    }
@@ -1142,6 +1253,28 @@ const tickItem = (itemType: ItemType): void => {
          const playerTransformComponent = TransformComponentArray.getComponent(Player.instance!.id);
          const structureType = ITEM_INFO_RECORD[itemType as PlaceableItemType].entityType;
          const placeInfo = calculateStructurePlaceInfo(Camera.position, playerTransformComponent.rotation, structureType, layer.getWorldInfo());
+
+         // @Speed: should only run when the player position or rotation changes
+         if (placeableEntityGhost !== 0) {
+            const transformComponent = TransformComponentArray.getComponent(placeableEntityGhost);
+            transformComponent.position.x = placeInfo.position.x;
+            transformComponent.position.y = placeInfo.position.y;
+            transformComponent.rotation = placeInfo.rotation;
+
+            // @Speed @Garbage: only do when hitboxes change!
+
+            // @Hack: only works if hitboxes aren't added or removed
+            for (let i = 0; i < placeInfo.hitboxes.length; i++) {
+               const hitboxData = placeInfo.hitboxes[i];
+               const entityHitbox = transformComponent.hitboxes[i];
+               entityHitbox.box.offset.x = hitboxData.box.offset.x;
+               entityHitbox.box.offset.y = hitboxData.box.offset.y;
+            }
+
+            transformComponent.updateHitboxes();
+            
+            registerDirtyEntity(placeableEntityGhost);
+         }
          
          const ghostInfo: GhostInfo = {
             position: placeInfo.position,

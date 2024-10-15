@@ -6,7 +6,7 @@ import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class Furnace extends Entity {
    public static readonly SIZE = 80;

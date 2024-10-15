@@ -3,7 +3,7 @@ import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class TribeTotem extends Entity {
    public static readonly SIZE = 120;

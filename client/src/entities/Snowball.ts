@@ -7,9 +7,9 @@ import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { SnowballComponentArray } from "../entity-components/SnowballComponent";
+import { SnowballComponentArray } from "../entity-components/server-components/SnowballComponent";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 const getTextureSource = (size: SnowballSize): string => {
    switch (size) {

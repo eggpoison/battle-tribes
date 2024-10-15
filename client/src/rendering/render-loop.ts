@@ -1,4 +1,3 @@
-import Entity from "../Entity";
 import Particle from "../Particle";
 import { calculateRenderPartDepth, getEntityHeight, renderEntities } from "./webgl/entity-rendering";
 import { RenderPartOverlayGroup, renderEntityOverlay } from "./webgl/overlay-rendering";
@@ -55,7 +54,7 @@ const getRenderableRenderHeight = (type: RenderableType, renderable: Renderable)
          let minDepth = 999999;
          for (let i = 0; i < overlay.renderParts.length; i++) {
             const renderPart = overlay.renderParts[i];
-            const renderInfo = getEntityRenderInfo(overlay.entity.id);
+            const renderInfo = getEntityRenderInfo(overlay.entity);
             const depth = calculateRenderPartDepth(renderPart, renderInfo);
             if (depth < minDepth) {
                minDepth = depth;
@@ -102,6 +101,7 @@ export function addRenderable(layer: Layer, type: RenderableType, renderable: Re
    };
    renderables.splice(idx, 0, renderableInfo);
 
+   // @Speed @Temporary
    let previousRenderHeight = -99999;
    for (let i = 0; i < renderables.length; i++) {
       const renderable = renderables[i];

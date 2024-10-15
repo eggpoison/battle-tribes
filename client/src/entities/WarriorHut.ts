@@ -4,7 +4,7 @@ import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class WarriorHut extends Entity {
    constructor(id: number) {

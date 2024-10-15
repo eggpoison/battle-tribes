@@ -6,10 +6,10 @@ import { Point } from "battletribes-shared/utils";
 import { HitboxCollisionType, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { EntityID } from "battletribes-shared/entities";
-import { TransformComponentArray } from "./entity-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Chunk from "./Chunk";
 import Player from "./entities/Player";
-import { PhysicsComponentArray } from "./entity-components/PhysicsComponent";
+import { PhysicsComponentArray } from "./entity-components/server-components/PhysicsComponent";
 import { getEntityLayer } from "./world";
 import Layer from "./Layer";
 import { getComponentArrays } from "./entity-components/ComponentArray";
@@ -82,11 +82,8 @@ export function collide(entity: EntityID, collidingEntity: EntityID, pushedHitbo
    const componentArrays = getComponentArrays();
    for (let i = 0; i < componentArrays.length; i++) {
       const componentArray = componentArrays[i];
-      if (componentArray.hasComponent(entity)) {
-         const component = componentArray.getComponent(entity);
-         if (typeof component.onCollision !== "undefined") {
-            component.onCollision(collidingEntity, pushedHitbox, pushingHitbox);
-         }
+      if (typeof componentArray.onCollision !== "undefined" && componentArray.hasComponent(entity)) {
+         componentArray.onCollision(entity, collidingEntity, pushedHitbox, pushingHitbox);
       }
    }
 }

@@ -1,16 +1,15 @@
 import { clamp, distance, lerp } from "battletribes-shared/utils";
 import { useEffect, useState } from "react";
-import Entity from "../../Entity"
 import Camera from "../../Camera";
 import { getHoveredEntityID } from "../../entity-selection";
 import Game from "../../Game";
 import Player from "../../entities/Player";
 import { latencyGameState } from "../../game-state/game-states";
 import { BuildMenu_isOpen } from "./BuildMenu";
-import { getEntityByID, getEntityRenderInfo } from "../../world";
-import { HealthComponentArray } from "../../entity-components/HealthComponent";
-import { TribeComponentArray } from "../../entity-components/TribeComponent";
-import { TransformComponentArray } from "../../entity-components/TransformComponent";
+import { getEntityRenderInfo } from "../../world";
+import { HealthComponentArray } from "../../entity-components/server-components/HealthComponent";
+import { TribeComponentArray } from "../../entity-components/server-components/TribeComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { EntityID } from "../../../../shared/src/entities";
 
 const Y_OFFSET = -50;

@@ -2,10 +2,9 @@ import { angle, randFloat } from "battletribes-shared/utils";
 import { HitData } from "battletribes-shared/client-server-types";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import Entity from "../Entity";
-import { YETI_SIZE } from "../entity-components/YetiComponent";
-import { ClientComponentType } from "../entity-components/components";
-import RandomSoundComponent from "../entity-components/client-components/RandomSoundComponent";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { YETI_SIZE } from "../entity-components/server-components/YetiComponent";
+import RandomSoundComponent, { RandomSoundComponentArray } from "../entity-components/client-components/RandomSoundComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class Yeti extends Entity {
    private static readonly BLOOD_POOL_SIZE = 30;
@@ -14,7 +13,7 @@ class Yeti extends Entity {
    constructor(id: number) {
       super(id);
 
-      this.addClientComponent(ClientComponentType.randomSound, new RandomSoundComponent(this));
+      RandomSoundComponentArray.addComponent(this.id, new RandomSoundComponent(this));
    }
 
    protected onHit(hitData: HitData): void {

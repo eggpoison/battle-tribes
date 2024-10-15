@@ -125,7 +125,7 @@ const turnEntity = (entity: EntityID, transformComponent: TransformComponent, ph
    }
 }
 
-const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): void => {
+const applyPhysics = (entity: EntityID, transformComponent: TransformComponent, physicsComponent: PhysicsComponent): void => {
    // @Speed: There are a whole bunch of conditions in here which rely on physicsComponent.isAffectedByFriction,
    // which is only set at the creation of an entity. To remove these conditions we could probably split the physics
    // entities into two groups, and call two different applyPhysicsFriction and applyPhysicsNoFriction functions to
@@ -138,7 +138,6 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
       physicsComponent.selfVelocity.y = 0;
    }
 
-   const transformComponent = TransformComponentArray.getComponent(entity);
    const layer = getEntityLayer(entity);
    
    const tileIndex = getEntityTile(transformComponent);
@@ -241,10 +240,38 @@ const dirtifyPathfindingNodes = (entity: EntityID, physicsComponent: PhysicsComp
       physicsComponent.pathfindingNodesAreDirty = true;
    }
 }
-
-const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): void => {
-   const transformComponent = TransformComponentArray.getComponent(entity);
    
+const resolveBorderCollisions = (transformComponent: TransformComponent, physicsComponent: PhysicsComponent): void => {
+   // Left border
+   if (transformComponent.boundingAreaMinX < 0) {
+      transformComponent.position.x -= transformComponent.boundingAreaMinX;
+      physicsComponent.selfVelocity.x = 0;
+      physicsComponent.externalVelocity.x = 0;
+      physicsComponent.positionIsDirty = true;
+      // Right border
+   } else if (transformComponent.boundingAreaMaxX > Settings.BOARD_UNITS) {
+      transformComponent.position.x -= transformComponent.boundingAreaMaxX - Settings.BOARD_UNITS;
+      physicsComponent.selfVelocity.x = 0;
+      physicsComponent.externalVelocity.x = 0;
+      physicsComponent.positionIsDirty = true;
+   }
+
+   // Bottom border
+   if (transformComponent.boundingAreaMinY < 0) {
+      transformComponent.position.y -= transformComponent.boundingAreaMinY;
+      physicsComponent.selfVelocity.y = 0;
+      physicsComponent.externalVelocity.y = 0;
+      physicsComponent.positionIsDirty = true;
+      // Top border
+   } else if (transformComponent.boundingAreaMaxY > Settings.BOARD_UNITS) {
+      transformComponent.position.y -= transformComponent.boundingAreaMaxY - Settings.BOARD_UNITS;
+      physicsComponent.selfVelocity.y = 0;
+      physicsComponent.externalVelocity.y = 0;
+      physicsComponent.positionIsDirty = true;
+   }
+}
+
+const updatePosition = (entity: EntityID, transformComponent: TransformComponent, physicsComponent: PhysicsComponent): void => {
    // @Cleanup: aren't both these the same?
    if (physicsComponent.hitboxesAreDirty) {
       // @Incomplete: if hitboxes are dirty, should still resolve wall tile collisions, etc.
@@ -273,7 +300,12 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
          registerDirtyEntity(entity);
       }
 
-      transformComponent.resolveBorderCollisions(entity);
+      resolveBorderCollisions(transformComponent, physicsComponent);
+
+      // If the entity is outside the world border after resolving border collisions, throw an error
+      if (transformComponent.position.x < 0 || transformComponent.position.x >= Settings.BOARD_UNITS || transformComponent.position.y < 0 || transformComponent.position.y >= Settings.BOARD_UNITS) {
+         throw new Error("Unable to properly resolve border collisions for " + EntityTypeString[getEntityType(entity)!] + ".");
+      }
    
       // If the object moved due to resolving border collisions, recalculate
       if (physicsComponent.positionIsDirty) {
@@ -299,8 +331,8 @@ function onTick(physicsComponent: PhysicsComponent, entity: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
 
    turnEntity(entity, transformComponent, physicsComponent);
-   applyPhysics(entity, physicsComponent);
-   updatePosition(entity, physicsComponent);
+   applyPhysics(entity, transformComponent, physicsComponent);
+   updatePosition(entity, transformComponent, physicsComponent);
 }
 
 export function applyKnockback(entity: EntityID, knockback: number, knockbackDirection: number): void {

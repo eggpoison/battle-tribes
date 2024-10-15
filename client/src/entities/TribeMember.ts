@@ -8,15 +8,15 @@ import Entity from "../Entity";
 import { BloodParticleSize, LeafParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
-import { getTribesmanRadius, TribeMemberComponentArray } from "../entity-components/TribeMemberComponent";
-import { getTribeType, TribeComponentArray } from "../entity-components/TribeComponent";
+import { getTribesmanRadius, TribeMemberComponentArray } from "../entity-components/server-components/TribeMemberComponent";
+import { getTribeType, TribeComponentArray } from "../entity-components/server-components/TribeComponent";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
-import { getEntityLayer, getEntityRenderInfo, getEntityType } from "../world";
-import { getEntityTile, TransformComponentArray } from "../entity-components/TransformComponent";
-import { InventoryComponentArray } from "../entity-components/InventoryComponent";
+import { getEntityAgeTicks, getEntityLayer, getEntityRenderInfo, getEntityType } from "../world";
+import { getEntityTile, TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { InventoryComponentArray } from "../entity-components/server-components/InventoryComponent";
 
 export const TRIBE_MEMBER_Z_INDEXES: Record<string, number> = {
    hand: 1,
@@ -336,7 +336,7 @@ abstract class TribeMember extends Entity {
       const armour = armourSlotInventory.itemSlots[1];
       if (typeof armour !== "undefined") {
          const transformComponent = TransformComponentArray.getComponent(this.id);
-         const layer = getEntityLayer(transformComponent.entity.id);
+         const layer = getEntityLayer(this.id);
          const tile = getEntityTile(layer, transformComponent);
 
          // If snow armour is equipped, move at normal speed on snow tiles
@@ -369,9 +369,7 @@ abstract class TribeMember extends Entity {
             renderInfo.attachRenderThing(this.lowHealthMarker);
          }
 
-         const transformComponent = TransformComponentArray.getComponent(this.id);
-
-         let opacity = Math.sin(transformComponent.ageTicks / Settings.TPS * 5) * 0.5 + 0.5;
+         let opacity = Math.sin(getEntityAgeTicks(this.id) / Settings.TPS * 5) * 0.5 + 0.5;
          this.lowHealthMarker.opacity = lerp(0.3, 0.8, opacity);
       } else {
          if (this.lowHealthMarker !== null) {

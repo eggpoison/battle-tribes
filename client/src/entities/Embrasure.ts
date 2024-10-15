@@ -4,10 +4,10 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
-import { BuildingMaterialComponentArray, EMBRASURE_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
+import { BuildingMaterialComponentArray, EMBRASURE_TEXTURE_SOURCES } from "../entity-components/server-components/BuildingMaterialComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class Embrasure extends Entity {
    constructor(id: number) {

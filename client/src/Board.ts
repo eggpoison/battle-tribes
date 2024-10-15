@@ -125,10 +125,9 @@ abstract class Board {
       for (let i = 0; i < componentArrays.length; i++) {
          const componentArray = componentArrays[i];
          if (typeof componentArray.onUpdate !== "undefined") {
-            for (let j = 0; j < componentArray.components.length; j++) {
-               const component = componentArray.components[j];
-               // @Temporary @Hack
-               componentArray.onUpdate(component, 0);
+            for (let j = 0; j < componentArray.entities.length; j++) {
+               const entity = componentArray.entities[j];
+               componentArray.onUpdate(entity);
             }
          }
       }

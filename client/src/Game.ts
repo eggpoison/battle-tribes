@@ -7,7 +7,7 @@ import { isDev } from "./utils";
 import { createTextCanvasContext, updateTextNumbers, renderText } from "./text-canvas";
 import Camera from "./Camera";
 import { updateSpamFilter } from "./components/game/ChatBox";
-import { createEntityShaders } from "./rendering/webgl/entity-rendering";
+import { createEntityShaders, renderEntities } from "./rendering/webgl/entity-rendering";
 import Client, { getQueuedGameDataPackets } from "./client/Client";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY, cursorX, cursorY, getMouseTargetEntity, handleMouseMovement, renderCursorTooltip } from "./mouse";
 import { refreshDebugInfo, setDebugInfoDebugData } from "./components/game/dev/DebugInfo";
@@ -30,7 +30,7 @@ import OPTIONS from "./options";
 import { RENDER_CHUNK_SIZE, createRenderChunks } from "./rendering/render-chunks";
 import { registerFrame, updateFrameGraph } from "./components/game/dev/FrameGraph";
 import { createNightShaders, renderLighting } from "./rendering/webgl/lighting-rendering";
-import { createPlaceableItemProgram, renderGhostEntities } from "./rendering/webgl/entity-ghost-rendering";
+import { createPlaceableItemProgram, getEntityGhosts, renderGhostEntities } from "./rendering/webgl/entity-ghost-rendering";
 import { setupFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { createTextureAtlases } from "./texture-atlases/texture-atlases";
 import { createForcefieldShaders, renderForcefield } from "./rendering/webgl/world-border-forcefield-rendering";
@@ -120,7 +120,7 @@ const main = (currentTime: number): void => {
             queuedPackets.length = 0;
 
             if (Player.instance !== null) {
-               updateEntity(Player.instance);
+               updateEntity(Player.instance.id);
             }
          } else {
             updateTextNumbers();
@@ -195,13 +195,17 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
       renderMonocolourParticles(ParticleRenderLayer.low);
       renderTexturedParticles(ParticleRenderLayer.low);
    }
-   // Render the rest
-   renderNextRenderables(layer, MAX_RENDER_LAYER);
+   // Render up to walls
+   renderNextRenderables(layer, RenderLayer.WALL_SEPARATOR);
 
+   // Render walls
    renderTileShadows(layer, TileShadowType.wallShadow);
    renderSolidTiles(layer, true);
    renderTileBreakProgress(layer);
    renderWallBorders(layer);
+
+   // Render everything else
+   renderNextRenderables(layer, MAX_RENDER_LAYER);
 
    renderEntitySelection();
    
@@ -228,7 +232,8 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
       renderLineDebugData(entityDebugData);
    }
 
-   renderGhostEntities();
+   const entityGhosts = getEntityGhosts();
+   renderEntities(entityGhosts);
 }
 
 abstract class Game {

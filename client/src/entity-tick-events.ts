@@ -4,7 +4,7 @@ import { playSound } from "./sound";
 import { ItemType } from "battletribes-shared/items/items";
 import { entityExists } from "./world";
 import { EntityID } from "../../shared/src/entities";
-import { TransformComponentArray } from "./entity-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 
 export function playBowFireSound(sourceEntity: EntityID, bowItemType: ItemType): void {
    const transformComponent = TransformComponentArray.getComponent(sourceEntity);

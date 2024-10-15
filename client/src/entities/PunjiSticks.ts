@@ -4,7 +4,7 @@ import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { getEntityRenderInfo, getEntityType } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class PunjiSticks extends Entity {
    constructor(id: number) {
@@ -28,11 +28,6 @@ class PunjiSticks extends Entity {
       );
       const renderInfo = getEntityRenderInfo(this.id);
       renderInfo.attachRenderThing(renderPart);
-
-      const transformComponent = TransformComponentArray.getComponent(this.id);
-      if (transformComponent.ageTicks <= 0) {
-         playSound("spike-place.mp3", 0.5, 1, transformComponent.position);
-      }
    }
 
    protected onHit(): void {

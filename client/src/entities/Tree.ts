@@ -7,8 +7,8 @@ import { playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo } from "../world";
-import { TreeComponentArray } from "../entity-components/TreeComponent";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TreeComponentArray } from "../entity-components/server-components/TreeComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 const treeTextures: { [T in TreeSize]: string } = {
    [TreeSize.small]: "entities/tree/tree-small.png",

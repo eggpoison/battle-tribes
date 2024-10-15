@@ -2,7 +2,7 @@ import { Settings } from "battletribes-shared/settings";
 import { NUM_RENDER_LAYERS, RenderLayer } from "../../render-layers";
 import { EntityID } from "battletribes-shared/entities";
 import { EntityRenderInfo } from "../../Entity";
-import { TransformComponentArray } from "../../entity-components/TransformComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { clearEntityInVertexData, EntityRenderingVars, getEntityRenderingProgram, setEntityInVertexData } from "./entity-rendering";
 import Camera from "../../Camera";
 import { gl } from "../../webgl";

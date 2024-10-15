@@ -1,7 +1,7 @@
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { DecorationType } from "battletribes-shared/components";
 import { getEntityType } from "./world";
-import { DecorationComponentArray } from "./entity-components/DecorationComponent";
+import { DecorationComponentArray } from "./entity-components/server-components/DecorationComponent";
 
 export enum RenderLayer {
    lowDecorations,
@@ -19,7 +19,11 @@ export enum RenderLayer {
    defaultEntities,
    projectiles,
    highEntities,
-   blueprints
+   blueprints,
+   /* --------------- */
+   WALL_SEPARATOR,
+   /* --------------- */
+   bracings
 }
 export const NUM_RENDER_LAYERS = Object.keys(RenderLayer).length / 2;
 export const MAX_RENDER_LAYER = NUM_RENDER_LAYERS - 1;
@@ -52,6 +56,9 @@ const decorationIsHigh = (decorationType: DecorationType): boolean => {
 
 export function getEntityRenderLayer(entity: EntityID): RenderLayer {
    switch (getEntityType(entity)) {
+      case EntityType.bracings: {
+         return RenderLayer.bracings;
+      }
       // Grass
       case EntityType.grassStrand: {
          return RenderLayer.grass;

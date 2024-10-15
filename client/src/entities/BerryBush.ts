@@ -2,7 +2,7 @@ import { randFloat, randInt } from "battletribes-shared/utils";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
 import { playSound } from "../sound";
 import Entity from "../Entity";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class BerryBush extends Entity {
    private static readonly RADIUS = 40;

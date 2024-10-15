@@ -43,7 +43,7 @@ import { AppState } from "../components/App";
 import { LoadingScreenStatus } from "../components/LoadingScreen";
 import { getEntityByID, getEntityType, layers, removeEntity } from "../world";
 import { getTileIndexIncludingEdges } from "../Layer";
-import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
+import { PhysicsComponentArray } from "../entity-components/server-components/PhysicsComponent";
 
 export type GameData = {
    readonly gameTicks: number;
@@ -514,7 +514,7 @@ abstract class Client {
 
    public static killPlayer(): void {
       // Remove the player from the game
-      removeEntity(Player.instance!, true);
+      removeEntity(Player.instance!.id, true);
       Player.instance = null;
 
       latencyGameState.resetFlags();

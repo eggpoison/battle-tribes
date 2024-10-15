@@ -159,7 +159,7 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
 
 export const NUM_COMPONENTS = Object.keys(ServerComponentTypeString).length;
 
-// @Hack: shouldn't be hardcoded
+// @Hack @Robustness: shouldn't be hardcoded
 export const EntityComponents = {
    [EntityType.cow]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.aiHelper, ServerComponentType.escapeAI, ServerComponentType.followAI, ServerComponentType.cow] as const,
    [EntityType.zombie]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.zombie, ServerComponentType.aiHelper, ServerComponentType.inventory, ServerComponentType.inventoryUse] as const,

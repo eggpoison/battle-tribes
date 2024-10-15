@@ -3,8 +3,8 @@ import Entity from "../Entity";
 import { createArrowDestroyParticle } from "../particles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo } from "../world";
-import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { PhysicsComponentArray } from "../entity-components/server-components/PhysicsComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class BallistaRock extends Entity {
    constructor(id: number) {

@@ -3,7 +3,7 @@ import { Point, randInt } from "battletribes-shared/utils";
 import { TileType } from "battletribes-shared/tiles";
 import Camera from "./Camera";
 import { getCurrentLayer } from "./world";
-import { TransformComponentArray } from "./entity-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { EntityID } from "../../shared/src/entities";
 
 // @Memory

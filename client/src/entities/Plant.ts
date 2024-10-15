@@ -2,30 +2,14 @@ import { angle, randFloat, randInt, randItem } from "battletribes-shared/utils";
 import { PlanterBoxPlant } from "battletribes-shared/components";
 import { HitData, HitFlags } from "battletribes-shared/client-server-types";
 import Entity from "../Entity";
-import { LeafParticleSize, createDirtParticle, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
+import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import Tree, { TREE_DESTROY_SOUNDS, TREE_HIT_SOUNDS } from "./Tree";
 import { playSound } from "../sound";
-import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
-import { PlantComponentArray } from "../entity-components/PlantComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { PlantComponentArray } from "../entity-components/server-components/PlantComponent";
 
 class Plant extends Entity {
    public static readonly SIZE = 80;
-
-   public onLoad(): void {
-      const transformComponent = TransformComponentArray.getComponent(this.id);
-      if (transformComponent.ageTicks <= 0) {
-         // Create dirt particles
-
-         for (let i = 0; i < 7; i++) {
-            const offsetDirection = 2 * Math.PI * Math.random();
-            const offsetMagnitude = randFloat(0, 10);
-            const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
-            const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
-            createDirtParticle(x, y, ParticleRenderLayer.high);
-         }
-      }
-   }
 
    // @Cleanup: move to plant component file
    protected onHit(hitData: HitData): void {

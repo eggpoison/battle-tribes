@@ -2,7 +2,7 @@ import { veryBadHash } from "battletribes-shared/utils";
 import { PlayerCauseOfDeath } from "battletribes-shared/entities";
 import Tombstone from "../../../entities/Tombstone";
 import { getSelectedEntity } from "../../../entity-selection";
-import { TombstoneComponentArray } from "../../../entity-components/TombstoneComponent";
+import { TombstoneComponentArray } from "../../../entity-components/server-components/TombstoneComponent";
 
 // __NAME__'s brain exploded.
 

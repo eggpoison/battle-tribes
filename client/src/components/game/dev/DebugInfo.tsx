@@ -10,9 +10,9 @@ import { getEntityLayer, getEntityType } from "../../../world";
 import Player from "../../../entities/Player";
 import { RENDER_CHUNK_SIZE } from "../../../rendering/render-chunks";
 import { EntityID } from "../../../../../shared/src/entities";
-import { TransformComponentArray } from "../../../entity-components/TransformComponent";
-import { PhysicsComponentArray } from "../../../entity-components/PhysicsComponent";
-import { HealthComponentArray } from "../../../entity-components/HealthComponent";
+import { TransformComponentArray } from "../../../entity-components/server-components/TransformComponent";
+import { PhysicsComponentArray } from "../../../entity-components/server-components/PhysicsComponent";
+import { HealthComponentArray } from "../../../entity-components/server-components/HealthComponent";
 
 export let updateDebugInfoTile: (tile: Tile | null) => void = () => {};
 

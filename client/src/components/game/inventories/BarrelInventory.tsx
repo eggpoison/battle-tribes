@@ -1,7 +1,7 @@
 import InventoryContainer from "./InventoryContainer";
 import { getSelectedEntity } from "../../../entity-selection";
 import { InventoryName } from "battletribes-shared/items/items";
-import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
+import { InventoryComponentArray } from "../../../entity-components/server-components/InventoryComponent";
 
 const BarrelInventory = () => {
    const barrel = getSelectedEntity();

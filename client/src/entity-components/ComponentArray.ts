@@ -1,19 +1,29 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID } from "battletribes-shared/entities";
-import Component from "./Component";
 import Entity from "../Entity";
 import { ClientComponentType } from "./components";
+import { Hitbox } from "../../../shared/src/boxes/boxes";
+import ServerComponentArray from "./ServerComponentArray";
+import ClientComponentArray from "./ClientComponentArray";
 
 export const enum ComponentArrayType {
    server,
    client
 }
 
-interface ComponentArrayFunctions<T extends object> {
-   /** Called when the entity is spawned in, not when the client first becomes aware of the entity's existence */
+export interface ComponentArrayFunctions<T extends object> {
+   /** Called once when the entity is created, just after all the components are added */
+   onLoad?(component: T, entity: EntityID): void;
+   // @Cleanup: is this not the same as spawn?
+   /** Called when the entity is spawned in, not when the client first becomes aware of the entity's existence. After the load function */
    onSpawn?(component: T, entity: EntityID): void;
    onTick?(component: T, entity: EntityID): void;
-   onUpdate?(component: T, entity: EntityID): void;
+   onUpdate?(entity: EntityID): void;
+   onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
+   onHit?(entity: EntityID, isDamagingHit: boolean): void;
+   onRemove?(entity: EntityID): void;
+   /** Called when the entity dies, not when the entity leaves the player's vision. */
+   onDie?(entity: EntityID): void;
 }
 
 type ComponentTypeForArray = {
@@ -27,10 +37,10 @@ interface ComponentArrayTypeObject<ArrayType extends ComponentArrayType> {
 }
 
 let componentArrays = new Array<ComponentArray>();
-let clientComponentArrayRecord: Record<ClientComponentType, ComponentArray> = {} as any;
-let serverComponentArrayRecord: Record<ServerComponentType, ComponentArray> = {} as any;
+let clientComponentArrayRecord: Record<ClientComponentType, ClientComponentArray> = {} as any;
+let serverComponentArrayRecord: Record<ServerComponentType, ServerComponentArray> = {} as any;
 
-export class ComponentArray<T extends Component = Component, ArrayType extends ComponentArrayType = ComponentArrayType, ComponentType extends ComponentTypeForArray[ArrayType] = ComponentTypeForArray[ArrayType]> implements ComponentArrayFunctions<T> {
+export abstract class ComponentArray<T extends object = object, ArrayType extends ComponentArrayType = ComponentArrayType, ComponentType extends ComponentTypeForArray[ArrayType] = ComponentTypeForArray[ArrayType]> implements ComponentArrayFunctions<T> {
    public readonly typeObject: ComponentArrayTypeObject<ArrayType>;
    private readonly isActiveByDefault: boolean;
    
@@ -52,9 +62,14 @@ export class ComponentArray<T extends Component = Component, ArrayType extends C
 
    private deactivateBuffer = new Array<number>();
 
+   public onLoad?(component: T, entity: EntityID): void;
    public onSpawn?(component: T, entity: EntityID): void;
    public onTick?: (component: T, entity: EntityID) => void;
-   public onUpdate?: (component: T, entity: EntityID) => void;
+   public onUpdate?: (entity: EntityID) => void;
+   public onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
+   public onHit?(entity: EntityID, isDamagingHit: boolean): void;
+   public onRemove?(entity: EntityID): void;
+   public onDie?(entity: EntityID): void;
 
    constructor(arrayType: ArrayType, componentType: ComponentType, isActiveByDefault: boolean, functions: ComponentArrayFunctions<T>) {
       this.typeObject = {
@@ -63,17 +78,22 @@ export class ComponentArray<T extends Component = Component, ArrayType extends C
       };
       this.isActiveByDefault = isActiveByDefault;
       
+      this.onLoad = functions.onLoad;
       this.onSpawn = functions.onSpawn;
       this.onTick = functions.onTick;
       this.onUpdate = functions.onUpdate;
+      this.onCollision = functions.onCollision;
+      this.onHit = functions.onHit;
+      this.onRemove = functions.onRemove;
+      this.onDie = functions.onDie;
 
       componentArrays.push(this as unknown as ComponentArray);
       if (arrayType === ComponentArrayType.server) {
          // @Cleanup: casts
-         serverComponentArrayRecord[componentType as ServerComponentType] = this as unknown as ComponentArray;
+         serverComponentArrayRecord[componentType as ServerComponentType] = this as unknown as ServerComponentArray;
       } else {
          // @Cleanup: casts
-         clientComponentArrayRecord[componentType as ClientComponentType] = this as unknown as ComponentArray;
+         clientComponentArrayRecord[componentType as ClientComponentType] = this as unknown as ClientComponentArray;
       }
    }
 
@@ -169,24 +189,23 @@ export function getComponentArrays(): ReadonlyArray<ComponentArray> {
    return componentArrays;
 }
 
-export function getClientComponentArray(componentType: ClientComponentType): ComponentArray {
+export function getClientComponentArray(componentType: ClientComponentType): ClientComponentArray {
    return clientComponentArrayRecord[componentType];
 }
 
-export function getServerComponentArray(componentType: ServerComponentType): ComponentArray {
+export function getServerComponentArray(componentType: ServerComponentType): ServerComponentArray {
    return serverComponentArrayRecord[componentType];
 }
 
-export function updateEntity(entity: Entity): void {
+export function updateEntity(entity: EntityID): void {
    for (let i = 0; i < componentArrays.length; i++) {
       const componentArray = componentArrays[i];
       if (typeof componentArray.onUpdate === "undefined") {
          continue;
       }
       
-      if (componentArray.hasComponent(entity.id)) {
-         const component = componentArray.getComponent(entity.id);
-         componentArray.onUpdate(component, entity.id);
+      if (componentArray.hasComponent(entity)) {
+         componentArray.onUpdate(entity);
       }
    }
 }

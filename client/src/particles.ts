@@ -5,9 +5,9 @@ import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferConta
 import Board from "./Board";
 import Entity from "./Entity";
 import { ServerComponentType } from "battletribes-shared/components";
-import TransformComponent, { TransformComponentArray } from "./entity-components/TransformComponent";
+import TransformComponent, { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { BlockType } from "../../shared/src/boxes/boxes";
-import { PhysicsComponentArray } from "./entity-components/PhysicsComponent";
+import { PhysicsComponentArray } from "./entity-components/server-components/PhysicsComponent";
 
 // @Cleanup: Standardise all these functions to just take the stuff necessary to create them, then have the places which call them modify the returned particle
 

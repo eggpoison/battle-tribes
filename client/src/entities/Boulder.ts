@@ -5,9 +5,9 @@ import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { randFloat, randItem } from "battletribes-shared/utils";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { BoulderComponentArray } from "../entity-components/BoulderComponent";
+import { BoulderComponentArray } from "../entity-components/server-components/BoulderComponent";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class Boulder extends Entity {
    private static readonly RADIUS = 40;

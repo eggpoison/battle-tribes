@@ -6,8 +6,8 @@ import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./
 import OPTIONS from "./options";
 import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "./client/Client";
 import Player from "./entities/Player";
-import { PlayerComponentArray } from "./entity-components/PlayerComponent";
-import { getCurrentLayer, getEntityByID, getEntityLayer } from "./world";
+import { PlayerComponentArray } from "./entity-components/server-components/PlayerComponent";
+import { getCurrentLayer, getEntityLayer, getEntityRenderInfo } from "./world";
 
 // @Cleanup: The logic for damage, research and heal numbers is extremely similar, can probably be combined
 
@@ -298,17 +298,17 @@ const renderPlayerNames = (): void => {
 
    const currentLayer = getCurrentLayer();
    for (let i = 0; i < PlayerComponentArray.entities.length; i++) {
-      const entityID = PlayerComponentArray.entities[i];
-      if (Player.instance !== null && entityID === Player.instance.id || getEntityLayer(entityID) !== currentLayer) {
+      const player = PlayerComponentArray.entities[i];
+      if (Player.instance !== null && player === Player.instance.id || getEntityLayer(player) !== currentLayer) {
          continue;
       }
 
-      const player = getEntityByID(entityID)!;
+      const renderInfo = getEntityRenderInfo(player);
       const playerComponent = PlayerComponentArray.components[i];
       
       // Calculate position in camera
-      const cameraX = getXPosInCamera(player.renderPosition.x);
-      const cameraY = getYPosInCamera(player.renderPosition.y + 21);
+      const cameraX = getXPosInCamera(renderInfo.renderPosition.x);
+      const cameraY = getYPosInCamera(renderInfo.renderPosition.y + 21);
       
       const username = playerComponent.username;
 

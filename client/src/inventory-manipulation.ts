@@ -1,10 +1,8 @@
-import Client from "./client/Client";
 import { craftingMenuIsOpen } from "./components/game/menus/CraftingMenu";
 import { setHeldItemVisualPosition } from "./components/game/HeldItem";
-import { definiteGameState } from "./game-state/game-states";
 import { InventorySelector_inventoryIsOpen } from "./components/game/inventories/InventorySelector";
-import { Inventory, InventoryName, Item, ItemType } from "battletribes-shared/items/items";
-import { InventoryComponentArray } from "./entity-components/InventoryComponent";
+import { Inventory, InventoryName, ItemType } from "battletribes-shared/items/items";
+import { InventoryComponentArray } from "./entity-components/server-components/InventoryComponent";
 import Player from "./entities/Player";
 import { sendItemPickupPacket, sendItemReleasePacket } from "./client/packet-creation";
 

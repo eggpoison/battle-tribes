@@ -2,8 +2,8 @@ import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-sh
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { Box, boxIsCircular, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { DamageBoxComponentArray } from "../../entity-components/DamageBoxComponent";
-import { TransformComponentArray } from "../../entity-components/TransformComponent";
+import { DamageBoxComponentArray } from "../../entity-components/server-components/DamageBoxComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { EntityID } from "battletribes-shared/entities";
 import { getEntityRenderInfo } from "../../world";
 

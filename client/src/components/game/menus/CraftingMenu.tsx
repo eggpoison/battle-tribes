@@ -14,8 +14,8 @@ import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemT
 import InventoryContainer from "../inventories/InventoryContainer";
 import { deselectHighlightedEntity } from "../../../entity-selection";
 import { addMenuCloseFunction } from "../../../menus";
-import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
-import { TransformComponentArray } from "../../../entity-components/TransformComponent";
+import { InventoryComponentArray } from "../../../entity-components/server-components/InventoryComponent";
+import { TransformComponentArray } from "../../../entity-components/server-components/TransformComponent";
 
 interface RecipeViewerProps {
    readonly recipe: CraftingRecipe;

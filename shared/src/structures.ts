@@ -1,8 +1,8 @@
 import { Chunks, EntityInfo, getChunk } from "./board-interface";
 import { EntityID, EntityType } from "./entities";
-import { estimateCollidingEntities, getBoxesCollidingEntities } from "./hitbox-collision";
+import { estimateCollidingEntities } from "./hitbox-collision";
 import { createBracingHitboxes, createNormalStructureHitboxes } from "./boxes/entity-hitbox-creation";
-import { boxIsCircular, Hitbox, updateBox } from "./boxes/boxes";
+import { boxIsCircular, Hitbox } from "./boxes/boxes";
 import { Settings } from "./settings";
 import { Point, distance, getAbsAngleDiff } from "./utils";
 
@@ -85,7 +85,7 @@ const structurePlaceIsValid = (entityType: StructureType, x: number, y: number, 
 const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityRotation: number, structureType: StructureType): Point => {
    // @Hack?
    if (structureType === EntityType.bracings) {
-      const placePosition = Point.fromVectorForm(Vars.STRUCTURE_PLACE_DISTANCE, placingEntityRotation);
+      const placePosition = Point.fromVectorForm(Vars.STRUCTURE_PLACE_DISTANCE + Settings.TILE_SIZE * 0.5, placingEntityRotation);
       placePosition.add(placeOrigin);
       return placePosition;
    }
@@ -384,39 +384,51 @@ const filterCandidatePositions = (candidates: Array<StructureTransformInfo>, reg
    }
 }
 
-const getNearbyTileCorners = (position: Point): ReadonlyArray<Point> => {
-   const minTileX = Math.floor(position.x / Settings.TILE_SIZE - 1);
-   const maxTileX = Math.ceil(position.x / Settings.TILE_SIZE + 1);
-   const minTileY = Math.floor(position.y / Settings.TILE_SIZE - 1);
-   const maxTileY = Math.ceil(position.y / Settings.TILE_SIZE + 1);
+const getNearbyTileCorners = (regularPlacePosition: Point): ReadonlyArray<Point> => {
+   const minTileX = Math.floor(regularPlacePosition.x / Settings.TILE_SIZE);
+   const maxTileX = Math.ceil(regularPlacePosition.x / Settings.TILE_SIZE);
+   const minTileY = Math.floor(regularPlacePosition.y / Settings.TILE_SIZE);
+   const maxTileY = Math.ceil(regularPlacePosition.y / Settings.TILE_SIZE);
 
    const tileCornerPositions = new Array<Point>();
    for (let tileCornerX = minTileX; tileCornerX <= maxTileX; tileCornerX++) {
       for (let tileCornerY = minTileY; tileCornerY <= maxTileY; tileCornerY++) {
-         const x = tileCornerX / Settings.TILE_SIZE;
-         const y = tileCornerY / Settings.TILE_SIZE;
+         const x = tileCornerX * Settings.TILE_SIZE;
+         const y = tileCornerY * Settings.TILE_SIZE;
          tileCornerPositions.push(new Point(x, y));
       }
    }
    return tileCornerPositions;
 }
 
-const getBracingsPlaceInfo = (position: Point, rotation: number, entityType: StructureType, worldInfo: WorldInfo): StructurePlaceInfo => {
-   const nearbyTileCorners = getNearbyTileCorners(position);
+const getBracingsPlaceInfo = (regularPlacePosition: Point, entityType: StructureType): StructurePlaceInfo => {
+   // Snap the place position to the closest tile
+   const tileX = Math.floor(regularPlacePosition.x / Settings.TILE_SIZE + 0.5);
+   const tileY = Math.floor(regularPlacePosition.y / Settings.TILE_SIZE + 0.5);
+   const position = new Point((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE);
+   
+   const nearbyTileCorners = getNearbyTileCorners(regularPlacePosition);
 
    let closestTileCorner: Point | undefined;
    let secondClosestTileCorner: Point | undefined;
 
    let minDist = Number.MAX_SAFE_INTEGER;
+   let secondMinDist = Number.MAX_SAFE_INTEGER;
 
    for (let i = 0; i < nearbyTileCorners.length; i++) {
       const corner = nearbyTileCorners[i];
 
-      const dist = corner.calculateDistanceBetween(position);
+      const distance = corner.calculateDistanceBetween(regularPlacePosition);
 
-      if (dist < minDist) {
+      if (distance < minDist) {
          secondClosestTileCorner = closestTileCorner;
+         secondMinDist = minDist;
+         
          closestTileCorner = corner;
+         minDist = distance;
+      } else if (distance < secondMinDist) {
+         secondClosestTileCorner = corner;
+         secondMinDist = distance;
       }
    }
 
@@ -436,7 +448,7 @@ const getBracingsPlaceInfo = (position: Point, rotation: number, entityType: Str
    
    return {
       position: position,
-      rotation: rotation,
+      rotation: 0,
       connectedSidesBitset: 0,
       connectedEntityIDs: [0, 0, 0, 0],
       entityType: entityType,
@@ -446,8 +458,9 @@ const getBracingsPlaceInfo = (position: Point, rotation: number, entityType: Str
 }
 
 const calculatePlaceInfo = (position: Point, rotation: number, entityType: StructureType, worldInfo: WorldInfo): StructurePlaceInfo => {
+   // @Hack?
    if (entityType === EntityType.bracings) {
-      return getBracingsPlaceInfo(position, rotation, entityType, worldInfo);
+      return getBracingsPlaceInfo(position, entityType);
    }
    
    const nearbyStructures = getNearbyStructures(position, worldInfo);

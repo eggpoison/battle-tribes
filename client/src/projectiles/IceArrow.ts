@@ -2,7 +2,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { playSound } from "../sound";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { getEntityRenderInfo } from "../world";
 
 class IceArrow extends Entity {

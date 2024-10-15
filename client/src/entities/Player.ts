@@ -2,11 +2,11 @@ import Camera from "../Camera";
 import { halfWindowHeight, halfWindowWidth } from "../webgl";
 import TribeMember, { addTribeMemberRenderParts } from "./TribeMember";
 import { ClientComponentType } from "../entity-components/components";
-import FootprintComponent from "../entity-components/FootprintComponent";
-import EquipmentComponent from "../entity-components/EquipmentComponent";
-import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
+import FootprintComponent, { FootprintComponentArray } from "../entity-components/server-components/FootprintComponent";
+import EquipmentComponent, { EquipmentComponentArray } from "../entity-components/server-components/EquipmentComponent";
+import { PhysicsComponentArray } from "../entity-components/server-components/PhysicsComponent";
 import { Settings } from "battletribes-shared/settings";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { getEntityRenderInfo } from "../world";
 
 /** Updates the rotation of the player to match the cursor position */
@@ -107,8 +107,8 @@ export default class Player extends TribeMember {
    constructor(id: number) {
       super(id);
       
-      this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.2, 20, 64, 4, 64));
-      this.addClientComponent(ClientComponentType.equipment, new EquipmentComponent(this));
+      FootprintComponentArray.addComponent(this.id, new FootprintComponent(this, 0.2, 20, 64, 4, 64));
+      EquipmentComponentArray.addComponent(this.id, new EquipmentComponent(this));
    }
 
    public onLoad(): void {

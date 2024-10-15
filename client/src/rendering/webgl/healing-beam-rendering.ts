@@ -2,9 +2,9 @@ import { createWebGLProgram, gl } from "../../webgl";
 import { Settings } from "battletribes-shared/settings";
 import { angle, distance, rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { HealingTotemComponentArray } from "../../entity-components/HealingTotemComponent";
-import { TransformComponentArray } from "../../entity-components/TransformComponent";
-import { getEntityByID } from "../../world";
+import { HealingTotemComponentArray } from "../../entity-components/server-components/HealingTotemComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { entityExists, getEntityRenderInfo } from "../../world";
 
 export const HEALING_BEAM_THICKNESS = 32;
 
@@ -161,10 +161,10 @@ const createData = (visibleBeams: ReadonlyArray<HealingBeam>): ReadonlyArray<num
 
       let endX: number;
       let endY: number;
-      const entity = getEntityByID(beam.entityID);
-      if (typeof entity !== "undefined") {
-         endX = entity.renderPosition.x;
-         endY = entity.renderPosition.y;
+      if (entityExists(beam.entityID)) {
+         const renderInfo = getEntityRenderInfo(beam.entityID)
+         endX = renderInfo.renderPosition.x;
+         endY = renderInfo.renderPosition.y;
       } else {
          endX = beam.endX;
          endY = beam.endY;

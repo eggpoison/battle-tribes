@@ -2,7 +2,7 @@ import { DecorationType } from "battletribes-shared/components";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import { DecorationComponentArray } from "../entity-components/DecorationComponent";
+import { DecorationComponentArray } from "../entity-components/server-components/DecorationComponent";
 import { getEntityRenderInfo } from "../world";
 
 const DECORATION_RENDER_INFO: Record<DecorationType, string> = {

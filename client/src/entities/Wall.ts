@@ -5,24 +5,20 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
-import { BuildingMaterialComponentArray, WALL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
+import { BuildingMaterialComponentArray, WALL_TEXTURE_SOURCES } from "../entity-components/server-components/BuildingMaterialComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo, getEntityType } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
-import { HealthComponentArray } from "../entity-components/HealthComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { HealthComponentArray } from "../entity-components/server-components/HealthComponent";
 
 class Wall extends Entity {
    private static readonly NUM_DAMAGE_STAGES = 6;
 
    private damageRenderPart: TexturedRenderPart | null = null;
 
-   constructor(id: number) {
-      super(id);
-   }
-
    public onLoad(): void {
       const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(this.id);
-      const healthComponentData = HealthComponentArray.getComponent(this.id);
+      const healthComponent = HealthComponentArray.getComponent(this.id);
       
       const renderPart = new TexturedRenderPart(
          null,
@@ -35,17 +31,12 @@ class Wall extends Entity {
       const renderInfo = getEntityRenderInfo(this.id);
       renderInfo.attachRenderThing(renderPart);
 
-      this.updateDamageRenderPart(healthComponentData.health, healthComponentData.maxHealth);
-
-      // @Hack
-      const transformComponent = TransformComponentArray.getComponent(this.id);
-      if (transformComponent.ageTicks <= 0) {
-         playSound("wooden-wall-place.mp3", 0.3, 1, transformComponent.position);
-      }
+      this.updateDamageRenderPart(healthComponent.health, healthComponent.maxHealth);
    }
 
    private updateDamageRenderPart(health: number, maxHealth: number): void {
-      let damageStage = Math.ceil((1 - health / maxHealth) * Wall.NUM_DAMAGE_STAGES);
+      // Max health can be 0 if it is an entity ghost
+      let damageStage = maxHealth > 0 ? Math.ceil((1 - health / maxHealth) * Wall.NUM_DAMAGE_STAGES) : 0;
       if (damageStage === 0) {
          if (this.damageRenderPart !== null) {
             const renderInfo = getEntityRenderInfo(this.id);

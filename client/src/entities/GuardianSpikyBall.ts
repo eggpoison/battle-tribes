@@ -1,5 +1,5 @@
 import Entity from "../Entity";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { createGenericGemParticle } from "../particles";
 import { playSound } from "../sound";
 

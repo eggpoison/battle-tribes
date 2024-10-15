@@ -8,7 +8,6 @@ import { setTechTreeX, setTechTreeY, setTechTreeZoom, techIsDirectlyAccessible }
 import OPTIONS from "../../../options";
 import Player from "../../../entities/Player";
 import { countItemTypesInInventory } from "../../../inventory-manipulation";
-import { definiteGameState } from "../../../game-state/game-states";
 import { createTechTreeItem } from "../../../rendering/webgl/tech-tree-item-rendering";
 import { Point, randFloat } from "battletribes-shared/utils";
 import Camera from "../../../Camera";
@@ -17,7 +16,7 @@ import TechTreeProgressBar from "./TechTreeProgressBar";
 import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemTally";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { addMenuCloseFunction } from "../../../menus";
-import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
+import { InventoryComponentArray } from "../../../entity-components/server-components/InventoryComponent";
 
 const boundsScale = 16;
 

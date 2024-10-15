@@ -1,14 +1,12 @@
 import { EntityID } from "../../../../shared/src/entities";
 import { randFloat, randItem } from "../../../../shared/src/utils";
-import Entity from "../../Entity";
 import { playSound } from "../../sound";
-import Component from "../Component";
-import { ComponentArray, ComponentArrayType } from "../ComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../components";
-import { TransformComponentArray } from "../TransformComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 
 /** Plays sounds coming from the entity randomly */
-export default class RandomSoundComponent extends Component {
+export default class RandomSoundComponent {
    public minSoundIntervalTicks = 0;
    public maxSoundIntervalTicks = 0;
    public volume = 0;
@@ -17,11 +15,9 @@ export default class RandomSoundComponent extends Component {
 
    public sounds: ReadonlyArray<string> = [];
    
-   constructor(entity: Entity) {
-      super(entity);
-
+   constructor(entity: EntityID) {
       // @Hack
-      RandomSoundComponentArray.addComponent(entity.id, this);
+      RandomSoundComponentArray.addComponent(entity, this);
    }
 
    public updateSounds(minSoundIntervalTicks: number, maxSoundIntervalTicks: number, sounds: ReadonlyArray<string>, volume: number) {
@@ -43,7 +39,7 @@ export default class RandomSoundComponent extends Component {
    }
 }
 
-export const RandomSoundComponentArray = new ComponentArray<RandomSoundComponent>(ComponentArrayType.client, ClientComponentType.randomSound, true, {
+export const RandomSoundComponentArray = new ClientComponentArray<RandomSoundComponent>(ClientComponentType.randomSound, true, {
    onTick: onTick
 });
 

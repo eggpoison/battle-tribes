@@ -4,7 +4,7 @@ import Player from "../../../entities/Player";
 import Game from "../../../Game";
 import { InventoryName } from "battletribes-shared/items/items";
 import EmptyItemSlot from "./EmptyItemSlot";
-import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
+import { InventoryComponentArray } from "../../../entity-components/server-components/InventoryComponent";
 import InventoryContainer from "./InventoryContainer";
 import { getHotbarSelectedItemSlot, ItemRestTime } from "../GameInteractableLayer";
 

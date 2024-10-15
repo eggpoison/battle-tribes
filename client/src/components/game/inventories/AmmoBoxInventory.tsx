@@ -5,8 +5,8 @@ import InventoryContainer from "./InventoryContainer";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-info";
 import { CLIENT_STATUS_EFFECT_INFO_RECORD } from "../../../status-effects";
 import { Inventory, ItemType, InventoryName } from "battletribes-shared/items/items";
-import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
-import { AmmoBoxComponentArray } from "../../../entity-components/AmmoBoxComponent";
+import { InventoryComponentArray } from "../../../entity-components/server-components/InventoryComponent";
+import { AmmoBoxComponentArray } from "../../../entity-components/server-components/AmmoBoxComponent";
 
 const getAmmoSlot = (ammoBoxInventory: Inventory): number => {
    for (let itemSlot = 1; itemSlot <= ammoBoxInventory.width * ammoBoxInventory.height; itemSlot++) {

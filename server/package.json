@@ -3,7 +3,7 @@
    "scripts": {
       "start": "ts-node-dev -r tsconfig-paths/register ./src/server/server",
       "perf": "node -r ts-node/register -r tsconfig-paths/register --inspect src/server/server.ts",
-      "gigaperf": "node -r ts-node/register --log-deopt --redirect-code-traces --redirect-code-traces-to=./NUL --log-ic --log-maps --log-maps-details --log-code --log-source-code --prof --log-internal-timer-events --detailed-line-info --logfile=v8.log --no-logfile-per-isolate src/server.ts",
+      "gigaperf": "node -r ts-node/register -r tsconfig-paths/register --log-deopt --redirect-code-traces --redirect-code-traces-to=./NUL --log-ic --log-maps --log-maps-details --log-code --log-source-code --prof --log-internal-timer-events --detailed-line-info --logfile=v8.log --no-logfile-per-isolate src/server/server.ts",
       "debug": "nodemon --inspect",
       "time": "node -r ts-node/register -r tsconfig-paths/register --expose-gc src/server.ts timed",
       "perfticks": "node -r ts-node/register -r tsconfig-paths/register --prof src/server.ts",

@@ -5,9 +5,9 @@ import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { randFloat, randItem } from "battletribes-shared/utils";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { TombstoneComponentArray } from "../entity-components/TombstoneComponent";
+import { TombstoneComponentArray } from "../entity-components/server-components/TombstoneComponent";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class Tombstone extends Entity {
    private static readonly HITBOX_WIDTH = 48;

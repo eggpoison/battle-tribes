@@ -1,8 +1,7 @@
 import { Point } from "battletribes-shared/utils";
 import Board from "./Board";
-import { getEntityByID } from "./world";
-import { copyMatrix, createTranslationMatrix, Matrix3x3, matrixMultiplyInPlace } from "./rendering/matrices";
-import { translateMatrix } from "./rendering/render-part-matrices";
+import { entityExists, getEntityRenderInfo } from "./world";
+import { createTranslationMatrix, Matrix3x3, matrixMultiplyInPlace } from "./rendering/matrices";
 
 type LightID = number;
 
@@ -143,20 +142,19 @@ export function getLightPositionMatrix(lightIdx: number): Matrix3x3 {
       return matrix;
    }
 
-   const attachedEntityID = lightToEntityRecord[lightID];
-   if (typeof attachedEntityID !== "undefined") {
-      const attachedEntity = getEntityByID(attachedEntityID);
-      if (typeof attachedEntity !== "undefined") {
-         // @Speed @Copynpaste
-         const matrix = createTranslationMatrix(light.offset.x, light.offset.y);
-         matrixMultiplyInPlace(attachedEntity.modelMatrix, matrix);
+   const attachedEntity = lightToEntityRecord[lightID];
+   if (typeof attachedEntity !== "undefined" && entityExists(attachedEntity)) {
+      // @Speed @Copynpaste
+      const matrix = createTranslationMatrix(light.offset.x, light.offset.y);
+      
+      const renderInfo = getEntityRenderInfo(attachedEntity);
+      matrixMultiplyInPlace(renderInfo.modelMatrix, matrix);
 
-         return matrix;
-      }
+      return matrix;
    }
 
    // @Incomplete
    // Make "attach light to world" logic
-   // return light.offset;
    throw new Error();
+   // return light.offset;
 }

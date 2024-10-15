@@ -129,17 +129,6 @@ export async function generateTextureAtlas(textureSources: ReadonlyArray<string>
       // Uncomment to see the texture atlas visually :D
       // document.body.appendChild(atlasElement);
       // atlasElement.style.position = "absolute";
-   
-      // const textureImages = new Array<HTMLImageElement>();
-      // for (let i = 0; i < textureSources.length; i++) {
-      //    const textureSource = textureSources[i];
-
-      //    const image = new Image();
-      //    image.src = require("../images/" + textureSource);
-
-      //    textureImages.push(image);
-      // }
-      // console.log(textureImages.length);
       
       for (let i = 0; i < textureSources.length; i++) {
          const image = textureImages[i];

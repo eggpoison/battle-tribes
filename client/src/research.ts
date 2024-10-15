@@ -10,10 +10,10 @@ import Client from "./client/Client";
 import { getSelectedEntityID } from "./entity-selection";
 import { playSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
-import { getRandomPointInEntity, TransformComponentArray } from "./entity-components/TransformComponent";
+import { getRandomPointInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { entityExists, getEntityType } from "./world";
-import { InventoryUseComponentArray } from "./entity-components/InventoryUseComponent";
-import { TribeMemberComponentArray } from "./entity-components/TribeMemberComponent";
+import { InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
+import { TribeMemberComponentArray } from "./entity-components/server-components/TribeMemberComponent";
 
 export interface ResearchOrb {
    /* X position of the node in the world */

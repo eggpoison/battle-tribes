@@ -4,7 +4,7 @@ import OPTIONS from "../../../options";
 import Board from "../../../Board";
 import Camera from "../../../Camera";
 import Client from "../../../client/Client";
-import { TransformComponentArray } from "../../../entity-components/TransformComponent";
+import { TransformComponentArray } from "../../../entity-components/server-components/TransformComponent";
 import Game from "../../../Game";
 import { sendToggleSimulationPacket } from "../../../client/packet-creation";
 

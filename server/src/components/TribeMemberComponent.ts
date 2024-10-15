@@ -88,6 +88,7 @@ function onInitialise(config: EntityConfig<ServerComponentType.health | ServerCo
    // Hotbar
    const hotbarInventory = new Inventory(getHotbarSize(config.entityType as TribesmanEntityType), 1, InventoryName.hotbar);
    hotbarInventory.addItem(createItem(ItemType.woodenBracings, 99), 2);
+   hotbarInventory.addItem(createItem(ItemType.wooden_wall, 99), 3);
    addInventoryToInventoryComponent(inventoryComponent, hotbarInventory, { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
    
    // Offhand

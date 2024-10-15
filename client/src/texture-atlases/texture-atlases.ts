@@ -332,7 +332,8 @@ export const TEXTURE_SOURCES: Array<string> = [
    "entities/guardian-gem-fragment-projectile/fragment-1.png",
    "entities/guardian-gem-fragment-projectile/fragment-2.png",
    "entities/guardian-gem-fragment-projectile/fragment-3.png",
-   "entities/guardian-spiky-ball/guardian-spiky-ball.png"
+   "entities/guardian-spiky-ball/guardian-spiky-ball.png",
+   "entities/bracings/vertical-post.png"
 ];
 
 const addTextureSource = (textureSource: string): void => {

@@ -8,13 +8,13 @@ import Game from "../../../Game";
 import Client from "../../../client/Client";
 import { InventoryName, itemTypeIsArmour, itemTypeIsBackpack } from "battletribes-shared/items/items";
 import Player from "../../../entities/Player";
-import { TribeComponentArray } from "../../../entity-components/TribeComponent";
-import { TribeMemberComponentArray } from "../../../entity-components/TribeMemberComponent";
+import { TribeComponentArray } from "../../../entity-components/server-components/TribeComponent";
+import { TribeMemberComponentArray } from "../../../entity-components/server-components/TribeMemberComponent";
 import { EntityID } from "../../../../../shared/src/entities";
-import { TribesmanAIComponentArray } from "../../../entity-components/TribesmanAIComponent";
-import { TransformComponentArray } from "../../../entity-components/TransformComponent";
-import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
-import { InventoryUseComponentArray } from "../../../entity-components/InventoryUseComponent";
+import { TribesmanAIComponentArray } from "../../../entity-components/server-components/TribesmanAIComponent";
+import { InventoryComponentArray } from "../../../entity-components/server-components/InventoryComponent";
+import { InventoryUseComponentArray } from "../../../entity-components/server-components/InventoryUseComponent";
+import { getEntityAgeTicks } from "../../../world";
 
 const PLAINSPEOPLE_NAMES: ReadonlyArray<string> = [
    "Oda",
@@ -184,8 +184,7 @@ const TribesmanInfocard = ({ tribesman }: TribesmanInfocardProps) => {
       }
    }
 
-   const transformComponent = TransformComponentArray.getComponent(tribesman);
-   const ageDays = transformComponent.ageTicks / Settings.TIME_PASS_RATE * Settings.TPS / 3600;
+   const ageDays = getEntityAgeTicks(tribesman) / Settings.TIME_PASS_RATE * Settings.TPS / 3600;
 
    let tribeName: string;
    if (tribeComponent.tribeID === Game.tribe.id) {

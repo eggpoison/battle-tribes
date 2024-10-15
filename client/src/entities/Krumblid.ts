@@ -3,10 +3,10 @@ import { angle, randFloat } from "battletribes-shared/utils";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ClientComponentType } from "../entity-components/components";
-import FootprintComponent from "../entity-components/FootprintComponent";
+import FootprintComponent, { FootprintComponentArray } from "../entity-components/server-components/FootprintComponent";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { getEntityRenderInfo } from "../world";
 
 class Krumblid extends Entity {
@@ -15,6 +15,10 @@ class Krumblid extends Entity {
    constructor(id: number) {
       super(id);
 
+      FootprintComponentArray.addComponent(this.id, new FootprintComponent(this, 0.3, 20, 64, 5, 50));
+   }
+
+   public onLoad(): void {
       const renderInfo = getEntityRenderInfo(this.id);
       renderInfo.attachRenderThing(
          new TexturedRenderPart(
@@ -24,8 +28,6 @@ class Krumblid extends Entity {
             getTextureArrayIndex("entities/krumblid/krumblid.png")
          )
       );
-
-      this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.3, 20, 64, 5, 50));
    }
 
    protected onHit(hitData: HitData): void {

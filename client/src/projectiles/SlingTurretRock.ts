@@ -4,8 +4,8 @@ import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle
 import { randFloat } from "battletribes-shared/utils";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
-import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { PhysicsComponentArray } from "../entity-components/server-components/PhysicsComponent";
 import { getEntityRenderInfo } from "../world";
 
 class SlingTurretRock extends Entity {

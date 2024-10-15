@@ -1,6 +1,6 @@
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
-import { BuildingMaterialComponentArray, TUNNEL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
+import { BuildingMaterialComponentArray, TUNNEL_TEXTURE_SOURCES } from "../entity-components/server-components/BuildingMaterialComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo } from "../world";
 

@@ -3,7 +3,7 @@ import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class Barrel extends Entity {
    public static readonly SIZE = 80;
@@ -20,13 +20,6 @@ class Barrel extends Entity {
             getTextureArrayIndex("entities/barrel/barrel.png")
          )
       );
-   }
-
-   public onLoad(): void {
-      const transformComponent = TransformComponentArray.getComponent(this.id);
-      if (transformComponent.ageTicks <= 0) {
-         playSound("barrel-place.mp3", 0.4, 1, transformComponent.position);
-      }
    }
 
    protected onHit(): void {

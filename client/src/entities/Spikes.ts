@@ -2,10 +2,10 @@ import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity from "../Entity";
-import { BuildingMaterialComponentArray, FLOOR_SPIKE_TEXTURE_SOURCES, WALL_SPIKE_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
+import { BuildingMaterialComponentArray, FLOOR_SPIKE_TEXTURE_SOURCES, WALL_SPIKE_TEXTURE_SOURCES } from "../entity-components/server-components/BuildingMaterialComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo, getEntityType } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 // @Cleanup: split into floor spikes and wall spikes
 class Spikes extends Entity {
@@ -34,11 +34,6 @@ class Spikes extends Entity {
 
       const renderInfo = getEntityRenderInfo(this.id);
       renderInfo.attachRenderThing(mainRenderPart);
-      
-      const transformComponent = TransformComponentArray.getComponent(this.id);
-      if (transformComponent.ageTicks <= 0) {
-         playSound("spike-place.mp3", 0.5, 1, transformComponent.position);
-      }
    }
 
    protected onHit(): void {

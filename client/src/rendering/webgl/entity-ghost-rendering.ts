@@ -1,5 +1,5 @@
 import { Point, lerp, randFloat, rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "battletribes-shared/utils";
-import { EntityType } from "battletribes-shared/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { StructureType } from "battletribes-shared/structures";
 import Player from "../../entities/Player";
 import { gl, createWebGLProgram } from "../../webgl";
@@ -8,7 +8,7 @@ import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../../utils";
 import OPTIONS from "../../options";
 import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "../../client/Client";
-import { NUM_LARGE_COVER_LEAVES, NUM_SMALL_COVER_LEAVES } from "../../entity-components/SpikesComponent";
+import { NUM_LARGE_COVER_LEAVES, NUM_SMALL_COVER_LEAVES } from "../../entity-components/server-components/SpikesComponent";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 // @Temporary: might be useful later
@@ -82,6 +82,8 @@ interface TextureInfo {
 }
 
 export const PARTIAL_OPACITY = 0.5;
+
+const entityGhosts = new Array<EntityID>();
 
 export const ENTITY_TYPE_TO_GHOST_TYPE_MAP: Record<StructureType, GhostType> = {
    [EntityType.campfire]: GhostType.campfire,
@@ -677,6 +679,23 @@ const calculateVertices = (ghostInfos: ReadonlyArray<GhostInfo>): ReadonlyArray<
    }
 
    return vertices;
+}
+
+export function createEntityGhost(entity: EntityID): void {
+   entityGhosts.push(entity);
+}
+
+export function removeEntityGhost(entity: EntityID): void {
+   const idx = entityGhosts.indexOf(entity);
+   if (idx !== -1) {
+      entityGhosts.splice(idx, 1);
+   } else {
+      throw new Error();
+   }
+}
+
+export function getEntityGhosts(): ReadonlyArray<EntityID> {
+   return entityGhosts;
 }
 
 export function renderGhostEntities(): void {

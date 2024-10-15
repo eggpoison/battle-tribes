@@ -6,9 +6,9 @@ import { BloodParticleSize, createBloodParticle, createBloodParticleFountain } f
 import { playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { FishComponentArray } from "../entity-components/FishComponent";
+import { FishComponentArray } from "../entity-components/server-components/FishComponent";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 const TEXTURE_SOURCES: Record<FishColour, string> = {
    [FishColour.blue]: "entities/fish/fish-blue.png",

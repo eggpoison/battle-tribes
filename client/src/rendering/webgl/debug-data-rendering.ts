@@ -2,9 +2,9 @@ import { Settings } from "battletribes-shared/settings";
 import { EntityDebugData } from "battletribes-shared/client-server-types";
 import { Point } from "battletribes-shared/utils";
 import { createWebGLProgram, generateLine, generateThickCircleWireframeVertices, gl } from "../../webgl";
-import Entity from "../../Entity";
+import { EntityRenderInfo } from "../../Entity";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { getEntityByID } from "../../world";
+import { entityExists, getEntityRenderInfo } from "../../world";
 
 let lineProgram: WebGLProgram;
 
@@ -86,19 +86,19 @@ export function createDebugDataShaders(): void {
    bindUBOToProgram(gl, triangleProgram, UBOBindingIndex.CAMERA);
 }
 
-const addCircleVertices = (vertices: Array<number>, debugData: EntityDebugData, gameObject: Entity): void => {
+const addCircleVertices = (vertices: Array<number>, debugData: EntityDebugData, renderInfo: EntityRenderInfo): void => {
    for (const circle of debugData.circles) {
       vertices.push(
-         ...generateThickCircleWireframeVertices(gameObject.renderPosition, circle.radius, circle.thickness, circle.colour[0], circle.colour[1], circle.colour[2])
+         ...generateThickCircleWireframeVertices(renderInfo.renderPosition, circle.radius, circle.thickness, circle.colour[0], circle.colour[1], circle.colour[2])
       );
    }
 }
 
-const addLineVertices = (vertices: Array<number>, debugData: EntityDebugData, entity: Entity): void => {
+const addLineVertices = (vertices: Array<number>, debugData: EntityDebugData, renderInfo: EntityRenderInfo): void => {
    for (const line of debugData.lines) {
       const targetPosition = new Point(...line.targetPosition);
       vertices.push(
-         ...generateLine(entity.renderPosition, targetPosition, line.thickness, line.colour[0], line.colour[1], line.colour[2])
+         ...generateLine(renderInfo.renderPosition, targetPosition, line.thickness, line.colour[0], line.colour[1], line.colour[2])
       );
    }
 }
@@ -107,14 +107,15 @@ const addLineVertices = (vertices: Array<number>, debugData: EntityDebugData, en
 export function renderLineDebugData(debugData: EntityDebugData): void {
    gl.useProgram(lineProgram);
 
-   const gameObject = getEntityByID(debugData.entityID);
-   if (typeof gameObject === "undefined") {
+   if (!entityExists(debugData.entityID)) {
       throw new Error("Couldn't find game object.");
    }
 
+   const renderInfo = getEntityRenderInfo(debugData.entityID);
+   
    const vertices = new Array<number>();
-   addCircleVertices(vertices, debugData, gameObject);
-   addLineVertices(vertices, debugData, gameObject);
+   addCircleVertices(vertices, debugData, renderInfo);
+   addLineVertices(vertices, debugData, renderInfo);
 
    const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);

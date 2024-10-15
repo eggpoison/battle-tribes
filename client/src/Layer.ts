@@ -7,7 +7,7 @@ import { SubtileType } from "../../shared/src/tiles";
 import { Point, randFloat, randInt, TileIndex } from "../../shared/src/utils";
 import Board from "./Board";
 import Chunk from "./Chunk";
-import { TransformComponentArray } from "./entity-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Particle from "./Particle";
 import { getEntityRenderLayer } from "./render-layers";
 import { RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
@@ -277,7 +277,7 @@ export default class Layer {
       return direction;
    }
 
-   public addEntity(entity: EntityID): void {
+   public addEntityForRendering(entity: EntityID): void {
       const renderLayer = getEntityRenderLayer(entity);
       if (renderLayerIsChunkRendered(renderLayer)) {
          registerChunkRenderedEntity(entity, renderLayer);

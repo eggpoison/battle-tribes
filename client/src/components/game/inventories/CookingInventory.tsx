@@ -4,8 +4,8 @@ import ItemSlot from "./ItemSlot";
 import { getSelectedEntity } from "../../../entity-selection";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { getEntityType } from "../../../world";
-import { CookingComponentArray } from "../../../entity-components/CookingComponent";
-import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
+import { CookingComponentArray } from "../../../entity-components/server-components/CookingComponent";
+import { InventoryComponentArray } from "../../../entity-components/server-components/InventoryComponent";
 
 const CookingInventory = () => {
    const cookingEntity = getSelectedEntity();

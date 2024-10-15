@@ -1,33 +1,23 @@
 import { Point, randFloat } from "battletribes-shared/utils";
 import { EntityID, EntityTypeString } from "battletribes-shared/entities";
 import { HitData, HitFlags } from "battletribes-shared/client-server-types";
-import { ServerComponentType } from "battletribes-shared/components";
 import Board from "./Board";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle } from "./particles";
 import { playSound } from "./sound";
-import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass } from "./entity-components/components";
-import Component from "./entity-components/Component";
 import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "./lights";
 import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
 import { removeRenderable } from "./rendering/render-loop";
-import { getRandomPointInEntity, TransformComponentArray } from "./entity-components/TransformComponent";
+import { getRandomPointInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { RenderPart, RenderThing, thingIsRenderPart } from "./render-parts/render-parts";
 import ServerComponent from "./entity-components/ServerComponent";
 import { createIdentityMatrix } from "./rendering/matrices";
 import { getEntityRenderLayer } from "./render-layers";
 import { registerDirtyEntity, renderParentIsHitbox } from "./rendering/render-part-matrices";
 import { getEntityByID, getEntityLayer, getEntityRenderInfo, getEntityType } from "./world";
-import { ComponentArrayType, getClientComponentArray, getComponentArrays } from "./entity-components/ComponentArray";
+import { ComponentArrayType, getComponentArrays } from "./entity-components/ComponentArray";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
-
-type ServerComponentsType = Partial<{
-   [T in ServerComponentType]: ServerComponentClass<T>;
-}>;
-type ClientComponentsType = Partial<{
-   [T in keyof typeof ClientComponents]: ClientComponentClass<T>;
-}>;
 
 export class EntityRenderInfo {
    public associatedEntity: EntityID;
@@ -41,7 +31,7 @@ export class EntityRenderInfo {
    
    public readonly modelMatrix = createIdentityMatrix();
 
-   /** Amount the game object's render parts will shake */
+   /** Amount the entity's render parts will shake */
    public shakeAmount = 0;
 
    /** Whether or not the entity has changed visually at all since its last dirty check */
@@ -53,9 +43,6 @@ export class EntityRenderInfo {
 
    constructor(associatedEntity: EntityID) {
       this.associatedEntity = associatedEntity;
-
-      // @Temporary? @Cleanup: should be done using the dirty function probs
-      registerDirtyEntity(this.associatedEntity);
    }
    
    public attachRenderThing(thing: RenderThing): void {
@@ -186,12 +173,6 @@ export class EntityRenderInfo {
 abstract class Entity {
    public readonly id: number;
 
-   // @Cleanup: some of this has to be superfluous.
-   public readonly components = new Array<Component>();
-   public readonly serverComponents = new Array<ServerComponent>();
-   private readonly serverComponentsRecord: ServerComponentsType = {};
-   private readonly clientComponents: ClientComponentsType = {};
-
    constructor(id: EntityID) {
       this.id = id;
 
@@ -206,29 +187,14 @@ abstract class Entity {
          this.onLoad();
       }
       
-      for (let i = 0; i < this.components.length; i++) {
-         const component = this.components[i];
-         if (typeof component.onLoad !== "undefined") {
-            component.onLoad();
+      const componentArrays = getComponentArrays();
+      for (let i = 0; i < componentArrays.length; i++) {
+         const componentArray = componentArrays[i];
+         if (typeof componentArray.onLoad !== "undefined" && componentArray.hasComponent(this.id)) {
+            const component = componentArray.getComponent(this.id);
+            componentArray.onLoad(component, this.id);
          }
       }
-   }
-
-   public addServerComponent(componentType: ServerComponentType, component: ServerComponent): void {
-      this.components.push(component);
-      this.serverComponents.push(component);
-      // @Cleanup: Remove cast
-      this.serverComponentsRecord[componentType] = component as any;
-   }
-
-   protected addClientComponent<T extends ClientComponentType>(componentType: T, component: ClientComponentClass<T>): void {
-      this.components.push(component);
-      // @Cleanup: Remove cast
-      this.clientComponents[componentType] = component as any;
-
-      // @Hack
-      const componentArray = getClientComponentArray(componentType);
-      componentArray.addComponent(this.id, component);
    }
 
    public remove(): void {
@@ -257,15 +223,12 @@ abstract class Entity {
          this.onDie();
       }
 
-      // @Cleanup: component shouldn't be typed as any!!
-      for (const component of Object.values(this.serverComponentsRecord)) {
-         if (typeof component.onDie !== "undefined") {
-            component.onDie();
-         }
-      }
-      for (const component of Object.values(this.clientComponents)) {
-         if (typeof component.onDie !== "undefined") {
-            component.onDie();
+      // @Speed
+      const componentArrays = getComponentArrays();
+      for (let i = 0; i < componentArrays.length; i++) {
+         const componentArray = componentArrays[i];
+         if (typeof componentArray.onDie !== "undefined" && componentArray.hasComponent(this.id)) {
+            componentArray.onDie(this.id);
          }
       }
    }
@@ -294,15 +257,12 @@ abstract class Entity {
 
       const isDamagingHit = (hitData.flags & HitFlags.NON_DAMAGING_HIT) === 0;
 
-      // @Cleanup
-      for (const component of Object.values(this.serverComponentsRecord)) {
-         if (typeof component.onHit !== "undefined") {
-            component.onHit(isDamagingHit);
-         }
-      }
-      for (const component of Object.values(this.clientComponents)) {
-         if (typeof component.onHit !== "undefined") {
-            component.onHit(isDamagingHit);
+      // @Speed
+      const componentArrays = getComponentArrays();
+      for (let i = 0; i < componentArrays.length; i++) {
+         const componentArray = componentArrays[i];
+         if (typeof componentArray.onHit !== "undefined" && componentArray.hasComponent(this.id)) {
+            componentArray.onHit(this.id, isDamagingHit);
          }
       }
    }

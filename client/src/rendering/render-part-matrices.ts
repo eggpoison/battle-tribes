@@ -7,8 +7,8 @@ import { renderLayerIsChunkRendered, updateChunkRenderedEntity } from "./webgl/c
 import { getEntityRenderInfo } from "../world";
 import { Hitbox } from "../../../shared/src/boxes/boxes";
 import { EntityID } from "../../../shared/src/entities";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
-import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { PhysicsComponentArray } from "../entity-components/server-components/PhysicsComponent";
 
 let dirtyEntities = new Array<EntityID>();
 

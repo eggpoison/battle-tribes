@@ -12,17 +12,17 @@ import Player from "../../entities/Player";
 import Game from "../../Game";
 import { InventoryName, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { addMenuCloseFunction } from "../../menus";
-import { InventoryComponentArray } from "../../entity-components/InventoryComponent";
+import { InventoryComponentArray } from "../../entity-components/server-components/InventoryComponent";
 import { getPlayerSelectedItem } from "./GameInteractableLayer";
-import { entityExists, getEntityByID, getEntityType } from "../../world";
-import { StructureComponentArray } from "../../entity-components/StructureComponent";
-import { TribeComponentArray } from "../../entity-components/TribeComponent";
-import { BuildingMaterialComponentArray } from "../../entity-components/BuildingMaterialComponent";
-import { TunnelComponentArray } from "../../entity-components/TunnelComponent";
-import { SpikesComponentArray } from "../../entity-components/SpikesComponent";
-import { HutComponentArray } from "../../entity-components/HutComponent";
-import { PlanterBoxComponentArray } from "../../entity-components/PlanterBoxComponent";
-import { TransformComponentArray } from "../../entity-components/TransformComponent";
+import { entityExists, getEntityType } from "../../world";
+import { StructureComponentArray } from "../../entity-components/server-components/StructureComponent";
+import { TribeComponentArray } from "../../entity-components/server-components/TribeComponent";
+import { BuildingMaterialComponentArray } from "../../entity-components/server-components/BuildingMaterialComponent";
+import { TunnelComponentArray } from "../../entity-components/server-components/TunnelComponent";
+import { SpikesComponentArray } from "../../entity-components/server-components/SpikesComponent";
+import { HutComponentArray } from "../../entity-components/server-components/HutComponent";
+import { PlanterBoxComponentArray } from "../../entity-components/server-components/PlanterBoxComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 
 /*
 // @Incomplete
@@ -443,8 +443,7 @@ const BuildMenu = () => {
 
    useEffect(() => {
       // Clear blueprint ghost type when the build menu is closed
-      const building = getEntityByID(buildingID);
-      if (typeof building === "undefined") {
+      if (!entityExists(buildingID)) {
          setGhostInfo(null);
          return;
       }
@@ -455,7 +454,7 @@ const BuildMenu = () => {
          deselectSelectedEntity();
       });
       
-      BuildMenu_isOpen = () => typeof getEntityByID(buildingID) !== "undefined";
+      BuildMenu_isOpen = () => entityExists(buildingID);
 
       BuildMenu_hide = (): void => {
          setBuildingID(0);
@@ -475,7 +474,7 @@ const BuildMenu = () => {
       }
 
       BuildMenu_refreshBuildingID = (): void => {
-         if (buildingID !== 0 && typeof getEntityByID(buildingID) === "undefined") {
+         if (!entityExists(buildingID)) {
             setBuildingID(0);
          }
 

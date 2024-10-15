@@ -9,8 +9,8 @@ import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import Client from "./Client";
 import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../components/game/GameInteractableLayer";
 import { getEntityByID, getEntityType } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
-import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { PhysicsComponentArray } from "../entity-components/server-components/PhysicsComponent";
 
 export function createPlayerDataPacket(): ArrayBuffer {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;

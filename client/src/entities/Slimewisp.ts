@@ -3,7 +3,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { TileType } from "battletribes-shared/tiles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { getEntityTile, TransformComponentArray } from "../entity-components/TransformComponent";
+import { getEntityTile, TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityRenderInfo } from "../world";
 
 class Slimewisp extends Entity {

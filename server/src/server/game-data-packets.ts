@@ -18,7 +18,7 @@ import { Inventory, InventoryName, ItemType } from "battletribes-shared/items/it
 import { TransformComponentArray } from "../components/TransformComponent";
 import { EntityConfig } from "../components";
 import { alignLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
-import { entityExists, getEntityLayer, getEntityType, getGameTicks, getGameTime, getTribes, layers, surfaceLayer } from "../world";
+import { entityExists, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes, layers, surfaceLayer } from "../world";
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -44,7 +44,7 @@ export function addInventoryDataToPacket(packet: Packet, inventory: Inventory): 
 }
 
 export function getEntityDataLength(entity: EntityID, player: EntityID | null): number {
-   let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 5 * Float32Array.BYTES_PER_ELEMENT;
 
    for (let i = 0; i < ComponentArrays.length; i++) {
       const componentArray = ComponentArrays[i];
@@ -58,9 +58,11 @@ export function getEntityDataLength(entity: EntityID, player: EntityID | null): 
 }
 
 export function addEntityDataToPacket(packet: Packet, entity: EntityID, player: EntityID | null): void {
-   // Entity ID, type, and layer
+   // Entity ID, type, spawn time, and layer
    packet.addNumber(entity);
    packet.addNumber(getEntityType(entity)!);
+   // @Bandwidth: Only include when client doesn't know about this information
+   packet.addNumber(getEntitySpawnTicks(entity));
    packet.addNumber(layers.indexOf(getEntityLayer(entity)));
 
    // @Speed

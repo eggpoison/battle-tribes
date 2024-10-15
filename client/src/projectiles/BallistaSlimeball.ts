@@ -2,8 +2,8 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { createArrowDestroyParticle } from "../particles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { PhysicsComponentArray } from "../entity-components/server-components/PhysicsComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { getEntityRenderInfo } from "../world";
 
 class BallistaSlimeball extends Entity {

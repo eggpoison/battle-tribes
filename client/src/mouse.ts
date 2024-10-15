@@ -7,7 +7,7 @@ import { updateDebugInfoEntity, updateDebugInfoTile } from "./components/game/de
 import { isDev } from "./utils";
 import { Tile } from "./Tile";
 import { updateCursorTooltip } from "./components/game/dev/CursorTooltip";
-import { TransformComponentArray } from "./entity-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getTileIndexIncludingEdges, tileIsInWorld } from "./Layer";
 import { getCurrentLayer, getEntityRenderInfo } from "./world";
 import { EntityID } from "../../shared/src/entities";

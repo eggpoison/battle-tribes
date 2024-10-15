@@ -1,9 +1,10 @@
 import { EntityID, EntityType } from "../../shared/src/entities";
 import { Settings } from "../../shared/src/settings";
+import Board from "./Board";
 import Chunk from "./Chunk";
 import Entity, { EntityRenderInfo } from "./Entity";
 import { getComponentArrays } from "./entity-components/ComponentArray";
-import { TransformComponentArray } from "./entity-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Layer from "./Layer";
 import { addEntityToRenderHeightMap } from "./rendering/webgl/entity-rendering";
 
@@ -13,6 +14,7 @@ let currentLayer: Layer;
 
 const entityRecord: Partial<Record<number, Entity>> = {};
 const entityTypes: Partial<Record<EntityID, EntityType>> = {};
+const entitySpawnTicks: Partial<Record<EntityID, number>> = {};
 const entityLayers: Partial<Record<EntityID, Layer>> = {};
 const entityRenderInfos: Partial<Record<EntityID, EntityRenderInfo>> = {};
 
@@ -26,6 +28,13 @@ export function setCurrentLayer(layerIdx: number): void {
 
 export function getCurrentLayer(): Layer {
    return currentLayer;
+}
+
+export function getEntityAgeTicks(entity: EntityID): number {
+   if (typeof entitySpawnTicks[entity] === "undefined") {
+      throw new Error();
+   }
+   return Board.serverTicks - entitySpawnTicks[entity]!;
 }
 
 export function getEntityLayer(entity: EntityID): Layer {
@@ -53,21 +62,25 @@ export function getEntityByID(entityID: number): Entity | undefined {
    return entityRecord[entityID];
 }
 
-export function registerBasicEntityInfo(entity: Entity, entityType: EntityType, layer: Layer, renderInfo: EntityRenderInfo): void {
+export function registerBasicEntityInfo(entity: Entity, entityType: EntityType, spawnTicks: number, layer: Layer, renderInfo: EntityRenderInfo): void {
    entityRecord[entity.id] = entity;
    entityTypes[entity.id] = entityType;
+   entitySpawnTicks[entity.id] = spawnTicks;
    entityLayers[entity.id] = layer;
    entityRenderInfos[entity.id] = renderInfo;
+}
+
+export function registerEntityRenderInfo(entity: EntityID, renderInfo: EntityRenderInfo): void {
+   entityRenderInfos[entity] = renderInfo;
 }
 
 export function addEntity(entity: Entity): void {
    entity.callOnLoadFunctions();
 
    // If the entity has first spawned in, call any spawn functions
-   const transformComponent = TransformComponentArray.getComponent(entity.id);
-   const ageTicks = transformComponent.ageTicks;
-   const componentArrays = getComponentArrays();
+   const ageTicks = getEntityAgeTicks(entity.id);
    if (ageTicks === 0) {
+      const componentArrays = getComponentArrays();
       for (let i = 0; i < componentArrays.length; i++) {
          const componentArray = componentArrays[i];
          if (componentArray.hasComponent(entity.id) && typeof componentArray.onSpawn !== "undefined") {
@@ -82,10 +95,11 @@ export function addEntity(entity: Entity): void {
    addEntityToRenderHeightMap(renderInfo);
 
    const layer = getEntityLayer(entity.id);
-   layer.addEntity(entity.id);
+   layer.addEntityForRendering(entity.id);
 }
 
-export function removeEntity(entity: Entity, isDeath: boolean): void {
+export function removeEntity(entityID: EntityID, isDeath: boolean): void {
+   const entity = getEntityByID(entityID)!;
    const layer = getEntityLayer(entity.id);
    layer.removeEntity(entity.id);
 
@@ -94,15 +108,16 @@ export function removeEntity(entity: Entity, isDeath: boolean): void {
    }
    entity.remove();
 
-   for (let i = 0; i < entity.components.length; i++) {
-      const component = entity.components[i];
-      if (typeof component.onRemove !== "undefined") {
-         component.onRemove();
+   const componentArrays = getComponentArrays();
+
+   for (let i = 0; i < componentArrays.length; i++) {
+      const componentArray = componentArrays[i];
+      if (typeof componentArray.onRemove !== "undefined" && componentArray.hasComponent(entityID)) {
+         componentArray.onRemove(entityID);
       }
    }
 
    // Remove from component arrays
-   const componentArrays = getComponentArrays();
    for (let i = 0; i < componentArrays.length; i++) {
       const componentArray = componentArrays[i];
       if (componentArray.hasComponent(entity.id)) {
@@ -112,7 +127,17 @@ export function removeEntity(entity: Entity, isDeath: boolean): void {
 
    delete entityRecord[entity.id];
    delete entityTypes[entity.id];
+   delete entitySpawnTicks[entity.id];
    delete entityLayers[entity.id];
+   delete entityRenderInfos[entity.id];
+}
+
+export function removeBasicEntityInfo(entity: EntityID): void {
+   delete entityRecord[entity];
+   delete entityTypes[entity];
+   delete entitySpawnTicks[entity];
+   delete entityLayers[entity];
+   delete entityRenderInfos[entity];
 }
 
 export function changeEntityLayer(entity: EntityID, newLayer: Layer): void {
@@ -120,7 +145,7 @@ export function changeEntityLayer(entity: EntityID, newLayer: Layer): void {
    const previousLayer = getEntityLayer(entity);
 
    previousLayer.removeEntity(entity);
-   newLayer.addEntity(entity);
+   newLayer.addEntityForRendering(entity);
 
    // Remove from all previous chunks and add to new ones
    const newChunks = new Set<Chunk>();

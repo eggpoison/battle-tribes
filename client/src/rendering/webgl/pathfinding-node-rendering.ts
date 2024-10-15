@@ -7,8 +7,8 @@ import { angle } from "battletribes-shared/utils";
 import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { nerdVisionIsVisible } from "../../components/game/dev/NerdVision";
-import { entityExists, getEntityByID } from "../../world";
-import { TransformComponentArray } from "../../entity-components/TransformComponent";
+import { entityExists } from "../../world";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 
 enum NodeType {
    occupied,
@@ -275,7 +275,7 @@ export function renderPathfindingNodes(): void {
    }
 
    const entityDebugData = Game.getEntityDebugData();
-   if (nerdVisionIsVisible() && entityDebugData !== null && typeof getEntityByID(entityDebugData.entityID) !== "undefined" && entityDebugData.hasOwnProperty("pathData")) {
+   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID) && entityDebugData.hasOwnProperty("pathData")) {
       for (const node of entityDebugData.pathData!.rawPathNodes) {
          nodeInfoArray.push({
             node: node,

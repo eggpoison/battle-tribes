@@ -3,11 +3,11 @@ import { HitData } from "battletribes-shared/client-server-types";
 import { BloodParticleSize, createBlueBloodParticle, createBlueBloodParticleFountain, createBlueBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
-import { FROZEN_YETI_HEAD_DISTANCE } from "../entity-components/FrozenYetiComponent";
+import { FROZEN_YETI_HEAD_DISTANCE } from "../entity-components/server-components/FrozenYetiComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class FrozenYeti extends Entity {
    private static readonly SIZE = 152;

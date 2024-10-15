@@ -9,7 +9,7 @@ import { ComponentArray } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent";
 import { TileType } from "battletribes-shared/tiles";
-import { PhysicsComponentArray } from "./PhysicsComponent";
+import { PhysicsComponent, PhysicsComponentArray } from "./PhysicsComponent";
 import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding";
 import { resolveWallCollision } from "../collision";
 import { Packet } from "battletribes-shared/packets";
@@ -366,46 +366,6 @@ export class TransformComponent {
          }
       }
    }
-   
-   public resolveBorderCollisions(entity: EntityID): void {
-      // Left border
-      if (this.boundingAreaMinX < 0) {
-         const physicsComponent = PhysicsComponentArray.getComponent(entity);
-         this.position.x -= this.boundingAreaMinX;
-         physicsComponent.selfVelocity.x = 0;
-         physicsComponent.externalVelocity.x = 0;
-         physicsComponent.positionIsDirty = true;
-         // Right border
-      } else if (this.boundingAreaMaxX > Settings.BOARD_UNITS) {
-         const physicsComponent = PhysicsComponentArray.getComponent(entity);
-         this.position.x -= this.boundingAreaMaxX - Settings.BOARD_UNITS;
-         physicsComponent.selfVelocity.x = 0;
-         physicsComponent.externalVelocity.x = 0;
-         physicsComponent.positionIsDirty = true;
-      }
-
-      // Bottom border
-      if (this.boundingAreaMinY < 0) {
-         const physicsComponent = PhysicsComponentArray.getComponent(entity);
-         this.position.y -= this.boundingAreaMinY;
-         physicsComponent.selfVelocity.y = 0;
-         physicsComponent.externalVelocity.y = 0;
-         physicsComponent.positionIsDirty = true;
-         // Top border
-      } else if (this.boundingAreaMaxY > Settings.BOARD_UNITS) {
-         const physicsComponent = PhysicsComponentArray.getComponent(entity);
-         this.position.y -= this.boundingAreaMaxY - Settings.BOARD_UNITS;
-         physicsComponent.selfVelocity.y = 0;
-         physicsComponent.externalVelocity.y = 0;
-         physicsComponent.positionIsDirty = true;
-      }
-
-      // @Temporary
-      if (this.position.x < 0 || this.position.x >= Settings.BOARD_UNITS || this.position.y < 0 || this.position.y >= Settings.BOARD_UNITS) {
-         console.log(this);
-         throw new Error("Unable to properly resolve border collisions for " + EntityTypeString[getEntityType(entity)!] + ".");
-      }
-   }
 }
 
 export const TransformComponentArray = new ComponentArray<TransformComponent>(ServerComponentType.transform, true, {
@@ -457,7 +417,7 @@ function onRemove(entity: EntityID): void {
 function getDataLength(entity: EntityID): number {
    const transformComponent = TransformComponentArray.getComponent(entity);
 
-   let lengthBytes = 9 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 8 * Float32Array.BYTES_PER_ELEMENT;
    
    for (const hitbox of transformComponent.hitboxes) {
       if (boxIsCircular(hitbox.box)) {
@@ -480,8 +440,6 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    packet.addNumber(transformComponent.position.x);
    packet.addNumber(transformComponent.position.y);
    packet.addNumber(transformComponent.rotation);
-   // @Hack
-   packet.addNumber(getEntityAgeTicks(entity));
    packet.addNumber(transformComponent.collisionBit);
    packet.addNumber(transformComponent.collisionMask);
    

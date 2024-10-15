@@ -7,7 +7,7 @@ import { playSound } from "../sound";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class IceSpikes extends Entity {
    private static readonly ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];

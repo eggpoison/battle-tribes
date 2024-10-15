@@ -2,7 +2,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { playSound } from "../sound";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { getEntityRenderInfo } from "../world";
 
 class SpearProjectile extends Entity {
@@ -18,14 +18,6 @@ class SpearProjectile extends Entity {
             getTextureArrayIndex("items/misc/spear.png")
          )
       );
-   }
-
-   public onLoad(): void {
-      // @Hack
-      const transformComponent = TransformComponentArray.getComponent(this.id);
-      if (transformComponent.ageTicks <= 0) {
-         playSound("spear-throw.mp3", 0.4, 1, transformComponent.position);
-      }
    }
 
    public onDie(): void {

@@ -1,14 +1,17 @@
 import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ClientComponentType } from "../entity-components/components";
-import FootprintComponent from "../entity-components/FootprintComponent";
+import FootprintComponent, { FootprintComponentArray } from "../entity-components/server-components/FootprintComponent";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityRenderInfo } from "../world";
 
 class Pebblum extends Entity {
    constructor(id: number) {
       super(id);
 
+      const renderInfo = getEntityRenderInfo(this.id);
+      
       // Nose
       const nose = new TexturedRenderPart(
          null,
@@ -17,7 +20,7 @@ class Pebblum extends Entity {
          getTextureArrayIndex("entities/pebblum/pebblum-nose.png")
       )
       nose.offset.y = 12;
-      this.attachRenderThing(nose);
+      renderInfo.attachRenderThing(nose);
 
       // Body
       const body = new TexturedRenderPart(
@@ -27,9 +30,9 @@ class Pebblum extends Entity {
          getTextureArrayIndex("entities/pebblum/pebblum-body.png")
       )
       body.offset.y = -8;
-      this.attachRenderThing(body);
+      renderInfo.attachRenderThing(body);
 
-      this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.3, 20, 64, 5, 40));
+      FootprintComponentArray.addComponent(this.id, new FootprintComponent(this, 0.3, 20, 64, 5, 40));
    }
 }
 

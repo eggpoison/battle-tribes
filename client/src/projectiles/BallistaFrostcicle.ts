@@ -3,8 +3,8 @@ import Entity from "../Entity";
 import { playSound } from "../sound";
 import { createArrowDestroyParticle } from "../particles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
-import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { PhysicsComponentArray } from "../entity-components/server-components/PhysicsComponent";
 import { getEntityRenderInfo } from "../world";
 
 class BallistaFrostcicle extends Entity {

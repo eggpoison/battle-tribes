@@ -6,11 +6,11 @@ import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud } from "../particles";
 import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
-import { WARRIOR_HUT_SIZE } from "../entity-components/HutComponent";
+import { WARRIOR_HUT_SIZE } from "../entity-components/server-components/HutComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { BlueprintComponentArray } from "../entity-components/BlueprintComponent";
+import { BlueprintComponentArray } from "../entity-components/server-components/BlueprintComponent";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 // @Cleanup: Move all this logic to the blueprint component file
 
@@ -325,41 +325,6 @@ export function getCurrentBlueprintProgressTexture(blueprintType: BlueprintType,
 }
 
 class BlueprintEntity extends Entity {
-   constructor(id: number) {
-      super(id);
-   }
-
-   public onLoad(): void {
-      const blueprintComponent = BlueprintComponentArray.getComponent(this.id);
-      
-      // Create completed render parts
-      const progressTextureInfoArray = BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponent.blueprintType];
-      const renderInfo = getEntityRenderInfo(this.id);
-      for (let i = 0; i < progressTextureInfoArray.length; i++) {
-         const progressTextureInfo = progressTextureInfoArray[i];
-
-         const renderPart = new TexturedRenderPart(
-            null,
-            progressTextureInfo.zIndex,
-            progressTextureInfo.rotation,
-            getTextureArrayIndex(progressTextureInfo.completedTextureSource)
-         );
-         renderPart.offset.x = progressTextureInfo.offsetX;
-         renderPart.offset.y = progressTextureInfo.offsetY;
-         renderPart.opacity = 0.5;
-         renderPart.tintR = 0.2;
-         renderPart.tintG = 0.1;
-         renderPart.tintB = 0.8;
-         renderInfo.attachRenderThing(renderPart);
-      }
-
-      // @Hack
-      const transformComponent = TransformComponentArray.getComponent(this.id);
-      if (transformComponent.ageTicks <= 0) {
-         playSound("blueprint-place.mp3", 0.4, 1, transformComponent.position);
-      }
-   }
-
    // @Hack
    public callOnLoadFunctions(): void {
       super.callOnLoadFunctions();

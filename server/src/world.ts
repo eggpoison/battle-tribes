@@ -155,6 +155,14 @@ export function getEntityAgeTicks(entity: EntityID): number {
    return ticks - entitySpawnTicks[entity]!;
 }
 
+export function getEntitySpawnTicks(entity: EntityID): number {
+   const spawnTicks = entitySpawnTicks[entity];
+   if (typeof spawnTicks === "undefined") {
+      throw new Error("Entity doesn't exist!");
+   }
+   return spawnTicks;
+}
+
 export function getEntityComponentTypes(entity: EntityID): ReadonlyArray<ServerComponentType> {
    return entityComponentTypes[entity]!;
 }

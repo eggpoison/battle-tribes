@@ -52,13 +52,6 @@ renderApp(App);
 // Enable Hot Module Replacement (HMR)
 if (module.hot) {
    module.hot.accept();
-//   module.hot.accept('./components/App', () => {
-//     const NextApp = require('./components/App').default;
-//     renderApp(NextApp);
-//   });
-//   module.hot.accept(function () {
-//     console.log('An error occurred while accepting new version');
-//   });
 }
 
 window.addEventListener("load", () => {

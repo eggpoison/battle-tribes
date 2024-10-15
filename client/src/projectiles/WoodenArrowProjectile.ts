@@ -2,9 +2,9 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { createArrowDestroyParticle } from "../particles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
+import { PhysicsComponentArray } from "../entity-components/server-components/PhysicsComponent";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class WoodenArrowProjectile extends Entity {
    constructor(id: number) {

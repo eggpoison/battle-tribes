@@ -3,15 +3,13 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { createCactusSpineParticle } from "../particles";
 import Entity from "../Entity";
-import { CACTUS_RADIUS } from "../entity-components/CactusComponent";
+import { CACTUS_RADIUS } from "../entity-components/server-components/CactusComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getEntityRenderInfo } from "../world";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class Cactus extends Entity {
-   constructor(id: number) {
-      super(id);
-
+   public onLoad(): void {
       const baseRenderPart = new TexturedRenderPart(
          null,
          2,
@@ -19,7 +17,7 @@ class Cactus extends Entity {
          getTextureArrayIndex("entities/cactus/cactus.png")
       );
 
-      const renderInfo = getEntityRenderInfo(id);
+      const renderInfo = getEntityRenderInfo(this.id);
       renderInfo.attachRenderThing(baseRenderPart);
    }
 

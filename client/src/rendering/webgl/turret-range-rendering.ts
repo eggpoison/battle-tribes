@@ -8,8 +8,8 @@ import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "battletribes-shared/items/items";
 import { getPlayerSelectedItem } from "../../components/game/GameInteractableLayer";
 import { entityExists, getEntityLayer, getEntityType } from "../../world";
-import { TransformComponentArray } from "../../entity-components/TransformComponent";
-import { TurretComponentArray } from "../../entity-components/TurretComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { TurretComponentArray } from "../../entity-components/server-components/TurretComponent";
 
 const CIRCLE_DETAIL = 300;
 

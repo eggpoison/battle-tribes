@@ -1,7 +1,7 @@
 import { randItem } from "battletribes-shared/utils";
 import Entity from "../Entity";
 import { playSound, ROCK_HIT_SOUNDS } from "../sound";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class Golem extends Entity {
    protected onHit(): void {

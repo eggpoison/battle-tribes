@@ -3,9 +3,9 @@ import { TileType } from "battletribes-shared/tiles";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
 import Entity from "../Entity";
 import { playSound } from "../sound";
-import { SLIME_SIZES, SlimeComponentArray } from "../entity-components/SlimeComponent";
+import { SLIME_SIZES, SlimeComponentArray } from "../entity-components/server-components/SlimeComponent";
 import { getEntityLayer } from "../world";
-import { getEntityTile, TransformComponentArray } from "../entity-components/TransformComponent";
+import { getEntityTile, TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 
 class Slime extends Entity {
    private static readonly NUM_PUDDLE_PARTICLES_ON_HIT: ReadonlyArray<number> = [1, 2, 3];

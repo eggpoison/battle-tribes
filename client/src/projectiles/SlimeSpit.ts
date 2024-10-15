@@ -4,7 +4,7 @@ import { playSound } from "../sound";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 import { createPoisonParticle } from "../particles";
-import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { getEntityRenderInfo } from "../world";
 
 class SlimeSpit extends Entity {
@@ -38,14 +38,6 @@ class SlimeSpit extends Entity {
       renderPart2.opacity = 0.75;
       renderInfo.attachRenderThing(renderPart2);
       renderParts.push(renderPart2);
-   }
-
-   public onLoad(): void {
-      // @Hack
-      const transformComponent = TransformComponentArray.getComponent(this.id);
-      if (transformComponent.ageTicks <= 0) {
-         playSound("slime-spit.mp3", 0.5, 1, transformComponent.position);
-      }
    }
 
    public onDie(): void {

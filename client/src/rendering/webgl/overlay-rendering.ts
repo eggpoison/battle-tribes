@@ -8,13 +8,14 @@ import { RenderableType, addRenderable } from "../render-loop";
 import { RenderPart, renderPartIsTextured } from "../../render-parts/render-parts";
 import { getEntityRenderLayer } from "../../render-layers";
 import { getEntityLayer } from "../../world";
+import { EntityID } from "../../../../shared/src/entities";
 
 const enum Vars {
    ATTRIBUTES_PER_VERTEX = 8
 }
 
 export interface RenderPartOverlayGroup {
-   readonly entity: Entity;
+   readonly entity: EntityID;
    readonly textureSource: string;
    readonly renderParts: Array<RenderPart>;
 }
@@ -31,16 +32,16 @@ let indexBuffer: WebGLBuffer;
 
 let overlayTextureArray: WebGLTexture;
 
-export function createRenderPartOverlayGroup(entity: Entity, textureSource: string, renderParts: Array<RenderPart>): RenderPartOverlayGroup {
+export function createRenderPartOverlayGroup(entity: EntityID, textureSource: string, renderParts: Array<RenderPart>): RenderPartOverlayGroup {
    const overlay: RenderPartOverlayGroup = {
       entity: entity,
       textureSource: textureSource,
       renderParts: renderParts
    };
 
-   const renderLayer = getEntityRenderLayer(entity.id);
+   const renderLayer = getEntityRenderLayer(entity);
    // @Cleanup: Side effect
-   addRenderable(getEntityLayer(entity.id), RenderableType.overlay, overlay, renderLayer);
+   addRenderable(getEntityLayer(entity), RenderableType.overlay, overlay, renderLayer);
 
    return overlay;
 }

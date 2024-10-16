@@ -1,8 +1,7 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponentArray from "../ServerComponentArray";
-import ServerComponent from "../ServerComponent";
 
-class IceSpikesComponent extends ServerComponent {}
+class IceSpikesComponent {}
 
 export default IceSpikesComponent;
 

@@ -1,12 +1,11 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { createIceSpeckProjectile, createSnowflakeParticle } from "../../particles";
-import ServerComponent from "../ServerComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityID } from "battletribes-shared/entities";
 import ServerComponentArray from "../ServerComponentArray";
 
-class IceArrowComponent extends ServerComponent {}
+class IceArrowComponent {}
 
 export default IceArrowComponent;
 

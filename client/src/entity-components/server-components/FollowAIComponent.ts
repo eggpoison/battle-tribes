@@ -1,9 +1,8 @@
-import ServerComponent from "../ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponentArray from "../ServerComponentArray";
 
-class FollowAIComponent extends ServerComponent {}
+class FollowAIComponent {}
 
 export default FollowAIComponent;
 

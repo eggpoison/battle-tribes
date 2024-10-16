@@ -1,7 +1,6 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { Point } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import { createRockSpeckParticle } from "../../particles";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -81,7 +80,7 @@ const getZIndex = (size: GolemRockSize): number => {
    }
 }
 
-class GolemComponent extends ServerComponent {
+class GolemComponent {
    public rockRenderParts = new Array<RenderPart>();
    public readonly eyeRenderParts = new Array<RenderPart>();
    public readonly eyeLights = new Array<Light>();

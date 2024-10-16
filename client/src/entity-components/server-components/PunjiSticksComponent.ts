@@ -1,5 +1,4 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import { Settings } from "battletribes-shared/settings";
 import { randFloat } from "battletribes-shared/utils";
 import { createFlyParticle } from "../../particles";
@@ -8,7 +7,7 @@ import { EntityID } from "../../../../shared/src/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
-class PunjiSticksComponent extends ServerComponent {
+class PunjiSticksComponent {
    public ticksSinceLastFly = 0;
    public ticksSinceLastFlySound = 0;
 }

@@ -1,7 +1,6 @@
 import { HealingTotemTargetData, ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { Point, angle, distance, lerp, randInt } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import { createHealingParticle } from "../../particles";
 import { Light, addLight, attachLightToEntity, removeLight } from "../../lights";
 import { PacketReader } from "battletribes-shared/packets";
@@ -12,7 +11,7 @@ import ServerComponentArray from "../ServerComponentArray";
 const EYE_LIGHTS_TRANSFORM_TICKS = Math.floor(0.5 / Settings.TPS);
 const BASELINE_EYE_LIGHT_INTENSITY = 0.5;
 
-class HealingTotemComponent extends ServerComponent {
+class HealingTotemComponent {
    public healingTargetsData!: ReadonlyArray<HealingTotemTargetData>;
 
    public ticksSpentHealing = 0;

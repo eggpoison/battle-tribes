@@ -1,11 +1,10 @@
 import { PacketReader } from "battletribes-shared/packets";
-import ServerComponent from "../ServerComponent";
 import { DecorationType } from "battletribes-shared/components";
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityID } from "../../../../shared/src/entities";
 
-class DecorationComponent extends ServerComponent {
+class DecorationComponent {
    public decorationType: DecorationType = 0;
 }
 

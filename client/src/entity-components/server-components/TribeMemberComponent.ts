@@ -3,7 +3,6 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { TitleGenerationInfo, TribesmanTitle } from "battletribes-shared/titles";
 import { Point, lerp, randFloat, veryBadHash } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import { Light, addLight, attachLightToEntity, removeLightsAttachedToEntity } from "../../lights";
 import Board from "../../Board";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
@@ -85,7 +84,7 @@ const readWarpaint = (reader: PacketReader): number | null => {
    return warpaintType;
 }
 
-class TribeMemberComponent extends ServerComponent {
+class TribeMemberComponent {
    public bodyRenderPart!: RenderPart;
    public handRenderParts!: ReadonlyArray<RenderPart>;
    

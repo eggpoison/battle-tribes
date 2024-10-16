@@ -6,13 +6,12 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSound } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { getEntityRenderInfo } from "../../world";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 
-export class GuardianSpikyBallComponent extends ServerComponent {}
+export class GuardianSpikyBallComponent {}
 
-export const GuardianSpikyBallComponentArray = new ServerComponentArray<ServerComponent>(ServerComponentType.guardianSpikyBall, true, {
+export const GuardianSpikyBallComponentArray = new ServerComponentArray<GuardianSpikyBallComponent>(ServerComponentType.guardianSpikyBall, true, {
    onLoad: onLoad,
    padData: padData,
    updateFromData: updateFromData

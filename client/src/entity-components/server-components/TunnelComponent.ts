@@ -7,7 +7,6 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSound } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { getEntityRenderInfo } from "../../world";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import TransformComponent, { TransformComponentArray } from "./TransformComponent";
 
@@ -38,7 +37,7 @@ const getTunnelDoorInfo = (doorBit: number, openProgress: number): TunnelDoorInf
    };
 }
 
-class TunnelComponent extends ServerComponent {
+class TunnelComponent {
    public readonly doorRenderParts: Record<number, RenderPart> = {};
    public doorBitset = 0;
 

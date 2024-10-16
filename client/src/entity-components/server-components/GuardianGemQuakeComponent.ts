@@ -6,7 +6,6 @@ import { createGemQuakeProjectile } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { getEntityRenderInfo } from "../../world";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 
@@ -16,7 +15,7 @@ const TEXTURE_SOURCES: ReadonlyArray<string> = [
    "entities/guardian-gem-quake/gem-3.png"
 ];
 
-export class GuardianGemQuakeComponent extends ServerComponent {}
+export class GuardianGemQuakeComponent {}
 
 export const GuardianGemQuakeComponentArray = new ServerComponentArray<GuardianGemQuakeComponent>(ServerComponentType.guardianGemQuake, true, {
    onLoad: onLoad,

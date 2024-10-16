@@ -4,11 +4,10 @@ import { PacketReader } from "../../../../shared/src/packets";
 import { customTickIntervalHasPassed } from "../../../../shared/src/utils";
 import { createPaperParticle } from "../../particles";
 import { getEntityAgeTicks } from "../../world";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray, getRandomPointInEntity } from "./TransformComponent";
 
-class ResearchBenchComponent extends ServerComponent {
+class ResearchBenchComponent {
    public isOccupied = false;
 }
 

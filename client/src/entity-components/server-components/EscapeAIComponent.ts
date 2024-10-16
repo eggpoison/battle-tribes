@@ -1,10 +1,8 @@
-import ServerComponent from "../ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
-import { EntityID } from "../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 
-class EscapeAIComponent extends ServerComponent {}
+class EscapeAIComponent {}
 
 export default EscapeAIComponent;
 

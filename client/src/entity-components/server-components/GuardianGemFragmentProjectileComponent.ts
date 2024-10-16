@@ -6,7 +6,6 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSound } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { getEntityRenderInfo } from "../../world";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 
@@ -16,7 +15,7 @@ const TEXTURE_SOURCES = [
    "entities/guardian-gem-fragment-projectile/fragment-3.png"
 ];
 
-export class GuardianGemFragmentProjectileComponent extends ServerComponent {
+export class GuardianGemFragmentProjectileComponent {
    public renderPart!: TexturedRenderPart;
 }
 

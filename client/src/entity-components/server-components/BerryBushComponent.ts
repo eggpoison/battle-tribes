@@ -1,4 +1,3 @@
-import ServerComponent from "../ServerComponent";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -16,7 +15,7 @@ const BERRY_BUSH_TEXTURE_SOURCES = [
    "entities/berry-bush6.png"
 ];
 
-class BerryBushComponent extends ServerComponent {
+class BerryBushComponent {
    public numBerries = 0;
    public renderPart!: TexturedRenderPart;
 }

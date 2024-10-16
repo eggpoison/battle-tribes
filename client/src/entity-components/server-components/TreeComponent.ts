@@ -1,10 +1,9 @@
 import { EntityID, TreeSize } from "battletribes-shared/entities";
-import ServerComponent from "../ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponentArray from "../ServerComponentArray";
 
-class TreeComponent extends ServerComponent {
+class TreeComponent {
    public treeSize = TreeSize.small;
 }
 

@@ -1,4 +1,3 @@
-import ServerComponent from "../ServerComponent";
 import { randFloat } from "battletribes-shared/utils";
 import { EntityID, FishColour } from "battletribes-shared/entities";
 import { PacketReader } from "battletribes-shared/packets";
@@ -10,7 +9,7 @@ import { getEntityLayer } from "../../world";
 import { getEntityTile, TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
-class FishComponent extends ServerComponent {
+class FishComponent {
    public colour: FishColour = 0;
    public readonly waterOpacityMultiplier = randFloat(0.6, 1);
 }

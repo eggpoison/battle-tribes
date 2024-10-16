@@ -1,11 +1,10 @@
 import { ScarInfo } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityID } from "../../../../shared/src/entities";
 
-class TribeWarriorComponent extends ServerComponent {
+class TribeWarriorComponent {
    public readonly scars = new Array<ScarInfo>();
 }
 

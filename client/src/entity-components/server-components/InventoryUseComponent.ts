@@ -2,7 +2,6 @@ import { EntityID, EntityType, LimbAction } from "battletribes-shared/entities";
 import { Point, lerp, randFloat, randItem } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
-import ServerComponent from "../ServerComponent";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import Board, { getElapsedTimeInSeconds, getSecondsSinceTickTimestamp } from "../../Board";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
@@ -405,7 +404,7 @@ export function readCrossbowLoadProgressRecord(reader: PacketReader): Partial<Re
    return record;
 }
 
-class InventoryUseComponent extends ServerComponent{
+class InventoryUseComponent {
    public readonly limbInfos = new Array<LimbInfo>();
 
    public readonly limbAttachPoints = new Array<RenderAttachPoint>();

@@ -1,5 +1,4 @@
 import { EntityID, SnowballSize } from "battletribes-shared/entities";
-import ServerComponent from "../ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import { randFloat } from "battletribes-shared/utils";
@@ -9,7 +8,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
-class SnowballComponent extends ServerComponent {
+class SnowballComponent {
    public size: SnowballSize = 0;
 }
 

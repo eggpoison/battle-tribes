@@ -7,7 +7,6 @@ import { BackpackInventoryMenu_update } from "../../components/game/inventories/
 import { Hotbar_update } from "../../components/game/inventories/Hotbar";
 import { CraftingMenu_updateRecipes } from "../../components/game/menus/CraftingMenu";
 import Player from "../../entities/Player";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import InventoryUseComponent, { LimbInfo, InventoryUseComponentArray } from "./InventoryUseComponent";
 
@@ -170,7 +169,7 @@ const updateHeldItem = (inventoryComponent: InventoryComponent, inventoryUseComp
    }
 }
 
-class InventoryComponent extends ServerComponent {
+class InventoryComponent {
    public readonly inventories: Partial<Record<InventoryName, Inventory>> = {};
 
    // @Cleanup: just combine these 2 and make it able to return undefined

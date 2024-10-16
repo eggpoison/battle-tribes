@@ -1,4 +1,3 @@
-import ServerComponent from "../ServerComponent";
 import { lerp, randFloat, randItem } from "battletribes-shared/utils";
 import { RenderPart } from "../../render-parts/render-parts";
 import { PacketReader } from "battletribes-shared/packets";
@@ -28,15 +27,13 @@ const ANGRY_SOUNDS: ReadonlyArray<string> = ["yeti-angry-1.mp3", "yeti-angry-2.m
 const HURT_SOUNDS: ReadonlyArray<string> = ["yeti-hurt-1.mp3", "yeti-hurt-2.mp3", "yeti-hurt-3.mp3", "yeti-hurt-4.mp3", "yeti-hurt-5.mp3"];
 const DEATH_SOUNDS: ReadonlyArray<string> = ["yeti-death-1.mp3", "yeti-death-2.mp3"];
 
-class YetiComponent extends ServerComponent {
+class YetiComponent {
    public pawRenderParts!: ReadonlyArray<RenderPart>;
    
    public lastAttackProgress = 0;
    public attackProgress = 0;
 
    constructor(entity: EntityID) {
-      super();
-      
       const renderInfo = getEntityRenderInfo(entity);
       
       renderInfo.attachRenderThing(

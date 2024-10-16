@@ -1,7 +1,6 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { randInt } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import Board from "../../Board";
 import { createDirtParticle } from "../../particles";
 import { playSound } from "../../sound";
@@ -12,7 +11,7 @@ import { getEntityLayer } from "../../world";
 import { getEntityTile, TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
-class CowComponent extends ServerComponent {
+class CowComponent {
    public species = CowSpecies.black;
    public grazeProgress = 0;
 }

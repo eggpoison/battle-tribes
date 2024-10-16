@@ -1,6 +1,5 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import ColouredRenderPart, { RenderPartColour } from "../../render-parts/ColouredRenderPart";
-import ServerComponent from "../ServerComponent";
 import { Colour, hueShift, lerp, multiColourLerp } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
 import { PacketReader } from "battletribes-shared/packets";
@@ -107,7 +106,7 @@ const getLayerColour = (entity: EntityID, r: number, g: number, b: number, layer
    }
 }
 
-class LayeredRodComponent extends ServerComponent {
+class LayeredRodComponent {
    public numLayers = 0;
    
    public naturalBendX = 0;

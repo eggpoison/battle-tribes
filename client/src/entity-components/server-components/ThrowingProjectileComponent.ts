@@ -1,8 +1,7 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
-class ThrowingProjectileComponent extends ServerComponent {}
+class ThrowingProjectileComponent {}
 
 export default ThrowingProjectileComponent;
 

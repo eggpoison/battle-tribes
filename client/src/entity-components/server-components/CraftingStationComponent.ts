@@ -1,11 +1,10 @@
-import ServerComponent from "../ServerComponent";
 import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityID } from "../../../../shared/src/entities";
 
-class CraftingStationComponent extends ServerComponent {
+class CraftingStationComponent {
    public craftingStation = CraftingStation.workbench;
 }
 

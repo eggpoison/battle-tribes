@@ -1,8 +1,7 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
-class PebblumComponent extends ServerComponent {}
+class PebblumComponent {}
 
 export default PebblumComponent;
 

@@ -8,14 +8,13 @@ import { TransformComponentArray } from "./TransformComponent";
 import { TribeComponentArray } from "./TribeComponent";
 import { EntityID } from "../../../../shared/src/entities";
 import { playSound } from "../../sound";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
 const GOBLIN_ANGRY_SOUNDS: ReadonlyArray<string> = ["goblin-angry-1.mp3", "goblin-angry-2.mp3", "goblin-angry-3.mp3", "goblin-angry-4.mp3"];
 const GOBLIN_ESCAPE_SOUNDS: ReadonlyArray<string> = ["goblin-escape-1.mp3", "goblin-escape-2.mp3", "goblin-escape-3.mp3"];
 const GOBLIN_AMBIENT_SOUNDS: ReadonlyArray<string> = ["goblin-ambient-1.mp3", "goblin-ambient-2.mp3", "goblin-ambient-3.mp3", "goblin-ambient-4.mp3", "goblin-ambient-5.mp3"];
 
-class TribesmanAIComponent extends ServerComponent {
+class TribesmanAIComponent {
    public name = 0;
    public untitledDescriptor = 0;
    public aiType = TribesmanAIType.idle;

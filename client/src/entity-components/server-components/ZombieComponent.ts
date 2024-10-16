@@ -2,13 +2,12 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { randInt } from "battletribes-shared/utils";
 import { playSound } from "../../sound";
-import ServerComponent from "../ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { EntityID } from "../../../../shared/src/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
-class ZombieComponent extends ServerComponent {
+class ZombieComponent {
    public zombieType = 0;
 }
 

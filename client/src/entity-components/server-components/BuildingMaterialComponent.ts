@@ -1,6 +1,5 @@
 import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType } from "battletribes-shared/entities";
-import ServerComponent from "../ServerComponent";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { getEntityRenderInfo, getEntityType } from "../../world";
@@ -27,7 +26,7 @@ const getMaterialTextureSources = (entityType: EntityType): ReadonlyArray<string
    }
 }
 
-class BuildingMaterialComponent extends ServerComponent {
+class BuildingMaterialComponent {
    public material: BuildingMaterial = 0;
 }
 

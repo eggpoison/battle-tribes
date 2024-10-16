@@ -1,7 +1,6 @@
 import { lerp, randFloat, randInt } from "battletribes-shared/utils";
 import { EntityID, SlimeSize } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import ServerComponent from "../ServerComponent";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -40,7 +39,7 @@ const getBodyShakeAmount = (spitProgress: number): number => {
    return lerp(0, 5, spitProgress);
 }
 
-class SlimeComponent extends ServerComponent {
+class SlimeComponent {
    public bodyRenderPart!: RenderPart;
    public eyeRenderPart!: RenderPart;
    public readonly orbRenderParts = new Array<RenderPart>();

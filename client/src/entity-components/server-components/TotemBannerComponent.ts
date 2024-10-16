@@ -1,7 +1,6 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID, TribeTotemBanner } from "battletribes-shared/entities";
 import { TribeType } from "battletribes-shared/tribes";
-import ServerComponent from "../ServerComponent";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -12,7 +11,7 @@ import ServerComponentArray from "../ServerComponentArray";
 
 const BANNER_LAYER_DISTANCES = [34, 52, 65];
 
-class TotemBannerComponent extends ServerComponent {
+class TotemBannerComponent {
    public readonly banners: Record<number, TribeTotemBanner> = {};
    public readonly bannerRenderParts: Record<number, RenderPart> = {};
 }

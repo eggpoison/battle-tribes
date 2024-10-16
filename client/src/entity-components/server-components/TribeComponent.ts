@@ -2,7 +2,6 @@ import { TribeType } from "battletribes-shared/tribes";
 import { EnemyTribeData } from "battletribes-shared/techs";
 import { ServerComponentType } from "battletribes-shared/components";
 import { randFloat } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import Game from "../../Game";
 import { playSound } from "../../sound";
 import { getTribesmanRadius, TribeMemberComponentArray } from "./TribeMemberComponent";
@@ -33,7 +32,7 @@ export function getTribeType(tribeID: number): TribeType {
    }
 }
 
-class TribeComponent extends ServerComponent {
+class TribeComponent {
    public tribeID = 0;
    public tribeType = TribeType.plainspeople;
 }

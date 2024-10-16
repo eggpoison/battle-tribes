@@ -68,9 +68,8 @@ import TunnelComponent from "./server-components/TunnelComponent";
 import TurretComponent from "./server-components/TurretComponent";
 import YetiComponent from "./server-components/YetiComponent";
 import ZombieComponent from "./server-components/ZombieComponent";
-import ServerComponent from "./ServerComponent";
 
-export function createComponent(entity: EntityID, componentType: ServerComponentType): ServerComponent {
+export function createComponent(entity: EntityID, componentType: ServerComponentType): object {
    switch (componentType) {
       case ServerComponentType.transform: return new TransformComponent();
       case ServerComponentType.cow: return new CowComponent();

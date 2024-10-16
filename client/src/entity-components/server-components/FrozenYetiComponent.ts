@@ -2,7 +2,6 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID, FrozenYetiAttackType } from "battletribes-shared/entities";
 import { lerp, randFloat, randInt } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
-import ServerComponent from "../ServerComponent";
 import { createBiteParticle, createRockParticle, createSnowParticle, createWhiteSmokeParticle } from "../../particles";
 import Board from "../../Board";
 import Particle from "../../Particle";
@@ -26,7 +25,7 @@ const ROAR_ARC = Math.PI / 6;
 const ROAR_REACH = 450;
 const SNOWBALL_THROW_OFFSET = 150;
 
-class FrozenYetiComponent extends ServerComponent {
+class FrozenYetiComponent {
    public readonly headRenderPart: RenderPart;
    /** Index 0: left paw, index 1: right paw */
    public readonly pawRenderParts: ReadonlyArray<RenderPart>;
@@ -36,8 +35,6 @@ class FrozenYetiComponent extends ServerComponent {
    public stageProgress = 0;
 
    constructor(entity: EntityID) {
-      super();
-
       const renderInfo = getEntityRenderInfo(entity);
       this.headRenderPart = renderInfo.getRenderThing("frozenYetiComponent:head") as RenderPart;
       this.pawRenderParts = renderInfo.getRenderThings("frozenYetiComponent:paw", 2) as Array<RenderPart>;

@@ -9,7 +9,6 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSound } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { getEntityRenderInfo } from "../../world";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 
@@ -17,7 +16,7 @@ const enum Vars {
    SPIKY_BALL_SUMMON_SHAKE_AMOUNT = 2
 }
 
-export default class GuardianComponent extends ServerComponent {
+export default class GuardianComponent {
    public rubyRenderParts = new Array<RenderPart>();
    public amethystRenderParts = new Array<RenderPart>();
    public emeraldRenderParts = new Array<RenderPart>();
@@ -42,8 +41,6 @@ export default class GuardianComponent extends ServerComponent {
    public attackStage = 0;
 
    constructor(entity: EntityID) {
-      super();
-
       const renderInfo = getEntityRenderInfo(entity);
 
       // Head

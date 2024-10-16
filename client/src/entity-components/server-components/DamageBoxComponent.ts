@@ -1,4 +1,3 @@
-import ServerComponent from "../ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
@@ -71,7 +70,7 @@ const getCollidingBox = (entity: EntityID, box: Box): DamageBoxCollisionInfo | n
    return null;
 }
 
-class DamageBoxComponent extends ServerComponent {
+class DamageBoxComponent {
    public damageBoxes = new Array<ClientDamageBox>();
    public blockBoxes = new Array<ClientBlockBox>();
    public readonly damageBoxesRecord: Partial<Record<number, ClientDamageBox>> = {};

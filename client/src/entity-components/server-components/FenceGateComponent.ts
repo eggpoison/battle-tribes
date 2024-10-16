@@ -4,7 +4,6 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID } from "../../../../shared/src/entities";
 import { getEntityRenderInfo } from "../../world";
 import RenderPart from "../../render-parts/RenderPart";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
 interface DoorInfo {
@@ -35,14 +34,12 @@ const getFenceGateDoorInfo = (openProgress: number): DoorInfo => {
    };
 }
 
-class FenceGateComponent extends ServerComponent {
+class FenceGateComponent {
    public readonly doorRenderPart: RenderPart;
 
    public openProgress = 0;
    
    constructor(entity: EntityID) {
-      super();
-
       const renderInfo = getEntityRenderInfo(entity);
       this.doorRenderPart = renderInfo.getRenderThing("fenceGateComponent:door") as RenderPart;
    }

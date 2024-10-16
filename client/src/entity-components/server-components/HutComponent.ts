@@ -2,7 +2,6 @@ import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Point, lerp } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import Board from "../../Board";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { playSound } from "../../sound";
@@ -56,7 +55,7 @@ const getDoorXOffset = (hutType: HutType, i: number): number => {
    }
 }
 
-class HutComponent extends ServerComponent {
+class HutComponent {
    public readonly doorRenderParts: ReadonlyArray<RenderPart>;
    
    // @Memory: Don't need to store
@@ -67,8 +66,6 @@ class HutComponent extends ServerComponent {
    public recallMarker: RenderPart | null = null;
 
    constructor(entity: EntityID) {
-      super();
-      
       const renderInfo = getEntityRenderInfo(entity);
       this.doorRenderParts = renderInfo.getRenderThings("hutComponent:door") as Array<RenderPart>;
    }

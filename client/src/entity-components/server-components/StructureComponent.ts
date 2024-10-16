@@ -3,11 +3,10 @@ import { EntityID, EntityType } from "../../../../shared/src/entities";
 import { PacketReader } from "../../../../shared/src/packets";
 import { playSound } from "../../sound";
 import { getEntityType } from "../../world";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 
-class StructureComponent extends ServerComponent {
+class StructureComponent {
    public hasActiveBlueprint = false;
    public connectedSidesBitset = 0;
 }

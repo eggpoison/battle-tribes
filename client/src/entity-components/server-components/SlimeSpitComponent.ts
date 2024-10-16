@@ -1,4 +1,3 @@
-import ServerComponent from "../ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { RenderPart } from "../../render-parts/render-parts";
 import { Settings } from "battletribes-shared/settings";
@@ -11,7 +10,7 @@ import { playSound } from "../../sound";
 import { getEntityRenderInfo } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 
-class SlimeSpitComponent extends ServerComponent {
+class SlimeSpitComponent {
    // @Speed: polymorphism
    public renderParts!: ReadonlyArray<RenderPart>;
 }

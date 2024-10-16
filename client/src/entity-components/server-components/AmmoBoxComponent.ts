@@ -1,6 +1,5 @@
 import { ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../../utils";
 import Board from "../../Board";
@@ -12,7 +11,7 @@ import { getEntityRenderInfo } from "../../world";
 import { EntityID } from "../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 
-class AmmoBoxComponent extends ServerComponent {
+class AmmoBoxComponent {
    public ammoType: TurretAmmoType | null = null;
    public ammoRemaining = 0;
 

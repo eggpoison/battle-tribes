@@ -1,12 +1,11 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { DoorToggleType, EntityID } from "battletribes-shared/entities";
-import ServerComponent from "../ServerComponent";
 import { playSound } from "../../sound";
 import { PacketReader } from "battletribes-shared/packets";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
-class DoorComponent extends ServerComponent {
+class DoorComponent {
    public toggleType = DoorToggleType.close;
    public openProgress = 0;
 }

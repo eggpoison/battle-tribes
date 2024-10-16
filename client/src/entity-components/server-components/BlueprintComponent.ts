@@ -1,6 +1,5 @@
 import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
 import { assertUnreachable, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import { playSound } from "../../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../../particles";
 import { BLUEPRINT_PROGRESS_TEXTURE_SOURCES, getCurrentBlueprintProgressTexture } from "../../entities/BlueprintEntity";
@@ -54,7 +53,7 @@ const createStoneBlueprintWorkParticleEffects = (originX: number, originY: numbe
    }
 }
 
-class BlueprintComponent extends ServerComponent {
+class BlueprintComponent {
    public readonly partialRenderParts = new Array<TexturedRenderPart>();
    
    public blueprintType: BlueprintType = 0;

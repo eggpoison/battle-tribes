@@ -1,6 +1,5 @@
 import { randFloat } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { playSound } from "../../sound";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../../particles";
@@ -15,7 +14,7 @@ import { EntityID } from "../../../../shared/src/entities";
 export const NUM_SMALL_COVER_LEAVES = 8;
 export const NUM_LARGE_COVER_LEAVES = 3;
 
-class SpikesComponent extends ServerComponent {
+class SpikesComponent {
    // @Cleanup: should be in particles.ts
    public static readonly LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
    public static readonly LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
@@ -25,8 +24,6 @@ class SpikesComponent extends ServerComponent {
    public isCovered = false;
 
    constructor(entity: EntityID) {
-      super();
-
       const leafRenderParts = new Array<RenderPart>();
       for (let i = 0; i < NUM_SMALL_COVER_LEAVES; i++) {
          const renderPart = this.createLeafRenderPart(entity, true);

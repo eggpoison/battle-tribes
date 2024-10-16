@@ -1,4 +1,3 @@
-import ServerComponent from "../ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
@@ -32,7 +31,7 @@ const ENTRANCE_SCALE = 0.65;
 
 const EXIT_SHAKE_AMOUNTS = [1.25, 2.25, 3.25];
 
-class RockSpikeComponent extends ServerComponent {
+class RockSpikeComponent {
    public size = 0;
    public lifetime = 0;
    

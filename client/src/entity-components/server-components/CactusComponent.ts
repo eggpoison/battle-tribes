@@ -1,6 +1,5 @@
 import { CactusBodyFlowerData, CactusFlowerSize, CactusLimbData, CactusLimbFlowerData, EntityID } from "battletribes-shared/entities";
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { createFlowerParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -19,7 +18,7 @@ const getFlowerTextureSource = (type: number, size: CactusFlowerSize): string =>
    }
 }
 
-class CactusComponent extends ServerComponent {
+class CactusComponent {
    // @Memory: go based off hitboxes/render parts
    public flowerData = new Array<CactusBodyFlowerData>();
    // @Memory: go based off hitboxes/render parts

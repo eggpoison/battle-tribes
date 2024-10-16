@@ -8,11 +8,10 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSound } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { getEntityRenderInfo, getEntityAgeTicks } from "../../world";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import TransformComponent, { TransformComponentArray, getRandomPointInEntity } from "./TransformComponent";
 
-class PlanterBoxComponent extends ServerComponent {
+class PlanterBoxComponent {
    public moundRenderPart: RenderPart | null = null;
    
    public hasPlant = false;

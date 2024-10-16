@@ -2,7 +2,6 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { StatusEffectData } from "battletribes-shared/client-server-types";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point, customTickIntervalHasPassed, lerp, randFloat, randItem } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import { playSound } from "../../sound";
 import Board from "../../Board";
 import Particle from "../../Particle";
@@ -14,6 +13,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityID } from "../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import Player from "../../entities/Player";
+import { getEntityRenderInfo } from "../../world";
+import { ComponentTint, createComponentTint } from "../../Entity";
 
 const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [
    [255/255, 102/255, 0],
@@ -22,7 +23,7 @@ const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [
 
 const BURNING_SMOKE_PARTICLE_FADEIN_TIME = 0.15;
 
-class StatusEffectComponent extends ServerComponent {
+class StatusEffectComponent {
    public burningLight: Light | null = null;
    
    public statusEffects = new Array<StatusEffectData>();
@@ -52,16 +53,11 @@ export const StatusEffectComponentArray = new ServerComponentArray<StatusEffectC
    onTick: onTick,
    padData: padData,
    updateFromData: updateFromData,
-   updatePlayerFromData: updatePlayerFromData
+   updatePlayerFromData: updatePlayerFromData,
+   calculateTint: calculateTint
 });
 
 function onTick(statusEffectComponent: StatusEffectComponent, entity: EntityID): void {
-   if (statusEffectComponent.hasStatusEffect(StatusEffect.freezing)) {
-      statusEffectComponent.setTint(entity, -0.15, 0, 0.5);
-   } else {
-      statusEffectComponent.setTint(entity, 0, 0, 0);
-   }
-
    const transformComponent = TransformComponentArray.getComponent(entity);
    
    const poisonStatusEffect = statusEffectComponent.getStatusEffect(StatusEffect.poisoned);
@@ -237,6 +233,8 @@ function padData(reader: PacketReader): void {
 
 function updateFromData(reader: PacketReader, entity: EntityID, isInitialData: boolean): void {
    const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
+
+   const previousHasFreezing = statusEffectComponent.hasStatusEffect(StatusEffect.freezing);
    
    // @Speed @Garbage
    const statusEffects = new Array<StatusEffectData>();
@@ -267,8 +265,23 @@ function updateFromData(reader: PacketReader, entity: EntityID, isInitialData: b
    }
    
    statusEffectComponent.statusEffects = statusEffects;
+
+   const newHasFreezing = statusEffectComponent.hasStatusEffect(StatusEffect.freezing);
+   if (newHasFreezing !== previousHasFreezing) {
+      const renderInfo = getEntityRenderInfo(entity);
+      renderInfo.recalculateTint();
+   }
 }
 
 function updatePlayerFromData(reader: PacketReader, isInitialData: boolean): void {
    updateFromData(reader, Player.instance!.id, isInitialData);
+}
+
+function calculateTint(entity: EntityID): ComponentTint {
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
+   if (statusEffectComponent.hasStatusEffect(StatusEffect.freezing)) {
+      return createComponentTint(-0.15, 0, 0.5);
+   } else {
+      return createComponentTint(0, 0, 0);
+   }
 }

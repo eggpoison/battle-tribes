@@ -26,7 +26,7 @@ import { gameScreenSetIsDead } from "../components/game/GameScreen";
 import { updateHealthBar } from "../components/game/HealthBar";
 import { selectItemSlot } from "../components/game/GameInteractableLayer";
 import { createComponent } from "../entity-components/component-creation";
-import { addEntity, addLayer, changeEntityLayer, entityExists, getCurrentLayer, getEntityByID, getEntityLayer, getEntityRenderInfo, layers, registerBasicEntityInfo, registerEntityRenderInfo, removeEntity, setCurrentLayer } from "../world";
+import { addEntity, addLayer, changeEntityLayer, entityExists, getCurrentLayer, getEntityLayer, getEntityRenderInfo, layers, registerBasicEntityInfo, registerEntityRenderInfo, removeEntity, setCurrentLayer } from "../world";
 import { NEIGHBOUR_OFFSETS } from "../utils";
 import { createRiverSteppingStoneData } from "../rendering/webgl/river-rendering";
 import Layer, { getTileIndexIncludingEdges, tileIsWithinEdge } from "../Layer";
@@ -34,7 +34,6 @@ import { TransformComponentArray } from "../entity-components/server-components/
 import { playSound } from "../sound";
 import { initialiseRenderables } from "../rendering/render-loop";
 import { PhysicsComponentArray } from "../entity-components/server-components/PhysicsComponent";
-import ServerComponent from "../entity-components/ServerComponent";
 import { registerDirtyEntity } from "../rendering/render-part-matrices";
 import ServerComponentArray from "../entity-components/ServerComponentArray";
 

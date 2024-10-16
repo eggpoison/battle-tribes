@@ -1,7 +1,6 @@
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
 import { lerp } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import { playSound } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { ItemType } from "battletribes-shared/items/items";
@@ -117,7 +116,7 @@ const getProjectileZIndex = (entityType: TurretType): number => {
    }
 }
 
-class TurretComponent extends ServerComponent {
+class TurretComponent {
    /** The render part which changes texture as the turret charges */
    public readonly aimingRenderPart: TexturedRenderPart;
    /** The render part which pivots as the turret aims */
@@ -129,8 +128,6 @@ class TurretComponent extends ServerComponent {
    public chargeProgress = 0;
    
    constructor(entity: EntityID) {
-      super();
-
       const renderInfo = getEntityRenderInfo(entity);
       this.aimingRenderPart = renderInfo.getRenderThing("turretComponent:aiming") as TexturedRenderPart;
       this.pivotingRenderPart = renderInfo.getRenderThing("turretComponent:pivoting") as RenderPart;

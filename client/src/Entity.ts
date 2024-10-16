@@ -9,15 +9,29 @@ import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
 import { removeRenderable } from "./rendering/render-loop";
 import { getRandomPointInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { RenderPart, RenderThing, thingIsRenderPart } from "./render-parts/render-parts";
-import ServerComponent from "./entity-components/ServerComponent";
 import { createIdentityMatrix } from "./rendering/matrices";
 import { getEntityRenderLayer } from "./render-layers";
 import { registerDirtyEntity, renderParentIsHitbox } from "./rendering/render-part-matrices";
-import { getEntityByID, getEntityLayer, getEntityRenderInfo, getEntityType } from "./world";
+import { entityExists, getEntityLayer, getEntityRenderInfo, getEntityType } from "./world";
 import { ComponentArrayType, getComponentArrays } from "./entity-components/ComponentArray";
+import ServerComponentArray from "./entity-components/ServerComponentArray";
+
+export interface ComponentTint {
+   readonly tintR: number;
+   readonly tintG: number;
+   readonly tintB: number;
+}
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
+
+export function createComponentTint(tintR: number, tintG: number, tintB: number): ComponentTint {
+   return {
+      tintR: tintR,
+      tintG: tintG,
+      tintB: tintB
+   };
+}
 
 export class EntityRenderInfo {
    public associatedEntity: EntityID;
@@ -44,7 +58,7 @@ export class EntityRenderInfo {
    constructor(associatedEntity: EntityID) {
       this.associatedEntity = associatedEntity;
    }
-   
+
    public attachRenderThing(thing: RenderThing): void {
       // Don't add if already attached
       if (this.allRenderThings.indexOf(thing) !== -1) {
@@ -148,11 +162,12 @@ export class EntityRenderInfo {
       const componentArrays = getComponentArrays();
       for (let i = 0; i < componentArrays.length; i++) {
          const componentArray = componentArrays[i];
-         if (componentArray.typeObject.type === ComponentArrayType.server && componentArray.hasComponent(this.associatedEntity)) {
-            const component = componentArray.getComponent(this.associatedEntity) as ServerComponent;
-            this.tintR += component.tintR;
-            this.tintG += component.tintG;
-            this.tintB += component.tintB;
+         if (componentArray.typeObject.type === ComponentArrayType.server && componentArray.hasComponent(this.associatedEntity) && typeof (componentArray as ServerComponentArray).calculateTint !== "undefined") {
+            const tint = (componentArray as ServerComponentArray).calculateTint!(this.associatedEntity);
+
+            this.tintR += tint.tintR;
+            this.tintG += tint.tintG;
+            this.tintB += tint.tintB;
          }
       }
    }
@@ -160,7 +175,7 @@ export class EntityRenderInfo {
    // @Cleanup: This just seems like an unnecessary wrapper for registerDirtyEntity
    public dirty(): void {
       if (!this.isDirty) {
-         if (typeof getEntityByID(this.associatedEntity) === "undefined") {
+         if (!entityExists(this.associatedEntity)) {
             throw new Error("Tried to dirty an entity which does not exist!");
          }
          

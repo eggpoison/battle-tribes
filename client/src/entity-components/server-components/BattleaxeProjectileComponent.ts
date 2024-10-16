@@ -1,12 +1,11 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import Board from "../../Board";
 import { playSound, attachSoundToEntity } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityID } from "../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 
-class BattleaxeProjectileComponent extends ServerComponent {}
+class BattleaxeProjectileComponent {}
 
 export default BattleaxeProjectileComponent;
 

@@ -8,7 +8,6 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { getEntityRenderInfo } from "../../world";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 
@@ -32,7 +31,7 @@ export const SEED_TO_PLANT_RECORD: Partial<Record<ItemType, PlanterBoxPlant>> = 
    [ItemType.frostcicle]: PlanterBoxPlant.iceSpikes
 };
 
-class PlantComponent extends ServerComponent {
+class PlantComponent {
    public plant: PlanterBoxPlant = 0;
    public growthProgress = 0;
    

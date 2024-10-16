@@ -1,10 +1,9 @@
-import ServerComponent from "../ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityID } from "../../../../shared/src/entities";
 
-class BoulderComponent extends ServerComponent {
+class BoulderComponent {
    public boulderType = 0;
 }
 

@@ -1,5 +1,4 @@
 import { Point, randFloat } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import Board from "../../Board";
 import { Light, addLight, attachLightToEntity } from "../../lights";
 import { PacketReader } from "battletribes-shared/packets";
@@ -9,15 +8,13 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityID } from "../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 
-class CookingComponent extends ServerComponent {
+class CookingComponent {
    public heatingProgress = 0;
    public isCooking = false;
 
    public readonly light: Light;
 
    constructor(entity: EntityID) {
-      super();
-
       this.light = {
          offset: new Point(0, 0),
          intensity: 1,

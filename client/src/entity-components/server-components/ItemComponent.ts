@@ -1,5 +1,4 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import { createDeepFrostHeartBloodParticles } from "../../particles";
 import { ItemType } from "battletribes-shared/items/items";
 import { PacketReader } from "battletribes-shared/packets";
@@ -7,7 +6,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityID } from "../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 
-class ItemComponent extends ServerComponent {
+class ItemComponent {
    public itemType = ItemType.wood;
 }
 

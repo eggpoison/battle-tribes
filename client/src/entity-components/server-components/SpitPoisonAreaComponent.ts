@@ -1,10 +1,8 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import { playSound, Sound } from "../../sound";
 import { Settings } from "battletribes-shared/settings";
 import { lerp } from "battletribes-shared/utils";
 import { createAcidParticle, createPoisonBubble } from "../../particles";
-import { ComponentArray, ComponentArrayType } from "../ComponentArray";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityID } from "../../../../shared/src/entities";
@@ -14,7 +12,7 @@ const enum Vars {
    MAX_RANGE = 55
 }
 
-class SpitPoisonAreaComponent extends ServerComponent {
+class SpitPoisonAreaComponent {
    public trackSource!: AudioBufferSourceNode;
    public sound!: Sound;
 }

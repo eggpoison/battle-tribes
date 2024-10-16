@@ -2,7 +2,6 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { DeathInfo, EntityID, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point, randInt } from "battletribes-shared/utils";
-import ServerComponent from "../ServerComponent";
 import { createDirtParticle } from "../../particles";
 import { playSound } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -10,7 +9,7 @@ import { PacketReader } from "battletribes-shared/packets";
 import { getEntityAgeTicks } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 
-class TombstoneComponent extends ServerComponent {
+class TombstoneComponent {
    public tombstoneType = 0;
    public zombieSpawnProgress = 0;
    public zombieSpawnX = -1;

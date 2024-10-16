@@ -1,11 +1,10 @@
 import { ServerComponentType } from "../../../../shared/src/components";
 import { EntityID } from "../../../../shared/src/entities";
 import { playSound } from "../../sound";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 
-class SpearProjectileComponent extends ServerComponent {}
+class SpearProjectileComponent {}
 
 export default SpearProjectileComponent;
 

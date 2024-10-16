@@ -1,5 +1,4 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import { Point, customTickIntervalHasPassed, lerp, randInt } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
 import { TILE_MOVE_SPEED_MULTIPLIERS, TileType, TILE_FRICTIONS } from "battletribes-shared/tiles";
@@ -154,7 +153,7 @@ const resolveBorderCollisions = (physicsComponent: PhysicsComponent, entity: Ent
    }
 }
 
-class PhysicsComponent extends ServerComponent {
+class PhysicsComponent {
    // @Memory @Speed: Unbox external velocity and velocity
    
    public readonly selfVelocity = new Point(-1, -1);

@@ -1,4 +1,3 @@
-import ServerComponent from "../ServerComponent";
 import Entity from "../../Entity";
 import { distance, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import { Tile } from "../../Tile";
@@ -30,7 +29,7 @@ export function getEntityTile(layer: Layer, transformComponent: TransformCompone
 }
 
 // @Memory: grass strands don't need a lot of this
-class TransformComponent extends ServerComponent {
+export default class TransformComponent {
    public totalMass = 0;
    
    public readonly position = new Point(-1, -1);
@@ -186,8 +185,6 @@ class TransformComponent extends ServerComponent {
       this.hitboxMap.delete(localID);
    }
 }
-
-export default TransformComponent;
 
 export const TransformComponentArray = new ServerComponentArray<TransformComponent>(ServerComponentType.transform, true, {
    onLoad: onLoad,

@@ -2,7 +2,6 @@ import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { getEntityRenderInfo } from "../../world";
-import ServerComponent from "../ServerComponent";
 import { StructureComponentArray } from "./StructureComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { PacketReader } from "../../../../shared/src/packets";
@@ -20,14 +19,12 @@ const getRailIdx = (railBit: RailBit): number => {
    }
 }
 
-class FenceComponent extends ServerComponent {
+class FenceComponent {
    public readonly railRenderParts: [RenderPart | null, RenderPart | null, RenderPart | null, RenderPart | null] = [null, null, null, null]
    
    public connectedSidesBitset = 0;
    
    constructor(entity: EntityID) {
-      super();
-
       updateRails(this, entity);
    }
 }

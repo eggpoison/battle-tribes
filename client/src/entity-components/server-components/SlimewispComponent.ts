@@ -1,8 +1,7 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import ServerComponent from "../ServerComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
-class SlimewispComponent extends ServerComponent {}
+class SlimewispComponent {}
 
 export default SlimewispComponent;
 

@@ -2,9 +2,8 @@ import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityID } from "../../../../shared/src/entities";
-import ServerComponent from "../ServerComponent";
 
-class PlayerComponent extends ServerComponent {
+class PlayerComponent {
    public username = "";
 }
 

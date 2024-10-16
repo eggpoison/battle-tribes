@@ -1,5 +1,6 @@
 import { ServerComponentType } from "../../../shared/src/components";
 import { EntityID } from "../../../shared/src/entities";
+import { PacketReader } from "../../../shared/src/packets";
 import AIHelperComponent from "./server-components/AIHelperComponent";
 import AmmoBoxComponent from "./server-components/AmmoBoxComponent";
 import ProjectileComponent from "./server-components/ArrowComponent";
@@ -58,8 +59,8 @@ import StructureComponent from "./server-components/StructureComponent";
 import ThrowingProjectileComponent from "./server-components/ThrowingProjectileComponent";
 import TombstoneComponent from "./server-components/TombstoneComponent";
 import TotemBannerComponent from "./server-components/TotemBannerComponent";
-import TransformComponent from "./server-components/TransformComponent";
-import TreeComponent from "./server-components/TreeComponent";
+import { createTransformComponentFromData } from "./server-components/TransformComponent";
+import TreeComponent, { createTreeComponentFromData } from "./server-components/TreeComponent";
 import TribeComponent from "./server-components/TribeComponent";
 import TribeMemberComponent from "./server-components/TribeMemberComponent";
 import TribesmanAIComponent from "./server-components/TribesmanAIComponent";
@@ -69,9 +70,9 @@ import TurretComponent from "./server-components/TurretComponent";
 import YetiComponent from "./server-components/YetiComponent";
 import ZombieComponent from "./server-components/ZombieComponent";
 
-export function createComponent(entity: EntityID, componentType: ServerComponentType): object {
+export function createComponent(entity: EntityID, componentType: ServerComponentType, reader: PacketReader): object {
    switch (componentType) {
-      case ServerComponentType.transform: return new TransformComponent();
+      case ServerComponentType.transform: return createTransformComponentFromData(reader);
       case ServerComponentType.cow: return new CowComponent();
       case ServerComponentType.turret: return new TurretComponent(entity);
       case ServerComponentType.tribe: return new TribeComponent();
@@ -90,7 +91,7 @@ export function createComponent(entity: EntityID, componentType: ServerComponent
       case ServerComponentType.player: return new PlayerComponent();
       case ServerComponentType.item: return new ItemComponent();
       case ServerComponentType.tombstone: return new TombstoneComponent();
-      case ServerComponentType.tree: return new TreeComponent();
+      case ServerComponentType.tree: return createTreeComponentFromData(reader);
       case ServerComponentType.blueprint: return new BlueprintComponent();
       case ServerComponentType.projectile: return new ProjectileComponent();
       case ServerComponentType.iceArrow: return new IceArrowComponent();

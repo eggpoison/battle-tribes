@@ -6,7 +6,7 @@ import Board from "../../Board";
 import { createFootprintParticle } from "../../particles";
 import { ClientComponentType } from "../components";
 import { getEntityLayer } from "../../world";
-import { getEntityTile, TransformComponentArray } from "./TransformComponent";
+import { entityIsInRiver, getEntityTile, TransformComponentArray } from "./TransformComponent";
 import { EntityID } from "../../../../shared/src/entities";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import ClientComponentArray from "../ClientComponentArray";
@@ -59,7 +59,7 @@ const createFootstepSound = (entity: EntityID): void => {
          break;
       }
       case TileType.water: {
-         if (!transformComponent.isInRiver(entity)) {
+         if (!entityIsInRiver(transformComponent, entity)) {
             playSound("rock-walk-" + randInt(1, 4) + ".mp3", 0.08, 1, transformComponent.position);
          }
          break;
@@ -72,7 +72,7 @@ function onTick(footprintComponent: FootprintComponent, entity: EntityID): void 
    const physicsComponent = PhysicsComponentArray.getComponent(entity);
 
    // Footsteps
-   if (physicsComponent.selfVelocity.lengthSquared() >= 2500 && !transformComponent.isInRiver(entity) && Board.tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds)) {
+   if (physicsComponent.selfVelocity.lengthSquared() >= 2500 && !entityIsInRiver(transformComponent, entity) && Board.tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds)) {
       createFootprintParticle(entity, footprintComponent.numFootstepsTaken, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
       footprintComponent.numFootstepsTaken++;
    }

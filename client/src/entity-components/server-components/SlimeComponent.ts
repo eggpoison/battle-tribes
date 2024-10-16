@@ -10,6 +10,27 @@ import { playSound } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { getEntityRenderInfo } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
+import { EntityRenderInfo } from "../../Entity";
+
+export interface SlimeComponentConfig {
+   readonly size: SlimeSize;
+}
+
+export interface SlimeComponentRenderParts {
+   readonly bodyRenderPart: RenderPart;
+   readonly eyeRenderPart: RenderPart;
+}
+
+export interface SlimeComponent {
+   bodyRenderPart: RenderPart;
+   eyeRenderPart: RenderPart;
+   readonly orbRenderParts: Array<RenderPart>;
+
+   size: SlimeSize;
+   readonly orbs: Array<SlimeOrbInfo>;
+
+   internalTickCounter: number;
+}
 
 export const SLIME_SIZES: ReadonlyArray<number> = [
    64, // small
@@ -39,24 +60,60 @@ const getBodyShakeAmount = (spitProgress: number): number => {
    return lerp(0, 5, spitProgress);
 }
 
-class SlimeComponent {
-   public bodyRenderPart!: RenderPart;
-   public eyeRenderPart!: RenderPart;
-   public readonly orbRenderParts = new Array<RenderPart>();
-
-   public size = 0;
-   public readonly orbs = new Array<SlimeOrbInfo>();
-
-   public internalTickCounter = 0;
-}
-
-export default SlimeComponent;
-
 export const SlimeComponentArray = new ServerComponentArray<SlimeComponent>(ServerComponentType.slime, true, {
+   createComponent: createComponent,
    onTick: onTick,
    padData: padData,
-   updateFromData: updateFromData
+   updateFromData: updateFromData,
+   createRenderParts: createRenderParts
 });
+
+function createComponent(config: SlimeComponentConfig, renderParts: SlimeComponentRenderParts): SlimeComponent {
+   return {
+      bodyRenderPart: renderParts.bodyRenderPart,
+      eyeRenderPart: renderParts.eyeRenderPart,
+      orbRenderParts: [],
+      size: config.size,
+      orbs: new Array<SlimeOrbInfo>,
+      internalTickCounter: 0
+   };
+}
+
+function createRenderParts(renderInfo: EntityRenderInfo, config: SlimeComponentConfig): SlimeComponentRenderParts {
+   const sizeString = SIZE_STRINGS[config.size];
+
+   // Body
+   const bodyRenderPart = new TexturedRenderPart(
+      null,
+      2,
+      0,
+      getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
+   );
+   renderInfo.attachRenderThing(bodyRenderPart);
+
+   // Shading
+   renderInfo.attachRenderThing(new TexturedRenderPart(
+      null,
+      0,
+      0,
+      getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`)
+   ));
+
+   // Eye
+   const eyeRenderPart = new TexturedRenderPart(
+      null,
+      3,
+      0,
+      getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
+   );
+   eyeRenderPart.inheritParentRotation = false;
+   renderInfo.attachRenderThing(eyeRenderPart);
+
+   return {
+      bodyRenderPart: bodyRenderPart,
+      eyeRenderPart: eyeRenderPart
+   };
+}
 
 function onTick(slimeComponent: SlimeComponent, entity: EntityID): void {
    if (Math.random() < 0.2 / Settings.TPS) {
@@ -126,47 +183,15 @@ function padData(reader: PacketReader): void {
    reader.padOffset(Float32Array.BYTES_PER_ELEMENT * numOrbs);
 }
 
-function updateFromData(reader: PacketReader, entity: EntityID, isInitialData: boolean): void {
+function updateFromData(reader: PacketReader, entity: EntityID): void {
    const slimeComponent = SlimeComponentArray.getComponent(entity);
    
+   // @Incomplete: change render parts when this happens?
    slimeComponent.size = reader.readNumber();
    const eyeRotation = reader.readNumber();
    const anger = reader.readNumber();
    const spitChargeProgress = reader.readNumber();
 
-   if (isInitialData) {
-      const sizeString = SIZE_STRINGS[slimeComponent.size];
-
-      const renderInfo = getEntityRenderInfo(entity);
-      
-      // Body
-      slimeComponent.bodyRenderPart = new TexturedRenderPart(
-         null,
-         2,
-         0,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
-      );
-      renderInfo.attachRenderThing(slimeComponent.bodyRenderPart);
-
-      // Shading
-      renderInfo.attachRenderThing(new TexturedRenderPart(
-         null,
-         0,
-         0,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`)
-      ));
-
-      // Eye
-      slimeComponent.eyeRenderPart = new TexturedRenderPart(
-         null,
-         3,
-         0,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
-      );
-      slimeComponent.eyeRenderPart.inheritParentRotation = false;
-      renderInfo.attachRenderThing(slimeComponent.eyeRenderPart);
-   }
-   
    // 
    // Update the eye's rotation
    // 

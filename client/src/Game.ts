@@ -233,7 +233,9 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    }
 
    const entityGhosts = getEntityGhosts();
-   renderEntities(entityGhosts);
+   if (entityGhosts.length > 0) {
+      renderEntities(entityGhosts);
+   }
 }
 
 abstract class Game {

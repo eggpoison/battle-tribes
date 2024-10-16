@@ -459,7 +459,6 @@ export function renderEntities(entities: ReadonlyArray<EntityID>): void {
    gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-   // const length = Math.max(previousNumRenderParts, numRenderParts) * EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
    const length = numRenderParts * EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
    gl.bufferSubData(gl.ARRAY_BUFFER, 0, vertexData, 0, length);
 

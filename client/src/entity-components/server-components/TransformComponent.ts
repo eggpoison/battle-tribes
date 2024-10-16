@@ -19,6 +19,125 @@ import Board from "../../Board";
 import { EntityID } from "../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import Player from "../../entities/Player";
+import { HitboxCollisionBit } from "../../../../shared/src/collision";
+
+// @Memory: grass strands don't need a lot of this
+export interface TransformComponent {
+   totalMass: number;
+   
+   readonly position: Point;
+
+   /** Angle the object is facing, taken counterclockwise from the positive x axis (radians) */
+   rotation: number;
+
+   readonly chunks: Set<Chunk>;
+
+   hitboxes: Array<ClientHitbox>;
+   readonly hitboxMap: Map<number, ClientHitbox>;
+
+   collisionBit: number;
+   collisionMask: number;
+
+   collidingEntities: Array<Entity>;
+   
+   boundingAreaMinX: number;
+   boundingAreaMaxX: number;
+   boundingAreaMinY: number;
+   boundingAreaMaxY: number;
+}
+
+export function createTransformComponent(position: Point, rotation: number, hitboxes: Array<ClientHitbox>, collisionBit: HitboxCollisionBit, collisionMask: number): TransformComponent {
+   let totalMass = 0;
+   const hitboxMap = new Map<number, ClientHitbox>();
+   for (const hitbox of hitboxes) {
+      totalMass += hitbox.mass;
+      hitboxMap.set(hitbox.localID, hitbox);
+   }
+   
+   return {
+      totalMass: totalMass,
+      position: position,
+      rotation: rotation,
+      chunks: new Set(),
+      hitboxes: hitboxes,
+      hitboxMap: hitboxMap,
+      collisionBit: collisionBit,
+      collisionMask: collisionMask,
+      collidingEntities: [],
+      boundingAreaMinX: Number.MAX_SAFE_INTEGER,
+      boundingAreaMaxX: Number.MIN_SAFE_INTEGER,
+      boundingAreaMinY: Number.MAX_SAFE_INTEGER,
+      boundingAreaMaxY: Number.MIN_SAFE_INTEGER
+   };
+}
+
+export function createTransformComponentFromData(reader: PacketReader): TransformComponent {
+   const positionX = reader.readNumber();
+   const positionY = reader.readNumber();
+   const position = new Point(positionX, positionY);
+
+   const rotation = reader.readNumber();
+   
+   const collisionBit = reader.readNumber();
+   const collisionMask = reader.readNumber();
+
+   const hitboxes = new Array<ClientHitbox>();
+   
+   const numCircularHitboxes = reader.readNumber();
+   for (let i = 0; i < numCircularHitboxes; i++) {
+      const mass = reader.readNumber();
+      const offsetX = reader.readNumber();
+      const offsetY = reader.readNumber();
+      const scale = reader.readNumber();
+      const collisionType = reader.readNumber();
+      const collisionBit = reader.readNumber();
+      const collisionMask = reader.readNumber();
+      const localID = reader.readNumber();
+      const numFlags = reader.readNumber();
+      const flags = new Array<HitboxFlag>();
+      for (let i = 0; i < numFlags; i++) {
+         flags.push(reader.readNumber());
+      }
+      const radius = reader.readNumber();
+
+      const offset = new Point(offsetX, offsetY);
+      const box = new CircularBox(offset, 0, radius);
+      box.scale = scale;
+      
+      const hitbox = new ClientHitbox(box, mass, collisionType, collisionBit, collisionMask, flags, localID);
+      hitboxes.push(hitbox);
+   }
+
+   // Update rectangular hitboxes
+   const numRectangularHitboxes = reader.readNumber();
+   for (let i = 0; i < numRectangularHitboxes; i++) {
+      const mass = reader.readNumber();
+      const offsetX = reader.readNumber();
+      const offsetY = reader.readNumber();
+      const scale = reader.readNumber();
+      const collisionType = reader.readNumber();
+      const collisionBit = reader.readNumber();
+      const collisionMask = reader.readNumber();
+      const localID = reader.readNumber();
+      const numFlags = reader.readNumber();
+      const flags = new Array<HitboxFlag>();
+      for (let i = 0; i < numFlags; i++) {
+         flags.push(reader.readNumber());
+      }
+      const width = reader.readNumber();
+      const height = reader.readNumber();
+      const rotation = reader.readNumber();
+
+      const offset = new Point(offsetX, offsetY);
+      const box = new RectangularBox(offset, width, height, rotation);
+      box.scale = scale;
+
+      const hitbox = new ClientHitbox(box, mass, collisionType, collisionBit, collisionMask, flags, localID);
+      hitboxes.push(hitbox);
+   }
+
+   return createTransformComponent(position, rotation, hitboxes, collisionBit, collisionMask);
+}
 
 export function getEntityTile(layer: Layer, transformComponent: TransformComponent): Tile {
    const tileX = Math.floor(transformComponent.position.x / Settings.TILE_SIZE);
@@ -28,162 +147,128 @@ export function getEntityTile(layer: Layer, transformComponent: TransformCompone
    return layer.getTile(tileIndex);
 }
 
-// @Memory: grass strands don't need a lot of this
-export default class TransformComponent {
-   public totalMass = 0;
+const getHitboxLocalID = (transformComponent: TransformComponent, hitbox: ClientHitbox): number => {
+   for (const pair of transformComponent.hitboxMap) {
+      if (pair[1] === hitbox) {
+         return pair[0];
+      }
+   }
+
+   throw new Error();
+}
+
+export function addHitboxToEntity(transformComponent: TransformComponent, hitbox: ClientHitbox): void {
+   updateBox(hitbox.box, transformComponent.position.x, transformComponent.position.y, transformComponent.rotation);
+   transformComponent.hitboxes.push(hitbox);
+   transformComponent.hitboxMap.set(hitbox.localID, hitbox);
+}
    
-   public readonly position = new Point(-1, -1);
+export function removeHitboxFromEntity(transformComponent: TransformComponent, hitbox: ClientHitbox, idx: number): void {
+   transformComponent.hitboxes.splice(idx, 1);
+   const localID = getHitboxLocalID(transformComponent, hitbox);
+   transformComponent.hitboxMap.delete(localID);
+}
 
-   /** Angle the object is facing, taken counterclockwise from the positive x axis (radians) */
-   public rotation = 0;
-
-   public readonly chunks = new Set<Chunk>();
-
-   public hitboxes = new Array<ClientHitbox>();
-   public readonly hitboxMap = new Map<number, ClientHitbox>();
-
-   public collisionBit = 0;
-   public collisionMask = 0;
-
-   public collidingEntities = new Array<Entity>();
-   
-   public boundingAreaMinX = Number.MAX_SAFE_INTEGER;
-   public boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
-   public boundingAreaMinY = Number.MAX_SAFE_INTEGER;
-   public boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
-
-   // constructor(position: Point, rotation: number, collisionBit: HitboxCollisionBit, collisionMask: number): void {
-   //    super();
-      
-   //    this.position = position;
-   //    this.rotation = rotation;
-   //    this.collisionBit = collisionBit;
-   //    this.collisionMask = collisionMask;
-   // }
-
-   public isInRiver(entity: EntityID): boolean {
-      const layer = getEntityLayer(entity);
-      const tile = getEntityTile(layer, this);
-      if (tile.type !== TileType.water) {
-         return false;
-      }
-
-      // If the game object is standing on a stepping stone they aren't in a river
-      for (const chunk of this.chunks) {
-         for (const steppingStone of chunk.riverSteppingStones) {
-            const size = RIVER_STEPPING_STONE_SIZES[steppingStone.size];
-            
-            const dist = distance(this.position.x, this.position.y, steppingStone.positionX, steppingStone.positionY);
-            if (dist <= size/2) {
-               return false;
-            }
-         }
-      }
-
-      return true;
+export function entityIsInRiver(transformComponent: TransformComponent, entity: EntityID): boolean {
+   const layer = getEntityLayer(entity);
+   const tile = getEntityTile(layer, transformComponent);
+   if (tile.type !== TileType.water) {
+      return false;
    }
 
-   public addHitbox(hitbox: ClientHitbox, localID: number): void {
-      updateBox(hitbox.box, this.position.x, this.position.y, this.rotation);
-      this.hitboxes.push(hitbox);
-      this.hitboxMap.set(localID, hitbox);
-   }
-
-   public updateHitboxes(): void {
-      this.boundingAreaMinX = Number.MAX_SAFE_INTEGER;
-      this.boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
-      this.boundingAreaMinY = Number.MAX_SAFE_INTEGER;
-      this.boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
-
-      for (const hitbox of this.hitboxes) {
-         const box = hitbox.box;
-         updateBox(box, this.position.x, this.position.y, this.rotation);
-
-         const boundsMinX = box.calculateBoundsMinX();
-         const boundsMaxX = box.calculateBoundsMaxX();
-         const boundsMinY = box.calculateBoundsMinY();
-         const boundsMaxY = box.calculateBoundsMaxY();
-
-         // Update bounding area
-         if (boundsMinX < this.boundingAreaMinX) {
-            this.boundingAreaMinX = boundsMinX;
-         }
-         if (boundsMaxX > this.boundingAreaMaxX) {
-            this.boundingAreaMaxX = boundsMaxX;
-         }
-         if (boundsMinY < this.boundingAreaMinY) {
-            this.boundingAreaMinY = boundsMinY;
-         }
-         if (boundsMaxY > this.boundingAreaMaxY) {
-            this.boundingAreaMaxY = boundsMaxY;
-         }
-      }
-   }
-
-   /** Recalculates which chunks the game object is contained in */
-   private updateContainingChunks(entity: EntityID): void {
-      const layer = getEntityLayer(entity);
-      const containingChunks = new Set<Chunk>();
-      
-      // Find containing chunks
-      for (const hitbox of this.hitboxes) {
-         const box = hitbox.box;
-
-         const minX = box.calculateBoundsMinX();
-         const maxX = box.calculateBoundsMaxX();
-         const minY = box.calculateBoundsMinY();
-         const maxY = box.calculateBoundsMaxY();
-
-         const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   // If the game object is standing on a stepping stone they aren't in a river
+   for (const chunk of transformComponent.chunks) {
+      for (const steppingStone of chunk.riverSteppingStones) {
+         const size = RIVER_STEPPING_STONE_SIZES[steppingStone.size];
          
-         for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-            for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-               const chunk = layer.getChunk(chunkX, chunkY);
-               containingChunks.add(chunk);
-            }
-         }
-      }
-
-      // Find all chunks which aren't present in the new chunks and remove them
-      for (const chunk of this.chunks) {
-         if (!containingChunks.has(chunk)) {
-            chunk.removeEntity(entity);
-            this.chunks.delete(chunk);
-         }
-      }
-
-      // Add all new chunks
-      for (const chunk of containingChunks) {
-         if (!this.chunks.has(chunk)) {
-            chunk.addEntity(entity);
-            this.chunks.add(chunk);
+         const dist = distance(transformComponent.position.x, transformComponent.position.y, steppingStone.positionX, steppingStone.positionY);
+         if (dist <= size/2) {
+            return false;
          }
       }
    }
 
-   private getHitboxLocalID(hitbox: ClientHitbox): number {
-      for (const pair of this.hitboxMap) {
-         if (pair[1] === hitbox) {
-            return pair[0];
-         }
+   return true;
+}
+
+const updateHitboxes = (transformComponent: TransformComponent): void => {
+   transformComponent.boundingAreaMinX = Number.MAX_SAFE_INTEGER;
+   transformComponent.boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
+   transformComponent.boundingAreaMinY = Number.MAX_SAFE_INTEGER;
+   transformComponent.boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
+
+   for (const hitbox of transformComponent.hitboxes) {
+      const box = hitbox.box;
+      updateBox(box, transformComponent.position.x, transformComponent.position.y, transformComponent.rotation);
+
+      const boundsMinX = box.calculateBoundsMinX();
+      const boundsMaxX = box.calculateBoundsMaxX();
+      const boundsMinY = box.calculateBoundsMinY();
+      const boundsMaxY = box.calculateBoundsMaxY();
+
+      // Update bounding area
+      if (boundsMinX < transformComponent.boundingAreaMinX) {
+         transformComponent.boundingAreaMinX = boundsMinX;
       }
-
-      throw new Error();
+      if (boundsMaxX > transformComponent.boundingAreaMaxX) {
+         transformComponent.boundingAreaMaxX = boundsMaxX;
+      }
+      if (boundsMinY < transformComponent.boundingAreaMinY) {
+         transformComponent.boundingAreaMinY = boundsMinY;
+      }
+      if (boundsMaxY > transformComponent.boundingAreaMaxY) {
+         transformComponent.boundingAreaMaxY = boundsMaxY;
+      }
    }
+}
 
-   public updatePosition(entity: EntityID): void {
-      this.updateHitboxes();
-      this.updateContainingChunks(entity);
-   }
+/** Recalculates which chunks the game object is contained in */
+const updateContainingChunks = (transformComponent: TransformComponent, entity: EntityID): void => {
+   const layer = getEntityLayer(entity);
+   const containingChunks = new Set<Chunk>();
    
-   public removeHitbox(hitbox: ClientHitbox, idx: number): void {
-      this.hitboxes.splice(idx, 1);
-      const localID = this.getHitboxLocalID(hitbox);
-      this.hitboxMap.delete(localID);
+   // Find containing chunks
+   for (const hitbox of transformComponent.hitboxes) {
+      const box = hitbox.box;
+
+      const minX = box.calculateBoundsMinX();
+      const maxX = box.calculateBoundsMaxX();
+      const minY = box.calculateBoundsMinY();
+      const maxY = box.calculateBoundsMaxY();
+
+      const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      
+      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+         for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+            const chunk = layer.getChunk(chunkX, chunkY);
+            containingChunks.add(chunk);
+         }
+      }
    }
+
+   // Find all chunks which aren't present in the new chunks and remove them
+   for (const chunk of transformComponent.chunks) {
+      if (!containingChunks.has(chunk)) {
+         chunk.removeEntity(entity);
+         transformComponent.chunks.delete(chunk);
+      }
+   }
+
+   // Add all new chunks
+   for (const chunk of containingChunks) {
+      if (!transformComponent.chunks.has(chunk)) {
+         chunk.addEntity(entity);
+         transformComponent.chunks.add(chunk);
+      }
+   }
+}
+
+export function updateEntityPosition(transformComponent: TransformComponent, entity: EntityID): void {
+   updateHitboxes(transformComponent);
+   updateContainingChunks(transformComponent, entity);
 }
 
 export const TransformComponentArray = new ServerComponentArray<TransformComponent>(ServerComponentType.transform, true, {
@@ -196,7 +281,7 @@ export const TransformComponentArray = new ServerComponentArray<TransformCompone
 
 function onLoad(transformComponent: TransformComponent, entity: EntityID): void {
    // @Hack?
-   transformComponent.updatePosition(entity);
+   updateEntityPosition(transformComponent, entity);
 }
 
 function onRemove(entity: EntityID): void {
@@ -251,7 +336,7 @@ function updateFromData(reader: PacketReader, entity: EntityID): void {
       transformComponent.position.y = positionY;
       transformComponent.rotation = rotation;
       
-      transformComponent.updatePosition(entity);
+      updateEntityPosition(transformComponent, entity);
 
       const renderInfo = getEntityRenderInfo(entity);
       renderInfo.dirty();
@@ -298,8 +383,8 @@ function updateFromData(reader: PacketReader, entity: EntityID): void {
          const offset = new Point(offsetX, offsetY);
          const box = new CircularBox(offset, 0, radius);
          box.scale = scale;
-         const hitbox = new ClientHitbox(box, mass, collisionType, collisionBit, collisionMask, flags);
-         transformComponent.addHitbox(hitbox, localID);
+         const hitbox = new ClientHitbox(box, mass, collisionType, collisionBit, collisionMask, flags, localID);
+         addHitboxToEntity(transformComponent, hitbox);
 
          couldBeRemovedCircularHitboxes = true;
 
@@ -346,8 +431,8 @@ function updateFromData(reader: PacketReader, entity: EntityID): void {
          const offset = new Point(offsetX, offsetY);
          const box = new RectangularBox(offset, width, height, rotation);
          box.scale = scale;
-         const hitbox = new ClientHitbox(box, mass, collisionType, collisionBit, collisionMask, flags);
-         transformComponent.addHitbox(hitbox, localID);
+         const hitbox = new ClientHitbox(box, mass, collisionType, collisionBit, collisionMask, flags, localID);
+         addHitboxToEntity(transformComponent, hitbox);
 
          couldBeRemovedRectangularHitboxes = true;
 
@@ -374,7 +459,7 @@ function updateFromData(reader: PacketReader, entity: EntityID): void {
          const hitbox = transformComponent.hitboxes[i];
          if (hitbox.lastUpdateTicks !== Board.serverTicks) {
             // Hitbox is removed!
-            transformComponent.removeHitbox(hitbox, i);
+            removeHitboxFromEntity(transformComponent, hitbox, i);
             i--;
          }
       }

@@ -1,6 +1,6 @@
 import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityID, EntityType } from "battletribes-shared/entities";
+import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { ItemType } from "battletribes-shared/items/items";
 import { PacketReader } from "battletribes-shared/packets";
 import { Settings } from "battletribes-shared/settings";
@@ -334,6 +334,7 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
    // @Cleanup: might be able to be cleaned up by making a separate processPlayerCreationData
    
    const entityType = reader.readNumber() as EntityType;
+   console.log(EntityTypeString[entityType]);
    const spawnTicks = reader.readNumber();
    const layerIdx = reader.readNumber();
 
@@ -358,7 +359,7 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
    for (let i = 0; i < numComponents; i++) {
       const componentType = reader.readNumber() as ServerComponentType;
       
-      const component = createComponent(entityID, componentType);
+      const component = createComponent(entityID, componentType, reader);
       const componentArray = getServerComponentArray(componentType);
       
       componentArray.addComponent(entityID, component);
@@ -370,8 +371,6 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
          } else {
             componentArray.padData(reader);
          }
-      } else {
-         componentArray.updateFromData(reader, entityID, true);
       }
    }
 

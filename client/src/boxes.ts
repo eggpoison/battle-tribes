@@ -26,6 +26,7 @@ export class ClientBlockBox<T extends BoxType = BoxType> extends GenericCollisio
 
 export class ClientHitbox<T extends BoxType = BoxType> implements Hitbox<T> {
    public readonly box: BoxFromType[T];
+   public readonly localID: number;
 
    public mass: number;
    public collisionType: HitboxCollisionType;
@@ -35,8 +36,9 @@ export class ClientHitbox<T extends BoxType = BoxType> implements Hitbox<T> {
 
    public lastUpdateTicks = Board.serverTicks;
 
-   constructor(box: BoxFromType[T], mass: number, collisionType: HitboxCollisionType, collisionBit: HitboxCollisionBit, collisionMask: number, flags: ReadonlyArray<HitboxFlag>) {
+   constructor(box: BoxFromType[T], mass: number, collisionType: HitboxCollisionType, collisionBit: HitboxCollisionBit, collisionMask: number, flags: ReadonlyArray<HitboxFlag>, localID: number) {
       this.box = box;
+      this.localID = localID;
       this.mass = mass;
       this.collisionType = collisionType;
       this.collisionBit = collisionBit;

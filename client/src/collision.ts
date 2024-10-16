@@ -1,6 +1,4 @@
 import { Settings } from "battletribes-shared/settings";
-import Entity from "./Entity";
-import { ServerComponentType } from "battletribes-shared/components";
 import { collisionBitsAreCompatible, CollisionPushInfo, getCollisionPushInfo } from "battletribes-shared/hitbox-collision";
 import { Point } from "battletribes-shared/utils";
 import { HitboxCollisionType, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";

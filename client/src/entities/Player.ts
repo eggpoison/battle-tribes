@@ -107,8 +107,8 @@ export default class Player extends TribeMember {
    constructor(id: number) {
       super(id);
       
-      FootprintComponentArray.addComponent(this.id, new FootprintComponent(this, 0.2, 20, 64, 4, 64));
-      EquipmentComponentArray.addComponent(this.id, new EquipmentComponent(this));
+      FootprintComponentArray.addComponent(this.id, new FootprintComponent(0.2, 20, 64, 4, 64));
+      EquipmentComponentArray.addComponent(this.id, new EquipmentComponent());
    }
 
    public onLoad(): void {

@@ -1,10 +1,21 @@
-import { EntityID, TreeSize } from "battletribes-shared/entities";
+import { TreeSize } from "battletribes-shared/entities";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponentArray from "../ServerComponentArray";
 
-class TreeComponent {
-   public treeSize = TreeSize.small;
+export interface TreeComponent {
+   readonly treeSize: TreeSize;
+}
+
+export function createTreeComponent(treeSize: TreeSize): TreeComponent {
+   return {
+      treeSize: treeSize
+   };
+}
+
+export function createTreeComponentFromData(reader: PacketReader): TreeComponent {
+   const treeSize = reader.readNumber();
+   return createTreeComponent(treeSize);
 }
 
 export default TreeComponent;
@@ -18,7 +29,6 @@ function padData(reader: PacketReader): void {
    reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
 }
 
-function updateFromData(reader: PacketReader, entity: EntityID): void {
-   const treeComponent = TreeComponentArray.getComponent(entity);
-   treeComponent.treeSize = reader.readNumber();
+function updateFromData(reader: PacketReader): void {
+   reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
 }

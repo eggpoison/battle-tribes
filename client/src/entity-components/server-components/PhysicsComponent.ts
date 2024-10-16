@@ -13,7 +13,7 @@ import { resolveWallCollisions } from "../../collision";
 import { PacketReader } from "battletribes-shared/packets";
 import { createWaterSplashParticle } from "../../particles";
 import { getEntityByID, getEntityLayer, getEntityRenderInfo, getEntityType } from "../../world";
-import { getEntityTile, TransformComponentArray } from "./TransformComponent";
+import { entityIsInRiver, getEntityTile, TransformComponentArray, updateEntityPosition } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
 const applyPhysics = (physicsComponent: PhysicsComponent, entity: EntityID): void => {
@@ -38,7 +38,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent, entity: EntityID): voi
    // Apply acceleration (to self-velocity)
    if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
       let tileMoveSpeedMultiplier = TILE_MOVE_SPEED_MULTIPLIERS[tile.type];
-      if (tile.type === TileType.water && !transformComponent.isInRiver(entity)) {
+      if (tile.type === TileType.water && !entityIsInRiver(transformComponent, entity)) {
          tileMoveSpeedMultiplier = 1;
       }
 
@@ -59,7 +59,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent, entity: EntityID): voi
    // @Speed: so much polymorphism and function calls and shit
    // Apply river flow to external velocity
    const moveSpeedIsOverridden = typeof entityTemp.overrideTileMoveSpeedMultiplier !== "undefined" && entityTemp.overrideTileMoveSpeedMultiplier() !== null;
-   if (transformComponent.isInRiver(entity) && !moveSpeedIsOverridden) {
+   if (entityIsInRiver(transformComponent, entity) && !moveSpeedIsOverridden) {
       const flowDirection = layer.getRiverFlowDirection(tile.x, tile.y);
       physicsComponent.selfVelocity.x += 240 / Settings.TPS * Math.sin(flowDirection);
       physicsComponent.selfVelocity.y += 240 / Settings.TPS * Math.cos(flowDirection);
@@ -109,7 +109,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent, entity: EntityID): voi
       transformComponent.position.y += (physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y) * Settings.I_TPS;
 
       // Mark entity's position as updated
-      transformComponent.updatePosition(entity);
+      updateEntityPosition(transformComponent, entity);
       const renderInfo = getEntityRenderInfo(entity);
       renderInfo.dirty();
    }
@@ -181,13 +181,13 @@ function onTick(physicsComponent: PhysicsComponent, entity: EntityID): void {
 
    // Water droplet particles
    // @Cleanup: Don't hardcode fish condition
-   if (transformComponent.isInRiver(entity) && customTickIntervalHasPassed(Board.clientTicks, 0.05) && (getEntityType(entity) !== EntityType.fish)) {
+   if (entityIsInRiver(transformComponent, entity) && customTickIntervalHasPassed(Board.clientTicks, 0.05) && (getEntityType(entity) !== EntityType.fish)) {
       createWaterSplashParticle(transformComponent.position.x, transformComponent.position.y);
    }
    
    // Water splash particles
    // @Cleanup: Move to particles file
-   if (transformComponent.isInRiver(entity) && customTickIntervalHasPassed(Board.clientTicks, 0.15) && (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) && getEntityType(entity) !== EntityType.fish) {
+   if (entityIsInRiver(transformComponent, entity) && customTickIntervalHasPassed(Board.clientTicks, 0.15) && (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) && getEntityType(entity) !== EntityType.fish) {
       const lifetime = 2.5;
 
       const particle = new Particle(lifetime);

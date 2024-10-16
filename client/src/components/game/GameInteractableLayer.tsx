@@ -28,7 +28,7 @@ import { playSound } from "../../sound";
 import { BackpackInventoryMenu_setIsVisible } from "./inventories/BackpackInventory";
 import Hotbar, { Hotbar_updateLeftThrownBattleaxeItemID, Hotbar_updateRightThrownBattleaxeItemID, Hotbar_setHotbarSelectedItemSlot } from "./inventories/Hotbar";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./menus/CraftingMenu";
-import TransformComponent, { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { addHitboxToEntity, createTransformComponent, TransformComponentArray, updateEntityPosition } from "../../entity-components/server-components/TransformComponent";
 import { AttackVars, copyCurrentLimbState, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
 import { PhysicsComponentArray } from "../../entity-components/server-components/PhysicsComponent";
 import { getCurrentLayer, getEntityLayer, getEntityRenderInfo, getEntityType, registerBasicEntityInfo, removeBasicEntityInfo } from "../../world";
@@ -44,6 +44,7 @@ import { addEntityToRenderHeightMap } from "../../rendering/webgl/entity-renderi
 import { registerDirtyEntity } from "../../rendering/render-part-matrices";
 import { thingIsRenderPart } from "../../render-parts/render-parts";
 import { ClientHitbox } from "../../boxes";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -828,24 +829,22 @@ const selectItem = (item: Item): void => {
          for (let i = 0; i < componentTypes.length; i++) {
             const componentType = componentTypes[i];
 
-            const component = createComponent(entityID, componentType);
-
+            let component!: object;
             switch (componentType) {
                case ServerComponentType.transform: {
-                  // @Hack
-                  (component as TransformComponent).position.x = placeInfo.position.x;
-                  (component as TransformComponent).position.y = placeInfo.position.y;
-                  (component as TransformComponent).rotation = 0;
-
-                  // @Hack
-                  if (entityType === EntityType.bracings) {
-                     for (let i = 0; i < placeInfo.hitboxes.length; i++) {
-                        const hitbox = placeInfo.hitboxes[i];
-                        const clientHitbox = new ClientHitbox(hitbox.box, hitbox.mass, hitbox.collisionType, hitbox.collisionBit, hitbox.collisionMask, hitbox.flags);
-                        (component as TransformComponent).addHitbox(clientHitbox, i);
-                     }
+                  const hitboxes = new Array<ClientHitbox>();
+                  for (let i = 0; i < placeInfo.hitboxes.length; i++) {
+                     const hitbox = placeInfo.hitboxes[i];
+                     const clientHitbox = new ClientHitbox(hitbox.box, hitbox.mass, hitbox.collisionType, hitbox.collisionBit, hitbox.collisionMask, hitbox.flags, i);
+                     hitboxes.push(clientHitbox);
                   }
+                  
+                  const position = placeInfo.position.copy();
+                  component = createTransformComponent(position, placeInfo.rotation, hitboxes, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
                   break;
+               }
+               default: {
+                  throw new Error(componentType.toString());
                }
             }
 
@@ -1271,7 +1270,7 @@ const tickItem = (itemType: ItemType): void => {
                entityHitbox.box.offset.y = hitboxData.box.offset.y;
             }
 
-            transformComponent.updateHitboxes();
+            updateEntityPosition(transformComponent, placeableEntityGhost);
             
             registerDirtyEntity(placeableEntityGhost);
          }

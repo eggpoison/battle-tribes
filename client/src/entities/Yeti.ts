@@ -13,7 +13,7 @@ class Yeti extends Entity {
    constructor(id: number) {
       super(id);
 
-      RandomSoundComponentArray.addComponent(this.id, new RandomSoundComponent(this));
+      RandomSoundComponentArray.addComponent(this.id, new RandomSoundComponent(id));
    }
 
    protected onHit(hitData: HitData): void {

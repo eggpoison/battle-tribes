@@ -1,3 +1,43 @@
+@import "./main-menu.css";
+@import "./loading-screen.css";
+@import "./game/chatbox.css";
+@import "./game/menus/settings.css";
+@import "./game/death-screen.css";
+@import "./game/health-bar.css";
+@import "./game/inventories/inventory.css";
+@import "./game/inventories/hotbar.css";
+@import "./game/inventories/cooking-inventory.css";
+@import "./game/inventories/tribesman-inventory.css";
+@import "./game/inventories/barrel-inventory.css";
+@import "./game/inventories/backpack-inventory.css";
+@import "./game/inventories/tombstone-epitaph.css";
+@import "./game/inventories/ammo-box-inventory.css";
+@import "./game/inventories/item-tooltip.css";
+@import "./game/charge-meter.css";
+@import "./game/menus/crafting-menu.css";
+@import "./game/nerd-vision/nerd-vision.css";
+@import "./game/nerd-vision/game-info-display.css";
+@import "./game/nerd-vision/cursor-tooltip.css";
+@import "./game/nerd-vision/terminal-button.css";
+@import "./game/nerd-vision/terminal.css";
+@import "./game/nerd-vision/debug-info.css";
+@import "./game/nerd-vision/frame-graph.css";
+@import "./game/tech-tree.css";
+@import "./game/tech-infocard.css";
+@import "./game/research-bench-caption.css";
+@import "./game/build-menu.css";
+@import "./game/health-inspector.css";
+@import "./game/infocards.css";
+@import "./game/attack-charge-bar.css";
+@import "./game/layer-change-message.css";
+@import "./game/tribe-plan-visualiser.css";
+@import "./game/animal-staff-options.css";
+@import "./game/select-carry-target-cursor-overlay.css";
+@import "./game/taming-menu.css";
+@import "./game/sign-inscribe-menu.css";
+@import "./game/cow-stamina-bar.css";
+@import "./game/spectator-controls.css";
+
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
 
@@ -40,10 +80,6 @@ body {
    box-shadow: 0 0 80px 10px rgba(0, 0, 0, 0.7) inset;
    z-index: 1;
    cursor: pointer;
-}
-
-#text-canvas {
-   pointer-events: none;
 }
 
 .game-message {

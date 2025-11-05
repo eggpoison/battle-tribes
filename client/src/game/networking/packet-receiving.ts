@@ -1,7 +1,7 @@
-import { WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize } from "battletribes-shared/client-server-types";
-import { PacketReader } from "battletribes-shared/packets";
-import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
+import { WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize } from "webgl-test-shared/src/client-server-types";
+import { PacketReader } from "webgl-test-shared/src/packets";
+import { Settings } from "webgl-test-shared/src/settings";
+import { TileType } from "webgl-test-shared/src/tiles";
 import { refreshCameraView, setCameraPosition } from "../camera";
 import { Tile } from "../Tile";
 import { addLayer, layers, setCurrentLayer, surfaceLayer } from "../world";
@@ -13,8 +13,8 @@ import { Biome } from "../../../../shared/src/biomes";
 import { Point, TileIndex } from "../../../../shared/src/utils";
 import { playerInstance } from "../player";
 import { registerTamingSpecsFromData } from "../taming-specs";
-import { addChatMessage } from "../../svelte/game/ChatBox";
-import { GameScreen_setIsSimulating } from "../../svelte/game/GameScreen";
+import { addChatMessage } from "../chat";
+import { gameUIState } from "../../ui-state/game-ui-state.svelte";
 
 const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {
    // Initially find all tiles below a dropdown tile
@@ -232,5 +232,5 @@ export function receiveChatMessagePacket(reader: PacketReader): void {
    
 export function processSimulationStatusUpdatePacket(reader: PacketReader): void {
    const isSimulating = reader.readBool();
-   GameScreen_setIsSimulating(isSimulating);
+   gameUIState.setIsSimulating(isSimulating);
 }

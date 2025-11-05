@@ -1,6 +1,6 @@
 import { Light, removeLight } from "../../lights";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
+import { PacketReader } from "webgl-test-shared/src/packets";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";

@@ -5,6 +5,8 @@ type ClientSettings = {
    readonly CURSOR_TOOLTIP_HOVER_RANGE: number;
 }
 
+// @Cleanup wtf is this
+
 const CLIENT_SETTINGS: ClientSettings = {
    CIRCLE_DETAIL: 25,
    CURSOR_TOOLTIP_HOVER_RANGE: 64

@@ -1,10 +1,9 @@
-import { distance, randAngle } from "battletribes-shared/utils";
-import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "battletribes-shared/research";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { TribesmanTitle } from "battletribes-shared/titles";
+import { distance, randAngle } from "webgl-test-shared/src/utils";
+import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "webgl-test-shared/src/research";
+import { Entity, EntityType } from "webgl-test-shared/src/entities";
+import { Settings } from "webgl-test-shared/src/settings";
+import { TribesmanTitle } from "webgl-test-shared/src/titles";
 import { currentSnapshot } from "./client";
-import { getSelectedEntityID } from "./entity-selection";
 import { playHeadSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
 import { getRandomPositionInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
@@ -14,6 +13,7 @@ import { TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/
 import { sendStudyTechPacket } from "./networking/packet-sending";
 import { playerInstance } from "./player";
 import { cursorWorldPos } from "./mouse-input";
+import { entityInteractionState } from "../ui-state/entity-interaction-state.svelte";
 
 export interface ResearchOrb {
    /* X position of the node in the world */
@@ -61,8 +61,8 @@ export function getResearchOrbCompleteProgress(): number {
 }
 
 export function updateActiveResearchBench(): void {
-   const selectedStructure = getSelectedEntityID();
-   if (!entityExists(selectedStructure)) {
+   const selectedStructure = entityInteractionState.selectedEntity;
+   if (selectedStructure === null) {
       currentResearchOrb = null;
       currentBenchID = -1;
       return;
@@ -111,7 +111,8 @@ const completeOrb = (): void => {
    const useInfo = inventoryUseComponent.limbInfos[0];
    useInfo.lastAttackTicks = currentSnapshot.tick;
    
-   const selectedStructure = getSelectedEntityID();
+   // @Hack: "!"
+   const selectedStructure = entityInteractionState.selectedEntity!;
    currentResearchOrb = generateResearchOrb(selectedStructure);
    orbCompleteProgress = 0;
 }

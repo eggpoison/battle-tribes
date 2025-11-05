@@ -1,30 +1,21 @@
-import { Settings } from "battletribes-shared/settings";
+import { Settings } from "webgl-test-shared/src/settings";
 import Board from "./Board";
-import { isDev } from "./utils";
 import { updateTextNumbers } from "./text-canvas";
-import { updateSpamFilter } from "../svelte/game/ChatBox";
 import { renderCursorTooltip } from "./mouse-input";
-import { refreshDebugInfo } from "../svelte/game/dev/DebugInfo";
 import { resizeCanvas } from "./webgl";
-import { GameInfoDisplay_setBufferSize, updateDebugScreenRenderTime } from "../svelte/game/dev/GameInfoDisplay";
-import { registerFrame, updateFrameGraph } from "../svelte/game/dev/FrameGraph";
 import { createAudioContext, playRiverSounds, updateSounds } from "./sound";
 import { attemptToResearch, updateActiveResearchBench, updateResearchOrb } from "./research";
-import { resetInteractableEntityIDs, updateHighlightedAndHoveredEntities, updateSelectedEntity } from "./entity-selection";
-import { InventorySelector_forceUpdate } from "../svelte/game/inventories/InventorySelector";
-import { BuildMenu_refreshBuildingID, BuildMenu_updateBuilding } from "../svelte/game/BuildMenu";
+import { updateHighlightedAndHoveredEntities, updateSelectedEntity } from "./entity-selection";
 import { updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
 import { entityUsesClientInterp } from "./rendering/render-part-matrices";
-import { updatePlayerMovement, updatePlayerItems } from "../svelte/game/GameInteractableLayer";
 import { createCollapseParticles } from "./collapses";
 import { updateSlimeTrails } from "./rendering/webgl/slime-trail-rendering";
-import { AnimalStaffOptions_update } from "../svelte/game/AnimalStaffOptions";
 import { updateDebugEntity } from "./entity-debugging";
 import { createSpectatingPlayer, isSpectating, playerInstance, setIsSpectating, setPlayerInstance, setPlayerUsername, updatePlayerRotation } from "./player";
-import { TamingMenu_forceUpdate } from "../svelte/game/taming-menu/TamingMenu";
+// import { TamingMenu_forceUpdate } from "../ui/game/taming-menu/TamingMenu";
 import { callEntityOnUpdateFunctions } from "./entity-components/ComponentArray";
 import { resolvePlayerCollisions } from "./collision";
-import { CowStaminaBar_forceUpdate } from "../svelte/game/CowStaminaBar";
+// import { CowStaminaBar_forceUpdate } from "../ui/game/CowStaminaBar";
 import { Packet, PacketReader, PacketType } from "../../../shared/src/packets";
 import { decodeSnapshotFromGameDataPacket, PacketSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
 import { TribeType } from "../../../shared/src/tribes";
@@ -33,9 +24,14 @@ import { InitialGameData, processForcePositionUpdatePacket, processInitialGameDa
 import { renderGame, setupRendering } from "./rendering/render";
 import { processDevGameDataPacket } from "./networking/dev-packets";
 import { assert } from "../../../shared/src/utils";
-import { LoadingScreenState, setLoadingScreenState } from "../stores/loading-screen-state.svelte";
-import { AppState, setAppState } from "../stores/app-state.svelte";
-import { gameInteractState } from "../stores/game-ui-state.svelte";
+import { LoadingScreenStage, loadingScreenState } from "../ui-state/loading-screen-state.svelte";
+import { appState, AppState } from "../ui-state/app-state.svelte";
+import { registerFrame, renderFrameGraph } from "./rendering/webgl/frame-graph-rendering";
+import { updateSpamFilter } from "./chat";
+import { gameUIState } from "../ui-state/game-ui-state.svelte";
+import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
+import { buildMenuState } from "../ui-state/build-menu-state.svelte";
+import { updatePlayerMovement } from "./player-action-handler";
 
 const SNAPSHOT_BUFFER_LENGTH = 2;
 /** The number of ticks it takes for the measured server packet interval to fully adjust (if going from a constant tps of A to a constant tps of B) */
@@ -91,7 +87,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 const onSuccessfulConnection = (username: string, tribeType: TribeType, isSpectating: boolean): void => {
-   setLoadingScreenState(LoadingScreenState.sendingPlayerData);
+   loadingScreenState.setStage(LoadingScreenStage.sendingPlayerData);
    sendInitialPlayerDataPacket(username, tribeType, isSpectating);
 
    setPlayerUsername(username);
@@ -100,8 +96,8 @@ const onSuccessfulConnection = (username: string, tribeType: TribeType, isSpecta
 
 const onFailedConnection = (): void => {
    gameIsRunning = false;
-   setAppState(AppState.loading);
-   setLoadingScreenState(LoadingScreenState.connectionError);
+   appState.setState(AppState.loading);
+   loadingScreenState.setStage(LoadingScreenStage.connectionError);
 
    setPlayerInstance(null);
 }
@@ -109,7 +105,7 @@ const onFailedConnection = (): void => {
 const startGame = (): void => {
    gameIsRunning = true;
    gameIsSynced = true;
-   setAppState(AppState.game);
+   appState.setState(AppState.game);
 
    resizeCanvas();
 
@@ -121,7 +117,7 @@ const startGame = (): void => {
 
 export function quitGame(): void {
    gameIsRunning = false;
-   setAppState(AppState.mainMenu);
+   appState.setState(AppState.mainMenu);
    
    if (socket !== null) {
       socket.close();
@@ -136,9 +132,8 @@ const onInitialGameDataPacket = async (reader: PacketReader): Promise<void> => {
    
    // Initialise game
 
-   setLoadingScreenState(LoadingScreenState.initialisingGame);
+   loadingScreenState.setStage(LoadingScreenStage.initialisingGame);
    
-   resetInteractableEntityIDs();
    await setupRendering();
    
    sendActivatePacket();
@@ -207,7 +202,7 @@ const receivePacket = (reader: PacketReader): PacketSnapshot => {
    const snapshot = decodeSnapshotFromGameDataPacket(reader, previousSnapshot);
    
    snapshotBuffer.push(snapshot);
-   GameInfoDisplay_setBufferSize(snapshotBuffer.length);
+   debugDisplayState.setSnapshotBufferSize(snapshotBuffer.length);
 
    const timeNow = performance.now();
    
@@ -242,6 +237,7 @@ export function sendPacket(packet: Packet): void {
 
 export function setCurrentSnapshot(snapshot: PacketSnapshot): void {
    currentSnapshot = snapshot;
+   debugDisplayState.setCurrentSnapshot(snapshot);
 }
 
 export function getMeasuredServerTPS(): number {
@@ -295,7 +291,7 @@ const runFrame = (frameStartTime: number): void => {
       if (i > 0) {
          snapshotBuffer.splice(0, i - 1);
       }
-      GameInfoDisplay_setBufferSize(snapshotBuffer.length);
+      debugDisplayState.setSnapshotBufferSize(snapshotBuffer.length);
 
       // @Cleanup kinda unclear at a glance
       nextSnapshot = (snapshotBuffer[snapshotBuffer.indexOf(currentSnapshot) + 1]) || currentSnapshot;
@@ -313,7 +309,7 @@ const runFrame = (frameStartTime: number): void => {
       // Tick the player (independently from all other entities)
       clientTickInterp += deltaTick;
       while (clientTickInterp >= 1) {
-         // Call this outside of the check to make sure the player is in-client, cuz we want the movement intention to update too!
+         // Call this outside of the check which makes sure the player is in-client, cuz we want the movement intention to update too!
          updatePlayerMovement();
          
          // @Cleanup: this function name i think is a lil weird for something which the contents of the if updates the player.
@@ -327,25 +323,25 @@ const runFrame = (frameStartTime: number): void => {
          // Tick all entities (cuz the client interp loop is based on the network update rate not the tick rate)
          Board.tickEntities();
          
-         updateSpamFilter();
+         updateSpamFilter(deltaTimeMS);
 
-         updatePlayerItems();
          updateActiveResearchBench();
          updateResearchOrb();
          attemptToResearch();
 
          // @Cleanup: can probs just combine these 2
-         updateHighlightedAndHoveredEntities(gameInteractState);
-         updateSelectedEntity(gameInteractState);
-         BuildMenu_updateBuilding();
-         BuildMenu_refreshBuildingID();
-         AnimalStaffOptions_update();
+         updateHighlightedAndHoveredEntities(gameUIState.gameInteractState);
+         updateSelectedEntity(gameUIState.gameInteractState);
+         buildMenuState.updateEntity();
+         // @Incomplete
+         // AnimalStaffOptions_update();
          // @Incomplete?
          // updateInspectHealthBar();
-         InventorySelector_forceUpdate();
          // @Hack @Speed
-         TamingMenu_forceUpdate();
-         CowStaminaBar_forceUpdate();
+         // @Incomplete
+         // TamingMenu_forceUpdate();
+         // @Incomplete
+         // CowStaminaBar_forceUpdate();
 
          updateTechTreeItems();
          
@@ -355,17 +351,16 @@ const runFrame = (frameStartTime: number): void => {
          createCollapseParticles();
          updateSlimeTrails();
 
-         if (isDev()) refreshDebugInfo();
+         // @Incomplete: this was a force update for entity+tile debug info
+         // if (isDev()) refreshDebugInfo();
          updateDebugEntity();
       }
 
       renderGame(clientTickInterp, serverTickInterp);
 
       const renderEndTime = performance.now();
-      const renderTimeTaken = renderEndTime - frameStartTime;
       registerFrame(frameStartTime, renderEndTime);
-      updateFrameGraph();
-      updateDebugScreenRenderTime(renderTimeTaken);
+      renderFrameGraph(renderEndTime);
 
       updateTextNumbers();
       Board.updateTickCallbacks();

@@ -1,7 +1,7 @@
-import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
+import { BuildingMaterial, ServerComponentType } from "webgl-test-shared/src/components";
+import { Entity, EntityType } from "webgl-test-shared/src/entities";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 

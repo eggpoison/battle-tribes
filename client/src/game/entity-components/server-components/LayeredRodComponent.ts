@@ -1,9 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import ColouredRenderPart, { RenderPartColour } from "../../render-parts/ColouredRenderPart";
-import { Colour, getTileIndexIncludingEdges, hueShift, lerp, multiColourLerp } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
-import { PacketReader } from "battletribes-shared/packets";
-import { Entity, EntityType } from "battletribes-shared/entities";
+import { Colour, getTileIndexIncludingEdges, hueShift, lerp, multiColourLerp } from "webgl-test-shared/src/utils";
+import { Settings } from "webgl-test-shared/src/settings";
+import { PacketReader } from "webgl-test-shared/src/packets";
+import { Entity, EntityType } from "webgl-test-shared/src/entities";
 import { EntityComponentData, getEntityRenderInfo, getEntityType, surfaceLayer } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { registerDirtyRenderInfo } from "../../rendering/render-part-matrices";

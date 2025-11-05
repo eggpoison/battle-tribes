@@ -1,5 +1,5 @@
-import { EntityType } from "battletribes-shared/entities";
-import { BlueprintType, DecorationType, ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "webgl-test-shared/src/entities";
+import { BlueprintType, DecorationType, ServerComponentType } from "webgl-test-shared/src/components";
 import { EntityComponentData } from "./world";
 import { assert } from "../../../shared/src/utils";
 

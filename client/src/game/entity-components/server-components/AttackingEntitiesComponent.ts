@@ -1,4 +1,4 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import ServerComponentArray from "../ServerComponentArray";
 import { PacketReader } from "../../../../../shared/src/packets";
 

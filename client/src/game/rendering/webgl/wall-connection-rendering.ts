@@ -1,8 +1,8 @@
-import { rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import { WallConnectionData } from "battletribes-shared/ai-building-types";
+import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/src/utils";
+import { WallConnectionData } from "webgl-test-shared/src/ai-building-types";
 import { createWebGLProgram, gl } from "../../webgl";
-import OPTIONS from "../../options";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
+import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
 
 const CONNECTION_WIDTH = 4;
 const CONNECTION_HEIGHT = 8;
@@ -50,7 +50,7 @@ export function createWallConnectionShaders(): void {
 }
 
 export function renderWallConnections(): void {
-   if (!OPTIONS.showWallConnections) {
+   if (!debugDisplayState.showWallConnections) {
       return;
    }
    

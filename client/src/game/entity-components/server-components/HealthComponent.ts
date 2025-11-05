@@ -1,8 +1,6 @@
-import { Settings } from "battletribes-shared/settings";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
-import { updateHealthBar } from "../../../svelte/game/HealthBar";
-import { discombobulate } from "../../../svelte/game/GameInteractableLayer";
+import { Settings } from "webgl-test-shared/src/settings";
+import { PacketReader } from "webgl-test-shared/src/packets";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import { ComponentTint, createComponentTint } from "../../EntityRenderInfo";
@@ -11,6 +9,8 @@ import { HitFlags } from "../../../../../shared/src/client-server-types";
 import { playerInstance } from "../../player";
 import { Hitbox } from "../../hitboxes";
 import { Point } from "../../../../../shared/src/utils";
+import { healthBarState } from "../../../ui-state/health-bar-state.svelte";
+import { discombobulate } from "../../player-action-handler";
 
 export interface HealthComponentData {
    readonly health: number;
@@ -115,7 +115,7 @@ function updatePlayerFromData(data: HealthComponentData): void {
    updateFromData(data, playerInstance!);
 
    const healthComponent = HealthComponentArray.getComponent(playerInstance!)!;
-   updateHealthBar(healthComponent.health);
+   healthBarState.setHealth(healthComponent.health);
 }
 
 function calculateTint(entity: Entity): ComponentTint {

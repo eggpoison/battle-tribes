@@ -1,7 +1,7 @@
-import { TileType } from "battletribes-shared/tiles";
-import { lerp, randFloat, rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
-import { WaterRockData, WaterRockSize } from "battletribes-shared/client-server-types";
-import { Settings } from "battletribes-shared/settings";
+import { TileType } from "webgl-test-shared/src/tiles";
+import { lerp, randFloat, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/src/utils";
+import { WaterRockData, WaterRockSize } from "webgl-test-shared/src/client-server-types";
+import { Settings } from "webgl-test-shared/src/settings";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getTexture } from "../../textures";
 import { RenderChunkRiverInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "../render-chunks";

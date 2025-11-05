@@ -1,13 +1,7 @@
 import { Settings } from "../../../../shared/src/settings";
 import { maxVisibleChunkX, maxVisibleChunkY, maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleChunkX, minVisibleChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY, refreshCameraPosition, refreshCameraView } from "../camera";
-import { updateDebugScreen } from "../../svelte/game/dev/GameInfoDisplay";
-import { nerdVisionIsVisible } from "../../svelte/game/dev/NerdVision";
-import { playerIsHoldingPlaceableItem } from "../../svelte/game/GameInteractableLayer";
-import { updateInspectHealthBar } from "../../svelte/game/HealthInspector";
-import { getSelectedEntityID, getHighlightedRenderInfo, getHighlightedEntityID } from "../entity-selection";
+import { getHighlightedRenderInfo } from "../entity-selection";
 import Layer from "../Layer";
-import { getEntityDebugData } from "../networking/dev-packets";
-import OPTIONS from "../options";
 import { updatePlayerRotation } from "../player";
 import { RenderLayer, MAX_RENDER_LAYER } from "../render-layers";
 import { loadSoundEffects } from "../sound";
@@ -60,6 +54,11 @@ import { createWallBorderShaders, renderWallBorders } from "./webgl/wall-border-
 import { createWallConnectionShaders, renderWallConnections } from "./webgl/wall-connection-rendering";
 import { createForcefieldShaders, renderForcefield } from "./webgl/world-border-forcefield-rendering";
 import { createWorldBorderShaders, renderWorldBorder } from "./webgl/world-border-rendering";
+import { playerIsHoldingPlaceableItem } from "../player-action-handler";
+import { entityInteractionState } from "../../ui-state/entity-interaction-state.svelte";
+import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
+import { nerdVisionState } from "../../ui-state/nerd-vision-state.svelte";
+import { hoverDebugState } from "../../ui-state/hover-debug-state.svelte";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -193,15 +192,15 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
 
    renderTurretRange();
 
-   const entityDebugData = getEntityDebugData();
-   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   const entityDebugData = hoverDebugState.entityDebugData;
+   if (nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
       renderTriangleDebugData(entityDebugData);
    }
    renderRestrictedBuildingAreas();
-   if (nerdVisionIsVisible() && OPTIONS.showChunkBorders) {
+   if (nerdVisionState.isVisible && debugDisplayState.showChunkBorders) {
       renderChunkBorders(minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY, Settings.CHUNK_SIZE, 1);
    }
-   if (nerdVisionIsVisible() && OPTIONS.showRenderChunkBorders) {
+   if (nerdVisionState.isVisible && debugDisplayState.showRenderChunkBorders) {
       renderChunkBorders(minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY, RENDER_CHUNK_SIZE, 2);
    }
 
@@ -218,7 +217,7 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    // Render everything up to fish
    renderNextRenderables(layer, RenderLayer.fish);
    renderUpperRiverFeatures(layer, visibleRiverRenderChunks);
-   if (OPTIONS.showParticles) {
+   if (debugDisplayState.showParticles) {
       renderMonocolourParticles(ParticleRenderLayer.low);
       renderTexturedParticles(ParticleRenderLayer.low);
    }
@@ -235,21 +234,24 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    // Render everything else
    renderNextRenderables(layer, MAX_RENDER_LAYER);
 
-   // @Cleanup: should this only be for the current layer?
-   // @Cleanup this is so messy
-   if (entityExists(getSelectedEntityID())) {
-      const renderInfo = getEntityRenderInfo(getSelectedEntityID());
-      renderEntitySelection(renderInfo, frameProgress, true);
-   }
-   const renderInfo = getHighlightedRenderInfo();
-   if (renderInfo !== null && getHighlightedEntityID() !== getSelectedEntityID()) {
-      renderEntitySelection(renderInfo, frameProgress, false);
+   if (layer === getCurrentLayer()) {
+      // @Cleanup: should this only be for the current layer?
+      // @Cleanup this is so messy
+      if (entityInteractionState.selectedEntity !== null) {
+         const renderInfo = getEntityRenderInfo(entityInteractionState.selectedEntity);
+         renderEntitySelection(renderInfo, frameProgress, true);
+      }
+      const renderInfo = getHighlightedRenderInfo();
+      // @INCOMPLETE @SQUEAM: This should be highlighted
+      if (renderInfo !== null && entityInteractionState.hoveredEntity !== entityInteractionState.selectedEntity) {
+         renderEntitySelection(renderInfo, frameProgress, false);
+      }
    }
    
    renderForcefield();
    renderWorldBorder();
    
-   if (OPTIONS.showParticles) {
+   if (debugDisplayState.showParticles) {
       renderMonocolourParticles(ParticleRenderLayer.high);
       renderTexturedParticles(ParticleRenderLayer.high);
    }
@@ -259,10 +261,10 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    renderWallConnections();
    renderResearchOrb();
 
-   if (OPTIONS.showHitboxes) {
+   if (debugDisplayState.showHitboxes) {
       renderHitboxes(layer);
    }
-   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
       renderLineDebugData(entityDebugData);
    }
 
@@ -276,11 +278,11 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
    renderLighting(layer);
-   if (OPTIONS.debugLights) {
+   if (debugDisplayState.debugLights) {
       renderLightingDebug(layer);
    }
 
-   if (OPTIONS.debugTethers) {
+   if (debugDisplayState.debugTethers) {
       // @Incomplete: not per layer
       renderDebugImages();
    }
@@ -324,17 +326,17 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number): 
       renderLayer(layers[1], serverTickInterp);
    }
 
-   if (OPTIONS.showSubtileSupports) {
+   if (debugDisplayState.showSubtileSupports) {
       renderSubtileSupports();
    }
 
-   if (OPTIONS.showLightLevels) {
+   if (debugDisplayState.showLightLevels) {
       renderLightLevelsBG();
       renderLightLevelsText();
    }
 
-   updateDebugScreen();
-   updateInspectHealthBar();
+   // @INCOMPLETE @SQUEAM
+   // updateInspectHealthBar();
    
    renderTechTree();
    renderTechTreeItems();

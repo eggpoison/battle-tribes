@@ -1,6 +1,6 @@
-import { Settings } from "battletribes-shared/settings";
-import { assert, Point, randInt } from "battletribes-shared/utils";
-import { TileType } from "battletribes-shared/tiles";
+import { Settings } from "webgl-test-shared/src/settings";
+import { assert, Point, randInt } from "webgl-test-shared/src/utils";
+import { TileType } from "webgl-test-shared/src/tiles";
 import { getCurrentLayer, getEntityLayer } from "./world";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { Entity } from "../../../shared/src/entities";

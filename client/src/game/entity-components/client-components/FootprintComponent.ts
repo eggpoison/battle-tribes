@@ -1,6 +1,6 @@
-import { Settings } from "battletribes-shared/settings";
-import { randInt } from "battletribes-shared/utils";
-import { TileType } from "battletribes-shared/tiles";
+import { Settings } from "webgl-test-shared/src/settings";
+import { randInt } from "webgl-test-shared/src/utils";
+import { TileType } from "webgl-test-shared/src/tiles";
 import { playSound } from "../../sound";
 import { createFootprintParticle } from "../../particles";
 import { EntityComponentData, getEntityLayer } from "../../world";

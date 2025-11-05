@@ -1,5 +1,5 @@
-import { Point, angle, lerp, polarVec2, randAngle, randFloat, randInt, randItem, randSign } from "battletribes-shared/utils";
-import { CactusFlowerSize, Entity } from "battletribes-shared/entities";
+import { Point, angle, lerp, polarVec2, randAngle, randFloat, randInt, randItem, randSign } from "webgl-test-shared/src/utils";
+import { CactusFlowerSize, Entity } from "webgl-test-shared/src/entities";
 import Particle from "./Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer } from "./rendering/webgl/particle-rendering";
 import Board from "./Board";
@@ -7,6 +7,11 @@ import { TransformComponent, TransformComponentArray } from "./entity-components
 import { BlockType } from "../../../shared/src/components";
 import { getHitboxVelocity, Hitbox } from "./hitboxes";
 import { tickIntervalHasPassed } from "./client";
+import { playerInstance } from "./player";
+import { InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
+import { createTranslationMatrix, matrixMultiplyInPlace } from "./rendering/matrices";
+import { getMatrixPosition } from "./rendering/render-part-matrices";
+import { playHeadSound } from "./sound";
 
 // @Cleanup: Standardise all these functions to just take the stuff necessary to create them, then have the places which call them modify the returned particle
 
@@ -2254,4 +2259,88 @@ export function createOkrenEyeParticle(spawnPositionX: number, spawnPositionY: n
       r, g, b
    );
    Board.highMonocolourParticles.push(particle);
+}
+
+export const enum AnimalStaffCommandType {
+   follow,
+   move,
+   carry,
+   attack
+}
+
+export function createControlCommandParticles(commandType: AnimalStaffCommandType): void {
+   if (playerInstance === null) {
+      return;
+   }
+   
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance);
+   if (inventoryUseComponent === null) {
+      return;
+   }
+
+   const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[0];
+
+   const originMatrix = createTranslationMatrix(14, 14);
+   matrixMultiplyInPlace(activeItemRenderPart.modelMatrix, originMatrix);
+   const origin = getMatrixPosition(originMatrix);
+
+   let r: number;
+   let g: number;
+   let b: number;
+   switch (commandType) {
+      case AnimalStaffCommandType.follow: {
+         r = 165/255;
+         g = 255/255;
+         b = 163/255;
+         break;
+      }
+      case AnimalStaffCommandType.move: {
+         r = 65/255;
+         g = 238/255;
+         b = 240/255;
+         break;
+      }
+      case AnimalStaffCommandType.carry: {
+         r = 237/255;
+         g = 172/255;
+         b = 19/255;
+         break;
+      }
+      case AnimalStaffCommandType.attack: {
+         r = 237/255;
+         g = 0/255;
+         b = 0/255;
+         break;
+      }
+   }
+
+   const n = 20;
+   for (let i = 0; i < n; i++) {
+      const offsetDirection = 2 * Math.PI * i / n;
+      const offsetMagnitude = 15;
+      const x = origin.x + offsetMagnitude * Math.sin(offsetDirection);
+      const y = origin.y + offsetMagnitude * Math.cos(offsetDirection);
+      createAnimalStaffCommandParticle(x, y, offsetDirection, r, g, b);
+   }
+
+   let soundFile: string;
+   switch (commandType) {
+      case AnimalStaffCommandType.follow: {
+         soundFile = "animal-staff-command-follow.mp3";
+         break;
+      }
+      case AnimalStaffCommandType.move: {
+         soundFile = "animal-staff-command-move.mp3";
+         break;
+      }
+      case AnimalStaffCommandType.carry: {
+         soundFile = "animal-staff-command-carry.mp3";
+         break;
+      }
+      case AnimalStaffCommandType.attack: {
+         soundFile = "animal-staff-command-attack.mp3";
+         break;
+      }
+   }
+   playHeadSound(soundFile, 1.3, 1);
 }

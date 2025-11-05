@@ -1,6 +1,6 @@
-import { Settings } from "battletribes-shared/settings";
-import { EntityDebugData } from "battletribes-shared/client-server-types";
-import { Point } from "battletribes-shared/utils";
+import { Settings } from "webgl-test-shared/src/settings";
+import { EntityDebugData } from "webgl-test-shared/src/client-server-types";
+import { Point } from "webgl-test-shared/src/utils";
 import { createWebGLProgram, generateLine, generateThickCircleWireframeVertices, gl } from "../../webgl";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";

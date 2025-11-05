@@ -1,12 +1,12 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
-import { lerp, randAngle } from "battletribes-shared/utils";
+import { Entity, EntityType } from "webgl-test-shared/src/entities";
+import { ServerComponentType, TurretAmmoType } from "webgl-test-shared/src/components";
+import { lerp, randAngle } from "webgl-test-shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { ItemType } from "battletribes-shared/items/items";
+import { ItemType } from "webgl-test-shared/src/items/items";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../world";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 import ServerComponentArray from "../ServerComponentArray";

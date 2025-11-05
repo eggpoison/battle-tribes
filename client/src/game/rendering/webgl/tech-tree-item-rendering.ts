@@ -1,12 +1,12 @@
-import { Point, polarVec2, randAngle, randFloat, randSign, rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
+import { Point, polarVec2, randAngle, randFloat, randSign, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/src/utils";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth } from "../../webgl";
 import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
 import { getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import { getTechTreeGL, techTreeX, techTreeY, techTreeZoom } from "./tech-tree-rendering";
-import { Settings } from "battletribes-shared/settings";
+import { Settings } from "webgl-test-shared/src/settings";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import { ItemType } from "battletribes-shared/items/items";
+import { ItemType } from "webgl-test-shared/src/items/items";
 import { TEXTURE_SOURCES } from "../../texture-atlases/texture-sources";
 
 interface TechTreeItem {

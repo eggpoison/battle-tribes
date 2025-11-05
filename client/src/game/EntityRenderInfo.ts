@@ -1,5 +1,5 @@
-import { assert } from "battletribes-shared/utils";
-import { Entity, EntityTypeString } from "battletribes-shared/entities";
+import { assert } from "webgl-test-shared/src/utils";
+import { Entity, EntityTypeString } from "webgl-test-shared/src/entities";
 import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
 import { removeRenderable } from "./rendering/render-loop";
 import { renderParentIsHitbox, RenderPart } from "./render-parts/render-parts";

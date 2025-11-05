@@ -1,4 +1,4 @@
-import { Settings } from "battletribes-shared/settings";
+import { Settings } from "webgl-test-shared/src/settings";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY } from "../../camera";

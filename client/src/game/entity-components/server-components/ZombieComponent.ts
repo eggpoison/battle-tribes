@@ -1,8 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { Point, randAngle, randFloat, randInt } from "battletribes-shared/utils";
+import { ServerComponentType } from "webgl-test-shared/src/components";
+import { Settings } from "webgl-test-shared/src/settings";
+import { Point, randAngle, randFloat, randInt } from "webgl-test-shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
-import { PacketReader } from "battletribes-shared/packets";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { Entity } from "../../../../../shared/src/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";

@@ -1,4 +1,4 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import { playSoundOnHitbox } from "../../sound";
 import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";

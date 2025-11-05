@@ -1,12 +1,12 @@
-import { EntityTickEventType } from "battletribes-shared/entity-events";
-import { randAngle, randFloat, randInt } from "battletribes-shared/utils";
+import { EntityTickEventType } from "webgl-test-shared/src/entity-events";
+import { randAngle, randFloat, randInt } from "webgl-test-shared/src/utils";
 import { playSoundOnHitbox } from "./sound";
-import { ItemType } from "battletribes-shared/items/items";
+import { ItemType } from "webgl-test-shared/src/items/items";
 import { entityExists } from "./world";
 import { Entity } from "../../../shared/src/entities";
 import { getRandomPositionOnBoxEdge, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { createHotSparkParticle } from "./particles";
-import { playBowFireSound } from "../svelte/game/GameInteractableLayer";
+import { playBowFireSound } from "../ui/game/GameInteractableLayer";
 
 export function processTickEvent(entity: Entity, type: EntityTickEventType, data: number): void {
    // @HACK

@@ -2,8 +2,8 @@ import { SafetyNodeData } from "../../../../shared/src/ai-building-types";
 import { CircleDebugData, EntityDebugData, LineDebugData, PathData, PathfindingNodeIndex, TileHighlightData } from "../../../../shared/src/client-server-types";
 import { PacketReader } from "../../../../shared/src/packets";
 import { assert } from "../../../../shared/src/utils";
+import { hoverDebugState } from "../../ui-state/hover-debug-state.svelte";
 import { readTribeBuildingSafeties, resetBuildingSafeties } from "../building-safety";
-import { setDebugInfoDebugData } from "../../svelte/game/dev/DebugInfo";
 import { updateLightLevelsFromData } from "../light-levels";
 import { updateLocalBiomesFromData } from "../local-biomes";
 import { updateTribePlanData } from "../rendering/tribe-plan-visualiser/tribe-plan-visualiser";
@@ -12,17 +12,6 @@ import { setVisibleSafetyNodes } from "../rendering/webgl/safety-node-rendering"
 import { SubtileSupportInfo, setVisibleSubtileSupports } from "../rendering/webgl/subtile-support-rendering";
 import { setSpawnDistributionBlocks, SpawnDistributionBlock } from "../text-canvas";
 import { readGhostVirtualBuildings, pruneGhostBuildingPlans } from "../virtual-buildings";
-
-let entityDebugData: EntityDebugData | null = null;
-
-const setGameObjectDebugData = (newEntityDebugData: EntityDebugData | null): void => {
-   entityDebugData = newEntityDebugData;
-   setDebugInfoDebugData(entityDebugData);
-}
-
-export function getEntityDebugData(): EntityDebugData | null {
-   return entityDebugData;
-}
 
 const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData => {
    const entityID = reader.readNumber();
@@ -233,11 +222,10 @@ export function processDevGameDataPacket(reader: PacketReader): void {
    }
 
    const hasDebugData = reader.readBool();
-   
    if (hasDebugData) {
       const debugData = updateEntityDebugInfoFromPacket(reader);
-      setGameObjectDebugData(debugData);
+      hoverDebugState.setEntityDebugData(debugData);
    } else {
-      setGameObjectDebugData(null);
+      hoverDebugState.setEntityDebugData(null);
    }
 }

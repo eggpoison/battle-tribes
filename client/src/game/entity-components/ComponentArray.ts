@@ -1,5 +1,5 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
+import { ServerComponentType } from "webgl-test-shared/src/components";
+import { Entity, EntityType } from "webgl-test-shared/src/entities";
 import ServerComponentArray from "./ServerComponentArray";
 import ClientComponentArray from "./ClientComponentArray";
 import { ClientComponentType } from "./client-component-types";

@@ -1,11 +1,11 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { Point, randAngle, randFloat, randInt } from "battletribes-shared/utils";
+import { ServerComponentType } from "webgl-test-shared/src/components";
+import { Settings } from "webgl-test-shared/src/settings";
+import { Point, randAngle, randFloat, randInt } from "webgl-test-shared/src/utils";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createDirtParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
-import { CowSpecies, Entity } from "battletribes-shared/entities";
-import { PacketReader } from "battletribes-shared/packets";
+import { CowSpecies, Entity } from "webgl-test-shared/src/entities";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";

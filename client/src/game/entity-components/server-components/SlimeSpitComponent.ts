@@ -1,7 +1,7 @@
-import { PacketReader } from "battletribes-shared/packets";
-import { Settings } from "battletribes-shared/settings";
+import { PacketReader } from "webgl-test-shared/src/packets";
+import { Settings } from "webgl-test-shared/src/settings";
 import { createPoisonParticle } from "../../particles";
-import { ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { playSoundOnHitbox } from "../../sound";
 import ServerComponentArray from "../ServerComponentArray";

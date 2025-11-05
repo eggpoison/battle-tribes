@@ -1,11 +1,11 @@
-import { distance, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
-import { BuildingPlanData, SafetyNodeData, TribeWallData, WallSideNodeData } from "battletribes-shared/ai-building-types";
+import { distance, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/src/utils";
+import { Settings } from "webgl-test-shared/src/settings";
+import { BuildingPlanData, SafetyNodeData, TribeWallData, WallSideNodeData } from "webgl-test-shared/src/ai-building-types";
 import { createWebGLProgram, gl } from "../../webgl";
-import OPTIONS from "../../options";
-import { getHoveredEntityID } from "../../entity-selection";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { cursorWorldPos } from "../../mouse-input";
+import { entityInteractionState } from "../../../ui-state/entity-interaction-state.svelte";
+import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
 
 const OCCUPIED_NODE_THICKNESS = 3;
 const OCCUPIED_NODE_FREE_THICKNESS = 4.5;
@@ -95,14 +95,14 @@ export function createSafetyNodeShaders(): void {
 }
 
 const getHighlightedNodes = (): ReadonlyArray<WallSideNodeData> => {
-   const hoveredEntityID = getHoveredEntityID();
-   if (hoveredEntityID === -1) {
+   const hoveredEntity = entityInteractionState.hoveredEntity;
+   if (hoveredEntity === null) {
       return [];
    }
 
    const highlightedNodes = new Array<WallSideNodeData>();
    for (const wallData of visibleWalls) {
-      if (wallData.wallID === hoveredEntityID) {
+      if (wallData.wallID === hoveredEntity) {
          for (let k = 0; k < wallData.topSideNodes.length; k++) {
             const nodeData = wallData.topSideNodes[k];
             highlightedNodes.push(nodeData);
@@ -126,7 +126,7 @@ const getHighlightedNodes = (): ReadonlyArray<WallSideNodeData> => {
 }
 
 export function renderSafetyNodes(): void {
-   if (!OPTIONS.showSafetyNodes) {
+   if (!debugDisplayState.showSafetyNodes) {
       return;
    }
 
@@ -152,7 +152,7 @@ export function renderSafetyNodes(): void {
    for (let i = 0; i < safetyNodes.length; i++) {
       const nodeData = safetyNodes[i];
 
-      let safetyIdealness = nodeData.safety / OPTIONS.maxGreenSafety;
+      let safetyIdealness = nodeData.safety / debugDisplayState.maxGreenSafety;
       if (safetyIdealness > 1) {
          safetyIdealness = 1;
       }

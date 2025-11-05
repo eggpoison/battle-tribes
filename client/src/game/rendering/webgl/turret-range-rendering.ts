@@ -1,14 +1,14 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
+import { Entity, EntityType } from "webgl-test-shared/src/entities";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getHoveredEntityID } from "../../entity-selection";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "battletribes-shared/items/items";
-import { getPlayerSelectedItem } from "../../../svelte/game/GameInteractableLayer";
+import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "webgl-test-shared/src/items/items";
 import { entityExists, getEntityLayer, getEntityType } from "../../world";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { TurretComponentArray } from "../../entity-components/server-components/TurretComponent";
 import { playerInstance } from "../../player";
 import { calculateEntityPlaceInfo } from "../../structure-placement";
+import { getPlayerSelectedItem } from "../../player-action-handler";
 
 const CIRCLE_DETAIL = 300;
 

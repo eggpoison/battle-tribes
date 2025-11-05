@@ -22,7 +22,7 @@
       "isolatedModules": true, // This might cause problems...
       "declaration": true,
       "paths": {
-         "battletribes-shared/*": ["../shared/src/*"]
+         "webgl-test-shared/src/*": ["../shared/src/*"]
        }
    },
    "references": [

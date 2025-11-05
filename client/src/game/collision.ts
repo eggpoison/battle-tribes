@@ -1,9 +1,9 @@
-import { Settings } from "battletribes-shared/settings";
-import { collisionBitsAreCompatible } from "battletribes-shared/hitbox-collision";
-import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import { Box, HitboxCollisionType, HitboxFlag } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
-import { Entity } from "battletribes-shared/entities";
+import { Settings } from "webgl-test-shared/src/settings";
+import { collisionBitsAreCompatible } from "webgl-test-shared/src/hitbox-collision";
+import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/src/utils";
+import { Box, HitboxCollisionType, HitboxFlag } from "webgl-test-shared/src/boxes/boxes";
+import RectangularBox from "webgl-test-shared/src/boxes/RectangularBox";
+import { Entity } from "webgl-test-shared/src/entities";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Chunk from "./Chunk";
 import { getEntityLayer } from "./world";

@@ -1,8 +1,8 @@
-import { ServerComponentType, TribesmanAIType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { TribeType } from "battletribes-shared/tribes";
-import { randInt, randItem } from "battletribes-shared/utils";
-import { PacketReader } from "battletribes-shared/packets";
+import { ServerComponentType, TribesmanAIType } from "webgl-test-shared/src/components";
+import { Settings } from "webgl-test-shared/src/settings";
+import { TribeType } from "webgl-test-shared/src/tribes";
+import { randInt, randItem } from "webgl-test-shared/src/utils";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { TribeComponentArray } from "./TribeComponent";
 import { Entity } from "../../../../../shared/src/entities";
 import { playSoundOnHitbox } from "../../sound";

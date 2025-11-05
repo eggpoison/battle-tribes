@@ -1,10 +1,8 @@
-import { assert, rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
+import { assert } from "webgl-test-shared/src/utils";
 import { createWebGLProgram, gl } from "../../webgl";
-import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, getEntityTextureAtlasUBO, UBOBindingIndex } from "../ubos";
-import { createImage } from "../../textures";
 import { RenderableType, addRenderable } from "../render-loop";
-import { VisualRenderPart, renderPartIsTextured } from "../../render-parts/render-parts";
+import { VisualRenderPart } from "../../render-parts/render-parts";
 import { getEntityLayer, getEntityRenderInfo } from "../../world";
 import { Entity } from "../../../../../shared/src/entities";
 import { calculateRenderPartDepth } from "./entity-rendering";

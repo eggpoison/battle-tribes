@@ -1,7 +1,7 @@
-import { Entity } from "battletribes-shared/entities";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
-import { randAngle, randFloat, randInt } from "battletribes-shared/utils";
+import { Entity } from "webgl-test-shared/src/entities";
+import { PacketReader } from "webgl-test-shared/src/packets";
+import { ServerComponentType } from "webgl-test-shared/src/components";
+import { randAngle, randFloat, randInt } from "webgl-test-shared/src/utils";
 import Board from "../../Board";
 import { createSnowParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";

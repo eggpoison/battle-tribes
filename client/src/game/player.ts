@@ -5,7 +5,7 @@ import { ServerComponentType } from "../../../shared/src/components";
 import { Entity, EntityType } from "../../../shared/src/entities";
 import { angle, Point } from "../../../shared/src/utils";
 import { setCameraSubject } from "./camera";
-import { selectItemSlot } from "../svelte/game/GameInteractableLayer";
+import { selectItemSlot } from "./player-action-handler";
 import { createTransformComponentData, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { createHitboxQuick, setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
 import { closeCurrentMenu } from "./menus";
@@ -15,7 +15,7 @@ import { EntityServerComponentData } from "./networking/packet-snapshots";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import { addEntityToWorld, createEntityCreationInfo, EntityComponentData, getEntityRenderInfo } from "./world";
-import { setIsDeadState } from "../stores/game-ui-state.svelte";
+import { setIsDeadState } from "../ui-state/game-ui-state.svelte";
 
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
 // but this is in the client so these optimisations are less important. The ease-of-use is worth it

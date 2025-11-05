@@ -1,6 +1,6 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { randAngle, randFloat } from "battletribes-shared/utils";
+import { ServerComponentType } from "webgl-test-shared/src/components";
+import { Settings } from "webgl-test-shared/src/settings";
+import { randAngle, randFloat } from "webgl-test-shared/src/utils";
 import { createFlyParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { Entity, EntityType } from "../../../../../shared/src/entities";

@@ -1,4 +1,4 @@
-import { Settings } from "battletribes-shared/settings";
+import { Settings } from "webgl-test-shared/src/settings";
 import { createWebGLProgram, gl } from "../../webgl";
 import { WORLD_RENDER_CHUNK_SIZE } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";

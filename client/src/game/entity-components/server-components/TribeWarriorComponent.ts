@@ -1,6 +1,6 @@
-import { ScarInfo } from "battletribes-shared/components";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
+import { ScarInfo } from "webgl-test-shared/src/components";
+import { PacketReader } from "webgl-test-shared/src/packets";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import ServerComponentArray from "../ServerComponentArray";
 import { Entity } from "../../../../../shared/src/entities";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";

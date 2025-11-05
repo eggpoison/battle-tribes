@@ -1,6 +1,6 @@
-import { PacketReader } from "battletribes-shared/packets";
-import { DecorationType } from "battletribes-shared/components";
-import { ServerComponentType } from "battletribes-shared/components";
+import { PacketReader } from "webgl-test-shared/src/packets";
+import { DecorationType } from "webgl-test-shared/src/components";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";

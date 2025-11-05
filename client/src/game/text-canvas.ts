@@ -1,7 +1,6 @@
-import { Settings } from "battletribes-shared/settings";
-import { distance, lerp, randAngle, randFloat } from "battletribes-shared/utils";
+import { Settings } from "webgl-test-shared/src/settings";
+import { distance, lerp, randAngle, randFloat } from "webgl-test-shared/src/utils";
 import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./webgl";
-import OPTIONS from "./options";
 import { getCurrentLayer, getEntityLayer, getEntityType } from "./world";
 import { getBuildingSafeties } from "./building-safety";
 import { getVisibleBuildingPlan, GhostBuildingPlan, VirtualBuildingSafetySimulation } from "./virtual-buildings";
@@ -16,6 +15,7 @@ import { FloorSignComponentArray } from "./entity-components/server-components/F
 import { TamingComponentArray } from "./entity-components/server-components/TamingComponent";
 import { cameraPosition, cameraZoom } from "./camera";
 import { cursorWorldPos } from "./mouse-input";
+import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 
 // @Cleanup: The logic for damage, research and heal numbers is extremely similar, can probably be combined
 
@@ -432,7 +432,7 @@ const calculatePotentialPlanIdealness = (virtualBuildingSafetySimulation: Virtua
 let lastGhostBuildingPlan: GhostBuildingPlan | null = null;
 
 const renderPotentialBuildingPlans = (): void => {
-   if (!OPTIONS.showBuildingPlans) {
+   if (!debugDisplayState.showBuildingPlans) {
       return;
    }
    
@@ -682,11 +682,11 @@ export function renderText(tickInterp: number): void {
    renderDamageNumbers();
    renderResearchNumbers();
    renderHealNumbers();
-   if (OPTIONS.showBuildingSafetys) {
+   if (debugDisplayState.showBuildingSafetys) {
       renderBuildingSafetys();
    }
 
-   // if (OPTIONS.showBuildingPlans) {
+   // if (debugDisplayState.showBuildingPlans) {
       // renderBuildingPlanInfos();
       renderPotentialBuildingPlans();
       // @Temporary @Incomplete

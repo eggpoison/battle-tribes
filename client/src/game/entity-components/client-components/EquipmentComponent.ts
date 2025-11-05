@@ -1,5 +1,5 @@
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName, ARMOUR_ITEM_TYPES, NUM_ITEM_TYPES, itemTypeIsGlove } from "battletribes-shared/items/items";
+import { ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName, ARMOUR_ITEM_TYPES, NUM_ITEM_TYPES, itemTypeIsGlove } from "webgl-test-shared/src/items/items";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getInventory, InventoryComponentArray } from "../server-components/InventoryComponent";
 import { getEntityRenderInfo, getEntityType } from "../../world";

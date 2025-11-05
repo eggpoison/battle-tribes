@@ -1,7 +1,7 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { DoorToggleType, Entity } from "battletribes-shared/entities";
+import { ServerComponentType } from "webgl-test-shared/src/components";
+import { DoorToggleType, Entity } from "webgl-test-shared/src/entities";
 import { playSoundOnHitbox } from "../../sound";
-import { PacketReader } from "battletribes-shared/packets";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";

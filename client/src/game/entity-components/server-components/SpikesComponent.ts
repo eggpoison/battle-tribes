@@ -1,11 +1,11 @@
-import { randAngle, randFloat } from "battletribes-shared/utils";
-import { ServerComponentType } from "battletribes-shared/components";
+import { randAngle, randFloat } from "webgl-test-shared/src/utils";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../../particles";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { Entity } from "../../../../../shared/src/entities";

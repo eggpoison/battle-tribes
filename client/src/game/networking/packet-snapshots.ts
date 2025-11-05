@@ -1,8 +1,7 @@
-import { ServerComponentType, ServerComponentTypeString } from "../../../../shared/src/components";
-import { Entity, EntityType, EntityTypeString } from "../../../../shared/src/entities";
+import { ServerComponentType } from "../../../../shared/src/components";
+import { Entity, EntityType } from "../../../../shared/src/entities";
 import { PacketReader } from "../../../../shared/src/packets";
 import { setCameraSubject } from "../camera";
-import { updateDebugScreenCurrentSnapshot } from "../../svelte/game/dev/GameInfoDisplay";
 import { getComponentArrays, getServerComponentArray } from "../entity-components/ComponentArray";
 import { setCurrentSnapshot } from "../client";
 import Layer from "../Layer";
@@ -11,13 +10,12 @@ import { playHeadSound, playSound } from "../sound";
 import { ExtendedTribe, readExtendedTribeData, readShortTribeData, Tribe, tribes, updatePlayerTribe } from "../tribes";
 import { addEntityToWorld, changeEntityLayer, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityComponentTypes, getEntityLayer, getEntityRenderInfo, getEntityType, layers, removeEntity, setCurrentLayer } from "../world";
 import { ClientComponentData, getEntityClientComponentConfigs } from "../entity-components/client-components";
-import { TribesTab_refresh } from "../../svelte/game/dev/tabs/TribesTab";
 import { ServerComponentData } from "../entity-components/components";
 import { ClientComponentType } from "../entity-components/client-component-types";
 import { registerDirtyRenderInfo } from "../rendering/render-part-matrices";
 import { assert, Point, randAngle, randFloat } from "../../../../shared/src/utils";
 import { LightData, readLightsFromData, updateLightsFromData } from "../lights";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { AttackEffectiveness } from "webgl-test-shared/src/entity-damage-types";
 import { getRandomPositionInEntity, TransformComponentArray, TransformComponentData } from "../entity-components/server-components/TransformComponent";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle } from "../particles";
 import { HitFlags } from "../../../../shared/src/client-server-types";
@@ -27,12 +25,14 @@ import { STRUCTURE_TYPES } from "../../../../shared/src/structures";
 import { SubtileType, TileType } from "../../../../shared/src/tiles";
 import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
 import { TribesmanTitle } from "../../../../shared/src/titles";
-import { Infocards_setTitleOffer } from "../../svelte/game/infocards/Infocards";
+import { Infocards_setTitleOffer } from "../../ui/game/infocards/Infocards";
 import { EntityTickEventType } from "../../../../shared/src/entity-events";
 import { processTickEvent } from "../entity-tick-events";
 import { setMinedSubtiles, tickCollapse } from "../collapses";
 import { GrassBlockerData, readGrassBlockers, updateGrassBlockersFromData } from "../grass-blockers";
 import Board from "../Board";
+import { tribesTabState } from "../../ui-state/tribes-tab-state.svelte";
+import { infocardsState } from "../../ui-state/infocards-state.svelte";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
@@ -500,7 +500,6 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
    Board.updateParticles();
 
    setCurrentSnapshot(snapshot);
-   updateDebugScreenCurrentSnapshot(snapshot);
 
    if (snapshot.layer !== getCurrentLayer()) {
       setCurrentLayer(snapshot.layer);
@@ -541,8 +540,7 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
    for (const tribe of snapshot.enemyTribeData) {
       tribes.push(tribe);
    }
-   // @Hack @Speed: shouldn't do always
-   TribesTab_refresh();
+   tribesTabState.updateTribes(tribes);
    
    setPlayerInstance(snapshot.playerInstance);
    setCameraSubject(snapshot.cameraSubject);
@@ -668,7 +666,7 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
       playHeadSound("item-pickup.mp3", 0.3, 1);
    }
 
-   Infocards_setTitleOffer(snapshot.titleOffer);
+   infocardsState.setTitleOffer(snapshot.titleOffer);
 
    for (const entityTickEvent of snapshot.entityTickEvents) {
       processTickEvent(entityTickEvent.entity, entityTickEvent.type, entityTickEvent.data);

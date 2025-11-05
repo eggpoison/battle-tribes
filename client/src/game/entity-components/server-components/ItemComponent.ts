@@ -1,7 +1,7 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import { createDeepFrostHeartBloodParticles } from "../../particles";
-import { ItemType } from "battletribes-shared/items/items";
-import { PacketReader } from "battletribes-shared/packets";
+import { ItemType } from "webgl-test-shared/src/items/items";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { TransformComponentArray } from "./TransformComponent";
 import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";

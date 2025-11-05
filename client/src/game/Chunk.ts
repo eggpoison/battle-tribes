@@ -1,4 +1,4 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
+import { Entity, EntityType } from "webgl-test-shared/src/entities";
 import { getEntityType } from "./world";
 
 class Chunk {

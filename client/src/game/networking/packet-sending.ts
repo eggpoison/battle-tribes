@@ -1,11 +1,8 @@
-import { alignLengthBytes, getStringLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
-import { getSelectedEntityID } from "../entity-selection";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { GameDataPacketOptions } from "battletribes-shared/client-server-types";
-import OPTIONS from "../options";
+import { alignLengthBytes, getStringLengthBytes, Packet, PacketType } from "webgl-test-shared/src/packets";
+import { Entity, EntityType } from "webgl-test-shared/src/entities";
+import { GameDataPacketOptions } from "webgl-test-shared/src/client-server-types";
 import { windowHeight, windowWidth } from "../webgl";
-import { InventoryName, ItemType } from "battletribes-shared/items/items";
-import { getHotbarSelectedItemSlot, getInstancePlayerAction, getPlayerMoveIntention } from "../../svelte/game/GameInteractableLayer";
+import { InventoryName, ItemType } from "webgl-test-shared/src/items/items";
 import { entityExists, getEntityType } from "../world";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { BlueprintType } from "../../../../shared/src/components";
@@ -17,6 +14,9 @@ import { cameraPosition } from "../camera";
 import { TribeType } from "../../../../shared/src/tribes";
 import { sendPacket } from "../client";
 import { TribesmanTitle } from "../../../../shared/src/titles";
+import { getHotbarSelectedItemSlot, getInstancePlayerAction, getPlayerMoveIntention } from "../player-action-handler";
+import { entityInteractionState } from "../../ui-state/entity-interaction-state.svelte";
+import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
 
 export function sendInitialPlayerDataPacket(username: string, tribeType: TribeType, isSpectating: boolean): void {
    // Send player data to the server
@@ -86,40 +86,41 @@ export function sendPlayerDataPacket(): void {
    packet.writeNumber(getInstancePlayerAction(InventoryName.offhand));
 
    let interactingEntityID = 0;
-   const selectedEntityID = getSelectedEntityID();
 
-   if (entityExists(selectedEntityID)) {
-      const entityType = getEntityType(selectedEntityID);
+   const selectedEntity = entityInteractionState.selectedEntity;
+   if (selectedEntity !== null) {
+      const entityType = getEntityType(selectedEntity);
       if (entityType === EntityType.tribeWorker || entityType === EntityType.tribeWarrior) {
-         interactingEntityID = selectedEntityID;
+         interactingEntityID = selectedEntity;
       }
    }
 
    packet.writeNumber(interactingEntityID);
    
+   // @BANDWIDTH: only needed for dev!!
    let gameDataOptions = 0;
-   if (OPTIONS.showPathfindingNodes) {
+   if (debugDisplayState.showPathfindingNodes) {
       gameDataOptions |= GameDataPacketOptions.sendVisiblePathfindingNodeOccupances;
    }
-   if (OPTIONS.showSafetyNodes) {
+   if (debugDisplayState.showSafetyNodes) {
       gameDataOptions |= GameDataPacketOptions.sendVisibleSafetyNodes;
    }
-   if (OPTIONS.showBuildingPlans) {
+   if (debugDisplayState.showBuildingPlans) {
       gameDataOptions |= GameDataPacketOptions.sendVisibleBuildingPlans;
    }
-   if (OPTIONS.showBuildingSafetys) {
+   if (debugDisplayState.showBuildingSafetys) {
       gameDataOptions |= GameDataPacketOptions.sendVisibleBuildingSafetys;
    }
-   if (OPTIONS.showRestrictedAreas) {
+   if (debugDisplayState.showRestrictedAreas) {
       gameDataOptions |= GameDataPacketOptions.sendVisibleRestrictedBuildingAreas;
    }
-   if (OPTIONS.showWallConnections) {
+   if (debugDisplayState.showWallConnections) {
       gameDataOptions |= GameDataPacketOptions.sendVisibleWallConnections;
    }
-   if (OPTIONS.showSubtileSupports) {
+   if (debugDisplayState.showSubtileSupports) {
       gameDataOptions |= GameDataPacketOptions.sendSubtileSupports;
    }
-   if (OPTIONS.showLightLevels) {
+   if (debugDisplayState.showLightLevels) {
       gameDataOptions |= GameDataPacketOptions.sendLightLevels;
    }
    

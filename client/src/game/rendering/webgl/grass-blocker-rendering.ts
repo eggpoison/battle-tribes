@@ -1,5 +1,5 @@
 import { createTexture, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../../webgl";
-import {  rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
+import {  rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/src/utils";
 import { getTexture } from "../../textures";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { getGrassBlockers, GrassBlocker } from "../../grass-blockers";

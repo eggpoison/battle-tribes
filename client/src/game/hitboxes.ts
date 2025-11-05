@@ -1,4 +1,4 @@
-import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, updateVertexPositionsAndSideAxes } from "battletribes-shared/boxes/boxes";
+import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, updateVertexPositionsAndSideAxes } from "webgl-test-shared/src/boxes/boxes";
 import { CollisionBit } from "../../../shared/src/collision";
 import { Entity } from "../../../shared/src/entities";
 import { Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "../../../shared/src/utils";

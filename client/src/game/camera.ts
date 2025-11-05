@@ -1,5 +1,5 @@
-import { Point } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
+import { Point } from "webgl-test-shared/src/utils";
+import { Settings } from "webgl-test-shared/src/settings";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
 import Chunk from "./Chunk";
@@ -10,6 +10,7 @@ import { calculateHitboxRenderPosition, getEntityTickInterp } from "./rendering/
 import { Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { isSpectating } from "./player";
+import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 
 let cameraSubjectHitbox: Hitbox | null = null;
 
@@ -73,6 +74,7 @@ const getMissingChunks = (chunksA: ReadonlyArray<Chunk>, chunksB: ReadonlyArray<
 
 export function setCameraZoom(zoom: number): void {
    cameraZoom = zoom;
+   debugDisplayState.setCameraZoom(zoom);
 }
 
 export function setCameraSubject(cameraSubject: Entity): void {

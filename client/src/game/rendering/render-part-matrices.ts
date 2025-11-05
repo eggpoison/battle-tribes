@@ -1,6 +1,6 @@
 import { EntityRenderInfo, updateEntityRenderInfoRenderData } from "../EntityRenderInfo";
 import { createIdentityMatrix, createTranslationMatrix, Matrix3x2, matrixMultiplyInPlace } from "./matrices";
-import { Settings } from "battletribes-shared/settings";
+import { Settings } from "webgl-test-shared/src/settings";
 import { RenderPart, renderParentIsHitbox } from "../render-parts/render-parts";
 import { renderLayerIsChunkRendered, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
 import { entityExists, getEntityRenderInfo } from "../world";

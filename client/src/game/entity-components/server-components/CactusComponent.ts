@@ -1,9 +1,9 @@
-import { CactusFlowerSize, Entity } from "battletribes-shared/entities";
-import { ServerComponentType } from "battletribes-shared/components";
+import { CactusFlowerSize, Entity } from "webgl-test-shared/src/entities";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { createCactusSpineParticle, createFlowerParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { assert, randAngle, randInt } from "../../../../../shared/src/utils";

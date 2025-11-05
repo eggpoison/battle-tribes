@@ -2,12 +2,10 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity, LimbAction } from "../../../../../shared/src/entities";
 import { InventoryName, Item, ITEM_TYPE_RECORD, Inventory, ItemType, copyInventory } from "../../../../../shared/src/items/items";
 import { PacketReader } from "../../../../../shared/src/packets";
-import { armourSlotState, backpackSlotState, backpackState, craftingOutputSlotState, gloveSlotState, heldItemSlotState, hotbarState, offhandState, setArmourSlotState, setBackpackSlotState, setBackpackState, setCraftingOutputSlotState, setGloveSlotState, setHeldItemSlotState, setHotbarState, setOffhandState } from "../../../stores/inventory-state.svelte";
-import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../../svelte/game/GameInteractableLayer";
-import { BackpackInventoryMenu_update } from "../../../svelte/game/inventories/BackpackInventory";
-import { Hotbar_update } from "../../../svelte/game/inventories/Hotbar";
+import { inventoryState } from "../../../ui-state/inventory-state.svelte";
 import { inventoriesAreDifferent } from "../../inventory-manipulation";
 import { playerInstance } from "../../player";
+import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../player-action-handler";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";
@@ -19,23 +17,6 @@ export interface InventoryComponentData {
 export interface InventoryComponent {
    readonly inventoryRecord: Partial<Record<InventoryName, Inventory>>;
    readonly inventories: Array<Inventory>;
-}
-
-const registerInventoryUpdate = (inventoryName: InventoryName): void => {
-   // @Hack: There must be a better way to do this without some switch bullshit to call a hotpot of external functions
-   switch (inventoryName) {
-      case InventoryName.hotbar:
-      case InventoryName.offhand:
-      case InventoryName.backpackSlot:
-      case InventoryName.armourSlot:
-      case InventoryName.gloveSlot: {
-         Hotbar_update();
-         break;
-      }
-      case InventoryName.backpack: {
-         BackpackInventoryMenu_update();
-      }
-   }
 }
 
 /** Checks if the player is doing a legal action for a given item. */
@@ -239,9 +220,6 @@ function updateInventories(inventoryComponent: InventoryComponent, data: Invento
       }
 
       inventoryComponent.inventoryRecord[inventoryName] = createInventoryFromData(inventoryData);
-      if (isPlayer) {
-         registerInventoryUpdate(inventoryName);
-      }
    }
    
    // @Speed: Garbage collection
@@ -253,9 +231,6 @@ function updateInventories(inventoryComponent: InventoryComponent, data: Invento
       if (typeof inventoryData !== "undefined") {
          const inventory = inventoryComponent.inventoryRecord[inventoryName]!;
          const hasChanged = updateInventoryFromData(inventory, inventoryData, isPlayer);
-         if (hasChanged && isPlayer) {
-            registerInventoryUpdate(inventoryName);
-         }
       }
    }
 }
@@ -278,28 +253,28 @@ function updatePlayerFromData(data: InventoryComponentData): void {
    const entityArmourSlot = getInventory(inventoryComponent, InventoryName.armourSlot);
    const entityGloveSlot = getInventory(inventoryComponent, InventoryName.gloveSlot);
       
-   if (entityHotbar !== null && inventoriesAreDifferent(hotbarState, entityHotbar)) {
-      setHotbarState(copyInventory(entityHotbar));
+   if (entityHotbar !== null && inventoriesAreDifferent(inventoryState.hotbar, entityHotbar)) {
+      inventoryState.setHotbar(copyInventory(entityHotbar));
    }
-   if (entityOffhand !== null && inventoriesAreDifferent(offhandState, entityOffhand)) {
-      setOffhandState(copyInventory(entityOffhand));
+   if (entityOffhand !== null && inventoriesAreDifferent(inventoryState.offhand, entityOffhand)) {
+      inventoryState.setOffhand(copyInventory(entityOffhand));
    }
-   if (entityHeldItemSlot !== null && inventoriesAreDifferent(heldItemSlotState, entityHeldItemSlot)) {
-      setHeldItemSlotState(copyInventory(entityHeldItemSlot));
+   if (entityHeldItemSlot !== null && inventoriesAreDifferent(inventoryState.heldItemSlot, entityHeldItemSlot)) {
+      inventoryState.setHeldItemSlot(copyInventory(entityHeldItemSlot));
    }
-   if (entityCraftingOutputSlot !== null && inventoriesAreDifferent(craftingOutputSlotState, entityCraftingOutputSlot)) {
-      setCraftingOutputSlotState(copyInventory(entityCraftingOutputSlot));
+   if (entityCraftingOutputSlot !== null && inventoriesAreDifferent(inventoryState.craftingOutputSlot, entityCraftingOutputSlot)) {
+      inventoryState.setCraftingOutputSlot(copyInventory(entityCraftingOutputSlot));
    }
-   if (entityBackpack !== null && inventoriesAreDifferent(backpackState, entityBackpack)) {
-      setBackpackState(copyInventory(entityBackpack));
+   if (entityBackpack !== null && inventoriesAreDifferent(inventoryState.backpack, entityBackpack)) {
+      inventoryState.setBackpack(copyInventory(entityBackpack));
    }
-   if (entityBackpackSlot !== null && inventoriesAreDifferent(backpackSlotState, entityBackpackSlot)) {
-      setBackpackSlotState(copyInventory(entityBackpackSlot));
+   if (entityBackpackSlot !== null && inventoriesAreDifferent(inventoryState.backpackSlot, entityBackpackSlot)) {
+      inventoryState.setBackpackSlot(copyInventory(entityBackpackSlot));
    }
-   if (entityArmourSlot !== null && inventoriesAreDifferent(armourSlotState, entityArmourSlot)) {
-      setArmourSlotState(copyInventory(entityArmourSlot));
+   if (entityArmourSlot !== null && inventoriesAreDifferent(inventoryState.armourSlot, entityArmourSlot)) {
+      inventoryState.setArmourSlot(copyInventory(entityArmourSlot));
    }
-   if (entityGloveSlot !== null && inventoriesAreDifferent(gloveSlotState, entityGloveSlot)) {
-      setGloveSlotState(copyInventory(entityGloveSlot));
+   if (entityGloveSlot !== null && inventoriesAreDifferent(inventoryState.gloveSlot, entityGloveSlot)) {
+      inventoryState.setGloveSlot(copyInventory(entityGloveSlot));
    }
 }

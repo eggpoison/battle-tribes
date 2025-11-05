@@ -1,11 +1,11 @@
-import { assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, randSign, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
-import { TILE_PHYSICS_INFO_RECORD, TileType } from "battletribes-shared/tiles";
+import { assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, randSign, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/src/utils";
+import { Settings } from "webgl-test-shared/src/settings";
+import { TILE_PHYSICS_INFO_RECORD, TileType } from "webgl-test-shared/src/tiles";
 import Chunk from "../../Chunk";
-import { randFloat } from "battletribes-shared/utils";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
-import { boxIsCircular, updateBox, Box } from "battletribes-shared/boxes/boxes";
+import { randFloat } from "webgl-test-shared/src/utils";
+import { PacketReader } from "webgl-test-shared/src/packets";
+import { ServerComponentType } from "webgl-test-shared/src/components";
+import { boxIsCircular, updateBox, Box } from "webgl-test-shared/src/boxes/boxes";
 import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityType, surfaceLayer, undergroundLayer } from "../../world";
 import Board from "../../Board";
 import { Entity, EntityType } from "../../../../../shared/src/entities";
@@ -19,7 +19,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { entitiesAreColliding, resolveWallCollisions } from "../../collision";
 import { keyIsPressed } from "../../keyboard-input";
 import { currentSnapshot } from "../../client";
-import { setCanAscendLayerState } from "../../../stores/game-ui-state.svelte";
+import { setCanAscendLayerState } from "../../../ui-state/game-ui-state.svelte";
 
 export interface TransformComponentData {
    readonly traction: number;

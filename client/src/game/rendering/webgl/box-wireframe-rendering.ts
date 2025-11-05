@@ -1,10 +1,10 @@
-import { Point, polarVec2, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import { CollisionGroup, getEntityCollisionGroup } from "battletribes-shared/collision-groups";
+import { Point, polarVec2, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/src/utils";
+import { CollisionGroup, getEntityCollisionGroup } from "webgl-test-shared/src/collision-groups";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { Box, boxIsCircular, getRelativePivotPos, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { Box, boxIsCircular, getRelativePivotPos, HitboxCollisionType } from "webgl-test-shared/src/boxes/boxes";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
-import { Entity } from "battletribes-shared/entities";
+import { Entity } from "webgl-test-shared/src/entities";
 import { getEntityLayer, getEntityType } from "../../world";
 import Layer from "../../Layer";
 

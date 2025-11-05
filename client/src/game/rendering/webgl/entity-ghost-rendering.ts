@@ -1,4 +1,4 @@
-import { assert, Point } from "battletribes-shared/utils";
+import { assert, Point } from "webgl-test-shared/src/utils";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { cleanupEntityRendering, renderEntity, setupEntityRendering } from "./entity-rendering";
 import { gl } from "../../webgl";
@@ -77,7 +77,7 @@ export function removeGhostRenderInfo(renderInfo: EntityRenderInfo): void {
 export function renderGhostEntities(): void {
    // @INCOMPLETE
    // // Building plans
-   // if (OPTIONS.showBuildingPlans) {
+   // if (debugDisplayState.showBuildingPlans) {
    //    const buildingPlans = getVisibleBuildingPlans();
    //    for (let i = 0; i < buildingPlans.length; i++) {
    //       const plan = buildingPlans[i];

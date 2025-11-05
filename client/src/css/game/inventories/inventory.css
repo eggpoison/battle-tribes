@@ -139,6 +139,7 @@
    z-index: 1;
 }
 
+/* @HACK: #held-item */
 .item-slot .item-count, #held-item .held-item-count {
    color: #fff;
    font-family: "Inconsolata";

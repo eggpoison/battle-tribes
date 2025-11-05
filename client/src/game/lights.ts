@@ -1,4 +1,4 @@
-import { assert, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
+import { assert, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/src/utils";
 import { getEntityLayer, layers } from "./world";
 import { createTranslationMatrix, Matrix3x2 } from "./rendering/matrices";
 import { Entity } from "../../../shared/src/entities";

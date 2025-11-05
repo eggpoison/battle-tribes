@@ -1,4 +1,4 @@
-import { Point, polarVec2 } from "battletribes-shared/utils";
+import { Point, polarVec2 } from "webgl-test-shared/src/utils";
 import { isDev } from "./utils";
 import { updateTechTreeCanvasSize } from "./rendering/webgl/tech-tree-rendering";
 import { TEXTURE_IMAGE_RECORD } from "./textures";

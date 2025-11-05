@@ -7,7 +7,7 @@ import { getEntityRenderInfo, getEntityType, layers } from "../world";
 import Layer from "../Layer";
 import { Entity, EntityType } from "../../../../shared/src/entities";
 import { gl } from "../webgl";
-import OPTIONS from "../options";
+import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
 
 export const enum RenderableType {
    entity,
@@ -117,7 +117,7 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
             setupEntityRendering();
             for (const renderable of renderables) {
                const entity = renderable as Entity;
-               if (OPTIONS.hideEntities && getEntityType(entity) !== EntityType.grassStrand) {
+               if (debugDisplayState.hideEntities && getEntityType(entity) !== EntityType.grassStrand) {
                   continue;
                }
                

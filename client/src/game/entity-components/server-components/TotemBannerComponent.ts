@@ -1,10 +1,10 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, TribeTotemBanner } from "battletribes-shared/entities";
-import { TribeType } from "battletribes-shared/tribes";
+import { ServerComponentType } from "webgl-test-shared/src/components";
+import { Entity, TribeTotemBanner } from "webgl-test-shared/src/entities";
+import { TribeType } from "webgl-test-shared/src/tribes";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";

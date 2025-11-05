@@ -1,7 +1,7 @@
-import { ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
+import { ServerComponentType, TurretAmmoType } from "webgl-test-shared/src/components";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import { Entity } from "../../../../../shared/src/entities";
@@ -99,7 +99,7 @@ const updateAmmoType = (ammoBoxComponent: AmmoBoxComponent, entity: Entity, ammo
       ammoBoxComponent.ammoType = null;
 
       if (ammoBoxComponent.ammoWarningRenderPart === null) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity)!;
          const hitbox = transformComponent.hitboxes[0];
          
          ammoBoxComponent.ammoWarningRenderPart = new TexturedRenderPart(
@@ -132,7 +132,7 @@ const updateAmmoType = (ammoBoxComponent: AmmoBoxComponent, entity: Entity, ammo
 }
 
 function updateFromData(data: AmmoBoxComponentData, entity: Entity): void {
-   const ammoBoxComponent = AmmoBoxComponentArray.getComponent(entity);
+   const ammoBoxComponent = AmmoBoxComponentArray.getComponent(entity)!;
    updateAmmoType(ammoBoxComponent, entity, ammoBoxComponent.ammoRemaining > 0 ? data.ammoType : null);
    ammoBoxComponent.ammoRemaining = data.ammoRemaining;
 }

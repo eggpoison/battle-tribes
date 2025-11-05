@@ -1,6 +1,8 @@
 import { gameIsRunning } from "./client";
-import { focusChatbox } from "../svelte/game/ChatBox";
-import { cinematicModeIsEnabledState, setCinematicModeIsEnabledState, setSettingsIsOpenState } from "../stores/game-ui-state.svelte";
+import { chatboxState } from "../ui-state/chatbox-state.svelte";
+import { gameUIState } from "../ui-state/game-ui-state.svelte";
+import { nerdVisionState } from "../ui-state/nerd-vision-state.svelte";
+import { techTreeState } from "../ui-state/tech-tree-state.svelte";
 
 const keyListeners: { [key: string]: Array<(e: KeyboardEvent) => void> } = {};
 
@@ -9,7 +11,7 @@ type IDKeyListener = {
    readonly callback: (e: KeyboardEvent) => void;
 }
 
-const idKeyListeners: { [id: string]: IDKeyListener } = {}; 
+const idKeyListeners: { [id: string]: IDKeyListener } = {};
 
 /** Stores whether a key is pressed or not */
 const pressedKeys: { [key: string]: boolean } = {};
@@ -71,16 +73,26 @@ export function onKeyDown(e: KeyboardEvent): void {
    if (gameIsRunning) {
       // Start a chat message
       if (key === "t") {
-         focusChatbox();
+         chatboxState.setIsFocused(true);
          e.preventDefault();
          clearPressedKeys();
          return;
+      // Toggle cinematic mode
       } else if (key === "o") {
-         // Toggle cinematic mode
-         setCinematicModeIsEnabledState(!cinematicModeIsEnabledState);
+         gameUIState.setCinematicModeIsEnabled(!gameUIState.cinematicModeIsEnabled);
+      // Close the settings
       } else if (key === "Escape") {
-         // Close the settings menu
-         setSettingsIsOpenState(false);
+         gameUIState.setSettingsIsOpen(false);
+      // Display nerd vision
+      } else if (key === "`") {
+         nerdVisionState.setIsVisible(true);
+      // Open terminal on tilda press
+      } else if (key === "~") {
+         nerdVisionState.setIsVisible(true);
+         nerdVisionState.setTerminalIsVisible(true);
+      // Open/close tech tree
+      } else if (key === "p") {
+         techTreeState.setIsVisible(!techTreeState.isVisible);
       }
    }
 

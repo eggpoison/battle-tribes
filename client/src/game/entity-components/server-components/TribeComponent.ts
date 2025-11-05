@@ -1,10 +1,10 @@
-import { TribeType } from "battletribes-shared/tribes";
-import { ServerComponentType } from "battletribes-shared/components";
-import { randAngle, randFloat } from "battletribes-shared/utils";
+import { TribeType } from "webgl-test-shared/src/tribes";
+import { ServerComponentType } from "webgl-test-shared/src/components";
+import { randAngle, randFloat } from "webgl-test-shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
 import { getHumanoidRadius, TribesmanComponentArray } from "./TribesmanComponent";
 import { createConversionParticle } from "../../particles";
-import { PacketReader } from "battletribes-shared/packets";
+import { PacketReader } from "webgl-test-shared/src/packets";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { Entity } from "../../../../../shared/src/entities";

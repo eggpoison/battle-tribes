@@ -1,9 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "webgl-test-shared/src/components";
 import { playSoundOnHitbox, SoundInfo } from "../../sound";
-import { Settings } from "battletribes-shared/settings";
-import { lerp, randAngle } from "battletribes-shared/utils";
+import { Settings } from "webgl-test-shared/src/settings";
+import { lerp, randAngle } from "webgl-test-shared/src/utils";
 import { createAcidParticle, createPoisonBubble } from "../../particles";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import CircularBox from "webgl-test-shared/src/boxes/CircularBox";
 import { TransformComponentArray } from "./TransformComponent";
 import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";

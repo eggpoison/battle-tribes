@@ -1,6 +1,6 @@
 import { createWebGLProgram, gl } from "../../webgl";
-import { Settings } from "battletribes-shared/settings";
-import { angle, distance, rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
+import { Settings } from "webgl-test-shared/src/settings";
+import { angle, distance, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/src/utils";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { HealingTotemComponentArray } from "../../entity-components/server-components/HealingTotemComponent";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";

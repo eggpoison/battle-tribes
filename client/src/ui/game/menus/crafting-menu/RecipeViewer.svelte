@@ -1,7 +1,7 @@
 <script lang="ts">
    import { CraftingRecipe } from "webgl-test-shared/src/items/crafting-recipes";
-    import { windowHeight } from "../../../../game/webgl";
-    import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../../game/client-item-info";
+   import { windowHeight } from "../../../../game/webgl";
+   import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../../game/client-item-info";
 
    interface Props {
       readonly recipe: CraftingRecipe;

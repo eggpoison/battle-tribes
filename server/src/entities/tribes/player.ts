@@ -13,7 +13,7 @@ import { InventoryName, ItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TIC
 import { EntityConfig } from "../../components";
 import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { entityExists, getEntityType, getGameTicks } from "../../world";
 import { HealthComponent } from "../../components/HealthComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";

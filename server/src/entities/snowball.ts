@@ -8,7 +8,7 @@ import { EntityConfig } from "../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { StatusEffectComponent } from "../components/StatusEffectComponent";
 import { addHitboxAngularVelocity, Hitbox } from "../hitboxes";
 

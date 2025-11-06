@@ -13,7 +13,7 @@ import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuil
 import { AutomatonAssemblerComponent } from "../../../components/AutomatonAssemblerComponent";
 import { Point } from "../../../../../shared/src/utils";
 import { HitboxCollisionType, HitboxFlag } from "../../../../../shared/src/boxes/boxes";
-import RectangularBox from "../../../../../shared/src/boxes/RectangularBox";
+import { RectangularBox } from "../../../../../shared/src/boxes/RectangularBox";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../../shared/src/collision";
 import { Hitbox } from "../../../hitboxes";
 import { StructureConnection } from "../../../structure-placement";

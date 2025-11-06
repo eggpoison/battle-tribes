@@ -1,7 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { randItem } from "../../../../../shared/src/utils";
+import { randItem, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { createGemQuakeProjectile } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";

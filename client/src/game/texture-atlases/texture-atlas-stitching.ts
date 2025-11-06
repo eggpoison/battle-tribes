@@ -1,3 +1,4 @@
+import { assert } from "webgl-test-shared";
 import { imageIsLoaded } from "../utils";
 import { TEXTURE_SOURCES } from "./texture-sources";
 
@@ -26,6 +27,9 @@ export const ATLAS_SLOT_SIZE = 16;
 
 let unavailableSlots: Array<number>;
 let textureSlotIndexes: Array<number>;
+
+// @HACK: this just imports everythign..... slow... prolly some i dont need.
+const itemImages = import.meta.glob("../../images/**/*", { eager: true, query: "?url", import: "default" });
 
 /** Attempts to find an available space for a texture, returning -1 if no available space can be found. */
 const getAvailableSlotIndex = (slotWidth: number, slotHeight: number, atlasSize: number): number => {
@@ -96,16 +100,17 @@ const expand = (atlasSize: number): void => {
 //    })
 // }
 
-// @Hack
-
+// @Hack @Cleanup @Location
 const textureImages = new Array<HTMLImageElement>();
 
 export function preloadTextureAtlasImages(): void {
    for (let i = 0; i < TEXTURE_SOURCES.length; i++) {
       const textureSource = TEXTURE_SOURCES[i];
+      const imageSrc = itemImages["../../images/" + textureSource] as string;
+      assert(typeof imageSrc !== "undefined");
 
       const image = new Image();
-      image.src = require("../images/" + textureSource);
+      image.src = imageSrc;
 
       textureImages.push(image);
    }
@@ -135,6 +140,7 @@ export async function generateTextureAtlas(textureSources: ReadonlyArray<string>
 
          if (image.width === 0) {
             console.log("Waiting for load...");
+            console.log(image);
             await imageIsLoaded(image);
          }
    

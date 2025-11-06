@@ -7,7 +7,7 @@ import { Box, boxIsCircular } from "battletribes-shared/boxes/boxes";
 import Layer from "../Layer";
 import { getSubtileIndex } from "../../../shared/src/subtiles";
 import TribeBuildingLayer, { getNumWallConnections, updateTribeWalls } from "./building-plans/TribeBuildingLayer";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 
 const enum Vars {
    /** How much safety increases when moving in a node */

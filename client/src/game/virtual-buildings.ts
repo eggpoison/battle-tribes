@@ -1,8 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../shared/src/collision";
-import { EntityComponents, ServerComponentType, BuildingMaterial } from "../../../shared/src/components";
-import { PacketReader } from "../../../shared/src/packets";
-import { StructureType } from "../../../shared/src/structures";
-import { distance, Point } from "../../../shared/src/utils";
+import { Box, HitboxCollisionType, distance, Point, StructureType, PacketReader, EntityComponents, ServerComponentType, BuildingMaterial, DEFAULT_COLLISION_MASK, CollisionBit } from "webgl-test-shared";
 import { createHitboxQuick } from "./hitboxes";
 import { createBracingsComponentData } from "./entity-components/server-components/BracingsComponent";
 import { createBuildingMaterialComponentData } from "./entity-components/server-components/BuildingMaterialComponent";
@@ -26,7 +22,6 @@ import { removeGhostRenderInfo } from "./rendering/webgl/entity-ghost-rendering"
 import { playerTribe } from "./tribes";
 import { createEntityCreationInfo, EntityComponentData, layers } from "./world";
 import { padBoxData, readBoxFromData } from "./networking/packet-hitboxes";
-import { Box, HitboxCollisionType } from "../../../shared/src/boxes/boxes";
 import { createBarrelComponentData } from "./entity-components/server-components/BarrelComponent";
 import { EntityServerComponentData } from "./networking/packet-snapshots";
 import { cursorWorldPos } from "./mouse-input";

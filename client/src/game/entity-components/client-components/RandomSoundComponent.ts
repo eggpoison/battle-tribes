@@ -1,5 +1,4 @@
-import { Entity } from "../../../../../shared/src/entities";
-import { randFloat, randItem } from "../../../../../shared/src/utils";
+import { randFloat, randItem, Entity } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";

@@ -1,9 +1,7 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { randAngle, randFloat } from "../../../../../shared/src/utils";
-import { Entity } from "../../../../../shared/src/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { createEmberParticle, createSmokeParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
@@ -55,10 +53,6 @@ function onTick(entity: Entity): void {
    // @Copynpaste: all of these effects from InventoryUseComponent
    
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
-   
    const hitbox = transformComponent.hitboxes[0];
    
    // Ember particles

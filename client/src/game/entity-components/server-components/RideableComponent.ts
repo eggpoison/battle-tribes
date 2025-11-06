@@ -1,7 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity, EntityType } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { assert, Point, rotatePoint, rotateXAroundOrigin, rotateYAroundOrigin } from "../../../../../shared/src/utils";
+import { assert, rotateXAroundOrigin, rotateYAroundOrigin, PacketReader, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
 import { getHitboxVelocity, translateHitbox } from "../../hitboxes";
 import { playerInstance } from "../../player";
 import { playSound } from "../../sound";

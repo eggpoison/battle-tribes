@@ -1,9 +1,5 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { Point, randAngle, randFloat, randInt } from "battletribes-shared/utils";
+import { Entity, PacketReader, Point, randAngle, randFloat, randInt, Settings, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
-import { PacketReader } from "battletribes-shared/packets";
-import { Entity } from "../../../../../shared/src/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
@@ -101,7 +97,7 @@ function getMaxRenderParts(): number {
 }
 
 function onTick(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
    // @Sync should be a server event
@@ -129,7 +125,7 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
 }
 
 function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 20);

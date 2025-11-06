@@ -1,8 +1,4 @@
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { ItemType } from "../../../shared/src/items/items";
-import { PacketReader } from "../../../shared/src/packets";
-import { EntityTamingSpec, getTamingSkill, TamingSkillID, TamingSkillNode, TamingTier } from "../../../shared/src/taming";
-import { assert } from "../../../shared/src/utils";
+import { assert, EntityTamingSpec, getTamingSkill, TamingSkillID, TamingSkillNode, TamingTier, PacketReader, ItemType, Entity, EntityType } from "webgl-test-shared";
 import { getEntityType } from "./world";
 
 const TAMING_SPECS: Partial<Record<EntityType, EntityTamingSpec>> = {};

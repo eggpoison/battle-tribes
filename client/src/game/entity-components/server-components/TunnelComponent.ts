@@ -1,7 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { angle, lerp } from "../../../../../shared/src/utils";
+import { angle, lerp, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";

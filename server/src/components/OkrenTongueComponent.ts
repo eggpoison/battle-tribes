@@ -1,5 +1,5 @@
 import { HitboxCollisionType, HitboxFlag } from "../../../shared/src/boxes/boxes";
-import RectangularBox from "../../../shared/src/boxes/RectangularBox";
+import { RectangularBox } from "../../../shared/src/boxes/RectangularBox";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
 import { ServerComponentType } from "../../../shared/src/components";
 import { Entity, EntityType } from "../../../shared/src/entities";

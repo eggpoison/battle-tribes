@@ -4,7 +4,7 @@ import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collis
 import { EntityType } from "battletribes-shared/entities";
 import { Colour, Point, randInt } from "battletribes-shared/utils";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
 import { LayeredRodComponent } from "../components/LayeredRodComponent";
 import { Hitbox } from "../hitboxes";

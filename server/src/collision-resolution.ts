@@ -4,7 +4,7 @@ import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-sh
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
 import { getComponentArrayRecord } from "./components/ComponentArray";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { getEntityComponentTypes, getEntityType } from "./world";
 import { HitboxCollisionPair } from "./collision-detection";
 import { getHitboxVelocity, Hitbox, addHitboxVelocity, setHitboxVelocity, translateHitbox, applyForce } from "./hitboxes";

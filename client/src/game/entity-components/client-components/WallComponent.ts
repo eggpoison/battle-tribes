@@ -1,6 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity, EntityType } from "../../../../../shared/src/entities";
-import { Point } from "../../../../../shared/src/utils";
+import { PointEntity, EntityType, ServerComponentType, Entity, Point } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { Hitbox } from "../../hitboxes";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
@@ -68,9 +66,6 @@ function getMaxRenderParts(): number {
 
 const updateDamageRenderPart = (entity: Entity, health: number, maxHealth: number): void => {
    const wallComponent = WallComponentArray.getComponent(entity);
-   if (wallComponent === null) {
-      return;
-   }
    
    // Max health can be 0 if it is an entity ghost
    let damageStage = maxHealth > 0 ? Math.ceil((1 - health / maxHealth) * NUM_DAMAGE_STAGES) : 0;
@@ -90,10 +85,6 @@ const updateDamageRenderPart = (entity: Entity, health: number, maxHealth: numbe
    const textureSource = "entities/wall/wooden-wall-damage-" + damageStage + ".png";
    if (wallComponent.damageRenderPart === null) {
       const transformComponent = TransformComponentArray.getComponent(entity);
-      if (transformComponent === null) {
-         return;
-      }
-      
       const hitbox = transformComponent.hitboxes[0];
       
       wallComponent.damageRenderPart = new TexturedRenderPart(
@@ -111,9 +102,7 @@ const updateDamageRenderPart = (entity: Entity, health: number, maxHealth: numbe
 
 function onTick(entity: Entity): void {
    const healthComponent = HealthComponentArray.getComponent(entity);
-   if (healthComponent !== null) {
-      updateDamageRenderPart(entity, healthComponent.health, healthComponent.maxHealth);
-   }
+   updateDamageRenderPart(entity, healthComponent.health, healthComponent.maxHealth);
 }
 
 function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
@@ -136,10 +125,6 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
 // @Incomplete: doesn't play when removed by deconstruction
 function onDie(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
-
    const hitbox = transformComponent.hitboxes[0];
 
    // @Speed @Hack
@@ -151,10 +136,6 @@ function onDie(entity: Entity): void {
          }
 
          const entityTransformComponent = TransformComponentArray.getComponent(entity);
-         if (entityTransformComponent === null) {
-            continue;
-         }
-         
          const entityHitbox = entityTransformComponent.hitboxes[0];
 
          const dist = hitbox.box.position.distanceTo(entityHitbox.box.position);

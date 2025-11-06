@@ -1,14 +1,7 @@
-import { assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, randSign, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
-import { TILE_PHYSICS_INFO_RECORD, TileType } from "battletribes-shared/tiles";
+import { Entity, EntityType, boxIsCircular, updateBox, Box, ServerComponentType, PacketReader, randFloat, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, randSign, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
 import Chunk from "../../Chunk";
-import { randFloat } from "battletribes-shared/utils";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
-import { boxIsCircular, updateBox, Box } from "battletribes-shared/boxes/boxes";
 import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityType, surfaceLayer, undergroundLayer } from "../../world";
 import Board from "../../Board";
-import { Entity, EntityType } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import { playerInstance } from "../../player";
 import { applyAccelerationFromGround, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, readHitboxFromData, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox, updateHitboxFromData, updatePlayerHitboxFromData } from "../../hitboxes";
@@ -19,7 +12,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { entitiesAreColliding, resolveWallCollisions } from "../../collision";
 import { keyIsPressed } from "../../keyboard-input";
 import { currentSnapshot } from "../../client";
-import { setCanAscendLayerState } from "../../../stores/game-ui-state.svelte";
+import { gameUIState } from "../../../ui-state/game-ui-state.svelte";
 
 export interface TransformComponentData {
    readonly traction: number;
@@ -200,7 +193,7 @@ const cleanHitboxIncludingChildrenTransform = (hitbox: Hitbox): void => {
 }
 
 export function cleanEntityTransform(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    for (const rootHitbox of transformComponent.rootHitboxes) {
       cleanHitboxIncludingChildrenTransform(rootHitbox);
@@ -474,7 +467,7 @@ function onLoad(entity: Entity): void {
 }
 
 function onTick(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    if (hitboxIsInRiver(hitbox)) {
       // Water droplet particles
@@ -519,7 +512,7 @@ function onTick(entity: Entity): void {
 }
 
 function onUpdate(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    if (transformComponent.boundingAreaMinX < 0 || transformComponent.boundingAreaMaxX >= Settings.WORLD_UNITS || transformComponent.boundingAreaMinY < 0 || transformComponent.boundingAreaMaxY >= Settings.WORLD_UNITS) {
       // @BUG @HACK: This warning should not be a thing. This can occur if I mistakenly set the player spawn position to be outside of the world, then this runs on the player.
       
@@ -556,7 +549,7 @@ function onUpdate(entity: Entity): void {
 }
 
 function onRemove(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    for (const chunk of transformComponent.chunks) {
       chunk.removeEntity(entity);
    }
@@ -565,7 +558,7 @@ function onRemove(entity: Entity): void {
 function updateFromData(data: TransformComponentData, entity: Entity): void {
    // @SPEED: What we could do is explicitly send which hitboxes have been created, and removed, from the server. (When using carmack networking)
    
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    // @Speed: would be faster if we split the hitboxes array
    let existingNumCircular = 0;
@@ -632,7 +625,7 @@ function updatePlayerFromData(data: TransformComponentData, isInitialData: boole
    // @Copynpaste
    let anyHitboxHasVelocity = false;
 
-   const transformComponent = TransformComponentArray.getComponent(playerInstance!)!;
+   const transformComponent = TransformComponentArray.getComponent(playerInstance!);
    for (const hitboxData of data.hitboxes) {
       const hitbox = transformComponent.hitboxMap.get(hitboxData.localID);
       assert(typeof hitbox !== "undefined");
@@ -659,7 +652,7 @@ function updatePlayerFromData(data: TransformComponentData, isInitialData: boole
          canAscendLayer = true;
       }
    }
-   setCanAscendLayerState(canAscendLayer);
+   gameUIState.setCanAscendLayer(canAscendLayer);
 }
 
 const countHitboxesIncludingChildren = (hitbox: Hitbox): number => {
@@ -759,7 +752,7 @@ export function entityIsVisibleToCamera(entity: Entity): boolean {
 
    // If on a different layer, the entity must be below a dropdown tile
    
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    const minTileX = Math.floor(transformComponent.boundingAreaMinX / Settings.TILE_SIZE);
    const maxTileX = Math.floor(transformComponent.boundingAreaMaxX / Settings.TILE_SIZE);

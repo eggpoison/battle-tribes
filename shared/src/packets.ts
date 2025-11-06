@@ -1,7 +1,7 @@
 import { Point } from "./utils";
 
 // @Cleanup: maybe extract into client-to-server and server-to-client ?
-export const enum PacketType {
+export enum PacketType {
    // -----------------
    // CLIENT-TO-SERVER
    // -----------------

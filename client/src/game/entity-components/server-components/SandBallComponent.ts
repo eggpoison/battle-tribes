@@ -1,9 +1,4 @@
-import CircularBox from "../../../../../shared/src/boxes/CircularBox";
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { Settings } from "../../../../../shared/src/settings";
-import { randAngle, randFloat } from "../../../../../shared/src/utils";
+import { randAngle, randFloat, Settings, PacketReader, Entity, ServerComponentType, CircularBox } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createSandParticle } from "../../particles";

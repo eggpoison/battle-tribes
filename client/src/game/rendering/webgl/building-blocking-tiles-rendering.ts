@@ -1,4 +1,4 @@
-import { Settings } from "../../../../../shared/src/settings";
+import { Settings } from "webgl-test-shared";
 import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY } from "../../camera";
 import { getTileIndexIncludingEdges } from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";

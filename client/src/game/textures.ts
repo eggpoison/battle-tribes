@@ -3,9 +3,13 @@ import { imageIsLoaded } from "./utils";
 import { FLOOR_TILE_TEXTURE_SOURCE_RECORD, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
 import { BREAK_PROGRESS_TEXTURE_SOURCES } from "./rendering/webgl/tile-break-progress-rendering";
 
+// @HACK: this just imports everythign..... slow... prolly some i dont need.
+// @SPEED: do the same thing in texture-atlases!!
+const itemImages = import.meta.glob("$images/**/*", { eager: true, query: "?url", import: "default" });
+
 let TEXTURES: { [key: string]: WebGLTexture } = {};
 
-const TEXTURE_SOURCES: Array<string> = [
+const miscTextureSources: Array<string> = [
    "miscellaneous/river/gravel.png",
    "miscellaneous/river/water-rock-large.png",
    "miscellaneous/river/water-rock-small.png",
@@ -25,42 +29,34 @@ const TEXTURE_SOURCES: Array<string> = [
 // @Hack. remove
 export const TEXTURE_IMAGE_RECORD: Record<string, HTMLImageElement> = {};
 
-export function createImage(imageSrc: string): Promise<HTMLImageElement> {
-   return new Promise(async resolve => {
-      const image = new Image();
-      image.src = require("./images/" + imageSrc);
-      
-      await imageIsLoaded(image).then(() => {
-         resolve(image);
-      });
-   })
-}
-
 export function preloadTextureImages(): Array<HTMLImageElement> {
    // Add floor tile textures
    for (const textureSource of Object.values(FLOOR_TILE_TEXTURE_SOURCE_RECORD)) {
-      if (textureSource !== null && !TEXTURE_SOURCES.includes(textureSource)) {
-         TEXTURE_SOURCES.push(textureSource);
+      if (textureSource !== null && !miscTextureSources.includes(textureSource)) {
+         miscTextureSources.push(textureSource);
       }
    }
    for (const textureSources of Object.values(WALL_TILE_TEXTURE_SOURCE_RECORD)) {
       for (const textureSource of textureSources) {
-         if (!TEXTURE_SOURCES.includes(textureSource)) {
-            TEXTURE_SOURCES.push(textureSource);
+         if (!miscTextureSources.includes(textureSource)) {
+            miscTextureSources.push(textureSource);
          }
       }
    }
    for (const textureSource of BREAK_PROGRESS_TEXTURE_SOURCES) {
-      if (!TEXTURE_SOURCES.includes(textureSource)) {
-         TEXTURE_SOURCES.push(textureSource);
+      if (!miscTextureSources.includes(textureSource)) {
+         miscTextureSources.push(textureSource);
       }
    }
 
+
    const images = new Array<HTMLImageElement>();
-   for (let i = 0; i < TEXTURE_SOURCES.length; i++) {
-      const textureSource = TEXTURE_SOURCES[i];
+   for (let i = 0; i < miscTextureSources.length; i++) {
+      const textureSource = miscTextureSources[i];
+      const texture = itemImages["$images/" + textureSource] as string;
+      
       const image = new Image();
-      image.src = require("./images/" + textureSource);
+      image.src = texture;
       images.push(image);
    }
    return images;
@@ -75,7 +71,7 @@ export async function loadTextures(textureImages: Array<HTMLImageElement>): Prom
          await imageIsLoaded(image);
       }
       
-      const textureSource = TEXTURE_SOURCES[i];
+      const textureSource = miscTextureSources[i];
       
       const texture = gl.createTexture()!;
       gl.bindTexture(gl.TEXTURE_2D, texture);

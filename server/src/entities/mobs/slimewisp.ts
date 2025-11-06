@@ -5,7 +5,7 @@ import { Point } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityConfig } from "../../components";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import WanderAI from "../../ai/WanderAI";
 import { Biome } from "battletribes-shared/biomes";

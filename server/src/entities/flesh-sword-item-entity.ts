@@ -5,7 +5,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { EntityConfig } from "../components";
 import { ItemType } from "battletribes-shared/items/items";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
 import { FleshSwordItemComponent } from "../components/FleshSwordItemComponent";
 import { AIHelperComponent } from "../components/AIHelperComponent";

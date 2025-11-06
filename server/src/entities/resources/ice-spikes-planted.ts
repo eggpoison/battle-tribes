@@ -4,7 +4,7 @@ import { Entity, EntityType } from "battletribes-shared/entities";
 import { Point, randInt } from "battletribes-shared/utils";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { PlantedComponent } from "../../components/PlantedComponent";
 import { EntityConfig } from "../../components";
 import { HealthComponent } from "../../components/HealthComponent";

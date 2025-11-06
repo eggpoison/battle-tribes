@@ -1,5 +1,5 @@
 import { boxIsCircular } from "../../shared/src/boxes/boxes";
-import RectangularBox from "../../shared/src/boxes/RectangularBox";
+import { RectangularBox } from "../../shared/src/boxes/RectangularBox";
 import { boxIsCollidingWithSubtile } from "../../shared/src/collision";
 import { getEntityCollisionGroup, CollisionGroup } from "../../shared/src/collision-groups";
 import { BlueprintType, BuildingMaterial, ServerComponentType } from "../../shared/src/components";

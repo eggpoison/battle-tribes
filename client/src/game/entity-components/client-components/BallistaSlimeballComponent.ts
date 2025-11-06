@@ -1,5 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
+import { Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle } from "../../particles";

@@ -1,7 +1,7 @@
-import { Entity } from "../../../shared/src/entities";
+import { Entity } from "webgl-test-shared";
+import { entityInteractionState } from "../ui-state/entity-interaction-state.svelte";
+import { nerdVisionState } from "../ui-state/nerd-vision-state.svelte";
 import { getCameraSubject } from "./camera";
-import { nerdVisionIsVisible } from "../svelte/game/dev/NerdVision";
-import { getMouseTargetEntity } from "./mouse-input";
 import { sendSetDebugEntityPacket } from "./networking/packet-sending";
 import { playerInstance } from "./player";
 import { isDev } from "./utils";
@@ -19,9 +19,9 @@ export function updateDebugEntity(): void {
    let debugEntity: Entity;
    if (cameraSubject !== null && entityExists(cameraSubject) && cameraSubject !== playerInstance) {
       debugEntity = cameraSubject;
-   } else if (nerdVisionIsVisible()) {
-      const targettedEntity = getMouseTargetEntity();
-      debugEntity = targettedEntity !== null ? targettedEntity : 0;
+   } else if (nerdVisionState.isVisible) {
+      const hoveredEntity = entityInteractionState.hoveredEntity;
+      debugEntity = hoveredEntity !== null ? hoveredEntity : 0;
    } else {
       debugEntity = 0;
    }

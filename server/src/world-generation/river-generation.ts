@@ -8,7 +8,7 @@ import { ServerComponentType } from "../../../shared/src/components";
 import { createEntityImmediate } from "../world";
 import Layer from "../Layer";
 import { getDistanceFromPointToHitbox } from "../ai-shared";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 
 const NUM_RIVERS = 20;
 

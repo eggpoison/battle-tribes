@@ -1,5 +1,4 @@
-import { getLightLevelNodeX, getLightLevelNodeY, LightLevelVars } from "../../../../shared/src/light-levels";
-import { distance, roundNum } from "../../../../shared/src/utils";
+import { distance, roundNum, getLightLevelNodeX, getLightLevelNodeY, LightLevelVars } from "webgl-test-shared";
 import { getLightLevelNodeInfos } from "../light-levels";
 import { cursorWorldPos } from "../mouse-input";
 import { getTextContext, getXPosInTextCanvas, getYPosInTextCanvas } from "../text-canvas";

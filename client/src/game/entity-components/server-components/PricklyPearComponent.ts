@@ -1,13 +1,10 @@
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
+import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { Entity } from "../../../../../shared/src/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
-import { randAngle, randFloat } from "../../../../../shared/src/utils";
 import { createPricklyPearParticle } from "../../particles";
 import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
@@ -67,6 +64,5 @@ function onDie(pricklyPear: Entity): void {
       }
    } else {
       playSoundOnHitbox("prickly-pear-snap.mp3", 0.5, randFloat(0.9, 1.1), pricklyPear, hitbox, false);
-
    }
 }

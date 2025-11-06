@@ -9,7 +9,7 @@ import { EntityConfig } from "../../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { HealthComponentArray } from "../../components/HealthComponent";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { destroyEntity } from "../../world";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
 import Tribe from "../../Tribe";

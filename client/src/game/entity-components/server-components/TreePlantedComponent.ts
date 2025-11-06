@@ -1,11 +1,7 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { randFloat, randItem, randInt, Point, randAngle, HitFlags, Entity, PacketReader, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
-import { PacketReader } from "../../../../../shared/src/packets";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { Entity } from "../../../../../shared/src/entities";
-import { HitFlags } from "../../../../../shared/src/client-server-types";
-import { randFloat, randItem, randInt, Point, randAngle } from "../../../../../shared/src/utils";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH, createWoodSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";

@@ -3,7 +3,7 @@ import { Settings } from "../settings";
 import { ItemTally2, createTallyFromRecord } from "./ItemTally";
 import { EntityType } from "../entities";
 
-const enum Vars {
+enum Vars {
    FAST_CRAFT_TIME = (0.5 * Settings.TICK_RATE) | 0,
    NORMAL_CRAFT_TIME = (1.2 * Settings.TICK_RATE) | 0,
    SLOW_CRAFT_TIME = (2.5 * Settings.TICK_RATE) | 0

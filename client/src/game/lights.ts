@@ -1,8 +1,6 @@
-import { assert, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
+import { PacketReader, Entity, assert, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
 import { getEntityLayer, layers } from "./world";
 import { createTranslationMatrix, Matrix3x2 } from "./rendering/matrices";
-import { Entity } from "../../../shared/src/entities";
-import { PacketReader } from "../../../shared/src/packets";
 import { getHitboxByLocalID, Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { currentSnapshot } from "./client";

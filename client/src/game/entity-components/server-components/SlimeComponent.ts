@@ -1,11 +1,7 @@
-import { lerp, randAngle, randFloat, randInt } from "battletribes-shared/utils";
-import { Entity, SlimeSize } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
+import { Settings, ServerComponentType, PacketReader, Entity, SlimeSize, lerp, randAngle, randFloat, randInt } from "webgl-test-shared";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
@@ -156,14 +152,14 @@ function getMaxRenderParts(): number {
 }
 
 function onTick(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
    if (Math.random() < 0.2 * Settings.DT_S) {
       playSoundOnHitbox("slime-ambient-" + randInt(1, 4) + ".mp3", 0.4, 1, entity, hitbox, false);
    }
 
-   const slimeComponent = SlimeComponentArray.getComponent(entity)!;
+   const slimeComponent = SlimeComponentArray.getComponent(entity);
    for (let i = 0; i < slimeComponent.orbs.length; i++) {
       const orb = slimeComponent.orbs[i];
 
@@ -205,7 +201,7 @@ const createOrb = (slimeComponent: SlimeComponent, entity: Entity, size: SlimeSi
    const spriteSize = SLIME_SIZES[slimeComponent.size];
    const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orbInfo.offset);
 
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    const renderPart = new TexturedRenderPart(
@@ -223,7 +219,7 @@ const createOrb = (slimeComponent: SlimeComponent, entity: Entity, size: SlimeSi
 }
 
 function updateFromData(data: SlimeComponentData, entity: Entity): void {
-   const slimeComponent = SlimeComponentArray.getComponent(entity)!;
+   const slimeComponent = SlimeComponentArray.getComponent(entity);
    
    // @Incomplete: change render parts when this happens?
    slimeComponent.size = data.size;
@@ -264,10 +260,10 @@ function updateFromData(data: SlimeComponentData, entity: Entity): void {
 }
 
 function onHit(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0]!;
    
-   const slimeComponent = SlimeComponentArray.getComponent(entity)!;
+   const slimeComponent = SlimeComponentArray.getComponent(entity);
 
    const radius = SLIME_SIZES[slimeComponent.size] / 2;
    
@@ -283,10 +279,10 @@ function onHit(entity: Entity): void {
 }
 
 function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
-   const slimeComponent = SlimeComponentArray.getComponent(entity)!;
+   const slimeComponent = SlimeComponentArray.getComponent(entity);
 
    const radius = SLIME_SIZES[slimeComponent.size] / 2;
 

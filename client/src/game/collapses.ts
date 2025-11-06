@@ -1,6 +1,4 @@
-import { Settings } from "../../../shared/src/settings";
-import { SubtileType } from "../../../shared/src/tiles";
-import { customTickIntervalHasPassed, lerp, Point, randAngle, randFloat, randInt } from "../../../shared/src/utils";
+import { Settings, SubtileType, customTickIntervalHasPassed, lerp, Point, randAngle, randFloat, randInt } from "webgl-test-shared";
 import Board from "./Board";
 import { getSubtileX, getSubtileY } from "./Layer";
 import Particle from "./Particle";

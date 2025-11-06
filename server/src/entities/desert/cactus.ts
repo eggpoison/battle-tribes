@@ -7,7 +7,7 @@ import { ChildConfigAttachInfo, EntityConfig } from "../../components";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { CactusComponent, CactusFlower } from "../../components/CactusComponent";
 import { ItemType } from "../../../../shared/src/items/items";

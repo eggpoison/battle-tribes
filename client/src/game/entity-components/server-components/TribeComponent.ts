@@ -1,13 +1,9 @@
-import { TribeType } from "battletribes-shared/tribes";
-import { ServerComponentType } from "battletribes-shared/components";
-import { randAngle, randFloat } from "battletribes-shared/utils";
+import { Entity, PacketReader, randAngle, randFloat, ServerComponentType, TribeType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { getHumanoidRadius, TribesmanComponentArray } from "./TribesmanComponent";
 import { createConversionParticle } from "../../particles";
-import { PacketReader } from "battletribes-shared/packets";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
-import { Entity } from "../../../../../shared/src/entities";
 import { Tribe, tribeExists } from "../../tribes";
 import { playerInstance } from "../../player";
 import { EntityComponentData } from "../../world";
@@ -61,14 +57,14 @@ function getMaxRenderParts(): number {
 }
 
 function updateFromData(data: TribeComponentData, entity: Entity): void {
-   const tribeComponent = TribeComponentArray.getComponent(entity)!;
+   const tribeComponent = TribeComponentArray.getComponent(entity);
    
    const tribeID = data.tribeID;
    const tribeType = data.tribeType;
    
    // Tribesman conversion
    if (tribeID !== tribeComponent.tribeID && TribesmanComponentArray.hasComponent(entity)) {
-      const transformComponent = TransformComponentArray.getComponent(entity)!;
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       playSoundOnHitbox("conversion.mp3", 0.4, 1, entity, hitbox, false);

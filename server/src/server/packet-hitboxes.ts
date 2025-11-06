@@ -1,7 +1,7 @@
-import BaseBox from "../../../shared/src/boxes/BaseBox";
+import { BaseBox } from "../../../shared/src/boxes/BaseBox";
 import { Box, boxIsCircular } from "../../../shared/src/boxes/boxes";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
-import RectangularBox from "../../../shared/src/boxes/RectangularBox";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
+import { RectangularBox } from "../../../shared/src/boxes/RectangularBox";
 import { Packet } from "../../../shared/src/packets";
 import { Hitbox } from "../hitboxes";
 

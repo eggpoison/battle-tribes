@@ -1,11 +1,7 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { DeathInfo, Entity, DamageSource } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { Point, randAngle, randFloat, randInt, randItem } from "battletribes-shared/utils";
+import { PacketReader, Point, randAngle, randFloat, randInt, randItem, Settings, DeathInfo, Entity, DamageSource, ServerComponentType } from "webgl-test-shared";
 import { createDirtParticle, createRockParticle, createRockSpeckParticle } from "../../particles";
 import { playSound, playSoundOnHitbox, ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
-import { PacketReader } from "battletribes-shared/packets";
 import { EntityComponentData, getEntityAgeTicks, getEntityLayer } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";

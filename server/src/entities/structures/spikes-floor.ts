@@ -13,7 +13,7 @@ import { StructureComponent } from "../../components/StructureComponent";
 import Tribe from "../../Tribe";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
-import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
 import { Hitbox } from "../../hitboxes";
 import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";

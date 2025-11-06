@@ -1,6 +1,4 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { randAngle, randItem } from "battletribes-shared/utils";
+import { Entity, CircularBox, PacketReader, randAngle, randItem, Settings, ServerComponentType } from "webgl-test-shared";
 import { createRockSpeckParticle } from "../../particles";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -8,10 +6,7 @@ import { Light } from "../../lights";
 import { playSoundOnHitbox, ROCK_HIT_SOUNDS } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { TransformComponentArray } from "./TransformComponent";
-import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";

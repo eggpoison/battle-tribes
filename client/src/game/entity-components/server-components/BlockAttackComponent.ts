@@ -1,6 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
+import { PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 
@@ -35,6 +33,6 @@ function getMaxRenderParts(): number {
 }
 
 function updateFromData(data: BlockAttackComponentData, entity: Entity): void {
-   const blockAttackComponent = BlockAttackComponentArray.getComponent(entity)!;
+   const blockAttackComponent = BlockAttackComponentArray.getComponent(entity);
    blockAttackComponent.hasBlocked = data.hasBlocked;
 }

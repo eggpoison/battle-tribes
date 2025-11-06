@@ -1,8 +1,7 @@
-import { Point } from "battletribes-shared/utils";
+import { Point } from "webgl-test-shared";
 import { createIdentityMatrix } from "../rendering/matrices";
 import { RenderPartParent, RenderPart } from "./render-parts";
 import { currentSnapshot } from "../client";
-import { Hitbox } from "../hitboxes";
 
 let idCounter = 0;
 

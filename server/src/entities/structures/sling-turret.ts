@@ -14,7 +14,7 @@ import Tribe from "../../Tribe";
 import { SlingTurretComponent } from "../../components/SlingTurretComponent";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
 import { Point } from "../../../../shared/src/utils";
-import CircularBox from "../../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
 import { Hitbox } from "../../hitboxes";
 import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";

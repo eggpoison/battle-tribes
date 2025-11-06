@@ -1,19 +1,15 @@
 import { EntityRenderInfo, updateEntityRenderInfoRenderData } from "../EntityRenderInfo";
 import { createIdentityMatrix, createTranslationMatrix, Matrix3x2, matrixMultiplyInPlace } from "./matrices";
-import { Settings } from "battletribes-shared/settings";
+import { ServerComponentType, Entity, assert, getAngleDiff, lerp, Point, randAngle, slerp, Settings } from "webgl-test-shared";
 import { RenderPart, renderParentIsHitbox } from "../render-parts/render-parts";
 import { renderLayerIsChunkRendered, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
 import { entityExists, getEntityRenderInfo } from "../world";
-import { assert, getAngleDiff, lerp, Point, randAngle, slerp } from "../../../../shared/src/utils";
 import { gl } from "../webgl";
-import { HealthComponentArray } from "../entity-components/server-components/HealthComponent";
 import { getHitboxVelocity, Hitbox } from "../hitboxes";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
-import { Entity } from "../../../../shared/src/entities";
 import { playerInstance } from "../player";
 import { EntitySnapshot } from "../networking/packet-snapshots";
 import { currentSnapshot, nextSnapshot } from "../client";
-import { ServerComponentType } from "../../../../shared/src/components";
 
 // @Cleanup: file name
 
@@ -297,7 +293,8 @@ export function cleanEntityRenderInfo(renderInfo: EntityRenderInfo, tickInterp: 
 }
 
 export function entityUsesClientInterp(entity: Entity): boolean {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.tryGetComponent(entity);
+   // Just in case this function gets called on an entity which doesn't exist (e.g. the spectator client-only entity)
    if (transformComponent === null) {
       return false;
    }

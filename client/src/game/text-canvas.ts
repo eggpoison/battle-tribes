@@ -1,12 +1,9 @@
-import { Settings } from "battletribes-shared/settings";
-import { distance, lerp, randAngle, randFloat } from "battletribes-shared/utils";
+import { EntityType, distance, lerp, randAngle, randFloat, Settings } from "webgl-test-shared";
 import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./webgl";
-import OPTIONS from "./options";
 import { getCurrentLayer, getEntityLayer, getEntityType } from "./world";
 import { getBuildingSafeties } from "./building-safety";
 import { getVisibleBuildingPlan, GhostBuildingPlan, VirtualBuildingSafetySimulation } from "./virtual-buildings";
 import { TribeMemberComponentArray } from "./entity-components/server-components/TribeMemberComponent";
-import { EntityType } from "../../../shared/src/entities";
 import { getHumanoidRadius } from "./entity-components/server-components/TribesmanComponent";
 import { playerInstance } from "./player";
 import { addGhostRenderInfo, removeGhostRenderInfo } from "./rendering/webgl/entity-ghost-rendering";
@@ -16,6 +13,7 @@ import { FloorSignComponentArray } from "./entity-components/server-components/F
 import { TamingComponentArray } from "./entity-components/server-components/TamingComponent";
 import { cameraPosition, cameraZoom } from "./camera";
 import { cursorWorldPos } from "./mouse-input";
+import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 
 // @Cleanup: The logic for damage, research and heal numbers is extremely similar, can probably be combined
 
@@ -356,7 +354,7 @@ const renderNames = (tickInterp: number): void => {
 
       const tribeMemberComponent = TribeMemberComponentArray.components[i];
 
-      const transformComponent = TransformComponentArray.getComponent(entity)!;
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, tickInterp);
       
@@ -372,7 +370,7 @@ const renderNames = (tickInterp: number): void => {
       const tamingComponent = TamingComponentArray.components[i];
       const name = tamingComponent.name;
       if (name !== "") {
-         const transformComponent = TransformComponentArray.getComponent(entity)!;
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[1];
          const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, tickInterp);
          
@@ -383,12 +381,12 @@ const renderNames = (tickInterp: number): void => {
    // @CLeanup: these aren't names!!
    // Floor signs
    for (const entity of FloorSignComponentArray.entities) {
-      const floorSignComponent = FloorSignComponentArray.getComponent(entity)!;
+      const floorSignComponent = FloorSignComponentArray.getComponent(entity);
       if (floorSignComponent.message === "") {
          continue;
       }
       
-      const transformComponent = TransformComponentArray.getComponent(entity)!;
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, tickInterp);
 
@@ -432,7 +430,7 @@ const calculatePotentialPlanIdealness = (virtualBuildingSafetySimulation: Virtua
 let lastGhostBuildingPlan: GhostBuildingPlan | null = null;
 
 const renderPotentialBuildingPlans = (): void => {
-   if (!OPTIONS.showBuildingPlans) {
+   if (!debugDisplayState.showBuildingPlans) {
       return;
    }
    
@@ -682,11 +680,11 @@ export function renderText(tickInterp: number): void {
    renderDamageNumbers();
    renderResearchNumbers();
    renderHealNumbers();
-   if (OPTIONS.showBuildingSafetys) {
+   if (debugDisplayState.showBuildingSafetys) {
       renderBuildingSafetys();
    }
 
-   // if (OPTIONS.showBuildingPlans) {
+   // if (debugDisplayState.showBuildingPlans) {
       // renderBuildingPlanInfos();
       renderPotentialBuildingPlans();
       // @Temporary @Incomplete

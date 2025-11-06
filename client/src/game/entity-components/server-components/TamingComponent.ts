@@ -1,14 +1,7 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity, EntityType } from "../../../../../shared/src/entities";
-import { ItemType } from "../../../../../shared/src/items/items";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { Settings } from "../../../../../shared/src/settings";
-import { getTamingSkill, TamingSkill, TamingSkillID } from "../../../../../shared/src/taming";
-import { TribeType } from "../../../../../shared/src/tribes";
-import { UtilVars } from "../../../../../shared/src/utils";
-import { getPlayerSelectedItem } from "../../../svelte/game/GameInteractableLayer";
+import { UtilVars, TribeType, getTamingSkill, TamingSkill, TamingSkillID, Settings, PacketReader, ItemType, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { Hitbox } from "../../hitboxes";
+import { getPlayerSelectedItem } from "../../player-action-handler";
 import { RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";

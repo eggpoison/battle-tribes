@@ -1,9 +1,4 @@
-import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../../shared/src/collision";
-import { BuildingMaterial, ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { Point } from "../../../../shared/src/utils";
+import { Point, EntityType, BuildingMaterial, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
 import { createBuildingMaterialComponentData } from "../entity-components/server-components/BuildingMaterialComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createSpikesComponentData } from "../entity-components/server-components/SpikesComponent";

@@ -5,7 +5,7 @@ import { createGlurbHeadSegmentConfig } from "./glurb-head-segment";
 import { createGlurbBodySegmentConfig } from "./glurb-body-segment";
 import { createGlurbTailSegmentConfig } from "./glurb-tail-segment";
 import { tetherHitboxes } from "../../tethers";
-import CircularBox from "../../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
 import { Hitbox } from "../../hitboxes";
 
 // @Cleanup: Shouldn't be globally exported!!!!

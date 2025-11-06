@@ -1,12 +1,9 @@
-import { assert, rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
+import { Entity, assert } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
-import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, getEntityTextureAtlasUBO, UBOBindingIndex } from "../ubos";
-import { createImage } from "../../textures";
 import { RenderableType, addRenderable } from "../render-loop";
-import { VisualRenderPart, renderPartIsTextured } from "../../render-parts/render-parts";
+import { VisualRenderPart } from "../../render-parts/render-parts";
 import { getEntityLayer, getEntityRenderInfo } from "../../world";
-import { Entity } from "../../../../../shared/src/entities";
 import { calculateRenderPartDepth } from "./entity-rendering";
 
 const enum Vars {
@@ -152,6 +149,22 @@ export async function createEntityOverlayShaders(): Promise<void> {
    gl.useProgram(program);
    gl.uniform1i(entityTextureUniformLocation, 0);
    gl.uniform1i(overlayTextureUniformLocation, 1);
+
+   // @SQUEAM transferred over from textures.ts
+   
+   // export function createImage(imageSrc: string): Promise<HTMLImageElement> {
+   //    return new Promise(async resolve => {
+   //       const image = new Image();
+   //       image.src = require("./images/" + imageSrc);
+         
+   //       await imageIsLoaded(image).then(() => {
+   //          resolve(image);
+   //       });
+   //    })
+   // }
+   
+   
+   
 
    // 
    // Create texture array

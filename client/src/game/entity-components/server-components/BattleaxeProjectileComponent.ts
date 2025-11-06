@@ -1,6 +1,5 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { Entity, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
-import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { tickIntervalHasPassed } from "../../client";
@@ -27,10 +26,8 @@ function getMaxRenderParts(): number {
 
 const playWhoosh = (entity: Entity): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent !== null) {
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("air-whoosh.mp3", 0.25, 1, entity, hitbox, true);
-   }
+   const hitbox = transformComponent.hitboxes[0];
+   playSoundOnHitbox("air-whoosh.mp3", 0.25, 1, entity, hitbox, true);
 }
 
 function onLoad(entity: Entity): void {

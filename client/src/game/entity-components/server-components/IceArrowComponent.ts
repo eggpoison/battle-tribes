@@ -1,8 +1,6 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
+import { Entity, Settings, ServerComponentType } from "webgl-test-shared";
 import { createIceSpeckProjectile, createSnowflakeParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import { Entity } from "battletribes-shared/entities";
 import ServerComponentArray from "../ServerComponentArray";
 
 export interface IceArrowComponentData {}

@@ -1,6 +1,11 @@
-import { lerp } from "battletribes-shared/utils";
-import { FrameInfo } from "../../../svelte/game/dev/FrameGraph";
+import { lerp } from "webgl-test-shared";
 import { createWebGLProgram } from "../../webgl";
+import { frameGraphState } from "../../../ui-state/frame-graph-state.svelte";
+
+export interface FrameInfo {
+   readonly startTime: number;
+   readonly endTime: number;
+}
 
 const TARGET_FRAME_RENDER_TIME = 16 / 1000; // 16 milliseconds
 const MAX_FRAME_RENDER_TIME = 24 / 1000; // 24 milliseconds
@@ -15,6 +20,35 @@ let frameGraphGL: WebGL2RenderingContext;
 
 let program: WebGLProgram;
 let buffer: WebGLBuffer;
+
+const frames = new Array<FrameInfo>();
+
+/** Registers that a frame has occured for use in showing the fps counter */
+export function registerFrame(frameStartTime: number, frameEndTime: number): void {
+   frames.push({
+      startTime: frameStartTime,
+      endTime: frameEndTime
+   });
+   // @Copynpaste
+   frameGraphState.trackedFrames.push({
+      startTime: frameStartTime,
+      endTime: frameEndTime
+   });
+
+   const renderTime = performance.now();
+   const now = renderTime / 1000;
+   
+   // Remove old frames
+   for (let i = frames.length - 1; i >= 0; i--) {
+      const frame = frames[i];
+      const timeSince = now - (frame.endTime / 1000);
+      if (timeSince > FRAME_GRAPH_RECORD_TIME) {
+         frames.splice(i, 1);
+         // @Copynpaste
+         frameGraphState.trackedFrames.splice(i, 1);
+      }
+   }
+}
 
 const createGLContext = (): void => {
    const canvas = document.getElementById("frame-graph-canvas") as HTMLCanvasElement;
@@ -67,7 +101,7 @@ export function setupFrameGraph(): void {
    createShaders();
 }
 
-export function renderFrameGraph(renderTime: number, frames: ReadonlyArray<FrameInfo>): void {
+export function renderFrameGraph(renderTime: number): void {
    const vertexData = new Float32Array(frames.length * 6 * 5 + 6 * 5);
 
    // Add 16ms line

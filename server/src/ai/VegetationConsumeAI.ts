@@ -1,5 +1,5 @@
 import { assertBoxIsCircular } from "../../../shared/src/boxes/boxes";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 import { Entity, EntityType } from "../../../shared/src/entities";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { PathfindingSettings, Settings } from "../../../shared/src/settings";

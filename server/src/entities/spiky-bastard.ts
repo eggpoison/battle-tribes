@@ -4,7 +4,7 @@ import { Point } from "battletribes-shared/utils";
 import { EntityType } from "battletribes-shared/entities";
 import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
 import { HealthComponent } from "../components/HealthComponent";
 import { StatusEffectComponent } from "../components/StatusEffectComponent";

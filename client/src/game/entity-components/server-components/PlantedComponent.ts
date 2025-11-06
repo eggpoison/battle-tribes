@@ -1,6 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { randAngle, randFloat } from "../../../../../shared/src/utils";
+import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-shared";
 import { createDirtParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import ServerComponentArray from "../ServerComponentArray";

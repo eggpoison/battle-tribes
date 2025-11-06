@@ -1,11 +1,9 @@
 import { createWebGLProgram, gl } from "../../webgl";
-import { Settings } from "battletribes-shared/settings";
-import { angle, distance, rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
+import { angle, distance, rotateXAroundPoint, rotateYAroundPoint, Settings } from "webgl-test-shared";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { HealingTotemComponentArray } from "../../entity-components/server-components/HealingTotemComponent";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { entityExists } from "../../world";
-import { Hitbox } from "../../hitboxes";
 
 export const HEALING_BEAM_THICKNESS = 32;
 

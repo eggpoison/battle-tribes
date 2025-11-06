@@ -1,13 +1,8 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Point, lerp, secondsToTicks } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
-import { ServerComponentType } from "battletribes-shared/components";
-import Board from "../../Board";
+import { PacketReader, ServerComponentType, Settings, Point, lerp, secondsToTicks, Entity, EntityType } from "webgl-test-shared";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
 import { EntityComponentData, getEntityAgeTicks, getEntityRenderInfo, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";

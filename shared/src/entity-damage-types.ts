@@ -3,14 +3,14 @@ import { ITEM_TYPE_RECORD as ITEM_CATEGORY_RECORD, Item } from "./items/items";
 
 // @Cleanup KILL THISSS
 
-const enum DamageType {
+enum DamageType {
    basic,
    weapon,
    axe,
    pickaxe
 }
 
-export const enum AttackEffectiveness {
+export enum AttackEffectiveness {
    stopped = 0,
    ineffective = 1,
    effective = 2
@@ -519,7 +519,6 @@ const getItemDamageTypes = (item: Item | null): ReadonlyArray<DamageType> => {
       case "backpack":
       case "bow":
       case "hammer":
-      case "bow":
       case "crossbow":
       case "glove":
       case "healing":

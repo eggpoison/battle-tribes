@@ -1,8 +1,4 @@
-import { GrassTileInfo, RiverFlowDirectionsRecord, WaterRockData } from "../../../shared/src/client-server-types";
-import { Entity } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { SubtileType, TileType } from "../../../shared/src/tiles";
-import { Point, randAngle, randFloat, randInt, TileIndex } from "../../../shared/src/utils";
+import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings } from "webgl-test-shared";
 import Board from "./Board";
 import Chunk from "./Chunk";
 import { Light } from "./lights";

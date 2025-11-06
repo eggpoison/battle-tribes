@@ -7,7 +7,7 @@ import { ComponentArray } from "./ComponentArray";
 import { addHitboxToEntity, TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { Hitbox } from "../hitboxes";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts}

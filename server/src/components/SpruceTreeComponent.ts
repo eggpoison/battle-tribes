@@ -5,7 +5,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { getEntityLayer } from "../world";
 import { createGrassBlocker } from "../grass-blockers";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 import { Point, randInt } from "../../../shared/src/utils";
 import { Hitbox } from "../hitboxes";
 

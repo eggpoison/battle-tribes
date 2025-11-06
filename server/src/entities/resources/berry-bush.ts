@@ -6,7 +6,7 @@ import { BerryBushComponent, BerryBushComponentArray } from "../../components/Be
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
 import { EntityConfig } from "../../components";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import { HealthComponent } from "../../components/HealthComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";

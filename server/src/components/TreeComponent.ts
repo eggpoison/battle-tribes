@@ -5,7 +5,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { getEntityLayer } from "../world";
 import { createGrassBlocker } from "../grass-blockers";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 import { Point } from "../../../shared/src/utils";
 
 const TREE_TRUNK_RADII: Record<TreeSize, number> = {

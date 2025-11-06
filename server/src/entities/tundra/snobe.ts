@@ -7,7 +7,7 @@ import { EntityConfig } from "../../components";
 import { TransformComponent, TransformComponentArray, addHitboxToTransformComponent } from "../../components/TransformComponent";
 import { applyAbsoluteKnockback, Hitbox } from "../../hitboxes";
 import { HealthComponent } from "../../components/HealthComponent";
-import CircularBox from "../../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
 import { SnobeComponent } from "../../components/SnobeComponent";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import { turnToPosition } from "../../ai-shared";

@@ -1,14 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { TileType, Entity, EntityType, PacketReader, Colour, getTileIndexIncludingEdges, hueShift, lerp, multiColourLerp, Settings, ServerComponentType } from "webgl-test-shared";
 import ColouredRenderPart, { RenderPartColour } from "../../render-parts/ColouredRenderPart";
-import { Colour, getTileIndexIncludingEdges, hueShift, lerp, multiColourLerp } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
-import { PacketReader } from "battletribes-shared/packets";
-import { Entity, EntityType } from "battletribes-shared/entities";
 import { EntityComponentData, getEntityRenderInfo, getEntityType, surfaceLayer } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { registerDirtyRenderInfo } from "../../rendering/render-part-matrices";
 import { Hitbox } from "../../hitboxes";
-import { TileType } from "../../../../../shared/src/tiles";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 
 const enum Vars {
@@ -228,7 +223,7 @@ const updateOffsets = (layeredRodComponent: LayeredRodComponent, entity: Entity)
 }
 
 function onTick(entity: Entity): void {
-   const layeredRodComponent = LayeredRodComponentArray.getComponent(entity)!;
+   const layeredRodComponent = LayeredRodComponentArray.getComponent(entity);
    if (layeredRodComponent.bendX === 0 && layeredRodComponent.bendY === 0) {
       LayeredRodComponentArray.queueComponentDeactivate(entity);
       return;
@@ -257,7 +252,7 @@ function onCollision(entity: Entity, collidingEntity: Entity, affectedHitbox: Hi
       return;
    }
    
-   const layeredRodComponent = LayeredRodComponentArray.getComponent(entity)!;
+   const layeredRodComponent = LayeredRodComponentArray.getComponent(entity);
    LayeredRodComponentArray.activateComponent(layeredRodComponent, entity);
    
    const directionFromCollidingEntity = collidingHitbox.box.position.angleTo(affectedHitbox.box.position);

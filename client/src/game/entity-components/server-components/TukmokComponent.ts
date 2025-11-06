@@ -1,7 +1,4 @@
-import { HitboxFlag } from "../../../../../shared/src/boxes/boxes";
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { Point, randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
+import { Point, randAngle, randFloat, randInt, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { Hitbox } from "../../hitboxes";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain } from "../../particles";

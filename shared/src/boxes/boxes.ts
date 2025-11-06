@@ -2,9 +2,9 @@ import { getCircleCircleCollisionResult, getCircleRectangleCollisionResult } fro
 import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "../utils";
 import { PivotPointType } from "./BaseBox";
 import { CircularBox } from "./CircularBox";
-import RectangularBox from "./RectangularBox";
+import { RectangularBox } from "./RectangularBox";
 
-export const enum HitboxFlag {
+export enum HitboxFlag {
    NON_GRASS_BLOCKING,
    // @Cleanup @Speed: This seems like it's central collision logic, perhaps instead change into a "collidesWithWalls" boolean on hitbox objects?
    IGNORES_WALL_COLLISIONS,
@@ -61,12 +61,12 @@ export const enum HitboxFlag {
    RIVER_STEPPING_STONE_LARGE,
 }
 
-export const enum HitboxCollisionType {
+export enum HitboxCollisionType {
    soft,
    hard
 }
 
-export const enum BoxType {
+export enum BoxType {
    circular,
    rectangular
 }

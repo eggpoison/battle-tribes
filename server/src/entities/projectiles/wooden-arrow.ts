@@ -11,7 +11,7 @@ import { addHitboxToTransformComponent, attachHitbox, TransformComponent, Transf
 import { ProjectileComponent, ProjectileComponentArray } from "../../components/ProjectileComponent";
 import { ItemType } from "battletribes-shared/items/items";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { entityExists, getEntityType } from "../../world";
 import Tribe from "../../Tribe";
 import { applyKnockback, getHitboxVelocity, Hitbox } from "../../hitboxes";

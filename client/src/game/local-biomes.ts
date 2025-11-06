@@ -1,6 +1,4 @@
-import { EntityType } from "../../../shared/src/entities";
-import { PacketReader } from "../../../shared/src/packets";
-import { assert, TileIndex } from "../../../shared/src/utils";
+import { assert, TileIndex, PacketReader, EntityType } from "webgl-test-shared";
 import { currentSnapshot } from "./client";
 
 interface LocalEntityCensusInfo {

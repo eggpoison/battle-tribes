@@ -1,17 +1,15 @@
-import { craftingMenuIsOpen } from "../svelte/game/menus/CraftingMenu";
-import { InventorySelector_inventoryIsOpen } from "../svelte/game/inventories/InventorySelector";
-import { Inventory, InventoryName, ItemType } from "battletribes-shared/items/items";
+import { Inventory, InventoryName, ItemType } from "webgl-test-shared";
 import { getInventory, InventoryComponentArray } from "./entity-components/server-components/InventoryComponent";
 import { sendItemPickupPacket, sendItemReleasePacket } from "./networking/packet-sending";
 import { playerInstance } from "./player";
 
-const canInteractWithItemSlots = (): boolean => {
-   return craftingMenuIsOpen() || InventorySelector_inventoryIsOpen();
+const inventoryIsFocused = (): boolean => {
+   
 }
 
 export function leftClickItemSlot(e: MouseEvent, entityID: number, inventory: Inventory, itemSlot: number): void {
    // Item slots can only be interacted with while the inventory is open
-   if (!canInteractWithItemSlots()) return;
+   if (!inventoryIsFocused()) return;
 
    const clickedItem = inventory.itemSlots[itemSlot];
    if (typeof clickedItem !== "undefined") {

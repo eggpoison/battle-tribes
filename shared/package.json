@@ -5,17 +5,23 @@
    "repository": "https://github.com/eggpoison/webgl-test-shared.git",
    "author": "eggpoison <edwrd.magee@gmail.com>",
    "license": "MIT",
+   "main": "dist/index.js",
+   "module": "dist/index.js",
+   "types": "dist/index.d.ts",
    "scripts": {
-      "start": "tsc -b -w",
+      "start": "rm -r ./dist && tsc -b -w",
       "build": "rm -r ./dist && tsc --build"
+   },
+   "dependencies": {
+      "@types/node": "^20.14.11"
    },
    "devDependencies": {
       "typescript": "^4.9.4"
    },
-   "files": [
-      "lib/**"
-   ],
-   "dependencies": {
-      "@types/node": "^20.14.11"
+   "exports": {
+      ".": {
+         "import": "./dist/index.js",
+         "types": "./dist/index.d.ts"
+      }
    }
 }

@@ -1,7 +1,7 @@
 import { Settings } from "./settings";
 import { lerp } from "./utils";
 
-export const enum AttackVars {
+export enum AttackVars {
    MAX_EXTRA_ATTACK_RANGE = 24,
    // The speed needed to have the max attack range
    MAX_EXTRA_ATTACK_RANGE_SPEED = 300,
@@ -16,7 +16,7 @@ export const enum AttackVars {
    SHIELD_BLOCK_REST_TIME_TICKS = (Settings.TICK_RATE * 2) | 0
 }
 
-export const enum LimbConfiguration {
+export enum LimbConfiguration {
    singleHanded,
    twoHanded
 }

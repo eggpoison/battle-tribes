@@ -1,4 +1,4 @@
-import { ServerComponentType } from "../../../../shared/src/components";
+import { ServerComponentType } from "webgl-test-shared";
 import { AIAssignmentComponent, AIAssignmentComponentArray, AIAssignmentComponentData } from "./server-components/AIAssignmentComponent";
 import { AIHelperComponent, AIHelperComponentArray, AIHelperComponentData } from "./server-components/AIHelperComponent";
 import { AmmoBoxComponent, AmmoBoxComponentArray, AmmoBoxComponentData } from "./server-components/AmmoBoxComponent";

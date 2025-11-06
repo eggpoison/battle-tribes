@@ -1,7 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity, EntityType, PlantedEntityType } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { randInt, customTickIntervalHasPassed } from "../../../../../shared/src/utils";
+import { randInt, customTickIntervalHasPassed, PacketReader, Entity, EntityType, PlantedEntityType, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { Hitbox } from "../../hitboxes";
 import { createGrowthParticle } from "../../particles";

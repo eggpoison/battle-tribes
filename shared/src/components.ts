@@ -475,7 +475,7 @@ export const TURRET_AMMO_TYPES: Record<TurretEntityType, ReadonlyArray<TurretAmm
    [EntityType.ballista]: [ItemType.wood, ItemType.rock, ItemType.slimeball, ItemType.frostcicle]
 };
 
-export const enum TunnelDoorSide {
+export enum TunnelDoorSide {
    top = 0b01,
    bottom = 0b10
 }
@@ -523,7 +523,7 @@ export enum DecorationType {
 
 // @Cleanup: Should these be here?
 
-// export const enum BallistaProjectileType {
+// export enum BallistaProjectileType {
 //    woodenBolt,
 //    rock,
 //    slimeball,
@@ -621,7 +621,7 @@ export const AMMO_INFO_RECORD: Record<TurretAmmoType, GenericAmmoInfo> = {
 
 
 // @Cleanup: Should be defined in server
-export const enum GuardianAttackType {
+export enum GuardianAttackType {
    none,
    crystalSlam,
    crystalBurst,
@@ -629,21 +629,21 @@ export const enum GuardianAttackType {
 }
 
 // @Cleanup: Should be defined in server
-export const enum GuardianCrystalSlamStage {
+export enum GuardianCrystalSlamStage {
    windup,
    slam,
    return
 }
 
 // @Cleanup: Should be defined in server
-export const enum GuardianCrystalBurstStage {
+export enum GuardianCrystalBurstStage {
    windup,
    burst,
    return
 }
 
 // @Cleanup: Should be defined in server
-export const enum GuardianSpikyBallSummonStage {
+export enum GuardianSpikyBallSummonStage {
    windup,
    focus,
    return
@@ -654,7 +654,7 @@ export const enum GuardianSpikyBallSummonStage {
 
 
 // @Cleanup: Should be defined in server
-export const enum BlockType {
+export enum BlockType {
    toolBlock,
    shieldBlock
 }

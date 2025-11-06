@@ -1,4 +1,4 @@
-import { Settings } from "battletribes-shared/settings";
+import { Settings } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 

@@ -9,7 +9,7 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityConfig, LightCreationInfo } from "../../components";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { registerEntityLootOnDeath } from "../../components/LootComponent";
 import { ItemType } from "../../../../shared/src/items/items";

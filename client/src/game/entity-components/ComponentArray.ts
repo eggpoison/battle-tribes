@@ -1,9 +1,7 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
+import { assert, Point, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "./ServerComponentArray";
 import ClientComponentArray from "./ClientComponentArray";
 import { ClientComponentType } from "./client-component-types";
-import { assert, Point } from "../../../../shared/src/utils";
 import { EntityComponentData } from "../world";
 import { Hitbox } from "../hitboxes";
 import { EntityRenderInfo } from "../EntityRenderInfo";
@@ -137,7 +135,13 @@ export abstract class ComponentArray<
       }
    }
 
-   public getComponent(entity: Entity): T | null {
+   public getComponent(entity: Entity) {
+      const idx = this.entityToIndexMap[entity];
+      assert(typeof idx !== "undefined");
+      return this.components[idx];
+   }
+
+   public tryGetComponent(entity: Entity): T | null {
       const idx = this.entityToIndexMap[entity];
       if (typeof idx === "undefined") {
          return null;

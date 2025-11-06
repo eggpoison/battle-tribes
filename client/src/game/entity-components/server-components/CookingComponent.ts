@@ -1,7 +1,5 @@
 import { Light, removeLight } from "../../lights";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity } from "../../../../../shared/src/entities";
+import { Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { tickIntervalHasPassed } from "../../client";
@@ -85,22 +83,16 @@ const updateLight = (cookingComponent: CookingComponent, entity: Entity): void =
 
 function onLoad(entity: Entity): void {
    const cookingComponent = CookingComponentArray.getComponent(entity);
-   if (cookingComponent !== null) {
-      updateLight(cookingComponent, entity);
-   }
+   updateLight(cookingComponent, entity);
 }
 
 function onTick(entity: Entity): void {
    const cookingComponent = CookingComponentArray.getComponent(entity);
-   if (cookingComponent !== null) {
-      updateLight(cookingComponent, entity);
-   }
+   updateLight(cookingComponent, entity);
 }
 
 function updateFromData(data: CookingComponentData, entity: Entity): void {
    const cookingComponent = CookingComponentArray.getComponent(entity);
-   if (cookingComponent !== null) {
-      cookingComponent.heatingProgress = data.heatingProgress;
-      cookingComponent.isCooking = data.isCooking;
-   }
+   cookingComponent.heatingProgress = data.heatingProgress;
+   cookingComponent.isCooking = data.isCooking;
 }

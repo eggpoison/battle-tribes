@@ -1,15 +1,6 @@
-import { Entity, EntityType, PlantedEntityType } from "battletribes-shared/entities";
-import { assert, distance, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import { TunnelDoorSide } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
+import { Entity, EntityType, PlantedEntityType, assert, distance, Point, rotateXAroundOrigin, rotateYAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, boxIsWithinRange, HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID } from "webgl-test-shared";
 import { currentSnapshot } from "./client";
-import { BuildMenu_hide, BuildMenu_setBuildingID, BuildMenu_updateBuilding, entityCanOpenBuildMenu, isHoveringInBlueprintMenu } from "../svelte/game/BuildMenu";
-import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector_setInventoryMenuType } from "../svelte/game/inventories/InventorySelector";
 import { GhostInfo, GhostType, PARTIAL_OPACITY } from "./rendering/webgl/entity-ghost-rendering";
-import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "../svelte/game/menus/CraftingMenu";
-import { ItemType, InventoryName, ITEM_INFO_RECORD } from "battletribes-shared/items/items";
-import { boxIsWithinRange, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { getPlayerSelectedItem, playerIsPlacingEntity } from "../svelte/game/GameInteractableLayer";
 import { entityExists, getEntityLayer, getEntityRenderInfo, getEntityType } from "./world";
 import { TombstoneComponentArray } from "./entity-components/server-components/TombstoneComponent";
 import { TunnelComponentArray } from "./entity-components/server-components/TunnelComponent";
@@ -19,26 +10,24 @@ import { getLimbByInventoryName, InventoryUseComponentArray } from "./entity-com
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { TribeComponentArray } from "./entity-components/server-components/TribeComponent";
 import { playerTribe } from "./tribes";
-import { sendMountCarrySlotPacket, sendPickUpEntityPacket, sendStructureInteractPacket, sendModifyBuildingPacket, sendSetCarryTargetPacket, sendSetAttackTargetPacket, sendStructureUninteractPacket } from "./networking/packet-sending";
-import { AnimalStaffCommandType, AnimalStaffOptions_isHovering, AnimalStaffOptions_setEntity, AnimalStaffOptions_setIsVisible, createControlCommandParticles } from "../svelte/game/AnimalStaffOptions";
+import { sendMountCarrySlotPacket, sendPickUpEntityPacket, sendStructureInteractPacket, sendModifyBuildingPacket, sendSetCarryTargetPacket, sendSetAttackTargetPacket } from "./networking/packet-sending";
 import { EntityRenderInfo } from "./EntityRenderInfo";
 import { RideableComponentArray } from "./entity-components/server-components/RideableComponent";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
-import { GameInteractState } from "../svelte/game/GameScreen";
 import { playerInstance } from "./player";
 import { HealthComponentArray } from "./entity-components/server-components/HealthComponent";
-import { TamingMenu_setEntity, TamingMenu_setVisibility } from "../svelte/game/taming-menu/TamingMenu";
-import { addMenuCloseFunction } from "./menus";
 import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "./entity-components/server-components/TamingComponent";
-import { createHitboxQuick, getHitboxVelocity, Hitbox } from "./hitboxes";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../shared/src/collision";
-import { SignInscribeMenu_setEntity } from "../svelte/game/SignInscribeMenu";
+import { createHitboxQuick, getHitboxVelocity } from "./hitboxes";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
-import { TamingSkillID } from "../../../shared/src/taming";
 import { cursorWorldPos } from "./mouse-input";
-import { CraftingStationEntityType } from "../../../shared/src/items/crafting-recipes";
+import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
+import { StructureComponentArray } from "./entity-components/server-components/StructureComponent";
+import { getPlayerSelectedItem, playerIsPlacingEntity } from "./player-action-handler";
+import { cameraZoom } from "./camera";
+import { entityInteractionState } from "../ui-state/entity-interaction-state.svelte";
+import { GameInteractState } from "../ui-state/game-ui-state.svelte";
+import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
 
 const enum Vars {
    DEFAULT_INTERACT_RANGE = 150
@@ -51,7 +40,7 @@ const enum InteractActionType {
    toggleTunnelDoor,
    startResearching,
    toggleDoor,
-   openInventory,
+   openMenu,
    openCraftingStation,
    openAnimalStaffMenu,
    mountCarrySlot,
@@ -95,9 +84,9 @@ interface ToggleDoorAction extends BaseInteractAction {
    readonly type: InteractActionType.toggleDoor;
 }
 
-interface OpenInventoryAction extends BaseInteractAction {
-   readonly type: InteractActionType.openInventory;
-   readonly inventoryMenuType: InventoryMenuType;
+interface OpenMenuAction extends BaseInteractAction {
+   readonly type: InteractActionType.openMenu;
+   readonly menu: Menu;
 }
 
 interface OpenCraftingMenuAction extends BaseInteractAction {
@@ -138,14 +127,10 @@ interface PickUpDustfleaEggAction extends BaseInteractAction {
    readonly type: InteractActionType.pickUpDustfleaEgg;
 }
 
-type InteractAction = OpenBuildMenuAction | PlantSeedAction | UseFertiliserAction | ToggleTunnelDoorAction | StartResearchingAction | ToggleDoorAction | OpenInventoryAction | OpenCraftingMenuAction | OpenAnimalStaffMenuAction | MountCarrySlotAction | PickUpEntityAction | SetCarryTargetAction | SelectAttackTargetAction | OpenTamingMenuAction | InscribeFloorSignAction | PickUpDustfleaEggAction;
+type InteractAction = OpenBuildMenuAction | PlantSeedAction | UseFertiliserAction | ToggleTunnelDoorAction | StartResearchingAction | ToggleDoorAction | OpenMenuAction | OpenCraftingMenuAction | OpenAnimalStaffMenuAction | MountCarrySlotAction | PickUpEntityAction | SetCarryTargetAction | SelectAttackTargetAction | OpenTamingMenuAction | InscribeFloorSignAction | PickUpDustfleaEggAction;
 
 const HIGHLIGHT_CURSOR_RANGE = 75;
 
-// @Cleanup: should we merge hovered and highlighted? having two very similar ones is confusing.
-let hoveredEntityID: Entity = 0;
-let highlightedEntity: Entity = 0;
-let selectedEntity: Entity = 0;
 /** The render info which an outline will be rendered around. */
 let highlightedRenderInfo: EntityRenderInfo | null = null;
 
@@ -159,9 +144,9 @@ export function getHighlightedRenderInfo(): EntityRenderInfo | null {
    return highlightedRenderInfo;
 }
 
-const getInventoryMenuType = (entity: Entity): InventoryMenuType | null => {
+const getEntityMenu = (entity: Entity): Menu | null => {
    // First make sure that the entity's inventory can be accessed by the player.
-   const tribeComponent = TribeComponentArray.getComponent(entity);
+   const tribeComponent = TribeComponentArray.tryGetComponent(entity);
    if (tribeComponent !== null) {
       if (tribeComponent.tribeID !== playerTribe.id) {
          return null;
@@ -169,20 +154,20 @@ const getInventoryMenuType = (entity: Entity): InventoryMenuType | null => {
    }
 
    switch (getEntityType(entity)) {
-      case EntityType.barrel: return InventoryMenuType.barrel;
+      case EntityType.barrel: return Menu.barrelInventory;
       case EntityType.tribeWorker:
-      case EntityType.tribeWarrior: return InventoryMenuType.tribesman;
-      case EntityType.campfire: return InventoryMenuType.campfire;
-      case EntityType.furnace: return InventoryMenuType.furnace;
+      case EntityType.tribeWarrior: return Menu.tribesmanInventory;
+      case EntityType.campfire: return Menu.campfireInventory;
+      case EntityType.furnace: return Menu.furnaceInventory;
       case EntityType.tombstone: {
-         const tombstoneComponent = TombstoneComponentArray.getComponent(entity)!;
+         const tombstoneComponent = TombstoneComponentArray.getComponent(entity);
          if (tombstoneComponent.deathInfo !== null) {
-            return InventoryMenuType.tombstone;
+            return Menu.tombstoneEpitaph;
          } else {
-            return InventoryMenuType.none;
+            return Menu.none;
          }
       }
-      case EntityType.ballista: return InventoryMenuType.ammoBox;
+      case EntityType.ballista: return Menu.ammoBoxInventory;
       default: return null;
    }
 }
@@ -196,10 +181,10 @@ const getTunnelDoorSide = (groupNum: number): TunnelDoorSide => {
 }
 
 const getSelectedCarrySlotIdx = (entity: Entity): number | null => {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
-   const rideableComponent = RideableComponentArray.getComponent(entity)!;
+   const rideableComponent = RideableComponentArray.getComponent(entity);
 
    let minDist = Number.MAX_SAFE_INTEGER;
    let closestCarrySlotIdx: number | null = null;
@@ -256,8 +241,8 @@ const getEntityInteractAction = (gameInteractState: GameInteractState, entity: E
 
    // Use fertiliser / plant seeds
    if (selectedItem !== null) {
-      const planterBoxComponent = PlanterBoxComponentArray.getComponent(entity);
-         if (planterBoxComponent !== null) {
+      const planterBoxComponent = PlanterBoxComponentArray.tryGetComponent(entity);
+      if (planterBoxComponent !== null) {
          // If holding fertiliser, try to fertilise the planter box
          if (selectedItem.type === ItemType.fertiliser && planterBoxComponent.hasPlant && !planterBoxComponent.isFertilised) {
             return {
@@ -281,7 +266,7 @@ const getEntityInteractAction = (gameInteractState: GameInteractState, entity: E
    }
    
    // See if the entity can be used in the build menu
-   if (entityCanOpenBuildMenu(entity)) {
+   if (StructureComponentArray.hasComponent(entity)) {
       return {
          type: InteractActionType.openBuildMenu,
          interactEntity: entity,
@@ -349,7 +334,7 @@ const getEntityInteractAction = (gameInteractState: GameInteractState, entity: E
          const carrySlotIdx = getSelectedCarrySlotIdx(entity);
          if (carrySlotIdx !== null) {
             // @Hack
-            const rideableComponent = RideableComponentArray.getComponent(entity)!;
+            const rideableComponent = RideableComponentArray.getComponent(entity);
             const carrySlot = rideableComponent.carrySlots[carrySlotIdx];
             if (!entityExists(carrySlot.occupiedEntity)) {
                return {
@@ -365,7 +350,7 @@ const getEntityInteractAction = (gameInteractState: GameInteractState, entity: E
 
    // Pick up arrows
    if (entityType === EntityType.woodenArrow) {
-      const transformComponent = TransformComponentArray.getComponent(entity)!;
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       if (getHitboxVelocity(hitbox).magnitude() < 1) {
          return {
@@ -394,13 +379,13 @@ const getEntityInteractAction = (gameInteractState: GameInteractState, entity: E
       };
    }
 
-   const inventoryMenuType = getInventoryMenuType(entity);
-   if (inventoryMenuType !== null) {
+   const menu = getEntityMenu(entity);
+   if (menu !== null) {
       return {
-         type: InteractActionType.openInventory,
+         type: InteractActionType.openMenu,
          interactEntity: entity,
          interactRange: Vars.DEFAULT_INTERACT_RANGE,
-         inventoryMenuType: inventoryMenuType
+         menu: menu
       };
    }
    
@@ -415,7 +400,7 @@ const createInteractRenderInfo = (interactAction: InteractAction): EntityRenderI
       case InteractActionType.toggleTunnelDoor:
       case InteractActionType.startResearching:
       case InteractActionType.toggleDoor:
-      case InteractActionType.openInventory:
+      case InteractActionType.openMenu:
       case InteractActionType.openCraftingStation:
       case InteractActionType.openAnimalStaffMenu:
       case InteractActionType.pickUpEntity:
@@ -427,11 +412,11 @@ const createInteractRenderInfo = (interactAction: InteractAction): EntityRenderI
          return getEntityRenderInfo(interactAction.interactEntity);
       }
       case InteractActionType.mountCarrySlot: {
-         const transformComponent = TransformComponentArray.getComponent(interactAction.interactEntity)!;
+         const transformComponent = TransformComponentArray.getComponent(interactAction.interactEntity);
          
          const renderInfo = new EntityRenderInfo(0, 0, 0, 1);
 
-         const rideableComponent = RideableComponentArray.getComponent(interactAction.interactEntity)!;
+         const rideableComponent = RideableComponentArray.getComponent(interactAction.interactEntity);
          const carrySlot = rideableComponent.carrySlots[interactAction.carrySlotIdx];
 
          const carryingHitbox = transformComponent.hitboxMap.get(carrySlot.hitboxLocalID);
@@ -463,18 +448,16 @@ const createInteractRenderInfo = (interactAction: InteractAction): EntityRenderI
 const interactWithEntity = (setGameInteractState: (state: GameInteractState) => void, entity: Entity, action: InteractAction): void => {
    switch (action.type) {
       case InteractActionType.openBuildMenu: {
-         // Select the entity and open the build menu
-         selectedEntity = entity;
-         BuildMenu_setBuildingID(entity);
-         BuildMenu_updateBuilding(entity);
-
+         entityInteractionState.setSelectedEntity(entity);
+         menuSelectorState.setMenu(Menu.buildMenu);
          break;
       }
       case InteractActionType.plantSeed: {
-         sendModifyBuildingPacket(highlightedEntity, action.plantedEntityType);
+         // @Hack: "!"
+         sendModifyBuildingPacket(entityInteractionState.hoveredEntity!, action.plantedEntityType);
 
          // @Hack
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!)!;
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
          const hotbarUseInfo = getLimbByInventoryName(inventoryUseComponent, InventoryName.hotbar);
          hotbarUseInfo.lastAttackTicks = currentSnapshot.tick;
          
@@ -484,53 +467,54 @@ const interactWithEntity = (setGameInteractState: (state: GameInteractState) => 
          sendModifyBuildingPacket(entity, -1);
 
          // @Hack
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!)!;
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
          const hotbarUseInfo = getLimbByInventoryName(inventoryUseComponent, InventoryName.hotbar);
          hotbarUseInfo.lastAttackTicks = currentSnapshot.tick;
 
          break;
       }
       case InteractActionType.toggleTunnelDoor: {
-         sendStructureInteractPacket(highlightedEntity, action.doorSide);
+         // @Hack: "!"
+         sendStructureInteractPacket(entityInteractionState.hoveredEntity!, action.doorSide);
 
          // @Hack
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!)!;
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
          const hotbarUseInfo = getLimbByInventoryName(inventoryUseComponent, InventoryName.hotbar);
          hotbarUseInfo.lastAttackTicks = currentSnapshot.tick;
          
          break;
       }
       case InteractActionType.startResearching: {
-         selectedEntity = entity;
+         entityInteractionState.setSelectedEntity(entity);
 
-         sendStructureInteractPacket(highlightedEntity, 0);
+         // @Hack: "!"
+         sendStructureInteractPacket(entityInteractionState.hoveredEntity!, 0);
          break;
       }
       case InteractActionType.toggleDoor: {
-         sendStructureInteractPacket(highlightedEntity, 0);
+         // @Hack: "!"
+         sendStructureInteractPacket(entityInteractionState.hoveredEntity!, 0);
 
          // @Hack
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!)!;
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
          const hotbarUseInfo = getLimbByInventoryName(inventoryUseComponent, InventoryName.hotbar);
          hotbarUseInfo.lastAttackTicks = currentSnapshot.tick;
 
          break;
       }
-      case InteractActionType.openInventory: {
-         selectedEntity = entity;
-         InventorySelector_setInventoryMenuType(action.inventoryMenuType);
+      case InteractActionType.openMenu: {
+         entityInteractionState.setSelectedEntity(entity);
+         menuSelectorState.setMenu(action.menu);
          break;
       }
       case InteractActionType.openCraftingStation: {
-         selectedEntity = entity;
-         CraftingMenu_setCraftingStation(action.craftingStation);
-         CraftingMenu_setIsVisible(true);
+         entityInteractionState.setSelectedEntity(entity);
+         menuSelectorState.setMenu(Menu.craftingMenu);
          break;
       }
       case InteractActionType.openAnimalStaffMenu: {
-         selectedEntity = entity;
-         AnimalStaffOptions_setIsVisible(true);
-         AnimalStaffOptions_setEntity(highlightedEntity);
+         entityInteractionState.setSelectedEntity(entity);
+         menuSelectorState.setMenu(Menu.animalStaffOptions);
          break;
       }
       case InteractActionType.mountCarrySlot: {
@@ -542,36 +526,33 @@ const interactWithEntity = (setGameInteractState: (state: GameInteractState) => 
          break;
       }
       case InteractActionType.setCarryTarget: {
-         sendSetCarryTargetPacket(getSelectedEntityID(), getHoveredEntityID());
+         // @Hack: "!"
+         const selectedEntity = entityInteractionState.selectedEntity!;
+         // @Hack: "!"
+         const hoveredEntity = entityInteractionState.hoveredEntity!;
+         sendSetCarryTargetPacket(selectedEntity, hoveredEntity);
          setGameInteractState(GameInteractState.none);
          createControlCommandParticles(AnimalStaffCommandType.carry);
          break;
       }
       case InteractActionType.selectAttackTarget: {
-         sendSetAttackTargetPacket(getSelectedEntityID(), getHoveredEntityID());
+         // @Hack: "!"
+         const selectedEntity = entityInteractionState.selectedEntity!;
+         // @Hack: "!"
+         const hoveredEntity = entityInteractionState.hoveredEntity!;
+         sendSetAttackTargetPacket(selectedEntity, hoveredEntity);
          setGameInteractState(GameInteractState.none);
          createControlCommandParticles(AnimalStaffCommandType.attack);
          break;
       }
       case InteractActionType.openTamingMenu: {
-         selectedEntity = entity;
-         TamingMenu_setEntity(entity);
-         TamingMenu_setVisibility(true);
-
-         addMenuCloseFunction(() => {
-            deselectSelectedEntity();
-            TamingMenu_setEntity(0);
-            TamingMenu_setVisibility(false);
-         });
+         entityInteractionState.setSelectedEntity(entity);
+         menuSelectorState.setMenu(Menu.tamingMenu);
          break;
       }
       case InteractActionType.inscribeFloorSign: {
-         selectedEntity = entity;
-         SignInscribeMenu_setEntity(entity);
-         addMenuCloseFunction(() => {
-            deselectSelectedEntity();
-            SignInscribeMenu_setEntity(null);
-         });
+         entityInteractionState.setSelectedEntity(entity);
+         menuSelectorState.setMenu(Menu.signInscribeMenu);
          break;
       }
       case InteractActionType.pickUpDustfleaEgg: {
@@ -584,65 +565,16 @@ const interactWithEntity = (setGameInteractState: (state: GameInteractState) => 
    }
 }
 
-export function getHoveredEntityID(): number {
-   return hoveredEntityID;
-}
-
-export function getHighlightedEntityID(): number {
-   return highlightedEntity;
-}
-
-export function getSelectedEntityID(): number {
-   return selectedEntity;
-}
-
-export function resetInteractableEntityIDs(): void {
-   hoveredEntityID = 0;
-   highlightedEntity = 0;
-   selectedEntity = 0;
-}
-
-export function getSelectedEntity(): Entity {
-   if (!entityExists(selectedEntity)) {
-      throw new Error("Can't select: Entity with ID " + selectedEntity + " doesn't exist");
-   }
-   return selectedEntity;
-}
-
-export function deselectSelectedEntity(closeInventory: boolean = true): void {
-   // Clear previous selected entity
-   if (entityExists(selectedEntity)) {
-      sendStructureUninteractPacket(selectedEntity);
-
-      BuildMenu_hide();
-      AnimalStaffOptions_setIsVisible(false);
-   }
-
-   selectedEntity = -1;
-
-   if (closeInventory) {
-      InventorySelector_setInventoryMenuType(InventoryMenuType.none);
-   }
-}
-
-export function deselectHighlightedEntity(): void {
-   if (selectedEntity === highlightedEntity) {
-      deselectSelectedEntity();
-   }
-
-   highlightedEntity = -1;
-}
-
 // @Cleanup: name
 const getEntityID = (gameInteractState: GameInteractState, doPlayerProximityCheck: boolean, doCanSelectCheck: boolean): number => {
-   const playerTransformComponent = TransformComponentArray.getComponent(playerInstance!)!;
+   const playerTransformComponent = TransformComponentArray.getComponent(playerInstance!);
    const playerHitbox = playerTransformComponent.hitboxes[0];
    const layer = getEntityLayer(playerInstance!);
 
-   const minChunkX = Math.max(Math.floor((cursorWorldPos.x - HIGHLIGHT_CURSOR_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((cursorWorldPos.x + HIGHLIGHT_CURSOR_RANGE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
-   const minChunkY = Math.max(Math.floor((cursorWorldPos.y - HIGHLIGHT_CURSOR_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((cursorWorldPos.y + HIGHLIGHT_CURSOR_RANGE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkX = Math.max(Math.floor((cursorWorldPos.x - HIGHLIGHT_CURSOR_RANGE / cameraZoom) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((cursorWorldPos.x + HIGHLIGHT_CURSOR_RANGE / cameraZoom) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkY = Math.max(Math.floor((cursorWorldPos.y - HIGHLIGHT_CURSOR_RANGE / cameraZoom) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((cursorWorldPos.y + HIGHLIGHT_CURSOR_RANGE / cameraZoom) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
 
    let minDist = HIGHLIGHT_CURSOR_RANGE + 1.1;
    let entityID = -1;
@@ -655,7 +587,7 @@ const getEntityID = (gameInteractState: GameInteractState, doPlayerProximityChec
                continue;
             }
 
-            const entityTransformComponent = TransformComponentArray.getComponent(currentEntity)!;
+            const entityTransformComponent = TransformComponentArray.getComponent(currentEntity);
             if (doPlayerProximityCheck && doCanSelectCheck) {
                const entityHitbox = entityTransformComponent.hitboxes[0];
                // @Incomplete: Should do it based on the distance from the closest hitbox rather than distance from player center
@@ -717,7 +649,7 @@ const updateHighlightedEntity = (gameInteractState: GameInteractState, entity: E
 
    highlightedRenderInfo = createInteractRenderInfo(interactAction);
    
-   const entityTransformComponent = TransformComponentArray.getComponent(entity)!;
+   const entityTransformComponent = TransformComponentArray.getComponent(entity);
    const entityHitbox = entityTransformComponent.hitboxes[0];
    
    switch (interactAction.type) {
@@ -772,7 +704,9 @@ export function updateHighlightedAndHoveredEntities(gameInteractState: GameInter
 
    // @Hack
    // If the player is interacting with an inventory, only consider the distance from the player not the cursor
-   if (playerInstance !== null && entityExists(selectedEntity) && (isHoveringInBlueprintMenu() || InventorySelector_inventoryIsOpen() || AnimalStaffOptions_isHovering())) {
+   // @CLEANUP @HACK @SQUEAM: just sliced this up. make a new system where it dynamically checks if something is being hovered or not.
+   // if (playerInstance !== null && entityExists(selectedEntity) && (isHoveringInBlueprintMenu() || InventorySelector_inventoryIsOpen() || AnimalStaffOptions_isHovering())) {
+   if (playerInstance !== null && entityExists(selectedEntity)) {
       hoveredEntityID = getEntityID(gameInteractState, false, false);
       return;
    }
@@ -793,10 +727,10 @@ export function updateHighlightedAndHoveredEntities(gameInteractState: GameInter
    updateHighlightedEntity(gameInteractState, entityExists(highlightedEntity) ? highlightedEntity : null);
 }
 
-export function attemptEntitySelection(gameInteractState: GameInteractState, setGameInteractState: (state: GameInteractState) => void): boolean {
+export function attemptEntitySelection(): boolean {
    if (!entityExists(highlightedEntity)) {
       // When a new entity is selected, deselect the previous entity
-      deselectSelectedEntity();
+      entityInteractionState.deselectSelectedEntity();
       return false;
    }
 
@@ -812,6 +746,6 @@ export function attemptEntitySelection(gameInteractState: GameInteractState, set
 export function updateSelectedEntity(gameInteractState: GameInteractState): void {
    // When the game is in select carry target mode, we want the controlled entity to remain selected
    if (gameInteractState !== GameInteractState.selectCarryTarget && gameInteractState !== GameInteractState.selectAttackTarget && gameInteractState !== GameInteractState.selectMoveTargetPosition && highlightedEntity === -1) {
-      deselectSelectedEntity();
+      entityInteractionState.deselectSelectedEntity();
    }
 }

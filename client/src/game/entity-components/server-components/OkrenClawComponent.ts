@@ -1,7 +1,4 @@
-import { HitboxFlag } from "../../../../../shared/src/boxes/boxes";
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
+import { PacketReader, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";

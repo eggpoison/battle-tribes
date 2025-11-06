@@ -1,6 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { Entity, ServerComponentType } from "webgl-test-shared";
 import { Hitbox } from "../../hitboxes";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -10,6 +8,7 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
+import { EntityRenderInfo } from "../../EntityRenderInfo";
 
 export interface WarriorHutComponentData {}
 

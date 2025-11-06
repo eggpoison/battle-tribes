@@ -1,10 +1,9 @@
 import { Box } from "./boxes/boxes";
-import RectangularBox from "./boxes/RectangularBox";
+import { RectangularBox } from "./boxes/RectangularBox";
 import { Settings } from "./settings";
 import { Mutable, Point, angle, distance, polarVec2, rotateXAroundPoint, rotateYAroundPoint } from "./utils";
 
-// @Speed: Maybe make into const enum?
-export const enum CollisionBit {
+export enum CollisionBit {
    default = 1 << 0,
    cactus = 1 << 1,
    none = 1 << 2,

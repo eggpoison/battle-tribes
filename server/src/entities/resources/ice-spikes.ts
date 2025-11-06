@@ -7,7 +7,7 @@ import { HealthComponent } from "../../components/HealthComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { EntityConfig } from "../../components";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import { IceSpikesComponent } from "../../components/IceSpikesComponent";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";

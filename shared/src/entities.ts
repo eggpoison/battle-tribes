@@ -1,7 +1,7 @@
 /** Unique identifier for each entity */
 export type Entity = number;
 
-export const enum EntityType {
+export enum EntityType {
    cow,
    zombie,
    tombstone,

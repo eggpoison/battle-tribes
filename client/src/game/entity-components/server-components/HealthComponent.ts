@@ -1,16 +1,11 @@
-import { Settings } from "battletribes-shared/settings";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
-import { updateHealthBar } from "../../../svelte/game/HealthBar";
-import { discombobulate } from "../../../svelte/game/GameInteractableLayer";
-import { Entity } from "../../../../../shared/src/entities";
+import { Point, HitFlags, Entity, ServerComponentType, PacketReader, Settings } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import { ComponentTint, createComponentTint } from "../../EntityRenderInfo";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
-import { HitFlags } from "../../../../../shared/src/client-server-types";
 import { playerInstance } from "../../player";
 import { Hitbox } from "../../hitboxes";
-import { Point } from "../../../../../shared/src/utils";
+import { healthBarState } from "../../../ui-state/health-bar-state.svelte";
+import { discombobulate } from "../../player-action-handler";
 
 export interface HealthComponentData {
    readonly health: number;
@@ -78,7 +73,7 @@ const calculateRedness = (healthComponent: HealthComponent): number => {
 }
 
 function onTick(entity: Entity): void {
-   const healthComponent = HealthComponentArray.getComponent(entity)!;
+   const healthComponent = HealthComponentArray.getComponent(entity);
    
    const previousRedness = calculateRedness(healthComponent);
    healthComponent.secondsSinceLastHit += Settings.DT_S;
@@ -92,7 +87,7 @@ function onTick(entity: Entity): void {
 }
 
 function onHit(entity: Entity, _hitbox: Hitbox, _hitPosition: Point, hitFlags: number): void {
-   const healthComponent = HealthComponentArray.getComponent(entity)!;
+   const healthComponent = HealthComponentArray.getComponent(entity);
       
    const isDamagingHit = (hitFlags & HitFlags.NON_DAMAGING_HIT) === 0;
    if (isDamagingHit) {
@@ -106,7 +101,7 @@ function onHit(entity: Entity, _hitbox: Hitbox, _hitPosition: Point, hitFlags: n
 }
    
 function updateFromData(data: HealthComponentData, entity: Entity): void {
-   const healthComponent = HealthComponentArray.getComponent(entity)!;
+   const healthComponent = HealthComponentArray.getComponent(entity);
    healthComponent.health = data.health;
    healthComponent.maxHealth = data.maxHealth;
 }
@@ -114,12 +109,12 @@ function updateFromData(data: HealthComponentData, entity: Entity): void {
 function updatePlayerFromData(data: HealthComponentData): void {
    updateFromData(data, playerInstance!);
 
-   const healthComponent = HealthComponentArray.getComponent(playerInstance!)!;
-   updateHealthBar(healthComponent.health);
+   const healthComponent = HealthComponentArray.getComponent(playerInstance!);
+   healthBarState.setHealth(healthComponent.health);
 }
 
 function calculateTint(entity: Entity): ComponentTint {
-   const healthComponent = HealthComponentArray.getComponent(entity)!;
+   const healthComponent = HealthComponentArray.getComponent(entity);
    const redness = calculateRedness(healthComponent);
 
    // @Incomplete?

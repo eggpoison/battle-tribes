@@ -1,13 +1,9 @@
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
+import { Point, randAngle, randFloat, Entity, HitboxFlag, ServerComponentType, PacketReader } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
-import { HitboxFlag } from "../../../../../shared/src/boxes/boxes";
-import { Entity } from "../../../../../shared/src/entities";
 import { Hitbox } from "../../hitboxes";
-import { Point, randAngle, randFloat } from "../../../../../shared/src/utils";
 import { createOkrenEyeParticle } from "../../particles";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { renderParentIsHitbox } from "../../render-parts/render-parts";
@@ -143,7 +139,7 @@ const getEyeRenderPart = (okren: Entity, flipX: boolean): TexturedRenderPart => 
 function updateFromData(data: OkrenComponentData, okren: Entity): void {
    const size = data.size;
 
-   const okrenComponent = OkrenComponentArray.getComponent(okren)!;
+   const okrenComponent = OkrenComponentArray.getComponent(okren);
    if (okrenComponent.size !== size) {
       okrenComponent.size = size;
    }

@@ -1,8 +1,4 @@
-import { Box, boxIsCircular } from "../../../../../shared/src/boxes/boxes";
-import CircularBox from "../../../../../shared/src/boxes/CircularBox";
-import RectangularBox from "../../../../../shared/src/boxes/RectangularBox";
-import { Settings } from "../../../../../shared/src/settings";
-import { distBetweenPointAndRectangularBox } from "../../../../../shared/src/utils";
+import { distBetweenPointAndRectangularBox, Settings, RectangularBox, CircularBox, Box, boxIsCircular } from "webgl-test-shared";
 import Layer from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";
 import { layers } from "../../world";

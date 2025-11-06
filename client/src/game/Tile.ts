@@ -1,5 +1,4 @@
-import { TileType } from "battletribes-shared/tiles";
-import { Biome } from "../../../shared/src/biomes";
+import { Biome, TileType } from "webgl-test-shared";
 
 export class Tile {
    public readonly x: number;

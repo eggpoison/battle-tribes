@@ -1,7 +1,5 @@
-import { Settings } from "battletribes-shared/settings";
-import { distance, getTileX, getTileY, lerp } from "battletribes-shared/utils";
+import { distance, getTileX, getTileY, lerp, Settings } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
-import OPTIONS from "../../options";
 import { getLightPositionMatrix } from "../../lights";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import Layer from "../../Layer";
@@ -9,6 +7,7 @@ import { surfaceLayer } from "../../world";
 import { currentSnapshot } from "../../client";
 import { cameraPosition } from "../../camera";
 import { gameFramebufferTexture } from "../render";
+import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
 
 const enum Vars {
    MAX_LIGHTS = 64,
@@ -292,7 +291,7 @@ export function createNightShaders(): void {
 
 /** Returns the minimum light level for the layer */
 const getAmbientLightLevel = (layer: Layer): number => {
-   if (OPTIONS.nightVisionIsEnabled) {
+   if (debugDisplayState.nightVisionIsEnabled) {
       return 1;
    }
    

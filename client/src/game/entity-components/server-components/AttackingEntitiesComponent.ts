@@ -1,6 +1,5 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { PacketReader, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
-import { PacketReader } from "../../../../../shared/src/packets";
 
 export interface AttackingEntitiesComponentData {}
 

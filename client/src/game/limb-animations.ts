@@ -1,20 +1,14 @@
-import { Settings } from "battletribes-shared/settings";
-import { Point, customTickIntervalHasPassed, lerp, randAngle, randFloat, randInt, randItem, rotateXAroundOrigin, rotateYAroundOrigin, secondsToTicks } from "battletribes-shared/utils";
-import { Entity, LimbAction } from "battletribes-shared/entities";
+import { Point, customTickIntervalHasPassed, lerp, randAngle, randFloat, randInt, randItem, rotateXAroundOrigin, rotateYAroundOrigin, secondsToTicks, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, getItemRecipe, Entity, LimbAction, Settings } from "webgl-test-shared";
 import { InventoryUseComponentArray, LimbInfo } from "./entity-components/server-components/InventoryUseComponent";
 import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
 import { ParticleColour } from "./rendering/webgl/particle-rendering";
 import { createColouredParticle, createSawdustCloud } from "./particles";
-import Board from "./Board";
-import { getItemRecipe } from "battletribes-shared/items/crafting-recipes";
-import { ItemType, ITEM_INFO_RECORD, ConsumableItemInfo } from "battletribes-shared/items/items";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
 import { VisualRenderPart } from "./render-parts/render-parts";
 import { TribesmanAIComponentArray } from "./entity-components/server-components/TribesmanAIComponent";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityAgeTicks, getEntityRenderInfo } from "./world";
-import { Hitbox } from "./hitboxes";
 import { currentSnapshot } from "./client";
 
 enum CustomItemState {
@@ -47,7 +41,7 @@ export function generateRandomLimbPosition(): Point {
 }
 
 export function createCraftingAnimationParticles(entity: Entity, limbIdx: number): void {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity)!;
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
    
    const recipe = getItemRecipe(tribesmanComponent.craftingItemType);
    if (recipe === null) {
@@ -56,7 +50,7 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
       return;
    }
    
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    // @Hack
    const hitbox = transformComponent.hitboxes[0];
 
@@ -90,7 +84,7 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
 }
 
 const createBandageRenderPart = (entity: Entity): void => {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
    const renderPart = new TexturedRenderPart(
@@ -108,7 +102,7 @@ const createBandageRenderPart = (entity: Entity): void => {
    const renderInfo = getEntityRenderInfo(entity);
    renderInfo.attachRenderPart(renderPart);
 
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity)!;
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    inventoryUseComponent.bandageRenderParts.push(renderPart);
 }
 
@@ -119,7 +113,7 @@ export function updateBandageRenderPart(entity: Entity, renderPart: VisualRender
       const renderInfo = getEntityRenderInfo(entity);
       renderInfo.removeRenderPart(renderPart);
 
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity)!;
+      const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
       const idx = inventoryUseComponent.bandageRenderParts.indexOf(renderPart);
       if (idx !== -1) {
          inventoryUseComponent.bandageRenderParts.splice(idx, 1);
@@ -133,7 +127,7 @@ export function updateBandageRenderPart(entity: Entity, renderPart: VisualRender
 
 export function createMedicineAnimationParticles(entity: Entity, limbIdx: number): void {
    if (Math.random() < 5 * Settings.DT_S) {
-      const transformComponent = TransformComponentArray.getComponent(entity)!;
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       const colour = randItem(MEDICINE_PARTICLE_COLOURS);
@@ -158,7 +152,7 @@ const getCustomItemRenderPartTextureSource = (entity: Entity, state: CustomItemS
          return CLIENT_ITEM_INFO_RECORD[ItemType.herbal_medicine].entityTextureSource;
       }
       case CustomItemState.crafting: {
-         const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity)!;
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
          return CLIENT_ITEM_INFO_RECORD[tribesmanComponent.craftingItemType].entityTextureSource;
       }
    }
@@ -167,7 +161,7 @@ const getCustomItemRenderPartTextureSource = (entity: Entity, state: CustomItemS
 const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState): number => {
    switch (state) {
       case CustomItemState.usingMedicine: {
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity)!;
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
          // @Hack
          let lastEatTicks: number | undefined;
@@ -189,14 +183,14 @@ const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState):
          return 1 - useProgress;
       }
       case CustomItemState.crafting: {
-         const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity)!;
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
          return tribesmanComponent.craftingProgress * 0.8;
       }
    }
 }
 
 const getCustomItemRenderPartState = (entity: Entity): CustomItemState | null => {
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity)!;
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    
    for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
       const limbInfo = inventoryUseComponent.limbInfos[i];
@@ -214,10 +208,10 @@ const getCustomItemRenderPartState = (entity: Entity): CustomItemState | null =>
 export function updateCustomItemRenderPart(entity: Entity): void {
    const customItemState = getCustomItemRenderPartState(entity);
    
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity)!;
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    if (customItemState !== null) {
       if (inventoryUseComponent.customItemRenderPart === null) {
-         const transformComponent = TransformComponentArray.getComponent(entity)!;
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          
          inventoryUseComponent.customItemRenderPart = new TexturedRenderPart(

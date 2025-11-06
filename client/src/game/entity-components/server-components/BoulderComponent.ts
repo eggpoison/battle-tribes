@@ -1,10 +1,7 @@
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
+import { CircularBox, randAngle, randFloat, randItem, Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
-import { Entity } from "../../../../../shared/src/entities";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { randAngle, randFloat, randItem } from "../../../../../shared/src/utils";
 import { createRockParticle, createRockSpeckParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { ROCK_HIT_SOUNDS, ROCK_DESTROY_SOUNDS, playSoundOnHitbox } from "../../sound";
@@ -12,7 +9,6 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import CircularBox from "../../../../../shared/src/boxes/CircularBox";
 
 export interface BoulderComponentData {
    readonly boulderType: number;

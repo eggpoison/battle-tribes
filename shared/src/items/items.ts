@@ -3,7 +3,7 @@ import { EntityType } from "../entities";
 import { Settings } from "../settings";
 import { StructureType } from "../structures";
 
-export const enum ItemType {
+export enum ItemType {
    wood,
    workbench,
    wooden_sword,
@@ -249,7 +249,7 @@ export interface StackableItemInfo extends BaseItemInfo {
 
 export interface MaterialItemInfo extends StackableItemInfo {}
 
-export const enum ConsumableItemCategory {
+export enum ConsumableItemCategory {
    food,
    medicine
 }
@@ -1110,7 +1110,7 @@ export type HammerItemType = keyof {
 /** Stores the items inside an inventory, indexed by their slot number. */
 export type ItemSlots = Partial<{ [itemSlot: number]: Item }>;
 
-export const enum InventoryName {
+export enum InventoryName {
    hotbar,
    offhand,
    craftingOutputSlot,

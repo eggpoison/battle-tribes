@@ -3,7 +3,7 @@ import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collis
 import { EntityType } from "battletribes-shared/entities";
 import { Point, randInt } from "battletribes-shared/utils";
 import { Box, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { TundraRockComponent } from "../../components/TundraRockComponent";
 import { EntityConfig } from "../../components";
 import { TransformComponent, addHitboxToTransformComponent } from "../../components/TransformComponent";

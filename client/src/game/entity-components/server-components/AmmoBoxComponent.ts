@@ -1,10 +1,8 @@
-import { ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
+import { PacketReader, Entity, ServerComponentType, TurretAmmoType } from "webgl-test-shared";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
-import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import { Hitbox } from "../../hitboxes";

@@ -1,10 +1,5 @@
-import { distance, randAngle } from "battletribes-shared/utils";
-import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "battletribes-shared/research";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { TribesmanTitle } from "battletribes-shared/titles";
+import { TribesmanTitle, Settings, Entity, EntityType, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize, distance, randAngle } from "webgl-test-shared";
 import { currentSnapshot } from "./client";
-import { getSelectedEntityID } from "./entity-selection";
 import { playHeadSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
 import { getRandomPositionInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
@@ -14,6 +9,7 @@ import { TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/
 import { sendStudyTechPacket } from "./networking/packet-sending";
 import { playerInstance } from "./player";
 import { cursorWorldPos } from "./mouse-input";
+import { entityInteractionState } from "../ui-state/entity-interaction-state.svelte";
 
 export interface ResearchOrb {
    /* X position of the node in the world */
@@ -34,7 +30,7 @@ const ORB_COMPLETE_SOUND_PITCHES = [1, 0.85, 0.7];
 const ORB_PARTICLES_PER_SECOND = [2, 3.5, 6];
 
 const generateResearchOrb = (researchBench: Entity): ResearchOrb => {
-   const transformComponent = TransformComponentArray.getComponent(researchBench)!;
+   const transformComponent = TransformComponentArray.getComponent(researchBench);
 
    const hitbox = transformComponent.hitboxes[0];
    
@@ -61,8 +57,8 @@ export function getResearchOrbCompleteProgress(): number {
 }
 
 export function updateActiveResearchBench(): void {
-   const selectedStructure = getSelectedEntityID();
-   if (!entityExists(selectedStructure)) {
+   const selectedStructure = entityInteractionState.selectedEntity;
+   if (selectedStructure === null) {
       currentResearchOrb = null;
       currentBenchID = -1;
       return;
@@ -107,11 +103,12 @@ const completeOrb = (): void => {
    playHeadSound("orb-complete.mp3", 0.3, ORB_COMPLETE_SOUND_PITCHES[currentResearchOrb!.size]);
 
    // Make the player smack to the bench
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!)!;
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
    const useInfo = inventoryUseComponent.limbInfos[0];
    useInfo.lastAttackTicks = currentSnapshot.tick;
    
-   const selectedStructure = getSelectedEntityID();
+   // @Hack: "!"
+   const selectedStructure = entityInteractionState.selectedEntity!;
    currentResearchOrb = generateResearchOrb(selectedStructure);
    orbCompleteProgress = 0;
 }
@@ -119,7 +116,7 @@ const completeOrb = (): void => {
 const getResearchSpeedMultiplier = (): number => {
    let multiplier = 1;
 
-   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!)!;
+   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!);
    if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.shrewd)) {
       multiplier *= 1.5;
    }

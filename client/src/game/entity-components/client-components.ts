@@ -1,4 +1,4 @@
-import { EntityType } from "../../../../shared/src/entities";
+import { EntityType } from "webgl-test-shared";
 import { EntityClientComponentData } from "../networking/packet-snapshots";
 import { ClientComponentType } from "./client-component-types";
 import { BallistaFrostcicleComponentData, createBallistaFrostcicleComponentData } from "./client-components/BallistaFrostcicleComponent";

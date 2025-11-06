@@ -1,6 +1,6 @@
 import { ItemType } from "./items/items";
 
-export const enum TamingSkillID {
+export enum TamingSkillID {
    follow,
    riding,
    move,

@@ -1,6 +1,6 @@
 import { HitboxFlag } from "../../../shared/src/boxes/boxes";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
-import RectangularBox from "../../../shared/src/boxes/RectangularBox";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
+import { RectangularBox } from "../../../shared/src/boxes/RectangularBox";
 import { ServerComponentType } from "../../../shared/src/components";
 import { DamageSource, Entity, EntityType } from "../../../shared/src/entities";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";

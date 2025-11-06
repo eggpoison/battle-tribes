@@ -1,14 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { randAngle, randFloat, Settings, CircularBox, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { Entity } from "../../../../../shared/src/entities";
 import { EntityComponentData } from "../../world";
-import { PacketReader } from "../../../../../shared/src/packets";
 import { TransformComponentArray } from "./TransformComponent";
-import CircularBox from "../../../../../shared/src/boxes/CircularBox";
-import { Settings } from "../../../../../shared/src/settings";
-import { randAngle, randFloat } from "../../../../../shared/src/utils";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderInfo } from "../../EntityRenderInfo";

@@ -1,9 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { randAngle, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { randAngle } from "../../../../../shared/src/utils";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 
 export interface DustfleaEggComponentData {}

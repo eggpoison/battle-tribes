@@ -1,7 +1,4 @@
-import { WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize } from "battletribes-shared/client-server-types";
-import { PacketReader } from "battletribes-shared/packets";
-import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
+import { Point, TileIndex, Biome, TileType, Settings, PacketReader, WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize } from "webgl-test-shared";
 import { refreshCameraView, setCameraPosition } from "../camera";
 import { Tile } from "../Tile";
 import { addLayer, layers, setCurrentLayer, surfaceLayer } from "../world";
@@ -9,12 +6,10 @@ import { NEIGHBOUR_OFFSETS } from "../utils";
 import Layer, { getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld, tileIsWithinEdge } from "../Layer";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { initialiseRenderables } from "../rendering/render-loop";
-import { Biome } from "../../../../shared/src/biomes";
-import { Point, TileIndex } from "../../../../shared/src/utils";
 import { playerInstance } from "../player";
 import { registerTamingSpecsFromData } from "../taming-specs";
-import { addChatMessage } from "../../svelte/game/ChatBox";
-import { GameScreen_setIsSimulating } from "../../svelte/game/GameScreen";
+import { addChatMessage } from "../chat";
+import { gameUIState } from "../../ui-state/game-ui-state.svelte";
 
 const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {
    // Initially find all tiles below a dropdown tile
@@ -218,7 +213,7 @@ export function processForcePositionUpdatePacket(reader: PacketReader): void {
    const x = reader.readNumber();
    const y = reader.readNumber();
 
-   const transformComponent = TransformComponentArray.getComponent(playerInstance)!;
+   const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
    playerHitbox.box.position.x = x;
    playerHitbox.box.position.y = y;
@@ -232,5 +227,5 @@ export function receiveChatMessagePacket(reader: PacketReader): void {
    
 export function processSimulationStatusUpdatePacket(reader: PacketReader): void {
    const isSimulating = reader.readBool();
-   GameScreen_setIsSimulating(isSimulating);
+   gameUIState.setIsSimulating(isSimulating);
 }

@@ -1,5 +1,4 @@
-import { BuildingMaterial, ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
+import { Settings, CollisionBit, DEFAULT_COLLISION_MASK, HitboxCollisionType, RectangularBox, Point, EntityType, BuildingMaterial, ServerComponentType } from "webgl-test-shared";
 import { createBracingsComponentData } from "../entity-components/server-components/BracingsComponent";
 import { createBuildingMaterialComponentData } from "../entity-components/server-components/BuildingMaterialComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
@@ -9,11 +8,6 @@ import { createTransformComponentData } from "../entity-components/server-compon
 import { createTribeComponentData } from "../entity-components/server-components/TribeComponent";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
-import { Point } from "../../../../shared/src/utils";
-import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { Settings } from "../../../../shared/src/settings";
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 
 export function createBracingsConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {

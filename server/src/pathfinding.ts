@@ -1,14 +1,14 @@
 import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
 import { Entity, EntityType } from "battletribes-shared/entities";
 import { PathfindingSettings, Settings } from "battletribes-shared/settings";
-import { angle, calculateDistanceSquared, distance, distBetweenPointAndRectangularBox, getTileX, getTileY, Point, TileIndex } from "battletribes-shared/utils";
+import { distance, distBetweenPointAndRectangularBox, getTileX, getTileY, Point, TileIndex } from "battletribes-shared/utils";
 import PathfindingHeap from "./PathfindingHeap";
 import { TribeComponentArray } from "./components/TribeComponent";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
 import { ProjectileComponentArray } from "./components/ProjectileComponent";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { boxIsCircular, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { getEntityLayer, getEntityType } from "./world";
 import PlayerClient, { PlayerClientVars } from "./server/PlayerClient";
 import { CollisionGroup, getEntityCollisionGroup } from "../../shared/src/collision-groups";

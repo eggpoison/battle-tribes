@@ -1,8 +1,4 @@
-import { HitboxFlag } from "../../../../../shared/src/boxes/boxes";
-import { GuardianAttackType, GuardianCrystalBurstStage, GuardianCrystalSlamStage, GuardianSpikyBallSummonStage, ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { lerp } from "../../../../../shared/src/utils";
+import { GuardianAttackType, GuardianCrystalBurstStage, GuardianCrystalSlamStage, GuardianSpikyBallSummonStage, ServerComponentType, lerp, PacketReader, Entity, HitboxFlag } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { Light } from "../../lights";
 import { VisualRenderPart } from "../../render-parts/render-parts";

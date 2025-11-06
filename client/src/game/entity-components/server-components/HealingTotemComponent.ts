@@ -1,11 +1,7 @@
-import { HealingTotemTargetData, ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { Point, angle, distance, lerp, randInt } from "battletribes-shared/utils";
+import { Entity, PacketReader, Point, angle, distance, lerp, randInt, Settings, HealingTotemTargetData, ServerComponentType } from "webgl-test-shared";
 import { createHealingParticle } from "../../particles";
 import { Light, removeLight } from "../../lights";
-import { PacketReader } from "battletribes-shared/packets";
 import { TransformComponentArray } from "./TransformComponent";
-import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";

@@ -1,9 +1,7 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { randFloat, angle, randAngle, Entity, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { Entity } from "../../../../../shared/src/entities";
-import { randFloat, angle, randAngle } from "../../../../../shared/src/utils";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { TransformComponentArray } from "./TransformComponent";
@@ -61,14 +59,7 @@ function getMaxRenderParts(): number {
 
 function onTick(entity: Entity): void {
    const cookingComponent = CookingComponentArray.getComponent(entity);
-   if (cookingComponent === null) {
-      return;
-   }
-
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
    
    if (cookingComponent.isCooking) {
       const hitbox = transformComponent.hitboxes[0];
@@ -122,10 +113,6 @@ function onHit(_entity: Entity, hitbox: Hitbox): void {
 
 function onDie(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
-   
    const hitbox = transformComponent.hitboxes[0];
 
    for (let i = 0; i < 5; i++) {

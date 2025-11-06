@@ -7,7 +7,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { EntityConfig } from "../../components";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import Tribe from "../../Tribe";
 import { BattleaxeProjectileComponent } from "../../components/BattleaxeProjectileComponent";
 import { Hitbox } from "../../hitboxes";

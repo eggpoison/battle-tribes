@@ -10,7 +10,7 @@ import { Box } from "battletribes-shared/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { AttackVars, BLOCKING_LIMB_STATE, copyLimbState, LimbConfiguration, LimbState, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, interpolateLimbState } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity, registerEntityTickEvent } from "../server/player-clients";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import Layer from "../Layer";
 import { getSubtileIndex } from "../../../shared/src/subtiles";
 import { createBlockAttackConfig } from "../entities/block-attack";

@@ -1,8 +1,7 @@
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { getSubtileX } from "../../Layer";
-import { getSubtileY } from "../../../../../shared/src/subtiles";
-import { Settings } from "../../../../../shared/src/settings";
+import { Settings, getSubtileY } from "webgl-test-shared";
 
 export interface SubtileSupportInfo {
    readonly subtileIndex: number;

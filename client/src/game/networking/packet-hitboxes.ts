@@ -1,9 +1,4 @@
-import { PivotPointType } from "../../../../shared/src/boxes/BaseBox";
-import { Box } from "../../../../shared/src/boxes/boxes";
-import CircularBox from "../../../../shared/src/boxes/CircularBox";
-import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
-import { PacketReader } from "../../../../shared/src/packets";
-import { Point } from "../../../../shared/src/utils";
+import { Point, PacketReader, Box, CircularBox, RectangularBox, PivotPointType } from "webgl-test-shared";
 
 const readCircularBoxFromData = (reader: PacketReader): CircularBox => {
    const x = reader.readNumber();

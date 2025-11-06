@@ -1,9 +1,9 @@
 import { CollisionResult, getCircleRectangleCollisionResult, rectanglesAreColliding } from "../collision";
 import { Point } from "../utils";
-import BaseBox from "./BaseBox";
+import { BaseBox } from "./BaseBox";
 import { Box, boxIsCircular, updateVertexPositionsAndSideAxes } from "./boxes";
 
-class RectangularBox extends BaseBox {
+export class RectangularBox extends BaseBox {
    public width: number;
    public height: number;
 
@@ -87,5 +87,3 @@ class RectangularBox extends BaseBox {
       }
    }
 }
-
-export default RectangularBox;

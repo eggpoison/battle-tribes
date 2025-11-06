@@ -1,10 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { Entity, PacketReader, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { Entity } from "../../../../../shared/src/entities";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 
 export interface SnowberryBushComponentData {

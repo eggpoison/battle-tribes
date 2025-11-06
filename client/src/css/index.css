@@ -1,15 +1,9 @@
-@import "./main-menu.css";
-@import "./loading-screen.css";
-@import "./game/chatbox.css";
 @import "./game/menus/settings.css";
-@import "./game/death-screen.css";
-@import "./game/health-bar.css";
 @import "./game/inventories/inventory.css";
 @import "./game/inventories/hotbar.css";
 @import "./game/inventories/cooking-inventory.css";
 @import "./game/inventories/tribesman-inventory.css";
 @import "./game/inventories/barrel-inventory.css";
-@import "./game/inventories/backpack-inventory.css";
 @import "./game/inventories/tombstone-epitaph.css";
 @import "./game/inventories/ammo-box-inventory.css";
 @import "./game/inventories/item-tooltip.css";
@@ -17,18 +11,15 @@
 @import "./game/menus/crafting-menu.css";
 @import "./game/nerd-vision/nerd-vision.css";
 @import "./game/nerd-vision/game-info-display.css";
-@import "./game/nerd-vision/cursor-tooltip.css";
 @import "./game/nerd-vision/terminal-button.css";
 @import "./game/nerd-vision/terminal.css";
 @import "./game/nerd-vision/debug-info.css";
-@import "./game/nerd-vision/frame-graph.css";
 @import "./game/tech-tree.css";
 @import "./game/tech-infocard.css";
 @import "./game/research-bench-caption.css";
 @import "./game/build-menu.css";
 @import "./game/health-inspector.css";
 @import "./game/infocards.css";
-@import "./game/attack-charge-bar.css";
 @import "./game/layer-change-message.css";
 @import "./game/tribe-plan-visualiser.css";
 @import "./game/animal-staff-options.css";
@@ -36,7 +27,6 @@
 @import "./game/taming-menu.css";
 @import "./game/sign-inscribe-menu.css";
 @import "./game/cow-stamina-bar.css";
-@import "./game/spectator-controls.css";
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
@@ -101,26 +91,6 @@ body {
    pointer-events: none !important;
 }
 
-/* Held item */
-
-#held-item {
-   width: var(--item-slot-size);
-   height: var(--item-slot-size);
-   position: absolute;
-   pointer-events: none;
-   z-index: 3;
-   user-select: none;
-}
-#held-item img {
-   width: var(--item-image-size);
-   height: var(--item-image-size);
-   image-rendering: pixelated;
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   z-index: 1;
-}
 /* NOTE: The held item count style is defined in inventory.css file. */
 
 #summon-prompt {

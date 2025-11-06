@@ -1,4 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
+import { ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 
 export interface AIAssignmentComponentData {}

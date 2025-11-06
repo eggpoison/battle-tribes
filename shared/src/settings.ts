@@ -2,7 +2,7 @@
 
 
 
-export const enum Settings {
+export enum Settings {
    SERVER_PORT = 8000,
    // @Incomplete was gunna bring these out of the settings enum but cuz this is typescript this messes up some other shit, wait until i can mark them as constexpr
    /** Server ticks per second. */
@@ -41,7 +41,7 @@ export const enum Settings {
    NIGHT_LIGHT_LEVEL = 0.4
 }
 
-export const enum PathfindingSettings {
+export enum PathfindingSettings {
    /** Units of separation between the nodes horizontally and vertically */
    NODE_SEPARATION = 16,
    NODES_IN_WORLD_WIDTH = Settings.WORLD_UNITS / PathfindingSettings.NODE_SEPARATION + 2,

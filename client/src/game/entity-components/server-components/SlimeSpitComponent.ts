@@ -1,8 +1,5 @@
-import { PacketReader } from "battletribes-shared/packets";
-import { Settings } from "battletribes-shared/settings";
+import { ServerComponentType, Entity, Settings, PacketReader } from "webgl-test-shared";
 import { createPoisonParticle } from "../../particles";
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity } from "../../../../../shared/src/entities";
 import { playSoundOnHitbox } from "../../sound";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -65,7 +62,7 @@ function getMaxRenderParts(): number {
 }
 
 function onLoad(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    playSoundOnHitbox("slime-spit.mp3", 0.5, 1, entity, hitbox, false);
 }

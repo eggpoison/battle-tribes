@@ -1,10 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { randAngle, randFloat, randInt, Entity, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { addMonocolourParticleToBufferContainer, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
-import { Entity } from "../../../../../shared/src/entities";
-import { randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
 import Board from "../../Board";
 import Particle from "../../Particle";
 import { playSoundOnHitbox } from "../../sound";

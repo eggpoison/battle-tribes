@@ -8,7 +8,7 @@ import { randFloat, lerp, randInt, Point, polarVec2, randAngle } from "battletri
 import { createPebblumConfig } from "../entities/mobs/pebblum";
 import { PebblumComponentArray } from "./PebblumComponent";
 import { TransformComponentArray } from "./TransformComponent";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { createEntity, destroyEntity, entityExists, getEntityLayer, getGameTicks } from "../world";
 import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity, HealthComponentArray } from "./HealthComponent";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";

@@ -11,7 +11,7 @@ import { TribeComponent } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
 import { Point } from "../../../../shared/src/utils";
-import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
 import { Hitbox } from "../../hitboxes";
 import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";

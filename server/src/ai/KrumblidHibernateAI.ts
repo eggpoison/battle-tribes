@@ -1,5 +1,5 @@
-import CircularBox from "../../../shared/src/boxes/CircularBox";
-import RectangularBox from "../../../shared/src/boxes/RectangularBox";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
+import { RectangularBox } from "../../../shared/src/boxes/RectangularBox";
 import { CollisionGroup, getEntityCollisionGroup } from "../../../shared/src/collision-groups";
 import { Entity } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";

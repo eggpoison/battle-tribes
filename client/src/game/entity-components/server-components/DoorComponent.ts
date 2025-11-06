@@ -1,7 +1,5 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { DoorToggleType, Entity } from "battletribes-shared/entities";
+import { randAngle, PacketReader, DoorToggleType, Entity, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
-import { PacketReader } from "battletribes-shared/packets";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -11,7 +9,6 @@ import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../par
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { randAngle } from "../../../../../shared/src/utils";
 
 export interface DoorComponentData {
    readonly toggleType: DoorToggleType;

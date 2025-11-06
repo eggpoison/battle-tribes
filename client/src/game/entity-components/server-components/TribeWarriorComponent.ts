@@ -1,8 +1,5 @@
-import { ScarInfo } from "battletribes-shared/components";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
+import { Entity, ServerComponentType, PacketReader, ScarInfo } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
-import { Entity } from "../../../../../shared/src/entities";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";

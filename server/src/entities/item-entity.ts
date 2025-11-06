@@ -7,7 +7,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { EntityConfig, LightCreationInfo } from "../components";
 import { ItemType } from "battletribes-shared/items/items";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { addHitboxToTransformComponent, getRandomPositionInBox, getRandomWeightedHitbox, TransformComponent, TransformComponentArray } from "../components/TransformComponent";
 import Layer from "../Layer";
 import { getSubtileIndex } from "../../../shared/src/subtiles";

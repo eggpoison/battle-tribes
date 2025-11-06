@@ -1,6 +1,6 @@
 import { getCircleCircleCollisionResult, getCircleRectangleCollisionResult, CollisionResult } from "../collision";
 import { Point } from "../utils";
-import BaseBox from "./BaseBox";
+import { BaseBox } from "./BaseBox";
 import { Box, boxIsCircular } from "./boxes";
 
 export class CircularBox extends BaseBox {
@@ -34,5 +34,3 @@ export class CircularBox extends BaseBox {
       }
    }
 }
-
-export default CircularBox;

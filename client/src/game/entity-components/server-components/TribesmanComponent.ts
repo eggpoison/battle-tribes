@@ -1,32 +1,23 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { TitleGenerationInfo, TribesmanTitle } from "battletribes-shared/titles";
-import { Point, assert, lerp, randAngle, randFloat, randInt, randItem, veryBadHash } from "battletribes-shared/utils";
+import { TileType, InventoryName, ItemType, CircularBox, TribeType, PacketReader, Point, assert, lerp, randAngle, randFloat, randInt, randItem, veryBadHash, TitleGenerationInfo, TribesmanTitle, Settings, ServerComponentType, Entity, EntityType } from "webgl-test-shared";
 import { Light } from "../../lights";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle, createSprintParticle, createTitleObtainParticle, LeafParticleSize } from "../../particles";
 import { createRenderPartOverlayGroup } from "../../rendering/webgl/overlay-rendering";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
-import { TitlesTab_setTitles } from "../../../svelte/game/dev/tabs/TitlesTab";
 import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../world";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { resetIgnoredTileSpeedMultipliers, TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
-import { TribeType } from "../../../../../shared/src/tribes";
-import { InventoryName, ItemType } from "../../../../../shared/src/items/items";
 import { playSoundOnHitbox } from "../../sound";
 import { InventoryComponentArray, getInventory } from "./InventoryComponent";
 import { TribeComponentArray } from "./TribeComponent";
-import { TileType } from "../../../../../shared/src/tiles";
-import CircularBox from "../../../../../shared/src/boxes/CircularBox";
 import { playerInstance } from "../../player";
 import { getHitboxTile, getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { currentSnapshot } from "../../client";
+import { tabSelectorState } from "../../../ui-state/tab-selector-state.svelte";
 
 export interface TribesmanComponentData {
    readonly warpaintType: number | null;
@@ -163,12 +154,12 @@ const FISH_SUIT_IGNORED_TILE_MOVE_SPEEDS = [TileType.water];
 
 /** Gets the radius of a humanoid creature with just the one circular hitbox */
 export function getHumanoidRadius(tribesman: Entity): number {
-   const transformComponent = TransformComponentArray.getComponent(tribesman)!;
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
    return ((transformComponent.hitboxes[0]).box as CircularBox).radius;
 }
 
 const getSecondsSinceLastAttack = (entity: Entity): number => {
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity)!;
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
    let maxLastTicks = 0;
    for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
@@ -527,7 +518,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
             const offsetX = (20 - 5 * 4 / 2) * (isFlipped ? 1 : -1);
             const offsetY = 24 - 6 * 4 / 2;
 
-            const transformComponent = TransformComponentArray.getComponent(entity)!;
+            const transformComponent = TransformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
 
             const renderPart = new TexturedRenderPart(
@@ -548,7 +539,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
          // Create shrewd eyes
          case TribesmanTitle.shrewd: {
             for (let i = 0; i < 2; i++) {
-               const transformComponent = TransformComponentArray.getComponent(entity)!;
+               const transformComponent = TransformComponentArray.getComponent(entity);
                const hitbox = transformComponent.hitboxes[0];
 
                const renderPart = new TexturedRenderPart(
@@ -590,7 +581,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
             for (let i = 0; i < numLeaves; i++) {
                const angle = ((i - (numLeaves - 1) / 2) * Math.PI * 0.2) + Math.PI;
 
-               const transformComponent = TransformComponentArray.getComponent(entity)!;
+               const transformComponent = TransformComponentArray.getComponent(entity);
                const hitbox = transformComponent.hitboxes[0];
                
                const renderPart = new TexturedRenderPart(
@@ -612,7 +603,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
             break;
          }
          case TribesmanTitle.yetisbane: {
-            const transformComponent = TransformComponentArray.getComponent(entity)!;
+            const transformComponent = TransformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
 
             const renderPart = new TexturedRenderPart(
@@ -669,7 +660,7 @@ const updateTitles = (tribeMemberComponent: TribesmanComponent, entity: Entity, 
    if (titlesAreDifferent(tribeMemberComponent.titles, newTitles)) {
       // If at least 1 title is added, do particle effects
       if (titlesArrayHasExtra(newTitles, tribeMemberComponent.titles)) {
-         const transformComponent = TransformComponentArray.getComponent(entity)!;
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          for (let i = 0; i < 25; i++) {
             const offsetMagnitude = randFloat(12, 34);
@@ -691,7 +682,7 @@ const updateTitles = (tribeMemberComponent: TribesmanComponent, entity: Entity, 
 }
 
 function onTick(entity: Entity): void {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(entity)!;
+   const tribesmanComponent = TribesmanComponentArray.getComponent(entity);
    if (tribesmanComponent.deathbringerEyeLights.length > 0) {
       const eyeFlashProgress = Math.min(getSecondsSinceLastAttack(entity) / 0.5, 1)
       const intensity = lerp(0.6, 0.5, eyeFlashProgress);
@@ -703,10 +694,10 @@ function onTick(entity: Entity): void {
       }
    }
 
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const entityHitbox = transformComponent.hitboxes[0];
    
-   const inventoryComponent = InventoryComponentArray.getComponent(entity)!;
+   const inventoryComponent = InventoryComponentArray.getComponent(entity);
    const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot)!;
    
    // Move speeds
@@ -759,7 +750,7 @@ function onTick(entity: Entity): void {
 }
 
 function updateFromData(data: TribesmanComponentData, entity: Entity): void {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(entity)!;
+   const tribesmanComponent = TribesmanComponentArray.getComponent(entity);
 
    tribesmanComponent.warpaintType = data.warpaintType;
 
@@ -775,7 +766,7 @@ function updateFromData(data: TribesmanComponentData, entity: Entity): void {
 function updatePlayerFromData(data: TribesmanComponentData): void {
    updateFromData(data, playerInstance!);
 
-   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!)!;
+   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!);
 
    // @Garbage
    const titles = new Array<TribesmanTitle>();
@@ -784,7 +775,7 @@ function updatePlayerFromData(data: TribesmanComponentData): void {
       titles.push(titleGenerationInfo.title);
    }
    
-   TitlesTab_setTitles(titles);
+   tabSelectorState.setTitles(titles);
 }
    
 function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
@@ -801,7 +792,7 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
       createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
    }
 
-   const tribeComponent = TribeComponentArray.getComponent(entity)!;
+   const tribeComponent = TribeComponentArray.getComponent(entity);
    switch (tribeComponent.tribeType) {
       case TribeType.goblins: {
          playSoundOnHitbox(randItem(GOBLIN_HURT_SOUNDS), 0.4, 1, entity, hitbox, true);
@@ -822,7 +813,7 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
    }
 
    // If the tribesman is wearing a leaf suit, create leaf particles
-   const inventoryComponent = InventoryComponentArray.getComponent(entity)!;
+   const inventoryComponent = InventoryComponentArray.getComponent(entity);
    const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot)!;
    const armour = armourInventory.itemSlots[1];
    if (typeof armour !== "undefined" && armour.type === ItemType.leaf_suit) {
@@ -839,13 +830,13 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
 }
 
 function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 20);
    createBloodParticleFountain(entity, 0.1, 1);
 
-   const tribeComponent = TribeComponentArray.getComponent(entity)!;
+   const tribeComponent = TribeComponentArray.getComponent(entity);
    switch (tribeComponent.tribeType) {
       case TribeType.goblins: {
          playSoundOnHitbox(randItem(GOBLIN_DIE_SOUNDS), 0.4, 1, entity, hitbox, false);

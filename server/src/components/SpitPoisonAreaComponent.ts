@@ -3,7 +3,7 @@ import { ComponentArray } from "./ComponentArray";
 import { Entity } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { TransformComponentArray } from "./TransformComponent";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { destroyEntity } from "../world";
 import { Hitbox } from "../hitboxes";
 

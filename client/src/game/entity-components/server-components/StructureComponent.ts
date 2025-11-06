@@ -1,6 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity, EntityType } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
+import { PacketReader, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { createStructureConnection, StructureConnection } from "../../structure-placement";
 import { EntityComponentData, getEntityType } from "../../world";

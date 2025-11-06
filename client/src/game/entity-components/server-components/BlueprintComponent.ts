@@ -1,12 +1,9 @@
-import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
-import { assertUnreachable, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
+import { Entity, PacketReader, assertUnreachable, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, BlueprintType, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../../particles";
 import { getEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
-import { Entity } from "../../../../../shared/src/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";

@@ -1,8 +1,7 @@
-import { TECHS, TechID, Tech, getTechByID } from "battletribes-shared/techs";
-import { angle } from "battletribes-shared/utils";
+import { angle, TECHS, TechID, Tech, getTechByID } from "webgl-test-shared";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "../../webgl";
-import { techIsHovered } from "../../../svelte/game/tech-tree/TechTree";
 import { playerTribe } from "../../tribes";
+import { techTreeState } from "../../../ui-state/tech-tree-state.svelte";
 
 const ConnectorType = {
    unlocked: 0,
@@ -18,29 +17,12 @@ let gl: WebGL2RenderingContext;
 let backgroundProgram: WebGLProgram;
 let connectorProgram: WebGLProgram;
 
-// @Cleanup: Weird to export like this
-export let techTreeX = 0;
-export let techTreeY = 0;
-export let techTreeZoom = 1;
-
 export function getTechTreeGL(): WebGL2RenderingContext {
    return gl;
 }
 
 export function updateTechTreeCanvasSize(): void {
    gl.viewport(0, 0, windowWidth, windowHeight);
-}
-
-export function setTechTreeX(x: number): void {
-   techTreeX = x;
-}
-
-export function setTechTreeY(y: number): void {
-   techTreeY = y;
-}
-
-export function setTechTreeZoom(zoom: number): void {
-   techTreeZoom = zoom;
 }
 
 // @Cleanup: Copy and paste
@@ -294,10 +276,10 @@ const renderBackground = (): void => {
    gl.uniform2f(screenWidthUniformLocation, windowWidth, windowHeight);
 
    const zoomUniformLocation = gl.getUniformLocation(backgroundProgram, "u_zoom");
-   gl.uniform1f(zoomUniformLocation, techTreeZoom);
+   gl.uniform1f(zoomUniformLocation, techTreeState.zoom);
 
    const scrollPosUniformLocation = gl.getUniformLocation(backgroundProgram, "u_scrollPos");
-   gl.uniform2f(scrollPosUniformLocation, techTreeX, -techTreeY);
+   gl.uniform2f(scrollPosUniformLocation, techTreeState.x, -techTreeState.y);
 
    const techPositionsUniformLocation = gl.getUniformLocation(backgroundProgram, "u_techPositions");
    gl.uniform2fv(techPositionsUniformLocation, techPositions);
@@ -323,9 +305,9 @@ const renderBackground = (): void => {
 /** X position in the screen (0 = left, windowWidth = right) */
 const calculateXScreenPos = (x: number): number => {
    // Account for the player position
-   let position = x + techTreeX;
+   let position = x + techTreeState.x;
    // Account for zoom
-   position = position * techTreeZoom + halfWindowWidth;
+   position = position * techTreeState.zoom + halfWindowWidth;
    position = position / halfWindowWidth - 1;
    return position;
 }
@@ -333,9 +315,9 @@ const calculateXScreenPos = (x: number): number => {
 /** Y position in the screen (0 = bottom, windowHeight = top) */
 const calculateYScreenPos = (y: number): number => {
    // Account for the player position
-   let position = y - techTreeY;
+   let position = y - techTreeState.y;
    // Account for zoom
-   position = position * techTreeZoom + halfWindowHeight;
+   position = position * techTreeState.zoom + halfWindowHeight;
    position = position / halfWindowHeight - 1;
    return position;
 }
@@ -351,7 +333,8 @@ const addConnectorVertices = (vertices: Array<number>, startTech: Tech, endTech:
    if (type === ConnectorType.conflicting) {
       connectorWidth = CONFLICTING_CONNECTOR_WIDTH;
    } else {
-      if (techIsHovered(startTech.id) || techIsHovered(endTech.id)) {
+      const hoveredTech = techTreeState.hoveredTech;
+      if (hoveredTech === startTech.id || hoveredTech === endTech.id) {
          connectorWidth = CONNECTOR_WIDTH * 1.3;
       } else {
          connectorWidth = CONNECTOR_WIDTH;
@@ -447,10 +430,10 @@ const renderConnectors = (): void => {
    gl.uniform2f(screenWidthUniformLocation, windowWidth, windowHeight);
 
    const zoomUniformLocation = gl.getUniformLocation(connectorProgram, "u_zoom");
-   gl.uniform1f(zoomUniformLocation, techTreeZoom);
+   gl.uniform1f(zoomUniformLocation, techTreeState.zoom);
 
    const scrollPosUniformLocation = gl.getUniformLocation(connectorProgram, "u_scrollPos");
-   gl.uniform2f(scrollPosUniformLocation, techTreeX, -techTreeY);
+   gl.uniform2f(scrollPosUniformLocation, techTreeState.x, -techTreeState.y);
 
    const timeUniformLocation = gl.getUniformLocation(connectorProgram, "u_time");
    gl.uniform1f(timeUniformLocation, performance.now());

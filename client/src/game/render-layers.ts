@@ -1,7 +1,5 @@
-import { EntityType } from "battletribes-shared/entities";
-import { BlueprintType, DecorationType, ServerComponentType } from "battletribes-shared/components";
+import { assert, BlueprintType, DecorationType, ServerComponentType, EntityType } from "webgl-test-shared";
 import { EntityComponentData } from "./world";
-import { assert } from "../../../shared/src/utils";
 
 export enum RenderLayer {
    lowDecorations,

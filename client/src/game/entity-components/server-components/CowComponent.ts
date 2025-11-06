@@ -1,17 +1,12 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { Point, randAngle, randFloat, randInt } from "battletribes-shared/utils";
+import { HitboxFlag, PacketReader, CowSpecies, Entity, Point, randAngle, randFloat, randInt, Settings, ServerComponentType } from "webgl-test-shared";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createDirtParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
-import { CowSpecies, Entity } from "battletribes-shared/entities";
-import { PacketReader } from "battletribes-shared/packets";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { HitboxFlag } from "../../../../../shared/src/boxes/boxes";
 import { RenderPart } from "../../render-parts/render-parts";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
@@ -111,14 +106,7 @@ function getMaxRenderParts(): number {
 
 function onTick(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
-   
    const cowComponent = CowComponentArray.getComponent(entity);
-   if (cowComponent === null) {
-      return;
-   }
 
    if (cowComponent.grazeProgress !== -1 && tickIntervalHasPassed(0.1)) {
       const hitbox = transformComponent.hitboxes[0];
@@ -138,14 +126,7 @@ function onTick(entity: Entity): void {
 
 function updateFromData(data: CowComponentData, entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
-      
    const cowComponent = CowComponentArray.getComponent(entity);
-   if (cowComponent === null) {
-      return;
-   }
    
    const grazeProgress = data.grazeProgress;
    
@@ -193,10 +174,6 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
 
 function onDie(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
-   
    const hitbox = transformComponent.hitboxes[0];
 
    for (let i = 0; i < 3; i++) {

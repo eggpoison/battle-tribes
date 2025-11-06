@@ -1,6 +1,4 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
+import { Settings, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderInfo } from "./EntityRenderInfo";
 import { ComponentArray, getClientComponentArray, getComponentArrays, getServerComponentArray } from "./entity-components/ComponentArray";
 import { ServerComponentData } from "./entity-components/components";
@@ -275,7 +273,7 @@ export function removeEntity(entity: Entity, isDeath: boolean): void {
 }
 
 export function changeEntityLayer(entity: Entity, newLayer: Layer): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const previousLayer = getEntityLayer(entity);
 
    const renderInfo = getEntityRenderInfo(entity);

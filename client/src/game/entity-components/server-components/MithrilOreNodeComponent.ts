@@ -1,7 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { randFloat, randInt } from "../../../../../shared/src/utils";
+import { randFloat, randInt, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { getRandomPositionInBox, Hitbox } from "../../hitboxes";
 import { createColouredParticle } from "../../particles";

@@ -5,7 +5,7 @@ import { Point } from "battletribes-shared/utils";
 import { EntityConfig } from "../../components";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { IceShardComponent } from "../../components/IceShardComponent";
 import { Hitbox } from "../../hitboxes";
 

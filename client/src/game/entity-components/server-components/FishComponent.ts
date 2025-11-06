@@ -1,8 +1,4 @@
-import { randAngle, randFloat, randInt } from "battletribes-shared/utils";
-import { Entity, FishColour } from "battletribes-shared/entities";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
-import { TileType } from "battletribes-shared/tiles";
+import { TileType, ServerComponentType, PacketReader, Entity, FishColour, randAngle, randFloat, randInt } from "webgl-test-shared";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
@@ -76,10 +72,6 @@ function getMaxRenderParts(): number {
 
 function onTick(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
-   
    const hitbox = transformComponent.hitboxes[0];
    
    const tile = getHitboxTile(hitbox);
@@ -106,10 +98,6 @@ function onHit(entity: Entity, hitbox: Hitbox): void {
 
 function onDie(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
-   
    const hitbox = transformComponent.hitboxes[0];
 
    createBloodParticleFountain(entity, 0.1, 0.8);

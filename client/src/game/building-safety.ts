@@ -1,4 +1,4 @@
-import { PacketReader } from "../../../shared/src/packets";
+import { PacketReader } from "webgl-test-shared";
 
 export interface BuildingSafety {
    readonly x: number;

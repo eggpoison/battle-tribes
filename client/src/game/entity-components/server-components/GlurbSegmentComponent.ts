@@ -1,8 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { Settings } from "../../../../../shared/src/settings";
-import { randFloat, Point, randAngle } from "../../../../../shared/src/utils";
+import { randFloat, Point, randAngle, Settings, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { getRandomPositionInBox, Hitbox } from "../../hitboxes";
 import { createSlurbParticle } from "../../particles";

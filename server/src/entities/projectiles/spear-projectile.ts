@@ -9,7 +9,7 @@ import { EntityConfig } from "../../components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { destroyEntity, entityExists } from "../../world";
 import { SpearProjectileComponent } from "../../components/SpearProjectileComponent";
 import { Hitbox } from "../../hitboxes";

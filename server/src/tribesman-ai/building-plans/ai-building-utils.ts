@@ -1,5 +1,5 @@
 import { Box } from "../../../../shared/src/boxes/boxes";
-import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
 import { boxIsCollidingWithSubtile } from "../../../../shared/src/collision";
 import { ServerComponentType } from "../../../../shared/src/components";
 import { Settings } from "../../../../shared/src/settings";

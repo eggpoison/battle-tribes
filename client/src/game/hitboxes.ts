@@ -1,18 +1,10 @@
-import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, updateVertexPositionsAndSideAxes } from "battletribes-shared/boxes/boxes";
-import { CollisionBit } from "../../../shared/src/collision";
-import { Entity } from "../../../shared/src/entities";
-import { Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "../../../shared/src/utils";
-import { Settings } from "../../../shared/src/settings";
-import { TILE_PHYSICS_INFO_RECORD, TileType } from "../../../shared/src/tiles";
+import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, updateVertexPositionsAndSideAxes, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, TILE_PHYSICS_INFO_RECORD, TileType, Settings, PacketReader, Entity, CollisionBit, CircularBox, RectangularBox } from "webgl-test-shared";
 import { hitboxIsInRiver, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityRenderInfo } from "./world";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
 import { getTileIndexIncludingEdges } from "./Layer";
 import { Tile } from "./Tile";
-import { PacketReader } from "../../../shared/src/packets";
 import { readBoxFromData } from "./networking/packet-hitboxes";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
-import RectangularBox from "../../../shared/src/boxes/RectangularBox";
 import { currentSnapshot } from "./client";
 
 export interface HitboxTether {
@@ -229,7 +221,7 @@ export function createHitboxFromData(data: Hitbox): Hitbox {
 
 // @Hack this is a lil bit of a hack
 export function findEntityHitbox(entity: Entity, localID: number): Hitbox | null {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.tryGetComponent(entity);
    if (transformComponent === null) {
       return null;
    }
@@ -375,7 +367,7 @@ export function translateHitbox(hitbox: Hitbox, translationX: number, translatio
 
 // @Cleanup: Passing in hitbox really isn't the best, ideally hitbox should self-contain all the necessary info... but is that really good? + memory efficient?
 export function applyAccelerationFromGround(hitbox: Hitbox, accelerationX: number, accelerationY: number): void {
-   const transformComponent = TransformComponentArray.getComponent(hitbox.entity)!;
+   const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
 
    const tile = getHitboxTile(hitbox);
    const tilePhysicsInfo = TILE_PHYSICS_INFO_RECORD[tile.type];

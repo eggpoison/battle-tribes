@@ -12,7 +12,7 @@ import { TribeComponent } from "../../components/TribeComponent";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
 import { Point } from "../../../../shared/src/utils";
 import { Hitbox } from "../../hitboxes";
-import CircularBox from "../../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
 import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
 import { StructureConnection } from "../../structure-placement";

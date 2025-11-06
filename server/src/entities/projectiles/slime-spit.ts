@@ -6,7 +6,7 @@ import { EntityConfig } from "../../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { Hitbox } from "../../hitboxes";
 
 export function createSlimeSpitConfig(position: Point, rotation: number, size: number): EntityConfig {

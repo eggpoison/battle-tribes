@@ -12,7 +12,7 @@ import { HealingTotemComponent } from "../../components/HealingTotemComponent";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
 import { Point } from "../../../../shared/src/utils";
 import { AIHelperComponent } from "../../components/AIHelperComponent";
-import CircularBox from "../../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
 import { Hitbox } from "../../hitboxes";
 import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";

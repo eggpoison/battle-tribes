@@ -1,11 +1,6 @@
-import { HitboxCollisionType, updateBox } from "../../../shared/src/boxes/boxes";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
-import { CollisionBit } from "../../../shared/src/collision";
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { angle, Point } from "../../../shared/src/utils";
+import { angle, Point, Entity, EntityType, ServerComponentType, CollisionBit, CircularBox, HitboxCollisionType, updateBox } from "webgl-test-shared";
 import { setCameraSubject } from "./camera";
-import { selectItemSlot } from "../svelte/game/GameInteractableLayer";
+import { selectItemSlot } from "./player-action-handler";
 import { createTransformComponentData, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { createHitboxQuick, setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
 import { closeCurrentMenu } from "./menus";
@@ -15,7 +10,7 @@ import { EntityServerComponentData } from "./networking/packet-snapshots";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import { addEntityToWorld, createEntityCreationInfo, EntityComponentData, getEntityRenderInfo } from "./world";
-import { setIsDeadState } from "../stores/game-ui-state.svelte";
+import { gameUIState } from "../ui-state/game-ui-state.svelte";
 
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
 // but this is in the client so these optimisations are less important. The ease-of-use is worth it
@@ -29,11 +24,11 @@ export let playerUsername = "";
 
 const onPlayerRespawn = (): void => {
    selectItemSlot(1);
-   setIsDeadState(false);
+   gameUIState.setIsDead(false);
 }
 
 const onPlayerDeath = (): void => {
-   setIsDeadState(true);
+   gameUIState.setIsDead(true);
    
    // Close any open menus
    closeCurrentMenu();
@@ -102,7 +97,7 @@ export function updatePlayerRotation(): void {
 
    const cursorDirection = angle(relativeCursorX, relativeCursorY);
 
-   const transformComponent = TransformComponentArray.getComponent(playerInstance)!;
+   const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
    
    const previousAngle = playerHitbox.box.angle;

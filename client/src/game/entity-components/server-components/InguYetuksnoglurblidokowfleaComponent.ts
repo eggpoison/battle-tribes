@@ -1,14 +1,10 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { randFloat, randInt, Settings, Entity, HitboxFlag, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getCurrentLayer } from "../../world";
-import { HitboxFlag } from "../../../../../shared/src/boxes/boxes";
-import { Entity } from "../../../../../shared/src/entities";
-import { Settings } from "../../../../../shared/src/settings";
 import { playSound } from "../../sound";
-import { randFloat, randInt } from "../../../../../shared/src/utils";
 import { cameraPosition } from "../../camera";
 
 export interface InguYetuksnoglurblidokowfleaComponentData {}

@@ -1,5 +1,5 @@
 import { Box, cloneBox } from "../../../../shared/src/boxes/boxes";
-import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
 import { ServerComponentType } from "../../../../shared/src/components";
 import { Entity, EntityType, NUM_ENTITY_TYPES } from "../../../../shared/src/entities";
 import { Packet } from "../../../../shared/src/packets";

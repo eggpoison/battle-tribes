@@ -1,12 +1,5 @@
-import { BlueprintType } from "../../../../../shared/src/components";
-import { Entity, EntityType } from "../../../../../shared/src/entities";
-import { CRAFTING_RECIPES, CraftingRecipe } from "../../../../../shared/src/items/crafting-recipes";
-import { ItemType } from "../../../../../shared/src/items/items";
-import { PacketReader } from "../../../../../shared/src/packets";
-import { StructureType } from "../../../../../shared/src/structures";
-import { getTechByID, TechID, Tech } from "../../../../../shared/src/techs";
-import { AIPlanType } from "../../../../../shared/src/utils";
-import { TribePlanVisualiser_setPlan } from "../../../svelte/game/tribe-plan-visualiser/TribePlanVisualiser";
+import { AIPlanType, getTechByID, TechID, Tech,StructureType, PacketReader, ItemType, CRAFTING_RECIPES, CraftingRecipe, Entity, EntityType, BlueprintType } from "webgl-test-shared";
+import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
 import { addMenuCloseFunction } from "../../menus";
 import { ExtendedTribe, getTribeByID } from "../../tribes";
 
@@ -339,7 +332,8 @@ export function renderTribePlans(): void {
    
    if (renderedTribeID === null) {
       canvasElement.classList.add("hidden");
-      TribePlanVisualiser_setPlan(null, null);
+      tribePlanVisualiserState.setTribeAssignmentInfo(null);
+      tribePlanVisualiserState.setTribe(null);
    } else {
       canvasElement.classList.remove("hidden");
       
@@ -347,6 +341,7 @@ export function renderTribePlans(): void {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       
       const tribeAssignmentInfo = tribePlanDataRecord[renderedTribeID];
-      TribePlanVisualiser_setPlan(tribeAssignmentInfo, getTribeByID(renderedTribeID) as ExtendedTribe);
+      tribePlanVisualiserState.setTribeAssignmentInfo(tribeAssignmentInfo);
+      tribePlanVisualiserState.setTribe(getTribeByID(renderedTribeID) as ExtendedTribe);
    }
 }

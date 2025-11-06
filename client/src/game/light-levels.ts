@@ -1,5 +1,4 @@
-import { LightLevelNode } from "../../../shared/src/light-levels";
-import { PacketReader } from "../../../shared/src/packets";
+import { PacketReader, LightLevelNode } from "webgl-test-shared";
 import { currentSnapshot } from "./client";
 import { getLightLevelRenderingChunkIndex, LightLevelBGUpdateInfo, updateLightLevelRenderingChunks } from "./rendering/webgl/light-levels-bg-rendering";
 

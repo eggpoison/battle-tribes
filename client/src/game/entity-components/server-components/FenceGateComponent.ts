@@ -1,10 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { HitboxFlag, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { HitboxFlag } from "../../../../../shared/src/boxes/boxes";
 
 export interface FenceGateComponentData {}
 

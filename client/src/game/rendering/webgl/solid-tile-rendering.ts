@@ -1,5 +1,4 @@
-import { Settings } from "battletribes-shared/settings";
-import { NUM_TILE_TYPES, SubtileType, TileType, TileTypeString } from "battletribes-shared/tiles";
+import { Settings, NUM_TILE_TYPES, SubtileType, TileType, TileTypeString } from "webgl-test-shared";
 import { gl, createWebGLProgram, createTextureArray } from "../../webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, RenderChunkSolidTileInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";

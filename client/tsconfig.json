@@ -17,19 +17,10 @@
       "resolveJsonModule": true,
       "noEmit": false,
       "outDir": "./build",
-      "jsx": "react-jsx",
       "sourceMap": true,
-      "isolatedModules": true, // This might cause problems...
       "declaration": true,
-      "paths": {
-         "battletribes-shared/*": ["../shared/src/*"]
-       }
+      "isolatedModules": true
    },
-   "references": [
-     { "path": "../shared" }
-   ],
-   "include": [
-      "src",
-      "node_modules/webgl-test-shared/**/*.d.ts"
-   ]
+   "include": ["src/**/*"],
+   "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
 }

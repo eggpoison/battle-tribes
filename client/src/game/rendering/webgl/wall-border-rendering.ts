@@ -1,4 +1,4 @@
-import { Settings } from "battletribes-shared/settings";
+import { Settings } from "webgl-test-shared";
 import { maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY } from "../../camera";
 import { createWebGLProgram, gl } from "../../webgl";
 import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo } from "../render-chunks";

@@ -1,12 +1,8 @@
-import { Settings } from "battletribes-shared/settings";
-import { EntityDebugData } from "battletribes-shared/client-server-types";
-import { Point } from "battletribes-shared/utils";
+import { Point, EntityDebugData, Settings } from "webgl-test-shared";
 import { createWebGLProgram, generateLine, generateThickCircleWireframeVertices, gl } from "../../webgl";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { entityExists, getEntityRenderInfo } from "../../world";
+import { entityExists } from "../../world";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
 
 let lineProgram: WebGLProgram;
 

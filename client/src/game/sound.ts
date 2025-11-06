@@ -1,9 +1,6 @@
-import { Settings } from "battletribes-shared/settings";
-import { assert, Point, randInt } from "battletribes-shared/utils";
-import { TileType } from "battletribes-shared/tiles";
+import { Entity, TileType, assert, Point, randInt, Settings } from "webgl-test-shared";
 import { getCurrentLayer, getEntityLayer } from "./world";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { Entity } from "../../../shared/src/entities";
 import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { cameraPosition, maxVisibleChunkX, maxVisibleChunkY, minVisibleChunkX, minVisibleChunkY } from "./camera";
@@ -36,6 +33,8 @@ interface SoundAttachInfo {
 const activeSounds = new Array<Sound>();
 const soundsAttachedToHitboxes = new Map<Hitbox, Array<SoundAttachInfo>>();
 const soundToHitboxMap = new Map<Sound, Hitbox | null>();
+
+const soundFiles = import.meta.glob("../sounds/*", { eager: true, query: "?url", import: "default" });
 
 // Must be called after a user action
 export function createAudioContext(): void {
@@ -342,7 +341,9 @@ export async function loadSoundEffects(): Promise<void> {
    const tempAudioBuffers: Partial<Record<string, AudioBuffer>> = {};
    
    const audioBufferPromises = AUDIO_FILE_PATHS.map(async (filePath) => {
-      const response = await fetch(require("./sounds/" + filePath));
+      const sound = soundFiles["../sounds/" + filePath] as string;
+      
+      const response = await fetch(sound);
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
       tempAudioBuffers[filePath] = audioBuffer;
@@ -470,7 +471,7 @@ export function playSoundOnHitbox(filePath: string, volume: number, pitchMultipl
 }
 
 export function removeEntitySounds(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    for (const hitbox of transformComponent.hitboxes) {
       const entityAttachedSounds = soundsAttachedToHitboxes.get(hitbox)!;
       if (typeof entityAttachedSounds === "undefined") {

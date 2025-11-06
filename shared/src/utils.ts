@@ -1,7 +1,7 @@
-import RectangularBox from "./boxes/RectangularBox";
+import { RectangularBox } from "./boxes/RectangularBox";
 import { Settings } from "./settings";
 
-export const enum UtilVars {
+export enum UtilVars {
    PI = 3.14159265358979
 }
 
@@ -24,7 +24,7 @@ export interface Colour {
 }
 
 // @Cleanup: location
-export const enum AIPlanType {
+export enum AIPlanType {
    root,
    craftRecipe,
    placeBuilding,

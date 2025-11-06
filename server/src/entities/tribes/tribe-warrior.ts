@@ -7,7 +7,7 @@ import { TribesmanAIComponent } from "../../components/TribesmanAIComponent";
 import { TribeComponent } from "../../components/TribeComponent";
 import { EntityConfig } from "../../components";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { HealthComponent } from "../../components/HealthComponent";
 import { InventoryComponent } from "../../components/InventoryComponent";
 import { InventoryUseComponent } from "../../components/InventoryUseComponent";

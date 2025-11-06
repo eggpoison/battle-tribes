@@ -1,6 +1,4 @@
-import { getLightLevelNodeX, getLightLevelNodeY, LightLevelNode, LightLevelVars } from "../../../../../shared/src/light-levels";
-import { Settings } from "../../../../../shared/src/settings";
-import { assert, mod } from "../../../../../shared/src/utils";
+import { assert, mod, Settings, getLightLevelNodeX, getLightLevelNodeY, LightLevelNode, LightLevelVars } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 

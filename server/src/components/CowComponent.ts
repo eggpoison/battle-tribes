@@ -22,7 +22,7 @@ import { getAvailableCarrySlot, mountCarrySlot, RideableComponentArray } from ".
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { addSkillLearningProgress, getRiderTargetPosition, TamingComponentArray } from "./TamingComponent";
 import { TamingSkillID } from "../../../shared/src/taming";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection";
 import { addHitboxVelocity, applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes";
 import { entityWantsToFollow, FollowAI, followAISetFollowTarget, updateFollowAIComponent } from "../ai/FollowAI";

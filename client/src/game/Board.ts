@@ -1,5 +1,4 @@
-import { Settings } from "battletribes-shared/settings";
-import { Point, Vector } from "battletribes-shared/utils";
+import { Settings, Point, Vector } from "webgl-test-shared";
 import Particle from "./Particle";
 import { highMonocolourBufferContainer, highTexturedBufferContainer, lowMonocolourBufferContainer, lowTexturedBufferContainer } from "./rendering/webgl/particle-rendering";
 import ObjectBufferContainer from "./rendering/ObjectBufferContainer";

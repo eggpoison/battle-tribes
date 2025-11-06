@@ -6,7 +6,7 @@ import { SpikesComponentArray } from "../../../components/SpikesComponent";
 import { Inventory, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, HammerItemInfo } from "battletribes-shared/items/items";
 import { TransformComponent, TransformComponentArray } from "../../../components/TransformComponent";
 import { getEntityLayer, getEntityType, getGameTicks } from "../../../world";
-import CircularBox from "../../../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../../../shared/src/boxes/CircularBox";
 import { tribeMemberHasTitle, TribesmanComponentArray } from "../../../components/TribesmanComponent";
 import { Settings, PathfindingSettings } from "../../../../../shared/src/settings";
 import { Path, entityCanBlockPathfinding, getEntityPathfindingGroupID, convertEntityPathfindingGroupID, getEntityFootprint, findMultiLayerPath, positionIsAccessible, PathfindFailureDefault, PathfindOptions } from "../../../pathfinding";

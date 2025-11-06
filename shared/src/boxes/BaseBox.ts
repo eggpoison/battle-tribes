@@ -2,7 +2,7 @@ import { CollisionResult } from "../collision";
 import { Point } from "../utils";
 import { Box } from "./boxes";
 
-export const enum PivotPointType {
+export enum PivotPointType {
    // @Cleanup: normalised is the wrong kind of term I feel]
    /** Coordinates normalised to the hitboxes' size. (-0.5, -0.5) = bottom left, (0, 0) = middle, (0.5, 0.5) = top right */
    normalised,
@@ -29,7 +29,7 @@ export function createAbsolutePivotPoint(offsetX: number, offsetY: number): Pivo
    };
 }
 
-abstract class BaseBox {
+export abstract class BaseBox {
    // @CLEANUP i should really make this only able to be manipulated through some supplied functions, so places can't mistakenly manipulate it thinking they're being correct
    public readonly position: Point;
    /** Offset of the box from its parent. If on a root hitbox of a base entity, does nothing. */
@@ -60,5 +60,3 @@ abstract class BaseBox {
 
    public abstract getCollisionResult(otherBox: Box, epsilon?: number): CollisionResult;
 }
-
-export default BaseBox;

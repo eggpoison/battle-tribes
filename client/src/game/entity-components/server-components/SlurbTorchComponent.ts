@@ -1,12 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { Settings, Entity, randAngle, randFloat, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { randAngle, randFloat } from "../../../../../shared/src/utils";
-import { Entity } from "../../../../../shared/src/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { createSlurbParticle } from "../../particles";
-import { Settings } from "../../../../../shared/src/settings";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 

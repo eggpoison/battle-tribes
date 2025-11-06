@@ -1,7 +1,4 @@
-import { Entity } from "battletribes-shared/entities";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
-import { randAngle, randFloat, randInt } from "battletribes-shared/utils";
+import { CircularBox, randAngle, randFloat, ServerComponentType, PacketReader, Entity, randInt } from "webgl-test-shared";
 import Board from "../../Board";
 import { createSnowParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
@@ -12,7 +9,6 @@ import Particle from "../../Particle";
 import { addMonocolourParticleToBufferContainer, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
-import CircularBox from "../../../../../shared/src/boxes/CircularBox";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { tickIntervalHasPassed } from "../../client";
 
@@ -64,7 +60,7 @@ function getMaxRenderParts(): number {
 }
 
 function onTick(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    const velocity = getHitboxVelocity(hitbox);
    if (velocity.magnitude() > 50) {
@@ -119,7 +115,7 @@ function onHit(entity: Entity, hitbox: Hitbox): void {
 }
 
 function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    // Create a bunch of snow particles throughout the snowball

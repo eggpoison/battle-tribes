@@ -1,11 +1,8 @@
-import { Settings } from "battletribes-shared/settings";
-import { randInt } from "battletribes-shared/utils";
-import { TileType } from "battletribes-shared/tiles";
+import { Entity, TileType, randInt, Settings } from "webgl-test-shared";
 import { playSound } from "../../sound";
 import { createFootprintParticle } from "../../particles";
 import { EntityComponentData, getEntityLayer } from "../../world";
 import { hitboxIsInRiver, TransformComponentArray } from "../server-components/TransformComponent";
-import { Entity } from "../../../../../shared/src/entities";
 import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { getHitboxTile, getHitboxVelocity } from "../../hitboxes";
@@ -67,10 +64,6 @@ function getMaxRenderParts(): number {
 
 const createFootstepSound = (entity: Entity): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
-   
    const hitbox = transformComponent.hitboxes[0];
    const layer = getEntityLayer(entity);
    
@@ -106,16 +99,10 @@ const createFootstepSound = (entity: Entity): void => {
 
 function onTick(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return;
-   }
    
    const hitbox = transformComponent.hitboxes[0];
    if (hitbox.parent === null) {
       const footprintComponent = FootprintComponentArray.getComponent(entity);
-      if (footprintComponent === null) {
-         return;
-      }
       
       const velocity = getHitboxVelocity(hitbox);
       

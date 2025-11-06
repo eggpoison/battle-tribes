@@ -1,12 +1,9 @@
+import { randAngle, randFloat, randInt, Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
-import { ServerComponentType } from "battletribes-shared/components";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
-import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { registerDirtyRenderInfo } from "../../rendering/render-part-matrices";
@@ -82,7 +79,7 @@ function getMaxRenderParts(): number {
 }
 
 function updateFromData(data: BerryBushComponentData, entity: Entity): void {
-   const berryBushComponent = BerryBushComponentArray.getComponent(entity)!;
+   const berryBushComponent = BerryBushComponentArray.getComponent(entity);
    berryBushComponent.numBerries = data.numBerries;
 
    berryBushComponent.renderPart.switchTextureSource(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponent.numBerries]);
@@ -92,7 +89,7 @@ function updateFromData(data: BerryBushComponentData, entity: Entity): void {
 }
 
 function onHit(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    const moveDirection = randAngle();
@@ -111,7 +108,7 @@ function onHit(entity: Entity): void {
 }
 
 function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    for (let i = 0; i < 6; i++) {

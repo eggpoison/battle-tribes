@@ -1,5 +1,4 @@
-import { WaterRockData } from "battletribes-shared/client-server-types";
-import { Settings } from "battletribes-shared/settings";
+import { Settings, WaterRockData } from "webgl-test-shared";
 import { createTileRenderChunks, recalculateSolidTileRenderChunkData } from "./webgl/solid-tile-rendering";
 import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
 import { calculateShadowInfo, TileShadowType } from "./webgl/tile-shadow-rendering";

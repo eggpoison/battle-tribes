@@ -1,6 +1,4 @@
-import { ServerComponentType } from "../../../../../shared/src/components";
-import { Entity } from "../../../../../shared/src/entities";
-import { randAngle, randFloat } from "../../../../../shared/src/utils";
+import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle } from "../../particles";

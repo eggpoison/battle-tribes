@@ -1,8 +1,8 @@
 import { Biome } from "../../../../shared/src/biomes";
 import { createAbsolutePivotPoint } from "../../../../shared/src/boxes/BaseBox";
 import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import CircularBox from "../../../../shared/src/boxes/CircularBox";
-import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
+import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
 import { ServerComponentType } from "../../../../shared/src/components";
 import { Entity, EntityType } from "../../../../shared/src/entities";

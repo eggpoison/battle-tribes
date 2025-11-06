@@ -1,13 +1,12 @@
-import { Point, polarVec2, randAngle, randFloat, randSign, rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
+import { ItemType, Settings, Point, polarVec2, randAngle, randFloat, randSign, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth } from "../../webgl";
 import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
 import { getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
-import { getTechTreeGL, techTreeX, techTreeY, techTreeZoom } from "./tech-tree-rendering";
-import { Settings } from "battletribes-shared/settings";
+import { getTechTreeGL } from "./tech-tree-rendering";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import { ItemType } from "battletribes-shared/items/items";
 import { TEXTURE_SOURCES } from "../../texture-atlases/texture-sources";
+import { techTreeState } from "../../../ui-state/tech-tree-state.svelte";
 
 interface TechTreeItem {
    readonly itemType: ItemType;
@@ -188,9 +187,9 @@ export function updateTechTreeItems(): void {
 /** X position in the screen (0 = left, windowWidth = right) */
 const calculateXScreenPos = (x: number): number => {
    // Account for the player position
-   let position = x + techTreeX;
+   let position = x + techTreeState.x;
    // Account for zoom
-   position = position * techTreeZoom + halfWindowWidth;
+   position = position * techTreeState.zoom + halfWindowWidth;
    position = position / halfWindowWidth - 1;
    return position;
 }
@@ -198,9 +197,9 @@ const calculateXScreenPos = (x: number): number => {
 /** Y position in the screen (0 = bottom, windowHeight = top) */
 const calculateYScreenPos = (y: number): number => {
    // Account for the player position
-   let position = y - techTreeY;
+   let position = y - techTreeState.y;
    // Account for zoom
-   position = position * techTreeZoom + halfWindowHeight;
+   position = position * techTreeState.zoom + halfWindowHeight;
    position = position / halfWindowHeight - 1;
    return position;
 }

@@ -1,4 +1,4 @@
-export const enum StatusEffect {
+export enum StatusEffect {
    burning = 1,
    freezing = 2,
    poisoned = 4,

@@ -1,6 +1,5 @@
-import { Settings } from "battletribes-shared/settings";
+import { Settings, Entity } from "webgl-test-shared";
 import { NUM_RENDER_LAYERS, RenderLayer } from "../../render-layers";
-import { Entity } from "battletribes-shared/entities";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { clearEntityInVertexData, EntityRenderingVars, getEntityRenderingProgram, setRenderInfoInVertexData } from "./entity-rendering";
@@ -151,7 +150,7 @@ const getChunkIndex = (chunkX: number, chunkY: number): number => {
 }
 
 const getEntityChunkIndex = (entity: Entity): number => {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    const chunkX = Math.floor(hitbox.box.position.x / Settings.CHUNK_UNITS);

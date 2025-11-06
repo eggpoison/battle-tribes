@@ -1,15 +1,14 @@
-import { Point } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
+import { Point, Settings, Entity } from "webgl-test-shared";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
 import Chunk from "./Chunk";
 import Layer from "./Layer";
 import { entityExists } from "./world";
-import { Entity } from "../../../shared/src/entities";
 import { calculateHitboxRenderPosition, getEntityTickInterp } from "./rendering/render-part-matrices";
 import { Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { isSpectating } from "./player";
+import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 
 let cameraSubjectHitbox: Hitbox | null = null;
 
@@ -73,23 +72,16 @@ const getMissingChunks = (chunksA: ReadonlyArray<Chunk>, chunksB: ReadonlyArray<
 
 export function setCameraZoom(zoom: number): void {
    cameraZoom = zoom;
+   debugDisplayState.setCameraZoom(zoom);
 }
 
 export function setCameraSubject(cameraSubject: Entity): void {
-   // @Hack? done for both playerInstance and cameraSubject
-   // If the player is spectating with a client-only entity, don't kill them!
-   if (isSpectating && !entityExists(cameraSubject)) {
-      return;
-   }
-   
-   const transformComponent = TransformComponentArray.getComponent(cameraSubject);
+   const transformComponent = TransformComponentArray.tryGetComponent(cameraSubject);
+   // (Might not have a transform component if we are setting the camera subject to be the non-existent client-only spectator player instance.)
    if (transformComponent !== null) {
       const hitbox = transformComponent.hitboxes[0];
       cameraSubjectHitbox = hitbox;
-      return;
    }
-
-   cameraSubjectHitbox = null;
 }
 
 export function getCameraSubject(): Entity | null {

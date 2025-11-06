@@ -1,13 +1,11 @@
 import { createWebGLProgram, gl } from "../../webgl";
-import OPTIONS from "../../options";
-import { PathfindingSettings } from "battletribes-shared/settings";
-import { angle } from "battletribes-shared/utils";
-import { EntityDebugData, PathData, PathfindingNodeIndex } from "battletribes-shared/client-server-types";
+import { EntityDebugData, PathData, PathfindingNodeIndex, angle, PathfindingSettings } from "webgl-test-shared";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { nerdVisionIsVisible } from "../../../svelte/game/dev/NerdVision";
 import { entityExists } from "../../world";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
-import { getEntityDebugData } from "../../networking/dev-packets";
+import { nerdVisionState } from "../../../ui-state/nerd-vision-state.svelte";
+import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
+import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
 
 enum NodeType {
    occupied,
@@ -143,12 +141,12 @@ const addConnector = (vertices: Array<number>, startX: number, startY: number, e
 }
 
 const renderConnectors = (pathData: PathData): void => {
-   const debugEntity = getEntityDebugData()!.entityID;
+   const debugEntity = hoverDebugState.entityDebugData!.entityID;
    if (!entityExists(debugEntity)) {
       return;
    }
 
-   const transformComponent = TransformComponentArray.getComponent(debugEntity)!;
+   const transformComponent = TransformComponentArray.getComponent(debugEntity);
    const entityHitbox = transformComponent.hitboxes[0];
    
    const vertices = new Array<number>();
@@ -198,7 +196,7 @@ const renderNodes = (vertexData: Float32Array): void => {
 }
 
 const getDebuggedPath = (entityDebugData: EntityDebugData | null): PathData | undefined => {
-   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
       return entityDebugData.pathData;
    }
 }
@@ -259,9 +257,9 @@ const addNodeData = (vertexData: Float32Array, segmentIdx: number, node: Pathfin
 }
 
 export function renderPathfindingNodes(): void {
-   const entityDebugData = getEntityDebugData();
+   const entityDebugData = hoverDebugState.entityDebugData;
    
-   if (nerdVisionIsVisible() && entityDebugData !== null && typeof entityDebugData.pathData !== "undefined") {
+   if (nerdVisionState.isVisible && entityDebugData !== null && typeof entityDebugData.pathData !== "undefined") {
       renderConnectors(entityDebugData.pathData);
    }
 
@@ -278,13 +276,13 @@ export function renderPathfindingNodes(): void {
       
       // @Speed: Remove duplicates (nodes with same position)
       
-      if (OPTIONS.showPathfindingNodes) {
+      if (debugDisplayState.showPathfindingNodes) {
          for (const node of visiblePathfindingNodeOccupances) {
             segmentIdx = addNodeData(vertexData, segmentIdx, node, NodeType.occupied);
          }
       }
    
-      if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+      if (nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
          const pathData = entityDebugData.pathData;
          if (typeof pathData !== "undefined") {
             for (const node of pathData.visitedNodes) {

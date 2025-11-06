@@ -1,9 +1,8 @@
-import { Settings } from "battletribes-shared/settings";
+import { Settings, TileType } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { RenderChunkTileShadowInfo, getRenderChunkTileShadowInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 import Layer, { subtileIsInWorld, tileIsWithinEdge } from "../../Layer";
-import { TileType } from "../../../../../shared/src/tiles";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
 
 export const enum TileShadowType {

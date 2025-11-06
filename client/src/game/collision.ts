@@ -1,9 +1,4 @@
-import { Settings } from "battletribes-shared/settings";
-import { collisionBitsAreCompatible } from "battletribes-shared/hitbox-collision";
-import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import { Box, HitboxCollisionType, HitboxFlag } from "battletribes-shared/boxes/boxes";
-import RectangularBox from "battletribes-shared/boxes/RectangularBox";
-import { Entity } from "battletribes-shared/entities";
+import { Settings, collisionBitsAreCompatible, Point, rotateXAroundOrigin, rotateYAroundOrigin, Box, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, Entity, CollisionResult } from "webgl-test-shared";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Chunk from "./Chunk";
 import { getEntityLayer } from "./world";
@@ -11,8 +6,6 @@ import Layer from "./Layer";
 import { getComponentArrays } from "./entity-components/ComponentArray";
 import { playerInstance } from "./player";
 import { applyForce, getHitboxVelocity, Hitbox, setHitboxVelocity, translateHitbox } from "./hitboxes";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
-import { CollisionResult } from "../../../shared/src/collision";
 
 export interface HitboxCollisionPair {
    readonly affectedHitbox: Hitbox;
@@ -79,10 +72,7 @@ export function collide(entity: Entity, collidingEntity: Entity, hitbox: Hitbox,
 const calculateEntityPairCollisionInfo = (affectedEntity: Entity, collidingEntity: Entity): EntityPairCollisionInfo | null => {
    const transformComponent1 = TransformComponentArray.getComponent(affectedEntity);
    const transformComponent2 = TransformComponentArray.getComponent(collidingEntity);
-   if (transformComponent1 === null || transformComponent2 === null) {
-      return null;
-   }
-   
+
    // AABB bounding area check
    if (transformComponent1.boundingAreaMinX > transformComponent2.boundingAreaMaxX || // minX(1) > maxX(2)
        transformComponent1.boundingAreaMaxX < transformComponent2.boundingAreaMinX || // maxX(1) < minX(2)
@@ -148,9 +138,6 @@ const collectEntityCollisionsWithChunk = (collisionPairs: CollisionPairs, affect
       // @Speed: re-gotten further in the line
       const entityTransformComponent = TransformComponentArray.getComponent(affectedEntity);
       const otherEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
-      if (entityTransformComponent === null || otherEntityTransformComponent === null) {
-         continue;
-      }
 
       // Make sure the entities aren't in the same carry heirarchy
       // @Hack
@@ -211,9 +198,6 @@ export function resolvePlayerCollisions(): void {
    }
    
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
-   if (transformComponent === null) {
-      return;
-   }
    
    const collisionPairs: CollisionPairs = new Map();
 
@@ -226,9 +210,6 @@ export function resolvePlayerCollisions(): void {
 
 export function resolveWallCollisions(entity: Entity): boolean {
    const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent === null) {
-      return false;
-   }
    
    let hasMoved = false;
    const layer = getEntityLayer(entity);
@@ -329,7 +310,7 @@ export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArr
                seenEntityIDs.add(entity);
                
                const entityTransformComponent = TransformComponentArray.getComponent(entity);
-               if (entityTransformComponent !== null && boxHasCollisionWithHitboxes(box, entityTransformComponent.hitboxes, epsilon)) {
+               if (boxHasCollisionWithHitboxes(box, entityTransformComponent.hitboxes, epsilon)) {
                   collidingEntities.push(entity);
                }
             }
@@ -368,9 +349,6 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
             }
 
             const transformComponent = TransformComponentArray.getComponent(entity);
-            if (transformComponent === null) {
-               continue;
-            }
             
             const entityHitbox = transformComponent.hitboxes[0];
             if (Math.pow(x - entityHitbox.box.position.x, 2) + Math.pow(y - entityHitbox.box.position.y, 2) <= visionRangeSquared) {
@@ -396,8 +374,8 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
 }
 
 export function entitiesAreColliding(entity1: Entity, entity2: Entity): boolean {
-   const transformComponent1 = TransformComponentArray.getComponent(entity1)!;
-   const transformComponent2 = TransformComponentArray.getComponent(entity2)!;
+   const transformComponent1 = TransformComponentArray.getComponent(entity1);
+   const transformComponent2 = TransformComponentArray.getComponent(entity2);
    
    // AABB bounding area check
    if (transformComponent1.boundingAreaMinX > transformComponent2.boundingAreaMaxX || // minX(1) > maxX(2)

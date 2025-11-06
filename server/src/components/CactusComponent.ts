@@ -9,7 +9,7 @@ import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerab
 import { applyAbsoluteKnockback, Hitbox } from "../hitboxes";
 import { Settings } from "../../../shared/src/settings";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent";
-import CircularBox from "../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 import { createPricklyPearConfig } from "../entities/desert/prickly-pear";
 import { createEntityConfigAttachInfo } from "../components";
 

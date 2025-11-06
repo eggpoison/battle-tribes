@@ -7,7 +7,7 @@
 import { EntityType } from "./entities";
 
 //   just manually check the entity type in the onCollision or getSoftCollisionPushFactor event.
-export const enum CollisionGroup {
+export enum CollisionGroup {
    default,
    none,
    /** Static entities which don't have any collision events. */

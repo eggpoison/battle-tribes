@@ -1,4 +1,4 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 
 export interface ThrowingProjectileComponentData {}

@@ -1,16 +1,11 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { StatusEffectData } from "battletribes-shared/client-server-types";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { customTickIntervalHasPassed, lerp, randAngle, randFloat, randItem } from "battletribes-shared/utils";
+import { Entity, customTickIntervalHasPassed, lerp, randAngle, randFloat, randItem, PacketReader, StatusEffect, StatusEffectData, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import Board from "../../Board";
 import Particle from "../../Particle";
 import { createPoisonBubble, createBloodParticle, BloodParticleSize, createHeatParticle } from "../../particles";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour } from "../../rendering/webgl/particle-rendering";
 import { Light, removeLight } from "../../lights";
-import { PacketReader } from "battletribes-shared/packets";
 import { TransformComponentArray } from "./TransformComponent";
-import { Entity } from "../../../../../shared/src/entities";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import { ComponentTint, createComponentTint } from "../../EntityRenderInfo";
@@ -97,10 +92,10 @@ function getMaxRenderParts(): number {
 }
 
 function onTick(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity)!;
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
-   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity)!;
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
    
    const poisonStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.poisoned);
    if (poisonStatusEffect !== null) {
@@ -285,7 +280,7 @@ function onTick(entity: Entity): void {
 }
 
 function updateFromData(data: StatusEffectComponentData, entity: Entity): void {
-   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity)!;
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
 
    const previousHasFreezing = hasStatusEffect(statusEffectComponent, StatusEffect.freezing);
    
@@ -293,7 +288,7 @@ function updateFromData(data: StatusEffectComponentData, entity: Entity): void {
       if (!hasStatusEffect(statusEffectComponent, statusEffectData.type)) {
          switch (statusEffectData.type) {
             case StatusEffect.freezing: {
-               const transformComponent = TransformComponentArray.getComponent(entity)!;
+               const transformComponent = TransformComponentArray.getComponent(entity);
                const hitbox = transformComponent.hitboxes[0];
                playSoundOnHitbox("freezing.mp3", 0.4, 1, entity, hitbox, false);
                break;
@@ -317,7 +312,7 @@ function updatePlayerFromData(data: StatusEffectComponentData): void {
 }
 
 function calculateTint(entity: Entity): ComponentTint {
-   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity)!;
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
    if (hasStatusEffect(statusEffectComponent, StatusEffect.freezing)) {
       return createComponentTint(-0.15, 0, 0.5);
    } else {

@@ -1,11 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { assert, Entity, ServerComponentType } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
-import { Entity } from "../../../../../shared/src/entities";
 import { RenderPart } from "../../render-parts/render-parts";
-import { assert } from "../../../../../shared/src/utils";
 import { StructureConnection } from "../../structure-placement";
 import { Hitbox } from "../../hitboxes";
 import { TransformComponentArray } from "./TransformComponent";

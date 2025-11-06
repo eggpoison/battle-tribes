@@ -14,7 +14,7 @@ import { BarrelComponent } from "../../components/BarrelComponent";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
 import { Point } from "../../../../shared/src/utils";
 import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import CircularBox from "../../../../shared/src/boxes/CircularBox";
+import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
 import { Hitbox } from "../../hitboxes";
 import { StructureConnection } from "../../structure-placement";

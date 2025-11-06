@@ -4,7 +4,7 @@ import { getAbsAngleDiff, Point, randInt } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityConfig } from "../../components";
 import { HitboxCollisionType, HitboxFlag } from "battletribes-shared/boxes/boxes";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import WanderAI from "../../ai/WanderAI";
 import { Biome } from "battletribes-shared/biomes";
 import Layer from "../../Layer";
@@ -21,7 +21,7 @@ import { LootComponent, registerEntityLootOnDeath } from "../../components/LootC
 import { ItemType } from "../../../../shared/src/items/items";
 import {getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EnergyStomachComponent } from "../../components/EnergyStomachComponent";
-import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
 import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared";
 import { SandBallingAI } from "../../ai/SandBallingAI";
 import { createNormalisedPivotPoint } from "../../../../shared/src/boxes/BaseBox";

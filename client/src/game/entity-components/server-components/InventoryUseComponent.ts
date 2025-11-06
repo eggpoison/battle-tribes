@@ -1,7 +1,4 @@
-import { Entity, EntityType, LimbAction } from "battletribes-shared/entities";
-import { Point, lerp, randAngle, randFloat, randItem } from "battletribes-shared/utils";
-import { BlockType, ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
+import { createZeroedLimbState, LimbConfiguration, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, SPEAR_CHARGED_LIMB_STATE, interpolateLimbState, copyLimbState, PacketReader, InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool, Settings, BlockType, ServerComponentType, Point, lerp, randAngle, randFloat, randItem, Entity, EntityType, LimbAction } from "webgl-test-shared";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import Board, { getElapsedTimeInSeconds, getSecondsSinceTickTimestamp } from "../../Board";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
@@ -9,12 +6,8 @@ import Particle from "../../Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../../rendering/webgl/particle-rendering";
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../../limb-animations";
 import { createBlockParticle, createDeepFrostHeartBloodParticles, createEmberParticle, createSlurbParticle, createSmokeParticle } from "../../particles";
-import { InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool } from "battletribes-shared/items/items";
 import { VisualRenderPart, RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { PacketReader } from "battletribes-shared/packets";
-import { Hotbar_updateRightThrownBattleaxeItemID } from "../../../svelte/game/inventories/Hotbar";
-import { createZeroedLimbState, LimbConfiguration, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, SPEAR_CHARGED_LIMB_STATE, interpolateLimbState, copyLimbState } from "battletribes-shared/attack-patterns";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
@@ -25,6 +18,7 @@ import { getHumanoidRadius } from "./TribesmanComponent";
 import { playerInstance } from "../../player";
 import { getHitboxVelocity } from "../../hitboxes";
 import { currentSnapshot, tickIntervalHasPassed } from "../../client";
+import { updatePlayerItems } from "../../player-action-handler";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -612,11 +606,9 @@ function getMaxRenderParts(entityComponentData: EntityComponentData): number {
 }
 
 function onLoad(entity: Entity): void {
-   const renderInfo = getEntityRenderInfo(entity);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
-   if (inventoryUseComponent === null) {
-      return;
-   }
+
+   const renderInfo = getEntityRenderInfo(entity);
 
    const numExpectedLimbs = inventoryUseComponent.limbInfos.length;
    
@@ -639,7 +631,7 @@ function onLoad(entity: Entity): void {
 }
 
 function onTick(entity: Entity): void {
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity)!;
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    // @Cleanup: move to separate function
    for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
       const limbInfo = inventoryUseComponent.limbInfos[limbIdx];
@@ -647,7 +639,7 @@ function onTick(entity: Entity): void {
          continue;
       }
 
-      const transformComponent = TransformComponentArray.getComponent(entity)!;
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const velocity = getHitboxVelocity(hitbox);
 
@@ -1558,7 +1550,7 @@ const updateLimbInfoFromData = (limbInfo: LimbInfo, reader: PacketReader): void 
 }
 
 function updateFromData(data: InventoryUseComponentData, entity: Entity): void {
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity)!;
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
    inventoryUseComponent.limbInfos.splice(0, inventoryUseComponent.limbInfos.length);
    for (let i = 0; i < data.limbInfos.length; i++) {
@@ -1576,7 +1568,7 @@ function updateFromData(data: InventoryUseComponentData, entity: Entity): void {
 // BAGUETTE
 
 function updatePlayerFromData(data: InventoryUseComponentData): void {
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!)!;
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
    
    for (let i = 0; i < data.limbInfos.length; i++) {
       const limbInfoData = data.limbInfos[i];
@@ -1610,4 +1602,6 @@ function updatePlayerFromData(data: InventoryUseComponentData): void {
 
       updateLimb(inventoryUseComponent, playerInstance!, i, limbInfo);
    }
+
+   updatePlayerItems();
 }

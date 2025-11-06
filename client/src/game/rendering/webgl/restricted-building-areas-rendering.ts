@@ -1,8 +1,7 @@
-import { rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import { RestrictedBuildingAreaData } from "battletribes-shared/client-server-types";
+import { RestrictedBuildingAreaData, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
-import OPTIONS from "../../options";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
+import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
 
 const BORDER_WIDTH = 5;
 
@@ -60,7 +59,7 @@ export function createRestrictedBuildingAreaShaders(): void {
 }
 
 export function renderRestrictedBuildingAreas(): void {
-   if (!OPTIONS.showRestrictedAreas) {
+   if (!debugDisplayState.showRestrictedAreas) {
       return;
    }
    

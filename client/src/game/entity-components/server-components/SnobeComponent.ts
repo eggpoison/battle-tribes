@@ -1,19 +1,14 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { PacketReader, Settings, Point, randAngle, randFloat, randInt, Entity, HitboxFlag, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { HitboxFlag } from "../../../../../shared/src/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
-import { Entity } from "../../../../../shared/src/entities";
-import { Point, randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain, createHighSnowParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { HealthComponentArray } from "./HealthComponent";
 import { RandomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
-import { Settings } from "../../../../../shared/src/settings";
-import { PacketReader } from "../../../../../shared/src/packets";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 
 const AMBIENT_SOUNDS: ReadonlyArray<string> = ["snobe-ambient-1.mp3", "snobe-ambient-2.mp3", "snobe-ambient-3.mp3", "snobe-ambient-4.mp3"];

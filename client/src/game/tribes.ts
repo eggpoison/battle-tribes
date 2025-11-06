@@ -1,11 +1,5 @@
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { ItemRequirements } from "../../../shared/src/items/crafting-recipes";
-import { ItemType } from "../../../shared/src/items/items";
-import { PacketReader } from "../../../shared/src/packets";
-import { getTechByID, Tech, TechID, TechTreeUnlockProgress } from "../../../shared/src/techs";
-import { TribeType } from "../../../shared/src/tribes";
-import { updateTechTree } from "../svelte/game/tech-tree/TechTree";
-import { TechInfocard_setSelectedTech } from "../svelte/game/TechInfocard";
+import { TribeType, getTechByID, Tech, TechID, TechTreeUnlockProgress, PacketReader, ItemType, Entity, EntityType, ItemRequirements } from "webgl-test-shared";
+import { techTreeState } from "../ui-state/tech-tree-state.svelte";
 import { playHeadSound } from "./sound";
 
 export interface TribesmanInfo {
@@ -46,10 +40,10 @@ export function updatePlayerTribe(tribe: ExtendedTribe): void {
       playHeadSound("research.mp3", 0.4, 1);
    }
 
+   // @Garbage
    playerTribe = tribe;
 
-   updateTechTree();
-   TechInfocard_setSelectedTech(tribe.selectedTech);
+   techTreeState.updateFromTribe(tribe);
 }
 
 export function getTribeByID(tribeID: number): Tribe {

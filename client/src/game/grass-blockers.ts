@@ -1,17 +1,10 @@
-import { Box } from "../../../shared/src/boxes/boxes";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { PacketReader } from "../../../shared/src/packets";
-import { assert, unitsToChunksClamped } from "../../../shared/src/utils";
-import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { EntityRenderInfo } from "./EntityRenderInfo";
+import { Box, PacketReader } from "webgl-test-shared";
 import { currentSnapshot } from "./client";
 import Layer from "./Layer";
 import { readBoxFromData } from "./networking/packet-hitboxes";
-import ColouredRenderPart from "./render-parts/ColouredRenderPart";
-import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
 import { calculateGrassBlockerVertexData } from "./rendering/webgl/grass-blocker-rendering";
 import { gl } from "./webgl";
-import { entityExists, getEntityRenderInfo, getEntityType, layers } from "./world";
+import { layers } from "./world";
 
 export interface GrassBlocker {
    readonly box: Box;

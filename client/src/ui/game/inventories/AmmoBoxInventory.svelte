@@ -51,7 +51,7 @@
       {@const itemType: ItemType = Number(itemTypeString)}
       {@const clientItemInfo = CLIENT_ITEM_INFO_RECORD[itemType]}
       
-      <div class="area{ammoBoxComponent.ammoRemaining > 0 && itemType === ammoBoxComponent.ammoType ? " selected" : ""}{ammoBoxComponent.ammoRemaining > 0 && itemType !== ammoBoxComponent.ammoType ? " deselected" : ""}">
+      <div class="area" class:selected={ammoBoxComponent.ammoRemaining > 0 && itemType === ammoBoxComponent.ammoType} class:deselected={ammoBoxComponent.ammoRemaining > 0 && itemType !== ammoBoxComponent.ammoType}>
          <h3><img src={getItemTypeImage(itemType)} alt="" />{clientItemInfo.name}</h3>
          <p><span>{ammoInfo.damage}</span> damage</p>
          <p><span>{ammoInfo.ammoMultiplier}x</span> ammo multiplier</p>

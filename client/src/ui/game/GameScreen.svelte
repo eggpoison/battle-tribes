@@ -21,6 +21,7 @@
    import NerdVision from "./dev/NerdVision.svelte";
    import { entityInteractionState } from "../../ui-state/entity-interaction-state.svelte";
    import LayerChangeMessage from "./LayerChangeMessage.svelte";
+   import { tribePlanVisualiserState } from "../../ui-state/tribe-plan-visualiser-state.svelte";
 
    $effect(() => {
       // Reset state
@@ -64,7 +65,9 @@
 <TechTree />
 <TechInfocard />
 
-<TribePlanVisualiser />
+{#if tribePlanVisualiserState.tribe !== null && tribePlanVisualiserState.tribeAssignmentInfo !== null}
+   <TribePlanVisualiser tribe={tribePlanVisualiserState.tribe} tribeAssignmentInfo={tribePlanVisualiserState.tribeAssignmentInfo} />
+{/if}
 
 <BuildMenu />
 

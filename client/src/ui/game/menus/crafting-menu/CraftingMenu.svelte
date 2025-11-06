@@ -203,7 +203,7 @@
          </div>
 
          <div class="bottom">
-            <button onclick={craftRecipe} class={`craft-button${craftableRecipes.includes(selectedRecipe) ? " craftable" : ""}`}>CRAFT</button>
+            <button onclick={craftRecipe} class="craft-button" class:craftable={craftableRecipes.includes(selectedRecipe)}>CRAFT</button>
             <ItemSlot className="crafting-output" entityID={playerInstance!} inventory={inventoryState.craftingOutputSlot} itemSlot={1} validItemSpecifier={() => false} />
          </div>
       {:else}

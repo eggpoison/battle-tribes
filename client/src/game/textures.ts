@@ -2,10 +2,11 @@ import { gl } from "./webgl";
 import { imageIsLoaded } from "./utils";
 import { FLOOR_TILE_TEXTURE_SOURCE_RECORD, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
 import { BREAK_PROGRESS_TEXTURE_SOURCES } from "./rendering/webgl/tile-break-progress-rendering";
+import { assert } from "webgl-test-shared";
 
 // @HACK: this just imports everythign..... slow... prolly some i dont need.
 // @SPEED: do the same thing in texture-atlases!!
-const itemImages = import.meta.glob("$images/**/*", { eager: true, query: "?url", import: "default" });
+const itemImages = import.meta.glob("/src/images/**/*", { eager: true, query: "?url", import: "default" });
 
 let TEXTURES: { [key: string]: WebGLTexture } = {};
 
@@ -53,7 +54,8 @@ export function preloadTextureImages(): Array<HTMLImageElement> {
    const images = new Array<HTMLImageElement>();
    for (let i = 0; i < miscTextureSources.length; i++) {
       const textureSource = miscTextureSources[i];
-      const texture = itemImages["$images/" + textureSource] as string;
+      const texture = itemImages["/src/images/" + textureSource] as string;
+      assert(typeof texture !== "undefined");
       
       const image = new Image();
       image.src = texture;

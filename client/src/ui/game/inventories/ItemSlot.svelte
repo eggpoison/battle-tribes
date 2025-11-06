@@ -95,7 +95,9 @@
    {onmouseout}
    {onmousemove}
    {onmousedown}
-   class={`item-slot${typeof props.className !== "undefined" ? " " + props.className : ""}${props.isSelected ? " selected" : ""}${typeof item === "undefined" ? " empty" : ""}`}
+   class="item-slot {props.className}"
+   class:selected={props.isSelected}
+   class:empty={typeof item === "undefined"}
 >
    {#if typeof img !== "undefined"}
       <img src={img} draggable={false} alt="" />

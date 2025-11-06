@@ -1,18 +1,18 @@
 <script lang="ts">
-   import { Entity } from "webgl-test-shared";
+   import { type Entity } from "webgl-test-shared";
    import CLIENT_ENTITY_INFO_RECORD from "../../../../game/client-entity-info";
-   import { ExtendedTribe } from "../../../../game/tribes";
+   import { type ExtendedTribe } from "../../../../game/tribes";
+   import { tribePlanVisualiserState } from "../../../../ui-state/tribe-plan-visualiser-state.svelte";
 
    interface Props {
       readonly tribe: ExtendedTribe;
-      onSelectEntity(entity: Entity | null): void;
    }
 
    let props: Props = $props();
 
    const onchange = (e: Event): void => {
       const selectedValue = Number((e.target! as HTMLSelectElement).value) as Entity;
-      props.onSelectEntity(selectedValue !== 0 ? selectedValue : null)
+      tribePlanVisualiserState.setEntity(selectedValue !== 0 ? selectedValue : null);
    }
 </script>
    

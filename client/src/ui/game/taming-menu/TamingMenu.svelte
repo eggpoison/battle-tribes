@@ -120,7 +120,7 @@
             </div>
          </div>
          {#if typeof nextTamingTierFoodCost !== "undefined"}
-            <button class={tamingComponent.foodEatenInTier >= nextTamingTierFoodCost ? "clickable" : undefined} onmousedown={onCompleteButtonClick}>Complete</button>
+            <button class:clickable={tamingComponent.foodEatenInTier >= nextTamingTierFoodCost} onmousedown={onCompleteButtonClick}>Complete</button>
          {/if}
       </div>
    </div>
@@ -131,7 +131,7 @@
       {/each}
       {#each tamingSpec.skillNodes as skillNode}
          {#if skillNode.parent !== null && tamingComponent.tamingTier >= skillNode.requiredTamingTier}
-            <SkillConnector tamingComponent={tamingComponent} toSkillNode={skillNode} />
+            <SkillConnector {tamingSpec} tamingComponent={tamingComponent} toSkillNode={skillNode} />
          {/if}
       {/each}
 

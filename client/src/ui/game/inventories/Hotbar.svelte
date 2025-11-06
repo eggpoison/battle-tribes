@@ -14,7 +14,7 @@
       <div class="flex-container">
          <EmptyItemSlot className="hidden" />
          <EmptyItemSlot className="hidden" />
-         <div class={"inventory" + (playerTribe.tribeType !== TribeType.barbarians ? " hidden" : "")}>
+         <div class="inventory" class:hidden={playerTribe.tribeType !== TribeType.barbarians}>
             <InventoryContainer entityID={playerInstance} inventory={inventoryState.offhand} itemRestTime={playerActionState.offhandItemRestTime} />
          </div>
       </div>

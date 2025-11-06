@@ -13,7 +13,7 @@ export type ClientItemInfo = {
    readonly flavourText?: string;
 }
 
-const itemImages = import.meta.glob("$images/items/*", { eager: true, query: "?url", import: "default" });
+const itemImages = import.meta.glob("/src/images/items/*", { eager: true, query: "?url", import: "default" });
 
 const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
    [ItemType.wood]: {
@@ -880,7 +880,7 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
 };
 
 export function getItemTypeImage(itemType: ItemType): string {
-   return itemImages["$images/" + CLIENT_ITEM_INFO_RECORD[itemType].textureSource] as string;
+   return itemImages["/src/images/" + CLIENT_ITEM_INFO_RECORD[itemType].textureSource] as string;
 }
 
 export default CLIENT_ITEM_INFO_RECORD;

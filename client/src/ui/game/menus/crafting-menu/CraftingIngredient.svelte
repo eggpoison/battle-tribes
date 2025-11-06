@@ -39,5 +39,5 @@
          </div>
       {/if}
    </div>
-   <span class={`ingredient-count${!playerHasEnoughIngredients ? " not-enough" : ""}`}>x{props.amountRequiredForRecipe}</span>
+   <span class="ingredient-count" class:not-enough={!playerHasEnoughIngredients}>x{props.amountRequiredForRecipe}</span>
 </li>

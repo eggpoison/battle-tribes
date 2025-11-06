@@ -37,6 +37,7 @@
       gameUIState.setGameInteractState(GameInteractState.spectateEntity);
    }
 
+   // @Cleanup: unused???
    const onChange = (e: Event): void => {
       const target = e.target as HTMLSelectElement;
       const entityType = Number(target.options[target.selectedIndex].value);
@@ -58,61 +59,61 @@
 
    <ul class="area options">
       <li>
-         <label class={debugDisplayState.nightVisionIsEnabled ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.nightVisionIsEnabled}>
             <input bind:checked={debugDisplayState.nightVisionIsEnabled} name="nightvision-checkbox" type="checkbox" />
             Nightvision
          </label>
       </li>
       <li>
-         <label class={debugDisplayState.showHitboxes ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showHitboxes}>
             <input bind:checked={debugDisplayState.showHitboxes} name="hitboxes-checkbox" type="checkbox" />
             Hitboxes
          </label>
       </li>
       <li>
-         <label class={debugDisplayState.showChunkBorders ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showChunkBorders}>
             <input bind:checked={debugDisplayState.showChunkBorders} name="chunk-borders-checkbox" type="checkbox" />
             Chunk borders
          </label>
       </li>
       <li>
-         <label class={debugDisplayState.showRenderChunkBorders ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showRenderChunkBorders}>
             <input bind:checked={debugDisplayState.showRenderChunkBorders} name="render-chunk-borders-checkbox" type="checkbox" />
             Render chunk borders
          </label>
       </li>
       <li>
-         <label class={debugDisplayState.hideEntities ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.hideEntities}>
             <input bind:checked={debugDisplayState.hideEntities} name="hide-entities-checkbox" type="checkbox" />
             Hide entities
          </label>
       </li>
       <li>
-         <label class={debugDisplayState.showPathfindingNodes ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showPathfindingNodes}>
             <input bind:checked={debugDisplayState.showPathfindingNodes} name="show-pathfinding-nodes-checkbox" type="checkbox" />
             Show pathfinding nodes
          </label>
       </li>
       <li>
-         <label class={debugDisplayState.debugLights ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.debugLights}>
             <input bind:checked={debugDisplayState.debugLights} name="debug-lights-checkbox" type="checkbox" />
             Debug lights
          </label>
       </li>
       <li>
-         <label class={debugDisplayState.showSubtileSupports ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showSubtileSupports}>
             <input bind:checked={debugDisplayState.showSubtileSupports} name="show-subtile-supports-checkbox" type="checkbox" />
             Subtile supports
          </label>
       </li>
       <li>
-         <label class={debugDisplayState.showLightLevels ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showLightLevels}>
             <input bind:checked={debugDisplayState.showLightLevels} name="show-light-levels-checkbox" type="checkbox" />
             Light levels
          </label>
       </li>
       <li>
-         <label class={debugDisplayState.debugTethers ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.debugTethers}>
             <input bind:checked={debugDisplayState.debugTethers} name="debug-tethers-checkbox" type="checkbox" />
             Debug tethers
          </label>
@@ -157,36 +158,36 @@
    </ul> -->
 
    <div class="area">
-      <label class={"title" + ((debugDisplayState.showSafetyNodes && debugDisplayState.showBuildingSafetys && debugDisplayState.showBuildingPlans && debugDisplayState.showRestrictedAreas && debugDisplayState.showWallConnections) ? " enabled" : "")}>
+      <label class="title" class:enabled={debugDisplayState.showSafetyNodes && debugDisplayState.showBuildingSafetys && debugDisplayState.showBuildingPlans && debugDisplayState.showRestrictedAreas && debugDisplayState.showWallConnections}>
          AI Building
          <input checked={debugDisplayState.showSafetyNodes && debugDisplayState.showBuildingSafetys && debugDisplayState.showBuildingPlans && debugDisplayState.showRestrictedAreas && debugDisplayState.showWallConnections} type="checkbox" onchange={toggleAIBuilding} />
       </label>
       <div>
-         <label class={debugDisplayState.showSafetyNodes ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showSafetyNodes}>
             <input bind:checked={debugDisplayState.showSafetyNodes} name="show-safety-nodes-checkbox" type="checkbox" />
             Show safety nodes
          </label>
       </div>
       <div>
-         <label class={debugDisplayState.showBuildingSafetys ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showBuildingSafetys}>
             <input bind:checked={debugDisplayState.showBuildingSafetys} name="show-building-safetys-checkbox" type="checkbox" />
             Show building safety
          </label>
       </div>
       <div>
-         <label class={debugDisplayState.showBuildingPlans ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showBuildingPlans}>
             <input bind:checked={debugDisplayState.showBuildingPlans} name="show-building-plans-checkbox" type="checkbox" />
             Show building plans
          </label>
       </div>
       <div>
-         <label class={debugDisplayState.showRestrictedAreas ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showRestrictedAreas}>
             <input bind:checked={debugDisplayState.showRestrictedAreas} name="show-restricted-areas-checkbox" type="checkbox" />
             Show restricted areas
          </label>
       </div>
       <div>
-         <label class={debugDisplayState.showWallConnections ? "enabled" : undefined}>
+         <label class:enabled={debugDisplayState.showWallConnections}>
             <input bind:checked={debugDisplayState.showWallConnections} name="show-wall-connections-checkbox" type="checkbox" />
             Show wall connections
          </label>

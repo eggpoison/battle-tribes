@@ -7,24 +7,13 @@
    }
 
    let props: Props = $props();
-
-   const className = (() => {
-      switch (gameUIState.gameInteractState) {
-         case GameInteractState.selectCarryTarget:
-         case GameInteractState.selectRiderDepositLocation: {
-            return "carry";
-         }
-         case GameInteractState.selectMoveTargetPosition: {
-            return "move";
-         }
-         case GameInteractState.selectAttackTarget: {
-            return "attack";
-         }
-         default: {
-            throw new Error();
-         }
-      }
-   })();
 </script>
 
-<div id="select-carry-target-cursor-overlay" class={className} style:left="{props.mouseX}px" style:top="{props.mouseY}px"></div>
+<div
+   id="select-carry-target-cursor-overlay"
+   class:carry={gameUIState.gameInteractState === GameInteractState.selectCarryTarget || gameUIState.gameInteractState === GameInteractState.selectRiderDepositLocation}
+   class:move={gameUIState.gameInteractState === GameInteractState.selectMoveTargetPosition}
+   class:attack={gameUIState.gameInteractState === GameInteractState.selectAttackTarget}
+   style:left="{props.mouseX}px"
+   style:top="{props.mouseY}px"
+></div>

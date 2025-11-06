@@ -586,7 +586,7 @@ function updateFromData(data: TransformComponentData, entity: Entity): void {
 
       if (!getHitboxVelocity(hitbox).isZero()) {
          anyHitboxHasVelocity = true;
-         // @Temporary @Squeam
+         // @Temporary @Squeam for optimisation
          const entityType = getEntityType(entity);
          if (entityType === EntityType.decoration || entityType === EntityType.lilypad || entityType === EntityType.reed) {
             console.log(hitbox);

@@ -15,8 +15,7 @@ export default defineConfig({
    // @HACK to get shitting shared project working
    resolve: {
       alias: {
-         'webgl-test-shared': path.resolve(__dirname, '../shared/src'),
-         $images: path.resolve(__dirname, 'src/images')
+         'webgl-test-shared': path.resolve(__dirname, '../shared/src')
       },
       preserveSymlinks: false // force resolution through alias, not the symlink
    },

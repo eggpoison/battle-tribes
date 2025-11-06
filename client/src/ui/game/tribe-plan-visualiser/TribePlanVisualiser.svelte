@@ -2,9 +2,30 @@
    import { type AIPlan, type TribeAssignmentInfo } from "../../../game/rendering/tribe-plan-visualiser/tribe-plan-visualiser";
    import { assert } from "webgl-test-shared";
    import { type Entity } from "webgl-test-shared";
-    import PlanNode from "./PlanNode.svelte";
+   import PlanNode from "./PlanNode.svelte";
+   import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
+   import { type ExtendedTribe } from "../../../game/tribes";
+    import TribesmanAssignmentDropdown from "../dev/tabs/TribesmanAssignmentDropdown.svelte";
 
-   const ZOOM_FACTOR = 1.4
+   interface Props {
+      tribeAssignmentInfo: TribeAssignmentInfo;
+      tribe: ExtendedTribe;
+   }
+   
+   const ZOOM_FACTOR = 1.4;
+
+   let props: Props = $props();
+   const tribe = props.tribe;
+   const tribeAssignmentInfo = props.tribeAssignmentInfo;
+
+   const viewedEntity = tribePlanVisualiserState.entity;
+   
+   let isDragging = $state(false);
+   let lastCursorX = $state(0);
+   let lastCursorY = $state(0);
+   let offsetX = $state(0);
+   let offsetY = $state(0);
+   let zoom = $state(1);
 
    const getAssignment = (tribeAssignmentInfo: TribeAssignmentInfo, selectedEntity: Entity | null): AIPlan => {
       if (selectedEntity === null) {
@@ -16,23 +37,14 @@
       return assignment;
    }
 
-   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
-   
-   const [isDragging, setIsDragging] = useState(false);
-   const [lastCursorX, setLastCursorX] = useState(0);
-   const [lastCursorY, setLastCursorY] = useState(0);
-   const [offsetX, setOffsetX] = useState(0);
-   const [offsetY, setOffsetY] = useState(0);
-   const [zoom, setZoom] = useState(1);
-
    const onmousedown = (e: MouseEvent): void => {
-      setIsDragging(true);
-      setLastCursorX(e.clientX);
-      setLastCursorY(e.clientY);
+      isDragging = true;
+      lastCursorX = e.clientX;
+      lastCursorY = e.clientY;
    }
 
    const onmouseup = (): void => {
-      setIsDragging(false);
+      isDragging = false;
    }
 
    const onmousemove = (e: MouseEvent): void => {
@@ -42,23 +54,19 @@
 
       e.preventDefault();
 
-      setOffsetX(offsetX + (e.clientX - lastCursorX) / zoom);
-      setOffsetY(offsetY + (e.clientY - lastCursorY) / zoom);
+      offsetX += (e.clientX - lastCursorX) / zoom;
+      offsetY += (e.clientY - lastCursorY) / zoom;
       
-      setLastCursorX(e.clientX);
-      setLastCursorY(e.clientY);
+      lastCursorX = e.clientX;
+      lastCursorY = e.clientY;
    }
 
    const onwheel = (e: WheelEvent): void => {
       if (e.deltaY > 0) {
-         setZoom(zoom / ZOOM_FACTOR);
+         zoom /= ZOOM_FACTOR;
       } else {
-         setZoom(zoom * ZOOM_FACTOR);
+         zoom *= ZOOM_FACTOR;
       }
-   }
-
-   const onSelectEntity = (entity: Entity | null): void => {
-      setSelectedEntity(entity);
    }
    
    // @SQUEAM @InCOMPLETE
@@ -66,7 +74,7 @@
    //    return null;
    // }
 
-   const assignment = getAssignment(tribeAssignmentInfo, selectedEntity);
+   const assignment = getAssignment(tribeAssignmentInfo, viewedEntity);
 
 </script>
 
@@ -76,5 +84,5 @@
       <PlanNode plan={assignment} offsetX={offsetX} offsetY={offsetY} />
    </div>
 
-   <TribesmanAssignmentDropdown tribe={tribe} onSelectEntity={onSelectEntity} />
+   <TribesmanAssignmentDropdown tribe={tribe} />
 </div>

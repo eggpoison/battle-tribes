@@ -116,7 +116,7 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div style:left="calc(50% + ({tech.positionX}rem + {x}px) * {zoom})" style:top="calc(50% + ({-tech.positionY}rem + {y}px) * {zoom})" {onclick} {oncontextmenu} class={`tech${isUnlocked ? " unlocked" : ""}${isSelected ? " selected" : ""}`} {onmouseenter} {onmouseleave}>
+<div style:left="calc(50% + ({tech.positionX}rem + {x}px) * {zoom})" style:top="calc(50% + ({-tech.positionY}rem + {y}px) * {zoom})" {onclick} {oncontextmenu} class="tech" class:unlocked={isUnlocked} class:selected={isSelected} {onmouseenter} {onmouseleave}>
    <div class="icon-wrapper">
       <img src={require("../../../images/tech-tree/" + tech.iconSrc)} alt="" class="icon" draggable={false} />
    </div>

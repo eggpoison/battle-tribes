@@ -86,7 +86,7 @@
    {#if tribeComponent.tribeID !== playerTribe.id}
       <div class="area">
          <div class="flex-container space-around">
-            <button class={`recruit-button${canRecruit ? " clickable" : ""}`} onclick={recruit}>Recruit</button>
+            <button class="recruit-button" class:clickable={canRecruit} onclick={recruit}>Recruit</button>
             <TribesmanRelationSlider relation={tribesmanAIComponent.relationsWithPlayer} />
          </div>
       </div>

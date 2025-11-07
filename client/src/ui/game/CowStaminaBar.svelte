@@ -2,7 +2,7 @@
    import { playerInstance } from "../../game/player";
    import { TransformComponentArray } from "../../game/entity-components/server-components/TransformComponent";
    import { CowComponentArray } from "../../game/entity-components/server-components/CowComponent";
-   import EnergyBlobImage from "src/images/miscellaneous/energy-blob.png";
+   import EnergyBlobImage from "/src/images/miscellaneous/energy-blob.png";
 
    const MAX_STAMINA = 15;
 </script>

@@ -7,7 +7,7 @@ let snapshotBufferSize = $state(0);
 
 let _cameraZoom = $state(1);
 
-let uiZoom = $state(1);
+let uiZoom = $state(1.4);
 // @Hack @Copynpaste
 document.documentElement.style.setProperty("--zoom", uiZoom.toString());
 

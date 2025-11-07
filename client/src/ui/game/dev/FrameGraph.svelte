@@ -1,6 +1,7 @@
 <script lang="ts">
    import { FRAME_GRAPH_RECORD_TIME } from "../../../game/rendering/webgl/frame-graph-rendering";
    import { frameGraphState } from "../../../ui-state/frame-graph-state.svelte";
+   import { nerdVisionState } from "../../../ui-state/nerd-vision-state.svelte";
 
    const frames = frameGraphState.trackedFrames;
    
@@ -24,7 +25,7 @@
    average /= frames.length;
 </script>
 
-<div id="frame-graph">
+<div id="frame-graph" class:hidden={!nerdVisionState.isVisible}>
    <p class="info"><span>fps={fps}</span> <span>t_avg={average.toFixed(2)}</span> <span>t_min={min.toFixed(2)}</span> <span>t_max={max.toFixed(2)}</span></p>
    <canvas id="frame-graph-canvas"></canvas>
 </div>

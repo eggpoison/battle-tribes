@@ -5,7 +5,7 @@
    import { AmmoBoxComponentArray } from "../../../game/entity-components/server-components/AmmoBoxComponent";
    import RemainingAmmoSlider from "./RemainingAmmoSlider.svelte";
    import { entityInteractionState } from "../../../ui-state/entity-interaction-state.svelte";
-   import InventoryContainer from "./InventoryContainer.svelte";
+   import InventoryContainer from "./ItemSlotsContainer.svelte";
    import { CLIENT_STATUS_EFFECT_INFO_RECORD } from "../../../game/status-effects";
 
    const getAmmoSlot = (ammoBoxInventory: Inventory): number => {

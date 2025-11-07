@@ -14,7 +14,7 @@ import { currentSnapshot, nextSnapshot } from "../client";
 // @Cleanup: file name
 
 // @HACK i've only kept this dirty array around for hacky reasons. when i make the rework where the client works off sent render parts this should go away.
-let dirtyEntityRenderInfos = new Array<EntityRenderInfo>();
+let dirtyEntityRenderInfos = new Set<EntityRenderInfo>();
 
 /* ------------------------ */
 /* Matrix Utility Functions */
@@ -105,39 +105,12 @@ const overrideWithRotationMatrix = (matrix: Matrix3x2, rotation: number): void =
 }
 
 export function registerDirtyRenderInfo(renderInfo: EntityRenderInfo): void {
-   if (!renderInfo.renderPartsAreDirty) {
-      renderInfo.renderPartsAreDirty = true;
-
-      dirtyEntityRenderInfos.push(renderInfo);
-   }
+   renderInfo.renderPartsAreDirty = true;
+   dirtyEntityRenderInfos.add(renderInfo);
 }
 
 export function undirtyRenderInfo(renderInfo: EntityRenderInfo): void {
-   const idx = dirtyEntityRenderInfos.indexOf(renderInfo);
-   if (idx !== -1) {
-      dirtyEntityRenderInfos.splice(idx, 1);
-   }
-}
-
-/** Marks all render infos which will move due to the frame progress */
-export function dirtifyMovingEntities(): void {
-   // @SPEED
-   for (let i = 0; i < TransformComponentArray.entities.length; i++) {
-      const entity = TransformComponentArray.entities[i];
-      const transformComponent = TransformComponentArray.components[i];
-
-      for (const hitbox of transformComponent.hitboxes) {
-         const velocity = getHitboxVelocity(hitbox);
-         if (velocity.x !== 0 || velocity.y !== 0) {
-            // Is moving!!
-
-            const renderInfo = getEntityRenderInfo(entity);
-            registerDirtyRenderInfo(renderInfo);
-
-            break;
-         }
-      }
-   }
+   dirtyEntityRenderInfos.delete(renderInfo);
 }
 
 const calculateAndOverrideRenderThingMatrix = (thing: RenderPart): void => {
@@ -329,5 +302,5 @@ export function updateRenderPartMatrices(clientTickInterp: number, serverTickInt
    }
 
    // Reset dirty entities
-   dirtyEntityRenderInfos.length = 0;
+   dirtyEntityRenderInfos.clear();
 }

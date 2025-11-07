@@ -17,21 +17,24 @@ export const entityInteractionState = {
    get selectedEntity() {
       return entityExists(selectedEntity) ? selectedEntity : null;
    },
-   setSelectedEntity(newSelectedEntity: Entity): void {
-      selectedEntity = newSelectedEntity;
-   },
-   deselectSelectedEntity(): void {
-      // Clear previous selected entity
-      if (entityExists(selectedEntity)) {
-         selectedEntity = 0;
+   setSelectedEntity(newSelectedEntity: Entity | null): void {
+      if (newSelectedEntity !== null && entityExists(newSelectedEntity)) {
+         // Clear previous selected entity
+         if (entityExists(selectedEntity)) {
+            selectedEntity = 0;
 
-         sendStructureUninteractPacket(selectedEntity);
-         closeCurrentMenu();
+            sendStructureUninteractPacket(selectedEntity);
+            closeCurrentMenu();
+         }
+
+         selectedEntity = newSelectedEntity;
+      } else {
+         selectedEntity = 0;
       }
    },
 
    reset() {
       this.setHoveredEntity(null);
-      this.deselectSelectedEntity();
+      this.setSelectedEntity(null);
    }
 }

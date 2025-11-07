@@ -8,7 +8,7 @@
    import { getHitboxVelocity } from "../../../game/hitboxes";
    import CLIENT_ENTITY_INFO_RECORD from "../../../game/client-entity-info";
    import { getEntityType } from "../../../game/world";
-   import InventoryContainer from "../inventories/InventoryContainer.svelte";
+   import InventoryContainer from "../inventories/ItemSlotsContainer.svelte";
    import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
 
    interface Props {
@@ -30,10 +30,10 @@
 
    const debugData = hoverDebugState.entityDebugData;
 
-   const healthComponent = HealthComponentArray.getComponent(entity);
-   const inventoryComponent = InventoryComponentArray.getComponent(entity);
-   const structureComponent = StructureComponentArray.getComponent(entity);
-   const snobeComponent = SnobeComponentArray.getComponent(entity);
+   const healthComponent = HealthComponentArray.tryGetComponent(entity);
+   const inventoryComponent = InventoryComponentArray.tryGetComponent(entity);
+   const structureComponent = StructureComponentArray.tryGetComponent(entity);
+   const snobeComponent = SnobeComponentArray.tryGetComponent(entity);
 </script>
 
 

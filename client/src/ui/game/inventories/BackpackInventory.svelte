@@ -2,7 +2,7 @@
    import { InventoryName } from "webgl-test-shared";
    import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
    import { playerInstance } from "../../../game/player";
-   import InventoryContainer from "./InventoryContainer.svelte";
+   import InventoryContainer from "./ItemSlotsContainer.svelte";
 </script>
 
 {#if playerInstance !== null}

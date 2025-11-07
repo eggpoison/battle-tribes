@@ -34,7 +34,7 @@ const activeSounds = new Array<Sound>();
 const soundsAttachedToHitboxes = new Map<Hitbox, Array<SoundAttachInfo>>();
 const soundToHitboxMap = new Map<Sound, Hitbox | null>();
 
-const soundFiles = import.meta.glob("../sounds/*", { eager: true, query: "?url", import: "default" });
+const soundFiles = import.meta.glob("../sounds/**/*", { eager: true, query: "?url", import: "default" });
 
 // Must be called after a user action
 export function createAudioContext(): void {

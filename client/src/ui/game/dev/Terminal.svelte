@@ -1,115 +1,65 @@
-import { COMMANDS, CommandPermissions, CommandSpecifications, commandIsValid, parseCommand } from "webgl-test-shared";
-import { useEffect, useRef, useState } from "react";
-import { isDev } from "../../../game/utils";
-import { setTerminalButtonOpened } from "./TerminalButton";
+<script lang="ts">
+   import { COMMANDS, CommandPermissions, type CommandSpecifications, commandIsValid, parseCommand } from "webgl-test-shared";
+   import { isDev } from "../../../game/utils";
+   import { nerdVisionState } from "../../../ui-state/nerd-vision-state.svelte";
 
-/** All lines output by the terminal */
-let terminalLines = new Array<string>();
-/** Commands entered to the terminal */
-const enteredCommands = new Array<string>();
-let selectedCommandIndex = 0;
+   /** All lines output by the terminal */
+   const terminalLines = $state(new Array<string>());
+   /** Commands entered to the terminal */
+   const enteredCommands = new Array<string>();
+   let selectedCommandIndex = 0;
 
-/**
- * Checks whether the player is using the terminal or not.
- */
-export let playerIsUsingTerminal = false;
+   const getCommandErrorMessage = (command: string): string => {
+      const commandComponents = parseCommand(command);
 
-const getCommandErrorMessage = (command: string): string => {
-   const commandComponents = parseCommand(command);
-
-   // Check if the command type exists
-   let commandSpecifications: CommandSpecifications | null = null;
-   for (const currentCommandSpecifications of COMMANDS) {
-      if (currentCommandSpecifications.name === commandComponents[0]) {
-         commandSpecifications = currentCommandSpecifications;
-         break;
-      }
-   }
-   if (commandSpecifications === null) {
-      return `Invalid command! Unable to find command '${commandComponents[0]}'.`;
-   }
-
-   return "Invalid command! Mismatch of parameters.";
-}
-
-export let setTerminalVisibility: (isVisible: boolean) => void;
-export let toggleTerminalVisiblity: () => void;
-export let forceTerminalFocus: () => void;
-
-interface TerminalParams {
-   readonly startingIsVisible: boolean;
-}
-
-const Terminal = ({ startingIsVisible }: TerminalParams) => {
-   const lineInputRef = useRef<HTMLInputElement | null>(null);
-   const [isVisible, setIsVisible] = useState(startingIsVisible);
-   const [isInFocus, setIsInFocus] = useState(startingIsVisible);
-   const [lineInputValue, setLineInputValue] = useState("");
-   
-   useEffect(() => {
-      if (startingIsVisible && lineInputRef.current !== null) {
-         lineInputRef.current.focus();
-      }
-   }, [startingIsVisible]);
-
-   useEffect(() => {
-      if (lineInputRef.current !== null) {
-         lineInputRef.current.focus();
-      }
-   }, [isInFocus]);
-   
-   useEffect(() => {
-      setTerminalVisibility = (isVisible: boolean): void => {
-         setIsInFocus(false);
-         setIsVisible(isVisible);
-         setTerminalButtonOpened(isVisible);
-         if (!isVisible) {
-            setLineInputValue("");
+      // Check if the command type exists
+      let commandSpecifications: CommandSpecifications | null = null;
+      for (const currentCommandSpecifications of COMMANDS) {
+         if (currentCommandSpecifications.name === commandComponents[0]) {
+            commandSpecifications = currentCommandSpecifications;
+            break;
          }
       }
-
-      forceTerminalFocus = (): void => {
-         focusTerminal();
+      if (commandSpecifications === null) {
+         return `Invalid command! Unable to find command '${commandComponents[0]}'.`;
       }
-   }, []);
 
-   useEffect(() => {
-      toggleTerminalVisiblity = (): void => {
-         const previousIsVisible = isVisible;
-         setTerminalVisibility(!previousIsVisible)
-      }
-   }, [isVisible]);
+      return "Invalid command! Mismatch of parameters.";
+   }
+
+   let lineInputElem: HTMLInputElement | undefined;
+   let lineInputValue = $state("");
+
+   let isFocused = $state(true);
    
    const focusTerminal = (e?: MouseEvent): void => {
-      setIsInFocus(true);
+      isFocused = true;
 
       // Focus the line input
-      if (lineInputRef.current !== null) {
+      if (typeof lineInputElem !== "undefined") {
          if (typeof e !== "undefined") {
             // Stop the click from registering so the focus is given to the line input
             e.preventDefault();
          }
          
-         lineInputRef.current.focus();
+         lineInputElem.focus();
       }
    }
 
    const unfocusTerminal = (): void => {
-      setIsInFocus(false);
+      isFocused = false;
    }
 
    // Whenever the command input changes, update the input's length
-   useEffect(() => {
-      if (lineInputRef.current === null) return;
-      
-      // Keep the input at least one character long
-      lineInputRef.current.style.width = Math.max(lineInputValue.length, 1) + "ch";
-   }, [lineInputValue]);
+   $effect(() => {
+      if (typeof lineInputElem !== "undefined") {
+         // Keep the input at least one character long
+         lineInputElem.style.width = Math.max(lineInputValue.length, 1) + "ch";
+      }
+   });
 
    const enterCommand = (): void => {
-      if (lineInputRef.current === null) return;
-
-      const command = lineInputRef.current.value;
+      const command = lineInputValue;
 
       terminalLines.push(">" + command);
       enteredCommands.push(command);
@@ -123,7 +73,7 @@ const Terminal = ({ startingIsVisible }: TerminalParams) => {
       if (commandIsValid(command, userPermissions)) {
          // @Cleanup
          if (command.split(" ")[0] === "clear") {
-            terminalLines = [];
+            terminalLines.splice(0, terminalLines.length);
          } else {
             // @Incomplete
             // Client.sendCommand(command);
@@ -134,21 +84,15 @@ const Terminal = ({ startingIsVisible }: TerminalParams) => {
       }
 
       // Clear the line input
-      setLineInputValue("");
+      lineInputValue = "";
 
       selectedCommandIndex = enteredCommands.length;
-   }
-
-   const enterLineCharacter = (e: React.ChangeEvent<HTMLInputElement>): void => {
-      selectedCommandIndex = enteredCommands.length;
-
-      setLineInputValue(e.target.value);
    }
 
    const enterKey = (e: KeyboardEvent): void => {
       switch (e.key) {
          case "Escape": {
-            setTerminalVisibility(false);
+            nerdVisionState.setTerminalIsVisible(false);
             break;
          }
          case "Enter": {
@@ -166,9 +110,7 @@ const Terminal = ({ startingIsVisible }: TerminalParams) => {
             selectedCommandIndex--;
             
             const command = enteredCommands[selectedCommandIndex];
-            if (lineInputRef.current !== null) {
-               setLineInputValue(command);
-            }
+            lineInputValue = command;
             break;
          }
          case "ArrowDown": {
@@ -190,26 +132,13 @@ const Terminal = ({ startingIsVisible }: TerminalParams) => {
                command = enteredCommands[selectedCommandIndex];
             }
 
-            if (lineInputRef.current !== null) {
-               setLineInputValue(command);
-            }
+            lineInputValue = command;
             break;
          }
       }
    };
 
-   useEffect(() => {
-      playerIsUsingTerminal = isInFocus;
-   }, [isInFocus]);
-
-   // When the terminal is closed, set isInFocus to false
-   useEffect(() => {
-      return () => {
-         playerIsUsingTerminal = false;
-      }
-   }, []);
-
-   useEffect(() => {
+   $effect(() => {
       const checkForTerminalUnfocus = (e: MouseEvent): void => {
          let hasClickedOffTerminal = true;
          for (const element of e.composedPath()) {
@@ -229,28 +158,26 @@ const Terminal = ({ startingIsVisible }: TerminalParams) => {
       return () => {
          window.removeEventListener("mousedown", checkForTerminalUnfocus);
       }
-   }, []);
+   });
+</script>
 
-   if (!isVisible) return null;
-
-   return <div id="terminal" className={isInFocus ? "focused" : undefined} onMouseDown={e => focusTerminal(e.nativeEvent)}>
-      <div className="lines">
-         {terminalLines.map((line: string, i: number) => {
-            return <div className="line" key={i}>
-               {line}
-            </div>
-         })}
-      </div>
-
-      <div className="line-reader">
-         <span>&gt;</span>
-
-         <div className="line-input-wrapper">
-            <input ref={lineInputRef} name="line-input" type="text" className="line-input" value={lineInputValue} onChange={e => enterLineCharacter(e)} onKeyDown={e => enterKey(e.nativeEvent)} />
-            <div className="dummy-line-input"></div>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div id="terminal" class:focused={isFocused} onmousedown={focusTerminal}>
+   <div class="lines">
+      {#each terminalLines as line}
+         <div class="line">
+            {line}
          </div>
+      {/each}
+   </div>
+
+   <div class="line-reader">
+      <span>&gt;</span>
+
+      <div class="line-input-wrapper">
+         <!-- svelte-ignore a11y_autofocus -->
+         <input bind:this={lineInputElem} name="line-input" type="text" class="line-input" bind:value={lineInputValue} onkeydown={enterKey} autofocus />
+         <div class="dummy-line-input"></div>
       </div>
    </div>
-}
-
-export default Terminal;
+</div>

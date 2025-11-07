@@ -19,6 +19,7 @@ import { playerInstance } from "../../player";
 import { getHitboxVelocity } from "../../hitboxes";
 import { currentSnapshot, tickIntervalHasPassed } from "../../client";
 import { updatePlayerItems } from "../../player-action-handler";
+import { inventoryState } from "../../../ui-state/inventory-state.svelte";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -1597,7 +1598,7 @@ function updatePlayerFromData(data: InventoryUseComponentData): void {
 
       if (limbInfo.inventoryName === InventoryName.hotbar) {
          limbInfo.thrownBattleaxeItemID = limbInfoData.thrownBattleaxeItemID;
-         Hotbar_updateRightThrownBattleaxeItemID(limbInfoData.thrownBattleaxeItemID);
+         inventoryState.setHotbarThrownBattleaxeItemID(limbInfoData.thrownBattleaxeItemID);
       }
 
       updateLimb(inventoryUseComponent, playerInstance!, i, limbInfo);

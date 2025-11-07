@@ -88,22 +88,22 @@
    margin-top: 0.3rem;
 }
 
-.inventory-container {
-   background-color: #666;
+.item-slots-container {
+   /* background-color: #666; */
    display: inline-block;
+   /* Stops item slots from spilling down if there "isn't enough space" */
+   white-space: nowrap;
+   /* @Hack Disgusting, must be done for the code comments due to white-space: nowrap */
+   font-size: 0;
 }
 
-.inventory-container.bordered {
+.item-slots-container.bordered {
    border: 5px solid #000;
 }
 
 .inventory {
-   background-color: #444;
+   /* background-color: #444; */
    border: 5px solid black;
-}
-
-.inventory-row {
-   display: flex;
 }
 
 .item-slot {
@@ -114,6 +114,7 @@
    image-rendering: pixelated;
    position: relative;
    user-select: none;
+   display: inline-block;
 }
 
 .item-slot.selected {

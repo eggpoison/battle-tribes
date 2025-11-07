@@ -84,9 +84,9 @@ export function onKeyDown(e: KeyboardEvent): void {
       // Close the settings
       } else if (key === "Escape") {
          gameUIState.setSettingsIsOpen(false);
-      // Display nerd vision
+      // Open/close nerd vision
       } else if (key === "`") {
-         nerdVisionState.setIsVisible(true);
+         nerdVisionState.setIsVisible(!nerdVisionState.isVisible);
       // Open terminal on tilda press
       } else if (key === "~") {
          nerdVisionState.setIsVisible(true);

@@ -1,7 +1,7 @@
 <script lang="ts">
    import { sendDevGiveItemPacket } from "../../../../game/networking/packet-sending";
    import { getItemStackSize } from "webgl-test-shared";
-   import { ItemSlotCallbackInfo } from "../../inventories/ItemSlot.svelte";
+   import { type ItemSlotCallbackInfo } from "../../inventories/ItemSlot.svelte";
    import ItemCatalogue from "./ItemCatalogue.svelte";
 
    const onSlotClick = (e: MouseEvent, callbackInfo: ItemSlotCallbackInfo): void => {

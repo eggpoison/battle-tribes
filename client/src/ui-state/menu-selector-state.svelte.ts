@@ -18,8 +18,9 @@ export enum Menu {
    tribesmanInventory,
    campfireInventory,
    furnaceInventory,
+   ammoBoxInventory,
    tombstoneEpitaph,
-   ammoBoxInventory
+   healthInspector
 }
 
 let menu = $state(Menu.none);
@@ -32,7 +33,7 @@ export const menuSelectorState = {
       menu = newMenu;
       if (newMenu !== Menu.none) {
          addMenuCloseFunction(() => {
-            entityInteractionState.deselectSelectedEntity();
+            entityInteractionState.setSelectedEntity(null);
             menuSelectorState.setMenu(Menu.none);
             
             // @INVESTIGATE: this might actually be bad for gameplay, cuz what if you randomly drop something or someone attacks you while you're doing something and you're forced to find a place to put your held item...

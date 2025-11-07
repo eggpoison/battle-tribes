@@ -19,7 +19,11 @@
       "outDir": "./build",
       "sourceMap": true,
       "declaration": true,
-      "isolatedModules": true
+      "isolatedModules": true,
+      "baseUrl": ".",
+      "paths": {
+         "webgl-test-shared": ["../shared/src"]
+      }
    },
    "include": ["src/**/*"],
    "exclude": ["node_modules/*", "__sapper__/*", "public/*"]

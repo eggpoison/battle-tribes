@@ -5,17 +5,19 @@
    import { tribeHasExtendedInfo, tribes } from "../../../../game/tribes";
    import CLIENT_ENTITY_INFO_RECORD from "../../../../game/client-entity-info";
    import { sendDevChangeTribeTypePacket, sendDevCreateTribePacket, sendSetAutogiveBaseResourcesPacket, sendTPTOEntityPacket } from "../../../../game/networking/packet-sending";
+   import DevmodeScrollableOptions from "../DevmodeScrollableOptions.svelte";
+   import DevmodeDropdownInput from "../DevmodeDropdownInput.svelte";
 
    let selectedTribe = $state(tribes[0]);
 
    const selectTribeID = (optionIdx: number): void => {
-      setSelectedTribe(tribes[optionIdx]);
+      selectedTribe = tribes[optionIdx];
    }
 
-   const updateTribeType = useCallback((optionIdx: number): void => {
+   const updateTribeType = (optionIdx: number): void => {
       const tribeType = optionIdx as TribeType;
       sendDevChangeTribeTypePacket(selectedTribe.id, tribeType);
-   }, [selectedTribe]);
+   }
 
    const tribeTypeOptions = new Array<string>();
    for (let tribeType: TribeType = 0; tribeType < NUM_TRIBE_TYPES; tribeType++) {
@@ -27,16 +29,12 @@
       const autogiveBaseResources = (e.target as HTMLInputElement).checked;
       sendSetAutogiveBaseResourcesPacket(selectedTribe.id, autogiveBaseResources);
    }
-
-   export let TribesTab_refresh: () => void = () => {};
-
-   const TribesTab = () => {}
 </script>
    
 <div id="tribes-tab" class="devmode-tab devmode-container">
    <div class="flex-container">
       <DevmodeScrollableOptions options={tribes.map(tribe => tribe.id.toString())} onOptionSelect={selectTribeID} />
-      
+   
       <div class="flex-container column">
          <div class="spawn-options devmode-menu-section">
             <h2 class="devmode-menu-section-title">{selectedTribe.name}</h2>

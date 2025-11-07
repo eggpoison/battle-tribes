@@ -12,7 +12,7 @@ interface Options {
 const OPTIONS: Options = {
    spawnEntities: true,
    spawnTribesmen: false,
-   generateRivers: true,
+   generateRivers: false,
    generateWalls: true,
    generateCaves: true,
    inBenchmarkMode: false,

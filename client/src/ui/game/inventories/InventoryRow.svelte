@@ -1,9 +1,6 @@
 <script lang="ts">
    import { type Inventory, InventoryName, ItemType } from "webgl-test-shared";
    import ItemSlot, { type ItemSlotCallbackInfo } from "./ItemSlot.svelte";
-   import BackpackWireframe from "../../../images/miscellaneous/backpack-wireframe.png";
-   import ArmourWireframe from "../../../images/miscellaneous/armour-wireframe.png";
-   import GloveWireframe from "../../../images/miscellaneous/glove-wireframe.png";
    import { type ItemRestTime } from "../../../game/player-action-handler";
 
    interface Props {
@@ -21,7 +18,6 @@
    }
 
    let props: Props = $props();
-   const inventory = props.inventory;
    const y = props.y;
 
    const xPositions = new Array<number>();
@@ -71,6 +67,6 @@
       {@const className = typeof props.itemSlotClassNameCallback !== "undefined" ? props.itemSlotClassNameCallback(callbackInfo) : undefined}
 
       {@const isSelected = typeof props.selectedItemSlot !== "undefined" && itemSlot === props.selectedItemSlot}
-      <ItemSlot className={className} entityID={props.entityID} inventory={inventory} itemSlot={itemSlot} isManipulable={props.isManipulable} isSelected={isSelected} placeholderImg={placeholderImg} onMouseDown={leftClickFunc} onMouseOver={props.onMouseOver} onMouseOut={props.onMouseOut} onMouseMove={props.onMouseMove} />
+      <ItemSlot {...props} className={className} itemSlot={itemSlot} isSelected={isSelected} placeholderImg={placeholderImg} onMouseDown={leftClickFunc} />
    {/each}
 </div>

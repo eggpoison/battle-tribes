@@ -1,9 +1,9 @@
 <script lang="ts">
    import { TabType } from "../../../ui-state/tab-selector-state.svelte";
-   import ItemTabImage from "src/images/ui/item-tab.png";
-   import SummonTabImage from "src/images/ui/summon-tab.png";
-   import TitlesTabImage from "src/images/ui/titles-tab.png";
-   import TribesTabImage from "src/images/ui/tribes-tab.png";
+   import ItemTabImage from "/src/images/ui/item-tab.png";
+   import SummonTabImage from "/src/images/ui/summon-tab.png";
+   import TitlesTabImage from "/src/images/ui/titles-tab.png";
+   import TribesTabImage from "/src/images/ui/tribes-tab.png";
 
    interface Props {
       readonly tabType: TabType;

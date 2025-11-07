@@ -1,8 +1,8 @@
 <script lang="ts">
-   import ItemsTab from "./tabs/ItemsTab";
-   import SummonTab from "./tabs/SummonTab";
-   import TitlesTab from "./tabs/TitlesTab";
-   import TribesTab from "./tabs/TribesTab";
+   import ItemsTab from "./tabs/ItemsTab.svelte";
+   import SummonTab from "./tabs/SummonTab.svelte";
+   import TitlesTab from "./tabs/TitlesTab.svelte";
+   import TribesTab from "./tabs/TribesTab.svelte";
    import Tab from "./Tab.svelte";
    import { TabType } from "../../../ui-state/tab-selector-state.svelte";
 

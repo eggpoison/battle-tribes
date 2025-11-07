@@ -1,35 +1,15 @@
 <script lang="ts">
-   import { Mutable, randAngle, Inventory, InventoryName, ItemSlots, EntityComponents, ServerComponentType, ComponentSummonData, EntitySummonData, EntitySummonPacket, EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared";
+   import { randAngle, InventoryName, type ItemSlots, EntityComponents, ServerComponentType, type ComponentSummonData, type EntitySummonData, type EntitySummonPacket, EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared";
    import CLIENT_ENTITY_INFO_RECORD from "../../../../game/client-entity-info";
-   import DevmodeRangeInput from "../DevmodeRangeInput";
-   import TribeComponentInput from "./TribeComponentInput";
-   import DevmodeScrollableOptions from "../DevmodeScrollableOptions";
-   import InventoryComponentInput, { ENTITY_INVENTORY_NAME_RECORD, NUM_INVENTORY_NAMES } from "./InventoryComponentInput";
+   import DevmodeScrollableOptions from "../DevmodeScrollableOptions.svelte";
    import { closeCurrentMenu } from "../../../../game/menus";
-   import { GameInteractState } from "../../GameScreen";
+   import { ENTITY_INVENTORY_NAME_RECORD, tabSelectorState } from "../../../../ui-state/tab-selector-state.svelte";
+   import { GameInteractState, gameUIState } from "../../../../ui-state/game-ui-state.svelte";
+   import DevmodeRangeInput from "../DevmodeRangeInput.svelte";
+   import InventoryComponentInput from "./InventoryComponentInput.svelte";
+   import TribeComponentInput from "./TribeComponentInput.svelte";
 
    type EntityTypeTuple = [EntityType, string];
-
-   interface ComponentDataInputsProps {
-      readonly componentType: ServerComponentType;
-   }
-
-   const createInitialInventories = (): Record<InventoryName, Inventory> => {
-      const inventories: Partial<Record<InventoryName, Inventory>> = {};
-
-      for (let inventoryName: InventoryName = 0; inventoryName < NUM_INVENTORY_NAMES; inventoryName++) {
-         const inventory = new Inventory(1, 1, inventoryName);
-         inventories[inventoryName] = inventory;
-      }
-
-      return inventories as Record<InventoryName, Inventory>;
-   }
-
-   // @Hack? Is there a better way?
-   export const SUMMON_DATA_PARAMS = {
-      inventories: createInitialInventories(),
-      tribeID: 0
-   };
 
    let alphabeticalEntityTypes: ReadonlyArray<EntityType>;
    {
@@ -59,7 +39,7 @@
       for (let i = 0; i < inventoryNames.length; i++) {
          const inventoryName = inventoryNames[i];
 
-         const inventory = SUMMON_DATA_PARAMS.inventories[inventoryName];
+         const inventory = tabSelectorState.summonedInventories[inventoryName];
          
          if (Object.keys(inventory.itemSlots).length > 0) {
             itemSlots[inventoryName] = inventory.itemSlots;
@@ -73,7 +53,7 @@
 
    const serialiseTribeComponentSummonData = (): ComponentSummonData<ServerComponentType.tribe> => {
       return {
-         tribeID: SUMMON_DATA_PARAMS.tribeID
+         tribeID: tabSelectorState.summonedTribeID
       };
    }
 
@@ -84,29 +64,14 @@
       }
    }
 
-   const getInputElement = (componentType: ServerComponentType, entityType: EntityType, setMenu: (element: JSX.Element) => void, key: number): JSX.Element | undefined => {
-      switch (componentType) {
-         case  ServerComponentType.inventory: return <InventoryComponentInput entityType={entityType} setMenu={setMenu} key={key} />;
-         case ServerComponentType.tribe: return <TribeComponentInput key={key} />;
-      }
-   }
-
-   const ComponentDataInputs = (props: ComponentDataInputsProps) => {
-      switch (props.componentType) {
-         case ServerComponentType.transform: {
-            
-         }
-      }
-   }
-
-   const [selectedEntityType, setSelectedEntityType] = useState(alphabeticalEntityTypes[0]);
+   let selectedEntityType = $state(alphabeticalEntityTypes[0]);
 
    // Spawn options
-   const [spawnRange, setSpawnRange] = useState(0);
+   let spawnRange = $state(0);
 
-   const componentTypes = EntityComponents[selectedEntityType] as ReadonlyArray<ServerComponentType>;
+   const componentTypes: ReadonlyArray<ServerComponentType> = $derived(EntityComponents[selectedEntityType]);
 
-   const updateSummonPacket = useCallback((): void => {
+   const updateSummonPacket = (): void => {
       // Create summon data
       const summonData: EntitySummonData = {};
       for (const componentType of componentTypes) {
@@ -124,20 +89,20 @@
          entityType: selectedEntityType,
          summonData: summonData
       };
-      props.summonPacketRef.current = packet;
-   }, [selectedEntityType, spawnRange]);
+      tabSelectorState.setSummonPacket(packet);
+   }
 
    const beginSummon = (): void => {
       updateSummonPacket();
 
       // Close the tab
       closeCurrentMenu();
-      props.setGameInteractState(GameInteractState.summonEntity);
+      gameUIState.setGameInteractState(GameInteractState.summonEntity);
    }
    
    const selectEntityType = (optionIdx: number): void => {
       const entityType = alphabeticalEntityTypes[optionIdx];
-      setSelectedEntityType(entityType);
+      selectedEntityType = entityType;
    }
 </script>
 
@@ -149,11 +114,15 @@
          <h2 class="devmode-menu-section-title">Spawn Options</h2>
          <div class="bar"></div>
 
-         <DevmodeRangeInput text="Spawn range:" defaultValue={spawnRange} onChange={setSpawnRange} />
+         <DevmodeRangeInput text="Spawn range:" bind:value={spawnRange} />
 
-         {componentTypes.map((componentType, i) => {
-            return getInputElement(componentType, selectedEntityType, props.setMenu, i);
-         })}
+         {#each componentTypes as componentType}
+            {#if componentType === ServerComponentType.inventory}
+               <InventoryComponentInput entityType={selectedEntityType} />;
+            {:else if componentType === ServerComponentType.tribe}
+               <TribeComponentInput />;
+            {/if}
+         {/each}
 
          <button onclick={beginSummon}>Summon</button>
       </div>

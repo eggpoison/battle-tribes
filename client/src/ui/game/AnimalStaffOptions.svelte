@@ -39,7 +39,7 @@
          sendAnimalStaffFollowCommandPacket(entity);
          createControlCommandParticles(AnimalStaffCommandType.follow);
       }
-      entityInteractionState.deselectSelectedEntity();
+      entityInteractionState.setSelectedEntity(null);
    }, [entity]);
 
    const pressMoveOption = useCallback((): void => {

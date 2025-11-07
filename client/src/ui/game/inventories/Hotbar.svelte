@@ -4,32 +4,41 @@
    import { playerInstance } from "../../../game/player";
    import { playerTribe } from "../../../game/tribes";
    import EmptyItemSlot from "./EmptyItemSlot.svelte";
-   import InventoryContainer from "./InventoryContainer.svelte";
    import { inventoryState } from "../../../ui-state/inventory-state.svelte";
    import { playerActionState } from "../../../ui-state/player-action-state.svelte";
+   import BackpackWireframe from "../../../images/miscellaneous/backpack-wireframe.png";
+   import ArmourWireframe from "../../../images/miscellaneous/armour-wireframe.png";
+   import GloveWireframe from "../../../images/miscellaneous/glove-wireframe.png";
+   import ItemSlotsContainer from "./ItemSlotsContainer.svelte";
+   import EntityInteractableItemSlot from "./EntityInteractableItemSlot.svelte";
 </script>
 
 {#if (playerInstance !== null && InventoryComponentArray.hasComponent(playerInstance))}
    <div id="hotbar">
       <div class="flex-container">
-         <EmptyItemSlot className="hidden" />
-         <EmptyItemSlot className="hidden" />
-         <div class="inventory" class:hidden={playerTribe.tribeType !== TribeType.barbarians}>
-            <InventoryContainer entityID={playerInstance} inventory={inventoryState.offhand} itemRestTime={playerActionState.offhandItemRestTime} />
-         </div>
+         <EmptyItemSlot class="hidden" />
+         <EmptyItemSlot class="hidden" />
+         {#if playerTribe.tribeType === TribeType.barbarians}
+            <ItemSlotsContainer isBordered>
+               <EntityInteractableItemSlot entity={playerInstance} inventory={inventoryState.offhand} itemSlot={1} restTime={playerActionState.offhandItemRestTime} />
+            </ItemSlotsContainer>
+         {:else}
+            <EmptyItemSlot class="hidden" />
+         {/if}
       </div>
       <div class="middle">
-         <div class="inventory">
-            <!-- @Hack -->
-            <InventoryContainer entityID={playerInstance} inventory={inventoryState.hotbar} itemRestTime={playerActionState.hotbarItemRestTime} selectedItemSlot={inventoryState.selectedItemSlot} />
-         </div>
+         <ItemSlotsContainer isBordered>
+            {#each inventoryState.hotbar.getSlots() as itemSlot}
+               <EntityInteractableItemSlot entity={playerInstance} inventory={inventoryState.hotbar} itemSlot={itemSlot} restTime={playerActionState.hotbarItemRestTime} />
+            {/each}
+         </ItemSlotsContainer>
       </div>
       <div class="flex-container">
-         <div class="inventory">
-            <InventoryContainer entityID={playerInstance} inventory={inventoryState.backpackSlot} />
-            <InventoryContainer entityID={playerInstance} inventory={inventoryState.armourSlot} />
-            <InventoryContainer entityID={playerInstance} inventory={inventoryState.gloveSlot} />
-         </div>
+         <ItemSlotsContainer isBordered>
+            <EntityInteractableItemSlot entity={playerInstance} inventory={inventoryState.backpackSlot} placeholderImg={BackpackWireframe} itemSlot={1} />
+            <EntityInteractableItemSlot entity={playerInstance} inventory={inventoryState.armourSlot}   placeholderImg={ArmourWireframe}   itemSlot={1} />
+            <EntityInteractableItemSlot entity={playerInstance} inventory={inventoryState.gloveSlot}    placeholderImg={GloveWireframe}    itemSlot={1} />
+         </ItemSlotsContainer>
       </div>
    </div>
 {/if}

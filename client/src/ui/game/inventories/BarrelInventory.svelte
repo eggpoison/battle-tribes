@@ -1,16 +1,24 @@
 <script lang="ts">
-   import { assert, InventoryName } from "webgl-test-shared";
+   import { assert, type Entity, type Inventory, InventoryName } from "webgl-test-shared";
    import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
    import MenuElem from "../menus/MenuElem.svelte";
-   import InventoryContainer from "./InventoryContainer.svelte";
-   import { entityInteractionState } from "../../../ui-state/entity-interaction-state.svelte";
+   import ItemSlotsContainer from "./ItemSlotsContainer.svelte";
+    import InventoryItemSlots from "./InventoryItemSlots.svelte";
 
-   // @Hack: "!"
-   const barrel = entityInteractionState.selectedEntity!;
-   const inventoryComponent = InventoryComponentArray.getComponent(barrel);
+   interface Props {
+      entity: Entity;
+   }
+  
+   let { entity }: Props = $props();
 
-   const inventory = getInventory(inventoryComponent, InventoryName.inventory);
-   assert(inventory !== null);
+   function getInven(): Inventory {
+      const inventoryComponent = InventoryComponentArray.getComponent(entity);
+      const inventory = getInventory(inventoryComponent, InventoryName.inventory);
+      assert(inventory !== null);
+      return inventory;
+   }
+   
+   const inventory = getInven();
 </script>
 
 <MenuElem id="barrel-inventory" class="menu">
@@ -26,6 +34,8 @@
       </label>
    </div>
    <div class="flex-container center">
-      <InventoryContainer entityID={barrel} inventory={inventory} />
+      <ItemSlotsContainer isBordered>
+         <InventoryItemSlots entity={entity} inventory={inventory} />
+      </ItemSlotsContainer>
    </div>
 </MenuElem>

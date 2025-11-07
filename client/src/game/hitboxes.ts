@@ -1,4 +1,4 @@
-import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, updateVertexPositionsAndSideAxes, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, TILE_PHYSICS_INFO_RECORD, TileType, Settings, PacketReader, Entity, CollisionBit, CircularBox, RectangularBox } from "webgl-test-shared";
+import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, updateVertexPositionsAndSideAxes, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, TILE_PHYSICS_INFO_RECORD, TileType, Settings, PacketReader, Entity, CollisionBit, CircularBox, RectangularBox, distance, distBetweenPointAndRectangle } from "webgl-test-shared";
 import { hitboxIsInRiver, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityRenderInfo } from "./world";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
@@ -474,4 +474,43 @@ export function getHitboxByLocalID(hitboxes: ReadonlyArray<Hitbox>, localID: num
       }
    }
    return null;
+}
+
+export function getDistanceFromPointToHitbox(point: Readonly<Point>, hitbox: Hitbox): number {
+   const box = hitbox.box;
+   
+   if (boxIsCircular(box)) {
+      const rawDistance = distance(point.x, point.y, box.position.x, box.position.y);
+      return rawDistance - box.radius;
+   } else {
+      return distBetweenPointAndRectangle(point.x, point.y, box.position, box.width, box.height, box.angle);
+   }
+}
+
+export function getDistanceFromPointToHitboxIncludingChildren(point: Readonly<Point>, hitbox: Hitbox): number {
+   let minDist = getDistanceFromPointToHitbox(point, hitbox);
+
+   for (const child of hitbox.children) {
+      if (child.isPartOfParent) {
+         const dist = getDistanceFromPointToHitboxIncludingChildren(point, child);
+         if (dist < minDist) {
+            minDist = dist;
+         }
+      }
+   }
+
+   return minDist;
+}
+
+export function getDistanceFromPointToEntity(point: Readonly<Point>, entity: Entity): number {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   
+   let minDist = Number.MAX_SAFE_INTEGER;
+   for (const hitbox of transformComponent.hitboxes) {
+      const dist = getDistanceFromPointToHitboxIncludingChildren(point, hitbox);
+      if (dist < minDist) {
+         minDist = dist;
+      }
+   }
+   return minDist;
 }

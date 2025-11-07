@@ -22,6 +22,7 @@ import { GrassBlockerData, readGrassBlockers, updateGrassBlockersFromData } from
 import Board from "../Board";
 import { tribesTabState } from "../../ui-state/tribes-tab-state.svelte";
 import { infocardsState } from "../../ui-state/infocards-state.svelte";
+import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 

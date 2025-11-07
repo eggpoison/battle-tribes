@@ -1,5 +1,5 @@
 <script lang="ts">
-   import { getCurrentLayer } from "../../../game/world";
+   import { entityExists, getCurrentLayer } from "../../../game/world";
    import { cursorWorldPos } from "../../../game/mouse-input";
    import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
    import HoverDebugTile from "./tabs/HoverDebugTile.svelte";
@@ -14,7 +14,7 @@
    {#if hoverDebugState.tile !== null}
       <HoverDebugTile {layer} tile={hoverDebugState.tile} />
    {/if}
-   {#if hoverDebugState.entityDebugData !== null}
+   {#if hoverDebugState.entityDebugData !== null && entityExists(hoverDebugState.entityDebugData.entityID)}
       <HoverDebugEntity entityDebugData={hoverDebugState.entityDebugData} />
    {/if}
 </div>

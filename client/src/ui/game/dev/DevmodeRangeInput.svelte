@@ -1,29 +1,21 @@
-import { forwardRef, useRef, useState } from "react";
-
-interface DevmodeRangeInputProps {
-   readonly text: string;
-   readonly defaultValue: number;
-   onChange(newValue: number): void;
-}
-
-const DevmodeRangeInput = forwardRef<HTMLInputElement | null, DevmodeRangeInputProps>((props: DevmodeRangeInputProps) => {
-   const ref = useRef<HTMLInputElement | null>(null);
-   const [value, setValue] = useState(props.defaultValue);
-   
-   const onChange = (): void => {
-      if (ref.current === null) {
-         return;
-      }
-
-      const value = Number(ref.current.value);
-      setValue(value);
-      props.onChange(value);
+<script lang="ts">
+   interface Props {
+      value: number;
+      readonly text: string;
+      onChange?(newValue: number): void;
    }
-   
-   return <label className="devmode-input range-input-label">
-      <span>{props.text} <span className="weighted">{value}</span></span>
-      <input ref={ref} type="range" name="zoom-input" defaultValue={value} min={0} max={250} step={25} onChange={onChange} />
-   </label>;
-});
 
-export default DevmodeRangeInput;
+   let { value = $bindable(), ...props}: Props = $props();
+   
+   $effect((): void => {
+      if (typeof props.onChange !== "undefined") {
+         props.onChange(value);
+      }
+   });
+</script>
+
+
+<label class="devmode-input range-input-label">
+   <span>{props.text} <span class="weighted">{value}</span></span>
+   <input type="range" name="zoom-input" bind:value={value} min={0} defaultValue={50} max={250} step={25} />
+</label>

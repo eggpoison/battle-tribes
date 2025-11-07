@@ -1,9 +1,9 @@
-import DevmodeDropdownInput from "../DevmodeDropdownInput";
-import { SUMMON_DATA_PARAMS } from "./SummonTab";
-import CLIENT_TRIBE_INFO_RECORD from "../../../../game/client-tribe-info";
-import { tribes } from "../../../../game/tribes";
+<script lang="ts">
+   import CLIENT_TRIBE_INFO_RECORD from "../../../../game/client-tribe-info";
+   import { tribes } from "../../../../game/tribes";
+   import { tabSelectorState } from "../../../../ui-state/tab-selector-state.svelte";
+   import DevmodeDropdownInput from "../DevmodeDropdownInput.svelte";
 
-const TribeComponentInput = () => {
    const tribeIDs = new Array<number>();
    const options = new Array<string>();
    for (const tribe of tribes) {
@@ -13,12 +13,8 @@ const TribeComponentInput = () => {
 
    const updateTribeID = (optionIdx: number): void => {
       const tribeID = tribeIDs[optionIdx];
-      SUMMON_DATA_PARAMS.tribeID = tribeID;
+      tabSelectorState.setSummonedTribeID(tribeID);
    }
-   
-   return <>
-      <DevmodeDropdownInput text="Tribe ID:" options={options} onChange={updateTribeID} />
-   </>;
-}
+</script>
 
-export default TribeComponentInput;
+<DevmodeDropdownInput text="Tribe ID:" options={options} onChange={updateTribeID} />

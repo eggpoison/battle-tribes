@@ -1,32 +1,28 @@
-import { useRef } from "react";
+<script lang="ts">
+   interface Props {
+      readonly text: string;
+      readonly options: ReadonlyArray<string>;
+      readonly defaultOption?: string;
+      onChange?(optionIdx: number): void;
+   }
 
-interface DevmodeDropdownInputProps {
-   readonly text: string;
-   readonly options: ReadonlyArray<string>;
-   readonly defaultOption: string;
-   onChange?(optionIdx: number): void;
-}
-
-const DevmodeDropdownInput = (props: DevmodeDropdownInputProps) => {
-   const dropdownRef = useRef<HTMLSelectElement | null>(null);
+   let props: Props = $props();
    
-   const onChange = (): void => {
-      if (dropdownRef.current === null || typeof props.onChange === "undefined") {
-         return;
+   let selectedOption = $state(props.defaultOption || props.options[0]);
+
+   $effect(() => {
+      if (typeof props.onChange !== "undefined") {
+         const optionIdx = props.options.indexOf(selectedOption);
+         props.onChange(optionIdx);
       }
+   });
+</script>
 
-      const optionIdx = props.options.indexOf(dropdownRef.current.value);
-      props.onChange(optionIdx);
-   };
-   
-   return <div className="devmode-input">
-      <span>{props.text}</span>
-      <select ref={dropdownRef} value={props.defaultOption} onChange={onChange}>
-         {props.options.map((option, i) => {
-            return <option key={i} value={option}>{option}</option>
-         })}
-      </select>
-   </div>
-}
-
-export default DevmodeDropdownInput;
+<div class="devmode-input">
+   <span>{props.text}</span>
+   <select bind:value={selectedOption}>
+      {#each props.options as option}
+         <option value={option}>{option}</option>
+      {/each}
+   </select>
+</div>

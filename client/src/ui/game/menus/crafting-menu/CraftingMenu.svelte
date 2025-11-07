@@ -2,19 +2,17 @@
    import { EntityType, Inventory, Item, ItemTally2, tallyInventoryItems, ItemType, InventoryName, type CraftingRecipe, CRAFTING_RECIPES, forceGetItemRecipe, type CraftingStationEntityType, getTechRequiredForItem } from "webgl-test-shared";
    import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../../game/client-item-info";
    import { playHeadSound } from "../../../../game/sound";
-   import { addMenuCloseFunction } from "../../../../game/menus";
-   import { TransformComponentArray } from "../../../../game/entity-components/server-components/TransformComponent";
    import { sendCraftItemPacket, sendItemDropPacket } from "../../../../game/networking/packet-sending";
    import { playerTribe } from "../../../../game/tribes";
    import { playerInstance } from "../../../../game/player";
-   import { getInventory, InventoryComponentArray } from "../../../../game/entity-components/server-components/InventoryComponent";
-   import ItemSlot, { type ItemSlotCallbackInfo } from "../../inventories/ItemSlot.svelte";
-   import InventoryContainer from "../../inventories/InventoryContainer.svelte";
+   import ItemSlot from "../../inventories/ItemSlot.svelte";
+   import InventoryContainer from "../../inventories/ItemSlotsContainer.svelte";
    import CraftingIngredients from "./CraftingIngredients.svelte";
-    import { entityInteractionState } from "../../../../ui-state/entity-interaction-state.svelte";
-    import { getEntityType } from "../../../../game/world";
-    import RecipeViewer from "./RecipeViewer.svelte";
-    import { inventoryState } from "../../../../ui-state/inventory-state.svelte";
+   import { entityInteractionState } from "../../../../ui-state/entity-interaction-state.svelte";
+   import { getEntityType } from "../../../../game/world";
+   import RecipeViewer from "./RecipeViewer.svelte";
+   import { inventoryState } from "../../../../ui-state/inventory-state.svelte";
+   import { type ItemSlotCallbackInfo } from "../../inventories/EntityInteractableItemSlot.svelte";
 
    // @Temporary? @Robustness
    const CRAFTING_STATION_ICON_TEXTURE_SOURCES: Record<CraftingStationEntityType, string> = {
@@ -204,7 +202,7 @@
 
          <div class="bottom">
             <button onclick={craftRecipe} class="craft-button" class:craftable={craftableRecipes.includes(selectedRecipe)}>CRAFT</button>
-            <ItemSlot className="crafting-output" entityID={playerInstance!} inventory={inventoryState.craftingOutputSlot} itemSlot={1} validItemSpecifier={() => false} />
+            <ItemSlot class="crafting-output" entityID={playerInstance!} inventory={inventoryState.craftingOutputSlot} itemSlot={1} validItemSpecifier={() => false} />
          </div>
       {:else}
          <div class="select-message">&#40;Select a recipe to view&#41;</div>

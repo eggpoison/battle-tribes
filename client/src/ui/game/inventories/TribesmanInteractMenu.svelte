@@ -7,7 +7,7 @@
    import { playerInstance } from "../../../game/player";
    import TribesmanInfocard from "./TribesmanInfocard.svelte";
    import { entityInteractionState } from "../../../ui-state/entity-interaction-state.svelte";
-   import InventoryContainer from "./InventoryContainer.svelte";
+   import InventoryContainer from "./ItemSlotsContainer.svelte";
    import BackpackWireframeImage from "../../../images/miscellaneous/backpack-wireframe.png";
    import ArmourWireframeImage from "../../../images/miscellaneous/armour-wireframe.png";
    import ItemSlot from "./ItemSlot.svelte";

@@ -5,17 +5,15 @@ import { renderCursorTooltip } from "./mouse-input";
 import { resizeCanvas } from "./webgl";
 import { createAudioContext, playRiverSounds, updateSounds } from "./sound";
 import { attemptToResearch, updateActiveResearchBench, updateResearchOrb } from "./research";
-import { updateHighlightedAndHoveredEntities, updateSelectedEntity } from "./entity-selection";
+import { updateHighlightedAndHoveredEntities } from "./entity-selection";
 import { updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
 import { entityUsesClientInterp } from "./rendering/render-part-matrices";
 import { createCollapseParticles } from "./collapses";
 import { updateSlimeTrails } from "./rendering/webgl/slime-trail-rendering";
 import { updateDebugEntity } from "./entity-debugging";
 import { createSpectatingPlayer, isSpectating, playerInstance, setIsSpectating, setPlayerInstance, setPlayerUsername, updatePlayerRotation } from "./player";
-// import { TamingMenu_forceUpdate } from "../ui/game/taming-menu/TamingMenu";
 import { callEntityOnUpdateFunctions } from "./entity-components/ComponentArray";
 import { resolvePlayerCollisions } from "./collision";
-// import { CowStaminaBar_forceUpdate } from "../ui/game/CowStaminaBar";
 import { decodeSnapshotFromGameDataPacket, PacketSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
 import { sendActivatePacket, sendInitialPlayerDataPacket, sendPlayerDataPacket } from "./networking/packet-sending";
 import { InitialGameData, processForcePositionUpdatePacket, processInitialGameDataPacket, processSimulationStatusUpdatePacket, processSyncDataPacket, receiveChatMessagePacket } from "./networking/packet-receiving";
@@ -25,7 +23,6 @@ import { LoadingScreenStage, loadingScreenState } from "../ui-state/loading-scre
 import { appState, AppState } from "../ui-state/app-state.svelte";
 import { registerFrame, renderFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { updateSpamFilter } from "./chat";
-import { gameUIState } from "../ui-state/game-ui-state.svelte";
 import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 import { buildMenuState } from "../ui-state/build-menu-state.svelte";
 import { updatePlayerMovement } from "./player-action-handler";
@@ -328,8 +325,7 @@ const runFrame = (frameStartTime: number): void => {
          attemptToResearch();
 
          // @Cleanup: can probs just combine these 2
-         updateHighlightedAndHoveredEntities(gameUIState.gameInteractState);
-         updateSelectedEntity(gameUIState.gameInteractState);
+         updateHighlightedAndHoveredEntities();
          buildMenuState.updateEntity();
          // @Incomplete
          // AnimalStaffOptions_update();

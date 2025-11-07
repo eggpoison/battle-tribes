@@ -1,27 +1,20 @@
 <script lang="ts">
    import ChatBox from "./ChatBox.svelte";
-   import CraftingMenu from "./menus/crafting-menu/CraftingMenu.svelte";
    import TechTree from "./tech-tree/TechTree.svelte";
-   import BuildMenu from "./menus/BuildMenu.svelte";
    import TechInfocard from "./TechInfocard.svelte";
-   import InventorySelector from "./inventories/InventorySelector.svelte";
-   import HealthInspector from "./HealthInspector.svelte";
+   import MenuSelector from "./inventories/MenuSelector.svelte";
    import Infocards from "./infocards/Infocards.svelte";
    import SummonCrosshair from "./SummonCrosshair.svelte";
    import GameInteractableLayer from "./GameInteractableLayer.svelte";
    import TribePlanVisualiser from "./tribe-plan-visualiser/TribePlanVisualiser.svelte";
-   import AnimalStaffOptions from "./AnimalStaffOptions.svelte";
-   import TamingMenu from "./taming-menu/TamingMenu.svelte";
-   import SignInscribeMenu from "./SignInscribeMenu.svelte";
-   import TamingRenamePrompt from "./taming-menu/TamingRenamePrompt.svelte";
    import { GameInteractState, gameUIState } from "../../ui-state/game-ui-state.svelte";
    import DeathScreen from "./DeathScreen.svelte";
    import HealthBar from "./HealthBar.svelte";
-   import BackpackInventory from "./inventories/BackpackInventory.svelte";
    import NerdVision from "./dev/NerdVision.svelte";
    import { entityInteractionState } from "../../ui-state/entity-interaction-state.svelte";
    import LayerChangeMessage from "./LayerChangeMessage.svelte";
    import { tribePlanVisualiserState } from "../../ui-state/tribe-plan-visualiser-state.svelte";
+   import { techTreeState } from "../../ui-state/tech-tree-state.svelte";
 
    $effect(() => {
       // Reset state
@@ -37,10 +30,6 @@
    <HealthBar />
    <Infocards />
 {/if}
-
-<!-- Note: BackpackInventoryMenu must be exactly before CraftingMenu because of CSS hijinks -->
-<BackpackInventory />
-<CraftingMenu  />
 
 {#if gameUIState.isDead}
    <DeathScreen />
@@ -58,29 +47,19 @@
    <SummonCrosshair />
 
    <!-- @INCOMPLETE? wat was this -->
-   <!-- svelte-ignore a11y_no_static_element_interactions -->
    <!-- <div id="summon-entity-veil" onmousedown={e => placeEntity(e.nativeEvent)}></div> -->
 {/if}
 
-<TechTree />
+{#if techTreeState.isVisible}
+   <TechTree />
+{/if}
 <TechInfocard />
 
 {#if tribePlanVisualiserState.tribe !== null && tribePlanVisualiserState.tribeAssignmentInfo !== null}
    <TribePlanVisualiser tribe={tribePlanVisualiserState.tribe} tribeAssignmentInfo={tribePlanVisualiserState.tribeAssignmentInfo} />
 {/if}
 
-<BuildMenu />
-
-<InventorySelector />
-
-<HealthInspector />
-
-<AnimalStaffOptions />
-
-<TamingMenu />
-<TamingRenamePrompt />
-
-<SignInscribeMenu />
+<MenuSelector />
 
 <!-- @SQUEAM for pre-stamina-bar shots -->
 <!-- <CowStaminaBar /> -->

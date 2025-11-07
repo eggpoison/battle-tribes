@@ -23,10 +23,10 @@
    <GameScreen />
 {/if}
 
-<div id="canvas-wrapper" class={appState.state !== AppState.game ? "hidden" : undefined}>
+<div id="canvas-wrapper" class:hidden={appState.state !== AppState.game}>
    <canvas id="game-canvas"></canvas>
    <canvas id="text-canvas"></canvas>
-   <canvas id="tech-tree-canvas" class={techTreeState.isVisible ? "hidden" : undefined}></canvas>
+   <canvas id="tech-tree-canvas" class:hidden={!techTreeState.isVisible}></canvas>
    <canvas id="tribe-plan-visualiser-canvas" class="hidden"></canvas>
    <FrameGraph />
 </div>

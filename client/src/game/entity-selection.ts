@@ -18,7 +18,7 @@ import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
 import { playerInstance } from "./player";
 import { HealthComponentArray } from "./entity-components/server-components/HealthComponent";
 import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "./entity-components/server-components/TamingComponent";
-import { createHitboxQuick, getHitboxVelocity } from "./hitboxes";
+import { createHitboxQuick, getDistanceFromPointToEntity, getHitboxVelocity } from "./hitboxes";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
 import { cursorWorldPos } from "./mouse-input";
 import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
@@ -26,7 +26,7 @@ import { StructureComponentArray } from "./entity-components/server-components/S
 import { getPlayerSelectedItem, playerIsPlacingEntity } from "./player-action-handler";
 import { cameraZoom } from "./camera";
 import { entityInteractionState } from "../ui-state/entity-interaction-state.svelte";
-import { GameInteractState } from "../ui-state/game-ui-state.svelte";
+import { GameInteractState, gameUIState } from "../ui-state/game-ui-state.svelte";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
 
 const enum Vars {
@@ -204,10 +204,10 @@ const getSelectedCarrySlotIdx = (entity: Entity): number | null => {
    return closestCarrySlotIdx;
 }
 
-const getEntityInteractAction = (gameInteractState: GameInteractState, entity: Entity): InteractAction | null => {
+const getEntityInteractAction = (entity: Entity): InteractAction | null => {
    const selectedItem = getPlayerSelectedItem();
 
-   if (gameInteractState === GameInteractState.selectCarryTarget) {
+   if (gameUIState.gameInteractState === GameInteractState.selectCarryTarget) {
       const entityType = getEntityType(entity);
       // @Hack
       if (entityType !== EntityType.tree && entityType !== EntityType.boulder) {
@@ -218,7 +218,7 @@ const getEntityInteractAction = (gameInteractState: GameInteractState, entity: E
          };
       }
    }
-   if (gameInteractState === GameInteractState.selectAttackTarget) {
+   if (gameUIState.gameInteractState === GameInteractState.selectAttackTarget) {
       if (HealthComponentArray.hasComponent(entity)) {
          return {
             type: InteractActionType.selectAttackTarget,
@@ -445,7 +445,7 @@ const createInteractRenderInfo = (interactAction: InteractAction): EntityRenderI
    }
 }
 
-const interactWithEntity = (setGameInteractState: (state: GameInteractState) => void, entity: Entity, action: InteractAction): void => {
+const interactWithEntity = (entity: Entity, action: InteractAction): void => {
    switch (action.type) {
       case InteractActionType.openBuildMenu: {
          entityInteractionState.setSelectedEntity(entity);
@@ -531,7 +531,7 @@ const interactWithEntity = (setGameInteractState: (state: GameInteractState) => 
          // @Hack: "!"
          const hoveredEntity = entityInteractionState.hoveredEntity!;
          sendSetCarryTargetPacket(selectedEntity, hoveredEntity);
-         setGameInteractState(GameInteractState.none);
+         gameUIState.setGameInteractState(GameInteractState.none);
          createControlCommandParticles(AnimalStaffCommandType.carry);
          break;
       }
@@ -541,7 +541,7 @@ const interactWithEntity = (setGameInteractState: (state: GameInteractState) => 
          // @Hack: "!"
          const hoveredEntity = entityInteractionState.hoveredEntity!;
          sendSetAttackTargetPacket(selectedEntity, hoveredEntity);
-         setGameInteractState(GameInteractState.none);
+         gameUIState.setGameInteractState(GameInteractState.none);
          createControlCommandParticles(AnimalStaffCommandType.attack);
          break;
       }
@@ -565,8 +565,7 @@ const interactWithEntity = (setGameInteractState: (state: GameInteractState) => 
    }
 }
 
-// @Cleanup: name
-const getEntityID = (gameInteractState: GameInteractState, doPlayerProximityCheck: boolean, doCanSelectCheck: boolean): number => {
+export function updateHighlightedAndHoveredEntities(): void {
    const playerTransformComponent = TransformComponentArray.getComponent(playerInstance!);
    const playerHitbox = playerTransformComponent.hitboxes[0];
    const layer = getEntityLayer(playerInstance!);
@@ -576,176 +575,56 @@ const getEntityID = (gameInteractState: GameInteractState, doPlayerProximityChec
    const minChunkY = Math.max(Math.floor((cursorWorldPos.y - HIGHLIGHT_CURSOR_RANGE / cameraZoom) / Settings.CHUNK_UNITS), 0);
    const maxChunkY = Math.min(Math.floor((cursorWorldPos.y + HIGHLIGHT_CURSOR_RANGE / cameraZoom) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
 
-   let minDist = HIGHLIGHT_CURSOR_RANGE + 1.1;
-   let entityID = -1;
+   let newHoveredEntity: Entity | null = null;
+   let newHoveredEntityDist = HIGHLIGHT_CURSOR_RANGE;
+   let newSelectedEntity: Entity | null = null;
+   let newSelectedEntityDist = HIGHLIGHT_CURSOR_RANGE;
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);
          for (const currentEntity of chunk.nonGrassEntities) {
-            const interactAction = getEntityInteractAction(gameInteractState, currentEntity);
-            if (doCanSelectCheck && interactAction === null) {
-               continue;
-            }
+            const dist = getDistanceFromPointToEntity(cursorWorldPos, currentEntity);
 
-            const entityTransformComponent = TransformComponentArray.getComponent(currentEntity);
-            if (doPlayerProximityCheck && doCanSelectCheck) {
-               const entityHitbox = entityTransformComponent.hitboxes[0];
-               // @Incomplete: Should do it based on the distance from the closest hitbox rather than distance from player center
-               if (playerHitbox.box.position.distanceTo(entityHitbox.box.position) > interactAction!.interactRange) {
-                  continue;
-               }
-            }
-            
-            // Distance from cursor
-            for (const hitbox of entityTransformComponent.hitboxes) {
-               if (boxIsWithinRange(hitbox.box, cursorWorldPos, HIGHLIGHT_CURSOR_RANGE)) {
-                  const distance = cursorWorldPos.distanceTo(hitbox.box.position);
-                  if (distance < minDist) {
-                     minDist = distance;
-                     entityID = currentEntity;
+            if (dist < newSelectedEntityDist) {
+               const interactAction = getEntityInteractAction(currentEntity);
+               if (interactAction !== null) {
+                  // @Incomplete @Cleanup: Should do it based on the distance from the closest hitbox rather than distance from player center
+                  const distToPlayer = getDistanceFromPointToEntity(playerHitbox.box.position, currentEntity);
+                  if (distToPlayer < interactAction!.interactRange) {
+                     newSelectedEntity = currentEntity;
+                     newSelectedEntityDist = dist;
                   }
-                  break;
                }
+            } else if (dist < newHoveredEntityDist) {
+               newHoveredEntity = currentEntity;
+               newHoveredEntityDist = dist;
             }
          }
       }
    }
 
-   return entityID;
-}
+   entityInteractionState.setHoveredEntity(newHoveredEntity);
+   entityInteractionState.setSelectedEntity(newSelectedEntity);
 
-const getPlantGhostType = (plantedEntityType: PlantedEntityType): GhostType => {
-   switch (plantedEntityType) {
-      case EntityType.treePlanted: {
-         return GhostType.treeSeed;
-      }
-      case EntityType.berryBushPlanted: {
-         return GhostType.berryBushSeed;
-      }
-      case EntityType.iceSpikesPlanted: {
-         return GhostType.iceSpikesSeed;
-      }
-   }
-}
-
-// @Cleanup: setGhostInfo called at every return
-// @CLEANUP: Alsmost completely useless?
-const updateHighlightedEntity = (gameInteractState: GameInteractState, entity: Entity | null): void => {
-   if (entity === null) {
-      // @Incomplete
-      // setGhostInfo(null);
-      highlightedRenderInfo = null;
-      return;
-   }
+   // @INCOMPLETE @SQUEAM wtf
    
-   // @Speed: could just pass this in
-   const interactAction = getEntityInteractAction(gameInteractState, entity);
-
-   if (interactAction === null) {
-      // @Incomplete
-      // setGhostInfo(null);
-      return;
-   }
-
-   highlightedRenderInfo = createInteractRenderInfo(interactAction);
-   
-   const entityTransformComponent = TransformComponentArray.getComponent(entity);
-   const entityHitbox = entityTransformComponent.hitboxes[0];
-   
-   switch (interactAction.type) {
-      case InteractActionType.plantSeed: {
-         const ghostInfo: GhostInfo = {
-            position: entityHitbox.box.position,
-            rotation: entityHitbox.box.angle,
-            ghostType: getPlantGhostType(interactAction.plantedEntityType),
-            tint: [1, 1, 1],
-            opacity: PARTIAL_OPACITY
-         };
-         // @Incomplete
-         // setGhostInfo(ghostInfo);
-         break;
-      }
-      case InteractActionType.useFertiliser: {
-         const ghostInfo: GhostInfo = {
-            position: entityHitbox.box.position,
-            rotation: entityHitbox.box.angle,
-            ghostType: GhostType.fertiliser,
-            tint: [1, 1, 1],
-            opacity: PARTIAL_OPACITY
-         };
-         // @Incomplete
-         // setGhostInfo(ghostInfo);
-         break;
-      }
-      default: {
-         // @Incomplete
-         // setGhostInfo(null);
-         break;
-      }
-   }
-}
-
-export function updateHighlightedAndHoveredEntities(gameInteractState: GameInteractState): void {
-   // @Hack
-   if (playerInstance === null) {
-      hoveredEntityID = -1;
-      return;
-   }
-
-   // @Cleanup: This is a pretty messy function: has 3 different scenarios, only separated by guards. Maybe refactor?
-
-   // @Hack?
-   if (playerIsPlacingEntity()) {
-      // When the player is placing an entity, we don't want them to be able to select entities.
-      deselectHighlightedEntity();
-      hoveredEntityID = getEntityID(gameInteractState, false, false);
-      return;
-   }
-
-   // @Hack
-   // If the player is interacting with an inventory, only consider the distance from the player not the cursor
-   // @CLEANUP @HACK @SQUEAM: just sliced this up. make a new system where it dynamically checks if something is being hovered or not.
-   // if (playerInstance !== null && entityExists(selectedEntity) && (isHoveringInBlueprintMenu() || InventorySelector_inventoryIsOpen() || AnimalStaffOptions_isHovering())) {
-   if (playerInstance !== null && entityExists(selectedEntity)) {
-      hoveredEntityID = getEntityID(gameInteractState, false, false);
-      return;
-   }
-
-   hoveredEntityID = getEntityID(gameInteractState, false, false);
-
-   const newHighlightedEntityID = getEntityID(gameInteractState, true, true);
-   if (newHighlightedEntityID !== highlightedEntity) {
-      // Special case: when the game is in the select carry target interact state, we want the selected cow to remain selected even as the player highlights other entities
-      if (gameInteractState !== GameInteractState.selectCarryTarget && gameInteractState !== GameInteractState.selectAttackTarget && gameInteractState !== GameInteractState.selectMoveTargetPosition) {
-         // @Incomplete
-         // setGhostInfo(null);
-         deselectHighlightedEntity();
-      }
-      highlightedEntity = newHighlightedEntityID;
-   }
-
-   updateHighlightedEntity(gameInteractState, entityExists(highlightedEntity) ? highlightedEntity : null);
+   // When the game is in select carry target mode, we want the controlled entity to remain selected
+   // if (gameInteractState !== GameInteractState.selectCarryTarget && gameInteractState !== GameInteractState.selectAttackTarget && gameInteractState !== GameInteractState.selectMoveTargetPosition && highlightedEntity === -1) {
+   //    entityInteractionState.setSelectedEntity(null);
+   // }
 }
 
 export function attemptEntitySelection(): boolean {
-   if (!entityExists(highlightedEntity)) {
-      // When a new entity is selected, deselect the previous entity
-      entityInteractionState.deselectSelectedEntity();
+   const hoveredEntity = entityInteractionState.hoveredEntity;
+   if (hoveredEntity === null) {
       return false;
    }
-
-   const interactAction = getEntityInteractAction(gameInteractState, highlightedEntity);
+   
+   const interactAction = getEntityInteractAction(hoveredEntity);
    if (interactAction !== null) {
-      interactWithEntity(setGameInteractState, highlightedEntity, interactAction);
+      interactWithEntity(hoveredEntity, interactAction);
       return true;
    }
 
    return false;
-}
-
-export function updateSelectedEntity(gameInteractState: GameInteractState): void {
-   // When the game is in select carry target mode, we want the controlled entity to remain selected
-   if (gameInteractState !== GameInteractState.selectCarryTarget && gameInteractState !== GameInteractState.selectAttackTarget && gameInteractState !== GameInteractState.selectMoveTargetPosition && highlightedEntity === -1) {
-      entityInteractionState.deselectSelectedEntity();
-   }
 }

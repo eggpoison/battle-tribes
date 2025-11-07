@@ -1,47 +1,17 @@
-<!-- import { InventoryName, Item, EntityType } from "webgl-test-shared";
-import InventoryContainer from "../../inventories/InventoryContainer";
-import ItemCatalogue from "./ItemCatalogue";
-import { ItemSlotCallbackInfo } from "../../inventories/ItemSlot";
-import { SUMMON_DATA_PARAMS } from "./SummonTab";
-import { useReducer } from "react";
-import { closeCurrentMenu } from "../../../../game/menus";
+<script lang="ts">
+   import { EntityType, InventoryName, INVENTORY_NAME_RECORD, Item } from "webgl-test-shared";
+   import { closeCurrentMenu } from "../../../../game/menus";
+   import { ENTITY_INVENTORY_NAME_RECORD, tabSelectorState } from "../../../../ui-state/tab-selector-state.svelte";
+   import InventoryContainer from "../../inventories/ItemSlotsContainer.svelte";
+   import { type ItemSlotCallbackInfo } from "../../inventories/ItemSlot.svelte";
 
-interface InventoryComponentInputProps {
-   readonly entityType: EntityType;
-   setMenu(element: JSX.Element): void;
-}
+   interface Props {
+      readonly entityType: EntityType;
+   }
 
-// @Cleanup: move to separate file?
-const INVENTORY_NAME_RECORD: Record<InventoryName, string> = {
-   [InventoryName.ammoBoxInventory]: "Ammo Box Inventory",
-   [InventoryName.armourSlot]: "Armour Slot",
-   [InventoryName.backpack]: "Backpack",
-   [InventoryName.backpackSlot]: "Backpack Slot",
-   [InventoryName.craftingOutputSlot]: "Crafting Output Slot",
-   [InventoryName.devInventory]: "Dev Inventory",
-   [InventoryName.fuelInventory]: "Fuel Inventory",
-   [InventoryName.gloveSlot]: "Glove Slot",
-   [InventoryName.handSlot]: "Hand Slot",
-   [InventoryName.heldItemSlot]: "Held Item Slot",
-   [InventoryName.hotbar]: "Hotbar",
-   [InventoryName.ingredientInventory]: "Ingredient Inventory",
-   [InventoryName.inventory]: "Inventory",
-   [InventoryName.offhand]: "Offhand",
-   [InventoryName.outputInventory]: "Output Inventory"
-};
+   let props: Props = $props();
 
-// @Hack
-export const NUM_INVENTORY_NAMES = Object.keys(INVENTORY_NAME_RECORD).length;
-
-// @Hack? @Robustness
-export const ENTITY_INVENTORY_NAME_RECORD: Partial<Record<EntityType, ReadonlyArray<InventoryName>>> = {
-   [EntityType.tribeWarrior]: [InventoryName.hotbar, InventoryName.offhand, InventoryName.armourSlot, InventoryName.backpackSlot, InventoryName.gloveSlot],
-   [EntityType.tribeWorker]: [InventoryName.hotbar, InventoryName.offhand, InventoryName.armourSlot, InventoryName.backpackSlot, InventoryName.gloveSlot]
-}
-
-const InventoryComponentInput = (props: InventoryComponentInputProps) => {
    const inventoryNames = ENTITY_INVENTORY_NAME_RECORD[props.entityType] || [];
-   const [, forceUpdate] = useReducer(x => x + 1, 0);
 
    const fillItemSlot = (e: MouseEvent, callbackInfo: ItemSlotCallbackInfo, inventoryName: InventoryName, itemSlot: number): void => {
       if (callbackInfo.itemType === null) {
@@ -51,10 +21,9 @@ const InventoryComponentInput = (props: InventoryComponentInputProps) => {
       // @Temporary @Incomplete: allow any amount to be added
       const amount = 1;
 
-      const inventory = SUMMON_DATA_PARAMS.inventories[inventoryName];
+      const inventory = tabSelectorState.summonedInventories[inventoryName];
       inventory.itemSlots[itemSlot] = new Item(callbackInfo.itemType, amount, 0);
       
-      forceUpdate();
       closeCurrentMenu();
    }
    
@@ -63,31 +32,20 @@ const InventoryComponentInput = (props: InventoryComponentInputProps) => {
       
       if (e.button === 2) {
          // Clear the item slot
-         delete SUMMON_DATA_PARAMS.inventories[inventoryName].itemSlots[itemSlot];
-         forceUpdate();
+         delete tabSelectorState.summonedInventories[inventoryName].itemSlots[itemSlot];
       } else {
-         const prompt = <ItemCatalogue hasAmountInput onMouseDown={(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo) => fillItemSlot(e, callbackInfo, inventoryName, itemSlot)} />;
-         props.setMenu(prompt);
+         // @INCOMPLETE
+
+         // const prompt = <ItemCatalogue hasAmountInput onMouseDown={(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo) => fillItemSlot(e, callbackInfo, inventoryName, itemSlot)} />;
+         // props.setMenu(prompt);
       }
    }
    
-   const elems = new Array<JSX.Element>();
-   for (let i = 0; i < inventoryNames.length; i++) {
-      const inventoryName = inventoryNames[i];
+</script>
 
-      elems.push(
-         <p key={elems.length}>{INVENTORY_NAME_RECORD[inventoryName]}</p>
-      );
-      
-      const inventory = SUMMON_DATA_PARAMS.inventories[inventoryName];
-      elems.push(
-         <InventoryContainer entityID={0} inventory={inventory} key={elems.length} onMouseDown={(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo) => clickInventory(e, callbackInfo, inventoryName)} />
-      );
-   }
+{#each inventoryNames as inventoryName}
+   <p>{INVENTORY_NAME_RECORD[inventoryName]}</p>
    
-   return <>
-      {elems}
-   </>;
-}
-
-export default InventoryComponentInput; -->
+   {@const inventory = tabSelectorState.summonedInventories[inventoryName]}
+   <InventoryContainer entityID={0} inventory={inventory} onMouseDown={(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo) => clickInventory(e, callbackInfo, inventoryName)} />
+{/each}

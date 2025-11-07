@@ -445,7 +445,7 @@
          buildMenuState.setEntity(0);
 
          // Deselect structure
-         entityInteractionState.deselectSelectedEntity();
+         entityInteractionState.setSelectedEntity(null);
       });
    });
 
@@ -527,7 +527,7 @@
          }
    
          if (option.deselectsOnClick) {
-            entityInteractionState.deselectSelectedEntity();
+            entityInteractionState.setSelectedEntity(null);
          }
       }
 

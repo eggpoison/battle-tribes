@@ -1146,6 +1146,27 @@ export const InventoryNameString: Record<InventoryName, string> = {
    [InventoryName.devInventory]: "Dev Inventory"
 };
 
+// @Cleanup: move to separate file?
+export const INVENTORY_NAME_RECORD: Record<InventoryName, string> = {
+   [InventoryName.ammoBoxInventory]: "Ammo Box Inventory",
+   [InventoryName.armourSlot]: "Armour Slot",
+   [InventoryName.backpack]: "Backpack",
+   [InventoryName.backpackSlot]: "Backpack Slot",
+   [InventoryName.craftingOutputSlot]: "Crafting Output Slot",
+   [InventoryName.devInventory]: "Dev Inventory",
+   [InventoryName.fuelInventory]: "Fuel Inventory",
+   [InventoryName.gloveSlot]: "Glove Slot",
+   [InventoryName.handSlot]: "Hand Slot",
+   [InventoryName.heldItemSlot]: "Held Item Slot",
+   [InventoryName.hotbar]: "Hotbar",
+   [InventoryName.ingredientInventory]: "Ingredient Inventory",
+   [InventoryName.inventory]: "Inventory",
+   [InventoryName.offhand]: "Offhand",
+   [InventoryName.outputInventory]: "Output Inventory"
+};
+
+export const NUM_INVENTORY_NAMES = Object.keys(InventoryNameString).length;
+
 /** Inventory data sent between client and server */
 export interface InventoryData {
    width: number;
@@ -1237,6 +1258,14 @@ export class Inventory {
       }
       
       return 0;
+   }
+
+   public getSlots(): Array<number> {
+      const slots = new Array<number>();
+      for (let itemSlot = 1; itemSlot <= this.width * this.height; itemSlot++) {
+         slots.push(itemSlot);
+      }
+      return slots;
    }
 }
 

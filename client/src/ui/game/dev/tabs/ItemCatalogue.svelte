@@ -2,8 +2,8 @@
    import CLIENT_ITEM_INFO_RECORD from "../../../../game/client-item-info";
    import { ItemType, ITEM_INFO_RECORD, Inventory, InventoryName, Item } from "webgl-test-shared";
    import { closeCurrentMenu } from "../../../../game/menus";
-   import { ItemSlotCallbackInfo } from "../../inventories/ItemSlot.svelte";
-   import InventoryContainer from "../../inventories/InventoryContainer.svelte";
+   import { type ItemSlotCallbackInfo } from "../../inventories/ItemSlot.svelte";
+   import InventoryContainer from "../../inventories/ItemSlotsContainer.svelte";
 
    interface Props {
       readonly hasAmountInput?: boolean;

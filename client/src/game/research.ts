@@ -3,13 +3,13 @@ import { currentSnapshot } from "./client";
 import { playHeadSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
 import { getRandomPositionInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { entityExists, getEntityType } from "./world";
+import { getEntityType } from "./world";
 import { InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
 import { TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { sendStudyTechPacket } from "./networking/packet-sending";
 import { playerInstance } from "./player";
-import { cursorWorldPos } from "./mouse-input";
-import { entityInteractionState } from "../ui-state/entity-interaction-state.svelte";
+import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
+import { cursorWorldPos } from "./camera";
 
 export interface ResearchOrb {
    /* X position of the node in the world */
@@ -57,7 +57,7 @@ export function getResearchOrbCompleteProgress(): number {
 }
 
 export function updateActiveResearchBench(): void {
-   const selectedStructure = entityInteractionState.selectedEntity;
+   const selectedStructure = entitySelectionState.selectedEntity;
    if (selectedStructure === null) {
       currentResearchOrb = null;
       currentBenchID = -1;
@@ -108,7 +108,7 @@ const completeOrb = (): void => {
    useInfo.lastAttackTicks = currentSnapshot.tick;
    
    // @Hack: "!"
-   const selectedStructure = entityInteractionState.selectedEntity!;
+   const selectedStructure = entitySelectionState.selectedEntity!;
    currentResearchOrb = generateResearchOrb(selectedStructure);
    orbCompleteProgress = 0;
 }

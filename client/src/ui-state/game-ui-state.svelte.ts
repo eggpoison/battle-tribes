@@ -20,6 +20,9 @@ let isSimulating = $state(true);
 
 let canAscendLayer = $state(false);
 
+let cursorX = $state(0);
+let cursorY = $state(0);
+
 export const gameUIState = {
    get gameInteractState() {
       return gameInteractState;
@@ -61,5 +64,19 @@ export const gameUIState = {
    },
    setCanAscendLayer(newCanAscendLayer: boolean): void {
       canAscendLayer = newCanAscendLayer;
+   },
+
+   get cursorX() {
+      return cursorX;
+   },
+   setCursorX(newCursorX: number): void {
+      cursorX = newCursorX;
+   },
+
+   get cursorY() {
+      return cursorY;
+   },
+   setCursorY(newCursorY: number): void {
+      cursorY = newCursorY;
    }
 };

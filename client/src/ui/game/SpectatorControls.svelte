@@ -13,7 +13,7 @@
    });
 </script>
 
-<MenuElem id="spectator-controls" class="menu">
+<MenuElem id="spectator-controls">
    <label>
       Speed
       <input type="range" min={100} max={1000} step={50} bind:value={speed} />

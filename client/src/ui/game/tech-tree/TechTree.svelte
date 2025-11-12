@@ -1,7 +1,6 @@
 <script lang="ts">
    import { TECHS } from "webgl-test-shared";
    import { techIsDirectlyAccessible } from "../../../game/rendering/webgl/tech-tree-rendering";
-   import { addMenuCloseFunction } from "../../../game/menus";
    import { techTreeState } from "../../../ui-state/tech-tree-state.svelte";
    import TechNode from "./TechNode.svelte";
    import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
@@ -37,14 +36,6 @@
 
    let lastDragX = $state(0);
    let lastDragY = $state(0);
-
-   $effect(() => {
-      if (techTreeState.isVisible) {
-         addMenuCloseFunction(() => {
-            techTreeState.setIsVisible(false);
-         });
-      }
-   });
 
    function onScroll(e: WheelEvent): void {
       if (e.deltaY > 0) {
@@ -108,13 +99,11 @@
    }
 </script>
 
-{#if techTreeState.isVisible}
-   <!-- svelte-ignore a11y_no_static_element_interactions -->
-   <div id="tech-tree" style:--tech-tree-zoom={techTreeState.zoom} {onmousedown} {onmousemove} {onmouseup}>
-      <h1>Tech Tree</h1>
-      
-      {#each TECHS.filter(tech => debugDisplayState.showAllTechs || techIsDirectlyAccessible(tech)) as techInfo}
-         <TechNode tech={techInfo} x={techTreeState.x} y={techTreeState.y} zoom={techTreeState.zoom} />
-      {/each}
-   </div>
-{/if}
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div id="tech-tree" style:--tech-tree-zoom={techTreeState.zoom} {onmousedown} {onmousemove} {onmouseup}>
+   <h1>Tech Tree</h1>
+   
+   {#each TECHS.filter(tech => debugDisplayState.showAllTechs || techIsDirectlyAccessible(tech)) as techInfo}
+      <TechNode tech={techInfo} x={techTreeState.x} y={techTreeState.y} zoom={techTreeState.zoom} />
+   {/each}
+</div>

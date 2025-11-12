@@ -1,5 +1,5 @@
 import { Entity } from "webgl-test-shared";
-import { entityInteractionState } from "../ui-state/entity-interaction-state.svelte";
+import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
 import { nerdVisionState } from "../ui-state/nerd-vision-state.svelte";
 import { getCameraSubject } from "./camera";
 import { sendSetDebugEntityPacket } from "./networking/packet-sending";
@@ -20,7 +20,7 @@ export function updateDebugEntity(): void {
    if (cameraSubject !== null && entityExists(cameraSubject) && cameraSubject !== playerInstance) {
       debugEntity = cameraSubject;
    } else if (nerdVisionState.isVisible) {
-      const hoveredEntity = entityInteractionState.hoveredEntity;
+      const hoveredEntity = entitySelectionState.hoveredEntity;
       debugEntity = hoveredEntity !== null ? hoveredEntity : 0;
    } else {
       debugEntity = 0;

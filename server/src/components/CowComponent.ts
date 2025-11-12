@@ -207,7 +207,8 @@ const graze = (cow: Entity, cowComponent: CowComponent, targetGrass: Entity): vo
             const position = grassHitbox.box.position.offset(randFloat(0, 12), randAngle());
 
             const blockerBox = new CircularBox(position, new Point(0, 0), 0, randFloat(12, 18));
-            createGrassBlocker(blockerBox, getEntityLayer(cow), blockAmount, blockAmount, 0);
+            // @SQUEAM for shot in horse archer
+            // createGrassBlocker(blockerBox, getEntityLayer(cow), blockAmount, blockAmount, 0);
          }
          
          healEntity(cow, 3, cow);

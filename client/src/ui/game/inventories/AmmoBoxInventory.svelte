@@ -4,7 +4,7 @@
    import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
    import { AmmoBoxComponentArray } from "../../../game/entity-components/server-components/AmmoBoxComponent";
    import RemainingAmmoSlider from "./RemainingAmmoSlider.svelte";
-   import { entityInteractionState } from "../../../ui-state/entity-interaction-state.svelte";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
    import InventoryContainer from "./ItemSlotsContainer.svelte";
    import { CLIENT_STATUS_EFFECT_INFO_RECORD } from "../../../game/status-effects";
 
@@ -19,7 +19,7 @@
    }
 
    // @Hack: "!"
-   const ballista = entityInteractionState.selectedEntity!;
+   const ballista = entitySelectionState.selectedEntity!;
    
    const inventoryComponent = InventoryComponentArray.getComponent(ballista);
    const inventory = getInventory(inventoryComponent, InventoryName.ammoBoxInventory)!;

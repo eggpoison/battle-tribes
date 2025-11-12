@@ -1,4 +1,4 @@
-import { lerp } from "webgl-test-shared";
+import { assert, lerp } from "webgl-test-shared";
 import { createWebGLProgram } from "../../webgl";
 import { frameGraphState } from "../../../ui-state/frame-graph-state.svelte";
 
@@ -16,12 +16,14 @@ const TARGET_RENDER_LINE_THICKNESS = 0.02;
 /** Time that frames are recorded for */
 export const FRAME_GRAPH_RECORD_TIME = 1;
 
-let frameGraphGL: WebGL2RenderingContext;
+let gl: WebGL2RenderingContext;
 
 let program: WebGLProgram;
 let buffer: WebGLBuffer;
 
 const frames = new Array<FrameInfo>();
+
+let rectIdx = 0;
 
 /** Registers that a frame has occured for use in showing the fps counter */
 export function registerFrame(frameStartTime: number, frameEndTime: number): void {
@@ -58,9 +60,9 @@ const createGLContext = (): void => {
       alert("Your browser does not support WebGL.");
       throw new Error("Your browser does not support WebGL.");
    }
-   frameGraphGL = glAttempt;
+   gl = glAttempt;
 
-   frameGraphGL.pixelStorei(frameGraphGL.UNPACK_FLIP_Y_WEBGL, true);
+   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 }
 
 const createShaders = (): void => {
@@ -69,13 +71,16 @@ const createShaders = (): void => {
    
    layout(location = 0) in vec2 a_position;
    layout(location = 1) in vec3 a_colour;
+   layout(location = 2) in float a_opacity;
    
    out vec3 v_colour;
+   out float v_opacity;
    
    void main() {
       gl_Position = vec4(a_position, 0.0, 1.0);
    
       v_colour = a_colour;
+      v_opacity = a_opacity;
    }
    `;
    
@@ -83,17 +88,18 @@ const createShaders = (): void => {
    precision highp float;
    
    in vec3 v_colour;
+   in float v_opacity;
    
    out vec4 outputColour;
    
    void main() {
-      outputColour = vec4(v_colour, 1.0);
+      outputColour = vec4(v_colour, v_opacity);
    }
    `;
 
-   program = createWebGLProgram(frameGraphGL, vertexShaderText, fragmentShaderText);
+   program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
 
-   buffer = frameGraphGL.createBuffer()!;
+   buffer = gl.createBuffer()!;
 }
 
 export function setupFrameGraph(): void {
@@ -101,10 +107,60 @@ export function setupFrameGraph(): void {
    createShaders();
 }
 
-export function renderFrameGraph(renderTime: number): void {
-   const vertexData = new Float32Array(frames.length * 6 * 5 + 6 * 5);
+const addRectData = (vertexData: Float32Array, x1: number, y1: number, x2: number, y2: number, r: number, g: number, b: number, a: number): void => {
+   const dataOffset = rectIdx * 6 * 6;
 
-   // Add 16ms line
+   vertexData[dataOffset] = x1;
+   vertexData[dataOffset + 1] = y1;
+   vertexData[dataOffset + 2] = r;
+   vertexData[dataOffset + 3] = g;
+   vertexData[dataOffset + 4] = b;
+   vertexData[dataOffset + 5] = a;
+
+   vertexData[dataOffset + 6] = x2;
+   vertexData[dataOffset + 7] = y1;
+   vertexData[dataOffset + 8] = r;
+   vertexData[dataOffset + 9] = g;
+   vertexData[dataOffset + 10] = b;
+   vertexData[dataOffset + 11] = a;
+
+   vertexData[dataOffset + 12] = x1;
+   vertexData[dataOffset + 13] = y2;
+   vertexData[dataOffset + 14] = r;
+   vertexData[dataOffset + 15] = g;
+   vertexData[dataOffset + 16] = b;
+   vertexData[dataOffset + 17] = a;
+
+   vertexData[dataOffset + 18] = x1;
+   vertexData[dataOffset + 19] = y2;
+   vertexData[dataOffset + 20] = r;
+   vertexData[dataOffset + 21] = g;
+   vertexData[dataOffset + 22] = b;
+   vertexData[dataOffset + 23] = a;
+
+   vertexData[dataOffset + 24] = x2;
+   vertexData[dataOffset + 25] = y1;
+   vertexData[dataOffset + 26] = r;
+   vertexData[dataOffset + 27] = g;
+   vertexData[dataOffset + 28] = b;
+   vertexData[dataOffset + 29] = a;
+
+   vertexData[dataOffset + 30] = x2;
+   vertexData[dataOffset + 31] = y2;
+   vertexData[dataOffset + 32] = r;
+   vertexData[dataOffset + 33] = g;
+   vertexData[dataOffset + 34] = b;
+   vertexData[dataOffset + 35] = a;
+   
+   rectIdx++;
+}
+
+export function renderFrameGraph(renderTime: number): void {
+   const numRects = (frames.length * 3 + 1);
+   const vertexData = new Float32Array(numRects * 6 * 6);
+   rectIdx = 0;
+
+   // Draw the 16ms line
    {
       const lineCenterY = lerp(-1, 1, TARGET_FRAME_RENDER_TIME / MAX_FRAME_RENDER_TIME);
       
@@ -112,46 +168,7 @@ export function renderFrameGraph(renderTime: number): void {
       const x2 = 1;
       const y1 = lineCenterY - TARGET_RENDER_LINE_THICKNESS;
       const y2 = lineCenterY + TARGET_RENDER_LINE_THICKNESS;
-
-      const r = 1;
-      const g = 0.64;
-      const b = 0;
-
-      vertexData[0] = x1;
-      vertexData[1] = y1;
-      vertexData[2] = r;
-      vertexData[3] = g;
-      vertexData[4] = b;
-
-      vertexData[5] = x2;
-      vertexData[6] = y1;
-      vertexData[7] = r;
-      vertexData[8] = g;
-      vertexData[9] = b;
-
-      vertexData[10] = x1;
-      vertexData[11] = y2;
-      vertexData[12] = r;
-      vertexData[13] = g;
-      vertexData[14] = b;
-
-      vertexData[15] = x1;
-      vertexData[16] = y2;
-      vertexData[17] = r;
-      vertexData[18] = g;
-      vertexData[19] = b;
-
-      vertexData[20] = x2;
-      vertexData[21] = y1;
-      vertexData[22] = r;
-      vertexData[23] = g;
-      vertexData[24] = b;
-
-      vertexData[25] = x2;
-      vertexData[26] = y2;
-      vertexData[27] = r;
-      vertexData[28] = g;
-      vertexData[29] = b;
+      addRectData(vertexData, x1, y1, x2, y2, 1, 0.64, 0, 1);
    }
    
    const currentTimeSeconds = renderTime / 1000;
@@ -159,8 +176,7 @@ export function renderFrameGraph(renderTime: number): void {
    let previousX = -1;
    
    // Calculate vertices
-   for (let i = 0; i < frames.length; i++) {
-      const frame = frames[i];
+   for (const frame of frames) {
       const secondsSinceFrameStartTime = currentTimeSeconds - frame.startTime / 1000;
       const secondsSinceFrameEndTime = currentTimeSeconds - frame.endTime / 1000;
 
@@ -172,61 +188,29 @@ export function renderFrameGraph(renderTime: number): void {
       const y1 = -1;
       const y2 = lerp(-1, 1, percentageHeight);
 
-      previousX = lerp(1, -1, secondsSinceFrameStartTime / FRAME_GRAPH_RECORD_TIME);
+      previousX = x2;
 
-      const r = 1;
-      const g = 0;
-      const b = 0;
-
-      const dataOffset = i + 1; // +1 to account for the 16ms line
-
-      vertexData[dataOffset * 6 * 5] = x1;
-      vertexData[dataOffset * 6 * 5 + 1] = y1;
-      vertexData[dataOffset * 6 * 5 + 2] = r;
-      vertexData[dataOffset * 6 * 5 + 3] = g;
-      vertexData[dataOffset * 6 * 5 + 4] = b;
-
-      vertexData[dataOffset * 6 * 5 + 5] = x2;
-      vertexData[dataOffset * 6 * 5 + 6] = y1;
-      vertexData[dataOffset * 6 * 5 + 7] = r;
-      vertexData[dataOffset * 6 * 5 + 8] = g;
-      vertexData[dataOffset * 6 * 5 + 9] = b;
-
-      vertexData[dataOffset * 6 * 5 + 10] = x1;
-      vertexData[dataOffset * 6 * 5 + 11] = y2;
-      vertexData[dataOffset * 6 * 5 + 12] = r;
-      vertexData[dataOffset * 6 * 5 + 13] = g;
-      vertexData[dataOffset * 6 * 5 + 14] = b;
-
-      vertexData[dataOffset * 6 * 5 + 15] = x1;
-      vertexData[dataOffset * 6 * 5 + 16] = y2;
-      vertexData[dataOffset * 6 * 5 + 17] = r;
-      vertexData[dataOffset * 6 * 5 + 18] = g;
-      vertexData[dataOffset * 6 * 5 + 19] = b;
-
-      vertexData[dataOffset * 6 * 5 + 20] = x2;
-      vertexData[dataOffset * 6 * 5 + 21] = y1;
-      vertexData[dataOffset * 6 * 5 + 22] = r;
-      vertexData[dataOffset * 6 * 5 + 23] = g;
-      vertexData[dataOffset * 6 * 5 + 24] = b;
-
-      vertexData[dataOffset * 6 * 5 + 25] = x2;
-      vertexData[dataOffset * 6 * 5 + 26] = y2;
-      vertexData[dataOffset * 6 * 5 + 27] = r;
-      vertexData[dataOffset * 6 * 5 + 28] = g;
-      vertexData[dataOffset * 6 * 5 + 29] = b;
+      // Body
+      addRectData(vertexData, x1, y1, x2, y2, 0.5, 0, 0, 0.5);
+      // Left border
+      addRectData(vertexData, x1, y1, x1 + 4 / gl.drawingBufferWidth, y2, 1, 0, 0, 1);
+      // Top border
+      addRectData(vertexData, x1, y2 - 4 / gl.drawingBufferHeight, x2, y2, 1, 0, 0, 1);
    }
    
-   frameGraphGL.useProgram(program);
+   gl.useProgram(program);
 
-   frameGraphGL.bindBuffer(frameGraphGL.ARRAY_BUFFER, buffer);
-   frameGraphGL.bufferData(frameGraphGL.ARRAY_BUFFER, vertexData, frameGraphGL.STATIC_DRAW);
+   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+   gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
-   frameGraphGL.vertexAttribPointer(0, 2, frameGraphGL.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
-   frameGraphGL.vertexAttribPointer(1, 3, frameGraphGL.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
 
-   frameGraphGL.enableVertexAttribArray(0);
-   frameGraphGL.enableVertexAttribArray(1);
+   gl.enableVertexAttribArray(0);
+   gl.enableVertexAttribArray(1);
+   gl.enableVertexAttribArray(2);
 
-   frameGraphGL.drawArrays(frameGraphGL.TRIANGLES, 0, frames.length * 6);
+   const numTrigs = numRects * 6;
+   gl.drawArrays(gl.TRIANGLES, 0, numTrigs);
 }

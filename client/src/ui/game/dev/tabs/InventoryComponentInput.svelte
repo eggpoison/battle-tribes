@@ -1,9 +1,9 @@
 <script lang="ts">
    import { EntityType, InventoryName, INVENTORY_NAME_RECORD, Item } from "webgl-test-shared";
-   import { closeCurrentMenu } from "../../../../game/menus";
    import { ENTITY_INVENTORY_NAME_RECORD, tabSelectorState } from "../../../../ui-state/tab-selector-state.svelte";
-   import InventoryContainer from "../../inventories/ItemSlotsContainer.svelte";
-   import { type ItemSlotCallbackInfo } from "../../inventories/ItemSlot.svelte";
+   import ItemSlotsContainer from "../../inventories/ItemSlotsContainer.svelte";
+   import { menuSelectorState } from "../../../../ui-state/menu-selector-state.svelte";
+   import { type ItemSlotCallbackInfo } from "../../inventories/EntityInteractableItemSlot.svelte";
 
    interface Props {
       readonly entityType: EntityType;
@@ -24,7 +24,7 @@
       const inventory = tabSelectorState.summonedInventories[inventoryName];
       inventory.itemSlots[itemSlot] = new Item(callbackInfo.itemType, amount, 0);
       
-      closeCurrentMenu();
+      menuSelectorState.closeMenu();
    }
    
    const clickInventory = (e: MouseEvent, callbackInfo: ItemSlotCallbackInfo, inventoryName: InventoryName): void => {
@@ -47,5 +47,5 @@
    <p>{INVENTORY_NAME_RECORD[inventoryName]}</p>
    
    {@const inventory = tabSelectorState.summonedInventories[inventoryName]}
-   <InventoryContainer entityID={0} inventory={inventory} onMouseDown={(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo) => clickInventory(e, callbackInfo, inventoryName)} />
+   <ItemSlotsContainer entityID={0} inventory={inventory} onMouseDown={(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo) => clickInventory(e, callbackInfo, inventoryName)} />
 {/each}

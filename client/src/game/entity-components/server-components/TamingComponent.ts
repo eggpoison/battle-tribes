@@ -9,8 +9,9 @@ import { playerTribe } from "../../tribes";
 import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { tamingMenuState } from "../../../ui-state/taming-menu-state.svelte";
 
-interface TamingSkillLearning {
+export interface TamingSkillLearning {
    readonly skill: TamingSkill;
    /** Indexes will be the same as the requirements on the skill */
    readonly requirementProgressArray: Array<number>;
@@ -61,6 +62,7 @@ export const TamingComponentArray = new ServerComponentArray<TamingComponent, Ta
 TamingComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 TamingComponentArray.updateFromData = updateFromData;
 TamingComponentArray.onTick = onTick;
+TamingComponentArray.updateSelectedEntityState = updateSelectedEntityState;
 
 function decodeData(reader: PacketReader): TamingComponentData {
    const tamingTier = reader.readNumber();
@@ -364,6 +366,14 @@ function updateFromData(data: TamingComponentData, entity: Entity): void {
       renderInfo.removeRenderPart(tamingComponent.followHalo);
       tamingComponent.followHalo = null;
    }
+}
+
+function updateSelectedEntityState(entity: Entity): void {
+   const tamingComponent = TamingComponentArray.getComponent(entity);
+   tamingMenuState.tamingTier = tamingComponent.tamingTier;
+   tamingMenuState.name = tamingComponent.name;
+   tamingMenuState.foodEatenInTier = tamingComponent.foodEatenInTier;
+   tamingMenuState.acquiredSkills = tamingComponent.acquiredSkills.map(skill => skill.id);
 }
 
 export function hasTamingSkill(tamingComponent: TamingComponent, skillID: TamingSkillID): boolean {

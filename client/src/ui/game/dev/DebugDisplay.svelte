@@ -6,22 +6,20 @@
    import { getCurrentLayer } from "../../../game/world";
    import { playerInstance } from "../../../game/player";
    import { getNumLights } from "../../../game/lights";
-   import { getMeasuredServerTPS } from "../../../game/client";
    import { setCameraZoom } from "../../../game/camera";
-   import { getNumActiveSounds } from "../../../game/sound";
-   import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
    import { GameInteractState, gameUIState } from "../../../ui-state/game-ui-state.svelte";
+   import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
 
-   const currentSnapshot = debugDisplayState.currentSnapshot;
+   const currentSnapshot = $derived(debugDisplayState.currentSnapshot);
 
    function toggleAIBuilding(): void {
       const toggleResult = !debugDisplayState.showSafetyNodes || !debugDisplayState.showBuildingSafetys || !debugDisplayState.showBuildingPlans || !debugDisplayState.showRestrictedAreas || !debugDisplayState.showWallConnections;
       
-      debugDisplayState.setShowSafetyNodes(toggleResult);
-      debugDisplayState.setShowBuildingSafetys(toggleResult);
-      debugDisplayState.setShowBuildingPlans(toggleResult);
-      debugDisplayState.setShowRestrictedAreas(toggleResult);
-      debugDisplayState.setShowWallConnections(toggleResult);
+      debugDisplayState.showSafetyNodes = toggleResult;
+      debugDisplayState.showBuildingSafetys = toggleResult;
+      debugDisplayState.showBuildingPlans = toggleResult;
+      debugDisplayState.showRestrictedAreas = toggleResult;
+      debugDisplayState.showWallConnections = toggleResult;
    }
 
    function changeZoom(e: Event & { currentTarget: HTMLInputElement }): void {
@@ -48,9 +46,9 @@
 <div id="game-info-display" class="devmode-container">
    <p>Time: {currentSnapshot.time.toFixed(2)}</p>
    <p>Ticks: {roundNum(currentSnapshot.tick, 2)}</p>
-   <p>Server TPS: {getMeasuredServerTPS().toFixed(2)}</p>
+   <p>Server TPS: {debugDisplayState.measuredServerTPS.toFixed(2)}</p>
    <p>Buffer size: {debugDisplayState.snapshotBufferSize}</p>
-   <p>Active sounds: {getNumActiveSounds()}</p>
+   <p>Active sounds: {debugDisplayState.numActiveSounds}</p>
 
    <button onclick={toggleSimulation}>{gameUIState.isSimulating ? "Pause" : "Resume"} Simulation</button>
 

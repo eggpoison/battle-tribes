@@ -5,7 +5,7 @@
 }
 
 .menu {
-   background-color: #3a3a3a;
+   background-color: #4a4a4a;
    border: 5px solid black;
    padding: 0 0.25rem 0.25rem;
    position: absolute;
@@ -91,19 +91,22 @@
 .item-slots-container {
    /* background-color: #666; */
    display: inline-block;
-   /* Stops item slots from spilling down if there "isn't enough space" */
-   white-space: nowrap;
    /* @Hack Disgusting, must be done for the code comments due to white-space: nowrap */
    font-size: 0;
 }
-
 .item-slots-container.bordered {
    border: 5px solid #000;
 }
 
-.inventory {
-   /* background-color: #444; */
-   border: 5px solid black;
+.item-slots-container.set-width {
+   width: calc(var(--item-slot-size) * var(--width-items));
+}
+.item-slots-container.min-height {
+   min-height: calc(var(--item-slot-size) * var(--min-height-items));
+}
+.item-slots-container:not(.set-width) {
+   /* Stops item slots from spilling down if there "isn't enough space" */
+   white-space: nowrap;
 }
 
 .item-slot {

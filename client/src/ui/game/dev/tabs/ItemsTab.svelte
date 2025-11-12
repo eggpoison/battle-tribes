@@ -1,17 +1,12 @@
 <script lang="ts">
    import { sendDevGiveItemPacket } from "../../../../game/networking/packet-sending";
-   import { getItemStackSize } from "webgl-test-shared";
-   import { type ItemSlotCallbackInfo } from "../../inventories/ItemSlot.svelte";
+   import { getItemStackSize, ItemType } from "webgl-test-shared";
    import ItemCatalogue from "./ItemCatalogue.svelte";
 
-   const onSlotClick = (e: MouseEvent, callbackInfo: ItemSlotCallbackInfo): void => {
-      if (callbackInfo.itemType === null) {
-         return;
-      }
-      
-      const amount = e.shiftKey ? getItemStackSize(callbackInfo.itemType) : 1;
-      sendDevGiveItemPacket(callbackInfo.itemType, amount);
+   const onSlotClick = (e: MouseEvent, itemType: ItemType): void => {
+      const amount = e.shiftKey ? getItemStackSize(itemType) : 1;
+      sendDevGiveItemPacket(itemType, amount);
    }
 </script>
 
-<ItemCatalogue onMouseDown={onSlotClick} />
+<ItemCatalogue onmousedown={onSlotClick} />

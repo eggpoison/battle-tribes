@@ -8,14 +8,14 @@
    import { worldToScreenPos } from "../../game/camera";
    import { preventDefault } from "../ui-utils.svelte";
    import { AnimalStaffCommandType, createControlCommandParticles } from "../../game/particles";
-   import { entityInteractionState } from "../../ui-state/entity-interaction-state.svelte";
+   import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
 
    const [x, setX] = useState(0);
    const [y, setY] = useState(0);
    const [isHovering, setIsHovering] = useState(false);
 
    // @Hack: "!"
-   const entity = entityInteractionState.selectedEntity!;
+   const entity = entitySelectionState.selectedEntity!;
 
    const tamingComponent = TamingComponentArray.getComponent(entity);
    const followOptionIsSelected = tamingComponent.isFollowing;
@@ -39,7 +39,7 @@
          sendAnimalStaffFollowCommandPacket(entity);
          createControlCommandParticles(AnimalStaffCommandType.follow);
       }
-      entityInteractionState.setSelectedEntity(null);
+      entitySelectionState.setSelectedEntity(null);
    }, [entity]);
 
    const pressMoveOption = useCallback((): void => {

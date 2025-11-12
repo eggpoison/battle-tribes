@@ -4,7 +4,7 @@
    import { sendForceUnlockTechPacket, sendSelectTechPacket, sendUnlockTechPacket } from "../../../game/networking/packet-sending";
    import { playHeadSound } from "../../../game/sound";
    import { playerTribe } from "../../../game/tribes";
-   import { techTreeState } from "../../../ui-state/tech-tree-state.svelte";
+   import { techTreeIcons, techTreeState } from "../../../ui-state/tech-tree-state.svelte";
    import { InventoryComponentArray, getInventory } from "../../../game/entity-components/server-components/InventoryComponent";
    import { playerInstance } from "../../../game/player";
    import { createTechTreeItem } from "../../../game/rendering/webgl/tech-tree-item-rendering";
@@ -118,7 +118,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div style:left="calc(50% + ({tech.positionX}rem + {x}px) * {zoom})" style:top="calc(50% + ({-tech.positionY}rem + {y}px) * {zoom})" {onclick} {oncontextmenu} class="tech" class:unlocked={isUnlocked} class:selected={isSelected} {onmouseenter} {onmouseleave}>
    <div class="icon-wrapper">
-      <img src={require("../../../images/tech-tree/" + tech.iconSrc)} alt="" class="icon" draggable={false} />
+      <img src={techTreeIcons["/src/images/tech-tree/" + tech.iconSrc] as string} alt="" class="icon" draggable={false} />
    </div>
 </div>
 

@@ -7,7 +7,7 @@ import { TurretComponentArray } from "../../entity-components/server-components/
 import { playerInstance } from "../../player";
 import { calculateEntityPlaceInfo } from "../../structure-placement";
 import { getPlayerSelectedItem } from "../../player-action-handler";
-import { entityInteractionState } from "../../../ui-state/entity-interaction-state.svelte";
+import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
 
 const CIRCLE_DETAIL = 300;
 
@@ -157,7 +157,7 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
       }
    }
 
-   const hoveredEntity = entityInteractionState.hoveredEntity;
+   const hoveredEntity = entitySelectionState.hoveredEntity;
    if (hoveredEntity !== null && TurretComponentArray.hasComponent(hoveredEntity)) {
       const hoveredEntityTransformComponent = TransformComponentArray.getComponent(hoveredEntity);
       // @Hack

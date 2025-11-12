@@ -1,14 +1,15 @@
-import { Point, Settings, Entity } from "webgl-test-shared";
+import { Point, Settings, Entity, getTileIndexIncludingEdges, tileIsInWorld } from "webgl-test-shared";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
 import Chunk from "./Chunk";
 import Layer from "./Layer";
-import { entityExists } from "./world";
+import { entityExists, getCurrentLayer } from "./world";
 import { calculateHitboxRenderPosition, getEntityTickInterp } from "./rendering/render-part-matrices";
 import { Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { isSpectating } from "./player";
 import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
+import { hoverDebugState } from "../ui-state/hover-debug-state.svelte";
+import { Tile } from "./Tile";
 
 let cameraSubjectHitbox: Hitbox | null = null;
 
@@ -33,6 +34,9 @@ export let minVisibleRenderChunkX = -1;
 export let maxVisibleRenderChunkX = -1;
 export let minVisibleRenderChunkY = -1;
 export let maxVisibleRenderChunkY = -1;
+
+export const cursorScreenPos = new Point(0, 0);
+export const cursorWorldPos = new Point(0, 0);
 
 // @Incomplete?
 // const registerVisibleChunk = (chunk: Chunk): void => {
@@ -72,7 +76,7 @@ const getMissingChunks = (chunksA: ReadonlyArray<Chunk>, chunksB: ReadonlyArray<
 
 export function setCameraZoom(zoom: number): void {
    cameraZoom = zoom;
-   debugDisplayState.setCameraZoom(zoom);
+   debugDisplayState.cameraZoom = zoom;
 }
 
 export function setCameraSubject(cameraSubject: Entity): void {
@@ -91,9 +95,37 @@ export function getCameraSubject(): Entity | null {
    return cameraSubjectHitbox.entity;
 }
 
-export function setCameraPosition(x: number, y: number): void {
-   cameraPosition.x = x;
-   cameraPosition.y = y;
+const updateCursorWorldPos = (): void => {
+   cursorWorldPos.set(screenToWorldPos(cursorScreenPos));
+
+   const layer = getCurrentLayer();
+   // @Hack? @Cleanup If the player moves their mouse before the layers are initialised, this function is called with currentLayer as undefined.
+   if (typeof layer !== "undefined") {
+      const tileX = Math.floor(cursorWorldPos.x / Settings.TILE_SIZE);
+      const tileY = Math.floor(cursorWorldPos.y / Settings.TILE_SIZE);
+
+      let cursorTargetTile: Tile | null;
+      if (tileIsInWorld(tileX, tileY)) {
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         cursorTargetTile = layer.getTile(tileIndex);
+      } else {
+         cursorTargetTile = null;
+      }
+
+      hoverDebugState.setTile(cursorTargetTile);
+   }
+}
+
+// Important: This should be the only function that modifies the camera position
+export function setCameraPosition(pos: Point): void {
+   cameraPosition.set(pos);
+   updateCursorWorldPos(); // (because the cursor world pos depends on the camera position)
+}
+
+export function updateCursorScreenPos(e: MouseEvent): void {
+   cursorScreenPos.x = e.clientX;
+   cursorScreenPos.y = e.clientY;
+   updateCursorWorldPos();
 }
 
 export function refreshCameraPosition(clientTickInterp: number, serverTickInterp: number): void {
@@ -103,7 +135,7 @@ export function refreshCameraPosition(clientTickInterp: number, serverTickInterp
 
    const tickInterp = getEntityTickInterp(cameraSubjectHitbox.entity, clientTickInterp, serverTickInterp);
    const pos = calculateHitboxRenderPosition(cameraSubjectHitbox, tickInterp);
-   cameraPosition.set(pos);
+   setCameraPosition(pos);
 }
 
 export function refreshCameraView(): void {

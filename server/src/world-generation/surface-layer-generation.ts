@@ -481,26 +481,26 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
    }
 
    // @SQUEAM for clementus shot
-   registerNewSpawnInfo({
-      entityTypes: [EntityType.cow],
-      layer: surfaceLayer,
-      spawnRate: 0.01,
-      biome: Biome.grasslands,
-      tileTypes: [TileType.grass],
-      packSpawning: {
-         getPackSize: () => randInt(2, 5),
-         spawnRange: 200
-      },
-      onlySpawnsInNight: false,
-      minSpawnDistance: 150,
-      spawnDistribution: createRawSpawnDistribution(16, 0.003),
-      balanceSpawnDistribution: false,
-      doStrictTileTypeCheck: false,
-      createEntity: (pos: Point, angle: number, firstEntityConfig: ReadonlyArray<EntityConfig> | null): ReadonlyArray<EntityConfig> | null => {
-         const species = firstEntityConfig === null ? randInt(0, 1) : firstEntityConfig[0].components[ServerComponentType.cow]!.species;
-         return [createCowConfig(pos, angle, species)];
-      }
-   });
+   // registerNewSpawnInfo({
+   //    entityTypes: [EntityType.cow],
+   //    layer: surfaceLayer,
+   //    spawnRate: 0.01,
+   //    biome: Biome.grasslands,
+   //    tileTypes: [TileType.grass],
+   //    packSpawning: {
+   //       getPackSize: () => randInt(2, 5),
+   //       spawnRange: 200
+   //    },
+   //    onlySpawnsInNight: false,
+   //    minSpawnDistance: 150,
+   //    spawnDistribution: createRawSpawnDistribution(16, 0.003),
+   //    balanceSpawnDistribution: false,
+   //    doStrictTileTypeCheck: false,
+   //    createEntity: (pos: Point, angle: number, firstEntityConfig: ReadonlyArray<EntityConfig> | null): ReadonlyArray<EntityConfig> | null => {
+   //       const species = firstEntityConfig === null ? randInt(0, 1) : firstEntityConfig[0].components[ServerComponentType.cow]!.species;
+   //       return [createCowConfig(pos, angle, species)];
+   //    }
+   // });
    registerNewSpawnInfo({
       entityTypes: [EntityType.berryBush],
       layer: surfaceLayer,

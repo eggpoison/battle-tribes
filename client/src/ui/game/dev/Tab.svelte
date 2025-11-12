@@ -1,14 +1,13 @@
 <script lang="ts">
-   import { TabType } from "../../../ui-state/tab-selector-state.svelte";
+   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
    import ItemTabImage from "/src/images/ui/item-tab.png";
    import SummonTabImage from "/src/images/ui/summon-tab.png";
    import TitlesTabImage from "/src/images/ui/titles-tab.png";
    import TribesTabImage from "/src/images/ui/tribes-tab.png";
 
    interface Props {
-      readonly tabType: TabType;
-      readonly selectedTabType: TabType | null;
-      onClick(e: MouseEvent, tabType: TabType): void;
+      readonly menu: Menu;
+      onClick(e: MouseEvent, menu: Menu): void;
    }
 
    interface TabInfo {
@@ -16,20 +15,20 @@
       readonly image: string;
    }
 
-   const TAB_INFO_RECORD: Record<TabType, TabInfo> = {
-      [TabType.items]: {
+   const TAB_INFO_RECORD: Partial<Record<Menu, TabInfo>> = {
+      [Menu.itemsDevTab]: {
          text: "Items",
          image: ItemTabImage
       },
-      [TabType.summon]: {
+      [Menu.summonDevTab]: {
          text: "Summon",
          image: SummonTabImage
       },
-      [TabType.titles]: {
+      [Menu.titlesDevTab]: {
          text: "Titles",
          image: TitlesTabImage
       },
-      [TabType.tribes]: {
+      [Menu.tribesDevTab]: {
          text: "Tribes",
          image: TribesTabImage
       }
@@ -37,13 +36,13 @@
 
    let props: Props = $props();
 
-   const tabInfo = TAB_INFO_RECORD[props.tabType];
-   const isSelected = props.tabType === props.selectedTabType;
+   const tabInfo = TAB_INFO_RECORD[props.menu]!;
+   const isSelected = menuSelectorState.menu === props.menu;
 </script>
    
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-   onmousedown={e => props.onClick(e, props.tabType)}
+   onmousedown={e => props.onClick(e, props.menu)}
    class="tab-selector devmode-container"
    class:selected={isSelected}
 >

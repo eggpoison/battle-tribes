@@ -1,13 +1,13 @@
 <script lang="ts">
    import CLIENT_ITEM_INFO_RECORD from "../../../../game/client-item-info";
-   import { ItemType, ITEM_INFO_RECORD, Inventory, InventoryName, Item } from "webgl-test-shared";
-   import { closeCurrentMenu } from "../../../../game/menus";
-   import { type ItemSlotCallbackInfo } from "../../inventories/ItemSlot.svelte";
-   import InventoryContainer from "../../inventories/ItemSlotsContainer.svelte";
+   import { ItemType, ITEM_INFO_RECORD, Item } from "webgl-test-shared";
+   import ItemSlotsContainer from "../../inventories/ItemSlotsContainer.svelte";
+   import ItemSlot from "../../inventories/ItemSlot.svelte";
+    import { menuSelectorState } from "../../../../ui-state/menu-selector-state.svelte";
 
    interface Props {
       readonly hasAmountInput?: boolean;
-      onMouseDown?(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo): void;
+      onmousedown?(e: MouseEvent, itemType: ItemType): void;
    }
 
    const WIDTH = 6;
@@ -34,18 +34,18 @@
    const itemTypes = getFilteredItemTypes();
    
    // Create inventory
-   const inventory = new Inventory(WIDTH, Math.ceil(itemTypes.length / WIDTH), InventoryName.devInventory);
-   for (let i = 0; i < itemTypes.length; i++) {
-      const itemType = itemTypes[i];
-      const itemSlot = i + 1;
+   // const inventory = new Inventory(WIDTH, Math.ceil(itemTypes.length / WIDTH), InventoryName.devInventory);
+   // for (let i = 0; i < itemTypes.length; i++) {
+   //    const itemType = itemTypes[i];
+   //    const itemSlot = i + 1;
       
-      const item = new Item(itemType, 1, 0);
-      inventory.addItem(item, itemSlot);
-   }
+   //    const item = new Item(itemType, 1, 0);
+   //    inventory.addItem(item, itemSlot);
+   // }
 
    const onFilterKeyDown = (e: KeyboardEvent): void => {
       if (e.key === "Escape") {
-         closeCurrentMenu();
+         menuSelectorState.closeMenu();
       }
    }
 </script>
@@ -63,5 +63,9 @@
       {/if}
    </div>
    
-   <InventoryContainer onMouseDown={props.onMouseDown} entityID={0} inventory={inventory} />
+   <ItemSlotsContainer width={WIDTH} height={undefined} numItemSlotsPassed={itemTypes.length}>
+      {#each itemTypes as itemType}
+         <ItemSlot item={new Item(itemType, 1, 0)} onmousedown={e => props.onmousedown?.(e, itemType)} />
+      {/each}
+   </ItemSlotsContainer>
 </div>

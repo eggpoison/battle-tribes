@@ -4,7 +4,6 @@
    import { getItemTypeImage } from "../../../game/client-item-info";
    import { countItemTypesInInventory } from "../../../game/inventory-manipulation";
    import { playHeadSound } from "../../../game/sound";
-   import { addMenuCloseFunction } from "../../../game/menus";
    import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
    import { getEntityType } from "../../../game/world";
    import { StructureComponentArray } from "../../../game/entity-components/server-components/StructureComponent";
@@ -18,8 +17,8 @@
    import { sendDeconstructBuildingPacket, sendModifyBuildingPacket, sendPlaceBlueprintPacket } from "../../../game/networking/packet-sending";
    import { playerTribe } from "../../../game/tribes";
    import { playerInstance } from "../../../game/player";
-   import { buildMenuState, OptionType } from "../../../ui-state/build-menu-state.svelte";
-   import { entityInteractionState } from "../../../ui-state/entity-interaction-state.svelte";
+   import { OptionType } from "../../../ui-state/build-menu-state.svelte";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
    import { getPlayerSelectedItem } from "../../../game/player-action-handler";
    import WoodenEmbrasureImage from "/src/images/entities/embrasure/wooden-embrasure.png";
    import WoodenDoorImage from "/src/images/entities/door/wooden-door.png";
@@ -38,6 +37,7 @@
    import RecallHutIcon from "/src/images/miscellaneous/recall.png";
    import ShovelPlantIcon from "/src/images/miscellaneous/shovel.png";
    import ConvertToFenceGateIcon from "/src/images/miscellaneous/full-fence-gate.png";
+    import { gameUIState } from "../../../ui-state/game-ui-state.svelte";
 
    interface OptionCost {
       readonly itemType: ItemType;
@@ -120,6 +120,12 @@
    };
 
    let menuElement: HTMLDivElement | undefined;
+
+   interface Props {
+      entity: Entity;
+   }
+   
+   let { entity }: Props = $props();
 
    const playerIsHoldingHammer = (): boolean => {
       const heldItem = getPlayerSelectedItem();
@@ -429,9 +435,6 @@
 
    let hoveredOptionIdx = $state<number | null>(null);
 
-   // @Hack: "!"
-   const buildingID = entityInteractionState.selectedEntity!;
-
    $effect(() => {
       // @Incomplete
       // Clear blueprint ghost type when the build menu is closed
@@ -440,13 +443,6 @@
       //    // setGhostInfo(null);
       //    return;
       // }
-
-      addMenuCloseFunction(() => {
-         buildMenuState.setEntity(0);
-
-         // Deselect structure
-         entityInteractionState.setSelectedEntity(null);
-      });
    });
 
    // @INCOMPLETE
@@ -513,21 +509,21 @@
                   blueprintType = option.blueprintType(building!);
                }
                
-               sendPlaceBlueprintPacket(buildingID, blueprintType);
+               sendPlaceBlueprintPacket(entity, blueprintType);
                break;
             }
             case OptionType.modify: {
-               sendModifyBuildingPacket(buildingID, 0);
+               sendModifyBuildingPacket(entity, 0);
                break;
             }
             case OptionType.deconstruct: {
-               sendDeconstructBuildingPacket(buildingID);
+               sendDeconstructBuildingPacket(entity);
                break;
             }
          }
    
          if (option.deselectsOnClick) {
-            entityInteractionState.setSelectedEntity(null);
+            entitySelectionState.setSelectedEntity(null);
          }
       }
 
@@ -538,7 +534,7 @@
       }
    }
 
-   const options = getMenuOptions(buildingID);
+   const options = $derived(getMenuOptions(entity));
 
    // @Temporary?
    // const hotkeyLabels = new Array<JSX.Element>();
@@ -553,7 +549,7 @@
    //    direction = -direction;
 
    //    hotkeyLabels.push(
-   //       <div key={i} className="hotkey-label" style={{"--x-proj": Math.cos(direction).toString(), "--y-proj": Math.sin(direction).toString()} as React.CSSProperties}>
+   //       <div key={i} class="hotkey-label" style={{"--x-proj": Math.cos(direction).toString(), "--y-proj": Math.sin(direction).toString()} as React.CSSProperties}>
    //          {i + 1}
    //       </div>
    //    );
@@ -592,14 +588,11 @@
       hoveredOptionIdx = optionIdx;
    }
 
-   const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(buildingID);
-
-   const segmentCoverage = 2 * Math.PI / options.length * (180 / Math.PI);
+   const buildingMaterialComponent = $derived(BuildingMaterialComponentArray.getComponent(entity));
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
- <!-- @SQUEAM: x, y -->
-<div bind:this={menuElement} id="blueprint-menu" onmousedown={() => click(buildingID, options)} {onmousemove} onmouseleave={() => {hoveredOptionIdx = null}} style:--x="{0}" style:--y="{0}" oncontextmenu={e => e.preventDefault()}>
+<div bind:this={menuElement} id="blueprint-menu" onmousedown={() => click(entity, options)} {onmousemove} onmouseleave={() => {hoveredOptionIdx = null}} style:--x="{gameUIState.cursorX}" style:--y="{gameUIState.cursorY}" oncontextmenu={e => e.preventDefault()}>
    <div class="inner-ring"></div>
 
    {#each options as _, i}
@@ -612,13 +605,20 @@
    
    {#each options as option, i}
       {@const direction = 2 * Math.PI * i / options.length}
-      {@const isHighlighted = typeof option.isHighlighted !== "undefined" && option.isHighlighted(buildingID)}
+      {@const isHighlighted = typeof option.isHighlighted !== "undefined" && option.isHighlighted(entity)}
+      {@const segmentCoverage = 2 * Math.PI / options.length * (180 / Math.PI)}
 
-      <div class="segment" class:hovered={i === hoveredOptionIdx} class:highlighted={isHighlighted} style:--direction="{direction}" style:--coverage="{segmentCoverage}"></div>
+      <div
+         class="segment"
+         class:hovered={i === hoveredOptionIdx}
+         class:highlighted={isHighlighted}
+         style:--direction="{direction}"
+         style:--coverage="{segmentCoverage}"
+      ></div>
    {/each}
 
    {#each options as option, i}
-      {@const isUnclickable = typeof option.isClickable !== "undefined" && !option.isClickable(buildingID)}
+      {@const isUnclickable = typeof option.isClickable !== "undefined" && !option.isClickable(entity)}
 
       {@const _direction = 2 * Math.PI * i / options.length}
       {@const direction = -_direction + Math.PI/2}

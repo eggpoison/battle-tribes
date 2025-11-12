@@ -59,8 +59,7 @@ export interface InitialGameData {
 export function processInitialGameDataPacket(reader: PacketReader): InitialGameData {
    const layerIdx = reader.readNumber();
    
-   const spawnPositionX = reader.readNumber();
-   const spawnPositionY = reader.readNumber();
+   const spawnPosition = reader.readPoint();
    
    // Create layers
    const numLayers = reader.readNumber();
@@ -142,15 +141,14 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
    }
 
    const spawnLayer = layers[layerIdx];
+   setCurrentLayer(spawnLayer);
 
    // Relies on the number of layers
    initialiseRenderables();
 
    // Set the initial camera position
-   setCameraPosition(spawnPositionX, spawnPositionY);
+   setCameraPosition(spawnPosition);
    refreshCameraView();
-
-   setCurrentLayer(spawnLayer);
 
    // @Hack: how do we know that 
    const surfaceLayer = layers[0];
@@ -176,7 +174,7 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
 
    return {
       spawnLayer: spawnLayer,
-      spawnPosition: new Point(spawnPositionX, spawnPositionY)
+      spawnPosition: spawnPosition
    };
 }
 

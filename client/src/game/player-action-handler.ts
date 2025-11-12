@@ -1,5 +1,5 @@
 import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, EntityComponents, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE } from "webgl-test-shared";
-import { entityInteractionState } from "../ui-state/entity-interaction-state.svelte";
+import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state.svelte";
 import { inventoryState } from "../ui-state/inventory-state.svelte";
 import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
@@ -24,15 +24,13 @@ import { createSpikesComponentData } from "./entity-components/server-components
 import { StatusEffectComponentArray, createStatusEffectComponentData } from "./entity-components/server-components/StatusEffectComponent";
 import { createStructureComponentData } from "./entity-components/server-components/StructureComponent";
 import { TransformComponentArray, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
-import { TribeComponentArray, createTribeComponentData } from "./entity-components/server-components/TribeComponent";
+import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
 import { TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { attemptEntitySelection } from "./entity-selection";
 import { EntityRenderInfo } from "./EntityRenderInfo";
 import { getHitboxVelocity, setHitboxVelocity, applyAccelerationFromGround, Hitbox } from "./hitboxes";
 import { countItemTypesInInventory } from "./inventory-manipulation";
 import { addKeyListener, keyIsPressed } from "./keyboard-input";
-import { closeCurrentMenu } from "./menus";
-import { cursorWorldPos } from "./mouse-input";
 import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSpectateEntityPacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket } from "./networking/packet-sending";
 import { EntityServerComponentData } from "./networking/packet-snapshots";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
@@ -44,6 +42,7 @@ import { playHeadSound, playSoundOnHitbox } from "./sound";
 import { calculateEntityPlaceInfo } from "./structure-placement";
 import { playerTribe } from "./tribes";
 import { entityExists, getEntityLayer, getCurrentLayer, EntityComponentData, createEntityCreationInfo } from "./world";
+import { cursorWorldPos } from "./camera";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -699,7 +698,7 @@ const createHotbarKeyListeners = (): void => {
 const hideInventory = (): void => {
    _inventoryIsOpen = false;
    
-   closeCurrentMenu();
+   menuSelectorState.closeMenu();
 
    // If the player is holding an item when their inventory is closed, throw the item out
    if (playerInstance !== null) {
@@ -716,10 +715,10 @@ const hideInventory = (): void => {
 /** Creates the key listener to toggle the inventory on and off. */
 const createInventoryToggleListeners = (): void => {
    addKeyListener("e", () => {
-      const didCloseMenu = closeCurrentMenu();
+      const didCloseMenu = menuSelectorState.closeMenu();
       if (!didCloseMenu) {
          // Open the crafting menu
-         menuSelectorState.setMenu(Menu.craftingMenu);
+         menuSelectorState.openMenu(Menu.craftingMenu);
       }
    });
 
@@ -730,7 +729,7 @@ const createInventoryToggleListeners = (): void => {
       }
    });
    addKeyListener("escape", () => {
-      closeCurrentMenu();
+      menuSelectorState.closeMenu();
    });
 }
 
@@ -794,7 +793,7 @@ export function onGameMouseDown(e: MouseEvent): void {
 
    if (e.button === 0) { // Left click
       if (gameUIState.gameInteractState === GameInteractState.spectateEntity) {
-         const hoveredEntity = entityInteractionState.hoveredEntity;
+         const hoveredEntity = entitySelectionState.hoveredEntity;
          if (hoveredEntity !== null) {
             sendSpectateEntityPacket(hoveredEntity);
             gameUIState.setGameInteractState(GameInteractState.none);
@@ -805,7 +804,7 @@ export function onGameMouseDown(e: MouseEvent): void {
             e.preventDefault();
          }
       } else if (gameUIState.gameInteractState === GameInteractState.selectRiderDepositLocation) {
-         const selectedEntity = entityInteractionState.selectedEntity;
+         const selectedEntity = entitySelectionState.selectedEntity;
          if (selectedEntity !== null) {
             sendSelectRiderDepositLocationPacket(selectedEntity, cursorWorldPos);
          }
@@ -821,7 +820,7 @@ export function onGameMouseDown(e: MouseEvent): void {
       }
 
       if (gameUIState.gameInteractState === GameInteractState.selectMoveTargetPosition) {
-         const selectedEntity = entityInteractionState.selectedEntity;
+         const selectedEntity = entitySelectionState.selectedEntity;
          if (selectedEntity !== null) {
             sendSetMoveTargetPositionPacket(selectedEntity, cursorWorldPos.x, cursorWorldPos.y);
             gameUIState.setGameInteractState(GameInteractState.none);

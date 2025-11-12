@@ -1,17 +1,16 @@
 import { Settings } from "webgl-test-shared";
 import Board from "./Board";
 import { updateTextNumbers } from "./text-canvas";
-import { renderCursorTooltip } from "./mouse-input";
 import { resizeCanvas } from "./webgl";
 import { createAudioContext, playRiverSounds, updateSounds } from "./sound";
 import { attemptToResearch, updateActiveResearchBench, updateResearchOrb } from "./research";
-import { updateHighlightedAndHoveredEntities } from "./entity-selection";
+import { updateEntitySelections } from "./entity-selection";
 import { updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
 import { entityUsesClientInterp } from "./rendering/render-part-matrices";
 import { createCollapseParticles } from "./collapses";
 import { updateSlimeTrails } from "./rendering/webgl/slime-trail-rendering";
 import { updateDebugEntity } from "./entity-debugging";
-import { createSpectatingPlayer, isSpectating, playerInstance, setIsSpectating, setPlayerInstance, setPlayerUsername, updatePlayerRotation } from "./player";
+import { createSpectatingPlayer, isSpectating, playerInstance, setIsSpectating, setPlayerInstance, setPlayerUsername, updatePlayerDirection } from "./player";
 import { callEntityOnUpdateFunctions } from "./entity-components/ComponentArray";
 import { resolvePlayerCollisions } from "./collision";
 import { decodeSnapshotFromGameDataPacket, PacketSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
@@ -23,10 +22,9 @@ import { LoadingScreenStage, loadingScreenState } from "../ui-state/loading-scre
 import { appState, AppState } from "../ui-state/app-state.svelte";
 import { registerFrame, renderFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { updateSpamFilter } from "./chat";
-import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
-import { buildMenuState } from "../ui-state/build-menu-state.svelte";
 import { updatePlayerMovement } from "./player-action-handler";
-import { PacketReader, PacketType, Packet, TribeType, assert } from "webgl-test-shared";
+import { PacketReader, PacketType, Packet, TribeType } from "webgl-test-shared";
+import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 
 const SNAPSHOT_BUFFER_LENGTH = 2;
 /** The number of ticks it takes for the measured server packet interval to fully adjust (if going from a constant tps of A to a constant tps of B) */
@@ -36,7 +34,6 @@ let socket: WebSocket | null = null;
 
 export let gameIsRunning = false;
 /** If the game has recevied up-to-date game data from the server. Set to false when paused */
-// @Cleanup: We might be able to remove this whole system by just always sending player data. But do we want to do that???
 // @Cleanup: unused???
 let gameIsSynced = true;
 
@@ -56,30 +53,32 @@ let measuredServerPacketIntervalMS = 1000 / Settings.SERVER_PACKET_SEND_RATE; //
 
 let playerPacketAccumulator = 0;
 
-document.addEventListener("visibilitychange", () => {
-   if (document.visibilityState === "visible") {
-      lastPacketTime = performance.now();
+// @Temporary: testing out simply treating packets as usual while tabbed out.
+// document.addEventListener("visibilitychange", () => {
+//    console.log("change");
+//    if (document.visibilityState === "visible") {
+//       lastPacketTime = performance.now();
 
-      gameIsSynced = true;
-      // If the ideal buffer length is 2, we want to revive the top 3 snapshots.
-      // for (let i = Math.max(unprocessedGamePackets.length - SNAPSHOT_BUFFER_LENGTH - 1, 0); i < unprocessedGamePackets.length; i++) {
-      //    const reader = unprocessedGamePackets[i];
-      //    receivePacket(reader);
-      // }
-      // @HACK @SPEED im doing this all at once... if you're tabbed out for long enough this is going to be horrible.
-      console.log(unprocessedGamePackets.length);
-      for (const reader of unprocessedGamePackets) {
-         const previousSnapshot = snapshotBuffer.length > 0 ? snapshotBuffer[snapshotBuffer.length - 1] : null;
-         const snapshot = decodeSnapshotFromGameDataPacket(reader, previousSnapshot);
-         updateGameStateToSnapshot(snapshot);
-      }
-      unprocessedGamePackets.splice(0, unprocessedGamePackets.length);
-   } else if (document.visibilityState === "hidden") {
-      gameIsSynced = false;
-      assert(unprocessedGamePackets.length === 0);
-      unprocessedGamePackets.splice(0, unprocessedGamePackets.length);
-   }
-});
+//       gameIsSynced = true;
+//       // If the ideal buffer length is 2, we want to revive the top 3 snapshots.
+//       // for (let i = Math.max(unprocessedGamePackets.length - SNAPSHOT_BUFFER_LENGTH - 1, 0); i < unprocessedGamePackets.length; i++) {
+//       //    const reader = unprocessedGamePackets[i];
+//       //    receivePacket(reader);
+//       // }
+//       // @HACK @SPEED im doing this all at once... if you're tabbed out for long enough this is going to be horrible.
+//       console.log("num processed from backed-up:",unprocessedGamePackets.length);
+//       for (const reader of unprocessedGamePackets) {
+//          const previousSnapshot = snapshotBuffer.length > 0 ? snapshotBuffer[snapshotBuffer.length - 1] : null;
+//          const snapshot = decodeSnapshotFromGameDataPacket(reader, previousSnapshot);
+//          updateGameStateToSnapshot(snapshot);
+//       }
+//       unprocessedGamePackets.splice(0, unprocessedGamePackets.length);
+//    } else if (document.visibilityState === "hidden") {
+//       gameIsSynced = false;
+//       assert(unprocessedGamePackets.length === 0);
+//       unprocessedGamePackets.splice(0, unprocessedGamePackets.length);
+//    }
+// });
 
 const onSuccessfulConnection = (username: string, tribeType: TribeType, isSpectating: boolean): void => {
    loadingScreenState.setStage(LoadingScreenStage.sendingPlayerData);
@@ -104,7 +103,8 @@ const startGame = (): void => {
 
    resizeCanvas();
 
-   updatePlayerRotation();
+   // Initial player direction
+   updatePlayerDirection(0, 0);
             
    lastFrameTime = performance.now();
    requestAnimationFrame(runFrame);
@@ -156,12 +156,16 @@ const onPacket = (msg: MessageEvent): void => {
                startGame();
             }
          } else if (gameIsRunning) {
-            // Only unload game packets when the game is running
-            if (gameIsSynced) {
-               receivePacket(reader);
-            } else {
-               unprocessedGamePackets.push(reader);
-            }
+            receivePacket(reader);
+
+            // @Temporary: testing out simply treating packets as usual while tabbed out.
+            // // Only unload game packets when the game is running
+            // if (gameIsSynced) {
+            //    receivePacket(reader);
+            // } else {
+            //    console.log("receive packet",performance.now());
+            //    unprocessedGamePackets.push(reader);
+            // }
          }
          break;
       }
@@ -197,7 +201,7 @@ const receivePacket = (reader: PacketReader): PacketSnapshot => {
    const snapshot = decodeSnapshotFromGameDataPacket(reader, previousSnapshot);
    
    snapshotBuffer.push(snapshot);
-   debugDisplayState.setSnapshotBufferSize(snapshotBuffer.length);
+   debugDisplayState.snapshotBufferSize = snapshotBuffer.length;
 
    const timeNow = performance.now();
    
@@ -206,6 +210,7 @@ const receivePacket = (reader: PacketReader): PacketSnapshot => {
    // Calculate new server packet interval using la "Exponential Moving Average"
    const smoothingFactor = 2 / (PACKET_INTERVAL_ADJUST_TIME + 1);
    measuredServerPacketIntervalMS = measuredServerPacketIntervalMS * (1 - smoothingFactor) + smoothingFactor * delta;
+   debugDisplayState.measuredServerTPS = 1000 / measuredServerPacketIntervalMS;
    
    lastPacketTime = timeNow;
 
@@ -232,11 +237,7 @@ export function sendPacket(packet: Packet): void {
 
 export function setCurrentSnapshot(snapshot: PacketSnapshot): void {
    currentSnapshot = snapshot;
-   debugDisplayState.setCurrentSnapshot(snapshot);
-}
-
-export function getMeasuredServerTPS(): number {
-   return 1000 / measuredServerPacketIntervalMS;
+   debugDisplayState.currentSnapshot = snapshot;
 }
 
 export function tickIntervalHasPassed(intervalSeconds: number): boolean {
@@ -250,118 +251,108 @@ export function tickIntervalHasPassed(intervalSeconds: number): boolean {
 }
 
 const runFrame = (frameStartTime: number): void => {
-   if (gameIsSynced) {
-      const deltaTimeMS = frameStartTime - lastFrameTime;
-      lastFrameTime = frameStartTime;
+   const deltaTimeMS = frameStartTime - lastFrameTime;
+   lastFrameTime = frameStartTime;
 
-      // Calculate the client tick's error
-      const serverTick = snapshotBuffer[snapshotBuffer.length - 1].tick;
-      const delayTicks = serverTick - clientTick;
-      const errorTicks = delayTicks + Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
+   // Calculate the client tick's error
+   const serverTick = snapshotBuffer[snapshotBuffer.length - 1].tick;
+   const delayTicks = serverTick - clientTick;
+   const errorTicks = delayTicks + Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
 
-      const timeDilationFactor = (errorTicks < -0.5 || errorTicks > 0.5) ? 1 + 0.15 * errorTicks : 1;
-      
-      // Delta tick accounting for the MEASURED tps of the server
-      const deltaTick = deltaTimeMS / measuredServerPacketIntervalMS * Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
-
-      clientTick += deltaTick * timeDilationFactor;
-      
-      // Calculate the subtick time to render at (render tick)
-      const renderTick = clientTick - SNAPSHOT_BUFFER_LENGTH * Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
-
-      // Make sure the current snapshot is the snapshot just below the currently rendered tick
-      let i = 0;
-      for (; i < snapshotBuffer.length; i++) {
-         const snapshot = snapshotBuffer[i];
-         if (snapshot.tick < renderTick) {
-            if (snapshot.tick > currentSnapshot.tick) {
-               updateGameStateToSnapshot(snapshot);
-               currentSnapshot = snapshot;
-            }
-         } else {
-            break;
-         }
-      }
-      // Snapshots older than the current one are now useless
-      if (i > 0) {
-         snapshotBuffer.splice(0, i - 1);
-      }
-      debugDisplayState.setSnapshotBufferSize(snapshotBuffer.length);
-
-      // @Cleanup kinda unclear at a glance
-      nextSnapshot = (snapshotBuffer[snapshotBuffer.indexOf(currentSnapshot) + 1]) || currentSnapshot;
-
-      const snapshotTickDiff = nextSnapshot.tick - currentSnapshot.tick;
-      const serverTickInterp = snapshotTickDiff > 0 ? (renderTick - currentSnapshot.tick) / snapshotTickDiff : 0;
+   const timeDilationFactor = (errorTicks < -0.5 || errorTicks > 0.5) ? 1 + 0.15 * errorTicks : 1;
    
-      // Send player packets to server
-      playerPacketAccumulator += deltaTick;
-      while (playerPacketAccumulator >= Settings.TICK_RATE / Settings.CLIENT_PACKET_SEND_RATE) {
-         sendPlayerDataPacket();
-         playerPacketAccumulator -= Settings.TICK_RATE / Settings.CLIENT_PACKET_SEND_RATE;
-      }
+   // Delta tick accounting for the MEASURED tps of the server
+   const deltaTick = deltaTimeMS / measuredServerPacketIntervalMS * Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
 
-      // Tick the player (independently from all other entities)
-      clientTickInterp += deltaTick;
-      while (clientTickInterp >= 1) {
-         // Call this outside of the check which makes sure the player is in-client, cuz we want the movement intention to update too!
-         updatePlayerMovement();
-         
-         // @Cleanup: this function name i think is a lil weird for something which the contents of the if updates the player.
-         if (playerInstance !== null && entityUsesClientInterp(playerInstance)) {
-            callEntityOnUpdateFunctions(playerInstance);
-            resolvePlayerCollisions();
+   clientTick += deltaTick * timeDilationFactor;
+   
+   // Calculate the subtick time to render at (render tick)
+   const renderTick = clientTick - SNAPSHOT_BUFFER_LENGTH * Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
+
+   // Make sure the current snapshot is the snapshot just below the currently rendered tick
+   let i = 0;
+   for (; i < snapshotBuffer.length; i++) {
+      const snapshot = snapshotBuffer[i];
+      if (snapshot.tick < renderTick) {
+         if (snapshot.tick > currentSnapshot.tick) {
+            updateGameStateToSnapshot(snapshot);
+            currentSnapshot = snapshot;
          }
+      } else {
+         break;
+      }
+   }
+   // Snapshots older than the current one are now useless
+   if (i > 0) {
+      snapshotBuffer.splice(0, i - 1);
+   }
+   debugDisplayState.snapshotBufferSize = snapshotBuffer.length;
 
-         clientTickInterp--;
+   // @Cleanup kinda unclear at a glance
+   nextSnapshot = (snapshotBuffer[snapshotBuffer.indexOf(currentSnapshot) + 1]) || currentSnapshot;
 
-         // Tick all entities (cuz the client interp loop is based on the network update rate not the tick rate)
-         Board.tickEntities();
-         
-         updateSpamFilter(deltaTimeMS);
+   const snapshotTickDiff = nextSnapshot.tick - currentSnapshot.tick;
+   const serverTickInterp = snapshotTickDiff > 0 ? (renderTick - currentSnapshot.tick) / snapshotTickDiff : 0;
 
-         updateActiveResearchBench();
-         updateResearchOrb();
-         attemptToResearch();
+   // Send player packets to server
+   playerPacketAccumulator += deltaTick;
+   while (playerPacketAccumulator >= Settings.TICK_RATE / Settings.CLIENT_PACKET_SEND_RATE) {
+      sendPlayerDataPacket();
+      playerPacketAccumulator -= Settings.TICK_RATE / Settings.CLIENT_PACKET_SEND_RATE;
+   }
 
-         // @Cleanup: can probs just combine these 2
-         updateHighlightedAndHoveredEntities();
-         buildMenuState.updateEntity();
-         // @Incomplete
-         // AnimalStaffOptions_update();
-         // @Incomplete?
-         // updateInspectHealthBar();
-         // @Hack @Speed
-         // @Incomplete
-         // TamingMenu_forceUpdate();
-         // @Incomplete
-         // CowStaminaBar_forceUpdate();
-
-         updateTechTreeItems();
-         
-         updateSounds();
-         playRiverSounds();
-
-         createCollapseParticles();
-         updateSlimeTrails();
-
-         // @Incomplete: this was a force update for entity+tile debug info
-         // if (isDev()) refreshDebugInfo();
-         updateDebugEntity();
+   // Tick the player (independently from all other entities)
+   clientTickInterp += deltaTick;
+   while (clientTickInterp >= 1) {
+      // Call this outside of the check which makes sure the player is in-client, cuz we want the movement intention to update too!
+      updatePlayerMovement();
+      
+      // @Cleanup: this function name i think is a lil weird for something which the contents of the if updates the player.
+      if (playerInstance !== null && entityUsesClientInterp(playerInstance)) {
+         callEntityOnUpdateFunctions(playerInstance);
+         resolvePlayerCollisions();
       }
 
-      renderGame(clientTickInterp, serverTickInterp);
+      clientTickInterp--;
 
-      const renderEndTime = performance.now();
-      registerFrame(frameStartTime, renderEndTime);
-      renderFrameGraph(renderEndTime);
-
-      updateTextNumbers();
-      Board.updateTickCallbacks();
-      Board.updateParticles();
+      // Tick all entities (cuz the client interp loop is based on the network update rate not the tick rate)
+      Board.tickEntities();
       
-      renderCursorTooltip();
+      updateSpamFilter(deltaTimeMS);
+
+      updateActiveResearchBench();
+      updateResearchOrb();
+      attemptToResearch();
+
+      updateEntitySelections();
+
+      updateTechTreeItems();
+      
+      updateSounds();
+      playRiverSounds();
+
+      createCollapseParticles();
+      updateSlimeTrails();
+
+      // @Incomplete: this was a force update for entity+tile debug info
+      // if (isDev()) refreshDebugInfo();
+      updateDebugEntity();
    }
+
+   if (gameIsSynced) {
+      renderGame(clientTickInterp, serverTickInterp);
+   }
+
+   const renderEndTime = performance.now();
+   registerFrame(frameStartTime, renderEndTime);
+
+   if (gameIsSynced) {
+      renderFrameGraph(renderEndTime);
+   }
+
+   updateTextNumbers();
+   Board.updateTickCallbacks();
+   Board.updateParticles();
 
    if (gameIsRunning) {
       requestAnimationFrame(runFrame);

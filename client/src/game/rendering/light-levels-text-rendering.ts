@@ -1,7 +1,7 @@
 import { distance, roundNum, getLightLevelNodeX, getLightLevelNodeY, LightLevelVars } from "webgl-test-shared";
 import { getLightLevelNodeInfos } from "../light-levels";
-import { cursorWorldPos } from "../mouse-input";
 import { getTextContext, getXPosInTextCanvas, getYPosInTextCanvas } from "../text-canvas";
+import { cursorWorldPos } from "../camera";
 
 const enum Vars {
    NODE_DISPLAY_DIST = 32

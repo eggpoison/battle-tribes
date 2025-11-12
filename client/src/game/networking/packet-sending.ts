@@ -6,7 +6,7 @@ import { playerInstance } from "../player";
 import { cameraPosition } from "../camera";
 import { sendPacket } from "../client";
 import { getHotbarSelectedItemSlot, getInstancePlayerAction, getPlayerMoveIntention } from "../player-action-handler";
-import { entityInteractionState } from "../../ui-state/entity-interaction-state.svelte";
+import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
 import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
 
 export function sendInitialPlayerDataPacket(username: string, tribeType: TribeType, isSpectating: boolean): void {
@@ -78,7 +78,7 @@ export function sendPlayerDataPacket(): void {
 
    let interactingEntityID = 0;
 
-   const selectedEntity = entityInteractionState.selectedEntity;
+   const selectedEntity = entitySelectionState.selectedEntity;
    if (selectedEntity !== null) {
       const entityType = getEntityType(selectedEntity);
       if (entityType === EntityType.tribeWorker || entityType === EntityType.tribeWarrior) {

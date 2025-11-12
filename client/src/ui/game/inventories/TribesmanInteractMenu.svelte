@@ -6,14 +6,14 @@
    import { playerTribe } from "../../../game/tribes";
    import { playerInstance } from "../../../game/player";
    import TribesmanInfocard from "./TribesmanInfocard.svelte";
-   import { entityInteractionState } from "../../../ui-state/entity-interaction-state.svelte";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
    import InventoryContainer from "./ItemSlotsContainer.svelte";
    import BackpackWireframeImage from "../../../images/miscellaneous/backpack-wireframe.png";
    import ArmourWireframeImage from "../../../images/miscellaneous/armour-wireframe.png";
    import ItemSlot from "./ItemSlot.svelte";
 
    // @Hack: "!"
-   const tribesman = entityInteractionState.selectedEntity!;
+   const tribesman = entitySelectionState.selectedEntity!;
    
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
@@ -32,7 +32,7 @@
    <div class="flex-container space-around">
       {#if backpackSlotInventory.itemSlots.hasOwnProperty(1)}
          <div>
-            <InventoryContainer isBordered className="backapck" entityID={tribesman} inventory={getInventory(inventoryComponent, InventoryName.backpack)!} />
+            <InventoryContainer isBordered class="backapck" entityID={tribesman} inventory={getInventory(inventoryComponent, InventoryName.backpack)!} />
          </div>
       {/if}
       <div>
@@ -44,8 +44,8 @@
       <div class="hotbar-container">
          <InventoryContainer isBordered className="hotbar" entityID={tribesman} inventory={getInventory(inventoryComponent, InventoryName.hotbar)!} selectedItemSlot={getLimbByInventoryName(inventoryUseComponent, InventoryName.hotbar).selectedItemSlot} />
          <div class="inventory">
-            <ItemSlot className="armour-slot" entityID={playerID} inventory={backpackSlotInventory} itemSlot={1} placeholderImg={BackpackWireframeImage} validItemSpecifier={itemTypeIsBackpack} />
-            <ItemSlot className="backpack-slot" entityID={playerID} inventory={armourSlotInventory} itemSlot={1} placeholderImg={ArmourWireframeImage} validItemSpecifier={itemTypeIsArmour} />
+            <ItemSlot class="armour-slot" entityID={playerID} inventory={backpackSlotInventory} itemSlot={1} placeholderImg={BackpackWireframeImage} validItemSpecifier={itemTypeIsBackpack} />
+            <ItemSlot class="backpack-slot" entityID={playerID} inventory={armourSlotInventory} itemSlot={1} placeholderImg={ArmourWireframeImage} validItemSpecifier={itemTypeIsArmour} />
          </div>
       </div>
    {/if}

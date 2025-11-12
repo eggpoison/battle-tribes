@@ -5,7 +5,7 @@
    import ItemTooltip from "./ItemTooltip.svelte";
    import type { HTMLAttributes } from "svelte/elements";
 
-   interface Props extends HTMLAttributes<HTMLDivElement>{
+   interface Props extends HTMLAttributes<HTMLDivElement> {
       item: Item | null;
       isSelected?: boolean;
       placeholderImg?: any;

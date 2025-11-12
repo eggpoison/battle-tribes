@@ -1,12 +1,5 @@
 import { EntitySummonPacket, EntityType, Inventory, InventoryName, NUM_INVENTORY_NAMES, TribesmanTitle } from "webgl-test-shared";
 
-export enum TabType {
-   items,
-   summon,
-   titles,
-   tribes
-}
-
 // @Hack? @Robustness
 export const ENTITY_INVENTORY_NAME_RECORD: Partial<Record<EntityType, ReadonlyArray<InventoryName>>> = {
    [EntityType.tribeWarrior]: [InventoryName.hotbar, InventoryName.offhand, InventoryName.armourSlot, InventoryName.backpackSlot, InventoryName.gloveSlot],

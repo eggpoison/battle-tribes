@@ -1,21 +1,16 @@
 <script lang="ts">
    import { type CraftingRecipe } from "webgl-test-shared";
-   import { windowHeight } from "../../../../game/webgl";
    import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../../game/client-item-info";
 
    interface Props {
       readonly recipe: CraftingRecipe;
-      readonly hoverPositionX: number;
-      readonly hoverPositionY: number;
-      readonly craftingMenuHeight: number;
+      readonly offsetY: number;
    }
 
    let props: Props = $props();
-
-   const top = $derived((windowHeight - props.craftingMenuHeight) / 2);
 </script>
 
-<div class="recipe-viewer" style:top="{props.hoverPositionX - top}px">
+<div class="recipe-viewer" style:--offset-y="{props.offsetY}px">
    <div class="header">
       <img class="recipe-product-icon" src={getItemTypeImage(props.recipe.product)} alt="" />
       <div class="recipe-product-name">{CLIENT_ITEM_INFO_RECORD[props.recipe.product].name}</div>

@@ -34,7 +34,7 @@
       </label>
    </div>
    <div class="flex-container center">
-      <ItemSlotsContainer isBordered>
+      <ItemSlotsContainer isBordered width={inventory.width} height={inventory.height} numItemSlotsPassed={inventory.items.length}>
          <InventoryItemSlots entity={entity} inventory={inventory} />
       </ItemSlotsContainer>
    </div>

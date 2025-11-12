@@ -2,7 +2,6 @@ import { Point, polarVec2 } from "webgl-test-shared";
 import { isDev } from "./utils";
 import { updateTechTreeCanvasSize } from "./rendering/webgl/tech-tree-rendering";
 import { TEXTURE_IMAGE_RECORD } from "./textures";
-import { getTribePlanVisualiserGL } from "./rendering/tribe-plan-visualiser/tribe-plan-visualiser";
 
 export const CIRCLE_VERTEX_COUNT = 50;
 
@@ -43,11 +42,6 @@ export function resizeCanvas(): void {
    techTreeCanvas.width = windowWidth;
    techTreeCanvas.height = windowHeight;
    updateTechTreeCanvasSize();
-
-   const tribePlanVisualiserCanvas = document.getElementById("tribe-plan-visualiser-canvas") as HTMLCanvasElement;
-   tribePlanVisualiserCanvas.width = windowWidth;
-   tribePlanVisualiserCanvas.height = windowHeight;
-   getTribePlanVisualiserGL().viewport(0, 0, windowWidth, windowHeight);
 }
 
 // Run the resizeCanvas function whenever the window is resize

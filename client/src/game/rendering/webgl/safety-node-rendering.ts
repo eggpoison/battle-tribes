@@ -1,9 +1,9 @@
 import { BuildingPlanData, SafetyNodeData, TribeWallData, WallSideNodeData, Settings, distance, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { cursorWorldPos } from "../../mouse-input";
-import { entityInteractionState } from "../../../ui-state/entity-interaction-state.svelte";
+import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
 import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
+import { cursorWorldPos } from "../../camera";
 
 const OCCUPIED_NODE_THICKNESS = 3;
 const OCCUPIED_NODE_FREE_THICKNESS = 4.5;
@@ -93,7 +93,7 @@ export function createSafetyNodeShaders(): void {
 }
 
 const getHighlightedNodes = (): ReadonlyArray<WallSideNodeData> => {
-   const hoveredEntity = entityInteractionState.hoveredEntity;
+   const hoveredEntity = entitySelectionState.hoveredEntity;
    if (hoveredEntity === null) {
       return [];
    }

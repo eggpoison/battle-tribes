@@ -23,6 +23,7 @@ import Board from "../Board";
 import { tribesTabState } from "../../ui-state/tribes-tab-state.svelte";
 import { infocardsState } from "../../ui-state/infocards-state.svelte";
 import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
+import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
@@ -512,6 +513,21 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
             updateEntityFromData(entity, entitySnapshot);
          } else {
             createEntityFromData(entity, entitySnapshot);
+         }
+      }
+   }
+   const selectedEntity = entitySelectionState.selectedEntity;
+   if (selectedEntity !== null) {
+      const snapshotData = snapshot.entities.get(selectedEntity);
+      if (typeof snapshotData !== "undefined") {
+         const componentTypes = getEntityComponentTypes(selectedEntity);
+         for (const componentType of componentTypes) {
+            if (typeof snapshotData.serverComponentData[componentType] !== "undefined") {
+               const componentArray = getServerComponentArray(componentType);
+               if (typeof componentArray.updateSelectedEntityState !== "undefined") {
+                  componentArray.updateSelectedEntityState(selectedEntity);
+               }
+            }
          }
       }
    }

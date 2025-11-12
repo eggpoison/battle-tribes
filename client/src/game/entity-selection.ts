@@ -1,7 +1,6 @@
-import { Entity, EntityType, PlantedEntityType, assert, distance, Point, rotateXAroundOrigin, rotateYAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, boxIsWithinRange, HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID } from "webgl-test-shared";
+import { Entity, EntityType, PlantedEntityType, assert, distance, Point, rotateXAroundOrigin, rotateYAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID } from "webgl-test-shared";
 import { currentSnapshot } from "./client";
-import { GhostInfo, GhostType, PARTIAL_OPACITY } from "./rendering/webgl/entity-ghost-rendering";
-import { entityExists, getEntityLayer, getEntityRenderInfo, getEntityType } from "./world";
+import { entityExists, getCurrentLayer, getEntityRenderInfo, getEntityType } from "./world";
 import { TombstoneComponentArray } from "./entity-components/server-components/TombstoneComponent";
 import { TunnelComponentArray } from "./entity-components/server-components/TunnelComponent";
 import { PlanterBoxComponentArray } from "./entity-components/server-components/PlanterBoxComponent";
@@ -20,18 +19,13 @@ import { HealthComponentArray } from "./entity-components/server-components/Heal
 import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "./entity-components/server-components/TamingComponent";
 import { createHitboxQuick, getDistanceFromPointToEntity, getHitboxVelocity } from "./hitboxes";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
-import { cursorWorldPos } from "./mouse-input";
 import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
 import { StructureComponentArray } from "./entity-components/server-components/StructureComponent";
 import { getPlayerSelectedItem, playerIsPlacingEntity } from "./player-action-handler";
-import { cameraZoom } from "./camera";
-import { entityInteractionState } from "../ui-state/entity-interaction-state.svelte";
+import { cameraPosition, cameraZoom, cursorWorldPos } from "./camera";
+import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state.svelte";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
-
-const enum Vars {
-   DEFAULT_INTERACT_RANGE = 150
-}
 
 const enum InteractActionType {
    openBuildMenu,
@@ -130,6 +124,7 @@ interface PickUpDustfleaEggAction extends BaseInteractAction {
 type InteractAction = OpenBuildMenuAction | PlantSeedAction | UseFertiliserAction | ToggleTunnelDoorAction | StartResearchingAction | ToggleDoorAction | OpenMenuAction | OpenCraftingMenuAction | OpenAnimalStaffMenuAction | MountCarrySlotAction | PickUpEntityAction | SetCarryTargetAction | SelectAttackTargetAction | OpenTamingMenuAction | InscribeFloorSignAction | PickUpDustfleaEggAction;
 
 const HIGHLIGHT_CURSOR_RANGE = 75;
+const DEFAULT_INTERACT_RANGE = 150
 
 /** The render info which an outline will be rendered around. */
 let highlightedRenderInfo: EntityRenderInfo | null = null;
@@ -164,7 +159,7 @@ const getEntityMenu = (entity: Entity): Menu | null => {
          if (tombstoneComponent.deathInfo !== null) {
             return Menu.tombstoneEpitaph;
          } else {
-            return Menu.none;
+            return null;
          }
       }
       case EntityType.ballista: return Menu.ammoBoxInventory;
@@ -233,7 +228,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       return {
          type: InteractActionType.toggleTunnelDoor,
          interactEntity: entity,
-         interactRange: Vars.DEFAULT_INTERACT_RANGE,
+         interactRange: DEFAULT_INTERACT_RANGE,
          // @HACK: GROUP NUM PARAMETER IS OBSOLETE
          doorSide: getTunnelDoorSide(0)
       };
@@ -248,7 +243,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
             return {
                type: InteractActionType.useFertiliser,
                interactEntity: entity,
-               interactRange: Vars.DEFAULT_INTERACT_RANGE
+               interactRange: DEFAULT_INTERACT_RANGE
             };
          }
          
@@ -258,7 +253,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
             return {
                type: InteractActionType.plantSeed,
                interactEntity: entity,
-               interactRange: Vars.DEFAULT_INTERACT_RANGE,
+               interactRange: DEFAULT_INTERACT_RANGE,
                plantedEntityType: plant
             };
          }
@@ -270,7 +265,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       return {
          type: InteractActionType.openBuildMenu,
          interactEntity: entity,
-         interactRange: Vars.DEFAULT_INTERACT_RANGE
+         interactRange: DEFAULT_INTERACT_RANGE
       };
    }
 
@@ -280,7 +275,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       return {
          type: InteractActionType.startResearching,
          interactEntity: entity,
-         interactRange: Vars.DEFAULT_INTERACT_RANGE
+         interactRange: DEFAULT_INTERACT_RANGE
       };
    }
 
@@ -289,7 +284,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       return {
          type: InteractActionType.toggleDoor,
          interactEntity: entity,
-         interactRange: Vars.DEFAULT_INTERACT_RANGE
+         interactRange: DEFAULT_INTERACT_RANGE
       };
    }
 
@@ -298,7 +293,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       return {
          type: InteractActionType.openCraftingStation,
          interactEntity: entity,
-         interactRange: Vars.DEFAULT_INTERACT_RANGE,
+         interactRange: DEFAULT_INTERACT_RANGE,
          craftingStation: getEntityType(entity) as CraftingStationEntityType
       };
    }
@@ -317,7 +312,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       return {
          type: InteractActionType.openTamingMenu,
          interactEntity: entity,
-         interactRange: Vars.DEFAULT_INTERACT_RANGE
+         interactRange: DEFAULT_INTERACT_RANGE
       };
    // Rideable entities
    } else if (RideableComponentArray.hasComponent(entity)) {
@@ -340,7 +335,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
                return {
                   type: InteractActionType.mountCarrySlot,
                   interactEntity: entity,
-                  interactRange: Vars.DEFAULT_INTERACT_RANGE,
+                  interactRange: DEFAULT_INTERACT_RANGE,
                   carrySlotIdx: carrySlotIdx
                };
             }
@@ -356,7 +351,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
          return {
             type: InteractActionType.pickUpEntity,
             interactEntity: entity,
-            interactRange: Vars.DEFAULT_INTERACT_RANGE
+            interactRange: DEFAULT_INTERACT_RANGE
          };
       }
    }
@@ -366,7 +361,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       return {
          type: InteractActionType.pickUpEntity,
          interactEntity: entity,
-         interactRange: Vars.DEFAULT_INTERACT_RANGE
+         interactRange: DEFAULT_INTERACT_RANGE
       };
    }
 
@@ -375,7 +370,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       return {
          type: InteractActionType.inscribeFloorSign,
          interactEntity: entity,
-         interactRange: Vars.DEFAULT_INTERACT_RANGE
+         interactRange: DEFAULT_INTERACT_RANGE
       };
    }
 
@@ -384,7 +379,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       return {
          type: InteractActionType.openMenu,
          interactEntity: entity,
-         interactRange: Vars.DEFAULT_INTERACT_RANGE,
+         interactRange: DEFAULT_INTERACT_RANGE,
          menu: menu
       };
    }
@@ -445,16 +440,25 @@ const createInteractRenderInfo = (interactAction: InteractAction): EntityRenderI
    }
 }
 
+export function updateHighlightedEntityRenderInfo(highlightedEntity: Entity | null): void {
+   if (highlightedEntity === null) {
+      highlightedRenderInfo = null;
+   } else {
+      const action = getEntityInteractAction(highlightedEntity);
+      assert(action !== null);
+      highlightedRenderInfo = createInteractRenderInfo(action);
+   }
+}
+
 const interactWithEntity = (entity: Entity, action: InteractAction): void => {
    switch (action.type) {
       case InteractActionType.openBuildMenu: {
-         entityInteractionState.setSelectedEntity(entity);
-         menuSelectorState.setMenu(Menu.buildMenu);
+         entitySelectionState.setSelectedEntity(entity);
+         menuSelectorState.openMenu(Menu.buildMenu);
          break;
       }
       case InteractActionType.plantSeed: {
-         // @Hack: "!"
-         sendModifyBuildingPacket(entityInteractionState.hoveredEntity!, action.plantedEntityType);
+         sendModifyBuildingPacket(entity, action.plantedEntityType);
 
          // @Hack
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
@@ -474,8 +478,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          break;
       }
       case InteractActionType.toggleTunnelDoor: {
-         // @Hack: "!"
-         sendStructureInteractPacket(entityInteractionState.hoveredEntity!, action.doorSide);
+         sendStructureInteractPacket(entity, action.doorSide);
 
          // @Hack
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
@@ -485,15 +488,13 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          break;
       }
       case InteractActionType.startResearching: {
-         entityInteractionState.setSelectedEntity(entity);
+         entitySelectionState.setSelectedEntity(entity);
 
-         // @Hack: "!"
-         sendStructureInteractPacket(entityInteractionState.hoveredEntity!, 0);
+         sendStructureInteractPacket(entity, 0);
          break;
       }
       case InteractActionType.toggleDoor: {
-         // @Hack: "!"
-         sendStructureInteractPacket(entityInteractionState.hoveredEntity!, 0);
+         sendStructureInteractPacket(entity, 0);
 
          // @Hack
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
@@ -503,18 +504,18 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          break;
       }
       case InteractActionType.openMenu: {
-         entityInteractionState.setSelectedEntity(entity);
-         menuSelectorState.setMenu(action.menu);
+         entitySelectionState.setSelectedEntity(entity);
+         menuSelectorState.openMenu(action.menu);
          break;
       }
       case InteractActionType.openCraftingStation: {
-         entityInteractionState.setSelectedEntity(entity);
-         menuSelectorState.setMenu(Menu.craftingMenu);
+         entitySelectionState.setSelectedEntity(entity);
+         menuSelectorState.openMenu(Menu.craftingMenu);
          break;
       }
       case InteractActionType.openAnimalStaffMenu: {
-         entityInteractionState.setSelectedEntity(entity);
-         menuSelectorState.setMenu(Menu.animalStaffOptions);
+         entitySelectionState.setSelectedEntity(entity);
+         menuSelectorState.openMenu(Menu.animalStaffOptions);
          break;
       }
       case InteractActionType.mountCarrySlot: {
@@ -527,32 +528,28 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       }
       case InteractActionType.setCarryTarget: {
          // @Hack: "!"
-         const selectedEntity = entityInteractionState.selectedEntity!;
-         // @Hack: "!"
-         const hoveredEntity = entityInteractionState.hoveredEntity!;
-         sendSetCarryTargetPacket(selectedEntity, hoveredEntity);
+         const hoveredEntity = entitySelectionState.hoveredEntity!;
+         sendSetCarryTargetPacket(entity, hoveredEntity);
          gameUIState.setGameInteractState(GameInteractState.none);
          createControlCommandParticles(AnimalStaffCommandType.carry);
          break;
       }
       case InteractActionType.selectAttackTarget: {
          // @Hack: "!"
-         const selectedEntity = entityInteractionState.selectedEntity!;
-         // @Hack: "!"
-         const hoveredEntity = entityInteractionState.hoveredEntity!;
-         sendSetAttackTargetPacket(selectedEntity, hoveredEntity);
+         const hoveredEntity = entitySelectionState.hoveredEntity!;
+         sendSetAttackTargetPacket(entity, hoveredEntity);
          gameUIState.setGameInteractState(GameInteractState.none);
          createControlCommandParticles(AnimalStaffCommandType.attack);
          break;
       }
       case InteractActionType.openTamingMenu: {
-         entityInteractionState.setSelectedEntity(entity);
-         menuSelectorState.setMenu(Menu.tamingMenu);
+         entitySelectionState.setSelectedEntity(entity);
+         menuSelectorState.openMenu(Menu.tamingMenu);
          break;
       }
       case InteractActionType.inscribeFloorSign: {
-         entityInteractionState.setSelectedEntity(entity);
-         menuSelectorState.setMenu(Menu.signInscribeMenu);
+         entitySelectionState.setSelectedEntity(entity);
+         menuSelectorState.openMenu(Menu.signInscribeMenu);
          break;
       }
       case InteractActionType.pickUpDustfleaEgg: {
@@ -565,11 +562,9 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
    }
 }
 
-export function updateHighlightedAndHoveredEntities(): void {
-   const playerTransformComponent = TransformComponentArray.getComponent(playerInstance!);
-   const playerHitbox = playerTransformComponent.hitboxes[0];
-   const layer = getEntityLayer(playerInstance!);
-
+export function updateEntitySelections(): void {
+   const layer = getCurrentLayer();
+   
    const minChunkX = Math.max(Math.floor((cursorWorldPos.x - HIGHLIGHT_CURSOR_RANGE / cameraZoom) / Settings.CHUNK_UNITS), 0);
    const maxChunkX = Math.min(Math.floor((cursorWorldPos.x + HIGHLIGHT_CURSOR_RANGE / cameraZoom) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
    const minChunkY = Math.max(Math.floor((cursorWorldPos.y - HIGHLIGHT_CURSOR_RANGE / cameraZoom) / Settings.CHUNK_UNITS), 0);
@@ -577,54 +572,60 @@ export function updateHighlightedAndHoveredEntities(): void {
 
    let newHoveredEntity: Entity | null = null;
    let newHoveredEntityDist = HIGHLIGHT_CURSOR_RANGE;
-   let newSelectedEntity: Entity | null = null;
-   let newSelectedEntityDist = HIGHLIGHT_CURSOR_RANGE;
+   let newHighlightedEntity: Entity | null = null;
+   let newHighlightedEntityDist = HIGHLIGHT_CURSOR_RANGE;
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);
          for (const currentEntity of chunk.nonGrassEntities) {
             const dist = getDistanceFromPointToEntity(cursorWorldPos, currentEntity);
 
-            if (dist < newSelectedEntityDist) {
+            if (dist < newHighlightedEntityDist) {
                const interactAction = getEntityInteractAction(currentEntity);
                if (interactAction !== null) {
-                  // @Incomplete @Cleanup: Should do it based on the distance from the closest hitbox rather than distance from player center
-                  const distToPlayer = getDistanceFromPointToEntity(playerHitbox.box.position, currentEntity);
+                  const distToPlayer = getDistanceFromPointToEntity(cameraPosition, currentEntity);
                   if (distToPlayer < interactAction!.interactRange) {
-                     newSelectedEntity = currentEntity;
-                     newSelectedEntityDist = dist;
+                     newHighlightedEntity = currentEntity;
+                     newHighlightedEntityDist = dist;
                   }
                }
-            } else if (dist < newHoveredEntityDist) {
+            }
+            if (dist < newHoveredEntityDist) {
                newHoveredEntity = currentEntity;
                newHoveredEntityDist = dist;
             }
          }
       }
    }
-
-   entityInteractionState.setHoveredEntity(newHoveredEntity);
-   entityInteractionState.setSelectedEntity(newSelectedEntity);
-
-   // @INCOMPLETE @SQUEAM wtf
    
-   // When the game is in select carry target mode, we want the controlled entity to remain selected
-   // if (gameInteractState !== GameInteractState.selectCarryTarget && gameInteractState !== GameInteractState.selectAttackTarget && gameInteractState !== GameInteractState.selectMoveTargetPosition && highlightedEntity === -1) {
-   //    entityInteractionState.setSelectedEntity(null);
-   // }
+   entitySelectionState.setHoveredEntity(newHoveredEntity);
+
+   // When the player is placing an entity, we don't want them to be able to select entities.
+   if (playerIsPlacingEntity()) {
+      entitySelectionState.setHighlightedEntity(null);
+   } else {
+      entitySelectionState.setHighlightedEntity(newHighlightedEntity);
+   }
+
+
+   // If the player has stopped highlighting the selected entity, it means they want to deselect it.
+   // EXCEPT when the game is in select carry target mode, we want the controlled entity to remain selected
+   if (newHighlightedEntity !== entitySelectionState.selectedEntity && newHighlightedEntity === null) {
+      if (gameUIState.gameInteractState !== GameInteractState.selectCarryTarget && gameUIState.gameInteractState !== GameInteractState.selectAttackTarget && gameUIState.gameInteractState !== GameInteractState.selectMoveTargetPosition) {
+         // The close menu callback will deselect the entity
+         menuSelectorState.closeMenu();
+      }
+   }
 }
 
 export function attemptEntitySelection(): boolean {
-   const hoveredEntity = entityInteractionState.hoveredEntity;
-   if (hoveredEntity === null) {
+   const highlightedEntity = entitySelectionState.highlightedEntity;
+   if (highlightedEntity === null) {
       return false;
    }
    
-   const interactAction = getEntityInteractAction(hoveredEntity);
-   if (interactAction !== null) {
-      interactWithEntity(hoveredEntity, interactAction);
-      return true;
-   }
-
-   return false;
+   const interactAction = getEntityInteractAction(highlightedEntity);
+   assert(interactAction !== null);
+   interactWithEntity(highlightedEntity, interactAction);
+   return true;
 }

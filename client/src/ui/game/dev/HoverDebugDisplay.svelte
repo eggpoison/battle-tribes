@@ -1,11 +1,13 @@
 <script lang="ts">
    import { entityExists, getCurrentLayer } from "../../../game/world";
-   import { cursorWorldPos } from "../../../game/mouse-input";
    import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
    import HoverDebugTile from "./tabs/HoverDebugTile.svelte";
    import HoverDebugEntity from "./HoverDebugEntity.svelte";
+   import { cursorWorldPos } from "../../../game/camera";
 
    const layer = getCurrentLayer();
+
+   const entityDebugData = $derived(hoverDebugState.entityDebugData);
 </script>
 
 <div id="debug-info">
@@ -14,7 +16,7 @@
    {#if hoverDebugState.tile !== null}
       <HoverDebugTile {layer} tile={hoverDebugState.tile} />
    {/if}
-   {#if hoverDebugState.entityDebugData !== null && entityExists(hoverDebugState.entityDebugData.entityID)}
-      <HoverDebugEntity entityDebugData={hoverDebugState.entityDebugData} />
+   {#if entityDebugData !== null && entityExists(entityDebugData.entityID)}
+      <HoverDebugEntity {entityDebugData} />
    {/if}
 </div>

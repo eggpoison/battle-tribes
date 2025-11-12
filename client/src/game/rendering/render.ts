@@ -2,7 +2,7 @@ import { Settings } from "webgl-test-shared";
 import { maxVisibleChunkX, maxVisibleChunkY, maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleChunkX, minVisibleChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY, refreshCameraPosition, refreshCameraView } from "../camera";
 import { getHighlightedRenderInfo } from "../entity-selection";
 import Layer from "../Layer";
-import { updatePlayerRotation } from "../player";
+import { updatePlayerDirection } from "../player";
 import { RenderLayer, MAX_RENDER_LAYER } from "../render-layers";
 import { loadSoundEffects } from "../sound";
 import { createTextCanvasContext, renderText } from "../text-canvas";
@@ -16,7 +16,6 @@ import { renderLightLevelsText } from "./light-levels-text-rendering";
 import { createRenderChunks, RENDER_CHUNK_SIZE } from "./render-chunks";
 import { resetRenderOrder, renderNextRenderables } from "./render-loop";
 import { updateRenderPartMatrices } from "./render-part-matrices";
-import { createTribePlanVisualiserGLContext, renderTribePlans } from "./tribe-plan-visualiser/tribe-plan-visualiser";
 import { createUBOs, updateUBOs } from "./ubos";
 import { createHitboxShaders, renderHitboxes } from "./webgl/box-wireframe-rendering";
 import { createBuildingBlockingTileShaders, renderBuildingBlockingTiles } from "./webgl/building-blocking-tiles-rendering";
@@ -55,10 +54,10 @@ import { createWallConnectionShaders, renderWallConnections } from "./webgl/wall
 import { createForcefieldShaders, renderForcefield } from "./webgl/world-border-forcefield-rendering";
 import { createWorldBorderShaders, renderWorldBorder } from "./webgl/world-border-rendering";
 import { playerIsHoldingPlaceableItem } from "../player-action-handler";
-import { entityInteractionState } from "../../ui-state/entity-interaction-state.svelte";
-import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
+import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
 import { nerdVisionState } from "../../ui-state/nerd-vision-state.svelte";
 import { hoverDebugState } from "../../ui-state/hover-debug-state.svelte";
+import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -77,7 +76,6 @@ export async function setupRendering(): Promise<void> {
          createWebGLContext();
          createTechTreeGLContext();
          createTextCanvasContext();
-         createTribePlanVisualiserGLContext();
 
          console.log("creating contexts",performance.now() - l);
          l = performance.now();
@@ -238,13 +236,12 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    if (layer === getCurrentLayer()) {
       // @Cleanup: should this only be for the current layer?
       // @Cleanup this is so messy
-      if (entityInteractionState.selectedEntity !== null) {
-         const renderInfo = getEntityRenderInfo(entityInteractionState.selectedEntity);
+      if (entitySelectionState.selectedEntity !== null) {
+         const renderInfo = getEntityRenderInfo(entitySelectionState.selectedEntity);
          renderEntitySelection(renderInfo, frameProgress, true);
       }
       const renderInfo = getHighlightedRenderInfo();
-      // @INCOMPLETE @SQUEAM: This should be highlighted
-      if (renderInfo !== null && entityInteractionState.hoveredEntity !== entityInteractionState.selectedEntity) {
+      if (renderInfo !== null && entitySelectionState.highlightedEntity !== entitySelectionState.selectedEntity) {
          renderEntitySelection(renderInfo, frameProgress, false);
       }
    }
@@ -290,9 +287,6 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
 }
 
 export function renderGame(clientTickInterp: number, serverTickInterp: number): void {
-   // Player rotation is updated each render, but only sent each update
-   updatePlayerRotation();
-   
    gl.bindFramebuffer(gl.FRAMEBUFFER, gameFramebuffer);
 
    if (lastTextureWidth !== windowWidth || lastTextureHeight !== windowHeight) {
@@ -312,10 +306,12 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number): 
 
    updateUBOs();
 
-   updateRenderPartMatrices(clientTickInterp, serverTickInterp);
-
-   refreshCameraPosition(clientTickInterp, serverTickInterp)
+   refreshCameraPosition(clientTickInterp, serverTickInterp);
    refreshCameraView();
+   // Done immediately following the camera position update as the player direction is reliant on it.
+   updatePlayerDirection(clientTickInterp, serverTickInterp);
+
+   updateRenderPartMatrices(clientTickInterp, serverTickInterp);
 
    // Render layers
    // @Hack
@@ -341,6 +337,4 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number): 
    
    renderTechTree();
    renderTechTreeItems();
-
-   renderTribePlans();
 }

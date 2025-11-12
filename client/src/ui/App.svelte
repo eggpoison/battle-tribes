@@ -1,18 +1,27 @@
 <script lang="ts">
+   import { updateCursorScreenPos } from "../game/camera";
    import { onKeyDown, onKeyUp } from "../game/keyboard-input";
    import { createPlayerInputListeners } from "../game/player-action-handler";
    import { AppState, appState } from "../ui-state/app-state.svelte";
-   import { techTreeState } from "../ui-state/tech-tree-state.svelte";
+   import { gameUIState } from "../ui-state/game-ui-state.svelte";
+   import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
    import FrameGraph from "./game/dev/FrameGraph.svelte";
    import GameScreen from "./game/GameScreen.svelte";
    import LoadingScreen from "./LoadingScreen.svelte";
    import MainMenu from "./MainMenu.svelte";
+
+   const onMouseMove = (e: MouseEvent): void => {
+      gameUIState.setCursorX(e.clientX);
+      gameUIState.setCursorY(e.clientY);
+      updateCursorScreenPos(e);
+   }
 </script>
 
 <svelte:window
    on:load={createPlayerInputListeners}
    on:keydown={onKeyDown}
    on:keyup={onKeyUp}
+   on:mousemove={onMouseMove}
 />
 
 {#if appState.state === AppState.mainMenu}
@@ -26,8 +35,7 @@
 <div id="canvas-wrapper" class:hidden={appState.state !== AppState.game}>
    <canvas id="game-canvas"></canvas>
    <canvas id="text-canvas"></canvas>
-   <canvas id="tech-tree-canvas" class:hidden={!techTreeState.isVisible}></canvas>
-   <canvas id="tribe-plan-visualiser-canvas" class="hidden"></canvas>
+   <canvas id="tech-tree-canvas" class:hidden={menuSelectorState.menu !== Menu.techTree}></canvas>
    <FrameGraph />
 </div>
 

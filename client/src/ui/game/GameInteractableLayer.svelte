@@ -5,7 +5,6 @@
    import { playerActionState } from "../../ui-state/player-action-state.svelte";
    import AttackChargeBar from "./AttackChargeBar.svelte";
    import CursorEntityTooltip from "./dev/CursorEntityTooltip.svelte";
-   import HeldItemSlot from "./HeldItemSlot.svelte";
    import Hotbar from "./inventories/Hotbar.svelte";
    import SpectatorControls from "./SpectatorControls.svelte";
 
@@ -25,8 +24,6 @@
 </script>
 
 <div id="game-interactable-layer" draggable={false} onmousemove={onMouseMove} onmousedown={onGameMouseDown} onmouseup={onGameMouseUp} oncontextmenu={preventDefault} aria-hidden="true"></div>
-
-<HeldItemSlot mouseX={mouseX} mouseY={mouseY} />
 
 <AttackChargeBar mouseX={mouseX} mouseY={mouseY} chargeElapsedTicks={playerActionState.hotbarChargeElapsedTicks} chargeDuration={playerActionState.hotbarChargeDuration} />
 <AttackChargeBar mouseX={mouseX} mouseY={mouseY + 18} chargeElapsedTicks={playerActionState.offhandChargeElapsedTicks} chargeDuration={playerActionState.hotbarChargeDuration} />

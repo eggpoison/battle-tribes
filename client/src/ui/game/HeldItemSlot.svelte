@@ -1,14 +1,13 @@
 <script lang="ts">
    import { getItemTypeImage } from "../../game/client-item-info";
+    import { gameUIState } from "../../ui-state/game-ui-state.svelte";
    import { inventoryState } from "../../ui-state/inventory-state.svelte";
 
-   let props = $props();
-   
-   const heldItem = inventoryState.heldItemSlot.getItem(1);
+   const heldItem = $derived(inventoryState.heldItemSlot.getItem(1));
 </script>
 
 {#if heldItem !== null}
-   <div id="held-item" style:left="{props.mouseX}px" style:top="{props.mouseY}px">
+   <div id="held-item" style:left="{gameUIState.cursorX}px" style:top="{gameUIState.cursorY}px">
       <img class="held-item-icon" src={getItemTypeImage(heldItem.type)} alt="" />
       <div class="held-item-count">{heldItem.count > 1 ? heldItem.count : ""}</div>
    </div>
@@ -22,6 +21,7 @@
       pointer-events: none;
       z-index: 3;
       user-select: none;
+      transform: scale(var(--zoom));
    }
    #held-item img {
       width: var(--item-image-size);

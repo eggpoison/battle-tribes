@@ -1,16 +1,14 @@
-import { angle, Point, Entity, EntityType, ServerComponentType, CollisionBit, CircularBox, HitboxCollisionType, updateBox } from "webgl-test-shared";
-import { setCameraSubject } from "./camera";
+import { Point, Entity, EntityType, ServerComponentType, CollisionBit, CircularBox, HitboxCollisionType, updateBox } from "webgl-test-shared";
+import { cursorWorldPos, setCameraSubject } from "./camera";
 import { selectItemSlot } from "./player-action-handler";
 import { createTransformComponentData, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { createHitboxQuick, setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
-import { closeCurrentMenu } from "./menus";
-import { cursorScreenPos } from "./mouse-input";
 import { InitialGameData } from "./networking/packet-receiving";
 import { EntityServerComponentData } from "./networking/packet-snapshots";
-import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
-import { halfWindowHeight, halfWindowWidth } from "./webgl";
+import { calculateHitboxRenderPosition, getEntityTickInterp, registerDirtyRenderInfo } from "./rendering/render-part-matrices";
 import { addEntityToWorld, createEntityCreationInfo, EntityComponentData, getEntityRenderInfo } from "./world";
 import { gameUIState } from "../ui-state/game-ui-state.svelte";
+import { menuSelectorState } from "../ui-state/menu-selector-state.svelte";
 
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
 // but this is in the client so these optimisations are less important. The ease-of-use is worth it
@@ -31,7 +29,7 @@ const onPlayerDeath = (): void => {
    gameUIState.setIsDead(true);
    
    // Close any open menus
-   closeCurrentMenu();
+   while (menuSelectorState.closeMenu());
 }
 
 export function setPlayerInstance(newPlayerInstance: Entity | null): void {
@@ -89,16 +87,17 @@ export function createSpectatingPlayer(initialGameData: InitialGameData): void {
 }
 
 /** Updates the rotation of the player to match the cursor position */
-export function updatePlayerRotation(): void {
+export function updatePlayerDirection(clientTickInterp: number, serverTickInterp: number): void {
    if (playerInstance === null) return;
-
-   const relativeCursorX = cursorScreenPos.x - halfWindowWidth;
-   const relativeCursorY = -cursorScreenPos.y + halfWindowHeight;
-
-   const cursorDirection = angle(relativeCursorX, relativeCursorY);
 
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
+
+   // Use the render position instead of the hitboxes' actual game position, as that is not up-to-date for each and every rendered frame.
+   const tickInterp = getEntityTickInterp(playerInstance, clientTickInterp, serverTickInterp);
+   const playerHitboxRenderPos = calculateHitboxRenderPosition(playerHitbox, tickInterp);
+
+   const cursorDirection = playerHitboxRenderPos.angleTo(cursorWorldPos);
    
    const previousAngle = playerHitbox.box.angle;
 

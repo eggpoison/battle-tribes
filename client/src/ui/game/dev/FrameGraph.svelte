@@ -3,26 +3,37 @@
    import { frameGraphState } from "../../../ui-state/frame-graph-state.svelte";
    import { nerdVisionState } from "../../../ui-state/nerd-vision-state.svelte";
 
-   const frames = frameGraphState.trackedFrames;
+   const frames = $derived(frameGraphState.trackedFrames);
    
-   const fps = frames.length / FRAME_GRAPH_RECORD_TIME;
+   const fps = $derived(frames.length / FRAME_GRAPH_RECORD_TIME);
 
-   let average = 0;
-   let min = 999;
-   let max = 0;
-   for (let i = 0; i < frames.length; i++) {
-      const frame = frames[i];
-      const duration = frame.endTime - frame.startTime;
+   const frameStats = () => {
+      if (frames.length === 0) {
+         return { average: 0, min: 0, max: 0 };
+      }
 
-      average += duration;
-      if (duration < min) {
-         min = duration;
+      let totalDuration = 0;
+      let min = Infinity;
+      let max = -Infinity;
+
+      for (const frame of frames) {
+         const duration = frame.endTime - frame.startTime;
+
+         totalDuration += duration;
+         if (duration < min) {
+            min = duration;
+         }
+         if (duration > max) {
+            max = duration;
+         }
       }
-      if (duration > max) {
-         max = duration;
-      }
-   }
-   average /= frames.length;
+
+      const average = totalDuration / frames.length;
+
+      return { average, min, max };
+   };
+
+   const { average, min, max } = $derived(frameStats());
 </script>
 
 <div id="frame-graph" class:hidden={!nerdVisionState.isVisible}>

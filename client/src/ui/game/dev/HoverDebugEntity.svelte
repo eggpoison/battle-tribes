@@ -8,32 +8,32 @@
    import { getHitboxVelocity } from "../../../game/hitboxes";
    import CLIENT_ENTITY_INFO_RECORD from "../../../game/client-entity-info";
    import { getEntityType } from "../../../game/world";
-   import InventoryContainer from "../inventories/ItemSlotsContainer.svelte";
    import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
+   import ItemSlotsContainer from "../inventories/ItemSlotsContainer.svelte";
+   import InventoryItemSlots from "../inventories/InventoryItemSlots.svelte";
 
    interface Props {
       entityDebugData: EntityDebugData;
    }
 
-   let props: Props = $props();
-   const entityDebugData = props.entityDebugData;
-   const entity = entityDebugData.entityID;
+   let { entityDebugData }: Props = $props();
+   const entity = $derived(entityDebugData.entityID);
 
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
+   const transformComponent = $derived(TransformComponentArray.getComponent(entity));
+   const hitbox = $derived(transformComponent.hitboxes[0]);
 
-   const displayX = roundNum(hitbox.box.position.x, 0);
-   const displayY = roundNum(hitbox.box.position.y, 0);
+   const displayX = $derived(roundNum(hitbox.box.position.x, 0));
+   const displayY = $derived(roundNum(hitbox.box.position.y, 0));
 
-   const velocity = getHitboxVelocity(hitbox);
-   let displayVelocityMagnitude = roundNum(velocity.magnitude(), 0);
+   const velocity = $derived(getHitboxVelocity(hitbox));
+   const displayVelocityMagnitude = $derived(roundNum(velocity.magnitude(), 0));
 
    const debugData = hoverDebugState.entityDebugData;
 
-   const healthComponent = HealthComponentArray.tryGetComponent(entity);
-   const inventoryComponent = InventoryComponentArray.tryGetComponent(entity);
-   const structureComponent = StructureComponentArray.tryGetComponent(entity);
-   const snobeComponent = SnobeComponentArray.tryGetComponent(entity);
+   const healthComponent = $derived(HealthComponentArray.tryGetComponent(entity));
+   const inventoryComponent = $derived(InventoryComponentArray.tryGetComponent(entity));
+   const structureComponent = $derived(StructureComponentArray.tryGetComponent(entity));
+   const snobeComponent = $derived(SnobeComponentArray.tryGetComponent(entity));
 </script>
 
 
@@ -69,7 +69,9 @@
    {#each inventoryComponent.inventories as inventory}
       <div>
          <p>{InventoryNameString[inventory.name]}</p>
-         <InventoryContainer inventory={inventory} />
+         <ItemSlotsContainer width={inventory.width} height={inventory.height} numItemSlotsPassed={inventory.items.length}>
+            <InventoryItemSlots entity={entity} inventory={inventory} />
+         </ItemSlotsContainer>
          <br/>
       </div>
    {/each}

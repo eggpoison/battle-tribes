@@ -8,7 +8,7 @@
 
    let props: Props = $props();
    
-   const debugData = hoverDebugState.entityDebugData;
+   const debugData = $derived(hoverDebugState.entityDebugData);
    
    const healthText = debugData !== null && typeof debugData.health !== "undefined" && typeof debugData.maxHealth !== "undefined" ? debugData.health.toFixed(2) + "/" + debugData.maxHealth.toFixed(2) : undefined;
 </script>

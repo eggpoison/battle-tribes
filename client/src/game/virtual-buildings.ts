@@ -24,7 +24,7 @@ import { createEntityCreationInfo, EntityComponentData, layers } from "./world";
 import { padBoxData, readBoxFromData } from "./networking/packet-hitboxes";
 import { createBarrelComponentData } from "./entity-components/server-components/BarrelComponent";
 import { EntityServerComponentData } from "./networking/packet-snapshots";
-import { cursorWorldPos } from "./mouse-input";
+import { cursorWorldPos } from "./camera";
 
 export interface VirtualBuilding {
    readonly entityType: StructureType;

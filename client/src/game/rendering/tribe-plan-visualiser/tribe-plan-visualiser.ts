@@ -1,7 +1,7 @@
 import { AIPlanType, getTechByID, TechID, Tech,StructureType, PacketReader, ItemType, CRAFTING_RECIPES, CraftingRecipe, Entity, EntityType, BlueprintType } from "webgl-test-shared";
 import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
-import { addMenuCloseFunction } from "../../menus";
 import { ExtendedTribe, getTribeByID } from "../../tribes";
+import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
 
 const enum Vars {
    NODE_DISPLAY_SIZE = 100
@@ -69,44 +69,7 @@ export interface TribeAssignmentInfo {
    readonly entityAssignments: Partial<Record<Entity, AIPlan>>;
 }
 
-let gl: WebGL2RenderingContext;
-
 const tribePlanDataRecord: Record<number, TribeAssignmentInfo> = {};
-
-let renderedTribeID: number | null = null;
-
-// @Cleanup: Copy and paste
-export function createTribePlanVisualiserGLContext(): void {
-   const canvas = document.getElementById("tribe-plan-visualiser-canvas") as HTMLCanvasElement;
-   const glAttempt = canvas.getContext("webgl2", { alpha: false });
-
-   if (glAttempt === null) {
-      alert("Your browser does not support WebGL.");
-      throw new Error("Your browser does not support WebGL.");
-   }
-   gl = glAttempt;
-
-   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-}
-
-export function getTribePlanVisualiserGL(): WebGL2RenderingContext {
-   return gl;
-}
-
-// @Incomplete: unused?
-export function createTribePlanVisualiserShaders(): void {
-   const vertexShaderText = `#version 300 es
-   precision highp float;
-   
-   layout(location = 0) in vec2 a_position;
-
-   void main() {
-      gl_Position = vec4(a_position, 0.0, 1.0);
-
-      v_position = a_position;
-   }
-   `;
-}
 
 const readRootPlan = (reader: PacketReader, assignedTribesman: Entity | null, isComplete: boolean, isCompletable: boolean, depth: number): AIRootPlan => {
    return {
@@ -314,34 +277,15 @@ export function updateTribePlanData(reader: PacketReader, tribeID: number): void
    tribePlanDataRecord[tribeID] = tribeAssignmentInfo;
 }
 
-export function setRenderedTribePlanID(id: number | null): void {
+export function setRenderedTribePlanID(renderedTribeID: number | null): void {
    if (renderedTribeID === null) {
-      addMenuCloseFunction(() => {
-         renderedTribeID = null;
-      });
-   }
-   
-   renderedTribeID = id;
-}
-
-export function renderTribePlans(): void {
-   const canvasElement = document.getElementById("tribe-plan-visualiser-canvas");
-   if (canvasElement === null) {
-      return;
-   }
-   
-   if (renderedTribeID === null) {
-      canvasElement.classList.add("hidden");
       tribePlanVisualiserState.setTribeAssignmentInfo(null);
       tribePlanVisualiserState.setTribe(null);
    } else {
-      canvasElement.classList.remove("hidden");
-      
-      gl.clearColor(0, 0, 0, 1);
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      
       const tribeAssignmentInfo = tribePlanDataRecord[renderedTribeID];
       tribePlanVisualiserState.setTribeAssignmentInfo(tribeAssignmentInfo);
       tribePlanVisualiserState.setTribe(getTribeByID(renderedTribeID) as ExtendedTribe);
+      
+      menuSelectorState.openMenu(Menu.tribePlanVisualiser);
    }
 }

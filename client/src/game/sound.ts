@@ -4,6 +4,7 @@ import { TransformComponentArray } from "./entity-components/server-components/T
 import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { cameraPosition, maxVisibleChunkX, maxVisibleChunkY, minVisibleChunkX, minVisibleChunkY } from "./camera";
+import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 
 type SoundID = number;
 
@@ -47,10 +48,6 @@ export function createAudioContext(): void {
 //       resolve();
 //    }, 20)
 // }));
-
-export function getNumActiveSounds(): number {
-   return activeSounds.length;
-}
 
 export async function loadSoundEffects(): Promise<void> {
    const AUDIO_FILE_PATHS = [
@@ -516,6 +513,8 @@ export function updateSounds(): void {
          sound.gainNode.gain.value = calculateSoundVolume(sound.volume, sound.position);
       }
    }
+
+   debugDisplayState.numActiveSounds = activeSounds.length;
 }
 
 // @Hack: There should really be unique sounds for each entity type, not one generic sound.

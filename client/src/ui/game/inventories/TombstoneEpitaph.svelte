@@ -1,7 +1,7 @@
 <script lang="ts">
    import { DamageSource, veryBadHash } from "webgl-test-shared";
    import { TombstoneComponentArray } from "../../../game/entity-components/server-components/TombstoneComponent";
-   import { entityInteractionState } from "../../../ui-state/entity-interaction-state.svelte";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
 
    // __NAME__'s brain exploded.
 
@@ -33,7 +33,7 @@
    };
 
    // @Hack: "!"
-   const tombstone = entityInteractionState.selectedEntity!;
+   const tombstone = entitySelectionState.selectedEntity!;
 
    const tombstoneComponent = TombstoneComponentArray.getComponent(tombstone);
    const causeOfDeath = TOMBSTONE_DEATH_MESSAGES[tombstoneComponent.deathInfo!.damageSource];

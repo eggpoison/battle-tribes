@@ -1,8 +1,6 @@
 import { Tech, TechID } from "webgl-test-shared";
 import { ExtendedTribe } from "../game/tribes";
 
-let isVisible = $state(false);
-
 let x = $state(0);
 let y = $state(0);
 let zoom = $state(1);
@@ -12,14 +10,9 @@ let unlockedTechs = $state(new Array<Tech>());
 let selectedTech = $state<Tech | null>(null);
 let selectedTechStudyProgress = $state(0);
 
-export const techTreeState = {
-   get isVisible() {
-      return isVisible;
-   },
-   setIsVisible(newIsVisible: boolean): void {
-      isVisible = newIsVisible;
-   },
+export const techTreeIcons = import.meta.glob("/src/images/tech-tree/**/*", { eager: true, query: "?url", import: "default" });
 
+export const techTreeState = {
    get x() {
       return x;
    },

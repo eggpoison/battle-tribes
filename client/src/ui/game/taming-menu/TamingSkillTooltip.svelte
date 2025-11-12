@@ -1,30 +1,35 @@
 <script lang="ts">
    import { type TamingSkillNode, EntityType } from "webgl-test-shared";
    import CLIENT_ENTITY_INFO_RECORD from "../../../game/client-entity-info";
-   import { getTamingSkillLearning, hasTamingSkill, skillLearningIsComplete, type TamingComponent } from "../../../game/entity-components/server-components/TamingComponent";
-   import { cursorScreenPos } from "../../../game/mouse-input";
+   import { skillLearningIsComplete, type TamingSkillLearning } from "../../../game/entity-components/server-components/TamingComponent";
+   import { tamingMenuState } from "../../../ui-state/taming-menu-state.svelte";
+   import { gameUIState } from "../../../ui-state/game-ui-state.svelte";
 
    interface Props {
-      readonly entityType: EntityType;
-      readonly tamingComponent: TamingComponent;
-      readonly skillNode: TamingSkillNode;
+      entityType: EntityType;
+      skillNode: TamingSkillNode;
+      hasSkill: boolean;
    }
 
    let props: Props = $props();
 
-   const tamingComponent = props.tamingComponent;
    const skillNode = props.skillNode;
    const skill = skillNode.skill;
    
-   const x = cursorScreenPos.x;
-   const y = cursorScreenPos.y;
+   const getTamingSkillLearning = (): TamingSkillLearning | null => {
+      for (const skillLearning of tamingMenuState.skillLearningArray) {
+         if (skillLearning.skill.id === skill.id) {
+            return skillLearning;
+         }
+      }
+      return null;
+   }
 
-   const skillLearning = getTamingSkillLearning(props.tamingComponent, skill.id);
+   const skillLearning = $derived(getTamingSkillLearning());
    
    const description = skill.description.replace("[[CREATURE_NAME]]", CLIENT_ENTITY_INFO_RECORD[props.entityType].name.toLowerCase());
    
    const getRequirementProgress = (i: number): number => {
-      const skillLearning = getTamingSkillLearning(tamingComponent, skill.id);
       if (skillLearning !== null) {
          return skillLearning.requirementProgressArray[i];
       } else {
@@ -33,11 +38,11 @@
    }
 </script>
 
-<div id="taming-skill-tooltip" style:top="{y}px" style:left="{x}px">
+<div id="taming-skill-tooltip" style:top="{gameUIState.cursorY}px" style:left="{gameUIState.cursorX}px">
    <p class="description">{description}</p>
 
-   {#if !hasTamingSkill(tamingComponent, skill.id)}
-      {#if skillNode.requiredTamingTier <= tamingComponent.tamingTier}
+   {#if !props.hasSkill}
+      {#if skillNode.requiredTamingTier <= tamingMenuState.tamingTier}
          {#each skill.requirements as requirement, i}
             
             <p class="requirement">{requirement.description}: {getRequirementProgress(i)}/{requirement.amountRequired}{requirement.suffix}</p>

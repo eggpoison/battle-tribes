@@ -1,8 +1,5 @@
-#tribe-plan-visualiser-canvas {
-   z-index: 2;
-}
-
 #tribe-plan-visualiser {
+   background-color: #000;
    position: absolute;
    z-index: 3;
    top: 0;

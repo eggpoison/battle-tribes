@@ -19,7 +19,7 @@
 </script>
 
 <div id="health-inspector" style:left="{x}px" style:bottom="{y}px" style:opacity={opacity}>
-   <!-- <div className="health-slider" style={{width: (health / healthComponent.maxHealth) * 100 + "%"}}></div> -->
+   <!-- <div class="health-slider" style={{width: (health / healthComponent.maxHealth) * 100 + "%"}}></div> -->
    <div class="bg"></div>
    <div class="fill" style:--fullness="{health / healthComponent.maxHealth * 100}%"></div>
    <span class="health-counter">{health}</span>

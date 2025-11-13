@@ -1541,7 +1541,7 @@ const tickItem = (itemType: ItemType): void => {
                   break;
                }
                case ServerComponentType.inventory: {
-                  components[componentType] = createInventoryComponentData();
+                  components[componentType] = createInventoryComponentData({});
                   break;
                }
                case ServerComponentType.cooking: {

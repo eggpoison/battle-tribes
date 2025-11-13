@@ -20,7 +20,7 @@
    </label>
    <label>
       Instant movement
-      <input type="checkbox" bind:value={hasInstantMovement} />
+      <input type="checkbox" bind:checked={hasInstantMovement} />
    </label>
 </MenuElem>
 

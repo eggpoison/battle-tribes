@@ -559,12 +559,7 @@ export function processTPToEntityPacket(playerClient: PlayerClient, reader: Pack
 }
 
 export function processSpectateEntityPacket(playerClient: PlayerClient, reader: PacketReader): void {
-   const player = playerClient.instance;
-   if (!entityExists(player)) {
-      return;
-   }
-
-   const entity = reader.readNumber() as Entity;
+   const entity: Entity = reader.readNumber();
    if (entityExists(entity)) {
       playerClient.cameraSubject = entity;
    }

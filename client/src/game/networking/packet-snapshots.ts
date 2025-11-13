@@ -439,7 +439,7 @@ export function createEntityFromData(entity: Entity, data: EntitySnapshot): void
    };
    
    const entityCreationInfo = createEntityCreationInfo(entity, entityComponentData);
-   addEntityToWorld(data.spawnTicks, data.layer, entityCreationInfo);
+   addEntityToWorld(data.spawnTicks, data.layer, entityCreationInfo, true);
 }
 
 const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {

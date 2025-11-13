@@ -123,7 +123,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
             break;
          }
          case ServerComponentType.inventory: {
-            components[componentType] = createInventoryComponentData();
+            components[componentType] = createInventoryComponentData({});
             break;
          }
          case ServerComponentType.cooking: {

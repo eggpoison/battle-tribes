@@ -27,7 +27,7 @@ export function createCampfireConfig(position: Point, rotation: number, tribe: T
          [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
          [ServerComponentType.structure]: createStructureComponentData(),
          [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.inventory]: createInventoryComponentData(),
+         [ServerComponentType.inventory]: createInventoryComponentData({}),
          [ServerComponentType.cooking]: createCookingComponentData(),
          [ServerComponentType.campfire]: createCampfireComponentData(),
       },

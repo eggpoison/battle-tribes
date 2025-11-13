@@ -39,46 +39,42 @@
 
 <div id="main-menu">
    <div class="content">
-      <form onsubmit={handlePlay}>
-         <!-- svelte-ignore a11y_autofocus -->
-         <input type="text" bind:value={username} onkeydown={pressEnter} placeholder="Enter name here" autoFocus />
+      <!-- svelte-ignore a11y_autofocus -->
+      <input type="text" bind:value={username} onkeydown={pressEnter} placeholder="Enter name here" autoFocus />
 
-         <div>
-            <label for="tribe-selection-plainspeople">
-               <input type="radio" id="tribe-selection-plainspeople" name="tribe-selection" defaultChecked />
-               Plainspeople
-            </label>
-            <label for="tribe-selection-barbarians">
-               <input type="radio" id="tribe-selection-barbarians" name="tribe-selection" />
-               Barbarians
-            </label>
-            <label for="tribe-selection-frostlings">
-               <input type="radio" id="tribe-selection-frostlings" name="tribe-selection" />
-               Frostlings
-            </label>
-            <label for="tribe-selection-goblins">
-               <input type="radio" id="tribe-selection-goblins" name="tribe-selection"/>
-               Goblins
-            </label>
-            <label for="tribe-selection-dwarves">
-               <input type="radio" id="tribe-selection-dwarves" name="tribe-selection"/>
-               Dwarves
-            </label>
-         </div>
-
-         <label>
-            <input type="checkbox" />
-            Spectate
+      <div>
+         <label for="tribe-selection-plainspeople">
+            <input type="radio" id="tribe-selection-plainspeople" name="tribe-selection" defaultChecked />
+            Plainspeople
          </label>
-         
-         <button type="submit">Play</button>
-      </form>
+         <label for="tribe-selection-barbarians">
+            <input type="radio" id="tribe-selection-barbarians" name="tribe-selection" />
+            Barbarians
+         </label>
+         <label for="tribe-selection-frostlings">
+            <input type="radio" id="tribe-selection-frostlings" name="tribe-selection" />
+            Frostlings
+         </label>
+         <label for="tribe-selection-goblins">
+            <input type="radio" id="tribe-selection-goblins" name="tribe-selection"/>
+            Goblins
+         </label>
+         <label for="tribe-selection-dwarves">
+            <input type="radio" id="tribe-selection-dwarves" name="tribe-selection"/>
+            Dwarves
+         </label>
+      </div>
+
+      <label>
+         <input type="checkbox" bind:checked={isSpectating} />
+         Spectate
+      </label>
+      
+      <button onclick={handlePlay}>Play</button>
    </div>
 </div>
 
 <style>
-   /* @Cleanup: two absolutes? wtf */
-   
    #main-menu {
       position: absolute;
       top: 0;
@@ -90,9 +86,6 @@
       justify-content: center;
    }
    
-   form {
-      margin: 5px;
-   }
    button {
       display: block;
       padding: 0 10px;

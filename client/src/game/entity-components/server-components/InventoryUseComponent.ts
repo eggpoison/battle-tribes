@@ -568,6 +568,17 @@ InventoryUseComponentArray.onTick = onTick;
 InventoryUseComponentArray.updateFromData = updateFromData;
 InventoryUseComponentArray.updatePlayerFromData = updatePlayerFromData;
 
+export function createInventoryUseComponentData(inventoryNames: ReadonlyArray<InventoryName>): InventoryUseComponentData {
+   const limbInfos = new Array<LimbInfo>();
+   for (const inventoryName of inventoryNames) {
+      const limbInfo = createZeroedLimbInfo(inventoryName);
+      limbInfos.push(limbInfo);
+   }
+   return {
+      limbInfos: limbInfos
+   };
+}
+
 function decodeData(reader: PacketReader): InventoryUseComponentData {
    const limbInfos = new Array<LimbInfo>();
 
@@ -611,20 +622,19 @@ function onLoad(entity: Entity): void {
 
    const renderInfo = getEntityRenderInfo(entity);
 
-   const numExpectedLimbs = inventoryUseComponent.limbInfos.length;
-   
-   const attachPoints = renderInfo.getRenderThings("inventoryUseComponent:attachPoint", numExpectedLimbs) as Array<RenderAttachPoint>;
+   const attachPoints = renderInfo.getRenderThings("inventoryUseComponent:attachPoint") as Array<RenderAttachPoint>;
    for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
       inventoryUseComponent.limbAttachPoints.push(attachPoints[limbIdx]);
    }
    
    // @Cleanup
-   const handRenderParts = renderInfo.getRenderThings("inventoryUseComponent:hand", numExpectedLimbs) as Array<VisualRenderPart>;
+   const handRenderParts = renderInfo.getRenderThings("inventoryUseComponent:hand") as Array<VisualRenderPart>;
    for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
       inventoryUseComponent.limbRenderParts.push(handRenderParts[limbIdx]);
    }
 
-   for (let i = 0; i < numExpectedLimbs; i++) {
+   // @Hack: use the attachPoints length in case the player is spectating cuz 'twill crash if yeah
+   for (let i = 0; i < attachPoints.length; i++) {
       updateLimb(inventoryUseComponent, entity, i, inventoryUseComponent.limbInfos[i]);
    }
 

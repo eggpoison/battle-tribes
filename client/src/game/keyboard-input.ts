@@ -2,8 +2,8 @@ import { gameIsRunning } from "./client";
 import { chatboxState } from "../ui-state/chatbox-state.svelte";
 import { gameUIState } from "../ui-state/game-ui-state.svelte";
 import { nerdVisionState } from "../ui-state/nerd-vision-state.svelte";
-import { techTreeState } from "../ui-state/tech-tree-state.svelte";
 import { sendAscendPacket } from "./networking/packet-sending";
+import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
 
 const keyListeners: { [key: string]: Array<(e: KeyboardEvent) => void> } = {};
 
@@ -74,7 +74,7 @@ export function onKeyDown(e: KeyboardEvent): void {
    if (gameIsRunning) {
       // Start a chat message
       if (key === "t") {
-         chatboxState.setIsFocused(true);
+         chatboxState.isFocused = true;
          e.preventDefault();
          clearPressedKeys();
          return;
@@ -93,7 +93,7 @@ export function onKeyDown(e: KeyboardEvent): void {
          nerdVisionState.setTerminalIsVisible(true);
       // Open/close tech tree
       } else if (key === "p") {
-         techTreeState.setIsVisible(!techTreeState.isVisible);
+         menuSelectorState.toggleMenu(Menu.techTree);
       // Ascend layers
       } else if (key === " ") {
          if (gameUIState.canAscendLayer) {

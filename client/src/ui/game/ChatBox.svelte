@@ -1,6 +1,22 @@
 <script lang="ts">
    import { onChatboxKeyPress } from "../../game/chat";
    import { chatboxState } from "../../ui-state/chatbox-state.svelte";
+
+   let chatMessage = $state("");
+
+   let chatboxElem: HTMLInputElement | undefined;
+
+   $effect(() => {
+      if (typeof chatboxElem === "undefined") {
+         return;
+      }
+
+      if (chatboxState.isFocused) {
+         chatboxElem.focus();
+      } else {
+         chatboxElem.blur();
+      }
+   });
 </script>
 
 <div id="chat-box" class="{!chatboxState.isFocused ? "idle" : ""}">
@@ -12,7 +28,7 @@
       {/each}
    </div>
 
-   <input name="chat-box-input" type="text" onfocus={() => chatboxState.setIsFocused(true)} onblur={() => chatboxState.setIsFocused(false)} onkeydown={onChatboxKeyPress} class="message-preview{chatboxState.isFocused ? " active" : ""}" />
+   <input bind:this={chatboxElem} name="chat-box-input" type="text" onfocus={() => chatboxState.isFocused = true} onblur={() => chatboxState.isFocused = false} onkeydown={e => onChatboxKeyPress(e, chatMessage)} class="message-preview{chatboxState.isFocused ? " active" : ""}" bind:value={chatMessage} />
 </div>
 
 <style>
@@ -21,9 +37,11 @@
       min-width: 15rem;
       max-width: 25rem;
       position: absolute;
-      left: 1rem;
-      bottom: 1rem;
+      left: calc(1rem * var(--zoom));
+      bottom: calc(9rem * var(--zoom));
       z-index: 1;
+      transform: scale(var(--zoom));
+      transform-origin: 0% 100%;
    }
    #chat-box.idle .message-history {
       animation: Disappear 5s forwards;
@@ -33,7 +51,7 @@
       color: #fff;
       text-shadow: 2px 2px #000;
       font-family: "Noto Sans";
-      font-size: 0.95rem;
+      font-size: 1rem;
       min-height: var(--message-height);
       padding: 0 5px;
       margin: 5px;
@@ -46,7 +64,6 @@
    #chat-box .message-preview {
       border: none;
       outline: none;
-      margin-top: 3rem;
       /* background-color: rgba(0, 0, 0, 0.4); */
       opacity: 0;
    }

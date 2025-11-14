@@ -9,6 +9,9 @@ let hoveredEntity = $state<Entity>(0);
 let highlightedEntity = $state<Entity>(0);
 let selectedEntity = $state<Entity>(0);
 
+let selectedEntityX = $state(0);
+let selectedEntityY = $state(0);
+
 export const entitySelectionState = {
    get hoveredEntity() {
       return entityExists(hoveredEntity) ? hoveredEntity : null;
@@ -36,7 +39,7 @@ export const entitySelectionState = {
 
             // @Location @Hack @Cleanup
             sendStructureUninteractPacket(selectedEntity);
-            menuSelectorState.closeMenu();
+            menuSelectorState.closeCurrentMenu();
          }
 
          selectedEntity = newSelectedEntity;
@@ -52,6 +55,19 @@ export const entitySelectionState = {
       } else {
          selectedEntity = 0;
       }
+   },
+
+   get selectedEntityX() {
+      return selectedEntityX;
+   },
+   setSelectedEntityX(newSelectedEntityX: number) {
+      selectedEntityX = newSelectedEntityX;
+   },
+   get selectedEntityY() {
+      return selectedEntityY;
+   },
+   setSelectedEntityY(newSelectedEntityY: number) {
+      selectedEntityY = newSelectedEntityY;
    },
 
    reset() {

@@ -37,11 +37,13 @@
    const onCompleteButtonClick = (): void => {
       if (keyIsPressed("shift") && isDev()) {
          sendForceCompleteTamingTierPacket(entity);
-      } else {
+         // @Copynpaste
+         playHeadSound("taming-tier-complete.mp3", 1, 1);
+      } else if (typeof nextTamingTierFoodCost !== "undefined" && tamingMenuState.foodEatenInTier >= nextTamingTierFoodCost) {
          sendCompleteTamingTierPacket(entity);
+         // @Copynpaste
+         playHeadSound("taming-tier-complete.mp3", 1, 1);
       }
-
-      playHeadSound("taming-tier-complete.mp3", 1, 1);
    }
 
    const openRenamePrompt = (): void => {

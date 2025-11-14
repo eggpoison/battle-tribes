@@ -32,7 +32,7 @@ const onPlayerDeath = (): void => {
    gameUIState.setIsDead(true);
    
    // Close any open menus
-   while (menuSelectorState.closeMenu());
+   while (menuSelectorState.closeCurrentMenu());
 }
 
 export function setPlayerInstance(newPlayerInstance: Entity | null): void {

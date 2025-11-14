@@ -35,7 +35,7 @@
 <div id="canvas-wrapper" class:hidden={appState.state !== AppState.game}>
    <canvas id="game-canvas"></canvas>
    <canvas id="text-canvas"></canvas>
-   <canvas id="tech-tree-canvas" class:hidden={menuSelectorState.menu !== Menu.techTree}></canvas>
+   <canvas id="tech-tree-canvas" class:hidden={!menuSelectorState.menuIsOpen(Menu.techTree)}></canvas>
    <FrameGraph />
 </div>
 

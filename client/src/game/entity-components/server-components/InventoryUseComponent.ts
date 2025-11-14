@@ -18,7 +18,7 @@ import { getHumanoidRadius } from "./TribesmanComponent";
 import { playerInstance } from "../../player";
 import { getHitboxVelocity } from "../../hitboxes";
 import { currentSnapshot, tickIntervalHasPassed } from "../../client";
-import { updatePlayerItems } from "../../player-action-handler";
+import { tickPlayerItems } from "../../player-action-handler";
 import { inventoryState } from "../../../ui-state/inventory-state.svelte";
 
 export interface LimbInfo {
@@ -642,6 +642,14 @@ function onLoad(entity: Entity): void {
 }
 
 function onTick(entity: Entity): void {
+   // @Hack???
+   // @Speed: needn't check this for all billion non-player entities
+   // Used to do it in the updatePlayerFromData function. That's wrong cuz that'll only update according to the packet send rate, not tick rate.
+   // Previously was in a clientTickInterp >= 1 loop, but moved it into updatePlayerFromData because it makes more sense as this is the component the function works on. Felt it is strange to have this function in the critical game loop.
+   if (entity === playerInstance) {
+      tickPlayerItems();
+   }
+
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    // @Cleanup: move to separate function
    for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
@@ -1613,6 +1621,4 @@ function updatePlayerFromData(data: InventoryUseComponentData): void {
 
       updateLimb(inventoryUseComponent, playerInstance!, i, limbInfo);
    }
-
-   updatePlayerItems();
 }

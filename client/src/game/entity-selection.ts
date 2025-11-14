@@ -600,6 +600,12 @@ export function updateEntitySelections(): void {
    
    entitySelectionState.setHoveredEntity(newHoveredEntity);
 
+   // If there is a static menu open, we want no highlighted entity, and also for the bottom bit of code to not cancel the selection.
+   if (menuSelectorState.hasOpenStaticMenu()) {
+      entitySelectionState.setHighlightedEntity(null);
+      return;
+   }
+   
    // When the player is placing an entity, we don't want them to be able to select entities.
    if (playerIsPlacingEntity()) {
       entitySelectionState.setHighlightedEntity(null);
@@ -613,7 +619,7 @@ export function updateEntitySelections(): void {
    if (newHighlightedEntity !== entitySelectionState.selectedEntity && newHighlightedEntity === null) {
       if (gameUIState.gameInteractState !== GameInteractState.selectCarryTarget && gameUIState.gameInteractState !== GameInteractState.selectAttackTarget && gameUIState.gameInteractState !== GameInteractState.selectMoveTargetPosition) {
          // The close menu callback will deselect the entity
-         menuSelectorState.closeMenu();
+         menuSelectorState.closeCurrentMenu();
       }
    }
 }

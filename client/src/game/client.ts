@@ -44,7 +44,7 @@ let clientTickInterp = 0;
 
 // @Garbage: I could create a set fixed number of packet snapshots, and then just override their data!
 const snapshotBuffer = new Array<PacketSnapshot>();
-const unprocessedGamePackets = new Array<PacketReader>();
+// const unprocessedGamePackets = new Array<PacketReader>();
 export let currentSnapshot: PacketSnapshot;
 export let nextSnapshot: PacketSnapshot;
 
@@ -184,8 +184,8 @@ export function establishNetworkConnection(username: string, tribeType: TribeTyp
    }
    
    // @SQUEAM
-   // socket = new WebSocket(`ws://10.0.0.21:${Settings.SERVER_PORT}`);
-   socket = new WebSocket(`ws://127.0.0.1:${Settings.SERVER_PORT}`);
+   socket = new WebSocket(`ws://10.0.0.21:${Settings.SERVER_PORT}`);
+   // socket = new WebSocket(`ws://127.0.0.1:${Settings.SERVER_PORT}`);
    socket.binaryType = "arraybuffer";
 
    socket.onopen = () => onSuccessfulConnection(username, tribeType, isSpectating);

@@ -632,6 +632,10 @@ function onLoad(entity: Entity): void {
 }
 
 function onTick(entity: Entity): void {
+   if (entity === playerInstance) {
+      updatePlayerItems();
+   }
+   
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    // @Cleanup: move to separate function
    for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
@@ -1603,6 +1607,4 @@ function updatePlayerFromData(data: InventoryUseComponentData): void {
 
       updateLimb(inventoryUseComponent, playerInstance!, i, limbInfo);
    }
-
-   updatePlayerItems();
 }

@@ -17,8 +17,8 @@ export const cameraPosition = new Point(0, 0);
 
 /** Larger = zoomed in, smaller = zoomed out */
 // @INCOMPLETE @HACK rn i have to fiddle around with this manually, make it be calcualted automatically before public testing
-export let cameraZoom = 1.4;
-// export let cameraZoom = 1;
+// export let cameraZoom = 1.4;
+export let cameraZoom = 1;
 
 export let minVisibleX = 0;
 export let maxVisibleX = 0;

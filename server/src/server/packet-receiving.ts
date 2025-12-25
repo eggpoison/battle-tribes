@@ -942,7 +942,7 @@ export function processForceAcquireTamingSkillPacket(playerClient: PlayerClient,
    if (!entityExists(entity)) {
       return;
    }
-   
+
    const skillID = reader.readNumber() as TamingSkillID;
    
    const skill = getTamingSkill(skillID);

@@ -4,6 +4,8 @@
    import ItemSlot from "./ItemSlot.svelte";
 
    // @Cleanup: would it be worth reverting to the system where i pass in an inventory, bypassing all of the unfortunateness happening here?? i mean the main issue with that and why i went for this silly system is that i thought it would be too rigid - but what if I don't collapse up the itemSlots logic? and just pass in the inventory here anywhays?
+
+   // SHOULD NOT pass in an inventory row into here!! messes shit up!!
    
    interface BaseProps extends HTMLAttributes<HTMLDivElement> {
       children: Snippet<[]>;

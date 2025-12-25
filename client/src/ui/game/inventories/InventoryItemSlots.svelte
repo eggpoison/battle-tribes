@@ -37,6 +37,7 @@
 {#each getInventoryRowNums() as y}
    <ItemSlotsRow>
       {#each getRowSlots(y) as itemSlot}
+      <!-- @Cleanup: unused?? -->
          {@const callbackInfo: ItemSlotCallbackInfo = {
             itemType: inventory.getItem(itemSlot)?.type || null,
             itemSlot: itemSlot

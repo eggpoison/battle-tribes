@@ -10,7 +10,8 @@ import Layer from "../Layer";
 import { getDistanceFromPointToHitbox } from "../ai-shared";
 import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 
-const NUM_RIVERS = 20;
+// Kinda hacky, used to be just set to 20, but that meant the density of rivers changed with the world size, no good.
+const NUM_RIVERS = 20 * ((Settings.WORLD_SIZE_CHUNKS / 64) ** 2);
 
 const ADJACENT_TILE_OFFSETS: ReadonlyArray<[xOffset: number, yOffset: number]> = [
    [1, 0],

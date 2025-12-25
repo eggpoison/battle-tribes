@@ -11,6 +11,7 @@
    import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
    import ItemSlotsContainer from "../inventories/ItemSlotsContainer.svelte";
    import InventoryItemSlots from "../inventories/InventoryItemSlots.svelte";
+    import ItemSlot from "../inventories/ItemSlot.svelte";
 
    interface Props {
       entityDebugData: EntityDebugData;
@@ -70,9 +71,11 @@
       <div>
          <p>{InventoryNameString[inventory.name]}</p>
          <ItemSlotsContainer width={inventory.width} height={inventory.height} numItemSlotsPassed={inventory.items.length}>
-            <InventoryItemSlots entity={entity} inventory={inventory} />
+            {#each inventory.items as item}
+               <ItemSlot {item} />
+            {/each}
          </ItemSlotsContainer>
-         <br/>
+         <br />
       </div>
    {/each}
 {/if}

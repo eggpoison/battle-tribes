@@ -1,4 +1,4 @@
-import { randAngle, randFloat, randInt, Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
+import { randAngle, randFloat, randInt, Entity, ServerComponentType, PacketReader, CircularBox } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
@@ -30,8 +30,6 @@ const BERRY_BUSH_TEXTURE_SOURCES = [
    "entities/berry-bush5.png",
    "entities/berry-bush6.png"
 ];
-
-const RADIUS = 40;
 
 const LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
 const LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
@@ -91,17 +89,18 @@ function updateFromData(data: BerryBushComponentData, entity: Entity): void {
 function onHit(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
+   const radius = (hitbox.box as CircularBox).radius;
 
    const moveDirection = randAngle();
    
-   const spawnPositionX = hitbox.box.position.x + RADIUS * Math.sin(moveDirection);
-   const spawnPositionY = hitbox.box.position.y + RADIUS * Math.cos(moveDirection);
+   const spawnPositionX = hitbox.box.position.x + radius * Math.sin(moveDirection);
+   const spawnPositionY = hitbox.box.position.y + radius * Math.cos(moveDirection);
 
    createLeafParticle(spawnPositionX, spawnPositionY, moveDirection + randFloat(-1, 1), LeafParticleSize.small);
    
    // Create leaf specks
    for (let i = 0; i < 5; i++) {
-      createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, RADIUS, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
+      createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
    }
 
    playSoundOnHitbox("berry-bush-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, entity, hitbox, false);
@@ -110,9 +109,10 @@ function onHit(entity: Entity): void {
 function onDie(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
+   const radius = (hitbox.box as CircularBox).radius;
 
    for (let i = 0; i < 6; i++) {
-      const offsetMagnitude = RADIUS * Math.random();
+      const offsetMagnitude = radius * Math.random();
       const spawnOffsetDirection = randAngle();
       const spawnPositionX = hitbox.box.position.x + offsetMagnitude * Math.sin(spawnOffsetDirection);
       const spawnPositionY = hitbox.box.position.y + offsetMagnitude * Math.cos(spawnOffsetDirection);
@@ -122,7 +122,7 @@ function onDie(entity: Entity): void {
    
    // Create leaf specks
    for (let i = 0; i < 9; i++) {
-      createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, RADIUS * Math.random(), LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
+      createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random(), LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
    }
 
    playSoundOnHitbox("berry-bush-destroy-1.mp3", 0.4, 1, entity, hitbox, false);

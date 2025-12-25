@@ -744,7 +744,7 @@ export const ITEM_INFO_RECORD = {
    [ItemType.wooden_bow]: {
       projectileDamage: 4,
       projectileKnockback: 150,
-      shotChargeTimeTicks: 1 * Settings.TICK_RATE,
+      shotChargeTimeTicks: Settings.TICK_RATE,
       projectileSpeed: 1100,
       airResistance: 400
    },

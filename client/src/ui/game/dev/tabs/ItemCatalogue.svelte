@@ -45,7 +45,7 @@
 
    const onFilterKeyDown = (e: KeyboardEvent): void => {
       if (e.key === "Escape") {
-         menuSelectorState.closeMenu();
+         menuSelectorState.closeCurrentMenu();
       }
    }
 </script>

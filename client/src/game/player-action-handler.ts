@@ -218,7 +218,7 @@ export function cancelAttack(limb: LimbInfo, limbConfiguration: LimbConfiguratio
 }
 
 // @Cleanup: bad name. mostly updating limbs
-export function updatePlayerItems(): void {
+export function tickPlayerItems(): void {
    if (playerInstance === null) {
       return;
    }
@@ -698,7 +698,7 @@ const createHotbarKeyListeners = (): void => {
 const hideInventory = (): void => {
    _inventoryIsOpen = false;
    
-   menuSelectorState.closeMenu();
+   menuSelectorState.closeCurrentMenu();
 
    // If the player is holding an item when their inventory is closed, throw the item out
    if (playerInstance !== null) {
@@ -715,7 +715,7 @@ const hideInventory = (): void => {
 /** Creates the key listener to toggle the inventory on and off. */
 const createInventoryToggleListeners = (): void => {
    addKeyListener("e", () => {
-      const didCloseMenu = menuSelectorState.closeMenu();
+      const didCloseMenu = menuSelectorState.closeCurrentMenu();
       if (!didCloseMenu) {
          // Open the crafting menu
          menuSelectorState.openMenu(Menu.craftingMenu);
@@ -729,7 +729,7 @@ const createInventoryToggleListeners = (): void => {
       }
    });
    addKeyListener("escape", () => {
-      menuSelectorState.closeMenu();
+      menuSelectorState.closeCurrentMenu();
    });
 }
 
@@ -1541,7 +1541,7 @@ const tickItem = (itemType: ItemType): void => {
                   break;
                }
                case ServerComponentType.inventory: {
-                  components[componentType] = createInventoryComponentData();
+                  components[componentType] = createInventoryComponentData({});
                   break;
                }
                case ServerComponentType.cooking: {

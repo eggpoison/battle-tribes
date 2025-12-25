@@ -37,6 +37,9 @@ export let gameIsRunning = false;
 // @Cleanup: unused???
 let gameIsSynced = true;
 
+// @Location: completely unused by all the client netcode stuff in here.
+export let gameIsFocused = true;
+
 let lastFrameTime = 0;
 
 let clientTick = 0;
@@ -54,10 +57,11 @@ let measuredServerPacketIntervalMS = 1000 / Settings.SERVER_PACKET_SEND_RATE; //
 let playerPacketAccumulator = 0;
 
 // @Temporary: testing out simply treating packets as usual while tabbed out.
-// document.addEventListener("visibilitychange", () => {
+document.addEventListener("visibilitychange", () => {
 //    console.log("change");
-//    if (document.visibilityState === "visible") {
-//       lastPacketTime = performance.now();
+   if (document.visibilityState === "visible") {
+      gameIsFocused = true;
+      lastPacketTime = performance.now();
 
 //       gameIsSynced = true;
 //       // If the ideal buffer length is 2, we want to revive the top 3 snapshots.
@@ -73,12 +77,14 @@ let playerPacketAccumulator = 0;
 //          updateGameStateToSnapshot(snapshot);
 //       }
 //       unprocessedGamePackets.splice(0, unprocessedGamePackets.length);
-//    } else if (document.visibilityState === "hidden") {
+   } else if (document.visibilityState === "hidden") {
+      gameIsFocused = false;
+      
 //       gameIsSynced = false;
 //       assert(unprocessedGamePackets.length === 0);
 //       unprocessedGamePackets.splice(0, unprocessedGamePackets.length);
-//    }
-// });
+   }
+});
 
 const onSuccessfulConnection = (username: string, tribeType: TribeType, isSpectating: boolean): void => {
    loadingScreenState.setStage(LoadingScreenStage.sendingPlayerData);
@@ -184,7 +190,7 @@ export function establishNetworkConnection(username: string, tribeType: TribeTyp
    }
    
    // @SQUEAM
-   socket = new WebSocket(`ws://10.0.0.21:${Settings.SERVER_PORT}`);
+   socket = new WebSocket(`ws://10.0.0.10:${Settings.SERVER_PORT}`);
    // socket = new WebSocket(`ws://127.0.0.1:${Settings.SERVER_PORT}`);
    socket.binaryType = "arraybuffer";
 
@@ -302,6 +308,7 @@ const runFrame = (frameStartTime: number): void => {
    }
 
    // Tick the player (independently from all other entities)
+   // A loop to run at the proper tick rate
    clientTickInterp += deltaTick;
    while (clientTickInterp >= 1) {
       // Call this outside of the check which makes sure the player is in-client, cuz we want the movement intention to update too!
@@ -334,8 +341,6 @@ const runFrame = (frameStartTime: number): void => {
       createCollapseParticles();
       updateSlimeTrails();
 
-      // @Incomplete: this was a force update for entity+tile debug info
-      // if (isDev()) refreshDebugInfo();
       updateDebugEntity();
    }
 

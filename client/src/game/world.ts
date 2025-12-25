@@ -148,6 +148,7 @@ const getMaxNumRenderParts = (entityComponentData: EntityComponentData): number 
 }
 
 // @Cleanup: remove the need to pass in Entity
+// @cleanup: SHOULDN'T HAVE SIDE EFFECTS!!
 /** Creates and populates all the things which make up an entity and returns them. It is then up to the caller as for what to do with these things */
 export function createEntityCreationInfo(entity: Entity, entityComponentData: EntityComponentData): EntityCreationInfo {
    const maxNumRenderParts = getMaxNumRenderParts(entityComponentData);
@@ -177,7 +178,8 @@ export function createEntityCreationInfo(entity: Entity, entityComponentData: En
    };
 }
 
-export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo: EntityCreationInfo): void {
+// @Hack: this "addToRendering" thing seems a bit hacky
+export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo: EntityCreationInfo, addToRendering: boolean): void {
    const entity = creationInfo.entity;
    
    const componentArrays = getEntityComponentArrays(creationInfo.entityComponentData);
@@ -206,8 +208,10 @@ export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo:
       }
    }
 
-   const renderInfo = creationInfo.renderInfo;
-   layer.addEntityToRendering(entity, renderInfo.renderLayer, renderInfo.renderHeight);
+   if (addToRendering) {
+      const renderInfo = creationInfo.renderInfo;
+      layer.addEntityToRendering(entity, renderInfo.renderLayer, renderInfo.renderHeight);
+   }
    
    // If the entity has first spawned in, call any spawn functions
    const ageTicks = getEntityAgeTicks(entity);

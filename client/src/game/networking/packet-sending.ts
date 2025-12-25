@@ -8,6 +8,7 @@ import { sendPacket } from "../client";
 import { getHotbarSelectedItemSlot, getInstancePlayerAction, getPlayerMoveIntention } from "../player-action-handler";
 import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
 import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
+import { AttackingEntitiesComponentArray } from "../entity-components/server-components/AttackingEntitiesComponent";
 
 export function sendInitialPlayerDataPacket(username: string, tribeType: TribeType, isSpectating: boolean): void {
    // Send player data to the server

@@ -23,6 +23,8 @@ let canAscendLayer = $state(false);
 let cursorX = $state(0);
 let cursorY = $state(0);
 
+let isFocusedOnMenu = $state(true);
+
 export const gameUIState = {
    get gameInteractState() {
       return gameInteractState;
@@ -78,5 +80,12 @@ export const gameUIState = {
    },
    setCursorY(newCursorY: number): void {
       cursorY = newCursorY;
+   },
+
+   get isFocusedOnMenu() {
+      return isFocusedOnMenu;
+   },
+   setIsFocusedOnMenu(newIsFocusedOnMenu: boolean): void {
+      isFocusedOnMenu = newIsFocusedOnMenu;
    }
 };

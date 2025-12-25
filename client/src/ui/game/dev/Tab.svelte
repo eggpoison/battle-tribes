@@ -36,8 +36,8 @@
 
    let props: Props = $props();
 
-   const tabInfo = TAB_INFO_RECORD[props.menu]!;
-   const isSelected = menuSelectorState.menu === props.menu;
+   const tabInfo = $derived(TAB_INFO_RECORD[props.menu]!);
+   const isSelected = $derived(menuSelectorState.menuIsOpen(props.menu));
 </script>
    
 <!-- svelte-ignore a11y_no_static_element_interactions -->

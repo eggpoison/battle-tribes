@@ -22,8 +22,6 @@ const SPAM_FILTER: SpamFilter = {
    maxMessages: 5
 };
 
-const chatMessages = new Array<ChatMessage>();
-
 export function updateSpamFilter(deltaTimeMS: number): void {
    for (let i = spamFilterHistory.length - 1; i >= 0; i--) {
       const spamFilterMessage = spamFilterHistory[i];
@@ -44,12 +42,8 @@ const messagePassesSpamFilter = (message: string): boolean => {
    return true;
 }
 
-export function onChatboxKeyPress(e: KeyboardEvent): void {
+export function onChatboxKeyPress(e: KeyboardEvent, chatMessage: string): void {
    // Don't type past the max char count
-   // @HACK!!! @SQUEAM
-   const chatMessage = "";
-   // const chatMessage = inputBoxRef.current!.value;
-   throw new Error();
    if (chatMessage.length >= MAX_CHAR_COUNT) {
       const isAllowed = e.shiftKey || e.metaKey || ALLOWED_KEYS_PAST_MAXIMUM.includes(e.key);
 
@@ -63,7 +57,7 @@ export function onChatboxKeyPress(e: KeyboardEvent): void {
    switch (key) {
       case "Escape": {
          // Cancel the chat message
-         chatboxState.setIsFocused(false);
+         chatboxState.isFocused = false;
 
          break;
       }
@@ -76,7 +70,7 @@ export function onChatboxKeyPress(e: KeyboardEvent): void {
             sendChatMessagePacket(chatMessage);
          }
 
-         chatboxState.setIsFocused(false);
+         chatboxState.isFocused = false;
 
          break;
       }
@@ -84,16 +78,13 @@ export function onChatboxKeyPress(e: KeyboardEvent): void {
 }
 
 export function addChatMessage(username: string, message: string): void {
-   chatMessages.push({
+   chatboxState.chatMessages.push({
       username: username,
       message: message
    });
 
    // Remove a chat message if the number of messages has exceeded the maximum
-   if (chatMessages.length > MAX_CHAT_MESSAGES) {
-      chatMessages.splice(0, 1);
+   if (chatboxState.chatMessages.length > MAX_CHAT_MESSAGES) {
+      chatboxState.chatMessages.splice(0, 1);
    }
-
-   // @Garbage @Speed
-   chatboxState.setChatMessages(chatMessages.slice());
 }

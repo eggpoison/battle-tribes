@@ -170,9 +170,9 @@ export const InventoryComponentArray = new ServerComponentArray<InventoryCompone
 InventoryComponentArray.updateFromData = updateFromData;
 InventoryComponentArray.updatePlayerFromData = updatePlayerFromData;
 
-export function createInventoryComponentData(): InventoryComponentData {
+export function createInventoryComponentData(inventories: Partial<Record<InventoryName, Inventory>>): InventoryComponentData {
    return {
-      inventories: {}
+      inventories: inventories
    };
 }
 

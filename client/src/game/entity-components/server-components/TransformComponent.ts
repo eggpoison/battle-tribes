@@ -13,6 +13,8 @@ import { entitiesAreColliding, resolveWallCollisions } from "../../collision";
 import { keyIsPressed } from "../../keyboard-input";
 import { currentSnapshot } from "../../client";
 import { gameUIState } from "../../../ui-state/game-ui-state.svelte";
+import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+import { worldToScreenPos } from "../../camera";
 
 export interface TransformComponentData {
    readonly traction: number;
@@ -426,6 +428,7 @@ TransformComponentArray.onTick = onTick;
 TransformComponentArray.onUpdate = onUpdate;
 TransformComponentArray.onRemove = onRemove;
 TransformComponentArray.updatePlayerFromData = updatePlayerFromData;
+TransformComponentArray.updateSelectedEntityState = updateSelectedEntityState;
 
 function createComponent(entityComponentData: EntityComponentData): TransformComponent {
    const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
@@ -653,6 +656,14 @@ function updatePlayerFromData(data: TransformComponentData, isInitialData: boole
       }
    }
    gameUIState.setCanAscendLayer(canAscendLayer);
+}
+
+function updateSelectedEntityState(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   const screenPos = worldToScreenPos(hitbox.box.position);
+   entitySelectionState.setSelectedEntityScreenPosX(screenPos.x);
+   entitySelectionState.setSelectedEntityScreenPosY(screenPos.y);
 }
 
 const countHitboxesIncludingChildren = (hitbox: Hitbox): number => {

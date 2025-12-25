@@ -266,7 +266,7 @@ function onTick(entity: Entity): void {
       } else {
          limb.currentActionElapsedTicks += limb.currentActionRate;
       }
-      
+
       if (currentActionHasFinished(limb)) {
          switch (limb.action) {
             case LimbAction.engageBlock: {

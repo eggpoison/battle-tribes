@@ -20,7 +20,7 @@ import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
-import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed } from "../world";
+import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, destroyEntity } from "../world";
 import { resolveEntityCollisions } from "../collision-detection";
 import { runCollapses } from "../collapses";
 import { updateTribes } from "../tribes";
@@ -227,10 +227,21 @@ class GameServer {
                }
 
                // @SQUEAM
-               // setTimeout(() => {
-               //    const config = createTribeWorkerConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, new Tribe(TribeType.plainspeople, true, new Point(spawnPosition.x + 200, spawnPosition.y)));
-               //    createEntity(config, layer, 0);
-               // }, 1000);
+               setTimeout(() => {
+                  if (username === "Clementus") {
+                     // const config = createTribeWorkerConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, new Tribe(TribeType.plainspeople, true, new Point(spawnPosition.x + 200, spawnPosition.y)));
+                     const config = createCowConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, CowSpecies.brown);
+                     createEntity(config, layer, 0);
+                  }
+               }, 1000);
+
+               // if (!isSpectating) {
+               //    setTimeout(() => {
+               //       if (typeof playerClient !== "undefined") {
+               //          destroyEntity(playerClient.instance);
+               //       }
+               //    }, 20000);
+               // }
                
                addPlayerClient(playerClient, surfaceLayer, spawnPosition);
 

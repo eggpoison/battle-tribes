@@ -11,8 +11,6 @@
    let mouseX = $state(0);
    let mouseY = $state(0);
    
-   let props = $props();
-
    function onMouseMove(e: MouseEvent) {
       mouseX = e.clientX
       mouseY = e.clientY;
@@ -21,14 +19,22 @@
    function preventDefault(e: Event) {
       e.preventDefault();
    }
+
+   function onMouseEnterInteractable(): void {
+      gameUIState.setIsFocusedOnMenu(false);
+   }
+
+   function onMouseLeaveInteractable(): void {
+      gameUIState.setIsFocusedOnMenu(true);
+   }
 </script>
 
-<div id="game-interactable-layer" draggable={false} onmousemove={onMouseMove} onmousedown={onGameMouseDown} onmouseup={onGameMouseUp} oncontextmenu={preventDefault} aria-hidden="true"></div>
+<div id="game-interactable-layer" draggable={false} onmouseenter={onMouseEnterInteractable} onmouseleave={onMouseLeaveInteractable} onmousemove={onMouseMove} onmousedown={onGameMouseDown} onmouseup={onGameMouseUp} oncontextmenu={preventDefault} aria-hidden="true"></div>
 
 <AttackChargeBar mouseX={mouseX} mouseY={mouseY} chargeElapsedTicks={playerActionState.hotbarChargeElapsedTicks} chargeDuration={playerActionState.hotbarChargeDuration} />
 <AttackChargeBar mouseX={mouseX} mouseY={mouseY + 18} chargeElapsedTicks={playerActionState.offhandChargeElapsedTicks} chargeDuration={playerActionState.hotbarChargeDuration} />
 
-{#if !props.cinematicModeIsEnabled}
+{#if !gameUIState.cinematicModeIsEnabled}
    {#if isSpectating}
       <SpectatorControls />
    {:else}
@@ -37,7 +43,7 @@
 {/if}
 
 {#if (gameUIState.gameInteractState === GameInteractState.selectCarryTarget || gameUIState.gameInteractState === GameInteractState.selectAttackTarget || gameUIState.gameInteractState === GameInteractState.selectMoveTargetPosition)}
-   <SelectTargetCursorOverlay gameInteractState={props.gameInteractState} mouseX={mouseX} mouseY={mouseY} />
+   <SelectTargetCursorOverlay gameInteractState={gameUIState.gameInteractState} mouseX={mouseX} mouseY={mouseY} />
 {/if}
 
 <CursorEntityTooltip />

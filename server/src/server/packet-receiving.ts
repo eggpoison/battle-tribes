@@ -559,12 +559,7 @@ export function processTPToEntityPacket(playerClient: PlayerClient, reader: Pack
 }
 
 export function processSpectateEntityPacket(playerClient: PlayerClient, reader: PacketReader): void {
-   const player = playerClient.instance;
-   if (!entityExists(player)) {
-      return;
-   }
-
-   const entity = reader.readNumber() as Entity;
+   const entity: Entity = reader.readNumber();
    if (entityExists(entity)) {
       playerClient.cameraSubject = entity;
    }
@@ -586,7 +581,7 @@ export function processStructureInteractPacket(playerClient: PlayerClient, reade
    }
 
    const structure = reader.readNumber() as Entity;
-   if (!entityExists(structure)) {
+   if (!entityExists(structure)) {''
       return;
    }
 
@@ -767,7 +762,10 @@ export function processPickUpEntityPacket(playerClient: PlayerClient, reader: Pa
       return;
    }
 
-   const entity = reader.readNumber() as Entity;
+   const entity: Entity = reader.readNumber();
+   if (!entityExists(entity)) {
+      return;
+   }
 
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
@@ -802,7 +800,11 @@ export function processModifyBuildingPacket(playerClient: PlayerClient, reader: 
       return;
    }
 
-   const structure = reader.readNumber() as Entity;
+   const structure: Entity = reader.readNumber();
+   if (!entityExists(structure)) {
+      return;
+   }
+   
    const data = reader.readNumber();
    
    modifyBuilding(playerClient.instance, structure, data);
@@ -813,7 +815,11 @@ export function processSetMoveTargetPositionPacket(playerClient: PlayerClient, r
       return;
    } 
 
-   const entity = reader.readNumber() as Entity;
+   const entity: Entity = reader.readNumber();
+   if (!entityExists(entity)) {
+      return;
+   }
+   
    const targetX = reader.readNumber();
    const targetY = reader.readNumber();
    
@@ -831,6 +837,10 @@ export function processSetCarryTargetPacket(playerClient: PlayerClient, reader: 
    }
 
    const entity = reader.readNumber() as Entity;
+   if (!entityExists(entity)) {
+      return;
+   }
+   
    const carryTarget = reader.readNumber();
    
    if (!TamingComponentArray.hasComponent(entity)) {
@@ -846,7 +856,11 @@ export function processSetAttackTargetPacket(playerClient: PlayerClient, reader:
       return;
    }
 
-   const entity = reader.readNumber() as Entity;
+   const entity: Entity = reader.readNumber();
+   if (!entityExists(entity)) {
+      return;
+   }
+   
    const attackTarget = reader.readNumber();
    
    if (!TamingComponentArray.hasComponent(entity)) {
@@ -862,7 +876,10 @@ export function processCompleteTamingTierPacket(playerClient: PlayerClient, read
       return;
    }
 
-   const entity = reader.readNumber() as Entity;
+   const entity: Entity = reader.readNumber();
+   if (!entityExists(entity)) {
+      return;
+   }
 
    if (!TamingComponentArray.hasComponent(entity)) {
       return;
@@ -884,7 +901,11 @@ export function processForceCompleteTamingTierPacket(playerClient: PlayerClient,
       return;
    }
 
-   const entity = reader.readNumber() as Entity;
+   const entity: Entity = reader.readNumber();
+   if (!entityExists(entity)) {
+      return;
+   }
+   
    const tamingComponent = TamingComponentArray.getComponent(entity);
    // @Cleanup @Copynpaste
    tamingComponent.tamingTier++;
@@ -897,7 +918,11 @@ export function processAcquireTamingSkillPacket(playerClient: PlayerClient, read
       return;
    }
 
-   const entity = reader.readNumber() as Entity;
+   const entity: Entity = reader.readNumber();
+   if (!entityExists(entity)) {
+      return;
+   }
+   
    const skillID = reader.readNumber() as TamingSkillID;
    
    const tamingComponent = TamingComponentArray.getComponent(entity);
@@ -913,7 +938,11 @@ export function processForceAcquireTamingSkillPacket(playerClient: PlayerClient,
       return;
    }
 
-   const entity = reader.readNumber() as Entity;
+   const entity: Entity = reader.readNumber();
+   if (!entityExists(entity)) {
+      return;
+   }
+   
    const skillID = reader.readNumber() as TamingSkillID;
    
    const skill = getTamingSkill(skillID);
@@ -935,6 +964,10 @@ export function processDevSetViewedSpawnDistribution(playerClient: PlayerClient,
 
 export function processSetSignMessagePacket(reader: PacketReader): void {
    const entity = reader.readNumber();
+   if (!entityExists(entity)) {
+      return;
+   }
+   
    const message = reader.readString();
 
    const floorSignComponent = FloorSignComponentArray.getComponent(entity);
@@ -944,6 +977,10 @@ export function processSetSignMessagePacket(reader: PacketReader): void {
 
 export function processRenameAnimalPacket(reader: PacketReader): void {
    const entity = reader.readNumber();
+   if (!entityExists(entity)) {
+      
+   }
+   
    const name = reader.readString();
 
    if (!TamingComponentArray.hasComponent(entity)) {

@@ -1,4 +1,4 @@
-import { Point, Entity, EntityType, ServerComponentType, CollisionBit, CircularBox, HitboxCollisionType, updateBox } from "webgl-test-shared";
+import { Point, Entity, EntityType, ServerComponentType, CollisionBit, CircularBox, HitboxCollisionType, updateBox, InventoryName, Inventory } from "webgl-test-shared";
 import { cursorWorldPos, setCameraSubject } from "./camera";
 import { selectItemSlot } from "./player-action-handler";
 import { createTransformComponentData, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
@@ -9,6 +9,9 @@ import { calculateHitboxRenderPosition, getEntityTickInterp, registerDirtyRender
 import { addEntityToWorld, createEntityCreationInfo, EntityComponentData, getEntityRenderInfo } from "./world";
 import { gameUIState } from "../ui-state/game-ui-state.svelte";
 import { menuSelectorState } from "../ui-state/menu-selector-state.svelte";
+import { createInventoryComponentData } from "./entity-components/server-components/InventoryComponent";
+import { createInventoryUseComponentData } from "./entity-components/server-components/InventoryUseComponent";
+import { createStatusEffectComponentData } from "./entity-components/server-components/StatusEffectComponent";
 
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
 // but this is in the client so these optimisations are less important. The ease-of-use is worth it
@@ -29,7 +32,7 @@ const onPlayerDeath = (): void => {
    gameUIState.setIsDead(true);
    
    // Close any open menus
-   while (menuSelectorState.closeMenu());
+   while (menuSelectorState.closeCurrentMenu());
 }
 
 export function setPlayerInstance(newPlayerInstance: Entity | null): void {
@@ -68,7 +71,19 @@ export function createSpectatingPlayer(initialGameData: InitialGameData): void {
             // @COPYNPASTE from server player creation
             createHitboxQuick(entity, 0, null, new CircularBox(initialGameData.spawnPosition.copy(), new Point(0, 0), 0, 32), 1.25, HitboxCollisionType.soft, CollisionBit.default, 0, [])
          ]
-      )
+      ),
+      [ServerComponentType.inventory]: createInventoryComponentData({
+         [InventoryName.hotbar]: new Inventory(1, 1, InventoryName.hotbar),
+         [InventoryName.offhand]: new Inventory(1, 1, InventoryName.offhand),
+         [InventoryName.armourSlot]: new Inventory(1, 1, InventoryName.armourSlot),
+         [InventoryName.gloveSlot]: new Inventory(1, 1, InventoryName.gloveSlot),
+         [InventoryName.backpackSlot]: new Inventory(1, 1, InventoryName.backpackSlot),
+         [InventoryName.heldItemSlot]: new Inventory(1, 1, InventoryName.heldItemSlot),
+      }),
+      [ServerComponentType.inventoryUse]: createInventoryUseComponentData([InventoryName.hotbar, InventoryName.offhand]),
+      [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
+      [ServerComponentType.tribesman]: { warpaintType: null, titles: [] },
+      [ServerComponentType.tribe]: { tribeID: 0, tribeType: 0 }
    };
 
    const entityComponentData: EntityComponentData = {
@@ -80,7 +95,7 @@ export function createSpectatingPlayer(initialGameData: InitialGameData): void {
 
    // Create the entity
    const creationInfo = createEntityCreationInfo(entity, entityComponentData);
-   addEntityToWorld(0, initialGameData.spawnLayer, creationInfo);
+   addEntityToWorld(0, initialGameData.spawnLayer, creationInfo, false);
 
    setPlayerInstance(entity);
    setCameraSubject(entity);

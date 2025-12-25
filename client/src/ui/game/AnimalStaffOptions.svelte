@@ -1,55 +1,39 @@
 <script lang="ts">
-   import { TamingSkillID, type Entity } from "webgl-test-shared";
-   import { TransformComponentArray } from "../../game/entity-components/server-components/TransformComponent";
+   import { type Entity, TamingSkillID } from "webgl-test-shared";
    import { sendAnimalStaffFollowCommandPacket } from "../../game/networking/packet-sending";
    import { entityExists } from "../../game/world";
    import { hasTamingSkill, TamingComponentArray } from "../../game/entity-components/server-components/TamingComponent";
    import { RideableComponentArray } from "../../game/entity-components/server-components/RideableComponent";
-   import { worldToScreenPos } from "../../game/camera";
    import { preventDefault } from "../ui-utils.svelte";
    import { AnimalStaffCommandType, createControlCommandParticles } from "../../game/particles";
    import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
+   import { GameInteractState, gameUIState } from "../../ui-state/game-ui-state.svelte";
+   import { setShittyCarrier } from "../../game/player-action-handler";
 
-   const [x, setX] = useState(0);
-   const [y, setY] = useState(0);
-   const [isHovering, setIsHovering] = useState(false);
+   interface Props {
+      entity: Entity;
+   } 
+    
+   let { entity }: Props = $props();
+    
+   const tamingComponent = $derived(TamingComponentArray.getComponent(entity));
 
-   // @Hack: "!"
-   const entity = entitySelectionState.selectedEntity!;
-
-   const tamingComponent = TamingComponentArray.getComponent(entity);
-   const followOptionIsSelected = tamingComponent.isFollowing;
-
-   const updateFromEntity = (entity: Entity): void => {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      if (transformComponent === null) {
-         return;
-      }
-
-      const hitbox = transformComponent.hitboxes[0];
-
-      const screenPos = worldToScreenPos(hitbox.box.position);
-      setX(screenPos.x);
-      setY(screenPos.y);
-
-   }
-
-   const pressFollowOption = useCallback((): void => {
+   const pressFollowOption = (): void => {
       if (entity !== null) {
          sendAnimalStaffFollowCommandPacket(entity);
          createControlCommandParticles(AnimalStaffCommandType.follow);
       }
       entitySelectionState.setSelectedEntity(null);
-   }, [entity]);
+   }
 
-   const pressMoveOption = useCallback((): void => {
+   const pressMoveOption = (): void => {
       if (entity !== null) {
          setShittyCarrier(entity);
-         props.setGameInteractState(GameInteractState.selectMoveTargetPosition);
+         gameUIState.setGameInteractState(GameInteractState.selectMoveTargetPosition);
       }
-   }, [entity]);
+   }
 
-   const pressCarryOption = useCallback((): void => {
+   const pressCarryOption = (): void => {
       if (entity !== null) {
          // @COPYNPASTE
 
@@ -65,38 +49,38 @@
 
          setShittyCarrier(entity);
          if (isCarrying) {
-            props.setGameInteractState(GameInteractState.selectRiderDepositLocation);
+            gameUIState.setGameInteractState(GameInteractState.selectRiderDepositLocation);
          } else {
-            props.setGameInteractState(GameInteractState.selectCarryTarget);
+            gameUIState.setGameInteractState(GameInteractState.selectCarryTarget);
          }
       }
-   }, [entity]);
+   }
 
    function pressAttackOption(): void {
       if (entity !== null) {
          setShittyCarrier(entity);
-         props.setGameInteractState(GameInteractState.selectAttackTarget);
+         gameUIState.setGameInteractState(GameInteractState.selectAttackTarget);
       }
    }
    
-   
-   let isCarrying = false;
-   const rideableComponent = RideableComponentArray.getComponent(entity);
-   if (rideableComponent !== null) {
-      for (const carrySlot of rideableComponent.carrySlots) {
-         if (entityExists(carrySlot.occupiedEntity)) {
-            isCarrying = true;
-            break;
+   const isCarrying = (): boolean => {
+      const rideableComponent = RideableComponentArray.getComponent(entity);
+      if (rideableComponent !== null) {
+         for (const carrySlot of rideableComponent.carrySlots) {
+            if (entityExists(carrySlot.occupiedEntity)) {
+               return true;
+            }
          }
       }
+      return false;
    }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div id="animal-staff-options" style:left="{x}px" style:bottom="{y}px" oncontextmenu={preventDefault}>
+<div id="animal-staff-options" style:left="{entitySelectionState.selectedEntityX}px" style:top="{entitySelectionState.selectedEntityY}px" oncontextmenu={preventDefault}>
    {#if hasTamingSkill(tamingComponent, TamingSkillID.follow)}
       <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <div class="option follow" class:active={followOptionIsSelected} onclick={pressFollowOption}></div>
+      <div class="option follow" class:active={tamingComponent.isFollowing} onclick={pressFollowOption}></div>
    {/if}
    {#if hasTamingSkill(tamingComponent, TamingSkillID.move)}
       <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -104,7 +88,7 @@
    {/if}
    {#if hasTamingSkill(tamingComponent, TamingSkillID.carry)}
       <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <div class="option carry" class:active={isCarrying} onclick={pressCarryOption}></div>
+      <div class="option carry" class:active={isCarrying()} onclick={pressCarryOption}></div>
    {/if}
    {#if hasTamingSkill(tamingComponent, TamingSkillID.attack)}
       <!-- svelte-ignore a11y_click_events_have_key_events -->

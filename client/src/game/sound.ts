@@ -5,6 +5,7 @@ import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { cameraPosition, maxVisibleChunkX, maxVisibleChunkY, minVisibleChunkX, minVisibleChunkY } from "./camera";
 import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
+import { gameIsFocused } from "./client";
 
 type SoundID = number;
 
@@ -396,6 +397,11 @@ export interface SoundInfo {
 }
 // @Speed: Garbage collection, unbox the source from a point
 export function playSound(filePath: string, volume: number, pitchMultiplier: number, source: Point, layer: Layer): SoundInfo | null {
+   // Don't play sounds when the game isn't open because god is that crushing for your mental health. maybe that is an overexaggeration
+   if (!gameIsFocused) {
+      return null;
+   }
+   
    // Only play sounds from the current layer
    if (layer !== null && layer !== getCurrentLayer()) {
       return null;

@@ -2,10 +2,10 @@
    import { type Entity, type Inventory, InventoryName, ItemType } from "webgl-test-shared";
    import { type ItemRestTime } from "../../../game/player-action-handler";
    import ItemSlot from "./ItemSlot.svelte";
-    import { menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
-    import { InventoryComponentArray, getInventory } from "../../../game/entity-components/server-components/InventoryComponent";
-    import { sendItemPickupPacket, sendItemReleasePacket } from "../../../game/networking/packet-sending";
-    import { playerInstance } from "../../../game/player";
+   import { menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
+   import { InventoryComponentArray, getInventory } from "../../../game/entity-components/server-components/InventoryComponent";
+   import { sendItemPickupPacket, sendItemReleasePacket } from "../../../game/networking/packet-sending";
+   import { playerInstance } from "../../../game/player";
 
    export interface ItemSlotCallbackInfo {
       readonly itemSlot: number;
@@ -39,7 +39,7 @@
    const isManipulable = typeof props.isManipulable === "undefined" || props.isManipulable;
    
    const inventoryIsFocused = (): boolean => {
-      return menuSelectorState.menu !== null;
+      return menuSelectorState.hasOpenMenu();
    }
 
    const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: number): void => {

@@ -11,8 +11,8 @@ interface Options {
 // @Speed: Make into const enum
 const OPTIONS: Options = {
    spawnEntities: true,
-   spawnTribesmen: true,
-   generateRivers: true,
+   spawnTribesmen: false,
+   generateRivers: false,
    generateWalls: true,
    generateCaves: true,
    inBenchmarkMode: false,

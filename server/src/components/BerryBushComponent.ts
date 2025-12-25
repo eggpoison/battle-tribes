@@ -7,7 +7,9 @@ import { Settings } from "../../../shared/src/settings";
 
 const enum Vars {
    /** Number of seconds it takes for a berry bush to regrow one of its berries */
-   BERRY_GROW_TIME = 30
+   // @SQUEAM so that no berries grow during the shot
+   // BERRY_GROW_TIME = 30
+   BERRY_GROW_TIME = 300
 }
 
 export class BerryBushComponent {

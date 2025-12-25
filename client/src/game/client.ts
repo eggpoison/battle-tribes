@@ -190,9 +190,9 @@ export function establishNetworkConnection(username: string, tribeType: TribeTyp
    }
    
    // @SQUEAM
-   // socket = new WebSocket(`ws://10.0.0.21:${Settings.SERVER_PORT}`);
+   socket = new WebSocket(`ws://10.0.0.10:${Settings.SERVER_PORT}`);
    // socket = new WebSocket(`ws://127.0.0.1:${Settings.SERVER_PORT}`);
-   socket = new WebSocket(`ws://localhost:${Settings.SERVER_PORT}`);
+   // socket = new WebSocket(`ws://localhost:${Settings.SERVER_PORT}`);
    socket.binaryType = "arraybuffer";
 
    socket.onopen = () => onSuccessfulConnection(username, tribeType, isSpectating);

@@ -61,7 +61,8 @@ export function beginSwing(attackingEntity: Entity, itemSlot: number, inventoryN
    }
 
    // If the limb is doing something or is resting, don't swing
-   if (limb.action !== LimbAction.none || limb.currentActionElapsedTicks < limb.currentActionDurationTicks) {
+   // This has 1 tick of leniency to reduce the chance of someone attacking which is ok client-side but they're still waiting 1 tick for their previous swing to finish server-side
+   if (limb.action !== LimbAction.none || limb.currentActionElapsedTicks < limb.currentActionDurationTicks - 1) {
       return false;
    }
 

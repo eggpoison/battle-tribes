@@ -37,7 +37,7 @@
 </script>
 
 <div id="frame-graph" class:hidden={!nerdVisionState.isVisible}>
-   <p class="info"><span>fps={fps}</span> <span>t_avg={average.toFixed(2)}</span> <span>t_min={min.toFixed(2)}</span> <span>t_max={max.toFixed(2)}</span></p>
+   <p class="info"><span class="highlight">fps={fps}</span> <span class="highlight">t_avg={average.toFixed(2)}</span> <span class="highlight">t_min={min.toFixed(2)}</span> <span class="highlight">t_max={max.toFixed(2)}</span></p>
    <canvas id="frame-graph-canvas"></canvas>
 </div>
 

@@ -27,39 +27,9 @@ export enum Menu {
    techTree
 }
 
-export enum MenuDisplayType {
-   /** The menu remains static on the screen. */
-   static,
-   /** The menu is tracked to the selected entity, and will close automatically if the cursor moves too far off it. */
-   entityTracked
-}
-
-const MENU_DISPLAY_TYPES: Record<Menu, MenuDisplayType> = {
-   [Menu.buildMenu]: MenuDisplayType.entityTracked,
-   [Menu.animalStaffOptions]: MenuDisplayType.entityTracked,
-   [Menu.craftingMenu]: MenuDisplayType.static,
-   [Menu.tamingMenu]: MenuDisplayType.static,
-   [Menu.tamingRenamePrompt]: MenuDisplayType.static,
-   [Menu.signInscribeMenu]: MenuDisplayType.static,
-   [Menu.barrelInventory]: MenuDisplayType.static,
-   [Menu.tribesmanInventory]: MenuDisplayType.static,
-   [Menu.campfireInventory]: MenuDisplayType.static,
-   [Menu.furnaceInventory]: MenuDisplayType.static,
-   [Menu.ammoBoxInventory]: MenuDisplayType.static,
-   [Menu.tombstoneEpitaph]: MenuDisplayType.static,
-   [Menu.healthInspector]: MenuDisplayType.static,
-   [Menu.itemsDevTab]: MenuDisplayType.static,
-   [Menu.summonDevTab]: MenuDisplayType.static,
-   [Menu.titlesDevTab]: MenuDisplayType.static,
-   [Menu.tribesDevTab]: MenuDisplayType.static,
-   [Menu.tribePlanVisualiser]: MenuDisplayType.static,
-   [Menu.techTree]: MenuDisplayType.static
-}
-
 interface MenuInfo {
    readonly menu: Menu;
    readonly closeFunction: () => void;
-   readonly displayType: MenuDisplayType;
 }
 
 const menuStack = $state(new Array<MenuInfo>());
@@ -87,9 +57,7 @@ export const menuSelectorState = {
                   sendItemDropPacket(InventoryName.heldItemSlot, 1, heldItem.count, hitbox.box.angle);
                }
             }
-         },
-         // @Memory: not required. is the same for each menu.
-         displayType: MENU_DISPLAY_TYPES[menu]
+         }
       });
    },
    closeCurrentMenu(): boolean {
@@ -127,14 +95,6 @@ export const menuSelectorState = {
    },
    hasOpenMenu(): boolean {
       return menuStack.length > 0
-   },
-   hasOpenStaticMenu(): boolean {
-      for (const menuInfo of menuStack) {
-         if (menuInfo.displayType === MenuDisplayType.static) {
-            return true;
-         }
-      }
-      return false;
    },
    /** If the menu is open, closes it. If no menu is open, opens the menu. If a different menu is open, do nothing. */
    toggleMenu(menu: Menu): void {

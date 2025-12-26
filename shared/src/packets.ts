@@ -100,6 +100,9 @@ export function alignLengthBytes(lengthBytes: number): number {
    return lengthBytes;
 }
 
+const utf8Encoder = new TextEncoder();
+const utf8Decoder = new TextDecoder();
+
 export class Packet extends BasePacketObject {
    public readonly buffer: ArrayBuffer;
    private readonly floatView: Float32Array;
@@ -120,8 +123,8 @@ export class Packet extends BasePacketObject {
          throw new Error("Tried to write NaN to a packet.");
       }
       
-      // this.cleanByteOffset();
-      if (this.currentByteOffset >= this.buffer.byteLength) {
+      // Make sure there is room for 4 bytes for the number
+      if (this.currentByteOffset + 4 > this.buffer.byteLength) {
          throw new Error("Exceeded length of buffer");
       }
       if (this.currentByteOffset % 4 !== 0) {
@@ -134,17 +137,16 @@ export class Packet extends BasePacketObject {
    }
 
    public writeString(str: string): void {
-      if (this.currentByteOffset >= this.buffer.byteLength) {
+      // @Speed: could be using encodeInto instead!!
+      const encodedUsername = utf8Encoder.encode(str);
+      const numBytes = encodedUsername.length;
+      
+      if (this.currentByteOffset + numBytes > this.buffer.byteLength) {
          throw new Error("Exceeded length of buffer");
       }
 
-      const encodedUsername = new TextEncoder().encode(str);
-
-      // Write the length of the string
-      this.writeNumber(str.length);
-      
-      new Uint8Array(this.buffer).set(encodedUsername, this.currentByteOffset);
-      
+      this.writeNumber(numBytes);
+      this.uint8View.set(encodedUsername, this.currentByteOffset);
       this.currentByteOffset += alignLengthBytes(encodedUsername.byteLength);
    }
 
@@ -168,7 +170,7 @@ export class Packet extends BasePacketObject {
 
 export function getStringLengthBytes(str: string): number {
    // @Copynpaste
-   return Float32Array.BYTES_PER_ELEMENT + alignLengthBytes(new TextEncoder().encode(str).byteLength); // @Speed?
+   return Float32Array.BYTES_PER_ELEMENT + alignLengthBytes(utf8Encoder.encode(str).byteLength); // @Speed?
 }
 
 export class PacketReader extends BasePacketObject {
@@ -212,8 +214,7 @@ export class PacketReader extends BasePacketObject {
       const stringLength = this.readNumber();
       
       const decodeBuffer = this.uint8View.subarray(this.currentByteOffset, this.currentByteOffset + stringLength);
-      // @Speed? @Garbage
-      const string = new TextDecoder().decode(decodeBuffer);
+      const string = utf8Decoder.decode(decodeBuffer);
 
       const lengthBytes = alignLengthBytes(new TextEncoder().encode(string).byteLength); // @Speed?
       this.currentByteOffset += lengthBytes;

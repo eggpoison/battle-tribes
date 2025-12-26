@@ -9,8 +9,8 @@ let hoveredEntity = $state<Entity>(0);
 let highlightedEntity = $state<Entity>(0);
 let selectedEntity = $state<Entity>(0);
 
-let selectedEntityX = $state(0);
-let selectedEntityY = $state(0);
+let selectedEntityScreenPosX = $state(0);
+let selectedEntityScreenPosY = $state(0);
 
 export const entitySelectionState = {
    get hoveredEntity() {
@@ -57,17 +57,17 @@ export const entitySelectionState = {
       }
    },
 
-   get selectedEntityX() {
-      return selectedEntityX;
+   get selectedEntityScreenPosX() {
+      return selectedEntityScreenPosX;
    },
-   setSelectedEntityX(newSelectedEntityX: number) {
-      selectedEntityX = newSelectedEntityX;
+   setSelectedEntityScreenPosX(newSelectedEntityScreenPosX: number) {
+      selectedEntityScreenPosX = newSelectedEntityScreenPosX;
    },
-   get selectedEntityY() {
-      return selectedEntityY;
+   get selectedEntityScreenPosY() {
+      return selectedEntityScreenPosY;
    },
-   setSelectedEntityY(newSelectedEntityY: number) {
-      selectedEntityY = newSelectedEntityY;
+   setSelectedEntityScreenPosY(newSelectedEntityScreenPosY: number) {
+      selectedEntityScreenPosY = newSelectedEntityScreenPosY;
    },
 
    reset() {

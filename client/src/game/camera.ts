@@ -10,6 +10,7 @@ import { TransformComponentArray } from "./entity-components/server-components/T
 import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 import { hoverDebugState } from "../ui-state/hover-debug-state.svelte";
 import { Tile } from "./Tile";
+import { isSpectating, playerInstance } from "./player";
 
 let cameraSubjectHitbox: Hitbox | null = null;
 
@@ -83,8 +84,18 @@ export function setCameraSubject(cameraSubject: Entity): void {
    const transformComponent = TransformComponentArray.tryGetComponent(cameraSubject);
    // (Might not have a transform component if we are setting the camera subject to be the non-existent client-only spectator player instance.)
    if (transformComponent !== null) {
-      const hitbox = transformComponent.hitboxes[0];
-      cameraSubjectHitbox = hitbox;
+      cameraSubjectHitbox = transformComponent.hitboxes[0];
+   } else {
+      // The camera has no subject. Set the subject hitbox to null
+      //           EXCEPT there is a special case when the player is spectating! "no hitbox" should instead follow the invisible spectator player's hitbox!!
+      // @Hack @Cleanup this is strange and its kind of unclear whether or not i have to do this in other places potentially?
+      if (isSpectating && playerInstance !== null && TransformComponentArray.hasComponent(playerInstance)) {
+         const transformComponent = TransformComponentArray.getComponent(playerInstance)
+         cameraSubjectHitbox = transformComponent.hitboxes[0];
+      } else {
+         console.log("null it!")
+         cameraSubjectHitbox = null;
+      }
    }
 }
 
@@ -120,6 +131,7 @@ const updateCursorWorldPos = (): void => {
 export function setCameraPosition(pos: Point): void {
    cameraPosition.set(pos);
    updateCursorWorldPos(); // (because the cursor world pos depends on the camera position)
+   console.log("setting to",pos.x,pos.y)
 }
 
 export function updateCursorScreenPos(e: MouseEvent): void {
@@ -135,6 +147,7 @@ export function refreshCameraPosition(clientTickInterp: number, serverTickInterp
 
    const tickInterp = getEntityTickInterp(cameraSubjectHitbox.entity, clientTickInterp, serverTickInterp);
    const pos = calculateHitboxRenderPosition(cameraSubjectHitbox, tickInterp);
+   console.log("(refresh)")
    setCameraPosition(pos);
 }
 

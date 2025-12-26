@@ -3,7 +3,7 @@
    import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
    import MenuElem from "../menus/MenuElem.svelte";
    import ItemSlotsContainer from "./ItemSlotsContainer.svelte";
-    import InventoryItemSlots from "./InventoryItemSlots.svelte";
+   import InventoryItemSlots from "./InventoryItemSlots.svelte";
 
    interface Props {
       entity: Entity;

@@ -25,6 +25,7 @@ import { updateSpamFilter } from "./chat";
 import { updatePlayerMovement } from "./player-action-handler";
 import { PacketReader, PacketType, Packet, TribeType } from "webgl-test-shared";
 import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
+import { cameraPosition } from "./camera";
 
 const SNAPSHOT_BUFFER_LENGTH = 2;
 /** The number of ticks it takes for the measured server packet interval to fully adjust (if going from a constant tps of A to a constant tps of B) */
@@ -47,7 +48,7 @@ let clientTickInterp = 0;
 
 // @Garbage: I could create a set fixed number of packet snapshots, and then just override their data!
 const snapshotBuffer = new Array<PacketSnapshot>();
-const unprocessedGamePackets = new Array<PacketReader>();
+// const unprocessedGamePackets = new Array<PacketReader>();
 export let currentSnapshot: PacketSnapshot;
 export let nextSnapshot: PacketSnapshot;
 
@@ -307,6 +308,8 @@ const runFrame = (frameStartTime: number): void => {
       sendPlayerDataPacket();
       playerPacketAccumulator -= Settings.TICK_RATE / Settings.CLIENT_PACKET_SEND_RATE;
    }
+
+   console.log(cameraPosition.copy());
 
    // Tick the player (independently from all other entities)
    // A loop to run at the proper tick rate

@@ -60,8 +60,9 @@ const enum BufferedInputType {
    block
 }
 
-/** Amount of time that attack/block inputs will be buffered */
-const INPUT_COYOTE_TIME = 0.05;
+/** Time in seconds that attack/block inputs will be buffered */
+// @SQUEAM: reduce to 0.08
+const INPUT_COYOTE_TIME = 0.1;
 
 /** Acceleration of the player while moving without any modifiers. */
 const PLAYER_ACCELERATION = 600;

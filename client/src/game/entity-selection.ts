@@ -21,11 +21,12 @@ import { createHitboxQuick, getDistanceFromPointToEntity, getHitboxVelocity } fr
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
 import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
 import { StructureComponentArray } from "./entity-components/server-components/StructureComponent";
-import { getPlayerSelectedItem, playerIsPlacingEntity } from "./player-action-handler";
+import { getPlayerSelectedItem, playerIsHoldingPlaceableItem, playerIsPlacingEntity } from "./player-action-handler";
 import { cameraPosition, cameraZoom, cursorWorldPos } from "./camera";
 import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state.svelte";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
+import { BuildMenuOption, buildMenuState, getBuildMenuOptions } from "../ui-state/build-menu-state.svelte";
 
 const enum InteractActionType {
    openBuildMenu,
@@ -54,6 +55,7 @@ interface BaseInteractAction {
 
 interface OpenBuildMenuAction extends BaseInteractAction {
    readonly type: InteractActionType.openBuildMenu;
+   readonly options: ReadonlyArray<BuildMenuOption>;
 }
 
 interface PlantSeedAction extends BaseInteractAction {
@@ -170,8 +172,8 @@ const getEntityMenu = (entity: Entity): Menu | null => {
 const getTunnelDoorSide = (groupNum: number): TunnelDoorSide => {
    switch (groupNum) {
       case 1: return 0b01;
-      case 2: return 0b10;
-      default: throw new Error();
+      case 2:
+      default: return 0b10;
    }
 }
 
@@ -261,11 +263,13 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
    }
    
    // See if the entity can be used in the build menu
-   if (StructureComponentArray.hasComponent(entity)) {
+   const options = getBuildMenuOptions(entity);
+   if (options.length > 0) {
       return {
          type: InteractActionType.openBuildMenu,
          interactEntity: entity,
-         interactRange: DEFAULT_INTERACT_RANGE
+         interactRange: DEFAULT_INTERACT_RANGE,
+         options: options
       };
    }
 
@@ -455,6 +459,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       case InteractActionType.openBuildMenu: {
          entitySelectionState.setSelectedEntity(entity);
          menuSelectorState.openMenu(Menu.buildMenu);
+         buildMenuState.options = action.options;
          break;
       }
       case InteractActionType.plantSeed: {
@@ -600,12 +605,6 @@ export function updateEntitySelections(): void {
    
    entitySelectionState.setHoveredEntity(newHoveredEntity);
 
-   // If there is a static menu open, we want no highlighted entity, and also for the bottom bit of code to not cancel the selection.
-   if (menuSelectorState.hasOpenStaticMenu()) {
-      entitySelectionState.setHighlightedEntity(null);
-      return;
-   }
-   
    // When the player is placing an entity, we don't want them to be able to select entities.
    if (playerIsPlacingEntity()) {
       entitySelectionState.setHighlightedEntity(null);
@@ -613,13 +612,14 @@ export function updateEntitySelections(): void {
       entitySelectionState.setHighlightedEntity(newHighlightedEntity);
    }
 
-
-   // If the player has stopped highlighting the selected entity, it means they want to deselect it.
-   // EXCEPT when the game is in select carry target mode, we want the controlled entity to remain selected
-   if (newHighlightedEntity !== entitySelectionState.selectedEntity && newHighlightedEntity === null) {
-      if (gameUIState.gameInteractState !== GameInteractState.selectCarryTarget && gameUIState.gameInteractState !== GameInteractState.selectAttackTarget && gameUIState.gameInteractState !== GameInteractState.selectMoveTargetPosition) {
-         // The close menu callback will deselect the entity
-         menuSelectorState.closeCurrentMenu();
+   // If the player is focused on the game, deselect the selected entity when the player stops highlighting it.
+   if (!gameUIState.isFocusedOnMenu) {
+      // EXCEPT when the game is in select carry target mode, we want the controlled entity to remain selected
+      if (newHighlightedEntity !== entitySelectionState.selectedEntity && newHighlightedEntity === null) {
+         if (gameUIState.gameInteractState !== GameInteractState.selectCarryTarget && gameUIState.gameInteractState !== GameInteractState.selectAttackTarget && gameUIState.gameInteractState !== GameInteractState.selectMoveTargetPosition) {
+            // The close menu callback will deselect the entity
+            menuSelectorState.closeCurrentMenu();
+         }
       }
    }
 }

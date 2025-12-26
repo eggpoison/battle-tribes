@@ -351,6 +351,11 @@ function onTick(cow: Entity): void {
       }
    }
 
+   // @SQUEAM
+   if (1+1===2) {
+      return;
+   }
+
    // Replenish stamina 
    // @HACK this literally only works logically for 1 case
    cowComponent.stamina += STAMINA_REPLENISH_RATE * Settings.DT_S;

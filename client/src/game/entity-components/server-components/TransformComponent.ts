@@ -14,6 +14,7 @@ import { keyIsPressed } from "../../keyboard-input";
 import { currentSnapshot } from "../../client";
 import { gameUIState } from "../../../ui-state/game-ui-state.svelte";
 import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+import { worldToScreenPos } from "../../camera";
 
 export interface TransformComponentData {
    readonly traction: number;
@@ -660,8 +661,9 @@ function updatePlayerFromData(data: TransformComponentData, isInitialData: boole
 function updateSelectedEntityState(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
-   entitySelectionState.setSelectedEntityX(hitbox.box.position.x);
-   entitySelectionState.setSelectedEntityY(hitbox.box.position.y);
+   const screenPos = worldToScreenPos(hitbox.box.position);
+   entitySelectionState.setSelectedEntityScreenPosX(screenPos.x);
+   entitySelectionState.setSelectedEntityScreenPosY(screenPos.y);
 }
 
 const countHitboxesIncludingChildren = (hitbox: Hitbox): number => {

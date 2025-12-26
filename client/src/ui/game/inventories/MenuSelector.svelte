@@ -4,7 +4,7 @@
    import TombstoneEpitaph from "./TombstoneEpitaph.svelte";
    import TribesmanInteractMenu from "./TribesmanInteractMenu.svelte";
    import AmmoBoxInventory from "./AmmoBoxInventory.svelte";
-   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
+   import { menuSelectorState, Menu } from "../../../ui-state/menu-selector-state.svelte";
    import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
    import BuildMenu from "../menus/BuildMenu.svelte";
    import TamingMenu from "../taming-menu/TamingMenu.svelte";
@@ -21,6 +21,7 @@
    import TribePlanVisualiser from "../tribe-plan-visualiser/TribePlanVisualiser.svelte";
    import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
    import TechTree from "../tech-tree/TechTree.svelte";
+   import { buildMenuState } from "../../../ui-state/build-menu-state.svelte";
 
    const selectedEntity = $derived(entitySelectionState.selectedEntity);
 </script>
@@ -41,8 +42,9 @@
    {:else if menu === Menu.ammoBoxInventory}
       <AmmoBoxInventory />;
    {:else if menu === Menu.buildMenu}
-      {#if selectedEntity !== null}
-         <BuildMenu entity={selectedEntity} />
+      {@const options = buildMenuState.options}
+      {#if selectedEntity !== null && options !== null}
+         <BuildMenu entity={selectedEntity} options={options} />
       {/if}
    {:else if menu === Menu.tamingMenu}
       {#if selectedEntity !== null}

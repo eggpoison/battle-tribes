@@ -20,7 +20,7 @@ import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
-import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed } from "../world";
+import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, destroyEntity } from "../world";
 import { resolveEntityCollisions } from "../collision-detection";
 import { runCollapses } from "../collapses";
 import { updateTribes } from "../tribes";
@@ -234,6 +234,14 @@ class GameServer {
                      createEntity(config, layer, 0);
                   }
                }, 1000);
+
+               // if (!isSpectating) {
+               //    setTimeout(() => {
+               //       if (typeof playerClient !== "undefined") {
+               //          destroyEntity(playerClient.instance);
+               //       }
+               //    }, 20000);
+               // }
                
                addPlayerClient(playerClient, surfaceLayer, spawnPosition);
 

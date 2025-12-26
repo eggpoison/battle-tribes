@@ -53,7 +53,7 @@
    <button onclick={toggleSimulation}>{gameUIState.isSimulating ? "Pause" : "Resume"} Simulation</button>
 
    <button onclick={enterSpectatingState}>Spectate Entity</button>
-   <button onclick={() => { playerInstance !== null ? sendSpectateEntityPacket(playerInstance) : undefined }}>Clear Spectate</button>
+   <button onclick={() => sendSpectateEntityPacket(playerInstance !== null ? playerInstance : 0)}>Clear Spectate</button>
 
    <ul class="area options">
       <li>

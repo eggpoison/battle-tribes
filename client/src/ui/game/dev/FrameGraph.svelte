@@ -62,6 +62,7 @@
       top: 0.2rem;
       left: 0.2rem;
       user-select: none;
+      pointer-events: none;
    }
 
    #frame-graph .info span {

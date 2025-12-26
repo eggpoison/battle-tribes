@@ -286,7 +286,7 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    }
 }
 
-export function renderGame(clientTickInterp: number, serverTickInterp: number): void {
+export function renderGame(clientTickInterp: number, serverTickInterp: number, deltaTimeMS: number): void {
    gl.bindFramebuffer(gl.FRAMEBUFFER, gameFramebuffer);
 
    if (lastTextureWidth !== windowWidth || lastTextureHeight !== windowHeight) {
@@ -306,7 +306,7 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number): 
 
    updateUBOs();
 
-   refreshCameraPosition(clientTickInterp, serverTickInterp);
+   refreshCameraPosition(clientTickInterp, serverTickInterp, deltaTimeMS);
    refreshCameraView();
    // Done immediately following the camera position update as the player direction is reliant on it.
    updatePlayerDirection(clientTickInterp, serverTickInterp);

@@ -50,13 +50,7 @@ const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {
    return buildingBlockingTiles;
 }
 
-// @Cleanup: location
-export interface InitialGameData {
-   readonly spawnLayer: Layer;
-   readonly spawnPosition: Readonly<Point>;
-}
-
-export function processInitialGameDataPacket(reader: PacketReader): InitialGameData {
+export function processInitialGameDataPacket(reader: PacketReader): void {
    const layerIdx = reader.readNumber();
    
    const spawnPosition = reader.readPoint();
@@ -171,11 +165,6 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
    }
 
    registerTamingSpecsFromData(reader);
-
-   return {
-      spawnLayer: spawnLayer,
-      spawnPosition: spawnPosition
-   };
 }
 
 export function processSyncDataPacket(reader: PacketReader): void {

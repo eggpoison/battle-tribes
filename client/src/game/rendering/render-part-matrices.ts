@@ -266,11 +266,11 @@ export function cleanEntityRenderInfo(renderInfo: EntityRenderInfo, tickInterp: 
 }
 
 export function entityUsesClientInterp(entity: Entity): boolean {
-   const transformComponent = TransformComponentArray.tryGetComponent(entity);
-   // Just in case this function gets called on an entity which doesn't exist (e.g. the spectator client-only entity)
-   if (transformComponent === null) {
-      return false;
+   // There are no client-only entities since I removed the spectator client-only entity, so im throwing an error. @Temporary comment
+   if (!TransformComponentArray.hasComponent(entity)) {
+      throw new Error();
    }
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    const entityHitbox = transformComponent.hitboxes[0];
    const rootEntity = entityHitbox.rootEntity;

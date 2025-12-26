@@ -317,7 +317,7 @@ export function updatePlayerHitboxFromData(hitbox: Hitbox, data: Hitbox): void {
 export function getHitboxVelocity(hitbox: Hitbox): Point {
    const vx = (hitbox.box.position.x - hitbox.previousPosition.x) * Settings.TICK_RATE;
    const vy = (hitbox.box.position.y - hitbox.previousPosition.y) * Settings.TICK_RATE;
-   return new Point(vx, vy);
+   return new Point(vx, vy);``
 }
 
 export function setHitboxVelocityX(hitbox: Hitbox, vx: number): void {

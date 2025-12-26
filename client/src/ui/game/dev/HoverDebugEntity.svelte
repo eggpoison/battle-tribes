@@ -10,8 +10,7 @@
    import { getEntityType } from "../../../game/world";
    import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
    import ItemSlotsContainer from "../inventories/ItemSlotsContainer.svelte";
-   import InventoryItemSlots from "../inventories/InventoryItemSlots.svelte";
-    import ItemSlot from "../inventories/ItemSlot.svelte";
+   import ItemSlot from "../inventories/ItemSlot.svelte";
 
    interface Props {
       entityDebugData: EntityDebugData;

@@ -6,6 +6,7 @@
    import AttackChargeBar from "./AttackChargeBar.svelte";
    import CursorEntityTooltip from "./dev/CursorEntityTooltip.svelte";
    import Hotbar from "./inventories/Hotbar.svelte";
+   import SelectCarryTargetCursorOverlay from "./SelectCarryTargetCursorOverlay.svelte";
    import SpectatorControls from "./SpectatorControls.svelte";
 
    let mouseX = $state(0);
@@ -43,7 +44,7 @@
 {/if}
 
 {#if (gameUIState.gameInteractState === GameInteractState.selectCarryTarget || gameUIState.gameInteractState === GameInteractState.selectAttackTarget || gameUIState.gameInteractState === GameInteractState.selectMoveTargetPosition)}
-   <SelectTargetCursorOverlay gameInteractState={gameUIState.gameInteractState} mouseX={mouseX} mouseY={mouseY} />
+   <SelectCarryTargetCursorOverlay {mouseX} {mouseY} />
 {/if}
 
-<CursorEntityTooltip />
+<CursorEntityTooltip {mouseX} {mouseY} />

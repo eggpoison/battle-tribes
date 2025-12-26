@@ -1,4 +1,4 @@
-import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, EntityComponents, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE } from "webgl-test-shared";
+import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, EntityComponents, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2 } from "webgl-test-shared";
 import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state.svelte";
 import { inventoryState } from "../ui-state/inventory-state.svelte";
@@ -42,7 +42,7 @@ import { playHeadSound, playSoundOnHitbox } from "./sound";
 import { calculateEntityPlaceInfo } from "./structure-placement";
 import { playerTribe } from "./tribes";
 import { entityExists, getEntityLayer, getCurrentLayer, EntityComponentData, createEntityCreationInfo } from "./world";
-import { cursorWorldPos } from "./camera";
+import { cursorWorldPos, setCameraVelocity } from "./camera";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -75,8 +75,7 @@ const PLAYER_SLOW_ACCELERATION = 350;
 /** Acceleration of the player for a brief period after being hit */
 const PLAYER_DISCOMBOBULATED_ACCELERATION = 275;
 
-let spectatorSpeed = 500;
-let spectatorHasInstantMovement = true;
+let spectatorSpeed = 800;
 
 export let rightMouseButtonIsPressed = false;
 
@@ -113,13 +112,6 @@ export function getSpectatorSpeed(): number {
 }
 export function setSpectatorSpeed(speed: number): void {
    spectatorSpeed = speed;
-}
-
-export function setSpectatorHasInstantMovement(hasInstantMovement: boolean): void {
-   spectatorHasInstantMovement = hasInstantMovement;
-}
-export function getSpectatorHasInstantMovement(): boolean {
-   return spectatorHasInstantMovement;
 }
 
 // @Copynpaste
@@ -790,8 +782,6 @@ export function createPlayerInputListeners(): void {
 }
 
 export function onGameMouseDown(e: MouseEvent): void {
-   if (playerInstance === null) return;
-
    if (e.button === 0) { // Left click
       if (gameUIState.gameInteractState === GameInteractState.spectateEntity) {
          const hoveredEntity = entitySelectionState.hoveredEntity;
@@ -839,7 +829,7 @@ export function onGameMouseDown(e: MouseEvent): void {
             onItemStartUse(selectedItemInfo.item.type, selectedItemInfo.inventoryName, selectedItemInfo.itemSlot);
    
             // Special case: Barbarians can eat with both hands at once
-            if (selectedItemInfo.inventoryName === InventoryName.hotbar && ITEM_TYPE_RECORD[selectedItemInfo.item.type] === "healing") {
+            if (playerInstance !== null && selectedItemInfo.inventoryName === InventoryName.hotbar && ITEM_TYPE_RECORD[selectedItemInfo.item.type] === "healing") {
                const inventoryComponent = InventoryComponentArray.getComponent(playerInstance);
                const offhandInventory = getInventory(inventoryComponent, InventoryName.offhand)!;
                const offhandHeldItem = offhandInventory.getItem(1);
@@ -924,14 +914,63 @@ const getPlayerMoveSpeedMultiplier = (moveDirection: number): number => {
    return moveSpeedMultiplier;
 }
 
-/** Updates the player's movement to match what keys are being pressed. */
-export function updatePlayerMovement(): void {
+const updateSpectatorMovement = (moveDirection: number | null): void => {
+   if (moveDirection !== null) {
+      setCameraVelocity(polarVec2(spectatorSpeed, moveDirection));
+   } else {
+      setCameraVelocity(new Point(0, 0));
+   }
+}
+
+const updateNonSpectatorMovement = (moveDirection: number | null): void => {
    if (playerInstance === null) {
       return;
    }
-   
+
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
 
+   if (moveDirection !== null) {
+      playerMoveIntention.x = Math.sin(moveDirection);
+      playerMoveIntention.y = Math.cos(moveDirection);
+
+      const playerAction = getInstancePlayerAction(InventoryName.hotbar);
+      
+      let acceleration: number;
+      if (keyIsPressed("l")) {
+         acceleration = PLAYER_LIGHTSPEED_ACCELERATION;
+      // @Bug: doesn't account for offhand
+      } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.chargeSpear || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || playerAction === LimbAction.windShieldBash || playerAction === LimbAction.pushShieldBash || playerAction === LimbAction.returnShieldBashToRest || playerIsPlacingEntity()) {
+         acceleration = PLAYER_SLOW_ACCELERATION;
+      } else {
+         acceleration = PLAYER_ACCELERATION;
+      }
+
+      // If discombobulated, limit the acceleration to the discombobulated acceleration
+      if (discombobulationTimer > 0 && acceleration > PLAYER_DISCOMBOBULATED_ACCELERATION) {
+         acceleration = PLAYER_DISCOMBOBULATED_ACCELERATION;
+      }
+
+      acceleration *= getPlayerMoveSpeedMultiplier(moveDirection);
+
+      // @INCOMPLETE i reworked lastPlantCollisionTicks out of existence
+      // if (latencyGameState.lastPlantCollisionTicks >= currentSnapshot.tick - 1) {
+      //    acceleration *= 0.5;
+      // }
+      
+      const playerHitbox = transformComponent.hitboxes[0];
+      
+      const accelerationX = acceleration * Math.sin(moveDirection);
+      const accelerationY = acceleration * Math.cos(moveDirection);
+
+      applyAccelerationFromGround(playerHitbox, accelerationX, accelerationY);
+   } else {
+      playerMoveIntention.x = 0;
+      playerMoveIntention.y = 0;
+   }
+}
+
+/** Updates the player's movement to match what keys are being pressed. */
+export function updatePlayerMovement(): void {
    // Get pressed keys
    const wIsPressed = keyIsPressed("w") || keyIsPressed("W") || keyIsPressed("ArrowUp");
    const aIsPressed = keyIsPressed("a") || keyIsPressed("A") || keyIsPressed("ArrowLeft");
@@ -961,60 +1000,10 @@ export function updatePlayerMovement(): void {
       case 15: moveDirection = null;          break;
    }
 
-   if (moveDirection !== null) {
-      playerMoveIntention.x = Math.sin(moveDirection);
-      playerMoveIntention.y = Math.cos(moveDirection);
-
-      const playerAction = getInstancePlayerAction(InventoryName.hotbar);
-      
-      let acceleration: number;
-      if (isSpectating) {
-         acceleration = spectatorSpeed;
-         // @Hack to counteract the fact that directly setting velocity is faster than directly setting acceleration.
-         // - a far better way to do this is to have instant movement actually use acceleration as well, but with a supa high traction so it instantly reaches its top speed
-         if (!spectatorHasInstantMovement) {
-            acceleration *= 1.5;
-         }
-      } else if (keyIsPressed("l")) {
-         acceleration = PLAYER_LIGHTSPEED_ACCELERATION;
-      // @Bug: doesn't account for offhand
-      } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.chargeSpear || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || playerAction === LimbAction.windShieldBash || playerAction === LimbAction.pushShieldBash || playerAction === LimbAction.returnShieldBashToRest || playerIsPlacingEntity()) {
-         acceleration = PLAYER_SLOW_ACCELERATION;
-      } else {
-         acceleration = PLAYER_ACCELERATION;
-      }
-
-      // If discombobulated, limit the acceleration to the discombobulated acceleration
-      if (discombobulationTimer > 0 && acceleration > PLAYER_DISCOMBOBULATED_ACCELERATION) {
-         acceleration = PLAYER_DISCOMBOBULATED_ACCELERATION;
-      }
-
-      acceleration *= getPlayerMoveSpeedMultiplier(moveDirection);
-
-      // @INCOMPLETE i reworked lastPlantCollisionTicks out of existence
-      // if (latencyGameState.lastPlantCollisionTicks >= currentSnapshot.tick - 1) {
-      //    acceleration *= 0.5;
-      // }
-      
-      const playerHitbox = transformComponent.hitboxes[0];
-      
-      const accelerationX = acceleration * Math.sin(moveDirection);
-      const accelerationY = acceleration * Math.cos(moveDirection);
-
-      if (isSpectating && spectatorHasInstantMovement) {
-         setHitboxVelocity(playerHitbox, accelerationX, accelerationY);
-      } else {
-         applyAccelerationFromGround(playerHitbox, accelerationX, accelerationY);
-      }
+   if (isSpectating) {
+      updateSpectatorMovement(moveDirection);
    } else {
-      playerMoveIntention.x = 0;
-      playerMoveIntention.y = 0;
-
-      if (isSpectating && spectatorHasInstantMovement) {
-         // @Copynpaste
-         const playerHitbox = transformComponent.hitboxes[0];
-         setHitboxVelocity(playerHitbox, 0, 0);
-      }
+      updateNonSpectatorMovement(moveDirection);
    }
 }
 

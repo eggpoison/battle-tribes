@@ -10,11 +10,13 @@ import { TransformComponentArray } from "./entity-components/server-components/T
 import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 import { hoverDebugState } from "../ui-state/hover-debug-state.svelte";
 import { Tile } from "./Tile";
-import { isSpectating, playerInstance } from "./player";
+import { isSpectating } from "./player";
 
 let cameraSubjectHitbox: Hitbox | null = null;
 
 export const cameraPosition = new Point(0, 0);
+/** Used when the player is spectating, for smooth camera movement */
+const cameraVelocity = new Point(0, 0);
 
 /** Larger = zoomed in, smaller = zoomed out */
 // @INCOMPLETE @HACK rn i have to fiddle around with this manually, make it be calcualted automatically before public testing
@@ -80,22 +82,12 @@ export function setCameraZoom(zoom: number): void {
    debugDisplayState.cameraZoom = zoom;
 }
 
-export function setCameraSubject(cameraSubject: Entity): void {
+export function setCameraSubject(cameraSubject: Entity | 0): void {
    const transformComponent = TransformComponentArray.tryGetComponent(cameraSubject);
-   // (Might not have a transform component if we are setting the camera subject to be the non-existent client-only spectator player instance.)
    if (transformComponent !== null) {
       cameraSubjectHitbox = transformComponent.hitboxes[0];
    } else {
-      // The camera has no subject. Set the subject hitbox to null
-      //           EXCEPT there is a special case when the player is spectating! "no hitbox" should instead follow the invisible spectator player's hitbox!!
-      // @Hack @Cleanup this is strange and its kind of unclear whether or not i have to do this in other places potentially?
-      if (isSpectating && playerInstance !== null && TransformComponentArray.hasComponent(playerInstance)) {
-         const transformComponent = TransformComponentArray.getComponent(playerInstance)
-         cameraSubjectHitbox = transformComponent.hitboxes[0];
-      } else {
-         console.log("null it!")
-         cameraSubjectHitbox = null;
-      }
+      cameraSubjectHitbox = null;
    }
 }
 
@@ -127,11 +119,14 @@ const updateCursorWorldPos = (): void => {
    }
 }
 
-// Important: This should be the only function that modifies the camera position
+// Important: This should be the ONLY place that modifies the camera position.
 export function setCameraPosition(pos: Point): void {
    cameraPosition.set(pos);
    updateCursorWorldPos(); // (because the cursor world pos depends on the camera position)
-   console.log("setting to",pos.x,pos.y)
+}
+
+export function setCameraVelocity(velocity: Point): void {
+   cameraVelocity.set(velocity);
 }
 
 export function updateCursorScreenPos(e: MouseEvent): void {
@@ -140,14 +135,19 @@ export function updateCursorScreenPos(e: MouseEvent): void {
    updateCursorWorldPos();
 }
 
-export function refreshCameraPosition(clientTickInterp: number, serverTickInterp: number): void {
+export function refreshCameraPosition(clientTickInterp: number, serverTickInterp: number, deltaTimeMS: number): void {
    if (cameraSubjectHitbox === null) {
+      if (isSpectating) {
+         const dt = deltaTimeMS / 1000;
+         cameraPosition.x += cameraVelocity.x * dt;
+         cameraPosition.y += cameraVelocity.y * dt;
+      }
+      
       return;
    }
 
    const tickInterp = getEntityTickInterp(cameraSubjectHitbox.entity, clientTickInterp, serverTickInterp);
    const pos = calculateHitboxRenderPosition(cameraSubjectHitbox, tickInterp);
-   console.log("(refresh)")
    setCameraPosition(pos);
 }
 

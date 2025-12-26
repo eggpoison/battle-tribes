@@ -2,13 +2,12 @@ import { TribesmanTitle, TribeType, Point, TamingSkillID, TechID, BlueprintType,
 import { windowHeight, windowWidth } from "../webgl";
 import { getEntityType } from "../world";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
-import { playerInstance } from "../player";
+import { isSpectating, playerInstance } from "../player";
 import { cameraPosition } from "../camera";
 import { sendPacket } from "../client";
 import { getHotbarSelectedItemSlot, getInstancePlayerAction, getPlayerMoveIntention } from "../player-action-handler";
 import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
 import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
-import { AttackingEntitiesComponentArray } from "../entity-components/server-components/AttackingEntitiesComponent";
 
 export function sendInitialPlayerDataPacket(username: string, tribeType: TribeType, isSpectating: boolean): void {
    // Send player data to the server
@@ -29,7 +28,32 @@ export function sendActivatePacket(): void {
 }
 
 export function sendPlayerDataPacket(): void {
-   if (playerInstance === null) {
+   let position: Point;
+   let angle: number;
+   let previousPosition: Point;
+   let acceleration: Point;
+   let previousRelativeAngle: number;
+   let angularAcceleration: number;
+
+   if (playerInstance !== null) {
+      const transformComponent = TransformComponentArray.getComponent(playerInstance);
+      const playerHitbox = transformComponent.hitboxes[0];
+
+      position = playerHitbox.box.position;
+      angle = playerHitbox.box.angle;
+      previousPosition = playerHitbox.previousPosition;
+      acceleration = playerHitbox.acceleration;
+      previousRelativeAngle = playerHitbox.previousRelativeAngle;
+      angularAcceleration = playerHitbox.angularAcceleration;
+   } else if (isSpectating) {
+      position = cameraPosition;
+      angle = 0;
+      previousPosition = cameraPosition;
+      acceleration = new Point(0, 0);
+      previousRelativeAngle = 0;
+      angularAcceleration = 0;
+   } else {
+      // To not waste unnecessary bandwidth with a useless player data packet
       return;
    }
    
@@ -52,23 +76,17 @@ export function sendPlayerDataPacket(): void {
    
    const packet = new Packet(PacketType.playerData, lengthBytes);
    
-   const transformComponent = TransformComponentArray.getComponent(playerInstance);
-   const playerHitbox = transformComponent.hitboxes[0];
-   packet.writeNumber(playerHitbox.box.position.x);
-   packet.writeNumber(playerHitbox.box.position.y);
-   packet.writeNumber(playerHitbox.box.angle);
+   packet.writePoint(position);
+   packet.writeNumber(angle);
 
-   packet.writeNumber(playerHitbox.previousPosition.x);
-   packet.writeNumber(playerHitbox.previousPosition.y);
-   packet.writeNumber(playerHitbox.acceleration.x);
-   packet.writeNumber(playerHitbox.acceleration.y);
+   packet.writePoint(previousPosition);
+   packet.writePoint(acceleration);
 
    const movementIntention = getPlayerMoveIntention();
-   packet.writeNumber(movementIntention.x);
-   packet.writeNumber(movementIntention.y);
+   packet.writePoint(movementIntention);
 
-   packet.writeNumber(playerHitbox.previousRelativeAngle);
-   packet.writeNumber(playerHitbox.angularAcceleration);
+   packet.writeNumber(previousRelativeAngle);
+   packet.writeNumber(angularAcceleration);
 
    packet.writeNumber(windowWidth);
    packet.writeNumber(windowHeight);

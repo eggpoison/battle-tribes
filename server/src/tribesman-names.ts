@@ -91,7 +91,9 @@ const BARBARIAN_NAMES: ReadonlyArray<string> = [
    "Agmundr",
    "Harald",
    "Frednog",
-   "Snigvut"
+   "Snigvut",
+   "Sparagus", // like asparagus. Also sounds kind of Spartan-y,
+   "Biggus", // biggus diggus
 ];
 
 const FROSTLING_NAMES: ReadonlyArray<string> = [

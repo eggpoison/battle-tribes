@@ -266,9 +266,10 @@ export function cleanEntityRenderInfo(renderInfo: EntityRenderInfo, tickInterp: 
 }
 
 export function entityUsesClientInterp(entity: Entity): boolean {
-   // There are no client-only entities since I removed the spectator client-only entity, so im throwing an error. @Temporary comment
+   // @HACK ideally we should be able to throw an error here, this should never be the case!! but it is rn for some reason!!....
    if (!TransformComponentArray.hasComponent(entity)) {
-      throw new Error();
+      console.warn("big poopoo town @ le function entityUsesClientInterp!!")
+      return false;
    }
    const transformComponent = TransformComponentArray.getComponent(entity);
    

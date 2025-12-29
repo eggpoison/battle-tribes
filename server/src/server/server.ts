@@ -11,7 +11,7 @@ import { updateDynamicPathfindingNodes } from "../pathfinding";
 import { updateGrassBlockers } from "../grass-blockers";
 import { broadcastSimulationStatus, createGameDataPacket, createSyncDataPacket, createSyncPacket } from "./packet-sending";
 import PlayerClient, { PlayerClientVars } from "./PlayerClient";
-import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, resetDirtyEntities } from "./player-clients";
+import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, processCommandPacket, resetDirtyEntities } from "./player-clients";
 import { createPlayerConfig } from "../entities/tribes/player";
 import { processAcquireTamingSkillPacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processCompleteTamingTierPacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processModifyBuildingPacket, processMountCarrySlotPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving";
 import { CowSpecies, Entity } from "battletribes-shared/entities";
@@ -252,6 +252,7 @@ class GameServer {
                return;
             }
             
+            // @Cleanup: so weird to have this in server.ts
             switch (packetType) {
                case PacketType.playerData: {
                   processPlayerDataPacket(playerClient, reader);
@@ -463,6 +464,10 @@ class GameServer {
                }
                case PacketType.devChangeTribeType: {
                   processDevChangeTribeTypePacket(reader);
+                  break;
+               }
+               case PacketType.terminalCommand: {
+                  processCommandPacket(playerClient, reader);
                   break;
                }
                default: {

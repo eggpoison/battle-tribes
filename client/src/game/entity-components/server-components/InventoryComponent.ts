@@ -1,4 +1,4 @@
-import { PacketReader, InventoryName, Item, ITEM_TYPE_RECORD, Inventory, ItemType, copyInventory, Entity, LimbAction, ServerComponentType } from "webgl-test-shared";
+import { PacketReader, InventoryName, Item, ITEM_TYPE_RECORD, Inventory, ItemType, Entity, LimbAction, ServerComponentType, copyInventoryShallow } from "webgl-test-shared";
 import { inventoryState } from "../../../ui-state/inventory-state.svelte";
 import { inventoriesAreDifferent } from "../../inventory-manipulation";
 import { playerInstance } from "../../player";
@@ -6,6 +6,7 @@ import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../p
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";
+import { selectedEntityInventoryState } from "../../../ui-state/selected-entity-inventory-state.svelte";
 
 export interface InventoryComponentData {
    readonly inventories: Partial<Record<InventoryName, Inventory>>;
@@ -107,7 +108,7 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
       // If there is a new item in the slot, add it
       const item = inventory.itemSlots[itemSlot];
       if (typeof item === "undefined" || item.id !== itemData.id) {
-         const item = new Item(itemData.type, itemData.count, itemData.id);
+         const item = new Item(itemData.type, itemData.count, itemData.id, itemData.nickname, itemData.namer);
          inventory.addItem(item, itemSlot);
          hasChanged = true;
 
@@ -117,9 +118,11 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
 
             validatePlayerAction(inventory.name, item);
          }
-      } else if (item.count !== itemData.count) {
+      } else if (item.count !== itemData.count || item.nickname !== itemData.nickname || item.namer !== itemData.namer) {
          // Otherwise the item needs to be updated with the new server data
          item.count = itemData.count;
+         item.nickname = itemData.nickname;
+         item.namer = itemData.namer;
          hasChanged = true;
       }
    }
@@ -139,8 +142,10 @@ const readInventory = (reader: PacketReader): Inventory => {
       const id = reader.readNumber();
       const itemType = reader.readNumber() as ItemType;
       const count = reader.readNumber();
+      const nickname = reader.readString();
+      const namer = reader.readString();
 
-      const item = new Item(itemType, count, id);
+      const item = new Item(itemType, count, id, nickname, namer);
       inventory.addItem(item, itemSlot);
    }
 
@@ -169,6 +174,7 @@ export function getInventory(inventoryComponent: InventoryComponent, inventoryNa
 export const InventoryComponentArray = new ServerComponentArray<InventoryComponent, InventoryComponentData, never>(ServerComponentType.inventory, true, createComponent, getMaxRenderParts, decodeData);
 InventoryComponentArray.updateFromData = updateFromData;
 InventoryComponentArray.updatePlayerFromData = updatePlayerFromData;
+InventoryComponentArray.updateSelectedEntityState = updateSelectedEntityState;
 
 export function createInventoryComponentData(inventories: Partial<Record<InventoryName, Inventory>>): InventoryComponentData {
    return {
@@ -227,6 +233,7 @@ function updateInventories(inventoryComponent: InventoryComponent, data: Invento
       // @Hack: this shouldn't be necessary, but for some reason is needed sometimes when the player respawns
       if (typeof inventoryData !== "undefined") {
          const inventory = inventoryComponent.inventoryRecord[inventoryName]!;
+         // @Cleanup: unused?
          const hasChanged = updateInventoryFromData(inventory, inventoryData, isPlayer);
       }
    }
@@ -251,27 +258,36 @@ function updatePlayerFromData(data: InventoryComponentData): void {
    const entityGloveSlot = getInventory(inventoryComponent, InventoryName.gloveSlot);
       
    if (entityHotbar !== null && inventoriesAreDifferent(inventoryState.hotbar, entityHotbar)) {
-      inventoryState.setHotbar(copyInventory(entityHotbar));
+      inventoryState.setHotbar(copyInventoryShallow(entityHotbar));
    }
    if (entityOffhand !== null && inventoriesAreDifferent(inventoryState.offhand, entityOffhand)) {
-      inventoryState.setOffhand(copyInventory(entityOffhand));
+      inventoryState.setOffhand(copyInventoryShallow(entityOffhand));
    }
    if (entityHeldItemSlot !== null && inventoriesAreDifferent(inventoryState.heldItemSlot, entityHeldItemSlot)) {
-      inventoryState.setHeldItemSlot(copyInventory(entityHeldItemSlot));
+      inventoryState.setHeldItemSlot(copyInventoryShallow(entityHeldItemSlot));
    }
    if (entityCraftingOutputSlot !== null && inventoriesAreDifferent(inventoryState.craftingOutputSlot, entityCraftingOutputSlot)) {
-      inventoryState.setCraftingOutputSlot(copyInventory(entityCraftingOutputSlot));
+      inventoryState.setCraftingOutputSlot(copyInventoryShallow(entityCraftingOutputSlot));
    }
    if (entityBackpack !== null && inventoriesAreDifferent(inventoryState.backpack, entityBackpack)) {
-      inventoryState.setBackpack(copyInventory(entityBackpack));
+      inventoryState.setBackpack(copyInventoryShallow(entityBackpack));
    }
    if (entityBackpackSlot !== null && inventoriesAreDifferent(inventoryState.backpackSlot, entityBackpackSlot)) {
-      inventoryState.setBackpackSlot(copyInventory(entityBackpackSlot));
+      inventoryState.setBackpackSlot(copyInventoryShallow(entityBackpackSlot));
    }
    if (entityArmourSlot !== null && inventoriesAreDifferent(inventoryState.armourSlot, entityArmourSlot)) {
-      inventoryState.setArmourSlot(copyInventory(entityArmourSlot));
+      inventoryState.setArmourSlot(copyInventoryShallow(entityArmourSlot));
    }
    if (entityGloveSlot !== null && inventoriesAreDifferent(inventoryState.gloveSlot, entityGloveSlot)) {
-      inventoryState.setGloveSlot(copyInventory(entityGloveSlot));
+      inventoryState.setGloveSlot(copyInventoryShallow(entityGloveSlot));
    }
+}
+
+function updateSelectedEntityState(entity: Entity): void {
+   // @Speed: this is happening every tick for some reason, causing refreshes every tick. baad!!
+   
+   const inventoryComponent = InventoryComponentArray.getComponent(entity);
+   // @Hack @Garbage: extra bad cuz it has to be a semi-deep copy of the inventories to actually register!!
+   // IMPORTANT: however doesn't do a full deep copy of the items too, as the items have to be the same for the item tooltip to properly be hidden on inventory close. (@Hack)
+   selectedEntityInventoryState.setInventories(inventoryComponent.inventories.map(copyInventoryShallow));
 }

@@ -20,6 +20,8 @@ import { destroyEntity, entityExists } from "../world";
 import { surfaceLayer } from "../layers";
 import { Hitbox } from "../hitboxes";
 import { PlayerComponentArray } from "../components/PlayerComponent";
+import { PacketReader } from "../../../shared/src/packets";
+import { createItem } from "../items";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -94,12 +96,13 @@ export function generatePlayerSpawnPosition(tribeType: TribeType): Point {
    return new Point(x, y);
 }
 
-const processCommandPacket = (playerClient: PlayerClient, command: string): void => {
+export function processCommandPacket(playerClient: PlayerClient, reader: PacketReader): void {
    if (!entityExists(playerClient.instance)) {
       return;
    }
    
-   registerCommand(command, playerClient.instance);
+   const command = reader.readString();
+   registerCommand(command, playerClient);
 }
 
 const devGiveItem = (playerClient: PlayerClient, itemType: ItemType, amount: number): void => {
@@ -110,7 +113,7 @@ const devGiveItem = (playerClient: PlayerClient, itemType: ItemType, amount: num
 
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
-   addItemToInventory(player, inventory, itemType, amount);
+   addItemToInventory(player, inventory, createItem(itemType, amount, "", ""));
 }
 
 const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonPacket): void => {
@@ -170,10 +173,6 @@ export function addPlayerClient(playerClient: PlayerClient, layer: Layer, spawnP
 
    socket.on("deactivate", () => {
       playerClient.isActive = false;
-   });
-
-   socket.on("command", (command: string) => {
-      processCommandPacket(playerClient, command);
    });
 
    // -------------------------- //

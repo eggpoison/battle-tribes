@@ -28,6 +28,7 @@ import { addHitboxVelocity, applyKnockback, getHitboxVelocity, Hitbox } from "..
 import { entityWantsToFollow, FollowAI, followAISetFollowTarget, updateFollowAIComponent } from "../ai/FollowAI";
 import { runEscapeAI } from "../ai/EscapeAI";
 import { HitboxFlag } from "../../../shared/src/boxes/boxes";
+import { createItem } from "../items";
 
 const enum Vars {
    SLOW_ACCELERATION = 200,
@@ -121,7 +122,7 @@ const poop = (cow: Entity, cowComponent: CowComponent): void => {
    const transformComponent = TransformComponentArray.getComponent(cow);
    const bodyHitbox = transformComponent.hitboxes[0];
    const poopPosition = bodyHitbox.box.position.offset(randFloat(0, 16), randAngle());
-   const config = createItemEntityConfig(poopPosition, randAngle(), ItemType.poop, 1, null);
+   const config = createItemEntityConfig(poopPosition, randAngle(), createItem(ItemType.poop, 1, "", ""), null);
    createEntity(config, getEntityLayer(cow), 0);
 
    // Let it out
@@ -504,7 +505,7 @@ function onTick(cow: Entity): void {
          const itemEntity = aiHelperComponent.visibleEntities[i];
          if (getEntityType(itemEntity) === EntityType.itemEntity) {
             const itemComponent = ItemComponentArray.getComponent(itemEntity);
-            if (itemComponent.itemType === ItemType.berry) {
+            if (itemComponent.item.type === ItemType.berry) {
                const wasEaten = chaseAndEatBerry(cow, cowComponent, itemEntity);
                if (wasEaten) {
                   healEntity(cow, 3, cow);

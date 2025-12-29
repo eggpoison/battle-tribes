@@ -525,6 +525,7 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
             if (typeof snapshotData.serverComponentData[componentType] !== "undefined") {
                const componentArray = getServerComponentArray(componentType);
                if (typeof componentArray.updateSelectedEntityState !== "undefined") {
+                  // @Speed: until I make component data only send on change this will run every tick for selected entities!! which is bad not only for performance but for proofchecking - what if a component isn't having its data registered as changed when it's changed, but it's masked up cuz all the data is sent anyway???
                   componentArray.updateSelectedEntityState(selectedEntity);
                }
             }

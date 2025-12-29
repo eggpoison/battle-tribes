@@ -88,7 +88,7 @@
    <div class="recipe-browser">
       <ItemSlotsContainer width={3} height={undefined} minHeight={5} numItemSlotsPassed={availableRecipes.length} onmousemove={onRecipeBrowserMouseMove}>
          {#each availableRecipes as recipe}
-            {@const item = new Item(recipe.recipe.product, recipe.recipe.yield, 0)}
+            {@const item = new Item(recipe.recipe.product, recipe.recipe.yield, 0, "", "")}
             <ItemSlot class={craftableRecipes.includes(recipe) ? "craftable" : undefined} {item} isSelected={recipe === selectedRecipe} onmouseover={() => hoveredRecipe = recipe} onmouseout={() => hoveredRecipe = null} onmousedown={() => selectedRecipe = recipe} />
          {/each}
       </ItemSlotsContainer>

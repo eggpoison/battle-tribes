@@ -8,6 +8,7 @@ import { CookingIngredientItemType, FuelSourceItemType } from "battletribes-shar
 import { getEntityType } from "../world";
 import { registerDirtyEntity } from "../server/player-clients";
 import { Settings } from "../../../shared/src/settings";
+import { createItem } from "../items";
 
 export interface HeatingRecipe {
    readonly ingredientType: CookingIngredientItemType;
@@ -140,7 +141,7 @@ function onTick(entity: Entity): void {
             consumeItemTypeFromInventory(entity, inventoryComponent, InventoryName.ingredientInventory, cookingComponent.currentRecipe.ingredientType, cookingComponent.currentRecipe.ingredientAmount);
 
             const outputInventory = getInventory(inventoryComponent, InventoryName.outputInventory);
-            addItemToInventory(entity, outputInventory, cookingComponent.currentRecipe.productType, cookingComponent.currentRecipe.productAmount);
+            addItemToInventory(entity, outputInventory, createItem(cookingComponent.currentRecipe.productType, cookingComponent.currentRecipe.productAmount, "", ""));
 
             cookingComponent.heatingTimer = 0;
             cookingComponent.currentRecipe = null;

@@ -142,14 +142,6 @@ export function getHighlightedRenderInfo(): EntityRenderInfo | null {
 }
 
 const getEntityMenu = (entity: Entity): Menu | null => {
-   // First make sure that the entity's inventory can be accessed by the player.
-   const tribeComponent = TribeComponentArray.tryGetComponent(entity);
-   if (tribeComponent !== null) {
-      if (tribeComponent.tribeID !== playerTribe.id) {
-         return null;
-      }
-   }
-
    switch (getEntityType(entity)) {
       case EntityType.barrel: return Menu.barrelInventory;
       case EntityType.tribeWorker:
@@ -612,13 +604,16 @@ export function updateEntitySelections(): void {
       entitySelectionState.setHighlightedEntity(newHighlightedEntity);
    }
 
-   // If the player is focused on the game, deselect the selected entity when the player stops highlighting it.
-   if (!gameUIState.isFocusedOnMenu) {
-      // EXCEPT when the game is in select carry target mode, we want the controlled entity to remain selected
+   // If the player isn't hovering on the selected entity's menu, deselect the selected entity when the player stops highlighting it.
+   if (!gameUIState.isHoveringOnMenu) {
       if (newHighlightedEntity !== entitySelectionState.selectedEntity && newHighlightedEntity === null) {
-         if (gameUIState.gameInteractState !== GameInteractState.selectCarryTarget && gameUIState.gameInteractState !== GameInteractState.selectAttackTarget && gameUIState.gameInteractState !== GameInteractState.selectMoveTargetPosition) {
-            // The close menu callback will deselect the entity
-            menuSelectorState.closeCurrentMenu();
+         // If the selected entity has a menu open, then that should only be closed when the player chooses to close it.
+         if (!menuSelectorState.hasOpenNonEmbodiedMenu()) {
+            // EXCEPT when the game is in select carry target mode, we want the controlled entity to remain selected
+            if (gameUIState.gameInteractState !== GameInteractState.selectCarryTarget && gameUIState.gameInteractState !== GameInteractState.selectAttackTarget && gameUIState.gameInteractState !== GameInteractState.selectMoveTargetPosition) {
+               // We do this by deselected the selected entity instead of the closeCurrentMenu function, as some selected entities such as the research bench don't have a menu and so it won't work for them.
+               entitySelectionState.setSelectedEntity(null);
+            }
          }
       }
    }

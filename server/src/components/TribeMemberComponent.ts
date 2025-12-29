@@ -59,7 +59,7 @@ function onTick(tribeMember: Entity): void {
             }
 
             const itemComponent = ItemComponentArray.getComponent(itemEntity);
-            if (!tribeMemberCanPickUpItem(tribeMember, itemComponent.itemType)) {
+            if (!tribeMemberCanPickUpItem(tribeMember, itemComponent.item.type)) {
                continue;
             }
 
@@ -114,7 +114,7 @@ function onEntityCollision(tribeMember: Entity, collidingEntity: Entity): void {
       const itemComponent = ItemComponentArray.getComponent(collidingEntity);
       
       // Keep track of it beforehand as the amount variable gets changed when being picked up
-      const itemAmount = itemComponent.amount;
+      const itemAmount = itemComponent.item.count;
 
       const wasPickedUp = pickupItemEntity(tribeMember, collidingEntity);
 
@@ -122,7 +122,7 @@ function onEntityCollision(tribeMember: Entity, collidingEntity: Entity): void {
          if (getEntityType(tribeMember) === EntityType.player) {
             registerPlayerDroppedItemPickup(tribeMember);
          } else if (TribesmanComponentArray.hasComponent(tribeMember) && itemComponent.throwingEntity !== null && itemComponent.throwingEntity !== tribeMember) {
-            adjustTribesmanRelationsAfterGift(tribeMember, itemComponent.throwingEntity, itemComponent.itemType, itemAmount);
+            adjustTribesmanRelationsAfterGift(tribeMember, itemComponent.throwingEntity, itemComponent.item.type, itemAmount);
          }
       }
    }

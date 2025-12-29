@@ -296,7 +296,7 @@ function onTick(serpent: Entity): void {
          }
 
          const itemComponent = ItemComponentArray.getComponent(entity);
-         if (itemComponent.itemType === ItemType.rawSnobeMeat) {
+         if (itemComponent.item.type === ItemType.rawSnobeMeat) {
             const entityTransformComponent = TransformComponentArray.getComponent(entity);
             const entityHitbox = entityTransformComponent.hitboxes[0];
             

@@ -87,8 +87,6 @@ export enum ItemType {
    cogwalker,
    automatonAssembler,
    mithrilAnvil,
-   yuriMinecraft,
-   yuriSonichu,
    animalStaff,
    woodenArrow,
    tamingAlmanac,
@@ -110,7 +108,9 @@ export enum ItemType {
    tukmokFurHide,
    winterskinArmour,
    ivoryTusk,
-   ivorySpear
+   ivorySpear,
+   sock,
+   mrpebbles
 }
 
 // @Cleanup @Robustness: pretty sure there's a C++ thing to automatically do this
@@ -198,8 +198,6 @@ export const ItemTypeString: Record<ItemType, string> = {
    [ItemType.cogwalker]: "Cogwalker",
    [ItemType.automatonAssembler]: "Automaton Assembler",
    [ItemType.mithrilAnvil]: "Mithril Anvil",
-   [ItemType.yuriMinecraft]: "Yuri Minecraft",
-   [ItemType.yuriSonichu]: "Yuri Sonichu",
    [ItemType.animalStaff]: "Animal Staff",
    [ItemType.woodenArrow]: "Wooden Arrow",
    [ItemType.tamingAlmanac]: "Taming Almanac",
@@ -222,6 +220,8 @@ export const ItemTypeString: Record<ItemType, string> = {
    [ItemType.winterskinArmour]: "Winterskin Armour",
    [ItemType.ivoryTusk]: "Ivory Tusk",
    [ItemType.ivorySpear]: "Ivory Spear",
+   [ItemType.sock]: "Sock",
+   [ItemType.mrpebbles]: "Mr Pebbles"
 };
 
 export const NUM_ITEM_TYPES = Object.keys(ItemTypeString).length;
@@ -549,8 +549,6 @@ export const ITEM_TYPE_RECORD = {
    [ItemType.cogwalker]: "placeable",
    [ItemType.automatonAssembler]: "placeable",
    [ItemType.mithrilAnvil]: "placeable",
-   [ItemType.yuriMinecraft]: "material",
-   [ItemType.yuriSonichu]: "material",
    [ItemType.animalStaff]: "animalStaff",
    [ItemType.woodenArrow]: "material",
    [ItemType.tamingAlmanac]: "tamingAlmanac",
@@ -573,6 +571,8 @@ export const ITEM_TYPE_RECORD = {
    [ItemType.winterskinArmour]: "armour",
    [ItemType.ivoryTusk]: "sword",
    [ItemType.ivorySpear]: "spear",
+   [ItemType.sock]: "material",
+   [ItemType.mrpebbles]: "material"
 } satisfies Record<ItemType, keyof ItemInfoRecord>;
 
 export type ItemInfo<T extends ItemType> = ItemInfoRecord[typeof ITEM_TYPE_RECORD[T]];
@@ -970,12 +970,6 @@ export const ITEM_INFO_RECORD = {
       stackSize: 99,
       entityType: EntityType.mithrilAnvil
    },
-   [ItemType.yuriMinecraft]: {
-      stackSize: 99
-   },
-   [ItemType.yuriSonichu]: {
-      stackSize: 99
-   },
    [ItemType.animalStaff]: {
       controlRange: 320
    },
@@ -1077,6 +1071,12 @@ export const ITEM_INFO_RECORD = {
       damage: 5,
       knockback: 300
    },
+   [ItemType.sock]: {
+      stackSize: 99
+   },
+   [ItemType.mrpebbles]: {
+      stackSize: 99
+   }
 } satisfies { [T in ItemType]: ItemInfo<T> };
 
 // Some typescript wizardry
@@ -1190,10 +1190,16 @@ export class Item {
    public type: ItemType;
    public count: number;
 
-   constructor(itemType: ItemType, count: number, id: number) {
+   public nickname: string;
+   public namer: string;
+
+   // @Cleanup: so awkward to have to pass in nickname and namer when these will be empty in 99% of cases
+   constructor(itemType: ItemType, count: number, id: number, nickname: string, namer: string) {
       this.type = itemType;
       this.count = count;
       this.id = id;
+      this.nickname = nickname;
+      this.namer = namer;
    }
 }
 
@@ -1269,15 +1275,26 @@ export class Inventory {
    }
 }
 
-/** Returns a deep copy of an inventory. */
-export function copyInventory(inventory: Inventory): Inventory {
+export function copyInventoryDeep(inventory: Inventory): Inventory {
    const newInventory = new Inventory(inventory.width, inventory.height, inventory.name);
 
    for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
       const item = inventory.itemSlots[itemSlot];
       if (typeof item !== "undefined") {
-         const itemCopy = new Item(item.type, item.count, item.id);
+         const itemCopy = new Item(item.type, item.count, item.id, item.nickname, item.namer);
          newInventory.addItem(itemCopy, itemSlot);
+      }
+   }
+
+   return newInventory;
+}
+export function copyInventoryShallow(inventory: Inventory): Inventory {
+   const newInventory = new Inventory(inventory.width, inventory.height, inventory.name);
+
+   for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
+      const item = inventory.itemSlots[itemSlot];
+      if (typeof item !== "undefined") {
+         newInventory.addItem(item, itemSlot);
       }
    }
 

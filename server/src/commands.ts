@@ -2,14 +2,17 @@ import { DamageSource, Entity } from "battletribes-shared/entities";
 import { Point } from "battletribes-shared/utils";
 import { parseCommand } from "battletribes-shared/commands";
 import { damageEntity, healEntity } from "./components/HealthComponent";
-import { InventoryComponentArray, addItem } from "./components/InventoryComponent";
+import { InventoryComponentArray, addItem, getInventory } from "./components/InventoryComponent";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { getPlayerFromUsername } from "./server/player-clients";
 import { TribeComponentArray } from "./components/TribeComponent";
-import { ItemType, getItemTypeFromString } from "battletribes-shared/items/items";
+import { InventoryName, ItemType, getItemTypeFromString } from "battletribes-shared/items/items";
 import { getRandomPositionInEntity, TransformComponentArray } from "./components/TransformComponent";
 import { Biome } from "../../shared/src/biomes";
 import { Hitbox } from "./hitboxes";
+import { getHeldItem, InventoryUseComponentArray } from "./components/InventoryUseComponent";
+import { createItem } from "./items";
+import PlayerClient from "./server/PlayerClient";
 
 const ENTITY_SPAWN_RANGE = 200;
 
@@ -34,12 +37,12 @@ const setTime = (time: number): void => {
    // Board.time = time;
 }
 
-const giveItem = (player: Entity, itemType: ItemType, amount: number): void => {
+const giveItem = (player: Entity, itemType: ItemType, amount: number, nickname: string, namer: string): void => {
    if (amount === 0) {
       return;
    }
 
-   addItem(player, InventoryComponentArray.getComponent(player), itemType, amount);
+   addItem(player, InventoryComponentArray.getComponent(player), createItem(itemType, amount, nickname, namer));
 }
 
 const tp = (player: Entity, x: number, y: number): void => {
@@ -73,16 +76,20 @@ const tp = (player: Entity, x: number, y: number): void => {
 //    forcePlayerTeleport(player, newPosition);
 // }
 
-export function registerCommand(command: string, player: Entity): void {
-   const commandComponents = parseCommand(command);
-   const numParameters = commandComponents.length - 1;
+export function registerCommand(command: string, playerClient: PlayerClient): void {
+   const player = playerClient.instance;
 
-   switch (commandComponents[0]) {
+   const parseQuery = parseCommand(command);
+   
+   const parts = parseQuery.parts;
+   const numParameters = parts.length - 1;
+
+   switch (parts[0].val) {
       case "kill": {
          if (numParameters === 0) {
             killPlayer(player);
          } else if (numParameters === 1) {
-            const targetPlayerName = commandComponents[1] as string;
+            const targetPlayerName = parts[1].val as string;
             const player = getPlayerFromUsername(targetPlayerName);
             if (player !== null) {
                killPlayer(player);
@@ -93,11 +100,11 @@ export function registerCommand(command: string, player: Entity): void {
       }
       case "damage": {
          if (numParameters === 1) {
-            const damage = commandComponents[1] as number;
+            const damage = parts[1].val as number;
             damagePlayer(player, damage);
          } else if (numParameters === 2) {
-            const username = commandComponents[1] as string;
-            const damage = commandComponents[2] as number;
+            const username = parts[1].val as string;
+            const damage = parts[2].val as number;
 
             const player = getPlayerFromUsername(username);
             if (player !== null) {
@@ -111,11 +118,11 @@ export function registerCommand(command: string, player: Entity): void {
          if (numParameters === 0) {
             healEntity(player, 99999, -1);
          } else if (numParameters === 1) {
-            const healing = commandComponents[1] as number;
+            const healing = parts[1].val as number;
             healEntity(player, healing, -1);
          } else if (numParameters === 2) {
-            const username = commandComponents[1] as string;
-            const healing = commandComponents[2] as number;
+            const username = parts[1].val as string;
+            const healing = parts[2].val as number;
 
             const player = getPlayerFromUsername(username);
             if (player !== null) {
@@ -126,12 +133,12 @@ export function registerCommand(command: string, player: Entity): void {
          break;
       }
       case "set_time": {
-         setTime(commandComponents[1] as number);
+         setTime(parts[1].val as number);
 
          break;
       }
       case "give": {
-         const itemTypeString = commandComponents[1];
+         const itemTypeString = parts[1].val;
          if (typeof itemTypeString === "number") {
             break;
          }
@@ -142,22 +149,22 @@ export function registerCommand(command: string, player: Entity): void {
          }
 
          if (numParameters === 1) {
-            giveItem(player, itemType, 1);
+            giveItem(player, itemType, 1, "", "");
          } else if (numParameters === 2) {
-            const amount = commandComponents[2] as number;
-            giveItem(player, itemType, amount);
+            const amount = parts[2].val as number;
+            giveItem(player, itemType, amount, "", "");
          }
          
          break;
       }
       case "tp": {
-         const x = commandComponents[1] as number;
-         const y = commandComponents[2] as number;
+         const x = parts[1].val as number;
+         const y = parts[2].val as number;
          tp(player, x, y);
          break;
       }
       case "tpbiome": {
-         const biomeName = commandComponents[1] as Biome;
+         const biomeName = parts[1].val as Biome;
          // tpBiome(player, biomeName);
          break;
       }
@@ -171,6 +178,23 @@ export function registerCommand(command: string, player: Entity): void {
          const tribeComponent = TribeComponentArray.getComponent(player);
          // @Incomplete
          // forceBuildPlans(tribeComponent.tribe);
+      }
+      case "itemname": {
+         const itemNameString = parts[1].val;
+         if (typeof itemNameString === "number") {
+            break;
+         }
+
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
+         const rightHand = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+         const heldItem = getHeldItem(rightHand);
+
+         if (heldItem !== null) {
+            heldItem.nickname = itemNameString;
+            heldItem.namer = playerClient.username;
+         }
+         
+         break;
       }
    }
 }

@@ -491,3 +491,9 @@ export function sendDevChangeTribeTypePacket(tribeID: number, newTribeType: Trib
    packet.writeNumber(newTribeType);
    sendPacket(packet);
 }
+
+export function sendTerminalCommandPacket(command: string): void {
+   const packet = new Packet(PacketType.terminalCommand, Float32Array.BYTES_PER_ELEMENT + getStringLengthBytes(command));
+   packet.writeString(command);
+   sendPacket(packet);
+}

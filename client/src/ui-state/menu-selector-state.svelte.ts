@@ -34,6 +34,28 @@ interface MenuInfo {
 
 const menuStack = $state(new Array<MenuInfo>());
 
+const MENU_IS_EMBODIED_RECORD: Record<Menu, boolean> = {
+   [Menu.buildMenu]: true,
+   [Menu.animalStaffOptions]: true,
+   [Menu.craftingMenu]: false,
+   [Menu.tamingMenu]: false,
+   [Menu.tamingRenamePrompt]: false,
+   [Menu.signInscribeMenu]: false,
+   [Menu.barrelInventory]: false,
+   [Menu.tribesmanInventory]: false,
+   [Menu.campfireInventory]: false,
+   [Menu.furnaceInventory]: false,
+   [Menu.ammoBoxInventory]: false,
+   [Menu.tombstoneEpitaph]: false,
+   [Menu.healthInspector]: false,
+   [Menu.itemsDevTab]: false,
+   [Menu.summonDevTab]: false,
+   [Menu.titlesDevTab]: false,
+   [Menu.tribesDevTab]: false,
+   [Menu.tribePlanVisualiser]: false,
+   [Menu.techTree]: false,
+}
+
 export const menuSelectorState = {
    get menuStack() {
       return menuStack;
@@ -94,7 +116,15 @@ export const menuSelectorState = {
       return menuStack.some(menuInfo => menuInfo.menu === menu);
    },
    hasOpenMenu(): boolean {
-      return menuStack.length > 0
+      return menuStack.length > 0;
+   },
+   hasOpenNonEmbodiedMenu(): boolean {
+      for (const menuInfo of menuStack) {
+         if (!MENU_IS_EMBODIED_RECORD[menuInfo.menu]) {
+            return true;
+         }
+      }
+      return false;
    },
    /** If the menu is open, closes it. If no menu is open, opens the menu. If a different menu is open, do nothing. */
    toggleMenu(menu: Menu): void {

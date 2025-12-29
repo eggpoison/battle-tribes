@@ -685,22 +685,6 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
       namePlural: "Mithril Anvils",
       description: ""
    },
-   [ItemType.yuriMinecraft]: {
-      entityTextureSource: "items/small/scrappy.png",
-      textureSource: "items/large/minecraft.png",
-      toolTextureSource: "",
-      name: "The Evoker's Cold Touch | Alex's Awakening",
-      namePlural: "The Evoker's Cold Touch | Alex's Awakening",
-      description: "Alex's thoughts keep drifting back to that encounter in the woodland mansion, as much as she wills herself not to. She can't put the cold shivers out of her mind, the cold shivers which make her feel so warm. Perhaps the Illager's intentions weren't hostile..."
-   },  
-   [ItemType.yuriSonichu]: {
-      entityTextureSource: "items/small/cogwalker.png",
-      textureSource: "items/large/sonichu.png",
-      toolTextureSource: "",
-      name: "Sonichu x FemShrek - Alone in Shrekke's Love Shack (Chapters 1-5)",
-      namePlural: "Sonichu x FemShrek - Alone in Shrekke's Love Shack (Chapters 1-5)",
-      description: "Stuck alone and pent up in the woods for a week, Sonichu has an affliction only Shrekke's gentle yet controlling hands can cure."
-   },
    [ItemType.animalStaff]: {
       entityTextureSource: "items/small/animal-staff.png",
       textureSource: "items/large/animal-staff.png",
@@ -876,6 +860,24 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
       name: "Ivory Spear",
       namePlural: "Ivory Spear",
       description: ""
+   },
+   [ItemType.sock]: {
+      entityTextureSource: "items/small/sock.png",
+      textureSource: "items/large/sock.png",
+      toolTextureSource: "",
+      name: "Sock",
+      namePlural: "",
+      description: "",
+      flavourText: "Works ok if you shift your foot around so the hole is on the top side."
+   },
+   [ItemType.mrpebbles]: {
+      entityTextureSource: "items/small/mrpebbles.png",
+      textureSource: "items/large/mrpebbles.png",
+      toolTextureSource: "",
+      name: "Rock",
+      namePlural: "",
+      description: "",
+      flavourText: "A merciless pet rock. Someone has carved a smile onto its face."
    },
 };
 

@@ -84,9 +84,6 @@
 .flex-container.column {
    flex-direction: column;
 }
-.menu .flex-container:not(:first-child) {
-   margin-top: 0.3rem;
-}
 
 .item-slots-container {
    /* background-color: #666; */

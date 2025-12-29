@@ -55,7 +55,7 @@ export function createBallistaConfig(position: Point, rotation: number, tribe: T
    const inventoryComponent = new InventoryComponent();
 
    const ammoBoxInventory = new Inventory(3, 1, InventoryName.ammoBoxInventory);
-   addInventoryToInventoryComponent(inventoryComponent, ammoBoxInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   addInventoryToInventoryComponent(inventoryComponent, ammoBoxInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
    const ballistaComponent = new BallistaComponent();
    

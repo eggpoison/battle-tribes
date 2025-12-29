@@ -180,7 +180,7 @@ function onTick(snobe: Entity): void {
          }
 
          const itemComponent = ItemComponentArray.getComponent(entity);
-         if (itemComponent.itemType === ItemType.snowberry) {
+         if (itemComponent.item.type === ItemType.snowberry) {
             const entityTransformComponent = TransformComponentArray.getComponent(entity);
             const entityHitbox = entityTransformComponent.hitboxes[0];
             

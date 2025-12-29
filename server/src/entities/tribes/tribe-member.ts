@@ -30,6 +30,7 @@ import { createEntity, destroyEntity, getEntityLayer, getEntityType, getGameTick
 import { awardTitle, hasTitle, TribesmanComponentArray } from "../../components/TribesmanComponent";
 import { calculateEntityPlaceInfo, createStructureConfig } from "../../structure-placement";
 import { getHitboxVelocity, Hitbox, addHitboxVelocity } from "../../hitboxes";
+import { createItem } from "../../items";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -714,7 +715,6 @@ export function throwItem(tribesman: Entity, inventoryName: InventoryName, itemS
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];
    
-   const itemType = item.type;
    const amountRemoved = consumeItemFromSlot(tribesman, inventory, itemSlot, dropAmount);
 
    const dropPosition = tribesmanHitbox.box.position.copy();
@@ -722,7 +722,7 @@ export function throwItem(tribesman: Entity, inventoryName: InventoryName, itemS
    dropPosition.y += Vars.ITEM_THROW_OFFSET * Math.cos(throwDirection);
 
    // Create the item entity
-   const config = createItemEntityConfig(dropPosition, randAngle(), itemType, amountRemoved, tribesman);
+   const config = createItemEntityConfig(dropPosition, randAngle(), createItem(item.type, amountRemoved, item.nickname, item.namer), tribesman);
 
    // Throw the dropped item away from the player
    const tribesmanVelocity = getHitboxVelocity(tribesmanHitbox);

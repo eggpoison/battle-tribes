@@ -58,7 +58,6 @@ let playerPacketAccumulator = 0;
 
 // @Temporary: testing out simply treating packets as usual while tabbed out.
 document.addEventListener("visibilitychange", () => {
-//    console.log("change");
    if (document.visibilityState === "visible") {
       gameIsFocused = true;
       lastPacketTime = performance.now();

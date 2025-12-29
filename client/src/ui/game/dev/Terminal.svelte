@@ -1,31 +1,14 @@
 <script lang="ts">
-   import { COMMANDS, CommandPermissions, type CommandSpecifications, commandIsValid, parseCommand } from "webgl-test-shared";
+   import { CommandPermissions, commandIsValid } from "webgl-test-shared";
    import { isDev } from "../../../game/utils";
    import { nerdVisionState } from "../../../ui-state/nerd-vision-state.svelte";
+   import { sendTerminalCommandPacket } from "../../../game/networking/packet-sending";
 
    /** All lines output by the terminal */
    const terminalLines = $state(new Array<string>());
    /** Commands entered to the terminal */
    const enteredCommands = new Array<string>();
    let selectedCommandIndex = 0;
-
-   const getCommandErrorMessage = (command: string): string => {
-      const commandComponents = parseCommand(command);
-
-      // Check if the command type exists
-      let commandSpecifications: CommandSpecifications | null = null;
-      for (const currentCommandSpecifications of COMMANDS) {
-         if (currentCommandSpecifications.name === commandComponents[0]) {
-            commandSpecifications = currentCommandSpecifications;
-            break;
-         }
-      }
-      if (commandSpecifications === null) {
-         return `Invalid command! Unable to find command '${commandComponents[0]}'.`;
-      }
-
-      return "Invalid command! Mismatch of parameters.";
-   }
 
    let lineInputElem: HTMLInputElement | undefined;
    let lineInputValue = $state("");
@@ -68,19 +51,18 @@
          return;
       }
 
-      // Execute the command
       const userPermissions = isDev() ? CommandPermissions.dev : CommandPermissions.player;
-      if (commandIsValid(command, userPermissions)) {
-         // @Cleanup
+
+      const isValidResult = commandIsValid(command, userPermissions);
+      if (isValidResult.isValid) {
+         // @Hack @Cleanup
          if (command.split(" ")[0] === "clear") {
             terminalLines.splice(0, terminalLines.length);
          } else {
-            // @Incomplete
-            // Client.sendCommand(command);
+            sendTerminalCommandPacket(command);
          }
       } else {
-         const errorMessage = getCommandErrorMessage(command);
-         terminalLines.push(errorMessage);
+         terminalLines.push(isValidResult.errorMessage);
       }
 
       // Clear the line input

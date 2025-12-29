@@ -12,6 +12,8 @@
    import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
    import LayerChangeMessage from "./LayerChangeMessage.svelte";
    import HeldItemSlot from "./HeldItemSlot.svelte";
+    import ItemTooltip from "./inventories/ItemTooltip.svelte";
+    import { itemTooltipState } from "../../ui-state/item-tooltip-state.svelte";
 
    $effect(() => {
       // Reset state
@@ -45,6 +47,10 @@
 
    <!-- @INCOMPLETE? wat was this -->
    <!-- <div id="summon-entity-veil" onmousedown={e => placeEntity(e.nativeEvent)}></div> -->
+{/if}
+
+{#if itemTooltipState.item !== null}
+   <ItemTooltip item={itemTooltipState.item} />
 {/if}
 
 <TechInfocard />

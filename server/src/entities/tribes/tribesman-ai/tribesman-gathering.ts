@@ -25,6 +25,7 @@ import { LocalBiome } from "../../../world-generation/terrain-generation-utils";
 import Layer from "../../../Layer";
 import { getHitboxTile, Hitbox } from "../../../hitboxes";
 import { pathToEntityExists, pathfindTribesman, getFinalPath, continueCurrentPath, AIPathfindingComponentArray } from "../../../components/AIPathfindingComponent";
+import { createItem } from "../../../items";
 
 // @Cleanup: unused?
 const tribesmanIsElegibleToHarvestEntityType = (tribesman: Entity, entityType: EntityType): boolean => {
@@ -172,7 +173,7 @@ const tribesmanGetItemPickupTarget = (tribesman: Entity, visibleItemEntities: Re
       // }
 
       const itemComponent = ItemComponentArray.getComponent(itemEntity);
-      if (itemComponent.itemType !== gatheredItemType || !tribeMemberCanPickUpItem(tribesman, itemComponent.itemType)) {
+      if (itemComponent.item.type !== gatheredItemType || !tribeMemberCanPickUpItem(tribesman, itemComponent.item.type)) {
          continue;
       }
 
@@ -300,7 +301,7 @@ export function workOnGatherPlan(tribesman: Entity, gatherPlan: AIGatherItemPlan
       const numItemsInInventory = countItemType(inventoryComponent, gatheredItemType);
 
       const numToGive = gatherPlan.amount - numItemsInInventory;
-      addItem(tribesman, inventoryComponent, gatheredItemType, numToGive);
+      addItem(tribesman, inventoryComponent, createItem(gatheredItemType, numToGive, "", ""));
       return;
    }
    

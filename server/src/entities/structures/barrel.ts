@@ -38,7 +38,7 @@ export function createBarrelConfig(position: Point, rotation: number, tribe: Tri
    const inventoryComponent = new InventoryComponent();
 
    const inventory = new Inventory(3, 3, InventoryName.inventory);
-   addInventoryToInventoryComponent(inventoryComponent, inventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   addInventoryToInventoryComponent(inventoryComponent, inventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
    
    const barrelComponent = new BarrelComponent();
    

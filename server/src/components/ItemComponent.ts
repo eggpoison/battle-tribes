@@ -1,7 +1,7 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { ComponentArray } from "./ComponentArray";
-import { ItemType } from "battletribes-shared/items/items";
+import { Item } from "battletribes-shared/items/items";
 import { Entity } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 import { destroyEntity, getEntityAgeTicks } from "../world";
@@ -12,16 +12,14 @@ const enum Vars {
 }
 
 export class ItemComponent {
-   public readonly itemType: ItemType;
-   public amount: number;
+   public readonly item: Item;
    
    public throwingEntity: Entity | null;
    /** Number of ticks after throwing for which the throwing entity cannot pick up the item */
    public throwingEntityPickupCooldownTicks: number;
 
-   constructor(itemType: ItemType, amount: number, throwingEntity: Entity | null) {
-      this.itemType = itemType;
-      this.amount = amount;
+   constructor(item: Item, throwingEntity: Entity | null) {
+      this.item = item;
       this.throwingEntity = throwingEntity;
       this.throwingEntityPickupCooldownTicks = Vars.THROWING_ENTITY_PICKUP_COOLDOWN_TICKS;
    }
@@ -51,7 +49,7 @@ function getDataLength(): number {
 
 function addDataToPacket(packet: Packet, entity: Entity): void {
    const itemComponent = ItemComponentArray.getComponent(entity);
-   packet.writeNumber(itemComponent.itemType);
+   packet.writeNumber(itemComponent.item.type);
 }
 
 export function itemEntityCanBePickedUp(itemEntity: Entity, entity: Entity): boolean {

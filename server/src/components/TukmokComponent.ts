@@ -4,13 +4,13 @@ import { Entity, EntityType } from "../../../shared/src/entities";
 import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity-events";
 import { ItemType } from "../../../shared/src/items/items";
 import { Settings } from "../../../shared/src/settings";
-import { TribeType } from "../../../shared/src/tribes";
-import { customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randFloat, randInt, secondsToTicks } from "../../../shared/src/utils";
+import { customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randInt, secondsToTicks } from "../../../shared/src/utils";
 import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared";
 import { entitiesAreColliding, CollisionVars } from "../collision-detection";
 import { createEntityConfigAttachInfo } from "../components";
 import { createItemEntityConfig } from "../entities/item-entity";
 import { applyAcceleration, applyForce, Hitbox } from "../hitboxes";
+import { createItem } from "../items";
 import { registerEntityTickEvent } from "../server/player-clients";
 import { createEntity, destroyEntity, entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
 import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent";
@@ -153,7 +153,7 @@ const getTargetLeafItem = (tukmok: Entity, aiHelperComponent: AIHelperComponent)
       }
 
       const itemComponent = ItemComponentArray.getComponent(entity);
-      if (itemComponent.itemType !== ItemType.leaf) {
+      if (itemComponent.item.type !== ItemType.leaf) {
          continue;
       }
 
@@ -545,7 +545,7 @@ function onTick(tukmok: Entity): void {
 
                         const leafPosition = trunkHeadHitbox.box.position.offset(20, trunkHeadHitbox.box.angle);
 
-                        const leafItemConfig = createItemEntityConfig(leafPosition, randAngle(), ItemType.leaf, 1, null);
+                        const leafItemConfig = createItemEntityConfig(leafPosition, randAngle(), createItem(ItemType.leaf, 1, "", ""), null);
                         const leafHitbox = leafItemConfig.components[ServerComponentType.transform]!.hitboxes[0];
                         leafItemConfig.attachInfo = createEntityConfigAttachInfo(leafHitbox, trunkHeadHitbox, false);
                         createEntity(leafItemConfig, getEntityLayer(tukmok), 0);

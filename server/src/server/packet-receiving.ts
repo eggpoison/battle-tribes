@@ -205,7 +205,7 @@ export function processDevGiveItemPacket(playerClient: PlayerClient, reader: Pac
 
    const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
    const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
-   addItemToInventory(player, inventory, itemType, amount);
+   addItemToInventory(player, inventory, createItem(itemType, amount, "", ""));
 }
 
 export function processRespawnPacket(playerClient: PlayerClient): void {
@@ -407,7 +407,7 @@ export function processItemPickupPacket(playerClient: PlayerClient, reader: Pack
 
    // Hold the item
    // Copy it as the consumeItemFromSlot function modifies the original item's count
-   const heldItem = createItem(pickedUpItem.type, amountConsumed);
+   const heldItem = createItem(pickedUpItem.type, amountConsumed, pickedUpItem.nickname, pickedUpItem.namer);
    heldItemInventory.addItem(heldItem, 1);
 }
 
@@ -437,7 +437,8 @@ export function processItemReleasePacket(playerClient: PlayerClient, reader: Pac
    const targetInventoryComponent = InventoryComponentArray.getComponent(entity);
 
    // Add the item to the inventory
-   const amountAdded = addItemToSlot(entity, targetInventoryComponent, inventoryName, itemSlot, heldItem.type, amount);
+   // Have to use a copy so that the consumeItemTypeFromInventory function doesn't remove from the new item's count!
+   const amountAdded = addItemToSlot(entity, targetInventoryComponent, inventoryName, itemSlot, createItem(heldItem.type, heldItem.count, heldItem.nickname, heldItem.namer), amount);
 
    // If all of the item was added, clear the held item
    consumeItemTypeFromInventory(entity, inventoryComponent, InventoryName.heldItemSlot, heldItem.type, amountAdded);
@@ -775,7 +776,7 @@ export function processPickUpEntityPacket(playerClient: PlayerClient, reader: Pa
             destroyEntity(entity);
             
             const inventoryComponent = InventoryComponentArray.getComponent(player);
-            addItem(player, inventoryComponent, ItemType.woodenArrow, 1);
+            addItem(player, inventoryComponent, createItem(ItemType.woodenArrow, 1, "", ""));
             // @Hack: should be detected in addItem or something. shuldn't have to be manually done at the place of calling, yknow?
             registerPlayerDroppedItemPickup(player);
          }
@@ -787,7 +788,7 @@ export function processPickUpEntityPacket(playerClient: PlayerClient, reader: Pa
          destroyEntity(entity);
 
          const inventoryComponent = InventoryComponentArray.getComponent(player);
-         addItem(player, inventoryComponent, ItemType.dustfleaEgg, 1);
+         addItem(player, inventoryComponent, createItem(ItemType.dustfleaEgg, 1, "", ""));
          // @Hack: should be detected in addItem or something. shuldn't have to be manually done at the place of calling, yknow?
          registerPlayerDroppedItemPickup(player);
          break;

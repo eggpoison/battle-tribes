@@ -43,13 +43,13 @@ export function createCampfireConfig(position: Point, rotation: number, tribe: T
    // @Copynpaste @Cleanup: don't add here, add in cooking component
    
    const fuelInventory = new Inventory(1, 1, InventoryName.fuelInventory);
-   addInventoryToInventoryComponent(inventoryComponent, fuelInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   addInventoryToInventoryComponent(inventoryComponent, fuelInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
    
    const ingredientInventory = new Inventory(1, 1, InventoryName.ingredientInventory);
-   addInventoryToInventoryComponent(inventoryComponent, ingredientInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   addInventoryToInventoryComponent(inventoryComponent, ingredientInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
    const outputInventory = new Inventory(1, 1, InventoryName.outputInventory);
-   addInventoryToInventoryComponent(inventoryComponent, outputInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   addInventoryToInventoryComponent(inventoryComponent, outputInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
    
    const cookingComponent = new CookingComponent(30);
 

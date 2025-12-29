@@ -15,6 +15,7 @@ import { calculateItemKnockback } from "../entities/tribes/limb-use";
 import { calculateItemDamage } from "../entities/tribes/tribe-member";
 import { getHumanoidRadius } from "../entities/tribes/tribesman-ai/tribesman-ai-utils";
 import { applyKnockback, Hitbox } from "../hitboxes";
+import { createItem } from "../items";
 import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "../world";
 import { BerryBushComponentArray } from "./BerryBushComponent";
 import { BerryBushPlantedComponentArray } from "./BerryBushPlantedComponent";
@@ -175,7 +176,7 @@ const gatherPlant = (plant: Entity, attacker: Entity, hitHitbox: Hitbox, gloves:
       const x = plantHitbox.box.position.x + (plantRadius - 7) * Math.sin(offsetDirection);
       const y = plantHitbox.box.position.y + (plantRadius - 7) * Math.cos(offsetDirection);
    
-      const config = createItemEntityConfig(new Point(x, y), randAngle(), ItemType.leaf, 1, null);
+      const config = createItemEntityConfig(new Point(x, y), randAngle(), createItem(ItemType.leaf, 1, "", ""), null);
       createEntity(config, getEntityLayer(plant), 0);
 
       hitEntityWithoutDamage(plant, hitHitbox, attacker, new Point(0, 0));

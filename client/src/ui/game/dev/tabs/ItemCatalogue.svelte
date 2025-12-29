@@ -31,7 +31,7 @@
       return itemTypes;
    }
 
-   const itemTypes = getFilteredItemTypes();
+   const itemTypes = $derived(getFilteredItemTypes());
    
    // Create inventory
    // const inventory = new Inventory(WIDTH, Math.ceil(itemTypes.length / WIDTH), InventoryName.devInventory);
@@ -39,7 +39,7 @@
    //    const itemType = itemTypes[i];
    //    const itemSlot = i + 1;
       
-   //    const item = new Item(itemType, 1, 0);
+   //    const item = new Item(itemType, 1, 0, "");
    //    inventory.addItem(item, itemSlot);
    // }
 
@@ -65,7 +65,7 @@
    
    <ItemSlotsContainer width={WIDTH} height={undefined} numItemSlotsPassed={itemTypes.length}>
       {#each itemTypes as itemType}
-         <ItemSlot item={new Item(itemType, 1, 0)} onmousedown={e => props.onmousedown?.(e, itemType)} />
+         <ItemSlot item={new Item(itemType, 1, 0, "", "")} onmousedown={e => props.onmousedown?.(e, itemType)} />
       {/each}
    </ItemSlotsContainer>
 </div>

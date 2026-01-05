@@ -9,14 +9,10 @@
    import DeathScreen from "./DeathScreen.svelte";
    import HealthBar from "./HealthBar.svelte";
    import NerdVision from "./dev/NerdVision.svelte";
-   import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
    import LayerChangeMessage from "./LayerChangeMessage.svelte";
    import HeldItemSlot from "./HeldItemSlot.svelte";
-
-   $effect(() => {
-      // Reset state
-      entitySelectionState.reset();
-   });
+   import ItemTooltip from "./inventories/ItemTooltip.svelte";
+   import { itemTooltipState } from "../../ui-state/item-tooltip-state.svelte";
 </script>
    
 <GameInteractableLayer />
@@ -45,6 +41,10 @@
 
    <!-- @INCOMPLETE? wat was this -->
    <!-- <div id="summon-entity-veil" onmousedown={e => placeEntity(e.nativeEvent)}></div> -->
+{/if}
+
+{#if itemTooltipState.item !== null}
+   <ItemTooltip item={itemTooltipState.item} />
 {/if}
 
 <TechInfocard />

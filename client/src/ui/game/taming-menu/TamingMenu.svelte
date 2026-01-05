@@ -16,6 +16,9 @@
    import NametagUsed from "../../../images/menus/taming-almanac/nametag-used.png";
    import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
    import { SKILL_TRANSFORM_SCALE_FACTOR, TAMING_TIER_ICONS, tamingMenuState } from "../../../ui-state/taming-menu-state.svelte";
+   import TamingSkillTooltip from "./TamingSkillTooltip.svelte";
+   import { tamingSkillTooltipState } from "../../../ui-state/taming-skill-tooltip-state.svelte";
+   import { onDestroy } from "svelte";
 
    interface Props {
       entity: Entity;
@@ -33,6 +36,11 @@
    const nextTamingTierFoodCost: number | undefined = $derived(tamingSpec.tierFoodRequirements[(tamingMenuState.tamingTier + 1) as TamingTier]);
 
    const foodProgress = $derived(typeof nextTamingTierFoodCost !== "undefined" ? Math.min(tamingMenuState.foodEatenInTier / nextTamingTierFoodCost, 1) : 1);
+
+   // @Hack? so that the tooltip doesn't retain its previous state when its closed, when its next opened.
+   onDestroy(() => {
+      tamingSkillTooltipState.setSkillNode(null);
+   });
 
    const onCompleteButtonClick = (): void => {
       if (keyIsPressed("shift") && isDev()) {
@@ -149,3 +157,7 @@
       {/if}
    </div>
 </MenuElem>
+
+{#if tamingSkillTooltipState.skillNode !== null}
+   <TamingSkillTooltip entityType={getEntityType(entity)} skillNode={tamingSkillTooltipState.skillNode} x={tamingSkillTooltipState.x} y={tamingSkillTooltipState.y} />
+{/if}

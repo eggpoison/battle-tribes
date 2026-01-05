@@ -56,7 +56,7 @@ function onTick(entity: Entity): void {
    const hitbox = transformComponent.hitboxes[0];
    
    // Ember particles
-   if (tickIntervalHasPassed(0.08)) {
+   if (tickIntervalHasPassed(0.15)) {
       let spawnPositionX = hitbox.box.position.x;
       let spawnPositionY = hitbox.box.position.y;
 

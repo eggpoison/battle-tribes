@@ -5,6 +5,6 @@ const getUniqueID = (): number => {
    return nextAvailableID++;
 }
 
-export function createItem(itemType: ItemType, amount: number): Item {
-   return new Item(itemType, amount, getUniqueID());
+export function createItem(itemType: ItemType, amount: number, nickname: string, namer: string): Item {
+   return new Item(itemType, amount, getUniqueID(), nickname, namer);
 }

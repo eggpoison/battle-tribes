@@ -11,7 +11,7 @@ import { recruitTribesman, TribeComponentArray } from "../components/TribeCompon
 import { startChargingSpear, startChargingBattleaxe, createPlayerConfig, modifyBuilding, startChargingBow } from "../entities/tribes/player";
 import { placeBlueprint, throwItem, useItem } from "../entities/tribes/tribe-member";
 import { beginSwing } from "../entities/tribes/limb-use";
-import { InventoryComponentArray, getInventory, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, inventoryComponentCanAffordRecipe, addItem } from "../components/InventoryComponent";
+import { InventoryComponentArray, getInventory, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, inventoryComponentCanAffordRecipe, addItem, isRoomForItem } from "../components/InventoryComponent";
 import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "battletribes-shared/components";
 import { Point, randAngle } from "battletribes-shared/utils";
 import { generatePlayerSpawnPosition, getPlayerClients, registerDirtyEntity, registerPlayerDroppedItemPickup } from "./player-clients";
@@ -47,6 +47,7 @@ import { acceptTitleOffer, forceAddTitle, rejectTitleOffer, removeTitle } from "
 import Tribe from "../Tribe";
 import { Settings } from "../../../shared/src/settings";
 import { broadcastSimulationStatus } from "./packet-sending";
+import { BarrelComponentArray } from "../components/BarrelComponent";
 
 // @Speed: would be much faster in many-spectator cases if spectators instead sent their own kind of packets with only the things they need set
 export function processPlayerDataPacket(playerClient: PlayerClient, reader: PacketReader): void {
@@ -205,7 +206,7 @@ export function processDevGiveItemPacket(playerClient: PlayerClient, reader: Pac
 
    const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
    const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
-   addItemToInventory(player, inventory, itemType, amount);
+   addItemToInventory(player, inventory, createItem(itemType, amount, "", ""));
 }
 
 export function processRespawnPacket(playerClient: PlayerClient): void {
@@ -407,8 +408,46 @@ export function processItemPickupPacket(playerClient: PlayerClient, reader: Pack
 
    // Hold the item
    // Copy it as the consumeItemFromSlot function modifies the original item's count
-   const heldItem = createItem(pickedUpItem.type, amountConsumed);
+   const heldItem = createItem(pickedUpItem.type, amountConsumed, pickedUpItem.nickname, pickedUpItem.namer);
    heldItemInventory.addItem(heldItem, 1);
+}
+
+export function processItemTransferPacket(playerClient: PlayerClient, reader: PacketReader): void {
+   const player = playerClient.instance;
+   if (!entityExists(player)) {
+      return;
+   }
+
+   const givingEntity = reader.readNumber() as Entity;
+   if (!entityExists(givingEntity)) {
+      return;
+   }
+   const givingInventoryName = reader.readNumber() as InventoryName;
+   const itemSlot = reader.readNumber();
+
+   const receivingEntity: Entity = reader.readNumber();
+   const receivingInventoryName = reader.readNumber() as InventoryName;
+
+   // Make sure it's actually a transfer between the player and something
+   if (givingEntity !== player && receivingEntity !== player) {
+      return;
+   }
+   
+   const givingInventoryComponent = InventoryComponentArray.getComponent(givingEntity);
+   const givingInventory = getInventory(givingInventoryComponent, givingInventoryName);
+   
+   const receivingInventoryComponent = InventoryComponentArray.getComponent(receivingEntity);
+   const receivingInventory = getInventory(receivingInventoryComponent, receivingInventoryName);
+   
+   const transferredItem = givingInventory.itemSlots[itemSlot];
+   if (typeof transferredItem === "undefined") {
+      return;
+   }
+
+   givingInventory.removeItem(itemSlot);
+   if (isRoomForItem(receivingInventory, transferredItem)) {
+      addItemToInventory(receivingEntity, receivingInventory, transferredItem);
+   }
 }
 
 export function processItemReleasePacket(playerClient: PlayerClient, reader: PacketReader): void {
@@ -437,7 +476,8 @@ export function processItemReleasePacket(playerClient: PlayerClient, reader: Pac
    const targetInventoryComponent = InventoryComponentArray.getComponent(entity);
 
    // Add the item to the inventory
-   const amountAdded = addItemToSlot(entity, targetInventoryComponent, inventoryName, itemSlot, heldItem.type, amount);
+   // Have to use a copy so that the consumeItemTypeFromInventory function doesn't remove from the new item's count!
+   const amountAdded = addItemToSlot(entity, targetInventoryComponent, inventoryName, itemSlot, createItem(heldItem.type, heldItem.count, heldItem.nickname, heldItem.namer), amount);
 
    // If all of the item was added, clear the held item
    consumeItemTypeFromInventory(entity, inventoryComponent, InventoryName.heldItemSlot, heldItem.type, amountAdded);
@@ -741,6 +781,13 @@ export function receiveSelectRiderDepositLocation(reader: PacketReader): void {
    }
 
    const depositLocation = reader.readPoint();
+
+   if (!TamingComponentArray.hasComponent(mount)) {
+      return;
+   }
+   const tamingComponent = TamingComponentArray.getComponent(mount);
+
+   tamingComponent.depositTarget = depositLocation;
 }
 
 export function processDismountCarrySlotPacket(playerClient: PlayerClient): void {
@@ -775,7 +822,7 @@ export function processPickUpEntityPacket(playerClient: PlayerClient, reader: Pa
             destroyEntity(entity);
             
             const inventoryComponent = InventoryComponentArray.getComponent(player);
-            addItem(player, inventoryComponent, ItemType.woodenArrow, 1);
+            addItem(player, inventoryComponent, createItem(ItemType.woodenArrow, 1, "", ""));
             // @Hack: should be detected in addItem or something. shuldn't have to be manually done at the place of calling, yknow?
             registerPlayerDroppedItemPickup(player);
          }
@@ -787,7 +834,7 @@ export function processPickUpEntityPacket(playerClient: PlayerClient, reader: Pa
          destroyEntity(entity);
 
          const inventoryComponent = InventoryComponentArray.getComponent(player);
-         addItem(player, inventoryComponent, ItemType.dustfleaEgg, 1);
+         addItem(player, inventoryComponent, createItem(ItemType.dustfleaEgg, 1, "", ""));
          // @Hack: should be detected in addItem or something. shuldn't have to be manually done at the place of calling, yknow?
          registerPlayerDroppedItemPickup(player);
          break;
@@ -1119,5 +1166,34 @@ export function processDevChangeTribeTypePacket(reader: PacketReader): void {
    const tribe = getTribe(tribeID);
    if (tribe !== null) {
       tribe.tribeType = newTribeType;
+   }
+}
+
+export function processOpenEntityInventoryPacket(reader: PacketReader): void {
+   const entity: Entity = reader.readNumber();
+   
+   if (BarrelComponentArray.hasComponent(entity)) {
+      const barrelComponent = BarrelComponentArray.getComponent(entity);
+      if (!barrelComponent.openers.includes(entity)) {
+         barrelComponent.openers.push(entity);
+         if (barrelComponent.openers.length === 1) {
+            registerDirtyEntity(entity);
+         }
+      }
+   }
+}
+
+export function processCloseEntityInventoryPacket(reader: PacketReader): void {
+   const entity: Entity = reader.readNumber();
+   
+   if (BarrelComponentArray.hasComponent(entity)) {
+      const barrelComponent = BarrelComponentArray.getComponent(entity);
+      const idx = barrelComponent.openers.indexOf(entity);
+      if (idx !== -1) {
+         barrelComponent.openers.splice(idx, 1);
+         if (barrelComponent.openers.length === 0) {
+            registerDirtyEntity(entity);
+         }
+      }
    }
 }

@@ -6,6 +6,7 @@ import { assert, Point, polarVec2, randAngle, randFloat, randSign } from "../../
 import { createPricklyPearFragmentProjectileConfig } from "../entities/desert/prickly-pear-fragment-projectile";
 import { createItemEntityConfig } from "../entities/item-entity";
 import { addHitboxAngularVelocity, addHitboxVelocity } from "../hitboxes";
+import { createItem } from "../items";
 import { createEntity, destroyEntity, getEntityLayer } from "../world";
 import { ComponentArray } from "./ComponentArray";
 import { HealthComponentArray } from "./HealthComponent";
@@ -63,7 +64,7 @@ const drop = (pricklyPear: Entity): void => {
    const x = hitbox.box.position.x + 8 * Math.sin(angleFromCactusToPear);
    const y = hitbox.box.position.y + 8 * Math.cos(angleFromCactusToPear);
    
-   const itemConfig = createItemEntityConfig(new Point(x, y), hitbox.box.angle, ItemType.pricklyPear, 1, null);
+   const itemConfig = createItemEntityConfig(new Point(x, y), hitbox.box.angle, createItem(ItemType.pricklyPear, 1, "", ""), null);
 
    const itemTransformComponent = itemConfig.components[ServerComponentType.transform]!;
    const itemHitbox = itemTransformComponent.hitboxes[0];

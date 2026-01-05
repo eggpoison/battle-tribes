@@ -154,7 +154,9 @@ export function getEntityRenderLayer(entityType: EntityType, entityComponentData
       case EntityType.warriorHut:
       case EntityType.wall:
       case EntityType.healingTotem:
-      case EntityType.door: {
+      case EntityType.door:
+      // @HACK: just slapped workbench in here so it goes on top of cows
+      case EntityType.workbench: {
          return RenderLayer.highEntities;
       }
       case EntityType.woodenArrow: {

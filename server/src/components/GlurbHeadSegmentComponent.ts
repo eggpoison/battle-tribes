@@ -189,7 +189,7 @@ function onTick(glurbHead: Entity): void {
       const entity = aiHelperComponent.visibleEntities[i];
       if (getEntityType(entity) === EntityType.itemEntity) {
          const itemEntityComponent = ItemComponentArray.getComponent(entity);
-         if (itemEntityComponent.itemType === ItemType.slurb){
+         if (itemEntityComponent.item.type === ItemType.slurb){
             continue;
          }
          

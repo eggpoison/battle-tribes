@@ -1,40 +1,32 @@
 <script lang="ts">
-   import { assert, type Entity, type Inventory, InventoryName } from "webgl-test-shared";
-   import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
+   import { type Entity, Inventory, InventoryName } from "webgl-test-shared";
    import MenuElem from "../menus/MenuElem.svelte";
    import ItemSlotsContainer from "./ItemSlotsContainer.svelte";
    import InventoryItemSlots from "./InventoryItemSlots.svelte";
+   import { selectedEntityInventoryState } from "../../../ui-state/selected-entity-inventory-state.svelte";
 
    interface Props {
       entity: Entity;
    }
   
-   let { entity }: Props = $props();
+   const { entity }: Props = $props();
 
-   function getInven(): Inventory {
-      const inventoryComponent = InventoryComponentArray.getComponent(entity);
-      const inventory = getInventory(inventoryComponent, InventoryName.inventory);
-      assert(inventory !== null);
-      return inventory;
+   function getBarrelInventory(): Inventory {
+      for (const inventory of selectedEntityInventoryState.inventories) {
+         if (inventory.name === InventoryName.inventory) {
+            return inventory;
+         }
+      }
+      throw new Error();
    }
    
-   const inventory = getInven();
+   const inventory = $derived(getBarrelInventory());
 </script>
 
 <MenuElem id="barrel-inventory" class="menu">
    <h2 class="menu-title">Barrel</h2>
-   <div class="area">
-      <label>
-         <input type="checkbox" defaultChecked={true} />
-         Allow friendly tribesmen
-      </label>
-      <label>
-         <input type="checkbox" defaultChecked={false} />
-         Allow enemies
-      </label>
-   </div>
    <div class="flex-container center">
-      <ItemSlotsContainer isBordered width={inventory.width} height={inventory.height} numItemSlotsPassed={inventory.items.length}>
+      <ItemSlotsContainer isBordered width={inventory.width} height={inventory.height} numItemSlotsPassed={inventory.width * inventory.height}>
          <InventoryItemSlots entity={entity} inventory={inventory} />
       </ItemSlotsContainer>
    </div>

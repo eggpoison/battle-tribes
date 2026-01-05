@@ -108,6 +108,7 @@ export const TEXTURE_SOURCES: Array<string> = [
    "entities/warrior-hut/warrior-hut-blueprint-5.png",
    "entities/warrior-hut/warrior-hut-blueprint-6.png",
    "entities/barrel/barrel.png",
+   "entities/barrel/barrel-open.png",
    "entities/campfire/campfire.png",
    "entities/furnace/furnace.png",
    "entities/krumblid/krumblid.png",

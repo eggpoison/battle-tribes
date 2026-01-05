@@ -497,6 +497,16 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
       playHeadSound("layer-change.mp3", 0.55, 1);
    }
 
+   // Tribes are done before entities because entity creation functions might require playerTribe to be defined.
+   updatePlayerTribe(snapshot.playerTribeData);
+   // @GARBAGE
+   tribes.splice(0, tribes.length);
+   tribes.push(snapshot.playerTribeData);
+   for (const tribe of snapshot.enemyTribeData) {
+      tribes.push(tribe);
+   }
+   tribesTabState.updateTribes(tribes);
+
    // Update entities
    for (const pair of snapshot.entities) {
       const entity = pair[0] as Entity;
@@ -525,6 +535,7 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
             if (typeof snapshotData.serverComponentData[componentType] !== "undefined") {
                const componentArray = getServerComponentArray(componentType);
                if (typeof componentArray.updateSelectedEntityState !== "undefined") {
+                  // @Speed: until I make component data only send on change this will run every tick for selected entities!! which is bad not only for performance but for proofchecking - what if a component isn't having its data registered as changed when it's changed, but it's masked up cuz all the data is sent anyway???
                   componentArray.updateSelectedEntityState(selectedEntity);
                }
             }
@@ -538,15 +549,6 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
          removeEntity(entityRemoveInfo.entity, entityRemoveInfo.isDestroyed);
       }
    }
-
-   updatePlayerTribe(snapshot.playerTribeData);
-   // @GARBAGE
-   tribes.splice(0, tribes.length);
-   tribes.push(snapshot.playerTribeData);
-   for (const tribe of snapshot.enemyTribeData) {
-      tribes.push(tribe);
-   }
-   tribesTabState.updateTribes(tribes);
    
    setPlayerInstance(snapshot.playerInstance);
    setCameraSubject(snapshot.cameraSubject);

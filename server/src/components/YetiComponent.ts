@@ -378,7 +378,7 @@ function onTick(yeti: Entity): void {
          }
 
          const itemComponent = ItemComponentArray.getComponent(entity);
-         if (itemComponent.itemType === ItemType.raw_beef || itemComponent.itemType === ItemType.raw_fish) {
+         if (itemComponent.item.type === ItemType.raw_beef || itemComponent.item.type === ItemType.raw_fish) {
             const entityTransformComponent = TransformComponentArray.getComponent(entity);
             const entityHitbox = entityTransformComponent.hitboxes[0];
             

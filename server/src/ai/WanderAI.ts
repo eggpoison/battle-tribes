@@ -1,7 +1,7 @@
 import { Entity } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point, randInt } from "battletribes-shared/utils";
-import { entityHasReachedPosition } from "../ai-shared";
+import { entityHasPassedPosition } from "../ai-shared";
 import { AIHelperComponentArray } from "../components/AIHelperComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import Layer from "../Layer";
@@ -69,7 +69,7 @@ export default class WanderAI {
       }
       
       if (this.targetPosition !== null) {
-         if (entityHasReachedPosition(entity, this.targetPosition)) {
+         if (entityHasPassedPosition(entity, this.targetPosition)) {
             this.targetPosition = null;
          }
       } else if (this.shouldTryAndWander(entityHitbox)) {

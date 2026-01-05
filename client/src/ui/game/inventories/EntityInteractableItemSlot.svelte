@@ -2,10 +2,12 @@
    import { type Entity, type Inventory, InventoryName, ItemType } from "webgl-test-shared";
    import { type ItemRestTime } from "../../../game/player-action-handler";
    import ItemSlot from "./ItemSlot.svelte";
-   import { menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
+   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
    import { InventoryComponentArray, getInventory } from "../../../game/entity-components/server-components/InventoryComponent";
-   import { sendItemPickupPacket, sendItemReleasePacket } from "../../../game/networking/packet-sending";
+   import { sendItemPickupPacket, sendItemReleasePacket, sendItemTransferPacket } from "../../../game/networking/packet-sending";
    import { playerInstance } from "../../../game/player";
+   import { keyIsPressed } from "../../../game/keyboard-input";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
 
    export interface ItemSlotCallbackInfo {
       readonly itemSlot: number;
@@ -43,14 +45,70 @@
    }
 
    const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: number): void => {
+      let openMenuInventory: Inventory | null;
+      let openMenuEntity: Entity | null;
+
+      if (menuSelectorState.menuStack.length === 1) {
+         const menuInfo = menuSelectorState.menuStack[0];
+         // @HACK
+         switch (menuInfo.menu) {
+            case Menu.buildMenu: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.animalStaffOptions: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.craftingMenu: openMenuInventory = getInventory(InventoryComponentArray.getComponent(playerInstance!), InventoryName.craftingOutputSlot); openMenuEntity = playerInstance!; break;
+            case Menu.tamingMenu: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.tamingRenamePrompt: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.signInscribeMenu: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.barrelInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
+            case Menu.tribesmanInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.hotbar); openMenuEntity = entitySelectionState.selectedEntity!; break;
+            case Menu.campfireInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
+            case Menu.furnaceInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
+            case Menu.ammoBoxInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
+            case Menu.tombstoneEpitaph: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.healthInspector: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.itemsDevTab: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.summonDevTab: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.titlesDevTab: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.tribesDevTab: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.tribePlanVisualiser: openMenuInventory = null; openMenuEntity = null; break;
+            case Menu.techTree: openMenuInventory = null; openMenuEntity = null; break;
+         }
+      } else {
+         openMenuInventory = null;
+         openMenuEntity = null;
+      }
+
+      let otherOpenMenuInventory: Inventory | null;
+      let otherOpenMenuEntity: Entity | null;
+      if (openMenuEntity === entity) {
+         const playerInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
+         otherOpenMenuInventory = getInventory(playerInventoryComponent, InventoryName.hotbar);
+         otherOpenMenuEntity = playerInstance!;
+      } else {
+         otherOpenMenuInventory = openMenuInventory;
+         otherOpenMenuEntity = openMenuEntity;
+      }
+
       const clickedItem = inventory.itemSlots[itemSlot];
       if (typeof clickedItem !== "undefined") {
          // Attempt to pick up the item if there isn't a held item
-         const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
-         const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot)!;
+         const playerInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
+         const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot)!;
          const heldItem = heldItemInventory.itemSlots[1];
          if (typeof heldItem === "undefined") {
-            sendItemPickupPacket(entity, inventory.name, itemSlot, clickedItem.count);
+            // If shift is held, insta-send the item between the player's inventory and the opened inventory
+            if (keyIsPressed("shift")) {
+               if (otherOpenMenuInventory !== null && otherOpenMenuEntity !== null) {
+                  if (entity === playerInstance) {
+                     // Clicked hte player inventory, so transfer to the open menu
+                     sendItemTransferPacket(entity, inventory.name, itemSlot, otherOpenMenuEntity, otherOpenMenuInventory.name);
+                  } else {
+                     // Clicked the open menu inventory, so transfer to the player inventory
+                     sendItemTransferPacket(entity, inventory.name, itemSlot, otherOpenMenuEntity, otherOpenMenuInventory.name);
+                  }
+               }
+            } else {
+               sendItemPickupPacket(entity, inventory.name, itemSlot, clickedItem.count);
+            }
          } else {
             // If both the held item and the clicked item are of the same type, attempt to add the held item to the clicked item
             if (clickedItem.type === heldItem.type) {

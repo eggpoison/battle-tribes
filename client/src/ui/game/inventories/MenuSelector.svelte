@@ -21,7 +21,7 @@
    import TribePlanVisualiser from "../tribe-plan-visualiser/TribePlanVisualiser.svelte";
    import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
    import TechTree from "../tech-tree/TechTree.svelte";
-   import { buildMenuState } from "../../../ui-state/build-menu-state.svelte";
+   import { TamingComponentArray } from "../../../game/entity-components/server-components/TamingComponent";
 
    const selectedEntity = $derived(entitySelectionState.selectedEntity);
 </script>
@@ -29,6 +29,7 @@
 {#each menuSelectorState.menuStack as menuInfo}
    {@const menu = menuInfo.menu}
 
+   <!-- NOTE TO FUTURE SELF: Don't put if blocks to wrap around the menu elems!! cuz that can easily go bad and lead to hard-to-find errors if those checks actually do fail! -->
    {#if menu === Menu.barrelInventory}
       {#if selectedEntity !== null}
          <BarrelInventory entity={selectedEntity} />
@@ -42,10 +43,7 @@
    {:else if menu === Menu.ammoBoxInventory}
       <AmmoBoxInventory />;
    {:else if menu === Menu.buildMenu}
-      {@const options = buildMenuState.options}
-      {#if selectedEntity !== null && options !== null}
-         <BuildMenu entity={selectedEntity} options={options} />
-      {/if}
+      <BuildMenu />
    {:else if menu === Menu.tamingMenu}
       {#if selectedEntity !== null}
          <TamingMenu entity={selectedEntity} />
@@ -53,8 +51,8 @@
    {:else if menu === Menu.signInscribeMenu}
       <SignInscribeMenu />
    {:else if menu === Menu.animalStaffOptions}
-      {#if selectedEntity !== null}
-         <AnimalStaffOptions entity={selectedEntity} />
+      {#if selectedEntity !== null && TamingComponentArray.hasComponent(selectedEntity)}
+         <AnimalStaffOptions entity={selectedEntity} tamingComponent={TamingComponentArray.getComponent(selectedEntity)} />
       {/if}
    {:else if menu === Menu.tamingRenamePrompt}
       <TamingRenamePrompt />

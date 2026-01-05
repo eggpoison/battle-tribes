@@ -22,11 +22,11 @@
    }
 
    function onMouseEnterInteractable(): void {
-      gameUIState.setIsFocusedOnMenu(false);
+      gameUIState.setIsHoveringOnMenu(false);
    }
 
    function onMouseLeaveInteractable(): void {
-      gameUIState.setIsFocusedOnMenu(true);
+      gameUIState.setIsHoveringOnMenu(true);
    }
 </script>
 

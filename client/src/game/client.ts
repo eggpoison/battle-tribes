@@ -3,7 +3,7 @@ import Board from "./Board";
 import { updateTextNumbers } from "./text-canvas";
 import { resizeCanvas } from "./webgl";
 import { createAudioContext, playRiverSounds, updateSounds } from "./sound";
-import { attemptToResearch, updateActiveResearchBench, updateResearchOrb } from "./research";
+import { attemptToResearch, updateResearchOrb } from "./research";
 import { updateEntitySelections } from "./entity-selection";
 import { updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
 import { entityUsesClientInterp } from "./rendering/render-part-matrices";
@@ -58,7 +58,6 @@ let playerPacketAccumulator = 0;
 
 // @Temporary: testing out simply treating packets as usual while tabbed out.
 document.addEventListener("visibilitychange", () => {
-//    console.log("change");
    if (document.visibilityState === "visible") {
       gameIsFocused = true;
       lastPacketTime = performance.now();
@@ -323,7 +322,6 @@ const runFrame = (frameStartTime: number): void => {
       
       updateSpamFilter(deltaTimeMS);
 
-      updateActiveResearchBench();
       updateResearchOrb();
       attemptToResearch();
 

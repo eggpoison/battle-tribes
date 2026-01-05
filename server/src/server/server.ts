@@ -11,9 +11,9 @@ import { updateDynamicPathfindingNodes } from "../pathfinding";
 import { updateGrassBlockers } from "../grass-blockers";
 import { broadcastSimulationStatus, createGameDataPacket, createSyncDataPacket, createSyncPacket } from "./packet-sending";
 import PlayerClient, { PlayerClientVars } from "./PlayerClient";
-import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, resetDirtyEntities } from "./player-clients";
+import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, processCommandPacket, resetDirtyEntities } from "./player-clients";
 import { createPlayerConfig } from "../entities/tribes/player";
-import { processAcquireTamingSkillPacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processCompleteTamingTierPacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processModifyBuildingPacket, processMountCarrySlotPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving";
+import { processAcquireTamingSkillPacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processCloseEntityInventoryPacket, processCompleteTamingTierPacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processItemTransferPacket, processModifyBuildingPacket, processMountCarrySlotPacket, processOpenEntityInventoryPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving";
 import { CowSpecies, Entity } from "battletribes-shared/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
@@ -252,6 +252,7 @@ class GameServer {
                return;
             }
             
+            // @Cleanup: so weird to have this in server.ts
             switch (packetType) {
                case PacketType.playerData: {
                   processPlayerDataPacket(playerClient, reader);
@@ -301,6 +302,10 @@ class GameServer {
                }
                case PacketType.itemPickup: {
                   processItemPickupPacket(playerClient, reader);
+                  break;
+               }
+               case PacketType.itemTransfer: {
+                  processItemTransferPacket(playerClient, reader);
                   break;
                }
                case PacketType.itemRelease: {
@@ -465,6 +470,18 @@ class GameServer {
                   processDevChangeTribeTypePacket(reader);
                   break;
                }
+               case PacketType.terminalCommand: {
+                  processCommandPacket(playerClient, reader);
+                  break;
+               }
+               case PacketType.openEntityInventory: {
+                  processOpenEntityInventoryPacket(reader);
+                  break;
+               }
+               case PacketType.closeEntityInventory: {
+                  processCloseEntityInventoryPacket(reader);
+                  break;
+               }
                default: {
                   console.log("Unknown packet type: " + packetType);
                }
@@ -605,10 +622,9 @@ class GameServer {
          }
          
          // Send the game data to the player
+         playerClient.visibleEntities = visibleEntities; // Done just before creating the game data packet, as adding the lights data requires .visibleEntities to be up-to-date.
          const gameDataPacket = createGameDataPacket(playerClient, entitiesToSend, removedEntities);
          playerClient.socket.send(gameDataPacket);
-
-         playerClient.visibleEntities = visibleEntities;
 
          // @Cleanup: should these be here?
          playerClient.visibleHits = [];

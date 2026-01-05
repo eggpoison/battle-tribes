@@ -22,9 +22,9 @@
       const amount = 1;
 
       const inventory = tabSelectorState.summonedInventories[inventoryName];
-      inventory.itemSlots[itemSlot] = new Item(callbackInfo.itemType, amount, 0);
+      inventory.itemSlots[itemSlot] = new Item(callbackInfo.itemType, amount, 0, "", "");
       
-      menuSelectorState.closeMenu();
+      menuSelectorState.closeCurrentMenu();
    }
    
    const clickInventory = (e: MouseEvent, callbackInfo: ItemSlotCallbackInfo, inventoryName: InventoryName): void => {

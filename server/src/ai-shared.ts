@@ -119,7 +119,7 @@ export function moveEntityToEntity(entity: Entity, targetEntity: Entity, acceler
    moveEntityToPosition(entity, targetHitbox.box.position.x, targetHitbox.box.position.y, acceleration, turnSpeed, 1);
 }
 
-export function hitboxIncludingChildrenHasReachedPosition(hitbox: Hitbox, pos: Point): boolean {
+export function hitboxIncludingChildrenHasPassedPosition(hitbox: Hitbox, pos: Point): boolean {
    const relativeX = hitbox.box.position.x - pos.x;
    const relativeY = hitbox.box.position.y - pos.y;
 
@@ -132,7 +132,7 @@ export function hitboxIncludingChildrenHasReachedPosition(hitbox: Hitbox, pos: P
 
    for (const childHitbox of hitbox.children) {
       // @INCOMPLETE: tethers??
-      if (childHitbox.isPartOfParent && hitboxIncludingChildrenHasReachedPosition(childHitbox, pos)) {
+      if (childHitbox.isPartOfParent && hitboxIncludingChildrenHasPassedPosition(childHitbox, pos)) {
          return true;
       }
    }
@@ -141,10 +141,10 @@ export function hitboxIncludingChildrenHasReachedPosition(hitbox: Hitbox, pos: P
 }
 
 // @HACK: instead of doing this, the hitbox-only function should also account for tethers
-export function entityHasReachedPosition(entity: Entity, pos: Point): boolean {
+export function entityHasPassedPosition(entity: Entity, pos: Point): boolean {
    const transformComponent = TransformComponentArray.getComponent(entity);
    for (const rootHitbox of transformComponent.rootHitboxes) {
-      if (hitboxIncludingChildrenHasReachedPosition(rootHitbox, pos)) {
+      if (hitboxIncludingChildrenHasPassedPosition(rootHitbox, pos)) {
          return true;
       }
    }

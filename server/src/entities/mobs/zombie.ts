@@ -63,7 +63,7 @@ export function createZombieConfig(position: Point, rotation: number, isGolden: 
    const inventoryUseComponent = new InventoryUseComponent();
    
    const handSlot = new Inventory(1, 1, InventoryName.handSlot);
-   addInventoryToInventoryComponent(inventoryComponent, handSlot, { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   addInventoryToInventoryComponent(inventoryComponent, handSlot, { acceptsPickedUpItems: true, isDroppedOnDeath: true });
    inventoryUseComponent.associatedInventoryNames.push(handSlot.name);
 
    // @IncompletE: chance to not have man hand instead of offhand
@@ -71,7 +71,7 @@ export function createZombieConfig(position: Point, rotation: number, isGolden: 
    // if (Math.random() < 0.7) {
    if (true) {
       const offhand = new Inventory(0, 0, InventoryName.offhand);
-      addInventoryToInventoryComponent(inventoryComponent, offhand, { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+      addInventoryToInventoryComponent(inventoryComponent, offhand, { acceptsPickedUpItems: true, isDroppedOnDeath: true });
       inventoryUseComponent.associatedInventoryNames.push(offhand.name);
    }
 

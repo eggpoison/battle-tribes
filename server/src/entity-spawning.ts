@@ -287,6 +287,9 @@ export function runSpawnAttempt(): void {
       return;
    }
 
+   // @SQUEAM for horse archer shot
+   return;
+
    // Regular spawning
    for (let i = 0; i < SPAWN_INFOS.length; i++) {
       const spawnInfo = SPAWN_INFOS[i];

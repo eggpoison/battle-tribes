@@ -20,7 +20,7 @@ export interface ResearchOrb {
    readonly size: number;
 }
 
-let currentBenchID = -1;
+let currentBench: Entity = 0;
 let currentResearchOrb: ResearchOrb | null = null;
 let orbCompleteProgress = 0;
 
@@ -56,25 +56,38 @@ export function getResearchOrbCompleteProgress(): number {
    return orbCompleteProgress / RESEARCH_ORB_COMPLETE_TIME;
 }
 
-export function updateActiveResearchBench(): void {
-   const selectedStructure = entitySelectionState.selectedEntity;
-   if (selectedStructure === null) {
-      currentResearchOrb = null;
-      currentBenchID = -1;
-      return;
-   }
+// export function updateActiveResearchBench(): void {
+//    const selectedStructure = entitySelectionState.selectedEntity;
+//    if (selectedStructure === null) {
+//       currentResearchOrb = null;
+//       currentBenchID = -1;
+//       return;
+//    }
 
-   if (getEntityType(selectedStructure) !== EntityType.researchBench) {
-      return;
-   }
+//    if (getEntityType(selectedStructure) !== EntityType.researchBench) {
+//       return;
+//    }
 
-   currentBenchID = selectedStructure;
+//    currentBenchID = selectedStructure;
+//    if (currentResearchOrb === null) {
+//       currentResearchOrb = generateResearchOrb(selectedStructure);
+//    }
+// }
+
+export function setActiveResearchBench(bench: Entity): void {
+   currentBench = bench;
    if (currentResearchOrb === null) {
-      currentResearchOrb = generateResearchOrb(selectedStructure);
+      currentResearchOrb = generateResearchOrb(bench);
    }
 }
 
 export function updateResearchOrb(): void {
+   // Make sure the bench is still selected
+   if (entitySelectionState.selectedEntity !== currentBench) {
+      currentResearchOrb = null;
+      return;
+   }
+
    if (currentResearchOrb === null) {
       return;
    }

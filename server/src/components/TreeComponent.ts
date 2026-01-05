@@ -3,8 +3,6 @@ import { ComponentArray } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
-import { getEntityLayer } from "../world";
-import { createGrassBlocker } from "../grass-blockers";
 import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 import { Point } from "../../../shared/src/utils";
 
@@ -31,7 +29,8 @@ function onJoin(entity: Entity): void {
    const treeComponent = TreeComponentArray.getComponent(entity);
 
    const blockerBox = new CircularBox(treeHitbox.box.position.copy(), new Point(0, 0), 0, TREE_TRUNK_RADII[treeComponent.treeSize]);
-   createGrassBlocker(blockerBox, getEntityLayer(entity), 0, 0.9, entity)
+   // @SQUEAM for shot
+   // createGrassBlocker(blockerBox, getEntityLayer(entity), 0, 0.9, entity)
 }
 
 function getDataLength(): number {

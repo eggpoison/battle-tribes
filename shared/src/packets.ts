@@ -19,6 +19,7 @@ export enum PacketType {
    stopItemUse,
    dropItem,
    itemPickup,
+   itemTransfer,
    itemRelease,
    summonEntity,
    toggleSimulation,
@@ -47,8 +48,11 @@ export enum PacketType {
    deconstructBuilding,
    recruitTribesman,
    respondToTitleOffer,
+   terminalCommand,
    // @Hack
    setSpectatingPosition,
+   openEntityInventory,
+   closeEntityInventory,
    forceCompleteTamingTier, // ((DEV))
    acquireTamingSkill,
    forceAcquireTamingSkill, // ((DEV))
@@ -137,15 +141,15 @@ export class Packet extends BasePacketObject {
    }
 
    public writeString(str: string): void {
-      // @Speed: could be using encodeInto instead!!
+      // @Speed: could be using .encodeInto instead!!
       const encodedUsername = utf8Encoder.encode(str);
-      const numBytes = encodedUsername.length;
+      const lengthBytes = encodedUsername.length;
       
-      if (this.currentByteOffset + numBytes > this.buffer.byteLength) {
+      if (this.currentByteOffset + lengthBytes > this.buffer.byteLength) {
          throw new Error("Exceeded length of buffer");
       }
 
-      this.writeNumber(numBytes);
+      this.writeNumber(lengthBytes);
       this.uint8View.set(encodedUsername, this.currentByteOffset);
       this.currentByteOffset += alignLengthBytes(encodedUsername.byteLength);
    }

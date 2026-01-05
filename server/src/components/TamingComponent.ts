@@ -35,22 +35,24 @@ export class TamingComponent {
    // @Temporary
    public followTarget: Entity = 0;
 
+   public depositTarget: Point | null = null;
+
    constructor() {
       const follow = getTamingSkill(TamingSkillID.follow);
       this.skillLearningArray.push({
          skill: follow,
          requirementProgressArray: [follow.requirements[0].amountRequired]
-      })
+      });
       const move = getTamingSkill(TamingSkillID.move);
       this.skillLearningArray.push({
          skill: move,
          requirementProgressArray: [move.requirements[0].amountRequired]
-      })
+      });
       const attack = getTamingSkill(TamingSkillID.attack);
       this.skillLearningArray.push({
          skill: attack,
          requirementProgressArray: [attack.requirements[0].amountRequired]
-      })
+      });
    }
 }
 

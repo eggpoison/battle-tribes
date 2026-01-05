@@ -189,7 +189,7 @@ function onTick(krumblid: Entity): void {
          const itemEntity = aiHelperComponent.visibleEntities[i];
          if (getEntityType(itemEntity) === EntityType.itemEntity) {
             const itemComponent = ItemComponentArray.getComponent(itemEntity);
-            if (itemComponent.itemType === ItemType.leaf) {
+            if (itemComponent.item.type === ItemType.leaf) {
                const wasEaten = chaseAndEatLeafItem(krumblid, itemEntity);
                if (!wasEaten) {
                   return;

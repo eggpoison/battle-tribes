@@ -8,7 +8,7 @@ import PlayerClient from "./PlayerClient";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { Inventory, InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
-import { alignLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
+import { alignLengthBytes, getStringLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
 import { entityExists, getEntityComponentTypes, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes } from "../world";
 import { getPlayerNearbyCollapses, getSubtileSupport, subtileIsCollapsing } from "../collapses";
 import { getSubtileIndex } from "../../../shared/src/subtiles";
@@ -23,6 +23,10 @@ import { getPlayerClients } from "./player-clients";
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += 4 * Float32Array.BYTES_PER_ELEMENT * inventory.items.length;
+   for (const item of inventory.items) {
+      lengthBytes += getStringLengthBytes(item.nickname);
+      lengthBytes += getStringLengthBytes(item.namer);
+   }
    return lengthBytes;
 }
 
@@ -40,6 +44,8 @@ export function addInventoryDataToPacket(packet: Packet, inventory: Inventory): 
       packet.writeNumber(item.id);
       packet.writeNumber(item.type);
       packet.writeNumber(item.count);
+      packet.writeString(item.nickname);
+      packet.writeString(item.namer);
    }
 }
 

@@ -5,7 +5,7 @@ import { Point, randAngle } from "battletribes-shared/utils";
 import { ItemComponent } from "../components/ItemComponent";
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityConfig, LightCreationInfo } from "../components";
-import { ItemType } from "battletribes-shared/items/items";
+import { Item, ItemType } from "battletribes-shared/items/items";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import { addHitboxToTransformComponent, getRandomPositionInBox, getRandomWeightedHitbox, TransformComponent, TransformComponentArray } from "../components/TransformComponent";
@@ -14,17 +14,19 @@ import { getSubtileIndex } from "../../../shared/src/subtiles";
 import { createEntity, getEntityLayer } from "../world";
 import { Hitbox } from "../hitboxes";
 import { createLight } from "../lights";
+import { createItem } from "../items";
 
-export function createItemEntityConfig(position: Point, rotation: number, itemType: ItemType, amount: number, throwingEntity: Entity | null): EntityConfig {
+export function createItemEntityConfig(position: Point, rotation: number, item: Item, throwingEntity: Entity | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
    const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
-   const itemComponent = new ItemComponent(itemType, amount, throwingEntity);
+   const itemComponent = new ItemComponent(item, throwingEntity);
 
    const lights = new Array<LightCreationInfo>();
-   if (itemType === ItemType.slurb) {
+   // @Hack: hardcoded!!
+   if (item.type === ItemType.slurb) {
       const light = createLight(new Point(0, 0), 0.6, 0.5, 4, 1, 0.1, 1);
       const lightCreationInfo: LightCreationInfo = {
          light: light,
@@ -76,7 +78,7 @@ export function createItemsOverEntity(entity: Entity, itemType: ItemType, amount
       }
       
       // Create item entity
-      const config = createItemEntityConfig(spawnPosition, randAngle(), itemType, 1, null);
+      const config = createItemEntityConfig(spawnPosition, randAngle(), createItem(itemType, 1, "", ""), null);
       createEntity(config, getEntityLayer(entity), 0);
    }
 }

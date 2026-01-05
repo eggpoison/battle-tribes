@@ -7,7 +7,9 @@ import { ComponentArray } from "./ComponentArray";
 import { getPlantGrowthSpeed, plantIsFertilised } from "./PlanterBoxComponent";
 
 const enum Vars {
+   // @SQUEAM for da shot
    GROWTH_TIME_TICKS = 60 * Settings.TICK_RATE
+   // GROWTH_TIME_TICKS = 6000 * Settings.TICK_RATE
 }
 
 export class BerryBushPlantedComponent {
@@ -34,13 +36,14 @@ function onTick(entity: Entity): void {
          const tickChance = plantIsFertilised(entity) ? 0.45 : 0.3;
          
          // Grow fruit
-         if (Math.random() < tickChance * Settings.DT_S) {
-            berryBushPlantedComponent.fruitRandomGrowthTicks++;
-            if (berryBushPlantedComponent.fruitRandomGrowthTicks === 5) {
-               berryBushPlantedComponent.numFruit++;
-               berryBushPlantedComponent.fruitRandomGrowthTicks = 0;
-            }
-         }
+         // @SQUEAM @TEMPORARY
+         // if (Math.random() < tickChance * Settings.DT_S) {
+         //    berryBushPlantedComponent.fruitRandomGrowthTicks++;
+         //    if (berryBushPlantedComponent.fruitRandomGrowthTicks === 5) {
+         //       berryBushPlantedComponent.numFruit++;
+         //       berryBushPlantedComponent.fruitRandomGrowthTicks = 0;
+         //    }
+         // }
       }
    }
 

@@ -74,7 +74,7 @@ export function updatePlayerDirection(clientTickInterp: number, serverTickInterp
 
    // Angular velocity
    // We don't use relativeAngle here cuz that wouldn't work for when the player is mounted.
-   // setHitboxAngularVelocity(playerHitbox, (playerHitbox.box.angle - previousAngle) * Settings.TICK_RATE);
+   // setHitboxObservedAngularVelocity(playerHitbox, (playerHitbox.box.angle - previousAngle) * Settings.TICK_RATE);
    setHitboxObservedAngularVelocity(playerHitbox, 0);
 
    const renderInfo = getEntityRenderInfo(playerInstance);

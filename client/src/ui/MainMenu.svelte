@@ -13,13 +13,6 @@
    const usernameIsValid = (): [warning: string, isValid: false] | [warning: null, isValid: true] => {
       if (username.length > MAX_USERNAME_CHARS) return ["Name cannot be more than " + MAX_USERNAME_CHARS + " characters long!", false];
       if (username.length === 0) return ["Name cannot be empty!", false];
-
-      // Make sure it doesn't contain any funky characters! only unicode or ur out!
-      for (const char of username) {
-         if (char.charCodeAt(0) > 127) {
-            return ["Name cannot contain funky characters!", false];
-         }
-      }
       
       return [null, true];
    }

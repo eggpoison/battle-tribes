@@ -1,7 +1,8 @@
 import { Settings } from "webgl-test-shared";
 import { PacketSnapshot } from "../game/networking/packet-snapshots";
 
-let uiZoom = $state(1.4);
+// @Location
+let uiZoom = $state(1);
 // @Hack @Copynpaste
 document.documentElement.style.setProperty("--zoom", uiZoom.toString());
 

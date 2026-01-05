@@ -798,6 +798,8 @@ export function onGameMouseDown(e: MouseEvent): void {
          const selectedEntity = entitySelectionState.selectedEntity;
          if (selectedEntity !== null) {
             sendSelectRiderDepositLocationPacket(selectedEntity, cursorWorldPos);
+            entitySelectionState.setSelectedEntity(null);
+            gameUIState.setGameInteractState(GameInteractState.none);
          }
       } else {
          attemptAttack();

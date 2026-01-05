@@ -152,6 +152,9 @@ const removeGrassBlocker = (blocker: GrassBlocker, i: number): void => {
 }
 
 export function updateGrassBlockers(): void {
+   // @SQUEAM so blockers dont disappear
+   if (1+1===2)return;
+   
    for (let i = 0; i < blockers.length; i++) {
       const blocker = blockers[i];
       

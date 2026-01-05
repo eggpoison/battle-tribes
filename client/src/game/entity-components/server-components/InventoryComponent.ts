@@ -1,4 +1,4 @@
-import { PacketReader, InventoryName, Item, ITEM_TYPE_RECORD, Inventory, ItemType, Entity, LimbAction, ServerComponentType, copyInventoryShallow } from "webgl-test-shared";
+import { PacketReader, InventoryName, Item, ITEM_TYPE_RECORD, Inventory, ItemType, Entity, LimbAction, ServerComponentType, copyInventoryShallow, copyInventoryDeep } from "webgl-test-shared";
 import { inventoryState } from "../../../ui-state/inventory-state.svelte";
 import { inventoriesAreDifferent } from "../../inventory-manipulation";
 import { playerInstance } from "../../player";
@@ -258,28 +258,28 @@ function updatePlayerFromData(data: InventoryComponentData): void {
    const entityGloveSlot = getInventory(inventoryComponent, InventoryName.gloveSlot);
       
    if (entityHotbar !== null && inventoriesAreDifferent(inventoryState.hotbar, entityHotbar)) {
-      inventoryState.setHotbar(copyInventoryShallow(entityHotbar));
+      inventoryState.setHotbar(copyInventoryDeep(entityHotbar));
    }
    if (entityOffhand !== null && inventoriesAreDifferent(inventoryState.offhand, entityOffhand)) {
-      inventoryState.setOffhand(copyInventoryShallow(entityOffhand));
+      inventoryState.setOffhand(copyInventoryDeep(entityOffhand));
    }
    if (entityHeldItemSlot !== null && inventoriesAreDifferent(inventoryState.heldItemSlot, entityHeldItemSlot)) {
-      inventoryState.setHeldItemSlot(copyInventoryShallow(entityHeldItemSlot));
+      inventoryState.setHeldItemSlot(copyInventoryDeep(entityHeldItemSlot));
    }
    if (entityCraftingOutputSlot !== null && inventoriesAreDifferent(inventoryState.craftingOutputSlot, entityCraftingOutputSlot)) {
-      inventoryState.setCraftingOutputSlot(copyInventoryShallow(entityCraftingOutputSlot));
+      inventoryState.setCraftingOutputSlot(copyInventoryDeep(entityCraftingOutputSlot));
    }
    if (entityBackpack !== null && inventoriesAreDifferent(inventoryState.backpack, entityBackpack)) {
-      inventoryState.setBackpack(copyInventoryShallow(entityBackpack));
+      inventoryState.setBackpack(copyInventoryDeep(entityBackpack));
    }
    if (entityBackpackSlot !== null && inventoriesAreDifferent(inventoryState.backpackSlot, entityBackpackSlot)) {
-      inventoryState.setBackpackSlot(copyInventoryShallow(entityBackpackSlot));
+      inventoryState.setBackpackSlot(copyInventoryDeep(entityBackpackSlot));
    }
    if (entityArmourSlot !== null && inventoriesAreDifferent(inventoryState.armourSlot, entityArmourSlot)) {
-      inventoryState.setArmourSlot(copyInventoryShallow(entityArmourSlot));
+      inventoryState.setArmourSlot(copyInventoryDeep(entityArmourSlot));
    }
    if (entityGloveSlot !== null && inventoriesAreDifferent(inventoryState.gloveSlot, entityGloveSlot)) {
-      inventoryState.setGloveSlot(copyInventoryShallow(entityGloveSlot));
+      inventoryState.setGloveSlot(copyInventoryDeep(entityGloveSlot));
    }
 }
 
@@ -287,7 +287,6 @@ function updateSelectedEntityState(entity: Entity): void {
    // @Speed: this is happening every tick for some reason, causing refreshes every tick. baad!!
    
    const inventoryComponent = InventoryComponentArray.getComponent(entity);
-   // @Hack @Garbage: extra bad cuz it has to be a semi-deep copy of the inventories to actually register!!
-   // IMPORTANT: however doesn't do a full deep copy of the items too, as the items have to be the same for the item tooltip to properly be hidden on inventory close. (@Hack)
-   selectedEntityInventoryState.setInventories(inventoryComponent.inventories.map(copyInventoryShallow));
+   // @Garbage: extra bad cuz it has to be a semi-deep copy of the inventories to actually register!!
+   selectedEntityInventoryState.setInventories(inventoryComponent.inventories.map(copyInventoryDeep));
 }

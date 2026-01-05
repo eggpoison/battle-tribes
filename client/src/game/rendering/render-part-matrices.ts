@@ -266,9 +266,9 @@ export function cleanEntityRenderInfo(renderInfo: EntityRenderInfo, tickInterp: 
 }
 
 export function entityUsesClientInterp(entity: Entity): boolean {
-   // @HACK ideally we should be able to throw an error here, this should never be the case!! but it is rn for some reason!!....
+   // @HACK ideally we should be able to throw an error here, this should never be the case!! but it is rn in the case of players holding a placeable item
    if (!TransformComponentArray.hasComponent(entity)) {
-      console.warn("big poopoo town @ le function entityUsesClientInterp!!")
+      // console.warn("big poopoo town @ le function entityUsesClientInterp!!")
       return false;
    }
    const transformComponent = TransformComponentArray.getComponent(entity);

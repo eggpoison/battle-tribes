@@ -1,5 +1,5 @@
 <script lang="ts">
-   import { InventoryName, type Entity, BlueprintType } from "webgl-test-shared";
+   import { InventoryName, type Entity, BlueprintType, assert } from "webgl-test-shared";
    import { GhostType } from "../../../game/rendering/webgl/entity-ghost-rendering";
    import { getItemTypeImage } from "../../../game/client-item-info";
    import { countItemTypesInInventory } from "../../../game/inventory-manipulation";
@@ -9,7 +9,7 @@
    import { TransformComponentArray } from "../../../game/entity-components/server-components/TransformComponent";
    import { sendDeconstructBuildingPacket, sendModifyBuildingPacket, sendPlaceBlueprintPacket } from "../../../game/networking/packet-sending";
    import { playerInstance } from "../../../game/player";
-   import { type BuildMenuOption, OptionType } from "../../../ui-state/build-menu-state.svelte";
+   import { type BuildMenuOption, buildMenuState, OptionType } from "../../../ui-state/build-menu-state.svelte";
    import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
 
    let hoveredGhostType: GhostType | null = null;
@@ -19,14 +19,18 @@
 
    let menuElement: HTMLDivElement | undefined;
 
-   interface Props {
-      entity: Entity;
-      // This is passed in as a prop instead of getting the state directly here so as to guarantee that the case when the options array is empty is skipped
-      options: ReadonlyArray<BuildMenuOption>;
-   }
-   
-   let { entity, options }: Props = $props();
+   // const getSelectedEntity = (): Entity => {
+   //    const entity = entitySelectionState.selectedEntity;
+   //    assert(entity !== null);
+   //    return entity;
+   // }
 
+   const entity = entitySelectionState.selectedEntity;
+   assert(entity !== null);
+
+   const options = buildMenuState.options;
+   assert(options !== null);
+   
    // @Cleanup: copy paste of shared function
    const snapAngleToPlayerAngle = (structure: Entity, rotation: number): number => {
       if (playerInstance === null) {

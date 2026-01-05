@@ -1,5 +1,5 @@
 <script lang="ts">
-   import {ITEM_TYPE_RECORD, ITEM_INFO_RECORD, type Item, type AnimalStaffItemInfo, type ArmourItemInfo } from "webgl-test-shared";
+   import {ITEM_TYPE_RECORD, ITEM_INFO_RECORD, type Item, type AnimalStaffItemInfo, type ArmourItemInfo, itemInfoIsTool, ItemType } from "webgl-test-shared";
    import CLIENT_ITEM_INFO_RECORD from "../../../game/client-item-info";
    import { gameUIState } from "../../../ui-state/game-ui-state.svelte";
 
@@ -26,6 +26,15 @@
    {#if itemCategory === "armour"}
       <p>Defence: {(itemInfo as ArmourItemInfo).defence * 100}%</p>
    {/if}
+
+   {#if itemInfoIsTool(item.type, itemInfo)}
+      <p>Damage: {itemInfo.damage}</p>
+   {/if}
+
+   <!-- @SQUEAM -->
+    {#if item.type === ItemType.mrpebbles}
+      <p>Damage: 1</p>
+    {/if}
 
    {#if typeof clientItemInfo.flavourText !== "undefined"}
       <p class="flavour-text">{clientItemInfo.flavourText}</p>
@@ -80,10 +89,10 @@
 }
 
 #item-tooltip p.namer {
-   font-size: 0.75rem;
+   font-size: 0.8rem;
    font-style: italic;
-   color: #aeaeae;
-   margin-top: 0.5rem;
+   color: #bbb;
+   margin-top: 0.4rem;
    /* shifted 1px in x y instead of 2px */
    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
 }

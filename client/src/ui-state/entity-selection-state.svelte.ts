@@ -32,16 +32,18 @@ export const entitySelectionState = {
       return entityExists(selectedEntity) ? selectedEntity : null;
    },
    setSelectedEntity(newSelectedEntity: Entity | null): void {
+      // If there was a previous entity selected, and it's being changed, deselect the entity.
+      if (entityExists(selectedEntity) && newSelectedEntity !== selectedEntity) {
+         // @Location @Hack @Cleanup
+         sendStructureUninteractPacket(selectedEntity);
+
+         // Done as a wee bit of a hack so that this doesn't get into an infinite loop with closeCurrentMenu (they call each other)
+         selectedEntity = 0; 
+
+         menuSelectorState.closeCurrentMenu();
+      }
+
       if (newSelectedEntity !== null && entityExists(newSelectedEntity)) {
-         // Clear previous selected entity
-         if (entityExists(selectedEntity)) {
-            selectedEntity = 0;
-
-            // @Location @Hack @Cleanup
-            sendStructureUninteractPacket(selectedEntity);
-            menuSelectorState.closeCurrentMenu();
-         }
-
          selectedEntity = newSelectedEntity;
 
          // Update UI state

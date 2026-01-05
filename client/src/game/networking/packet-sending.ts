@@ -214,6 +214,18 @@ export function sendItemPickupPacket(entityID: number, inventoryName: InventoryN
    sendPacket(packet);
 }
 
+export function sendItemTransferPacket(entity: Entity, inventoryName: InventoryName, itemSlot: number, receivingEntity: Entity, receivingInventoryName: InventoryName): void {
+   const packet = new Packet(PacketType.itemTransfer, 6 * Float32Array.BYTES_PER_ELEMENT);
+
+   packet.writeNumber(entity);
+   packet.writeNumber(inventoryName);
+   packet.writeNumber(itemSlot);
+   packet.writeNumber(receivingEntity);
+   packet.writeNumber(receivingInventoryName);
+
+   sendPacket(packet);
+}
+
 export function sendItemReleasePacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
    const packet = new Packet(PacketType.itemRelease, 5 * Float32Array.BYTES_PER_ELEMENT);
 
@@ -495,5 +507,17 @@ export function sendDevChangeTribeTypePacket(tribeID: number, newTribeType: Trib
 export function sendTerminalCommandPacket(command: string): void {
    const packet = new Packet(PacketType.terminalCommand, Float32Array.BYTES_PER_ELEMENT + getStringLengthBytes(command));
    packet.writeString(command);
+   sendPacket(packet);
+}
+
+export function sendOpenEntityInventoryPacket(entity: Entity): void {
+   const packet = new Packet(PacketType.openEntityInventory, 2 * Float32Array.BYTES_PER_ELEMENT);
+   packet.writeNumber(entity);
+   sendPacket(packet);
+}
+
+export function sendCloseEntityInventoryPacket(entity: Entity): void {
+   const packet = new Packet(PacketType.closeEntityInventory, 2 * Float32Array.BYTES_PER_ELEMENT);
+   packet.writeNumber(entity);
    sendPacket(packet);
 }

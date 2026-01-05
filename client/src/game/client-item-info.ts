@@ -868,7 +868,7 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
       name: "Sock",
       namePlural: "",
       description: "",
-      flavourText: "Works ok if you shift your foot around so the hole is on the top side."
+      flavourText: "Works ok if you shift your foot around so the hole is on the top."
    },
    [ItemType.mrpebbles]: {
       entityTextureSource: "items/small/mrpebbles.png",
@@ -877,7 +877,7 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
       name: "Rock",
       namePlural: "",
       description: "",
-      flavourText: "A merciless pet rock. Someone has carved a smile onto its face."
+      flavourText: "A pet rock. Someone has carved a smile onto its face."
    },
 };
 

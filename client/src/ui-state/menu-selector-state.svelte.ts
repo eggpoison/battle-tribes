@@ -1,7 +1,7 @@
 import { InventoryName } from "webgl-test-shared";
 import { InventoryComponentArray, getInventory } from "../game/entity-components/server-components/InventoryComponent";
 import { TransformComponentArray } from "../game/entity-components/server-components/TransformComponent";
-import { sendItemDropPacket } from "../game/networking/packet-sending";
+import { sendCloseEntityInventoryPacket, sendItemDropPacket } from "../game/networking/packet-sending";
 import { playerInstance } from "../game/player";
 import { entitySelectionState } from "./entity-selection-state.svelte";
 
@@ -56,6 +56,32 @@ const MENU_IS_EMBODIED_RECORD: Record<Menu, boolean> = {
    [Menu.techTree]: false,
 }
 
+const MENU_IS_INVENTORY_RECORD: Record<Menu, boolean> = {
+   [Menu.buildMenu]: false,
+   [Menu.animalStaffOptions]: false,
+   [Menu.craftingMenu]: false,
+   [Menu.tamingMenu]: false,
+   [Menu.tamingRenamePrompt]: false,
+   [Menu.signInscribeMenu]: false,
+   [Menu.barrelInventory]: true,
+   [Menu.tribesmanInventory]: false,
+   [Menu.campfireInventory]: false,
+   [Menu.furnaceInventory]: false,
+   [Menu.ammoBoxInventory]: false,
+   [Menu.tombstoneEpitaph]: false,
+   [Menu.healthInspector]: false,
+   [Menu.itemsDevTab]: false,
+   [Menu.summonDevTab]: false,
+   [Menu.titlesDevTab]: false,
+   [Menu.tribesDevTab]: false,
+   [Menu.tribePlanVisualiser]: false,
+   [Menu.techTree]: false,
+};
+
+export function menuIsInventory(menu: Menu): boolean {
+   return MENU_IS_INVENTORY_RECORD[menu];
+}
+
 export const menuSelectorState = {
    get menuStack() {
       return menuStack;
@@ -65,6 +91,10 @@ export const menuSelectorState = {
       menuStack.push({
          menu: menu,
          closeFunction: () => {
+            if (entitySelectionState.selectedEntity !== null && menuIsInventory(menu)) {
+               sendCloseEntityInventoryPacket(entitySelectionState.selectedEntity);
+            }
+            
             entitySelectionState.setSelectedEntity(null);
             
             // @INVESTIGATE: this might actually be bad for gameplay, cuz what if you randomly drop something or someone attacks you while you're doing something and you're forced to find a place to put your held item...
@@ -91,7 +121,7 @@ export const menuSelectorState = {
       menuStack.pop();
       return true;
    },
-   /** Closes a specific menu, and any menus opened above it. */
+   /** Closes a specific menu, and any menus opened after it. */
    closeMenu(menu: Menu): void {
       let idx: number | undefined;
       for (let i = 0; i < menuStack.length; i++) {
@@ -118,9 +148,9 @@ export const menuSelectorState = {
    hasOpenMenu(): boolean {
       return menuStack.length > 0;
    },
-   hasOpenNonEmbodiedMenu(): boolean {
+   hasOpenEmbodiedMenu(): boolean {
       for (const menuInfo of menuStack) {
-         if (!MENU_IS_EMBODIED_RECORD[menuInfo.menu]) {
+         if (MENU_IS_EMBODIED_RECORD[menuInfo.menu]) {
             return true;
          }
       }

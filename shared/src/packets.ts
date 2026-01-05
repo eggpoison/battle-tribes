@@ -19,6 +19,7 @@ export enum PacketType {
    stopItemUse,
    dropItem,
    itemPickup,
+   itemTransfer,
    itemRelease,
    summonEntity,
    toggleSimulation,
@@ -50,6 +51,8 @@ export enum PacketType {
    terminalCommand,
    // @Hack
    setSpectatingPosition,
+   openEntityInventory,
+   closeEntityInventory,
    forceCompleteTamingTier, // ((DEV))
    acquireTamingSkill,
    forceAcquireTamingSkill, // ((DEV))

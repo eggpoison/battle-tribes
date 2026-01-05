@@ -463,3 +463,52 @@ function addDataToPacket(packet: Packet, entity: Entity): void {
 export function hasInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName): boolean {
    return typeof inventoryComponent.inventoryRecord[inventoryName] !== "undefined";
 }
+
+export function isRoomForItem(inventory: Inventory, item: Item): boolean {
+   let remainingAmountToAdd = item.count;
+   let amountAdded = 0;
+
+   const isStackable = itemIsStackable(item.type);
+
+   if (isStackable) {
+      const stackSize = (ITEM_INFO_RECORD[item.type] as StackableItemInfo).stackSize;
+      
+      // If there is already an item of the same type in the inventory, add it there
+      for (let i = 0; i < inventory.items.length; i++) {
+         const currentItem = inventory.items[i];
+
+         // If the item is of the same type, add it
+         if (currentItem.type === item.type) {
+            const maxAddAmount = Math.min(stackSize - currentItem.count, remainingAmountToAdd);
+            
+            remainingAmountToAdd -= maxAddAmount;
+            amountAdded += maxAddAmount;
+
+            if (remainingAmountToAdd === 0) {
+               return true;
+            }
+         }
+      }
+   }
+   
+   for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
+      // If the slot is empty then add the rest of the item
+      if (typeof inventory.itemSlots[itemSlot] === "undefined") {
+         let addAmount: number;
+         if (isStackable) {
+            const stackSize = (ITEM_INFO_RECORD[item.type] as StackableItemInfo).stackSize;
+            addAmount = Math.min(stackSize, remainingAmountToAdd);
+         } else {
+            addAmount = 1;
+         }
+
+         amountAdded += addAmount;
+         remainingAmountToAdd -= addAmount;
+         if (remainingAmountToAdd === 0) {
+            return true;
+         }
+      }
+   }
+
+   return false;
+}

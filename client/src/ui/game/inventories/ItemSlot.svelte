@@ -22,10 +22,13 @@
 
    const img = $derived(item !== null ? getItemTypeImage(item.type) : placeholderImg);
 
+   let isShowingTooltip = $state(false);
+
    const onMouseOver = (e: MouseEvent): void => {
       onmouseover?.(e);
 
       itemTooltipState.setItem(item);
+      isShowingTooltip = true;
    }
 
    const onMouseMove = (e: MouseEvent): void => {
@@ -34,15 +37,15 @@
 
    const onMouseOut = (e: MouseEvent): void => {
       onmouseout?.(e);
+      isShowingTooltip = false;
 
-      if (itemTooltipState.item === item) {
-         itemTooltipState.setItem(null);
-      }
+      // @Bug? what if this overrides it?
+      itemTooltipState.setItem(null);
    }
 
    onDestroy(() => {
       // If the player is hovering over the item when the menu is closed, the onMouseOut function won't be triggered, so we have to also clear the item tooltip when it's destroyed
-      if (itemTooltipState.item === item) {
+      if (isShowingTooltip) {
          itemTooltipState.setItem(null);
       }
    });

@@ -1,4 +1,4 @@
-import { Entity, ServerComponentType } from "webgl-test-shared";
+import { Entity, PacketReader, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
@@ -8,47 +8,75 @@ import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 
-export interface BarrelComponentData {}
+export interface BarrelComponentData {
+   readonly isOpened: boolean;
+}
 
-interface IntermediateInfo {}
+interface IntermediateInfo {
+   readonly renderPart: TexturedRenderPart;
+}
 
-export interface BarrelComponent {}
+export interface BarrelComponent {
+   readonly renderPart: TexturedRenderPart;
+}
 
 export const BarrelComponentArray = new ServerComponentArray<BarrelComponent, BarrelComponentData, IntermediateInfo>(ServerComponentType.barrel, true, createComponent, getMaxRenderParts, decodeData);
 BarrelComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 BarrelComponentArray.onHit = onHit;
 BarrelComponentArray.onDie = onDie;
+BarrelComponentArray.updateFromData = updateFromData;
+
+const getTextureSource = (isOpened: boolean): string => {
+   return isOpened ? "entities/barrel/barrel-open.png" : "entities/barrel/barrel.png";
+}
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
    const hitbox = transformComponentData.hitboxes[0];
-   
-   renderInfo.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         getTextureArrayIndex("entities/barrel/barrel.png")
-      )
-   );
 
-   return {};
+   const barrelComponentData = entityComponentData.serverComponentData[ServerComponentType.barrel]!;
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      getTextureArrayIndex(getTextureSource(barrelComponentData.isOpened))
+   );
+   renderInfo.attachRenderPart(renderPart);
+
+   return {
+      renderPart: renderPart
+   };
 }
 
 export function createBarrelComponentData(): BarrelComponentData {
-   return {};
+   return {
+      isOpened: false
+   };
 }
 
-function decodeData(): BarrelComponentData {
-   return {};
+function decodeData(reader: PacketReader): BarrelComponentData {
+   const isOpened = reader.readBool();
+   
+   return {
+      isOpened: isOpened
+   };
 }
 
-function createComponent(): BarrelComponent {
-   return {};
+function createComponent(_entityComponentData: EntityComponentData, intermediateInfo: Readonly<IntermediateInfo>): BarrelComponent {
+   return {
+      renderPart: intermediateInfo.renderPart
+   };
 }
 
 function getMaxRenderParts(): number {
    return 1;
+}
+
+function updateFromData(data: BarrelComponentData, entity: Entity): void {
+   const barrelComponent = BarrelComponentArray.getComponent(entity);
+   const textureSource = getTextureSource(data.isOpened);
+   barrelComponent.renderPart.switchTextureSource(textureSource);
 }
 
 function onHit(entity: Entity, hitbox: Hitbox): void {

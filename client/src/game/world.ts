@@ -215,7 +215,8 @@ export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo:
    
    // If the entity has first spawned in, call any spawn functions
    const ageTicks = getEntityAgeTicks(entity);
-   if (ageTicks === 0) {
+   // e.g. if packets are sent half as often as teh tick rate, then ageTicks <= 1 means it has spawned in.
+   if (ageTicks <= Math.ceil(Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE) - 1) {
       const componentArrays = getComponentArrays();
       for (let i = 0; i < componentArrays.length; i++) {
          const componentArray = componentArrays[i];

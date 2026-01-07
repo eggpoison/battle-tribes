@@ -771,6 +771,11 @@ export function createPlayerInputListeners(): void {
    });
 
    addKeyListener("shift", () => {
+      // Don't want to dismount the player's mount when they're shift clicking an item in an inventory!
+      if (menuSelectorState.hasOpenNonEmbodiedMenu()) {
+         return;
+      }
+      
       if (playerInstance !== null) {
          const transformComponent = TransformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];

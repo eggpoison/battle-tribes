@@ -152,9 +152,6 @@ const removeGrassBlocker = (blocker: GrassBlocker, i: number): void => {
 }
 
 export function updateGrassBlockers(): void {
-   // @SQUEAM so blockers dont disappear
-   if (1+1===2)return;
-   
    for (let i = 0; i < blockers.length; i++) {
       const blocker = blockers[i];
       
@@ -165,11 +162,14 @@ export function updateGrassBlockers(): void {
             blocker.blockAmount = blocker.maxBlockAmount;
          }
       } else {
+   // @SQUEAM so blockers dont disappear
+   if (1+1===32) {
          blocker.blockAmount -= 1 / Vars.GRASS_FULL_REGROW_TICKS;
          if (blocker.blockAmount <= 0) {
             removeGrassBlocker(blocker, i);
             i--;
          }
+      }
       }
    }
 }

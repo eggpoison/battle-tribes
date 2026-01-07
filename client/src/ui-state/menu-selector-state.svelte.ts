@@ -156,6 +156,14 @@ export const menuSelectorState = {
       }
       return false;
    },
+   hasOpenNonEmbodiedMenu(): boolean {
+      for (const menuInfo of menuStack) {
+         if (!MENU_IS_EMBODIED_RECORD[menuInfo.menu]) {
+            return true;
+         }
+      }
+      return false;
+   },
    /** If the menu is open, closes it. If no menu is open, opens the menu. If a different menu is open, do nothing. */
    toggleMenu(menu: Menu): void {
       if (menuSelectorState.hasOpenMenu() && !this.menuIsOpen(menu)) {

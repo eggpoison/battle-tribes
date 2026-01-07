@@ -52,6 +52,11 @@ export function setPlayerUsername(username: string): void {
 export function updatePlayerDirection(clientTickInterp: number, serverTickInterp: number): void {
    if (playerInstance === null) return;
 
+   // Don't turn the player if they're meddling about in an inventory, cuz they're not actually looking at stuff while they're doing that
+   if (menuSelectorState.hasOpenNonEmbodiedMenu()) {
+      return;
+   }
+
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
 

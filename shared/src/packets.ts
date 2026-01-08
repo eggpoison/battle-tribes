@@ -78,7 +78,8 @@ export enum PacketType {
    forcePositionUpdate,
    // @CLEANUP i snapped on the 'serverToClient' prefix to this cuz chatMessage was taken to the client-to-server packet
    serverToClientChatMessage,
-   simulationStatusUpdate
+   simulationStatusUpdate,
+   shieldKnock
 }
 
 // @Bandwidth: figure out a way to be tightly packed (not have to add padding)

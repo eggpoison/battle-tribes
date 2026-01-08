@@ -28,7 +28,7 @@ import { createTribeComponentData } from "./entity-components/server-components/
 import { TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { attemptEntitySelection } from "./entity-selection";
 import { EntityRenderInfo } from "./EntityRenderInfo";
-import { getHitboxVelocity, setHitboxVelocity, applyAccelerationFromGround, Hitbox } from "./hitboxes";
+import { getHitboxVelocity, applyAccelerationFromGround, Hitbox } from "./hitboxes";
 import { countItemTypesInInventory } from "./inventory-manipulation";
 import { addKeyListener, keyIsPressed } from "./keyboard-input";
 import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSpectateEntityPacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket } from "./networking/packet-sending";
@@ -47,6 +47,7 @@ import { cursorWorldPos, setCameraVelocity } from "./camera";
 export interface ItemRestTime {
    remainingTimeTicks: number;
    durationTicks: number;
+   itemSlot: number;
 }
 
 interface SelectedItemInfo {
@@ -136,20 +137,6 @@ const BOW_DRAWING_CHARGE_END_LIMB_STATE: LimbState = {
    extraOffsetX: 0,
    extraOffsetY: 8
 };
-
-const createItemRestTimes = (num: number): Array<ItemRestTime> => {
-   const restTimes = new Array<ItemRestTime>();
-   for (let i = 0; i < num; i++) {
-      restTimes.push({
-         remainingTimeTicks: 0,
-         durationTicks: 0
-      });
-   }
-   return restTimes;
-}
-
-// @Hack
-export let GameInteractableLayer_setItemRestTime: (inventoryName: InventoryName, itemSlot: number, restTimeTicks: number) => void = () => {};
 
 export function getHotbarSelectedItemSlot(): number {
    return hotbarSelectedItemSlot;
@@ -243,12 +230,16 @@ export function tickPlayerItems(): void {
          
          // @Copynpaste
 
+         const initialLimbState = getCurrentLimbState(limb);
+
          limb.action = LimbAction.returnBlockToRest;
          limb.currentActionElapsedTicks = 0;
          // @Temporary? Perhaps use separate blockReturnTimeTicks.
          limb.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks!;
          // The shield did a block, so it returns to rest twice as fast
          limb.currentActionRate = 2;
+         limb.currentActionStartLimbState = copyLimbState(initialLimbState);
+         limb.currentActionEndLimbState = RESTING_LIMB_STATES[getLimbConfiguration(inventoryUseComponent)];
 
          sendStopItemUsePacket();
       }
@@ -376,8 +367,14 @@ export function tickPlayerItems(): void {
       // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
       // If blocking but not right clicking, return to rest
       if (limb.action === LimbAction.block && !rightMouseButtonIsPressed) {
-         const blockAttackComponent = BlockAttackComponentArray.getComponent(limb.blockAttack);
-         const hasBlocked = blockAttackComponent !== null && blockAttackComponent.hasBlocked;
+         // It's possible that the block attack doesn't exist through either unblocking incredibly quickly or just some bug
+         let hasBlocked: boolean;
+         if (BlockAttackComponentArray.hasComponent(limb.blockAttack)) {
+            const blockAttackComponent = BlockAttackComponentArray.getComponent(limb.blockAttack);
+            hasBlocked = blockAttackComponent !== null && blockAttackComponent.hasBlocked;
+         } else {
+            hasBlocked = false;
+         }
 
          const initialLimbState = getCurrentLimbState(limb);
 
@@ -644,7 +641,7 @@ export function getPlayerSelectedItemSlot(inventoryName: InventoryName): number 
    }
 }
 
-const getSelectedItemInfo = (): SelectedItemInfo | null => {
+export function getSelectedItemInfo(): SelectedItemInfo | null {
    if (playerInstance === null) {
       return null;
    }
@@ -1362,22 +1359,6 @@ const onItemEndUse = (item: Item, inventoryName: InventoryName): void => {
          drawingLimb.currentActionStartLimbState = copyLimbState(startDrawingLimbState);
          // @Garbage
          drawingLimb.currentActionEndLimbState = copyLimbState(startDrawingLimbState);
-
-         // const startDrawingLimbState = getCurrentLimbState(drawingLimb);
-
-         // const limbConfiguration = getLimbConfiguration(inventoryUseComponent);
-         // const restingLimbState = RESTING_LIMB_STATES[limbConfiguration];
-         // for (let i = 0; i < 2; i++) {
-         //    const limb = getLimbByInventoryName(inventoryUseComponent, i === 0 ? InventoryName.hotbar : InventoryName.offhand);
-            
-         //    limb.action = LimbAction.none;
-         //    limb.currentActionElapsedTicks = 0;
-         //    limb.currentActionDurationTicks = 0;
-         //    // @Garbage
-         //    limb.currentActionStartLimbState = copyLimbState(restingLimbState);
-         //    // @Garbage
-         //    limb.currentActionEndLimbState = copyLimbState(restingLimbState);
-         // }
 
          break;
       }

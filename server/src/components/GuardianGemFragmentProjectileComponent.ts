@@ -3,7 +3,7 @@ import { Entity, DamageSource } from "battletribes-shared/entities";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { Packet } from "battletribes-shared/packets";
 import { Settings } from "battletribes-shared/settings";
-import { angle, Point, randFloat, randInt } from "battletribes-shared/utils";
+import { angle, Point, polarVec2, randFloat, randInt } from "battletribes-shared/utils";
 import { getEntityAgeTicks, destroyEntity } from "../world";
 import { ComponentArray } from "./ComponentArray";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
@@ -52,13 +52,12 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    }
    
    const fragmentHitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
-   applyKnockback(collidingHitbox, 50, fragmentHitDirection);
+   applyKnockback(collidingHitbox, polarVec2(50, fragmentHitDirection));
 
    damageEntity(collidingHitbox, fragment, 1, DamageSource.yeti, AttackEffectiveness.effective, collisionPoint, 0);
    
    const affectedHitboxVelocity = getHitboxVelocity(hitbox);
-   const knockbackDirection = angle(affectedHitboxVelocity.x, affectedHitboxVelocity.y);
-   applyKnockback(collidingHitbox, affectedHitboxVelocity.magnitude(), knockbackDirection);
+   applyKnockback(collidingHitbox, affectedHitboxVelocity);
    
    addLocalInvulnerabilityHash(collidingEntity, "gemFragmentProjectile", 0.166);
 }

@@ -599,3 +599,8 @@ export function broadcastSimulationStatus(isSimulating: boolean): void {
       playerClient.socket.send(packet.buffer);
    }
 }
+
+export function createShieldKnockPacket(): Packet {
+   const packet = new Packet(PacketType.shieldKnock, Float32Array.BYTES_PER_ELEMENT);
+   return packet;
+}

@@ -57,36 +57,37 @@ const hasFruit = (transformComponent: TransformComponent): boolean => {
 }
 
 function onTick(cactus: Entity): void {
-   const cactusComponent = CactusComponentArray.getComponent(cactus);
-   if (cactusComponent.canHaveFruit) {
-      const transformComponent = TransformComponentArray.getComponent(cactus);
-      if (!hasFruit(transformComponent)) {
-         if (cactusComponent.remainingFruitGrowTicks <= 0) {
-            // @Copynpaste
+   // @SQUEAM no fruits for the shot
+   // const cactusComponent = CactusComponentArray.getComponent(cactus);
+   // if (cactusComponent.canHaveFruit) {
+   //    const transformComponent = TransformComponentArray.getComponent(cactus);
+   //    if (!hasFruit(transformComponent)) {
+   //       if (cactusComponent.remainingFruitGrowTicks <= 0) {
+   //          // @Copynpaste
             
-            const cactusHitbox = transformComponent.hitboxes[0];
-            const cactusRadius = (cactusHitbox.box as CircularBox).radius;
+   //          const cactusHitbox = transformComponent.hitboxes[0];
+   //          const cactusRadius = (cactusHitbox.box as CircularBox).radius;
       
-            const offset = polarVec2(cactusRadius, randAngle());
+   //          const offset = polarVec2(cactusRadius, randAngle());
       
-            const x = cactusHitbox.box.position.x + offset.x;
-            const y = cactusHitbox.box.position.y + offset.y;
-            const position = new Point(x, y);
+   //          const x = cactusHitbox.box.position.x + offset.x;
+   //          const y = cactusHitbox.box.position.y + offset.y;
+   //          const position = new Point(x, y);
             
-            const fruitConfig = createPricklyPearConfig(position, offset, randAngle());
+   //          const fruitConfig = createPricklyPearConfig(position, offset, randAngle());
 
-            const fruitTransformComponent = fruitConfig.components[ServerComponentType.transform]!;
-            const fruitHitbox = fruitTransformComponent.hitboxes[0];
+   //          const fruitTransformComponent = fruitConfig.components[ServerComponentType.transform]!;
+   //          const fruitHitbox = fruitTransformComponent.hitboxes[0];
             
-            fruitConfig.attachInfo = createEntityConfigAttachInfo(fruitHitbox, cactusHitbox, true);
-            createEntity(fruitConfig, getEntityLayer(cactus), 0);
+   //          fruitConfig.attachInfo = createEntityConfigAttachInfo(fruitHitbox, cactusHitbox, true);
+   //          createEntity(fruitConfig, getEntityLayer(cactus), 0);
       
-            cactusComponent.remainingFruitGrowTicks = randInt(MIN_FRUIT_GROW_TICKS, MAX_FRUIT_GROW_TICKS);
-         } else {
-            cactusComponent.remainingFruitGrowTicks--;
-         }
-      }
-   }
+   //          cactusComponent.remainingFruitGrowTicks = randInt(MIN_FRUIT_GROW_TICKS, MAX_FRUIT_GROW_TICKS);
+   //       } else {
+   //          cactusComponent.remainingFruitGrowTicks--;
+   //       }
+   //    }
+   // }
 }
 
 function getDataLength(entity: Entity): number {

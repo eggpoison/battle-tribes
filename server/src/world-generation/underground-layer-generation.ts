@@ -245,8 +245,7 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
          let richnessFactor = 0;
          let weightFactor = 0;
          
-         // @SQUEAM
-         if (weight > 0.57 && 1+1===3) {
+         if (weight > 0.57) {
             if (depth > 0.4 && weight < 0.65 && mithrilGenerationWeight > Vars.MIN_MITHRIL_GENERATION_WEIGHT) {
                isMithrilRich = true;
                richnessFactor = (mithrilGenerationWeight - Vars.MIN_MITHRIL_GENERATION_WEIGHT) / (1 - Vars.MIN_MITHRIL_GENERATION_WEIGHT)

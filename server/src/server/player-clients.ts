@@ -266,10 +266,13 @@ export function registerEntityHit(hitEntity: Entity, hitHitbox: Hitbox, attackin
    }
 }
 
-export function registerPlayerKnockback(player: Entity, knockback: number, knockbackDirection: number): void {
+export function registerPlayerKnockback(player: Entity, knockback: Point): void {
+   // @HACK: shouldn't convert to polar at all really, should just stay cartesian
+   const polarVec = knockback.convertToVector();
+   
    const knockbackData: PlayerKnockbackData = {
-      knockback: knockback,
-      knockbackDirection: knockbackDirection
+      knockback: polarVec.magnitude,
+      knockbackDirection: polarVec.direction
    };
 
    const playerComponent = PlayerComponentArray.getComponent(player);

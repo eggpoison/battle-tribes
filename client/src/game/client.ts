@@ -15,7 +15,7 @@ import { callEntityOnUpdateFunctions } from "./entity-components/ComponentArray"
 import { resolvePlayerCollisions } from "./collision";
 import { decodeSnapshotFromGameDataPacket, PacketSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
 import { sendActivatePacket, sendInitialPlayerDataPacket, sendPlayerDataPacket } from "./networking/packet-sending";
-import { processForcePositionUpdatePacket, processInitialGameDataPacket, processSimulationStatusUpdatePacket, processSyncDataPacket, receiveChatMessagePacket } from "./networking/packet-receiving";
+import { processForcePositionUpdatePacket, processInitialGameDataPacket, processShieldKnockPacket, processSimulationStatusUpdatePacket, processSyncDataPacket, receiveChatMessagePacket } from "./networking/packet-receiving";
 import { renderGame, setupRendering } from "./rendering/render";
 import { processDevGameDataPacket } from "./networking/dev-packets";
 import { LoadingScreenStage, loadingScreenState } from "../ui-state/loading-screen-state.svelte";
@@ -175,6 +175,7 @@ const onPacket = (msg: MessageEvent): void => {
       case PacketType.serverToClientChatMessage: receiveChatMessagePacket(reader); break;
       case PacketType.simulationStatusUpdate: processSimulationStatusUpdatePacket(reader); break;
       case PacketType.devGameData: processDevGameDataPacket(reader); break;
+      case PacketType.shieldKnock: processShieldKnockPacket(); break;
    }
 }
 

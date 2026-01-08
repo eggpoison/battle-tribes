@@ -153,7 +153,7 @@ function onTick(fish: Entity): void {
             const collisionPoint = new Point((fishHitbox.box.position.x + targetHitbox.box.position.x) / 2, (fishHitbox.box.position.y + targetHitbox.box.position.y) / 2);
             
             damageEntity(targetHitbox, fish, 2, DamageSource.fish, AttackEffectiveness.effective, collisionPoint, 0);
-            applyKnockback(targetHitbox, 100, hitDirection);
+            applyKnockback(targetHitbox, polarVec2(100, hitDirection));
             addLocalInvulnerabilityHash(target, "fish", 0.3);
          }
       }

@@ -15,12 +15,15 @@ export const FLOOR_TILE_TEXTURE_SOURCE_RECORD: Partial<Record<TileType, string |
    [TileType.permafrost]: "tiles/permafrost.png",
    [TileType.sandyDirt]: "tiles/sandy-dirt.png",
    [TileType.sandyDirtDark]: "tiles/sandy-dirt-dark.png",
-   [TileType.sand]: "tiles/sand.png",
+   // @SQUEAM
+   // [TileType.sand]: "tiles/sand.png",
+   [TileType.sand]: "tiles/sandoldtemp.png",
    [TileType.sludge]: "tiles/sludge.png",
    [TileType.slime]: "tiles/slime.png",
    [TileType.dropdown]: null,
    [TileType.stone]: "tiles/stone.png",
    [TileType.stoneWallFloor]: "tiles/stone-wall-floor.png",
+   [TileType.fimbultur]: "tiles/fimbulturtemp.png",
 };
 const FLOOR_TILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<TileType, number | null>> = {};
 (() => {

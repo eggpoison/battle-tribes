@@ -4,7 +4,7 @@ import { Entity, EntityType, LimbAction } from "battletribes-shared/entities";
 import { BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { TribeType } from "battletribes-shared/tribes";
 import Layer from "../Layer";
-import { getCurrentLimbState, getHeldItem, InventoryUseComponentArray, setLimbActions } from "../components/InventoryUseComponent";
+import { getCurrentLimbState, getHeldItem, getLimbConfiguration, InventoryUseComponentArray, setLimbActions } from "../components/InventoryUseComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { changeEntityLayer, TransformComponentArray } from "../components/TransformComponent";
 import { recruitTribesman, TribeComponentArray } from "../components/TribeComponent";
@@ -37,7 +37,7 @@ import { getTamingSkillLearning, skillLearningIsComplete, TamingComponentArray }
 import { getTamingSpec } from "../taming-specs";
 import { getHitboxTile, getHitboxVelocity, setHitboxAngle, setHitboxAngularVelocity } from "../hitboxes";
 import { FloorSignComponentArray } from "../components/FloorSignComponent";
-import { BLOCKING_LIMB_STATE, copyLimbState, SHIELD_BLOCKING_LIMB_STATE } from "../../../shared/src/attack-patterns";
+import { BLOCKING_LIMB_STATE, copyLimbState, RESTING_LIMB_STATES, SHIELD_BLOCKING_LIMB_STATE } from "../../../shared/src/attack-patterns";
 import { updateBox } from "../../../shared/src/boxes/boxes";
 import { BuildingMaterialComponentArray } from "../components/BuildingMaterialComponent";
 import { createItemsOverEntity } from "../entities/item-entity";
@@ -347,11 +347,15 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
       const blockAttackComponent = BlockAttackComponentArray.getComponent(limb.blockAttack);
       const hasBlocked = blockAttackComponent.hasBlocked;
       
+      const initialLimbState = getCurrentLimbState(limb);
+      
       limb.action = LimbAction.returnBlockToRest;
       limb.currentActionElapsedTicks = 0;
       // @Temporary? Perhaps use separate blockReturnTimeTicks.
       limb.currentActionDurationTicks = heldItemAttackInfo.attackTimings.blockTimeTicks!;
       limb.currentActionRate = hasBlocked ? 2 : 1;
+      limb.currentActionStartLimbState = copyLimbState(initialLimbState);
+      limb.currentActionEndLimbState = RESTING_LIMB_STATES[getLimbConfiguration(inventoryUseComponent)];
 
       destroyEntity(limb.blockAttack);
    } else {

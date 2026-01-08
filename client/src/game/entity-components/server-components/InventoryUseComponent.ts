@@ -9,7 +9,7 @@ import { createBlockParticle, createDeepFrostHeartBloodParticles, createEmberPar
 import { VisualRenderPart, RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityLayer, getEntityRenderInfo } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { Light, removeLight } from "../../lights";
@@ -20,6 +20,7 @@ import { getHitboxVelocity } from "../../hitboxes";
 import { currentSnapshot, tickIntervalHasPassed } from "../../client";
 import { tickPlayerItems } from "../../player-action-handler";
 import { inventoryState } from "../../../ui-state/inventory-state.svelte";
+import { playSoundOnHitbox } from "../../sound";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -335,22 +336,6 @@ const createZeroedLimbInfo = (inventoryName: InventoryName): LimbInfo => {
    };
 }
 
-const readLimbStateFromPacket = (reader: PacketReader): LimbState => {
-   const direction = reader.readNumber();
-   const extraOffset = reader.readNumber();
-   const rotation = reader.readNumber();
-   const extraOffsetX = reader.readNumber();
-   const extraOffsetY = reader.readNumber();
-
-   return {
-      direction: direction,
-      extraOffset: extraOffset,
-      angle: rotation,
-      extraOffsetX: extraOffsetX,
-      extraOffsetY: extraOffsetY
-   };
-}
-
 const updateLimbStateFromPacket = (reader: PacketReader, limbState: LimbState): void => {
    limbState.direction = reader.readNumber();
    limbState.extraOffset = reader.readNumber();
@@ -568,17 +553,6 @@ InventoryUseComponentArray.onTick = onTick;
 InventoryUseComponentArray.updateFromData = updateFromData;
 InventoryUseComponentArray.updatePlayerFromData = updatePlayerFromData;
 
-export function createInventoryUseComponentData(inventoryNames: ReadonlyArray<InventoryName>): InventoryUseComponentData {
-   const limbInfos = new Array<LimbInfo>();
-   for (const inventoryName of inventoryNames) {
-      const limbInfo = createZeroedLimbInfo(inventoryName);
-      limbInfos.push(limbInfo);
-   }
-   return {
-      limbInfos: limbInfos
-   };
-}
-
 function decodeData(reader: PacketReader): InventoryUseComponentData {
    const limbInfos = new Array<LimbInfo>();
 
@@ -635,7 +609,7 @@ function onLoad(entity: Entity): void {
 
    // @Hack: use the attachPoints length in case the player is spectating cuz 'twill crash if yeah
    for (let i = 0; i < attachPoints.length; i++) {
-      updateLimb(inventoryUseComponent, entity, i, inventoryUseComponent.limbInfos[i]);
+      updateLimbVisuals(inventoryUseComponent, entity, i, inventoryUseComponent.limbInfos[i]);
    }
 
    updateCustomItemRenderPart(entity);
@@ -992,7 +966,7 @@ export function updateLimb_TEMP(limbRenderPart: RenderPart, attachPoint: RenderA
    resetThing(limbRenderPart);
 }
 
-const updateLimb = (inventoryUseComponent: InventoryUseComponent, entity: Entity, limbIdx: number, limb: LimbInfo): void => {
+const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity: Entity, limbIdx: number, limb: LimbInfo): void => {
    // @Bug: The itemSize variable will be one tick too slow as it gets the size of the item before it has been updated
    
    const limbRenderPart = inventoryUseComponent.limbRenderParts[limbIdx];
@@ -1107,7 +1081,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, entity: Entity
       case LimbAction.feignAttack: {
          // @Copynpaste
          const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
-         const windupProgress = secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks;
+         const windupProgress = limb.currentActionDurationTicks > 0 ? secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks : 1;
 
          lerpThingBetweenStates(entity, attachPoint, limb.currentActionStartLimbState, limb.currentActionEndLimbState, windupProgress);
          resetThing(limbRenderPart);
@@ -1118,7 +1092,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, entity: Entity
       case LimbAction.windShieldBash: {
          // @Copynpaste
          const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
-         const windupProgress = secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks;
+         const windupProgress = limb.currentActionDurationTicks > 0 ? secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks : 1;
          
          lerpThingBetweenStates(entity, attachPoint, SHIELD_BLOCKING_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, windupProgress);
          resetThing(limbRenderPart);
@@ -1129,7 +1103,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, entity: Entity
       case LimbAction.pushShieldBash: {
          // @Copynpaste
          const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
-         const windupProgress = secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks;
+         const windupProgress = limb.currentActionDurationTicks > 0 ? secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks : 1;
          
          lerpThingBetweenStates(entity, attachPoint, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BASH_PUSHED_LIMB_STATE, windupProgress);
          resetThing(limbRenderPart);
@@ -1140,7 +1114,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, entity: Entity
       case LimbAction.returnShieldBashToRest: {
          // @Copynpaste
          const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
-         const windupProgress = secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks;
+         const windupProgress = limb.currentActionDurationTicks > 0 ? secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks : 1;
          
          lerpThingBetweenStates(entity, attachPoint, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, windupProgress);
          resetThing(limbRenderPart);
@@ -1151,7 +1125,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, entity: Entity
       case LimbAction.windAttack: {
          // @Copynpaste
          const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
-         const windupProgress = secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks;
+         const windupProgress = limb.currentActionDurationTicks > 0 ? secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks : 1;
 
          lerpThingBetweenStates(entity, attachPoint, limb.currentActionStartLimbState, limb.currentActionEndLimbState, windupProgress);
          resetThing(limbRenderPart);
@@ -1162,7 +1136,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, entity: Entity
       case LimbAction.attack: {
          // @Copynpaste
          const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
-         const attackProgress = secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks;
+         const attackProgress = limb.currentActionDurationTicks > 0 ? secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks : 1;
 
          lerpThingBetweenStates(entity, attachPoint, limb.currentActionStartLimbState, limb.currentActionEndLimbState, attackProgress);
          resetThing(limbRenderPart);
@@ -1173,7 +1147,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, entity: Entity
       case LimbAction.returnAttackToRest: {
          // @Copynpaste
          const secondsIntoAnimation = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
-         const animationProgress = secondsIntoAnimation * Settings.TICK_RATE / limb.currentActionDurationTicks;
+         const animationProgress = limb.currentActionDurationTicks > 0 ? secondsIntoAnimation * Settings.TICK_RATE / limb.currentActionDurationTicks : 1;
 
          lerpThingBetweenStates(entity, attachPoint, limb.currentActionStartLimbState, limb.currentActionEndLimbState, animationProgress);
          resetThing(limbRenderPart);
@@ -1212,7 +1186,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, entity: Entity
       case LimbAction.mainArrowReleased:
       case LimbAction.returnFromBow: {
          const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
-         const progress = secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks;
+         const progress = limb.currentActionDurationTicks > 0 ? secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks : 1;
 
          lerpThingBetweenStates(entity, attachPoint, limb.currentActionStartLimbState, limb.currentActionEndLimbState, progress);
          resetThing(limbRenderPart);
@@ -1471,9 +1445,10 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, entity: Entity
    // updateActiveItemRenderPart(inventoryUseComponent, limbIdx, limbInfo, heldItem, shouldShowActiveItemRenderPart);
 }
 
-const playBlockEffects = (x: number, y: number, blockType: BlockType): void => {
-   // @HACK @Incomplete removed this cuz cant access the layer in start. aaaaaaaa
-   // playSound(blockType === BlockType.shieldBlock ? "shield-block.mp3" : "block.mp3", blockType === BlockType.toolBlock ? 0.8 : 0.5, 1, new Point(x, y), layer);
+const playBlockEffects = (x: number, y: number, blockType: BlockType, entity: Entity): void => {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   playSoundOnHitbox(blockType === BlockType.shieldBlock ? "shield-block.mp3" : "block.mp3", blockType === BlockType.toolBlock ? 0.8 : 0.5, 1, entity, hitbox, false);
    
    for (let i = 0; i < 8; i++) {
       const offsetMagnitude = randFloat(0, 18);
@@ -1571,15 +1546,16 @@ const updateLimbInfoFromData = (limbInfo: LimbInfo, reader: PacketReader): void 
 function updateFromData(data: InventoryUseComponentData, entity: Entity): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
+   // @GARBAGE!!!
    inventoryUseComponent.limbInfos.splice(0, inventoryUseComponent.limbInfos.length);
    for (let i = 0; i < data.limbInfos.length; i++) {
       const limbInfo = data.limbInfos[i];
 
       inventoryUseComponent.limbInfos.push(limbInfo);
-      updateLimb(inventoryUseComponent, entity, i, limbInfo);
+      updateLimbVisuals(inventoryUseComponent, entity, i, limbInfo);
 
-      if (limbInfo.lastBlockTick === currentSnapshot.tick) {
-         playBlockEffects(limbInfo.blockPositionX, limbInfo.blockPositionY, limbInfo.blockType);
+      if (currentSnapshot.tick - limbInfo.lastBlockTick <= Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE) {
+         playBlockEffects(limbInfo.blockPositionX, limbInfo.blockPositionY, limbInfo.blockType, entity);
       }
    }
 }
@@ -1593,6 +1569,8 @@ function updatePlayerFromData(data: InventoryUseComponentData): void {
       const limbInfoData = data.limbInfos[i];
       const usedInventoryName = limbInfoData.inventoryName;
 
+      // Don't update all of the player's limb to the data, only pieces that aren't being controlled by the client.
+      
       let limbInfo: LimbInfo;
       if (i >= inventoryUseComponent.limbInfos.length) {
          // New limb info
@@ -1601,7 +1579,7 @@ function updatePlayerFromData(data: InventoryUseComponentData): void {
       } else {
          // Existing limb info
          limbInfo = inventoryUseComponent.limbInfos[i];
-
+         // @Cleanup: useless???
          if (limbInfo.inventoryName !== usedInventoryName) {
             throw new Error();
          }
@@ -1619,6 +1597,11 @@ function updatePlayerFromData(data: InventoryUseComponentData): void {
          inventoryState.setHotbarThrownBattleaxeItemID(limbInfoData.thrownBattleaxeItemID);
       }
 
-      updateLimb(inventoryUseComponent, playerInstance!, i, limbInfo);
+      updateLimbVisuals(inventoryUseComponent, playerInstance!, i, limbInfo);
+
+      // @Copynpaste
+      if (currentSnapshot.tick - limbInfo.lastBlockTick <= Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE) {
+         playBlockEffects(limbInfo.blockPositionX, limbInfo.blockPositionY, limbInfo.blockType, playerInstance!);
+      }
    }
 }

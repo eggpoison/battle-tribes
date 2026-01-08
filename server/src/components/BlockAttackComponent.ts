@@ -3,17 +3,18 @@ import { Entity, EntityType } from "../../../shared/src/entities";
 import { InventoryName } from "../../../shared/src/items/items";
 import { Packet } from "../../../shared/src/packets";
 import { Settings } from "../../../shared/src/settings";
-import { Point } from "../../../shared/src/utils";
+import { Point, polarVec2 } from "../../../shared/src/utils";
 import { calculateItemKnockback } from "../entities/tribes/limb-use";
-import { applyKnockback, Hitbox } from "../hitboxes";
+import { applyKnockback, getHitboxMomentum, Hitbox } from "../hitboxes";
+import { createShieldKnockPacket } from "../server/packet-sending";
 import { registerDirtyEntity } from "../server/player-clients";
-import { destroyEntity, entityExists, getEntityType } from "../world";
+import { destroyEntity, entityExists, getEntityType, getGameTicks } from "../world";
 import { ComponentArray } from "./ComponentArray";
 import { getCurrentLimbState, getHeldItem, LimbInfo } from "./InventoryUseComponent";
-import { OkrenTongueComponentArray, startRetractingTongue } from "./OkrenTongueComponent";
+import { PlayerComponentArray } from "./PlayerComponent";
 import { ProjectileComponentArray } from "./ProjectileComponent";
 import { setHitboxToLimbState, SwingAttackComponentArray } from "./SwingAttackComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { attachHitbox, TransformComponentArray } from "./TransformComponent";
 
 export class BlockAttackComponent {
    public readonly owner: Entity;
@@ -86,35 +87,56 @@ const blockSwing = (blockAttack: Entity, swingAttack: Entity, blockingHitbox: Hi
       const pushDirection = swingHitbox.box.position.angleTo(blockingHitbox.box.position);
       const attackingItem = getHeldItem(attackerLimb);
       const knockbackAmount = calculateItemKnockback(attackingItem, true);
-      applyKnockback(blockingHitbox, knockbackAmount, pushDirection);
+      applyKnockback(blockingHitbox, polarVec2(knockbackAmount, pushDirection));
    }
 
    blockAttackComponent.hasBlocked = true;
 
-   // @Copynpaste @Incomplete
-   // blockBoxLimb.lastBlockTick = getGameTicks();
-   // blockBoxLimb.blockPositionX = blockBox.box.position.x;
-   // blockBoxLimb.blockPositionY = blockBox.box.position.y;
-   // blockBoxLimb.blockType = blockBox.blockType;
+   const blockBoxLimb = blockAttackComponent.limb;
+   const blockBoxTransformComponent = TransformComponentArray.getComponent(blockAttack);
+   const blockBoxHitbox = blockBoxTransformComponent.hitboxes[0];
+
+   blockBoxLimb.lastBlockTick = getGameTicks();
+   blockBoxLimb.blockPositionX = blockBoxHitbox.box.position.x;
+   blockBoxLimb.blockPositionY = blockBoxHitbox.box.position.y;
+   blockBoxLimb.blockType = blockAttackComponent.blockType;
+}
+
+/** Cancels the shield when hit by something forceful */
+const knockShield = (blockAttack: Entity, blockAttackComponent: BlockAttackComponent): void => {
+   const playerComponent = PlayerComponentArray.getComponent(blockAttackComponent.owner);
+   
+   const packet = createShieldKnockPacket();
+   playerComponent.client.socket.send(packet.buffer);
 }
 
 const blockProjectile = (blockAttack: Entity, projectile: Entity, blockingHitbox: Hitbox, projectileHitbox: Hitbox): void => {
    const blockAttackComponent = BlockAttackComponentArray.getComponent(blockAttack);
 
    blockAttackComponent.hasBlocked = true;
-   // @Copynpaste @Incomplete
-   // blockBoxLimb.lastBlockTick = getGameTicks();
-   // blockBoxLimb.blockPositionX = blockBox.box.position.x;
-   // blockBoxLimb.blockPositionY = blockBox.box.position.y;
-   // blockBoxLimb.blockType = blockBox.blockType;
+
+   const blockBoxLimb = blockAttackComponent.limb;
+   const blockBoxTransformComponent = TransformComponentArray.getComponent(blockAttack);
+   const blockBoxHitbox = blockBoxTransformComponent.hitboxes[0];
+
+   blockBoxLimb.lastBlockTick = getGameTicks();
+   blockBoxLimb.blockPositionX = blockBoxHitbox.box.position.x;
+   blockBoxLimb.blockPositionY = blockBoxHitbox.box.position.y;
+   blockBoxLimb.blockType = blockAttackComponent.blockType;
 
    if (blockAttackComponent.blockType === BlockType.shieldBlock) {
       // Push back
-      const pushDirection = projectileHitbox.box.position.angleTo(blockingHitbox.box.position);
-      // @Hack @Hardcoded: knockback amount
-      applyKnockback(blockingHitbox, 75, pushDirection);
+      // @Hack: should really be done in the attachHitbox thing! cuz otherwise momentum isn't conserved!
+      const projectileMomentum = getHitboxMomentum(projectileHitbox);
+      applyKnockback(blockingHitbox, projectileMomentum);
       
-      destroyEntity(projectile);
+      // Stick the projectile into the shield
+      attachHitbox(projectileHitbox, blockingHitbox, false);
+
+      console.log(projectileMomentum.magnitude())
+      if (projectileMomentum.magnitude() >= 30) {
+         knockShield(blockAttack, blockAttackComponent);
+      }
    } else {
       const projectileComponent = ProjectileComponentArray.getComponent(projectile);
       projectileComponent.isBlocked = true;

@@ -18,9 +18,7 @@ import { attachLightToHitbox } from "./lights";
 import { attachEntityWithTether, attachHitboxRaw } from "./components/TransformComponent";
 
 const enum Vars {
-   // @SQUEAM: for night shot
-   // START_TIME = 8
-   START_TIME = 22
+   START_TIME = 8
 }
 
 interface EntityJoinInfo {

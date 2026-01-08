@@ -5,7 +5,7 @@ import { ComponentArray } from "./ComponentArray";
 import { BowItemInfo, getItemAttackInfo, Inventory, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS } from "battletribes-shared/items/items";
 import { Packet } from "battletribes-shared/packets";
 import { getInventory, InventoryComponentArray } from "./InventoryComponent";
-import { customTickIntervalHasPassed, Point } from "battletribes-shared/utils";
+import { customTickIntervalHasPassed, Point, polarVec2 } from "battletribes-shared/utils";
 import { Box } from "battletribes-shared/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { AttackVars, BLOCKING_LIMB_STATE, copyLimbState, LimbConfiguration, LimbState, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, interpolateLimbState } from "battletribes-shared/attack-patterns";
@@ -288,7 +288,7 @@ function onTick(entity: Entity): void {
                const transformComponent = TransformComponentArray.getComponent(entity);
                const entityHitbox = transformComponent.hitboxes[0];
                
-               applyKnockback(entityHitbox, 250, entityHitbox.box.angle);
+               applyKnockback(entityHitbox, polarVec2(250, entityHitbox.box.angle));
 
                // @Incomplete
                
@@ -435,9 +435,14 @@ function onTick(entity: Entity): void {
                break;
             }
             case LimbAction.returnFromBow: {
+               const startingLimbState = getCurrentLimbState(limb);
+               const limbConfiguration = getLimbConfiguration(inventoryUseComponent);
+               
                limb.action = LimbAction.none;
                limb.currentActionElapsedTicks = 0;
                limb.currentActionDurationTicks = 0;
+               limb.currentActionStartLimbState = copyLimbState(startingLimbState);
+               limb.currentActionEndLimbState = RESTING_LIMB_STATES[limbConfiguration];
                break;
             }
          }

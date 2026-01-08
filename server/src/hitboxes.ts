@@ -170,8 +170,16 @@ export function getHitboxConnectedMass(hitbox: Hitbox): number {
    return getHitboxTotalMassIncludingChildren(rootHitbox);
 }
 
-export function applyKnockback(hitbox: Hitbox, knockback: number, knockbackDirection: number): void {
-   // @CLEANUP this is literally just addHItboxVelocity, but also registering it to the player.....
+export function getHitboxMomentum(hitbox: Hitbox): Point {
+   const momentum = getHitboxVelocity(hitbox);
+   momentum.x *= hitbox.mass;
+   momentum.y *= hitbox.mass;
+   return momentum;
+}
+
+// @BUG: Should really apply force instead!!
+export function applyKnockback(hitbox: Hitbox, addVec: Point): void {
+   // @CLEANUP this is literally just addHitboxVelocity, but also registering it to the player.....
    
    const rootHitbox = getRootHitbox(hitbox);
    if (rootHitbox.isStatic) {
@@ -184,12 +192,14 @@ export function applyKnockback(hitbox: Hitbox, knockback: number, knockbackDirec
    if (totalMass === 0) {
       return;
    }
-   const knockbackForce = knockback / totalMass;
-   addHitboxVelocity(rootHitbox, polarVec2(knockbackForce, knockbackDirection));
+   const addX = addVec.x / totalMass;
+   const addY = addVec.y / totalMass;
+   const addVecProper = new Point(addX, addY);
+   addHitboxVelocity(rootHitbox, addVecProper);
 
    // @Hack?
-   if (getEntityType(hitbox.entity) === EntityType.player) {
-      registerPlayerKnockback(hitbox.entity, knockback, knockbackDirection);
+   if (getEntityType(rootHitbox.entity) === EntityType.player) {
+      registerPlayerKnockback(rootHitbox.entity, addVecProper);
    }
 }
 
@@ -203,10 +213,8 @@ export function applyAbsoluteKnockback(hitbox: Hitbox, knockback: Point): void {
    addHitboxVelocity(rootHitbox, knockback);
 
    // @Hack?
-   if (getEntityType(hitbox.entity) === EntityType.player) {
-      // @Hack
-      const polarKnockback = knockback.convertToVector();
-      registerPlayerKnockback(hitbox.entity, polarKnockback.magnitude, polarKnockback.direction);
+   if (getEntityType(rootHitbox.entity) === EntityType.player) {
+      registerPlayerKnockback(rootHitbox.entity, knockback);
    }
 }
 

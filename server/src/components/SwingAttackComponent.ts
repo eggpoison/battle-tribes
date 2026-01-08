@@ -8,7 +8,7 @@ import { getItemType, HammerItemType, InventoryName, Item, ITEM_INFO_RECORD, Ite
 import { Settings } from "../../../shared/src/settings";
 import { StatusEffect } from "../../../shared/src/status-effects";
 import { TribesmanTitle } from "../../../shared/src/titles";
-import { lerp, Point, randAngle } from "../../../shared/src/utils";
+import { lerp, Point, polarVec2, randAngle } from "../../../shared/src/utils";
 import { HitboxCollisionPair } from "../collision-detection";
 import { createItemEntityConfig } from "../entities/item-entity";
 import { calculateItemKnockback } from "../entities/tribes/limb-use";
@@ -239,7 +239,7 @@ const damageEntityFromSwing = (swingAttack: Entity, victim: Entity, hitHitbox: H
    if (getEntityType(victimHitbox.entity) === EntityType.tukmokTailClub || victimHitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_MEDIUM) || victimHitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_BIG) || victimHitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_SMALL)) {
 
    } else {
-      applyKnockback(victimHitbox, attackKnockback, hitDirection);
+      applyKnockback(victimHitbox, polarVec2(attackKnockback, hitDirection));
    }
 
    if (attackingItem !== null) {

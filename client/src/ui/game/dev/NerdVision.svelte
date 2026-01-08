@@ -10,7 +10,6 @@
    <div id="nerd-vision-wrapper">
       <GameInfoDisplay />
       <HoverDebugDisplay />
-      <!-- <TerminalButton startingIsOpened={terminalStartingVisibility} /> -->
        {#if nerdVisionState.terminalIsVisible}
          <Terminal/>
       {/if}

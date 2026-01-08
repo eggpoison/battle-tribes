@@ -277,9 +277,9 @@ export function setHitboxAngle(hitbox: Hitbox, angle: number): void {
    transformComponent.isDirty = true;
 }
 
-/** Makes the hitboxes' angle be that as specified, by only changing its relative angle */
-export function setHitboxRelativeAngle(hitbox: Hitbox, angle: number): void {
-   const add = angle - hitbox.box.relativeAngle;
+/** Makes the hitboxes' relative angle be that as specified, by only changing its relative angle */
+export function setHitboxRelativeAngle(hitbox: Hitbox, relativeAngle: number): void {
+   const add = relativeAngle - hitbox.box.relativeAngle;
    hitbox.box.relativeAngle += add;
    hitbox.previousRelativeAngle += add;
 

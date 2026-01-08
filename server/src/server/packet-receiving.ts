@@ -4,7 +4,7 @@ import { Entity, EntityType, LimbAction } from "battletribes-shared/entities";
 import { BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { TribeType } from "battletribes-shared/tribes";
 import Layer from "../Layer";
-import { getCurrentLimbState, getHeldItem, getLimbConfiguration, InventoryUseComponentArray, setLimbActions } from "../components/InventoryUseComponent";
+import { getCurrentLimbState, getHeldItem, getHeldItemEntity, getLimbConfiguration, InventoryUseComponentArray, setLimbActions } from "../components/InventoryUseComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { changeEntityLayer, TransformComponentArray } from "../components/TransformComponent";
 import { recruitTribesman, TribeComponentArray } from "../components/TribeComponent";
@@ -13,7 +13,7 @@ import { placeBlueprint, throwItem, useItem } from "../entities/tribes/tribe-mem
 import { beginSwing } from "../entities/tribes/limb-use";
 import { InventoryComponentArray, getInventory, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, inventoryComponentCanAffordRecipe, addItem, isRoomForItem } from "../components/InventoryComponent";
 import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "battletribes-shared/components";
-import { Point, randAngle } from "battletribes-shared/utils";
+import { assert, Point, randAngle } from "battletribes-shared/utils";
 import { generatePlayerSpawnPosition, getPlayerClients, registerDirtyEntity, registerPlayerDroppedItemPickup } from "./player-clients";
 import { createItem } from "../items";
 import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType, getTribe } from "../world";
@@ -31,7 +31,6 @@ import { toggleTunnelDoor } from "../components/TunnelComponent";
 import { Tech, TechID, getTechByID } from "../../../shared/src/techs";
 import { CowComponentArray } from "../components/CowComponent";
 import { dismountMount, mountCarrySlot, RideableComponentArray } from "../components/RideableComponent";
-import { BlockAttackComponentArray } from "../components/BlockAttackComponent";
 import { getTamingSkill, TamingSkillID, TamingTier } from "../../../shared/src/taming";
 import { getTamingSkillLearning, skillLearningIsComplete, TamingComponentArray } from "../components/TamingComponent";
 import { getTamingSpec } from "../taming-specs";
@@ -48,6 +47,7 @@ import Tribe from "../Tribe";
 import { Settings } from "../../../shared/src/settings";
 import { broadcastSimulationStatus } from "./packet-sending";
 import { BarrelComponentArray } from "../components/BarrelComponent";
+import { HeldItemComponentArray } from "../components/HeldItemComponent";
 
 // @Speed: would be much faster in many-spectator cases if spectators instead sent their own kind of packets with only the things they need set
 export function processPlayerDataPacket(playerClient: PlayerClient, reader: PacketReader): void {
@@ -344,8 +344,11 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
       const heldItem = getHeldItem(limb);
       const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
 
-      const blockAttackComponent = BlockAttackComponentArray.getComponent(limb.blockAttack);
-      const hasBlocked = blockAttackComponent.hasBlocked;
+      const heldItemEntity = getHeldItemEntity(limb);
+      assert(heldItemEntity !== null);
+      const heldItemComponent = HeldItemComponentArray.getComponent(heldItemEntity);
+
+      const hasBlocked = heldItemComponent.hasBlocked;
       
       const initialLimbState = getCurrentLimbState(limb);
       
@@ -356,8 +359,6 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
       limb.currentActionRate = hasBlocked ? 2 : 1;
       limb.currentActionStartLimbState = copyLimbState(initialLimbState);
       limb.currentActionEndLimbState = RESTING_LIMB_STATES[getLimbConfiguration(inventoryUseComponent)];
-
-      destroyEntity(limb.blockAttack);
    } else {
       limb.action = LimbAction.none;
    }

@@ -291,6 +291,7 @@ export function pushEntityJoinBuffer(shouldTickJoinInfos: boolean): void {
    }
 }
 
+// @Hack? joinDelayTicks is really only used for guardian gem smash attack
 export function createEntity<ComponentTypes extends ServerComponentType>(entityConfig: EntityConfig, layer: Layer, joinDelayTicks: number): Entity {
    const entity = entityIDCounter++;
    

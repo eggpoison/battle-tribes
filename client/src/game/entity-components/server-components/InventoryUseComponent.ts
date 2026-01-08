@@ -1,4 +1,4 @@
-import { createZeroedLimbState, LimbConfiguration, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, SPEAR_CHARGED_LIMB_STATE, interpolateLimbState, copyLimbState, PacketReader, InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool, Settings, BlockType, ServerComponentType, Point, lerp, randAngle, randFloat, randItem, Entity, EntityType, LimbAction } from "webgl-test-shared";
+import { createZeroedLimbState, LimbConfiguration, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, SPEAR_CHARGED_LIMB_STATE, interpolateLimbState, copyLimbState, PacketReader, InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool, Settings, BlockType, ServerComponentType, Point, lerp, randAngle, randFloat, randItem, Entity, EntityType, LimbAction, HitboxFlag } from "webgl-test-shared";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import Board, { getElapsedTimeInSeconds, getSecondsSinceTickTimestamp } from "../../Board";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
@@ -9,16 +9,16 @@ import { createBlockParticle, createDeepFrostHeartBloodParticles, createEmberPar
 import { VisualRenderPart, RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
-import { EntityComponentData, getEntityLayer, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { Light, removeLight } from "../../lights";
 import { getRenderPartRenderPosition } from "../../rendering/render-part-matrices";
 import { getHumanoidRadius } from "./TribesmanComponent";
 import { playerInstance } from "../../player";
-import { getHitboxVelocity } from "../../hitboxes";
+import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { currentSnapshot, tickIntervalHasPassed } from "../../client";
-import { tickPlayerItems } from "../../player-action-handler";
+import { tickPlayerItems } from "../../player-action-handling";
 import { inventoryState } from "../../../ui-state/inventory-state.svelte";
 import { playSoundOnHitbox } from "../../sound";
 
@@ -46,8 +46,7 @@ export interface LimbInfo {
    currentActionPauseTicksRemaining: number;
    currentActionRate: number;
 
-   swingAttack: Entity;
-   blockAttack: Entity;
+   heldItemEntity: Entity;
 
    currentActionStartLimbState: LimbState;
    currentActionEndLimbState: LimbState;
@@ -297,6 +296,16 @@ export function getCurrentLimbState(limb: LimbInfo): LimbState {
    }
 }
 
+export function getPlayerLimbHitbox(limb: LimbInfo): Hitbox {
+   const transformComponent = TransformComponentArray.getComponent(playerInstance!);
+   // @Hack
+   if (limb.inventoryName === InventoryName.hotbar) {
+      return transformComponent.hitboxes[1];
+   } else {
+      return transformComponent.hitboxes[2];
+   }
+}
+
 const createZeroedLimbInfo = (inventoryName: InventoryName): LimbInfo => {
    return {
       selectedItemSlot: 0,
@@ -322,8 +331,7 @@ const createZeroedLimbInfo = (inventoryName: InventoryName): LimbInfo => {
       currentActionRate: 0,
       currentActionStartLimbState: createZeroedLimbState(),
       currentActionEndLimbState: createZeroedLimbState(),
-      swingAttack: 0,
-      blockAttack: 0,
+      heldItemEntity: 0,
       animationStartOffset: new Point(-1, -1),
       animationEndOffset: new Point(-1, -1),
       animationDurationTicks: 0,
@@ -1489,8 +1497,7 @@ const updateLimbInfoFromData = (limbInfo: LimbInfo, reader: PacketReader): void 
    const currentActionDurationTicks = reader.readNumber();
    const currentActionPauseTicksRemaining = reader.readNumber();
    const currentActionRate = reader.readNumber();
-   const swingAttack = reader.readNumber();
-   const blockAttack = reader.readNumber();
+   const heldItemEntity = reader.readNumber();
    const lastBlockTick = reader.readNumber();
    const blockPositionX = reader.readNumber();
    const blockPositionY = reader.readNumber();
@@ -1514,8 +1521,7 @@ const updateLimbInfoFromData = (limbInfo: LimbInfo, reader: PacketReader): void 
    limbInfo.lastCraftTicks = lastCraftTicks;
    limbInfo.thrownBattleaxeItemID = thrownBattleaxeItemID;
    limbInfo.lastAttackCooldown = lastAttackCooldown;
-   limbInfo.swingAttack = swingAttack;
-   limbInfo.blockAttack = blockAttack;
+   limbInfo.heldItemEntity = heldItemEntity;
    limbInfo.currentActionElapsedTicks = currentActionElapsedTicks;
    limbInfo.currentActionDurationTicks = currentActionDurationTicks;
    limbInfo.currentActionPauseTicksRemaining = currentActionPauseTicksRemaining;
@@ -1585,7 +1591,7 @@ function updatePlayerFromData(data: InventoryUseComponentData): void {
          }
       }
 
-      limbInfo.blockAttack = limbInfoData.blockAttack;
+      limbInfo.heldItemEntity = limbInfoData.heldItemEntity;
       
       // @INCOMPLETE no worky it brokey
       // if (limbInfoData.lastBlockTick === currentSnapshot.tick) {

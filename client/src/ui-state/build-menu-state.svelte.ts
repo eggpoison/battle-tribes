@@ -26,7 +26,7 @@ import DeconstructIcon from "/src/images/miscellaneous/deconstruct.png";
 import RecallHutIcon from "/src/images/miscellaneous/recall.png";
 import ShovelPlantIcon from "/src/images/miscellaneous/shovel.png";
 import ConvertToFenceGateIcon from "/src/images/miscellaneous/full-fence-gate.png";
-import { getPlayerSelectedItem } from "../game/player-action-handler";
+import { getPlayerSelectedItem } from "../game/player-action-handling";
 
 export enum OptionType {
    placeBlueprint,

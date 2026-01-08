@@ -18,7 +18,7 @@ import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "
 import { createHitboxQuick, getDistanceFromPointToEntity, getHitboxVelocity } from "./hitboxes";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
 import { Menu, menuIsInventory, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
-import { getPlayerSelectedItem, playerIsPlacingEntity } from "./player-action-handler";
+import { getPlayerSelectedItem, playerIsPlacingEntity } from "./player-action-handling";
 import { cameraPosition, cameraZoom, cursorWorldPos } from "./camera";
 import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state.svelte";

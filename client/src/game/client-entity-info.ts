@@ -347,13 +347,9 @@ const CLIENT_ENTITY_INFO_RECORD: Record<EntityType, ClientEntityInfo> = {
       name: "Mithril Anvil",
       internalName: "mithril-anvil"
    },
-   [EntityType.swingAttack]: {
-      name: "Swing Attack",
-      internalName: "swing-attack"
-   },
-   [EntityType.blockAttack]: {
-      name: "Block Attack",
-      internalName: "block-attack"
+   [EntityType.heldItem]: {
+      name: "Held Item",
+      internalName: "held-item"
    },
    [EntityType.moss]: {
       name: "Moss",

@@ -1,9 +1,9 @@
 import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Entity, EntityType, EntityTypeString, LimbAction, PlantedEntityType } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
+import { Point, rotatePoint } from "battletribes-shared/utils";
 import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, InventoryComponentArray, InventoryComponent } from "../../components/InventoryComponent";
-import { getCurrentLimbState, getLimbConfiguration, InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
+import { getCurrentLimbState, getLimbConfiguration, getLimbStateOffset, InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { TunnelComponentArray, updateTunnelDoorBitset } from "../../components/TunnelComponent";
 import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
@@ -12,7 +12,7 @@ import { SpikesComponentArray } from "../../components/SpikesComponent";
 import { InventoryName, ItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS } from "battletribes-shared/items/items";
 import { EntityConfig } from "../../components";
 import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { HitboxCollisionType, HitboxFlag } from "battletribes-shared/boxes/boxes";
 import { CircularBox } from "battletribes-shared/boxes/CircularBox";
 import { entityExists, getEntityType, getGameTicks } from "../../world";
 import { HealthComponent } from "../../components/HealthComponent";
@@ -24,7 +24,7 @@ import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
 import PlayerClient from "../../server/PlayerClient";
 import { TribesmanComponent } from "../../components/TribesmanComponent";
 import { Hitbox } from "../../hitboxes";
-import { LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES } from "../../../../shared/src/attack-patterns";
+import { LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES } from "../../../../shared/src/attack-patterns";
 
 // @COPYNPASTE a rare triple!!!!
 const BOW_HOLDING_LIMB_STATE: LimbState = {
@@ -49,13 +49,35 @@ const getHitboxRadius = (tribeType: TribeType): number => {
    }
 }
 
-export function createPlayerConfig(position: Point, rotation: number, tribe: Tribe, playerClient: PlayerClient): EntityConfig {
+export function createPlayerConfig(position: Point, angle: number, tribe: Tribe, playerClient: PlayerClient): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.traction = 1.4;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, getHitboxRadius(tribe.tribeType)), 1.25, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   addHitboxToTransformComponent(transformComponent, hitbox);
+   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, getHitboxRadius(tribe.tribeType)), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   addHitboxToTransformComponent(transformComponent, bodyHitbox);
+
+   const humanoidRadius = (bodyHitbox.box as CircularBox).radius;
+
+   // The hands
+   for (let i = 0; i < 2; i++) {
+      const limbConfiguration = LimbConfiguration.twoHanded;
+      const limbState = RESTING_LIMB_STATES[limbConfiguration];
+      
+      const isFlipped = i === 1;
+
+      const offset = getLimbStateOffset(limbState, humanoidRadius);
+
+      const handPosition = position.copy();
+      handPosition.add(rotatePoint(offset, angle));
+      
+      // @HACK SQUEAM: the collision mask, so that the player can mine berries for a horse archer shot
+      const hitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(handPosition, offset, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, [HitboxFlag.HAND]);
+      hitbox.box.flipX = isFlipped;
+      // @Hack
+      hitbox.box.totalFlipXMultiplier = isFlipped ? -1 : 1;
+      addHitboxToTransformComponent(transformComponent, hitbox);
+   }
 
    const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];
    const healthComponent = new HealthComponent(tribeInfo.maxHealthPlayer);
@@ -99,12 +121,11 @@ export function startChargingBow(player: Entity): void {
 
    
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
-   const limbConfiguration = getLimbConfiguration(inventoryUseComponent);
    
    const hotbarLimb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    const holdingLimb = hotbarLimb;
 
-   const startHoldingLimbState = RESTING_LIMB_STATES[limbConfiguration];
+   const startHoldingLimbState = getCurrentLimbState(holdingLimb);
    
    holdingLimb.action = LimbAction.engageBow;
    holdingLimb.currentActionElapsedTicks = 0;
@@ -116,7 +137,7 @@ export function startChargingBow(player: Entity): void {
    // Meanwhile the drawing limb pulls an arrow out
    
    const drawingLimb = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
-   const startDrawingLimbState = RESTING_LIMB_STATES[limbConfiguration];
+   const startDrawingLimbState = getCurrentLimbState(drawingLimb);
    
    drawingLimb.action = LimbAction.moveLimbToQuiver;
    drawingLimb.currentActionElapsedTicks = 0;

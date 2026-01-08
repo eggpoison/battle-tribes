@@ -8,7 +8,7 @@
    import { AnimalStaffCommandType, createControlCommandParticles } from "../../game/particles";
    import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
    import { GameInteractState, gameUIState } from "../../ui-state/game-ui-state.svelte";
-   import { setShittyCarrier } from "../../game/player-action-handler";
+   import { setShittyCarrier } from "../../game/player-action-handling";
 
    interface Props {
       entity: Entity;

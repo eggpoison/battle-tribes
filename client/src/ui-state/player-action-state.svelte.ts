@@ -1,4 +1,4 @@
-import { ItemRestTime } from "../game/player-action-handler";
+import { ItemRestTime } from "../game/player-action-handling";
 
 let hotbarChargeElapsedTicks = $state(-1);
 let hotbarChargeDuration = $state(-1);

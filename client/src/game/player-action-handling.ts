@@ -1,4 +1,4 @@
-import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, EntityComponents, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2 } from "webgl-test-shared";
+import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, EntityComponents, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp } from "webgl-test-shared";
 import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state.svelte";
 import { inventoryState } from "../ui-state/inventory-state.svelte";
@@ -8,7 +8,6 @@ import { getElapsedTimeInSeconds } from "./Board";
 import { currentSnapshot } from "./client";
 import { getEntityClientComponentConfigs } from "./entity-components/client-components";
 import { createBarrelComponentData } from "./entity-components/server-components/BarrelComponent";
-import { BlockAttackComponentArray } from "./entity-components/server-components/BlockAttackComponent";
 import { createBracingsComponentData } from "./entity-components/server-components/BracingsComponent";
 import { createBuildingMaterialComponentData } from "./entity-components/server-components/BuildingMaterialComponent";
 import { createCampfireComponentData } from "./entity-components/server-components/CampfireComponent";
@@ -17,7 +16,7 @@ import { createFireTorchComponentData } from "./entity-components/server-compone
 import { createFurnaceComponentData } from "./entity-components/server-components/FurnaceComponent";
 import { HealthComponentArray, createHealthComponentData } from "./entity-components/server-components/HealthComponent";
 import { InventoryComponentArray, getInventory, updatePlayerHeldItem, createInventoryComponentData } from "./entity-components/server-components/InventoryComponent";
-import { InventoryUseComponentArray, getLimbByInventoryName, LimbInfo, getLimbConfiguration, getCurrentLimbState } from "./entity-components/server-components/InventoryUseComponent";
+import { InventoryUseComponentArray, getLimbByInventoryName, LimbInfo, getLimbConfiguration, getCurrentLimbState, getPlayerLimbHitbox } from "./entity-components/server-components/InventoryUseComponent";
 import { createResearchBenchComponentData } from "./entity-components/server-components/ResearchBenchComponent";
 import { createSlurbTorchComponentData } from "./entity-components/server-components/SlurbTorchComponent";
 import { createSpikesComponentData } from "./entity-components/server-components/SpikesComponent";
@@ -25,10 +24,10 @@ import { StatusEffectComponentArray, createStatusEffectComponentData } from "./e
 import { createStructureComponentData } from "./entity-components/server-components/StructureComponent";
 import { TransformComponentArray, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
-import { TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
+import { getHumanoidRadius, TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { attemptEntitySelection } from "./entity-selection";
 import { EntityRenderInfo } from "./EntityRenderInfo";
-import { getHitboxVelocity, applyAccelerationFromGround, Hitbox } from "./hitboxes";
+import { getHitboxVelocity, applyAccelerationFromGround, Hitbox, setHitboxRelativeAngle } from "./hitboxes";
 import { countItemTypesInInventory } from "./inventory-manipulation";
 import { addKeyListener, keyIsPressed } from "./keyboard-input";
 import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSpectateEntityPacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket } from "./networking/packet-sending";
@@ -43,6 +42,7 @@ import { calculateEntityPlaceInfo } from "./structure-placement";
 import { playerTribe } from "./tribes";
 import { entityExists, getEntityLayer, getCurrentLayer, EntityComponentData, createEntityCreationInfo } from "./world";
 import { cursorWorldPos, setCameraVelocity } from "./camera";
+import { HeldItemComponentArray } from "./entity-components/server-components/HeldItemComponent";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -197,6 +197,25 @@ export function cancelAttack(limb: LimbInfo, limbConfiguration: LimbConfiguratio
    limb.currentActionEndLimbState = copyLimbState(RESTING_LIMB_STATES[limbConfiguration]);
 }
 
+const getLimbStateOffset = (limb: LimbState, humanoidRadius: number): Point => {
+   const offset = limb.extraOffset + humanoidRadius + 2;
+
+   const offsetX = offset * Math.sin(limb.direction) + limb.extraOffsetX;
+   const offsetY = offset * Math.cos(limb.direction) + limb.extraOffsetY;
+   return new Point(offsetX, offsetY);
+}
+
+const updateHandHitboxToLimbInfo = (limb: LimbInfo): void => {
+   const handHitbox = getPlayerLimbHitbox(limb);
+   
+   const limbOffset = getLimbStateOffset(getCurrentLimbState(limb), getHumanoidRadius(playerInstance!));
+   handHitbox.box.offset.x = limbOffset.x;
+   handHitbox.box.offset.y = limbOffset.y;
+
+   const progress = limb.currentActionDurationTicks > 0 ? limb.currentActionElapsedTicks / limb.currentActionDurationTicks : 1;
+   setHitboxRelativeAngle(handHitbox, lerp(limb.currentActionStartLimbState.angle, limb.currentActionEndLimbState.angle, progress));
+}
+
 // @Cleanup: bad name. mostly updating limbs
 export function tickPlayerItems(): void {
    if (playerInstance === null) {
@@ -332,18 +351,30 @@ export function tickPlayerItems(): void {
       }
 
       if (limb.action === LimbAction.returnFromBow && getElapsedTimeInSeconds(limb.currentActionElapsedTicks) * Settings.TICK_RATE >= limb.currentActionDurationTicks) {
+         const initialLimbState = getCurrentLimbState(limb);
+         const limbConfiguration = getLimbConfiguration(inventoryUseComponent);
+
          limb.action = LimbAction.none;
          limb.currentActionElapsedTicks = 0;
          limb.currentActionDurationTicks = 0;
+         // @Speed: why are we copying?
+         limb.currentActionStartLimbState = copyLimbState(initialLimbState);
+         limb.currentActionEndLimbState = RESTING_LIMB_STATES[limbConfiguration];
       }
 
       // If finished going to rest, set to default
       if (limb.action === LimbAction.returnAttackToRest && getElapsedTimeInSeconds(limb.currentActionElapsedTicks) * Settings.TICK_RATE >= limb.currentActionDurationTicks) {
-         limb.action = LimbAction.none;
-
+         const initialLimbState = getCurrentLimbState(limb);
+         const limbConfiguration = getLimbConfiguration(inventoryUseComponent);
+         
          const attackInfo = getItemAttackInfo(limb.heldItemType);
+         
+         limb.action = LimbAction.none;
          limb.currentActionElapsedTicks = 0;
          limb.currentActionDurationTicks = attackInfo.attackTimings.restTimeTicks;
+         // @Speed: why are we copying?
+         limb.currentActionStartLimbState = copyLimbState(initialLimbState);
+         limb.currentActionEndLimbState = RESTING_LIMB_STATES[limbConfiguration];
       }
 
       // If finished engaging block, go to block
@@ -367,14 +398,8 @@ export function tickPlayerItems(): void {
       // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
       // If blocking but not right clicking, return to rest
       if (limb.action === LimbAction.block && !rightMouseButtonIsPressed) {
-         // It's possible that the block attack doesn't exist through either unblocking incredibly quickly or just some bug
-         let hasBlocked: boolean;
-         if (BlockAttackComponentArray.hasComponent(limb.blockAttack)) {
-            const blockAttackComponent = BlockAttackComponentArray.getComponent(limb.blockAttack);
-            hasBlocked = blockAttackComponent !== null && blockAttackComponent.hasBlocked;
-         } else {
-            hasBlocked = false;
-         }
+         const heldItemComponent = HeldItemComponentArray.getComponent(limb.heldItemEntity);
+         const hasBlocked = heldItemComponent.hasBlocked;
 
          const initialLimbState = getCurrentLimbState(limb);
 
@@ -498,6 +523,8 @@ export function tickPlayerItems(): void {
       if (limb.heldItemType !== null) {
          tickItem(limb.heldItemType);
       }
+
+      updateHandHitboxToLimbInfo(limb);
    }
 
    playerActionState.decreaseItemRestTimes();

@@ -1,6 +1,6 @@
 import { Entity, updateBox } from "webgl-test-shared";
 import { cursorWorldPos } from "./camera";
-import { selectItemSlot } from "./player-action-handler";
+import { selectItemSlot } from "./player-action-handling";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
 import { calculateHitboxRenderPosition, getEntityTickInterp, registerDirtyRenderInfo } from "./rendering/render-part-matrices";

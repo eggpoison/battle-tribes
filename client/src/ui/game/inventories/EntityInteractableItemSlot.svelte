@@ -1,6 +1,6 @@
 <script lang="ts">
    import { type Entity, type Inventory, InventoryName, ItemType } from "webgl-test-shared";
-   import { type ItemRestTime } from "../../../game/player-action-handler";
+   import { type ItemRestTime } from "../../../game/player-action-handling";
    import ItemSlot from "./ItemSlot.svelte";
    import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
    import { InventoryComponentArray, getInventory } from "../../../game/entity-components/server-components/InventoryComponent";

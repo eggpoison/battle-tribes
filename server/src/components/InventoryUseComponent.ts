@@ -1,27 +1,45 @@
 import { BlockType, ServerComponentType } from "battletribes-shared/components";
-import { Entity, LimbAction } from "battletribes-shared/entities";
+import { DamageSource, Entity, EntityType, LimbAction } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { ComponentArray } from "./ComponentArray";
-import { BowItemInfo, getItemAttackInfo, Inventory, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS } from "battletribes-shared/items/items";
+import { BowItemInfo, getItemAttackInfo, getItemType, HammerItemType, Inventory, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, itemTypeIsHammer, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS } from "battletribes-shared/items/items";
 import { Packet } from "battletribes-shared/packets";
-import { getInventory, InventoryComponentArray } from "./InventoryComponent";
-import { customTickIntervalHasPassed, Point, polarVec2 } from "battletribes-shared/utils";
-import { Box } from "battletribes-shared/boxes/boxes";
-import { TransformComponentArray } from "./TransformComponent";
+import { getInventory, hasInventory, InventoryComponentArray } from "./InventoryComponent";
+import { customTickIntervalHasPassed, lerp, Point, polarVec2, randAngle } from "battletribes-shared/utils";
+import { assertBoxIsCircular, Box, HitboxFlag } from "battletribes-shared/boxes/boxes";
+import { getHitboxesByFlag, TransformComponentArray } from "./TransformComponent";
 import { AttackVars, BLOCKING_LIMB_STATE, copyLimbState, LimbConfiguration, LimbState, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, interpolateLimbState } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity, registerEntityTickEvent } from "../server/player-clients";
 import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import Layer from "../Layer";
 import { getSubtileIndex } from "../../../shared/src/subtiles";
-import { createBlockAttackConfig } from "../entities/block-attack";
-import { createEntity, destroyEntity, entityExists, getEntityLayer } from "../world";
-import { createSwingAttackConfig } from "../entities/swing-attack";
-import { applyKnockback } from "../hitboxes";
+import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType } from "../world";
+import { applyKnockback, getHitboxAngularVelocity, Hitbox, setHitboxRelativeAngle } from "../hitboxes";
 import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity-events";
+import { getHumanoidRadius } from "../entities/tribes/tribesman-ai/tribesman-ai-utils";
+import { HitFlags } from "../../../shared/src/client-server-types";
+import { AttackEffectiveness, calculateAttackEffectiveness } from "../../../shared/src/entity-damage-types";
+import { StatusEffect } from "../../../shared/src/status-effects";
+import { TribesmanTitle } from "../../../shared/src/titles";
+import { HitboxCollisionPair } from "../collision-detection";
+import { createItemEntityConfig } from "../entities/item-entity";
+import { calculateItemKnockback } from "../entities/tribes/limb-use";
+import { calculateItemDamage } from "../entities/tribes/tribe-member";
+import { createItem } from "../items";
+import { BerryBushComponentArray } from "./BerryBushComponent";
+import { BerryBushPlantedComponentArray } from "./BerryBushPlantedComponent";
+import { doBlueprintWork } from "./BlueprintComponent";
+import { HealthComponentArray, hitEntityWithoutDamage, damageEntity, healEntity } from "./HealthComponent";
+import { applyStatusEffect } from "./StatusEffectComponent";
+import { getEntityRelationship, EntityRelationship, entitiesBelongToSameTribe, TribeComponentArray } from "./TribeComponent";
+import { hasTitle } from "./TribesmanComponent";
+import { createHeldItemConfig } from "../entities/held-item";
+import { createEntityConfigAttachInfo } from "../components";
 
 // @Cleanup: Make into class Limb with getHeldItem method
 export interface LimbInfo {
    readonly associatedInventory: Inventory;
+   readonly hitbox: Hitbox;
    selectedItemSlot: number;
    readonly spearWindupCooldowns: Partial<Record<number, number>>;
    readonly crossbowLoadProgressRecord: Partial<Record<number, number>>;
@@ -52,8 +70,8 @@ export interface LimbInfo {
    currentActionStartLimbState: LimbState;
    currentActionEndLimbState: LimbState;
 
-   swingAttack: Entity;
-   blockAttack: Entity;
+   // swingAttack: Entity;
+   // blockAttack: Entity;
    
    // @Hack @Memory: Shouldn't be stored like this, should only be sent when block events happen
    // @Bug: If multiple attacks are blocked in 1 tick by the same damage box, only one of them is sent. 
@@ -61,6 +79,9 @@ export interface LimbInfo {
    blockPositionX: number;
    blockPositionY: number;
    blockType: BlockType;
+
+   isBlocked: boolean;
+   canDamage: boolean;
 }
 
 // @Copynpaste
@@ -100,11 +121,12 @@ export class InventoryUseComponent {
    public globalAttackCooldown = 0;
 
    // @Hack: limb configuration. Can't be called in this function as the limbInfos array won't have been populated
-   public createLimb(associatedInventory: Inventory, limbConfiguration: LimbConfiguration): void {
+   public createLimb(associatedInventory: Inventory, hitbox: Hitbox, limbConfiguration: LimbConfiguration): void {
       const restingLimbState = RESTING_LIMB_STATES[limbConfiguration];
 
       const useInfo: LimbInfo = {
          associatedInventory: associatedInventory,
+         hitbox: hitbox,
          selectedItemSlot: 1,
          spearWindupCooldowns: {},
          crossbowLoadProgressRecord: {},
@@ -127,12 +149,12 @@ export class InventoryUseComponent {
          currentActionRate: 1,
          currentActionStartLimbState: copyLimbState(restingLimbState),
          currentActionEndLimbState: copyLimbState(restingLimbState),
-         swingAttack: 0,
-         blockAttack: 0,
          lastBlockTick: 0,
          blockPositionX: 0,
          blockPositionY: 0,
-         blockType: BlockType.toolBlock
+         blockType: BlockType.toolBlock,
+         isBlocked: false,
+         canDamage: false
       };
       
       this.limbInfos.push(useInfo);
@@ -160,18 +182,25 @@ InventoryUseComponentArray.onTick = {
    tickInterval: 1,
    func: onTick
 };
+InventoryUseComponentArray.onHitboxCollision = onHitboxCollision;
 
 function onJoin(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const inventoryComponent = InventoryComponentArray.getComponent(entity);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    
+   const handHitboxes = getHitboxesByFlag(transformComponent, HitboxFlag.HAND);
+
    for (let i = 0; i < inventoryUseComponent.associatedInventoryNames.length; i++) {
       const inventoryName = inventoryUseComponent.associatedInventoryNames[i];
       const inventory = getInventory(inventoryComponent, inventoryName);
 
+      // @Hack?
+      const handHitbox = handHitboxes[i];
+
       // @Hack
       const limbConfiguration = inventoryUseComponent.associatedInventoryNames.length - 1;
-      inventoryUseComponent.createLimb(inventory, limbConfiguration);
+      inventoryUseComponent.createLimb(inventory, handHitbox, limbConfiguration);
    }
 }
 
@@ -184,6 +213,16 @@ const currentActionHasFinished = (limbInfo: LimbInfo): boolean => {
 export function getHeldItem(limbInfo: LimbInfo): Item | null {
    const item = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
    return (typeof item !== "undefined" && limbInfo.thrownBattleaxeItemID !== item.id) ? item : null;
+}
+
+export function getHeldItemEntity(limbInfo: LimbInfo): Entity | null {
+   for (const child of limbInfo.hitbox.children) {
+      if (getEntityType(child.entity) === EntityType.heldItem) {
+         return child.entity;
+      }
+   }
+
+   return null;
 }
 
 export function getLimbConfiguration(inventoryUseComponent: InventoryUseComponent): LimbConfiguration {
@@ -236,6 +275,34 @@ const getBoxCollidingWallSubtiles = (layer: Layer, box: Box): ReadonlyArray<numb
    return collidingWallSubtiles;
 }
 
+const getLimbActionProgress = (limb: LimbInfo): number => {
+   if (limb.currentActionDurationTicks <= 0 || limb.currentActionElapsedTicks > limb.currentActionDurationTicks) {
+      return 1;
+   }
+
+   return limb.currentActionElapsedTicks / limb.currentActionDurationTicks;
+}
+
+export function getLimbStateOffset(limbState: LimbState, humanoidRadius: number): Point {
+   const offset = limbState.extraOffset + humanoidRadius + 2;
+
+   const offsetX = offset * Math.sin(limbState.direction) + limbState.extraOffsetX;
+   const offsetY = offset * Math.cos(limbState.direction) + limbState.extraOffsetY;
+   return new Point(offsetX, offsetY);
+}
+
+const updateHandHitboxToLimbInfo = (handHitbox: Hitbox, limb: LimbInfo): void => {
+   const transformComponent = TransformComponentArray.getComponent(handHitbox.entity);
+   const limbOffset = getLimbStateOffset(getCurrentLimbState(limb), getHumanoidRadius(transformComponent));
+   handHitbox.box.offset.x = limbOffset.x;
+   handHitbox.box.offset.y = limbOffset.y;
+
+   transformComponent.isDirty = true;
+   
+   const progress = getLimbActionProgress(limb);
+   setHitboxRelativeAngle(handHitbox, lerp(limb.currentActionStartLimbState.angle, limb.currentActionEndLimbState.angle, progress));
+}
+
 function onTick(entity: Entity): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    if (inventoryUseComponent.globalAttackCooldown > 0) {
@@ -245,6 +312,16 @@ function onTick(entity: Entity): void {
    for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
       const limb = inventoryUseComponent.limbInfos[i];
 
+      const heldItem = getHeldItem(limb);
+
+      const heldItemEntity = getHeldItemEntity(limb);
+      if (heldItem !== null && heldItemEntity === null) {
+         const config = createHeldItemConfig(limb.hitbox, heldItem.type);
+         createEntity(config, getEntityLayer(entity), 0);
+      } else if (heldItem === null && heldItemEntity !== null) {
+         destroyEntity(heldItemEntity);
+      }
+      
       // @Cleanup @Bandwidth: When blocking, once the block is finished going up the entity should no longer be dirtied by this
       // Certain actions should always show an update for the player
       if (limb.action !== LimbAction.none) {
@@ -263,16 +340,13 @@ function onTick(entity: Entity): void {
 
       if (limb.currentActionPauseTicksRemaining > 0) {
          limb.currentActionPauseTicksRemaining--;
-      } else {
+      } else if (limb.currentActionElapsedTicks < limb.currentActionDurationTicks) {
          limb.currentActionElapsedTicks += limb.currentActionRate;
       }
 
       if (currentActionHasFinished(limb)) {
          switch (limb.action) {
             case LimbAction.engageBlock: {
-               const blockAttackConfig = createBlockAttackConfig(entity, limb);
-               limb.blockAttack = createEntity(blockAttackConfig, getEntityLayer(entity), 0);
-
                limb.action = LimbAction.block;
                limb.currentActionElapsedTicks = 0;
                limb.currentActionDurationTicks = 0;
@@ -329,7 +403,6 @@ function onTick(entity: Entity): void {
                break;
             }
             case LimbAction.windAttack: {
-               const heldItem = getHeldItem(limb);
                const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
 
                const attackPattern = heldItemAttackInfo.attackPatterns![getLimbConfiguration(inventoryUseComponent)];
@@ -341,14 +414,11 @@ function onTick(entity: Entity): void {
                limb.currentActionStartLimbState = copyLimbState(attackPattern.windedBack);
                // @Speed: Garbage collection
                limb.currentActionEndLimbState = copyLimbState(attackPattern.swung);
-               
-               const swingAttackConfig = createSwingAttackConfig(new Point(0, 0), 0, entity, limb);
-               limb.swingAttack = createEntity(swingAttackConfig, getEntityLayer(entity), 0);
+
+               limb.canDamage = true;
                break;
             }
             case LimbAction.attack: {
-               const heldItem = getHeldItem(limb);
-
                const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
             
                const limbConfiguration = getLimbConfiguration(inventoryUseComponent);
@@ -364,13 +434,10 @@ function onTick(entity: Entity): void {
                limb.currentActionEndLimbState = copyLimbState(RESTING_LIMB_STATES[limbConfiguration]);
             
                // If the swing hits something partway through it can be destroyed
-               if (entityExists(limb.swingAttack)) {
-                  destroyEntity(limb.swingAttack);
-               }
+               limb.canDamage = false;
                break;
             }
             case LimbAction.returnAttackToRest: {
-               const heldItem = getHeldItem(limb);
                const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
 
                const limbConfiguration = getLimbConfiguration(inventoryUseComponent);
@@ -437,7 +504,7 @@ function onTick(entity: Entity): void {
             case LimbAction.returnFromBow: {
                const startingLimbState = getCurrentLimbState(limb);
                const limbConfiguration = getLimbConfiguration(inventoryUseComponent);
-               
+
                limb.action = LimbAction.none;
                limb.currentActionElapsedTicks = 0;
                limb.currentActionDurationTicks = 0;
@@ -461,7 +528,6 @@ function onTick(entity: Entity): void {
       //          limb.heldItemDamageBox.blockingSubtileIndex = heldItemCollidingSubtiles[0];
 
       //          // Damage the subtiles with the pickaxe
-      //          const heldItem = getHeldItem(limb)!;
       //          if (ITEM_TYPE_RECORD[heldItem.type] === "pickaxe") {
       //             const itemInfo = ITEM_INFO_RECORD[heldItem.type] as PickaxeItemInfo;
 
@@ -497,7 +563,6 @@ function onTick(entity: Entity): void {
       // Update blocking damage box when blocking
       if (limb.action === LimbAction.block) {
          if (limb.currentActionElapsedTicks >= limb.currentActionDurationTicks) {
-            const heldItem = getHeldItem(limb);
             const blockingState = heldItem !== null && ITEM_TYPE_RECORD[heldItem.type] === "shield" ? SHIELD_BLOCKING_LIMB_STATE : BLOCKING_LIMB_STATE;
             // @Incomplete
             // setHitboxToState(entity, limb, blockingState, isFlipped);
@@ -508,6 +573,8 @@ function onTick(entity: Entity): void {
       // if (limbInfo.itemAttackCooldowns[limbInfo.selectedItemSlot] === undefined && limbInfo.extraAttackCooldownTicks > 0) {
       //    limbInfo.extraAttackCooldownTicks--;
       // }
+
+      updateHandHitboxToLimbInfo(limb.hitbox, limb);
    }
 }
 
@@ -537,7 +604,7 @@ function getDataLength(entity: Entity): number {
       lengthBytes += Float32Array.BYTES_PER_ELEMENT;
       lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.spearWindupCooldowns).length;
       lengthBytes += getCrossbowLoadProgressRecordLength(useInfo);
-      lengthBytes += 21 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 20 * Float32Array.BYTES_PER_ELEMENT;
       // Limb states
       lengthBytes += 2 * 5 * Float32Array.BYTES_PER_ELEMENT;
    }
@@ -583,8 +650,8 @@ function addDataToPacket(packet: Packet, entity: Entity): void {
       packet.writeNumber(limb.currentActionDurationTicks);
       packet.writeNumber(limb.currentActionPauseTicksRemaining);
       packet.writeNumber(limb.currentActionRate);
-      packet.writeNumber(limb.swingAttack);
-      packet.writeNumber(limb.blockAttack);
+      const heldItemEntity = getHeldItemEntity(limb);
+      packet.writeNumber(heldItemEntity !== null ? heldItemEntity : 0);
       packet.writeNumber(limb.lastBlockTick);
       packet.writeNumber(limb.blockPositionX);
       packet.writeNumber(limb.blockPositionY);
@@ -601,4 +668,225 @@ export function setLimbActions(inventoryUseComponent: InventoryUseComponent, lim
       const limbInfo = inventoryUseComponent.limbInfos[i];
       limbInfo.action = limbAction;
    }
+}
+
+const shouldRepairBuilding = (entity: Entity, comparingEntity: Entity): boolean => {
+   if (getEntityRelationship(entity, comparingEntity) !== EntityRelationship.friendlyBuilding) {
+      return false;
+   }
+
+   if (!entitiesBelongToSameTribe(entity, comparingEntity)) {
+      return false;
+   }
+
+   const healthComponent = HealthComponentArray.getComponent(comparingEntity);
+   return healthComponent.health < healthComponent.maxHealth;
+}
+
+const getRepairAmount = (tribeMember: Entity, itemType: HammerItemType): number => {
+   const itemInfo = ITEM_INFO_RECORD[itemType];
+   let repairAmount = itemInfo.repairAmount;
+
+   if (hasTitle(tribeMember, TribesmanTitle.builder)) {
+      repairAmount *= 1.5;
+   }
+   
+   return Math.round(repairAmount);
+}
+
+const isBerryBushWithBerries = (entity: Entity): boolean => {
+   switch (getEntityType(entity)) {
+      case EntityType.berryBush: {
+         const berryBushComponent = BerryBushComponentArray.getComponent(entity);
+         return berryBushComponent.numBerries > 0;
+      }
+      case EntityType.berryBushPlanted: {
+         const berryBushPlantedComponent = BerryBushPlantedComponentArray.getComponent(entity);
+         return berryBushPlantedComponent.numFruit > 0;
+      }
+      default: {
+         return false;
+      }
+   }
+}
+
+const getPlantGatherAmount = (tribeman: Entity, plant: Entity, gloves: Item | null): number => {
+   let amount = 1;
+
+   const entityType = getEntityType(plant);
+   if (hasTitle(tribeman, TribesmanTitle.berrymuncher) && (entityType === EntityType.berryBush || entityType === EntityType.berryBushPlanted)) {
+      if (Math.random() < 0.3) {
+         amount++;
+      }
+   }
+
+   if (hasTitle(tribeman, TribesmanTitle.gardener)) {
+      if (Math.random() < 0.3) {
+         amount++;
+      }
+   }
+
+   if (gloves !== null && gloves.type === ItemType.gardening_gloves) {
+      if (Math.random() < 0.2) {
+         amount++;
+      }
+   }
+
+   return amount;
+}
+
+const gatherPlant = (plant: Entity, attacker: Entity, hitHitbox: Hitbox, gloves: Item | null): void => {
+   const plantTransformComponent = TransformComponentArray.getComponent(plant);
+   const plantHitbox = plantTransformComponent.hitboxes[0];
+   
+   if (isBerryBushWithBerries(plant)) {
+      const gatherMultiplier = getPlantGatherAmount(attacker, plant, gloves);
+
+      // As hitting the bush will drop a berry regardless, only drop extra ones here
+      for (let i = 0; i < gatherMultiplier - 1; i++) {
+         // @HACK: hit position
+         hitEntityWithoutDamage(plant, hitHitbox, attacker, new Point(0, 0));
+      }
+   } else {
+      assertBoxIsCircular(plantHitbox.box);
+      const plantRadius = plantHitbox.box.radius;
+
+      const offsetDirection = randAngle();
+      const x = plantHitbox.box.position.x + (plantRadius - 7) * Math.sin(offsetDirection);
+      const y = plantHitbox.box.position.y + (plantRadius - 7) * Math.cos(offsetDirection);
+   
+      const config = createItemEntityConfig(new Point(x, y), randAngle(), createItem(ItemType.leaf, 1, "", ""), null);
+      createEntity(config, getEntityLayer(plant), 0);
+
+      hitEntityWithoutDamage(plant, hitHitbox, attacker, new Point(0, 0));
+   }
+
+   // @Hack
+   // const attackerTransformComponent = TransformComponentArray.getComponent(attacker);
+   // const collisionPoint = new Point((plantHitbox.box.position.x + attackerTransformComponent.position.x) / 2, (plantHitbox.box.position.y + attackerTransformComponent.position.y) / 2);
+   // @HACK
+   const collisionPoint = new Point(0, 0);
+
+   damageEntity(plantHitbox, attacker, 0, 0, AttackEffectiveness.ineffective, collisionPoint, HitFlags.NON_DAMAGING_HIT);
+}
+
+const damageEntityFromSwing = (attacker: Entity, limb: LimbInfo, itemType: ItemType | null, victim: Entity, hitbox: Hitbox, victimHitbox: Hitbox, collisionPoint: Point): boolean => {
+   const targetEntityType = getEntityType(victim);
+
+   const attackEffectiveness = calculateAttackEffectiveness(itemType, targetEntityType);
+
+   // Harvest leaves from trees and berries when wearing the gathering or gardening gloves
+   if ((itemType === null || itemType === ItemType.leaf) && (targetEntityType === EntityType.tree || targetEntityType === EntityType.berryBush || targetEntityType === EntityType.treePlanted || targetEntityType === EntityType.berryBushPlanted)) {
+      const inventoryComponent = InventoryComponentArray.getComponent(attacker);
+      if (hasInventory(inventoryComponent, InventoryName.gloveSlot)) {
+         const gloveInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
+         const gloves = gloveInventory.itemSlots[1];
+         if (typeof gloves !== "undefined" && (gloves.type === ItemType.gathering_gloves || gloves.type === ItemType.gardening_gloves)) {
+            gatherPlant(victim, attacker, victimHitbox, gloves);
+            return true;
+         }
+      }
+   }
+
+   const attackDamage = calculateItemDamage(attacker, itemType, attackEffectiveness, limb.isBlocked);
+   const attackKnockback = calculateItemKnockback(itemType, limb.isBlocked);
+
+   const hitDirection = hitbox.box.position.angleTo(victimHitbox.box.position);
+
+   // Register the hit
+   const hitFlags = itemType !== null && itemType === ItemType.flesh_sword ? HitFlags.HIT_BY_FLESH_SWORD : 0; // @HACK
+   damageEntity(victimHitbox, attacker, attackDamage, DamageSource.tribeMember, attackEffectiveness, collisionPoint, hitFlags);
+   // @SQUEAM
+   if (getEntityType(victimHitbox.entity) === EntityType.tukmokTailClub || victimHitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_MEDIUM) || victimHitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_BIG) || victimHitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_SMALL)) {
+
+   } else {
+      applyKnockback(victimHitbox, polarVec2(attackKnockback, hitDirection));
+   }
+
+   if (itemType !== null) {
+      // @HACK: shouldn't be hard-coded here!!
+      switch (itemType) {
+         case ItemType.flesh_sword: {
+            applyStatusEffect(victim, StatusEffect.poisoned, 3 * Settings.TICK_RATE);
+            break;
+         }
+         case ItemType.inguSerpentTooth:
+         case ItemType.iceWringer: {
+            applyStatusEffect(victim, StatusEffect.freezing, 3 * Settings.TICK_RATE);
+            break;
+         }
+      }
+   }
+
+   // Bloodaxes have a 20% chance to inflict bleeding on hit
+   if (hasTitle(attacker, TribesmanTitle.bloodaxe) && Math.random() < 0.2) {
+      applyStatusEffect(victim, StatusEffect.bleeding, 2 * Settings.TICK_RATE);
+   }
+
+   return true;
+}
+
+// @HACK: used in two components at once, which is why it's exported!!!
+export function onSwingEntityCollision(attacker: Entity, hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoint: Point, limb: LimbInfo, itemType: ItemType | null): void {
+   if (!limb.canDamage) {
+      return;
+   }
+
+   // @Temporary: remove when bug is fixed
+   if (!entityExists(attacker)) {
+      // @TEMPORARY
+      // console.warn("OUSEOFJHOSJFOISDJF bad")
+      return;
+   }
+   // @Temporary: remove when bug is fixed
+   // @Bug: Happens when a zombie swings !!!
+   if (!TribeComponentArray.hasComponent(attacker)) {
+      // @TEMPORARY
+      // console.log(getEntityType(owner));
+      // console.warn(getEntityType(owner));
+      return;
+   }
+
+   const collidingEntity = collidingHitbox.entity;
+   
+   // Build blueprints and repair buildings
+   if (itemType !== null && itemTypeIsHammer(itemType)) {
+      if (getEntityType(collidingEntity) === EntityType.blueprintEntity) {
+         if (entitiesBelongToSameTribe(attacker, collidingEntity)) {
+            doBlueprintWork(collidingEntity, itemType);
+            limb.canDamage = false;
+            return;
+         }
+      } else if (shouldRepairBuilding(attacker, collidingEntity)) {
+         const repairAmount = getRepairAmount(attacker, itemType);
+         healEntity(collidingEntity, repairAmount, attacker);
+         limb.canDamage = false;
+         return;
+      }
+   }
+
+   if (!HealthComponentArray.hasComponent(collidingEntity)) {
+      return;
+   }
+
+   // Don't attack friendlies
+   const relationship = getEntityRelationship(attacker, collidingEntity);
+   if (relationship === EntityRelationship.friendly) {
+      return;
+   }
+
+   damageEntityFromSwing(attacker, limb, itemType, collidingEntity, hitbox, collidingHitbox, collisionPoint);
+   limb.canDamage = false;
+}
+
+function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoint: Point) {
+   if (!hitbox.flags.includes(HitboxFlag.HAND)) {
+      return;
+   }
+
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(hitbox.entity);
+   const inventoryName = hitbox.box.flipX ? InventoryName.offhand : InventoryName.hotbar;
+   const limb = inventoryUseComponent.getLimbInfo(inventoryName);
+   
+   onSwingEntityCollision(hitbox.entity, hitbox, collidingHitbox, collisionPoint, limb, null);
 }

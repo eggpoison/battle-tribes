@@ -1,4 +1,4 @@
-import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, updateVertexPositionsAndSideAxes, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, TILE_PHYSICS_INFO_RECORD, TileType, Settings, PacketReader, Entity, CollisionBit, CircularBox, RectangularBox, distance, distBetweenPointAndRectangle } from "webgl-test-shared";
+import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, updateVertexPositionsAndSideAxes, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, TILE_PHYSICS_INFO_RECORD, TileType, Settings, PacketReader, Entity, CollisionBit, CircularBox, RectangularBox, distance, distBetweenPointAndRectangle, assert, getAngleDiff } from "webgl-test-shared";
 import { hitboxIsInRiver, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityRenderInfo } from "./world";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
@@ -254,12 +254,13 @@ export function updateHitboxFromData(hitbox: Hitbox, data: Hitbox): void {
    let parentHitboxLocalID: number;
    if (data.parent !== null) {
       parentEntity = data.parent.entity;
-      parentHitboxLocalID = data.localID;
+      parentHitboxLocalID = data.parent.localID;
    } else {
       parentEntity = 0;
       parentHitboxLocalID = 0;
    }
    hitbox.parent = findEntityHitbox(parentEntity, parentHitboxLocalID);
+   assert(hitbox.parent !== hitbox);
 
    // @Garbage
    hitbox.children.splice(0, hitbox.children.length);
@@ -293,12 +294,13 @@ export function updatePlayerHitboxFromData(hitbox: Hitbox, data: Hitbox): void {
    let parentHitboxLocalID: number;
    if (data.parent !== null) {
       parentEntity = data.parent.entity;
-      parentHitboxLocalID = data.localID;
+      parentHitboxLocalID = data.parent.localID;
    } else {
       parentEntity = 0;
       parentHitboxLocalID = 0;
    }
    hitbox.parent = findEntityHitbox(parentEntity, parentHitboxLocalID);
+   assert(hitbox.parent !== hitbox);
 
    // @Garbage
    // @Copynpaste
@@ -424,14 +426,14 @@ export function setHitboxObservedAngularVelocity(hitbox: Hitbox, angularVelocity
    hitbox.previousRelativeAngle = hitbox.box.angle - angularVelocity * Settings.DT_S;
 }
 
-// export function getHitboxAngularVelocity(hitbox: Hitbox): number {
-//    // Here we don't use getAngleDiff but just subtract them, so that e.g. adding 2pi to the relative angle will register as some angular velocity
-//    // @INCOMPLETE @INVESTIGATE but the above comment is wrong??? we do just use getAngleDiff??
-//    return getAngleDiff(hitbox.previousRelativeAngle, hitbox.box.relativeAngle) * Settings.TICK_RATE;
-// }
+export function getHitboxAngularVelocity(hitbox: Hitbox): number {
+   // Here don't use getAngleDiff but just subtract them, so that e.g. adding 2pi to the relative angle will register as some angular velocity
+   // @INCOMPLETE @INVESTIGATE but the above comment is wrong??? i do just use getAngleDiff??
+   return getAngleDiff(hitbox.previousRelativeAngle, hitbox.box.relativeAngle) * Settings.TICK_RATE;
+}
 // export function getHitboxRelativeAngularVelocity(hitbox: Hitbox): number {
-//    // Here we don't use getAngleDiff but just subtract them, so that e.g. adding 2pi to the relative angle will register as some angular velocity
-//    // @INCOMPLETE @INVESTIGATE but the above comment is wrong??? we do just use getAngleDiff??
+//    // Here don't use getAngleDiff but just subtract them, so that e.g. adding 2pi to the relative angle will register as some angular velocity
+//    // @INCOMPLETE @INVESTIGATE but the above comment is wrong??? i do just use getAngleDiff??
 //    return getAngleDiff(hitbox.previousRelativeAngle, hitbox.box.relativeAngle) * Settings.TICK_RATE;
 // }
 

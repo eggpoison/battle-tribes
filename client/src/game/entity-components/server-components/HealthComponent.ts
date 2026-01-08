@@ -5,7 +5,7 @@ import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import { playerInstance } from "../../player";
 import { Hitbox } from "../../hitboxes";
 import { healthBarState } from "../../../ui-state/health-bar-state.svelte";
-import { discombobulate } from "../../player-action-handler";
+import { discombobulate } from "../../player-action-handling";
 
 export interface HealthComponentData {
    readonly health: number;

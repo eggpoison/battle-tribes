@@ -1,5 +1,5 @@
 <script lang="ts">
-   import { getSpectatorSpeed, setSpectatorSpeed } from "../../game/player-action-handler";
+   import { getSpectatorSpeed, setSpectatorSpeed } from "../../game/player-action-handling";
    import MenuElem from "./menus/MenuElem.svelte";
 
    let speed = $state(getSpectatorSpeed());

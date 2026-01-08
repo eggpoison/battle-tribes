@@ -1,7 +1,7 @@
 import { UtilVars, TribeType, getTamingSkill, TamingSkill, TamingSkillID, Settings, PacketReader, ItemType, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { Hitbox } from "../../hitboxes";
-import { getPlayerSelectedItem } from "../../player-action-handler";
+import { getPlayerSelectedItem } from "../../player-action-handling";
 import { RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";

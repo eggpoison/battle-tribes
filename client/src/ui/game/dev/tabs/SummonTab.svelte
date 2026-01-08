@@ -7,27 +7,25 @@
    import DevmodeRangeInput from "../DevmodeRangeInput.svelte";
    import InventoryComponentInput from "./InventoryComponentInput.svelte";
    import TribeComponentInput from "./TribeComponentInput.svelte";
-    import { menuSelectorState } from "../../../../ui-state/menu-selector-state.svelte";
+   import { menuSelectorState } from "../../../../ui-state/menu-selector-state.svelte";
 
    type EntityTypeTuple = [EntityType, string];
 
-   let alphabeticalEntityTypes: ReadonlyArray<EntityType>;
-   {
-      const entityTypeTuples = new Array<EntityTypeTuple>();
-      for (let entityType: EntityType = 0; entityType < NUM_ENTITY_TYPES; entityType++) {
-         const clientEntityInfo = CLIENT_ENTITY_INFO_RECORD[entityType];
-         entityTypeTuples.push([entityType, clientEntityInfo.name]);
-      }
-
-      const sortedTuples = entityTypeTuples.sort((a, b) => a[1] > b[1] ? 1 : -1);
-
-      const sortedEntityTypes = new Array<EntityType>();
-      for (let i = 0; i < sortedTuples.length; i++) {
-         const tuple = sortedTuples[i];
-         sortedEntityTypes.push(tuple[0]);
-      }
-      alphabeticalEntityTypes = sortedEntityTypes;
+   const entityTypeTuples = new Array<EntityTypeTuple>();
+   for (let entityType: EntityType = 0; entityType < NUM_ENTITY_TYPES; entityType++) {
+      const clientEntityInfo = CLIENT_ENTITY_INFO_RECORD[entityType];
+      entityTypeTuples.push([entityType, clientEntityInfo.name]);
    }
+
+   const sortedTuples = entityTypeTuples.sort((a, b) => a[1] > b[1] ? 1 : -1);
+
+   const sortedEntityTypes = new Array<EntityType>();
+   for (let i = 0; i < sortedTuples.length; i++) {
+      const tuple = sortedTuples[i];
+      sortedEntityTypes.push(tuple[0]);
+   }
+   const alphabeticalEntityTypes = sortedEntityTypes;
+   
    const alphabeticalEntityNames = alphabeticalEntityTypes.map(entityType => CLIENT_ENTITY_INFO_RECORD[entityType].name);
 
    const serialiseInventoryComponentSummonData = (entityType: EntityType): ComponentSummonData<ServerComponentType.inventory> => {
@@ -96,7 +94,7 @@
       updateSummonPacket();
 
       // Close the tab
-      menuSelectorState.closeMenu();
+      menuSelectorState.closeCurrentMenu();
       gameUIState.setGameInteractState(GameInteractState.summonEntity);
    }
    

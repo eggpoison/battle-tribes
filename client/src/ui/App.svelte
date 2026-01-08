@@ -1,7 +1,7 @@
 <script lang="ts">
    import { updateCursorScreenPos } from "../game/camera";
    import { onKeyDown, onKeyUp } from "../game/keyboard-input";
-   import { createPlayerInputListeners } from "../game/player-action-handler";
+   import { createPlayerInputListeners } from "../game/player-action-handling";
    import { AppState, appState } from "../ui-state/app-state.svelte";
    import { gameUIState } from "../ui-state/game-ui-state.svelte";
    import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";

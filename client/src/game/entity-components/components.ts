@@ -84,8 +84,6 @@ import { TribeMemberComponent, TribeMemberComponentArray, TribeMemberComponentDa
 import { AutomatonAssemblerComponent, AutomatonAssemblerComponentArray, AutomatonAssemblerComponentData } from "./server-components/AutomatonAssemblerComponent";
 import { MithrilAnvilComponent, MithrilAnvilComponentArray, MithrilAnvilComponentData } from "./server-components/MithrilAnvilComponent";
 import { RideableComponent, RideableComponentArray, RideableComponentData } from "./server-components/RideableComponent";
-import { SwingAttackComponent, SwingAttackComponentArray, SwingAttackComponentData } from "./server-components/SwingAttackComponent";
-import { BlockAttackComponent, BlockAttackComponentArray, BlockAttackComponentData } from "./server-components/BlockAttackComponent";
 import { SlingTurretRockComponent, SlingTurretRockComponentArray, SlingTurretRockComponentData } from "./server-components/SlingTurretRockComponent";
 import { TamingComponent, TamingComponentArray, TamingComponentData } from "./server-components/TamingComponent";
 import { LootComponent, LootComponentArray, LootComponentData } from "./server-components/LootComponent";
@@ -151,6 +149,7 @@ import { InguYetuksnoglurblidokowfleaComponent, InguYetuksnoglurblidokowfleaComp
 import { InguYetuksnoglurblidokowfleaSeekerHeadComponent, InguYetuksnoglurblidokowfleaSeekerHeadComponentArray, InguYetuksnoglurblidokowfleaSeekerHeadComponentData } from "./server-components/InguYetuksnoglurblidokowfleaSeekerHeadComponent";
 import { InguYetukLaserComponent, InguYetukLaserComponentArray, InguYetukLaserComponentData } from "./server-components/InguYetukLaserComponent";
 import { RiverSteppingStoneComponent, RiverSteppingStoneComponentArray, RiverSteppingStoneComponentData } from "./server-components/RiverSteppingStoneComponent";
+import { HeldItemComponent, HeldItemComponentArray, HeldItemComponentData } from "./server-components/HeldItemComponent";
 
 // @cleanup: same as below
 const ClientComponentArrayRecord: Record<ClientComponentType, object> = {
@@ -267,8 +266,7 @@ const ServerComponentArrayRecord: Record<ServerComponentType, object> = {
    [ServerComponentType.automatonAssembler]: AutomatonAssemblerComponentArray,
    [ServerComponentType.mithrilAnvil]: MithrilAnvilComponentArray,
    [ServerComponentType.rideable]: RideableComponentArray,
-   [ServerComponentType.swingAttack]: SwingAttackComponentArray,
-   [ServerComponentType.blockAttack]: BlockAttackComponentArray,
+   [ServerComponentType.heldItem]: HeldItemComponentArray,
    [ServerComponentType.slingTurretRock]: SlingTurretRockComponentArray,
    [ServerComponentType.taming]: TamingComponentArray,
    [ServerComponentType.loot]: LootComponentArray,
@@ -402,8 +400,7 @@ const ServerComponentRecord = {
    [ServerComponentType.automatonAssembler]: (): AutomatonAssemblerComponent => 0 as any,
    [ServerComponentType.mithrilAnvil]: (): MithrilAnvilComponent => 0 as any,
    [ServerComponentType.rideable]: (): RideableComponent => 0 as any,
-   [ServerComponentType.swingAttack]: (): SwingAttackComponent => 0 as any,
-   [ServerComponentType.blockAttack]: (): BlockAttackComponent => 0 as any,
+   [ServerComponentType.heldItem]: (): HeldItemComponent => 0 as any,
    [ServerComponentType.slingTurretRock]: (): SlingTurretRockComponent => 0 as any,
    [ServerComponentType.taming]: (): TamingComponent => 0 as any,
    [ServerComponentType.loot]: (): LootComponent => 0 as any,
@@ -539,8 +536,7 @@ const ServerComponentDataRecord = {
    [ServerComponentType.automatonAssembler]: (): AutomatonAssemblerComponentData => 0 as any,
    [ServerComponentType.mithrilAnvil]: (): MithrilAnvilComponentData => 0 as any,
    [ServerComponentType.rideable]: (): RideableComponentData => 0 as any,
-   [ServerComponentType.swingAttack]: (): SwingAttackComponentData => 0 as any,
-   [ServerComponentType.blockAttack]: (): BlockAttackComponentData => 0 as any,
+   [ServerComponentType.heldItem]: (): HeldItemComponentData => 0 as any,
    [ServerComponentType.slingTurretRock]: (): SlingTurretRockComponentData => 0 as any,
    [ServerComponentType.taming]: (): TamingComponentData => 0 as any,
    [ServerComponentType.loot]: (): LootComponentData => 0 as any,

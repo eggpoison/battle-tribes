@@ -3,7 +3,7 @@ import { playSoundOnHitbox } from "./sound";
 import { entityExists } from "./world";
 import { getRandomPositionOnBoxEdge, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { createHotSparkParticle } from "./particles";
-import { playBowFireSound } from "./player-action-handler";
+import { playBowFireSound } from "./player-action-handling";
 
 export function processTickEvent(entity: Entity, type: EntityTickEventType, data: number): void {
    // @HACK

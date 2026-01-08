@@ -10,7 +10,7 @@ import { playerInstance } from "../player";
 import { registerTamingSpecsFromData } from "../taming-specs";
 import { addChatMessage } from "../chat";
 import { gameUIState } from "../../ui-state/game-ui-state.svelte";
-import { getSelectedItemInfo } from "../player-action-handler";
+import { getSelectedItemInfo } from "../player-action-handling";
 import { playerActionState } from "../../ui-state/player-action-state.svelte";
 
 const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {

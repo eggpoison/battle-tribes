@@ -12,7 +12,7 @@ import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPat
 import { resolveWallCollision } from "../collision-resolution";
 import { Packet } from "battletribes-shared/packets";
 import { Box, boxIsCircular, getBoxArea, HitboxFlag, updateBox } from "battletribes-shared/boxes/boxes";
-import { destroyEntity, getEntityLayer, getEntityType, setEntityLayer } from "../world";
+import { destroyEntity, entityExists, getEntityLayer, getEntityType, setEntityLayer } from "../world";
 import { removeEntityLights, updateEntityLights } from "../lights";
 import { registerDirtyEntity } from "../server/player-clients";
 import { surfaceLayer, undergroundLayer } from "../layers";
@@ -76,8 +76,10 @@ for (let i = 0; i < 8; i++) {
    b.push(Math.cos(angle));
 }
 
-/** Should only be called during entity creation */
+/** Only to be called during entity creation. */
 export function addHitboxToTransformComponent(transformComponent: TransformComponent, hitbox: Hitbox): void {
+   assert(!entityExists(hitbox.entity));
+
    assert(!transformComponent.hitboxes.includes(hitbox));
    transformComponent.hitboxes.push(hitbox);
 
@@ -85,11 +87,13 @@ export function addHitboxToTransformComponent(transformComponent: TransformCompo
       transformComponent.rootHitboxes.push(hitbox);
    } else {
       assert(!hitbox.parent.children.includes(hitbox));
+      // Hitboxes should never be created already attached to another entity! Instead the place which creates the entity config should create an entity attach info on the config.
+      assert(!entityExists(hitbox.parent.entity));
       hitbox.parent.children.push(hitbox);
    }
 }
 
-/** Should only be called after an entity is created */
+/** Only to be called after an entity is created. */
 export function addHitboxToEntity(entity: Entity, hitbox: Hitbox): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    

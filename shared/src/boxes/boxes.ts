@@ -59,6 +59,7 @@ export enum HitboxFlag {
    RIVER_STEPPING_STONE_SMALL,
    RIVER_STEPPING_STONE_MEDIUM,
    RIVER_STEPPING_STONE_LARGE,
+   HAND
 }
 
 export enum HitboxCollisionType {

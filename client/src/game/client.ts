@@ -22,7 +22,7 @@ import { LoadingScreenStage, loadingScreenState } from "../ui-state/loading-scre
 import { appState, AppState } from "../ui-state/app-state.svelte";
 import { registerFrame, renderFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { updateSpamFilter } from "./chat";
-import { updatePlayerMovement } from "./player-action-handler";
+import { updatePlayerMovement } from "./player-action-handling";
 import { PacketReader, PacketType, Packet, TribeType } from "webgl-test-shared";
 import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 

@@ -4,6 +4,7 @@
    import ItemSlotsContainer from "../../inventories/ItemSlotsContainer.svelte";
    import { menuSelectorState } from "../../../../ui-state/menu-selector-state.svelte";
    import { type ItemSlotCallbackInfo } from "../../inventories/EntityInteractableItemSlot.svelte";
+    import InventoryItemSlots from "../../inventories/InventoryItemSlots.svelte";
 
    interface Props {
       readonly entityType: EntityType;
@@ -47,5 +48,7 @@
    <p>{INVENTORY_NAME_RECORD[inventoryName]}</p>
    
    {@const inventory = tabSelectorState.summonedInventories[inventoryName]}
-   <ItemSlotsContainer entityID={0} inventory={inventory} onMouseDown={(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo) => clickInventory(e, callbackInfo, inventoryName)} />
+   <ItemSlotsContainer width={inventory.width} height={inventory.height} numItemSlotsPassed={inventory.width * inventory.height}>
+      <InventoryItemSlots entity={0} inventory={inventory} onmousedown={(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo) => clickInventory(e, callbackInfo, inventoryName)} />
+   </ItemSlotsContainer>
 {/each}

@@ -49,7 +49,7 @@ export function getRecruitTarget(tribesman: Entity, visibleEntities: ReadonlyArr
 
       // Don't try to gift items to tribesman who are already in an established tribe
       const tribeComponent = TribeComponentArray.getComponent(entity);
-      if (tribeComponent.tribe.hasTotem()) {
+      if (tribeComponent.tribe.getNumEntitiesOfType(EntityType.tribeTotem) >= 1) {
          continue;
       }
       

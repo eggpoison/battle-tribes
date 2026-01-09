@@ -1,6 +1,6 @@
 import { CowSpecies, DamageSource, Entity, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { getAbsAngleDiff, Point, positionIsInWorld, randAngle, randFloat, randInt, randItem, UtilVars } from "battletribes-shared/utils";
+import { getAbsAngleDiff, Point, polarVec2, positionIsInWorld, randAngle, randFloat, randInt, randItem, UtilVars } from "battletribes-shared/utils";
 import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity-events";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
@@ -715,7 +715,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
    
    damageEntity(collidingHitbox, cow, 2, DamageSource.iceSpikes, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingHitbox, 180, hitDirection);
+   applyKnockback(collidingHitbox, polarVec2(180, hitDirection));
 
    stopRamming(cowComponent);
 

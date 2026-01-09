@@ -1,4 +1,4 @@
-import { Point, TileIndex, Biome, TileType, Settings, PacketReader, WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize } from "webgl-test-shared";
+import { Point, TileIndex, Biome, TileType, Settings, PacketReader, WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, InventoryName, AttackVars } from "webgl-test-shared";
 import { refreshCameraView, setCameraPosition } from "../camera";
 import { Tile } from "../Tile";
 import { addLayer, layers, setCurrentLayer, surfaceLayer } from "../world";
@@ -10,6 +10,8 @@ import { playerInstance } from "../player";
 import { registerTamingSpecsFromData } from "../taming-specs";
 import { addChatMessage } from "../chat";
 import { gameUIState } from "../../ui-state/game-ui-state.svelte";
+import { getSelectedItemInfo } from "../player-action-handling";
+import { playerActionState } from "../../ui-state/player-action-state.svelte";
 
 const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {
    // Initially find all tiles below a dropdown tile
@@ -215,4 +217,25 @@ export function receiveChatMessagePacket(reader: PacketReader): void {
 export function processSimulationStatusUpdatePacket(reader: PacketReader): void {
    const isSimulating = reader.readBool();
    gameUIState.setIsSimulating(isSimulating);
+}
+
+export function processShieldKnockPacket(): void {
+   const selectedItemInfo = getSelectedItemInfo();
+   if (selectedItemInfo === null) {
+      return;
+   }
+   
+   if (selectedItemInfo.inventoryName === InventoryName.hotbar) {
+      playerActionState.setHotbarItemRestTime({
+         remainingTimeTicks: AttackVars.SHIELD_BLOCK_REST_TIME_TICKS,
+         durationTicks: AttackVars.SHIELD_BLOCK_REST_TIME_TICKS,
+         itemSlot: selectedItemInfo.itemSlot
+      });
+   } else {
+      playerActionState.setOffhandItemRestTime({
+         remainingTimeTicks: AttackVars.SHIELD_BLOCK_REST_TIME_TICKS,
+         durationTicks: AttackVars.SHIELD_BLOCK_REST_TIME_TICKS,
+         itemSlot: selectedItemInfo.itemSlot
+      });
+   }
 }

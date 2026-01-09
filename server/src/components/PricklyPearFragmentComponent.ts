@@ -2,7 +2,7 @@ import { ServerComponentType } from "../../../shared/src/components";
 import { Entity, DamageSource } from "../../../shared/src/entities";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { Packet } from "../../../shared/src/packets";
-import { Point, randInt } from "../../../shared/src/utils";
+import { Point, polarVec2, randInt } from "../../../shared/src/utils";
 import { Hitbox, applyKnockback, getHitboxVelocity } from "../hitboxes";
 import { destroyEntity } from "../world";
 import { ComponentArray } from "./ComponentArray";
@@ -66,6 +66,6 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
 
    damageEntity(collidingHitbox, fragment, 3, DamageSource.yeti, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingHitbox, 100, hitDirection);
+   applyKnockback(collidingHitbox, polarVec2(100, hitDirection));
    addLocalInvulnerabilityHash(collidingEntity, fragment.toString(), 0.3);
 }

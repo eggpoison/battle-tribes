@@ -1,7 +1,7 @@
 <script lang="ts">
    import { sendRenameAnimalPacket } from "../../../game/networking/packet-sending";
    import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
-    import { menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
+   import { menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
    import MenuElem from "../menus/MenuElem.svelte";
 
    // @Hack: "!"
@@ -11,11 +11,11 @@
 
    function doRename(): void {
       sendRenameAnimalPacket(entity, name);
-      menuSelectorState.closeMenu();
+      menuSelectorState.closeCurrentMenu();
    }
 
    const cancelRename = (): void => {
-      menuSelectorState.closeMenu();
+      menuSelectorState.closeCurrentMenu();
    }
 </script>
    

@@ -1,4 +1,4 @@
-import { assert, lerp } from "webgl-test-shared";
+import { lerp } from "webgl-test-shared";
 import { createWebGLProgram } from "../../webgl";
 import { frameGraphState } from "../../../ui-state/frame-graph-state.svelte";
 
@@ -31,24 +31,52 @@ export function registerFrame(frameStartTime: number, frameEndTime: number): voi
       startTime: frameStartTime,
       endTime: frameEndTime
    });
-   // @Copynpaste
-   frameGraphState.trackedFrames.push({
-      startTime: frameStartTime,
-      endTime: frameEndTime
-   });
 
-   const renderTime = performance.now();
-   const now = renderTime / 1000;
+   const now = frameEndTime / 1000;
    
    // Remove old frames
-   for (let i = frames.length - 1; i >= 0; i--) {
+   let lastOldIdx = -1;
+   for (let i = 0; i < frames.length; i++) {
       const frame = frames[i];
       const timeSince = now - (frame.endTime / 1000);
       if (timeSince > FRAME_GRAPH_RECORD_TIME) {
-         frames.splice(i, 1);
-         // @Copynpaste
-         frameGraphState.trackedFrames.splice(i, 1);
+         lastOldIdx = i;
+      } else {
+         break;
       }
+   }
+   if (lastOldIdx !== -1) {
+      frames.splice(0, lastOldIdx + 1);
+   }
+   
+   frameGraphState.setFPS(frames.length / FRAME_GRAPH_RECORD_TIME);
+
+   if (frames.length > 0) {
+      frameGraphState.setAverage(0);
+      frameGraphState.setMin(0);
+      frameGraphState.setMax(0);
+   } else {
+      let totalDuration = 0;
+      let min = Infinity;
+      let max = -Infinity;
+
+      for (const frame of frames) {
+         const duration = frame.endTime - frame.startTime;
+
+         totalDuration += duration;
+         if (duration < min) {
+            min = duration;
+         }
+         if (duration > max) {
+            max = duration;
+         }
+      }
+
+      const average = totalDuration / frames.length;
+
+      frameGraphState.setAverage(average);
+      frameGraphState.setMin(min);
+      frameGraphState.setMax(max);
    }
 }
 

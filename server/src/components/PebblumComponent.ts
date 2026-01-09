@@ -3,7 +3,7 @@ import { ComponentArray } from "./ComponentArray";
 import { DamageSource, Entity } from "battletribes-shared/entities";
 import { moveEntityToPosition } from "../ai-shared";
 import { TransformComponentArray } from "./TransformComponent";
-import { Point, UtilVars } from "battletribes-shared/utils";
+import { Point, polarVec2, UtilVars } from "battletribes-shared/utils";
 import { entityExists } from "../world";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
@@ -64,6 +64,6 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
 
    // @Incomplete: Cause of death
    damageEntity(collidingHitbox, pebblum, 1, DamageSource.yeti, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingHitbox, 150, hitDirection);
+   applyKnockback(collidingHitbox, polarVec2(150, hitDirection));
    addLocalInvulnerabilityHash(collidingEntity, "pebblum", 0.3);
 }

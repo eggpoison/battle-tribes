@@ -15,7 +15,8 @@ export enum TileType {
    lava,
    dropdown,
    stone,
-   stoneWallFloor
+   stoneWallFloor,
+   fimbultur
 }
 
 export enum SubtileType {
@@ -46,6 +47,7 @@ export const TileTypeString: Record<TileType, string> = {
    [TileType.dropdown]: "dropdown",
    [TileType.stone]: "stone",
    [TileType.stoneWallFloor]: "Stone Wall Floor",
+   [TileType.fimbultur]: "Fimbultur",
 };
 
 export const NUM_TILE_TYPES = Object.keys(TileTypeString).length;
@@ -121,6 +123,10 @@ export const TILE_PHYSICS_INFO_RECORD: Record<TileType, TilePhysicsInfo> = {
       moveSpeedMultiplier: 1
    },
    [TileType.stoneWallFloor]: {
+      friction: 0.65,
+      moveSpeedMultiplier: 1
+   },
+   [TileType.fimbultur]: {
       friction: 0.65,
       moveSpeedMultiplier: 1
    },

@@ -1,10 +1,10 @@
-import { Entity, EntityType, boxIsCircular, updateBox, Box, ServerComponentType, PacketReader, randFloat, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, randSign, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
+import { Entity, EntityType, boxIsCircular, updateBox, Box, ServerComponentType, PacketReader, randFloat, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, randSign, rotateXAroundOrigin, rotateYAroundOrigin, getTileIndexIncludingEdges } from "webgl-test-shared";
 import Chunk from "../../Chunk";
 import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityType, surfaceLayer, undergroundLayer } from "../../world";
 import Board from "../../Board";
 import ServerComponentArray from "../ServerComponentArray";
 import { playerInstance } from "../../player";
-import { applyAccelerationFromGround, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, readHitboxFromData, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox, updateHitboxFromData, updatePlayerHitboxFromData } from "../../hitboxes";
+import { applyAccelerationFromGround, getHitboxAngularVelocity, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, readHitboxFromData, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox, updateHitboxFromData, updatePlayerHitboxFromData } from "../../hitboxes";
 import Particle from "../../Particle";
 import { createWaterSplashParticle } from "../../particles";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -585,6 +585,10 @@ function updateFromData(data: TransformComponentData, entity: Entity): void {
          hitbox = hitboxData;
       } else {
          updateHitboxFromData(hitbox, hitboxData);
+         // @SQUEAM
+         // if (getEntityType(entity) === EntityType.heldItem) {
+         //    console.log(hitbox.box.angle);
+         // }
       }
 
       if (!getHitboxVelocity(hitbox).isZero()) {
@@ -650,7 +654,9 @@ function updatePlayerFromData(data: TransformComponentData, isInitialData: boole
    let canAscendLayer = false;
    if (getCurrentLayer() === undergroundLayer) {
       const hitbox = transformComponent.hitboxes[0];
-      const tileAbove = getHitboxTile(hitbox);
+      const tile = getHitboxTile(hitbox);
+      const tileIndex = getTileIndexIncludingEdges(tile.x, tile.y);
+      const tileAbove = surfaceLayer.getTile(tileIndex);
       if (tileAbove.type === TileType.dropdown) {
          canAscendLayer = true;
       }

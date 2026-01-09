@@ -322,6 +322,6 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
 
    // @Incomplete: Cause of death
    damageEntity(collidingHitbox, golem, 3, DamageSource.yeti, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingHitbox, 300, hitDirection);
+   applyKnockback(collidingHitbox, polarVec2(300, hitDirection));
    addLocalInvulnerabilityHash(collidingEntity, "golem", 0.3);
 }

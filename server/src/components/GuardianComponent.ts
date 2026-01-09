@@ -4,7 +4,7 @@ import { Entity, DamageSource } from "battletribes-shared/entities";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { Packet } from "battletribes-shared/packets";
 import { Settings } from "battletribes-shared/settings";
-import { getAngleDiff, lerp, Point, randInt, TileIndex, UtilVars } from "battletribes-shared/utils";
+import { getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVars } from "battletribes-shared/utils";
 import { moveEntityToPosition } from "../ai-shared";
 import { registerDirtyEntity } from "../server/player-clients";
 import { AIHelperComponentArray, AIType } from "./AIHelperComponent";
@@ -405,7 +405,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
       
       damageEntity(collidingHitbox, hitbox.entity, 2, DamageSource.yeti, AttackEffectiveness.effective, collisionPoint, 0);
-      applyKnockback(collidingHitbox, 200, hitDirection);
+      applyKnockback(collidingHitbox, polarVec2(200, hitDirection));
       addLocalInvulnerabilityHash(collidingEntity, "guardianLimb", 0.3);
    }
 }

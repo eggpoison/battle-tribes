@@ -365,7 +365,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
 
    // Damage and knock back the player
    damageEntity(collidingHitbox, zombie, 1, DamageSource.zombie, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingHitbox, 150, hitDirection);
+   applyKnockback(collidingHitbox, polarVec2(150, hitDirection));
    addLocalInvulnerabilityHash(collidingEntity, "zombie", 0.3);
 
    // Push the zombie away from the entity

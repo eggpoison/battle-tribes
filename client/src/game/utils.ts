@@ -11,7 +11,7 @@ export function imageIsLoaded(image: HTMLImageElement): Promise<boolean> {
  * @returns If the game is in development mode.
  */
 export function isDev(): boolean {
-   return !process.env.NODE_ENV || process.env.NODE_ENV === "development";
+   return import.meta.env.DEV;
 }
 
 export const NEIGHBOUR_OFFSETS = [

@@ -4,6 +4,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
+import { EntityRenderInfo } from "../../EntityRenderInfo";
 
 export interface WorkbenchComponentData {}
 

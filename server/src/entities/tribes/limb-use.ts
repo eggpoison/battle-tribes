@@ -1,29 +1,29 @@
 import { Entity, LimbAction } from "battletribes-shared/entities";
-import { getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, itemInfoIsTool } from "battletribes-shared/items/items";
+import { getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ItemType } from "battletribes-shared/items/items";
 import { getHeldItem, getLimbConfiguration, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { AttackVars, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES } from "battletribes-shared/attack-patterns";
-import { getHitboxVelocity, Hitbox } from "../../hitboxes";
+import { getHitboxVelocity } from "../../hitboxes";
 
 const enum Vars {
    DEFAULT_ATTACK_KNOCKBACK = 125
 }
 
-const getBaseItemKnockback = (item: Item | null): number => {
-   if (item === null) {
+const getBaseItemKnockback = (itemType: ItemType | null): number => {
+   if (itemType === null) {
       return Vars.DEFAULT_ATTACK_KNOCKBACK;
    }
 
-   const itemInfo = ITEM_INFO_RECORD[item.type];
-   if (itemInfoIsTool(item.type, itemInfo)) {
+   const itemInfo = ITEM_INFO_RECORD[itemType];
+   if (itemInfoIsTool(itemType, itemInfo)) {
       return itemInfo.knockback;
    }
 
    return Vars.DEFAULT_ATTACK_KNOCKBACK;
 }
 
-export function calculateItemKnockback(item: Item | null, attackIsBlocked: boolean): number {
-   let knockback = getBaseItemKnockback(item);
+export function calculateItemKnockback(itemType: ItemType | null, attackIsBlocked: boolean): number {
+   let knockback = getBaseItemKnockback(itemType);
    
    if (attackIsBlocked) {
       knockback *= 0.5;

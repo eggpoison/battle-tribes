@@ -8,7 +8,7 @@ import { createSpitPoisonAreaConfig } from "../entities/projectiles/spit-poison-
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { Settings } from "../../../shared/src/settings";
 import { StatusEffect } from "../../../shared/src/status-effects";
-import { Point, randAngle } from "../../../shared/src/utils";
+import { Point, polarVec2, randAngle } from "../../../shared/src/utils";
 import { HealthComponentArray, damageEntity } from "./HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
 import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes";
@@ -77,7 +77,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
 
    damageEntity(collidingHitbox, spit, damage, DamageSource.poison, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingHitbox, 150, hitDirection);
+   applyKnockback(collidingHitbox, polarVec2(150, hitDirection));
    
    if (StatusEffectComponentArray.hasComponent(collidingEntity)) {
       applyStatusEffect(collidingEntity, StatusEffect.poisoned, 2 * Settings.TICK_RATE);

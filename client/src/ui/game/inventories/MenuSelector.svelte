@@ -9,7 +9,6 @@
    import BuildMenu from "../menus/BuildMenu.svelte";
    import TamingMenu from "../taming-menu/TamingMenu.svelte";
    import SignInscribeMenu from "../SignInscribeMenu.svelte";
-   import HealthInspector from "../HealthInspector.svelte";
    import AnimalStaffOptions from "../AnimalStaffOptions.svelte";
    import TamingRenamePrompt from "../taming-menu/TamingRenamePrompt.svelte";
    import BackpackInventory from "./BackpackInventory.svelte";
@@ -60,8 +59,6 @@
       <!-- Note: BackpackInventoryMenu must be exactly before CraftingMenu because of CSS hijinks -->
       <BackpackInventory />
       <CraftingMenu  />
-   {:else if menu === Menu.healthInspector}
-      <HealthInspector />
    {:else if menu === Menu.itemsDevTab}
       <ItemsTab />
    {:else if menu === Menu.summonDevTab}

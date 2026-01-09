@@ -1,7 +1,7 @@
 <script lang="ts">
    import { type Item } from "webgl-test-shared";
    import { getItemTypeImage } from "../../../game/client-item-info";
-   import { type ItemRestTime } from "../../../game/player-action-handler";
+   import { type ItemRestTime } from "../../../game/player-action-handling";
    import type { HTMLAttributes } from "svelte/elements";
    import { itemTooltipState } from "../../../ui-state/item-tooltip-state.svelte";
    import { onDestroy } from "svelte";

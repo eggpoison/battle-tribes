@@ -53,7 +53,7 @@ import { createWallBorderShaders, renderWallBorders } from "./webgl/wall-border-
 import { createWallConnectionShaders, renderWallConnections } from "./webgl/wall-connection-rendering";
 import { createForcefieldShaders, renderForcefield } from "./webgl/world-border-forcefield-rendering";
 import { createWorldBorderShaders, renderWorldBorder } from "./webgl/world-border-rendering";
-import { playerIsHoldingPlaceableItem } from "../player-action-handler";
+import { playerIsHoldingPlaceableItem } from "../player-action-handling";
 import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
 import { nerdVisionState } from "../../ui-state/nerd-vision-state.svelte";
 import { hoverDebugState } from "../../ui-state/hover-debug-state.svelte";

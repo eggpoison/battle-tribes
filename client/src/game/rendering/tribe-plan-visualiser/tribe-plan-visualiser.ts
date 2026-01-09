@@ -254,6 +254,7 @@ const fillPlanChildrenXOffset = (plan: AIPlan): void => {
    }
 }
 
+// @Garbage: caused a 35ms long GC stutter
 export function updateTribePlanData(reader: PacketReader, tribeID: number): void {
    const tribePlan = readAssignmentData(reader, 0);
    fillPlanChildrenXOffset(tribePlan);

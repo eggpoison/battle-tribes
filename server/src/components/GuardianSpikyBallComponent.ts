@@ -3,7 +3,7 @@ import { ComponentArray } from "./ComponentArray";
 import { Entity, EntityType, DamageSource } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { Point, randFloat } from "battletribes-shared/utils";
+import { Point, polarVec2, randFloat } from "battletribes-shared/utils";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
 import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world";
 import { Settings } from "battletribes-shared/settings";
@@ -52,7 +52,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
 
       damageEntity(collidingHitbox, hitbox.entity, 2, DamageSource.yeti, AttackEffectiveness.effective, collisionPoint, 0);
-      applyKnockback(collidingHitbox, 100, hitDirection);
+      applyKnockback(collidingHitbox, polarVec2(100, hitDirection));
       addLocalInvulnerabilityHash(collidingEntity, "gemSpikyBall", 0.5);
    }
 }

@@ -180,7 +180,11 @@ export function registerCommand(command: string, playerClient: PlayerClient): vo
          // forceBuildPlans(tribeComponent.tribe);
       }
       case "itemname": {
-         const itemNameString = parts[1].val;
+         const itemNamePart = parts[1];
+         if (typeof itemNamePart === "undefined") {
+            break;
+         }
+         const itemNameString = itemNamePart.val;
          if (typeof itemNameString === "number") {
             break;
          }

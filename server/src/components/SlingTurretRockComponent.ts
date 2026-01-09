@@ -1,7 +1,7 @@
 import { ServerComponentType } from "../../../shared/src/components";
 import { EntityType, DamageSource } from "../../../shared/src/entities";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point } from "../../../shared/src/utils";
+import { Point, polarVec2 } from "../../../shared/src/utils";
 import { applyKnockback, Hitbox } from "../hitboxes";
 import { getEntityType, validateEntity, destroyEntity } from "../world";
 import { ComponentArray } from "./ComponentArray";
@@ -63,7 +63,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
       
       damageEntity(collidingHitbox, owner, 2, DamageSource.arrow, AttackEffectiveness.effective, collisionPoint, 0);
-      applyKnockback(collidingHitbox, 75, hitDirection);
+      applyKnockback(collidingHitbox, polarVec2(75, hitDirection));
 
       destroyEntity(slingTurretRock);
    }

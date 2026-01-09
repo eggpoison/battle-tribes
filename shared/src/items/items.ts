@@ -355,13 +355,13 @@ export interface ItemInfoRecord {
 export interface AttackInfo {
    readonly attackPatterns: Record<LimbConfiguration, AttackPatternInfo> | null;
    readonly attackTimings: AttackTimingsInfo;
-   readonly heldItemDamageBoxInfo: LimbHeldItemDamageBoxInfo | null;
+   readonly heldItemDamageBoxInfo: LimbHeldItemDamageBoxInfo;
 }
 
 const UNARMED_ATTACK_INFO: Readonly<AttackInfo> = {
    attackPatterns: UNARMED_ATTACK_PATTERNS,
    attackTimings: DEFAULT_ATTACK_TIMINGS,
-   heldItemDamageBoxInfo: null
+   heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
 };
 
 /** If an entry is null, then that item category can't attack. */

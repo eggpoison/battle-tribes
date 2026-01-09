@@ -2,7 +2,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { DamageSource, Entity } from "battletribes-shared/entities";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point } from "../../../shared/src/utils";
+import { Point, polarVec2 } from "../../../shared/src/utils";
 import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes";
 import { entityExists, destroyEntity } from "../world";
 import { HealthComponentArray, damageEntity } from "./HealthComponent";
@@ -64,7 +64,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    // @Temporary
    const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
    damageEntity(collidingHitbox, tribeMember, damage, DamageSource.spear, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingHitbox, 200, hitDirection);
+   applyKnockback(collidingHitbox, polarVec2(200, hitDirection));
    
    destroyEntity(spear);
 }

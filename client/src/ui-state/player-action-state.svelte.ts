@@ -1,12 +1,12 @@
-import { ItemRestTime } from "../game/player-action-handler";
+import { ItemRestTime } from "../game/player-action-handling";
 
 let hotbarChargeElapsedTicks = $state(-1);
 let hotbarChargeDuration = $state(-1);
 let offhandChargeElapsedTicks = $state(-1);
 let offhandChargeDuration = $state(-1);
 
-let hotbarItemRestTime = $state<ItemRestTime>({ remainingTimeTicks: 0, durationTicks: 0 });
-let offhandItemRestTime = $state<ItemRestTime>({ remainingTimeTicks: 0, durationTicks: 0 });
+let hotbarItemRestTime = $state<ItemRestTime>({ remainingTimeTicks: 0, durationTicks: 0, itemSlot: 1 });
+let offhandItemRestTime = $state<ItemRestTime>({ remainingTimeTicks: 0, durationTicks: 0, itemSlot: 1 });
 
 export const playerActionState = {
    get hotbarChargeElapsedTicks() {

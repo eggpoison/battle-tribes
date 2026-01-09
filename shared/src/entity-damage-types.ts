@@ -1,5 +1,5 @@
 import { EntityType } from "./entities";
-import { ITEM_TYPE_RECORD as ITEM_CATEGORY_RECORD, Item } from "./items/items";
+import { ITEM_TYPE_RECORD as ITEM_CATEGORY_RECORD, Item, ItemType } from "./items/items";
 
 // @Cleanup KILL THISSS
 
@@ -363,11 +363,7 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
       effectiveDamageTypes: [DamageType.weapon],
       stoppedDamageTypes: []
    },
-   [EntityType.swingAttack]: {
-      effectiveDamageTypes: [],
-      stoppedDamageTypes: []
-   },
-   [EntityType.blockAttack]: {
+   [EntityType.heldItem]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    },
@@ -509,12 +505,12 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    }
 };
 
-const getItemDamageTypes = (item: Item | null): ReadonlyArray<DamageType> => {
-   if (item === null) {
+const getItemDamageTypes = (itemType: ItemType | null): ReadonlyArray<DamageType> => {
+   if (itemType === null) {
       return [DamageType.basic];
    }
 
-   const category = ITEM_CATEGORY_RECORD[item.type];
+   const category = ITEM_CATEGORY_RECORD[itemType];
    switch (category) {
       case "backpack":
       case "bow":
@@ -550,8 +546,8 @@ const getDamageTypeEffectiveness = (damageType: DamageType, entityDamageInfo: En
 }
 
 // @Incomplete: account for building material for walls, tunnels, etc.
-export function calculateAttackEffectiveness(item: Item | null, attackedEntityType: EntityType): AttackEffectiveness {
-   const damageTypes = getItemDamageTypes(item);
+export function calculateAttackEffectiveness(itemType: ItemType | null, attackedEntityType: EntityType): AttackEffectiveness {
+   const damageTypes = getItemDamageTypes(itemType);
    const damageInfo = ENTITY_DAMAGE_INFO_RECORD[attackedEntityType];
 
    // Return the maximum effectiveness that the item has against the entity

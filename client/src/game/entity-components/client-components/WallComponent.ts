@@ -1,4 +1,4 @@
-import { PointEntity, EntityType, ServerComponentType, Entity, Point } from "webgl-test-shared";
+import { EntityType, ServerComponentType, Entity, Point } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { Hitbox } from "../../hitboxes";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";

@@ -1,7 +1,7 @@
 import { ServerComponentType } from "../../../shared/src/components";
 import { DamageSource } from "../../../shared/src/entities";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point } from "../../../shared/src/utils";
+import { Point, polarVec2 } from "../../../shared/src/utils";
 import { applyKnockback, Hitbox } from "../hitboxes";
 import { ComponentArray } from "./ComponentArray";
 import { GlurbSegmentComponentArray } from "./GlurbSegmentComponent";
@@ -37,6 +37,6 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
 
    damageEntity(collidingHitbox, hitbox.entity, 1, DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingHitbox, 100, hitDirection);
+   applyKnockback(collidingHitbox, polarVec2(100, hitDirection));
    addLocalInvulnerabilityHash(collidingEntity, "spikyBastard", 0.3);
 }

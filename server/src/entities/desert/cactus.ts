@@ -90,21 +90,22 @@ export function createCactusConfig(position: Point, rotation: number): EntityCon
    const lootComponent = new LootComponent();
 
    const childConfigs = new Array<ChildConfigAttachInfo>();
-   if (Math.random() < 0.4) {
-      const offset = polarVec2((rootHitbox.box as CircularBox).radius, randAngle());
+   // @SQUEAM: no pears in the clementus shots!
+   // if (Math.random() < 0.4) {
+   //    const offset = polarVec2((rootHitbox.box as CircularBox).radius, randAngle());
 
-      const x = rootHitbox.box.position.x + offset.x;
-      const y = rootHitbox.box.position.y + offset.y;
-      const position = new Point(x, y);
+   //    const x = rootHitbox.box.position.x + offset.x;
+   //    const y = rootHitbox.box.position.y + offset.y;
+   //    const position = new Point(x, y);
       
-      const config = createPricklyPearConfig(position, offset, randAngle());
-      childConfigs.push({
-         entityConfig: config,
-         attachedHitbox: config.components[ServerComponentType.transform]!.hitboxes[0],
-         parentHitbox: rootHitbox,
-         isPartOfParent: true
-      });
-   }
+   //    const config = createPricklyPearConfig(position, offset, randAngle());
+   //    childConfigs.push({
+   //       entityConfig: config,
+   //       attachedHitbox: config.components[ServerComponentType.transform]!.hitboxes[0],
+   //       parentHitbox: rootHitbox,
+   //       isPartOfParent: true
+   //    });
+   // }
    
    const cactusComponent = new CactusComponent(flowers, childConfigs.length > 0);
 

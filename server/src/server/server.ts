@@ -1,7 +1,7 @@
 import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
 import { Settings } from "battletribes-shared/settings";
 import { TribeType } from "battletribes-shared/tribes";
-import { Point } from "battletribes-shared/utils";
+import { Point, randInt } from "battletribes-shared/utils";
 import { PacketReader, PacketType } from "battletribes-shared/packets";
 import WebSocket, { Server } from "ws";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
@@ -37,6 +37,7 @@ import { ServerComponentType } from "../../../shared/src/components";
 import { getTamingSkill, TamingSkillID } from "../../../shared/src/taming";
 import { createDevGameDataPacket } from "./dev-packets";
 import { createTribeWorkerConfig } from "../entities/tribes/tribe-worker";
+import OPTIONS from "../options";
 
 /*
 
@@ -140,7 +141,15 @@ class GameServer {
       // } else {
       //    SRandom.seed(randInt(0, 9999999999));
       // }
-      SRandom.seed(2845700342);
+
+      // Desert:
+      // SRandom.seed(2767843904);
+
+      // Tundra:
+      SRandom.seed(2763196645);
+
+      // Cave:
+      // SRandom.seed(2950872542);
 
       const builtinRandomFunc = Math.random;
       Math.random = () => SRandom.next();

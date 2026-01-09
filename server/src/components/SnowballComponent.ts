@@ -1,7 +1,7 @@
 import { Entity, EntityType, DamageSource } from "battletribes-shared/entities";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { Point, randFloat, secondsToTicks } from "battletribes-shared/utils";
+import { Point, polarVec2, randFloat, secondsToTicks } from "battletribes-shared/utils";
 import { Packet } from "battletribes-shared/packets";
 import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world";
 import { Settings } from "battletribes-shared/settings";
@@ -90,7 +90,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
          const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
 
          damageEntity(collidingHitbox, null, 4, DamageSource.snowball, AttackEffectiveness.effective, collisionPoint, 0);
-         applyKnockback(collidingHitbox, 100, hitDirection);
+         applyKnockback(collidingHitbox, polarVec2(100, hitDirection));
          addLocalInvulnerabilityHash(collidingEntity, "snowball", 0.3);
       }
    }

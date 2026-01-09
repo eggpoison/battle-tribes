@@ -86,8 +86,6 @@ import { TribesmanComponent } from "./components/TribesmanComponent";
 import { AutomatonAssemblerComponent } from "./components/AutomatonAssemblerComponent";
 import { MithrilAnvilComponent } from "./components/MithrilAnvilComponent";
 import { RideableComponent } from "./components/RideableComponent";
-import { SwingAttackComponent } from "./components/SwingAttackComponent";
-import { BlockAttackComponent } from "./components/BlockAttackComponent";
 import { SlingTurretRockComponent } from "./components/SlingTurretRockComponent";
 import { TamingComponent } from "./components/TamingComponent";
 import { LootComponent } from "./components/LootComponent";
@@ -134,6 +132,7 @@ import { InguYetuksnoglurblidokowfleaComponent } from "./components/InguYetuksno
 import { InguYetuksnoglurblidokowfleaSeekerHeadComponent } from "./components/InguYetuksnoglurblidokowfleaSeekerHeadComponent";
 import { InguYetukLaserComponent } from "./components/InguYetukLaserComponent";
 import { RiverSteppingStoneComponent } from "./components/RiverSteppingStoneComponent";
+import { HeldItemComponent } from "./components/HeldItemComponent";
 
 // @Cleanup @Robustness: find better way to do this
 // @Cleanup: see if you can remove the arrow functions
@@ -227,8 +226,7 @@ const ComponentClassRecord = {
    [ServerComponentType.automatonAssembler]: () => AutomatonAssemblerComponent,
    [ServerComponentType.mithrilAnvil]: () => MithrilAnvilComponent,
    [ServerComponentType.rideable]: () => RideableComponent,
-   [ServerComponentType.swingAttack]: () => SwingAttackComponent,
-   [ServerComponentType.blockAttack]: () => BlockAttackComponent,
+   [ServerComponentType.heldItem]: () => HeldItemComponent,
    [ServerComponentType.slingTurretRock]: () => SlingTurretRockComponent,
    [ServerComponentType.taming]: () => TamingComponent,
    [ServerComponentType.loot]: () => LootComponent,
@@ -285,7 +283,7 @@ type EntityComponents = Partial<{
    [T in ServerComponentType]: InstanceType<ReturnType<typeof ComponentClassRecord[T]>>;
 }>;
 
-// @ASS @ASS @ASS all of this @Hack
+// @ASS @ASS @ASS all of this
 
 export interface EntityConfigAttachInfo {
    readonly attachedHitbox: Hitbox;

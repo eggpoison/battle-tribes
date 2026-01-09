@@ -15,14 +15,14 @@ import { callEntityOnUpdateFunctions } from "./entity-components/ComponentArray"
 import { resolvePlayerCollisions } from "./collision";
 import { decodeSnapshotFromGameDataPacket, PacketSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
 import { sendActivatePacket, sendInitialPlayerDataPacket, sendPlayerDataPacket } from "./networking/packet-sending";
-import { processForcePositionUpdatePacket, processInitialGameDataPacket, processSimulationStatusUpdatePacket, processSyncDataPacket, receiveChatMessagePacket } from "./networking/packet-receiving";
+import { processForcePositionUpdatePacket, processInitialGameDataPacket, processShieldKnockPacket, processSimulationStatusUpdatePacket, processSyncDataPacket, receiveChatMessagePacket } from "./networking/packet-receiving";
 import { renderGame, setupRendering } from "./rendering/render";
 import { processDevGameDataPacket } from "./networking/dev-packets";
 import { LoadingScreenStage, loadingScreenState } from "../ui-state/loading-screen-state.svelte";
 import { appState, AppState } from "../ui-state/app-state.svelte";
 import { registerFrame, renderFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { updateSpamFilter } from "./chat";
-import { updatePlayerMovement } from "./player-action-handler";
+import { updatePlayerMovement } from "./player-action-handling";
 import { PacketReader, PacketType, Packet, TribeType } from "webgl-test-shared";
 import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
 
@@ -175,6 +175,7 @@ const onPacket = (msg: MessageEvent): void => {
       case PacketType.serverToClientChatMessage: receiveChatMessagePacket(reader); break;
       case PacketType.simulationStatusUpdate: processSimulationStatusUpdatePacket(reader); break;
       case PacketType.devGameData: processDevGameDataPacket(reader); break;
+      case PacketType.shieldKnock: processShieldKnockPacket(); break;
    }
 }
 

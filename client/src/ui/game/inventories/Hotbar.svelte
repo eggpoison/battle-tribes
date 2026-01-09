@@ -29,7 +29,7 @@
       <div class="middle">
          <ItemSlotsContainer isBordered width={inventoryState.hotbar.width} height={inventoryState.hotbar.height} numItemSlotsPassed={inventoryState.hotbar.width}>
             {#each inventoryState.hotbar.getSlots() as itemSlot}
-               <EntityInteractableItemSlot entity={playerInstance} inventory={inventoryState.hotbar} itemSlot={itemSlot} restTime={playerActionState.hotbarItemRestTime} isSelected={itemSlot === inventoryState.selectedItemSlot} />
+               <EntityInteractableItemSlot entity={playerInstance} inventory={inventoryState.hotbar} itemSlot={itemSlot} restTime={itemSlot === playerActionState.hotbarItemRestTime.itemSlot ? playerActionState.hotbarItemRestTime : undefined} isSelected={itemSlot === inventoryState.selectedItemSlot} />
             {/each}
          </ItemSlotsContainer>
       </div>

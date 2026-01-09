@@ -1,7 +1,7 @@
 import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
 import { AMMO_INFO_RECORD, ServerComponentType } from "battletribes-shared/components";
 import { EntityType, DamageSource, Entity } from "battletribes-shared/entities";
-import { angleToPoint, Point } from "battletribes-shared/utils";
+import { angleToPoint, Point, polarVec2 } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
@@ -98,7 +98,7 @@ export function onWoodenArrowHitboxCollision(arrow: Entity, collidingEntity: Ent
       const damage = 2 * (projectileComponent.isBlocked ? 0.5 : 1);
       const knockback = 150 * (projectileComponent.isBlocked ? 0.5 : 1);
       damageEntity(collidingHitbox, attacker, damage, DamageSource.arrow, AttackEffectiveness.effective, collisionPoint, 0);
-      applyKnockback(collidingHitbox, knockback, hitDirection);
+      applyKnockback(collidingHitbox, polarVec2(knockback, hitDirection));
       addLocalInvulnerabilityHash(collidingEntity, attackHash, 9);
    
       if (StatusEffectComponentArray.hasComponent(collidingEntity) && ammoInfo.statusEffect !== null) {

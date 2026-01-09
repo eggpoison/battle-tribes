@@ -1,6 +1,6 @@
 <script lang="ts">
    import { isSpectating } from "../../game/player";
-   import { onGameMouseDown, onGameMouseUp } from "../../game/player-action-handler";
+   import { onGameMouseDown, onGameMouseUp } from "../../game/player-action-handling";
    import { GameInteractState, gameUIState } from "../../ui-state/game-ui-state.svelte";
    import { playerActionState } from "../../ui-state/player-action-state.svelte";
    import AttackChargeBar from "./AttackChargeBar.svelte";

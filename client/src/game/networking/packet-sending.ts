@@ -5,7 +5,7 @@ import { TransformComponentArray } from "../entity-components/server-components/
 import { isSpectating, playerInstance } from "../player";
 import { cameraPosition } from "../camera";
 import { sendPacket } from "../client";
-import { getHotbarSelectedItemSlot, getInstancePlayerAction, getPlayerMoveIntention } from "../player-action-handler";
+import { getHotbarSelectedItemSlot, getInstancePlayerAction, getPlayerMoveIntention } from "../player-action-handling";
 import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
 import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
 

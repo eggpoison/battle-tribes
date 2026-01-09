@@ -95,10 +95,10 @@ const getMostDamagingItemSlot = (tribesman: Entity, huntedEntity: Entity): numbe
          continue;
       }
 
-      const attackEffectiveness = calculateAttackEffectiveness(item, getEntityType(huntedEntity));
+      const attackEffectiveness = calculateAttackEffectiveness(item.type, getEntityType(huntedEntity));
       
       const attackExecuteTimeSeconds = getItemAttackExecuteTimeSeconds(item);
-      const damage = calculateItemDamage(tribesman, item, attackEffectiveness, false);
+      const damage = calculateItemDamage(tribesman, item.type, attackEffectiveness, false);
       const dps = damage / attackExecuteTimeSeconds;
 
       if (dps > mostDps) {

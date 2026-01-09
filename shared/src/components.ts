@@ -1,11 +1,7 @@
-import { StatusEffectData } from "./client-server-types";
-import { CraftingStationEntityType } from "./items/crafting-recipes";
-import { CowSpecies, DeathInfo, DoorToggleType, FishColour, SlimeSize, TreeSize, TribeTotemBanner, EntityType } from "./entities";
-import { Inventory, InventoryName, ItemType } from "./items/items";
+import { EntityType } from "./entities";
+import { ItemType } from "./items/items";
 import { Settings } from "./settings";
 import { StatusEffect } from "./status-effects";
-import { TitleGenerationInfo } from "./titles";
-import { Colour } from "./utils";
 
 /*
 data sent:
@@ -106,8 +102,7 @@ export enum ServerComponentType {
    automatonAssembler,
    mithrilAnvil,
    rideable,
-   swingAttack,
-   blockAttack,
+   heldItem,
    slingTurretRock,
    taming,
    loot,
@@ -247,8 +242,7 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.automatonAssembler]: "Automaton Assembler Component",
    [ServerComponentType.mithrilAnvil]: "Mithril Anvil Component",
    [ServerComponentType.rideable]: "Rideable Component",
-   [ServerComponentType.swingAttack]: "Swing Attack Component",
-   [ServerComponentType.blockAttack]: "Block Attack Component",
+   [ServerComponentType.heldItem]: "Held Item Component",
    [ServerComponentType.slingTurretRock]: "Sling Turret Rock Component",
    [ServerComponentType.taming]: "Taming Component",
    [ServerComponentType.loot]: "Loot Component",
@@ -381,8 +375,7 @@ export const EntityComponents = {
    [EntityType.cogwalker]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.cogwalker],
    [EntityType.automatonAssembler]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.craftingStation, ServerComponentType.automatonAssembler],
    [EntityType.mithrilAnvil]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.craftingStation, ServerComponentType.mithrilAnvil],
-   [EntityType.swingAttack]: [],
-   [EntityType.blockAttack]: [],
+   [EntityType.heldItem]: [],
    [EntityType.moss]: [],
    [EntityType.floorSign]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.floorSign],
    [EntityType.desertBushLively]: [],

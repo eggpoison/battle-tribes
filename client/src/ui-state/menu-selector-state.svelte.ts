@@ -18,7 +18,6 @@ export enum Menu {
    furnaceInventory,
    ammoBoxInventory,
    tombstoneEpitaph,
-   healthInspector,
    itemsDevTab,
    summonDevTab,
    titlesDevTab,
@@ -47,7 +46,6 @@ const MENU_IS_EMBODIED_RECORD: Record<Menu, boolean> = {
    [Menu.furnaceInventory]: false,
    [Menu.ammoBoxInventory]: false,
    [Menu.tombstoneEpitaph]: false,
-   [Menu.healthInspector]: false,
    [Menu.itemsDevTab]: false,
    [Menu.summonDevTab]: false,
    [Menu.titlesDevTab]: false,
@@ -69,7 +67,6 @@ const MENU_IS_INVENTORY_RECORD: Record<Menu, boolean> = {
    [Menu.furnaceInventory]: false,
    [Menu.ammoBoxInventory]: false,
    [Menu.tombstoneEpitaph]: false,
-   [Menu.healthInspector]: false,
    [Menu.itemsDevTab]: false,
    [Menu.summonDevTab]: false,
    [Menu.titlesDevTab]: false,
@@ -151,6 +148,14 @@ export const menuSelectorState = {
    hasOpenEmbodiedMenu(): boolean {
       for (const menuInfo of menuStack) {
          if (MENU_IS_EMBODIED_RECORD[menuInfo.menu]) {
+            return true;
+         }
+      }
+      return false;
+   },
+   hasOpenNonEmbodiedMenu(): boolean {
+      for (const menuInfo of menuStack) {
+         if (!MENU_IS_EMBODIED_RECORD[menuInfo.menu]) {
             return true;
          }
       }

@@ -9,7 +9,7 @@ import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countIte
 import { getEntitiesInRange } from "../../ai-shared";
 import { HealthComponentArray, healEntity } from "../../components/HealthComponent";
 import { clearStatusEffects } from "../../components/StatusEffectComponent";
-import { InventoryUseComponentArray } from "../../components/InventoryUseComponent";
+import { getCurrentLimbState, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { createBattleaxeProjectileConfig } from "../projectiles/battleaxe-projectile";
 import { createIceArrowConfig } from "../projectiles/ice-arrow";
 import { TribeComponentArray } from "../../components/TribeComponent";
@@ -17,7 +17,7 @@ import { TribesmanAIComponentArray } from "../../components/TribesmanAIComponent
 import { createItemEntityConfig } from "../item-entity";
 import { StructureComponentArray } from "../../components/StructureComponent";
 import { BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
-import { Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize } from "battletribes-shared/items/items";
+import { Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize, ARROW_RELEASE_WAIT_TIME_TICKS } from "battletribes-shared/items/items";
 import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity-events";
 import { registerEntityTickEvent } from "../../server/player-clients";
 import { TransformComponentArray } from "../../components/TransformComponent";
@@ -25,7 +25,7 @@ import { createWoodenArrowConfig } from "../projectiles/wooden-arrow";
 import { EntityConfig } from "../../components";
 import { createSpearProjectileConfig } from "../projectiles/spear-projectile";
 import { createBlueprintEntityConfig } from "../blueprint-entity";
-import { AttackVars } from "battletribes-shared/attack-patterns";
+import { AttackVars, copyLimbState } from "battletribes-shared/attack-patterns";
 import { createEntity, destroyEntity, getEntityLayer, getEntityType, getGameTicks } from "../../world";
 import { awardTitle, hasTitle, TribesmanComponentArray } from "../../components/TribesmanComponent";
 import { calculateEntityPlaceInfo, createStructureConfig } from "../../structure-placement";
@@ -60,20 +60,20 @@ const getDamageMultiplier = (entity: Entity): number => {
    return multiplier;
 }
 
-export function calculateItemDamage(entity: Entity, item: Item | null, attackEffectiveness: AttackEffectiveness, attackIsBlocked: boolean): number {
+export function calculateItemDamage(entity: Entity, itemType: ItemType | null, attackEffectiveness: AttackEffectiveness, attackIsBlocked: boolean): number {
    if (attackEffectiveness === AttackEffectiveness.stopped) {
       return 0;
    }
    
    let damage: number;
-   if (item === null) {
+   if (itemType === null) {
       damage = 1;
    } else {
       // @Cleanup
-      const itemCategory = ITEM_TYPE_RECORD[item.type];
+      const itemCategory = ITEM_TYPE_RECORD[itemType];
       switch (itemCategory) {
          case "battleaxe": {
-            const itemInfo = ITEM_INFO_RECORD[item.type] as BattleaxeItemInfo;
+            const itemInfo = ITEM_INFO_RECORD[itemType] as BattleaxeItemInfo;
             if (attackEffectiveness === AttackEffectiveness.effective) {
                damage = itemInfo.damage;
             } else {
@@ -83,16 +83,16 @@ export function calculateItemDamage(entity: Entity, item: Item | null, attackEff
          }
          case "spear":
          case "sword": {
-            const itemInfo = ITEM_INFO_RECORD[item.type] as SwordItemInfo;
+            const itemInfo = ITEM_INFO_RECORD[itemType] as SwordItemInfo;
             if (attackEffectiveness === AttackEffectiveness.effective) {
                damage = itemInfo.damage;
             } else {
-               damage = Math.floor(itemInfo.damage / 2);
+               damage = Math.ceil(itemInfo.damage / 2);
             }
             break;
          }
          case "axe": {
-            const itemInfo = ITEM_INFO_RECORD[item.type] as AxeItemInfo;
+            const itemInfo = ITEM_INFO_RECORD[itemType] as AxeItemInfo;
             if (attackEffectiveness === AttackEffectiveness.effective) {
                damage = itemInfo.damage;
             } else {
@@ -101,7 +101,7 @@ export function calculateItemDamage(entity: Entity, item: Item | null, attackEff
             break;
          }
          case "pickaxe": {
-            const itemInfo = ITEM_INFO_RECORD[item.type] as AxeItemInfo;
+            const itemInfo = ITEM_INFO_RECORD[itemType] as AxeItemInfo;
             if (attackEffectiveness === AttackEffectiveness.effective) {
                damage = itemInfo.damage;
             } else {
@@ -347,12 +347,25 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          
          createEntity(arrowConfig, getEntityLayer(tribeMember), 0);
 
-         for (let i = 0; i < 2; i++) {
-            const limb = inventoryUseComponent.getLimbInfo(i === 0 ? InventoryName.hotbar : InventoryName.offhand);
-            limb.action = LimbAction.none;
-            limb.currentActionElapsedTicks = 0;
-            limb.currentActionDurationTicks = AttackVars.BOW_REST_TIME_TICKS;
-         }
+         const holdingLimb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+         const startHoldingLimbState = getCurrentLimbState(holdingLimb);
+         
+         holdingLimb.action = LimbAction.mainArrowReleased;
+         holdingLimb.currentActionElapsedTicks = 0;
+         holdingLimb.currentActionDurationTicks = ARROW_RELEASE_WAIT_TIME_TICKS;
+         holdingLimb.currentActionStartLimbState = copyLimbState(startHoldingLimbState);
+         holdingLimb.currentActionEndLimbState = copyLimbState(startHoldingLimbState);
+
+         const drawingLimb = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
+         const startDrawingLimbState = getCurrentLimbState(drawingLimb);
+
+         drawingLimb.action = LimbAction.arrowReleased;
+         drawingLimb.currentActionElapsedTicks = 0;
+         drawingLimb.currentActionDurationTicks = ARROW_RELEASE_WAIT_TIME_TICKS;
+         // @Garbage
+         drawingLimb.currentActionStartLimbState = copyLimbState(startDrawingLimbState);
+         // @Garbage
+         drawingLimb.currentActionEndLimbState = copyLimbState(startDrawingLimbState);
          
          break;
       }

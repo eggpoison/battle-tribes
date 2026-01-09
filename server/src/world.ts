@@ -18,9 +18,7 @@ import { attachLightToHitbox } from "./lights";
 import { attachEntityWithTether, attachHitboxRaw } from "./components/TransformComponent";
 
 const enum Vars {
-   // @SQUEAM: for night shot
-   // START_TIME = 8
-   START_TIME = 22
+   START_TIME = 8
 }
 
 interface EntityJoinInfo {
@@ -293,6 +291,7 @@ export function pushEntityJoinBuffer(shouldTickJoinInfos: boolean): void {
    }
 }
 
+// @Hack? joinDelayTicks is really only used for guardian gem smash attack
 export function createEntity<ComponentTypes extends ServerComponentType>(entityConfig: EntityConfig, layer: Layer, joinDelayTicks: number): Entity {
    const entity = entityIDCounter++;
    

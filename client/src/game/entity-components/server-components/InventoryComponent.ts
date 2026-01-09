@@ -2,7 +2,7 @@ import { PacketReader, InventoryName, Item, ITEM_TYPE_RECORD, Inventory, ItemTyp
 import { inventoryState } from "../../../ui-state/inventory-state.svelte";
 import { inventoriesAreDifferent } from "../../inventory-manipulation";
 import { playerInstance } from "../../player";
-import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../player-action-handler";
+import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../player-action-handling";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";

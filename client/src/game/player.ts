@@ -1,6 +1,6 @@
 import { Entity, updateBox } from "webgl-test-shared";
 import { cursorWorldPos } from "./camera";
-import { selectItemSlot } from "./player-action-handler";
+import { selectItemSlot } from "./player-action-handling";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
 import { calculateHitboxRenderPosition, getEntityTickInterp, registerDirtyRenderInfo } from "./rendering/render-part-matrices";
@@ -51,6 +51,11 @@ export function setPlayerUsername(username: string): void {
 /** Updates the rotation of the player to match the cursor position */
 export function updatePlayerDirection(clientTickInterp: number, serverTickInterp: number): void {
    if (playerInstance === null) return;
+
+   // Don't turn the player if they're meddling about in an inventory, cuz they're not actually looking at stuff while they're doing that
+   if (menuSelectorState.hasOpenNonEmbodiedMenu()) {
+      return;
+   }
 
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];

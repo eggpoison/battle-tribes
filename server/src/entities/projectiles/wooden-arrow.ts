@@ -1,6 +1,6 @@
 import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
 import { AMMO_INFO_RECORD, ServerComponentType } from "battletribes-shared/components";
-import { EntityType, DamageSource, Entity } from "battletribes-shared/entities";
+import { EntityType, DamageSource, Entity, EntityTypeString } from "battletribes-shared/entities";
 import { angleToPoint, Point, polarVec2 } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";

@@ -857,12 +857,10 @@ const propagateRootEntityChange = (hitbox: Hitbox, rootEntity: Entity): void => 
 
 export function attachHitboxRaw(hitbox: Hitbox, parentHitbox: Hitbox, isPartOfParent: boolean): void {
    assert(hitbox.rootEntity !== parentHitbox.rootEntity);
-   if (hitbox.parent !== null && hitbox.parent !== parentHitbox) {
-      throw new Error("Cannot attach hitbox: already attached to a parent.");
-   }
+   assert(hitbox.parent === null && hitbox.parent !== parentHitbox);
    assert(!parentHitbox.children.includes(hitbox));
    
-   hitbox.rootEntity = parentHitbox.rootEntity;
+   propagateRootEntityChange(hitbox, parentHitbox.rootEntity);
    hitbox.parent = parentHitbox;
    hitbox.isPartOfParent = isPartOfParent;
    hitbox.parent.children.push(hitbox);
@@ -1073,32 +1071,52 @@ export function getRandomPositionInEntity(transformComponent: TransformComponent
    return getRandomPositionInBox(hitbox.box);
 }
 
-export function changeEntityLayer(entity: Entity, newLayer: Layer): void {
+const changeEntityLayerImpl = (entity: Entity, newLayer: Layer): void => {
    // @Correctness should probably instead collate all layer changes then do them all at once at the end of a tick
    
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   
-   // Remove from previous chunks
    const previousLayer = getEntityLayer(entity);
-   while (transformComponent.chunks.length > 0) {
-      const chunk = transformComponent.chunks[0];
-      removeFromChunk(entity, previousLayer, chunk);
-      transformComponent.chunks.splice(0, 1);
+
+   const transformComponent = TransformComponentArray.getComponent(entity);
+
+   if (newLayer !== previousLayer) {
+      // Remove from previous chunks
+      while (transformComponent.chunks.length > 0) {
+         const chunk = transformComponent.chunks[0];
+         removeFromChunk(entity, previousLayer, chunk);
+         transformComponent.chunks.splice(0, 1);
+      }
+
+      // Add to the new ones
+      // @Cleanup: this logic should be in transformcomponent, perhaps there is a function which already does this...
+      const minChunkX = Math.max(Math.floor(transformComponent.boundingAreaMinX / Settings.CHUNK_UNITS), 0);
+      const maxChunkX = Math.min(Math.floor(transformComponent.boundingAreaMaxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+      const minChunkY = Math.max(Math.floor(transformComponent.boundingAreaMinY / Settings.CHUNK_UNITS), 0);
+      const maxChunkY = Math.min(Math.floor(transformComponent.boundingAreaMaxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+         for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+            const newChunk = newLayer.getChunk(chunkX, chunkY);
+            addToChunk(entity, newLayer, newChunk);
+            transformComponent.chunks.push(newChunk);
+         }
+      }
+
+      setEntityLayer(entity, newLayer);
    }
 
-   // Add to the new ones
-   // @Cleanup: this logic should be in transformcomponent, perhaps there is a function which already does this...
-   const minChunkX = Math.max(Math.floor(transformComponent.boundingAreaMinX / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor(transformComponent.boundingAreaMaxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
-   const minChunkY = Math.max(Math.floor(transformComponent.boundingAreaMinY / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor(transformComponent.boundingAreaMaxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const newChunk = newLayer.getChunk(chunkX, chunkY);
-         addToChunk(entity, newLayer, newChunk);
-         transformComponent.chunks.push(newChunk);
+   // Propagate the layer change to any attached entities
+   for (const hitbox of transformComponent.hitboxes) {
+      for (const child of hitbox.children) {
+         if (child.entity !== entity) {
+            changeEntityLayerImpl(child.entity, newLayer);
+         }
       }
    }
+}
 
-   setEntityLayer(entity, newLayer);
+export function changeEntityLayer(entity: Entity, newLayer: Layer): void {
+   // @Hack?
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   const rootEntity = hitbox.rootEntity;
+   changeEntityLayerImpl(rootEntity, newLayer);
 }

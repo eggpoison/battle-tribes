@@ -520,40 +520,12 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
    return packet.buffer;
 }
 
-// @Cleanup: is this even used?
-export  function createSyncPacket(): ArrayBuffer {
-   const packet = new Packet(PacketType.sync, Float32Array.BYTES_PER_ELEMENT);
-   return packet.buffer;
-}
-
-// @Cleanup: is this even used?
-export function createSyncDataPacket(playerClient: PlayerClient): ArrayBuffer {
+export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBuffer {
    const player = playerClient.instance;
 
-   // @Copynpaste @Robustness
-   const inventoryComponent = InventoryComponentArray.getComponent(player);
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-   const backpackInventory = getInventory(inventoryComponent, InventoryName.backpack);
-   const backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
-   const heldItemSlotInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
-   const craftingOutputSlotInventory = getInventory(inventoryComponent, InventoryName.craftingOutputSlot);
-   const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
-   const offhandInventory = getInventory(inventoryComponent, InventoryName.offhand);
-   const gloveSlotInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
-
-   let lengthBytes = 9 * Float32Array.BYTES_PER_ELEMENT;
+   const lengthBytes = 9 * Float32Array.BYTES_PER_ELEMENT;
    
-   // Player inventories
-   lengthBytes += getInventoryDataLength(hotbarInventory);
-   lengthBytes += getInventoryDataLength(backpackInventory);
-   lengthBytes += getInventoryDataLength(backpackSlotInventory);
-   lengthBytes += getInventoryDataLength(heldItemSlotInventory);
-   lengthBytes += getInventoryDataLength(craftingOutputSlotInventory);
-   lengthBytes += getInventoryDataLength(armourSlotInventory);
-   lengthBytes += getInventoryDataLength(offhandInventory);
-   lengthBytes += getInventoryDataLength(gloveSlotInventory);
-
-   const packet = new Packet(PacketType.syncData, lengthBytes);
+   const packet = new Packet(PacketType.syncGameData, lengthBytes);
    
    const transformComponent = TransformComponentArray.getComponent(player);
    const hitbox = transformComponent.hitboxes[0];
@@ -566,15 +538,8 @@ export function createSyncDataPacket(playerClient: PlayerClient): ArrayBuffer {
    packet.writeNumber(hitbox.acceleration.x);
    packet.writeNumber(hitbox.acceleration.y);
 
-   // Add inventory data
-   addInventoryDataToPacket(packet, hotbarInventory);
-   addInventoryDataToPacket(packet, backpackInventory);
-   addInventoryDataToPacket(packet, backpackSlotInventory);
-   addInventoryDataToPacket(packet, heldItemSlotInventory);
-   addInventoryDataToPacket(packet, craftingOutputSlotInventory);
-   addInventoryDataToPacket(packet, armourSlotInventory);
-   addInventoryDataToPacket(packet, offhandInventory);
-   addInventoryDataToPacket(packet, gloveSlotInventory);
+   // @HACK @SPEED: would be way better to have a way to write the game data to the packet directly!!
+   
 
    return packet.buffer;
 }

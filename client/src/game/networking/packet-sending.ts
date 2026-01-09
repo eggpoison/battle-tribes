@@ -22,6 +22,11 @@ export function sendInitialPlayerDataPacket(username: string, tribeType: TribeTy
    sendPacket(packet);
 }
 
+export function sendDeactivatePacket(): void {
+   const packet = new Packet(PacketType.deactivate, Float32Array.BYTES_PER_ELEMENT);
+   sendPacket(packet);
+}
+
 export function sendActivatePacket(): void {
    const packet = new Packet(PacketType.activate, Float32Array.BYTES_PER_ELEMENT);
    sendPacket(packet);
@@ -139,9 +144,9 @@ export function sendPlayerDataPacket(): void {
    sendPacket(packet);
 }
 
-export function createSyncRequestPacket(): ArrayBuffer {
+export function sendSyncRequestPacket(): void {
    const packet = new Packet(PacketType.syncRequest, Float32Array.BYTES_PER_ELEMENT);
-   return packet.buffer;
+   sendPacket(packet);
 }
 
 export function sendAttackPacket(): void {

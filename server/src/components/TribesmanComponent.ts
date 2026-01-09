@@ -6,7 +6,7 @@ import { Settings } from "../../../shared/src/settings";
 import { TileType } from "../../../shared/src/tiles";
 import { TitleGenerationInfo, TRIBESMAN_TITLE_RECORD, TribesmanTitle } from "../../../shared/src/titles";
 import { TribeType } from "../../../shared/src/tribes";
-import { randInt } from "../../../shared/src/utils";
+import { Point, randInt } from "../../../shared/src/utils";
 import { EntityConfig } from "../components";
 import { onFishLeaderHurt } from "../entities/mobs/fish";
 import { useItem } from "../entities/tribes/tribe-member";
@@ -35,6 +35,8 @@ export class TribesmanComponent {
    // @Cleanup: would be great to not store a variable to do this.
    public lastPlantCollisionTicks = getGameTicks();
 
+   /** Way the player is intending on moving. Useful for controlling mounts when riding them. */
+   public movementIntention = new Point(0, 0);
 }
 
 export const TribesmanComponentArray = new ComponentArray<TribesmanComponent>(ServerComponentType.tribesman, true, getDataLength, addDataToPacket);

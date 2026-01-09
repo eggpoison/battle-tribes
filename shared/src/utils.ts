@@ -461,6 +461,7 @@ export function dotAngles(angle1: number, angle2: number): number {
    return Math.sin(angle1) * Math.sin(angle2) + Math.cos(angle1) * Math.cos(angle2);
 }
 
+// @Cleanup: rename to "unitVec2" (paired with polarVec2)
 export function angleToPoint(angle: number): Point {
    return new Point(Math.sin(angle), Math.cos(angle));
 }

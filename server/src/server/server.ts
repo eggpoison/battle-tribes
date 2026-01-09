@@ -1,7 +1,7 @@
 import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
 import { Settings } from "battletribes-shared/settings";
 import { TribeType } from "battletribes-shared/tribes";
-import { Point, randInt } from "battletribes-shared/utils";
+import { Point } from "battletribes-shared/utils";
 import { PacketReader, PacketType } from "battletribes-shared/packets";
 import WebSocket, { Server } from "ws";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
@@ -9,11 +9,11 @@ import Tribe from "../Tribe";
 import SRandom from "../SRandom";
 import { updateDynamicPathfindingNodes } from "../pathfinding";
 import { updateGrassBlockers } from "../grass-blockers";
-import { broadcastSimulationStatus, createGameDataPacket, createSyncDataPacket, createSyncPacket } from "./packet-sending";
+import { broadcastSimulationStatus, createGameDataPacket } from "./packet-sending";
 import PlayerClient, { PlayerClientVars } from "./PlayerClient";
 import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, processCommandPacket, resetDirtyEntities } from "./player-clients";
 import { createPlayerConfig } from "../entities/tribes/player";
-import { processAcquireTamingSkillPacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processCloseEntityInventoryPacket, processCompleteTamingTierPacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processItemTransferPacket, processModifyBuildingPacket, processMountCarrySlotPacket, processOpenEntityInventoryPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving";
+import { processAcquireTamingSkillPacket, processActivatePacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processCloseEntityInventoryPacket, processCompleteTamingTierPacket, processDeactivatePacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processItemTransferPacket, processModifyBuildingPacket, processMountCarrySlotPacket, processOpenEntityInventoryPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetDebugEntityPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processSyncRequestPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving";
 import { CowSpecies, Entity } from "battletribes-shared/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
@@ -24,7 +24,7 @@ import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuf
 import { resolveEntityCollisions } from "../collision-detection";
 import { runCollapses } from "../collapses";
 import { updateTribes } from "../tribes";
-import { surfaceLayer, layers } from "../layers";
+import { surfaceLayer, layers, undergroundLayer } from "../layers";
 import { generateReeds } from "../world-generation/reed-generation";
 import { riverMainTiles } from "../world-generation/surface-layer-generation";
 import { updateWind } from "../wind";
@@ -38,6 +38,8 @@ import { getTamingSkill, TamingSkillID } from "../../../shared/src/taming";
 import { createDevGameDataPacket } from "./dev-packets";
 import { createTribeWorkerConfig } from "../entities/tribes/tribe-worker";
 import OPTIONS from "../options";
+import { InventoryName, ItemType } from "../../../shared/src/items/items";
+import { createItem } from "../items";
 
 /*
 
@@ -146,10 +148,10 @@ class GameServer {
       // SRandom.seed(2767843904);
 
       // Tundra:
-      SRandom.seed(2763196645);
+      // SRandom.seed(2763196645);
 
       // Cave:
-      // SRandom.seed(2950872542);
+      SRandom.seed(2950872542);
 
       const builtinRandomFunc = Math.random;
       Math.random = () => SRandom.next();
@@ -241,6 +243,25 @@ class GameServer {
                      // const config = createTribeWorkerConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, new Tribe(TribeType.plainspeople, true, new Point(spawnPosition.x + 200, spawnPosition.y)));
                      const config = createCowConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, CowSpecies.brown);
                      createEntity(config, layer, 0);
+
+                     for (let i = 0; i < 2; i++) {
+                        const position = [new Point(2732 - 100, 2310), new Point(2662 - 130, 1792)][i];
+                        const cowAngle = [Math.PI * 0.35, Math.PI * 0.59][i];
+
+                        const tribesmanConfig = createTribeWorkerConfig(position, 0, tribe);
+
+                        const cowConfig = createCowConfig(position, cowAngle, CowSpecies.brown);
+                        cowConfig.childConfigs = [{
+                           entityConfig: tribesmanConfig,
+                           attachedHitbox: tribesmanConfig.components[ServerComponentType.transform]!.hitboxes[0],
+                           parentHitbox: cowConfig.components[ServerComponentType.transform]!.hitboxes[0],
+                           isPartOfParent: false
+                        }];
+                        createEntity(cowConfig, undergroundLayer, 0);
+                        setTimeout(() => {
+                           cowConfig.components[ServerComponentType.rideable]!.carrySlots[0].occupiedEntity = tribesmanConfig.components[ServerComponentType.transform]!.hitboxes[0].entity;
+                        }, 200);
+                     }
                   }
                }, 1000);
 
@@ -263,234 +284,62 @@ class GameServer {
             
             // @Cleanup: so weird to have this in server.ts
             switch (packetType) {
-               case PacketType.playerData: {
-                  processPlayerDataPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.activate: {
-                  playerClient.isActive = true;
-                  break;
-               }
-               case PacketType.syncRequest: {
-                  if (entityExists(playerClient.instance)) {
-                     const buffer = createSyncDataPacket(playerClient);
-                     socket.send(buffer);
-                  } else {
-                     const buffer = createSyncPacket();
-                     socket.send(buffer);
-                  }
-                  break;
-               }
-               case PacketType.attack: {
-                  processPlayerAttackPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.devGiveItem: {
-                  processDevGiveItemPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.respawn: {
-                  processRespawnPacket(playerClient);
-                  break;
-               }
-               case PacketType.startItemUse: {
-                  processStartItemUsePacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.useItem: {
-                  processUseItemPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.stopItemUse: {
-                  processStopItemUsePacket(playerClient);
-                  break;
-               }
-               case PacketType.dropItem: {
-                  processItemDropPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.itemPickup: {
-                  processItemPickupPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.itemTransfer: {
-                  processItemTransferPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.itemRelease: {
-                  processItemReleasePacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.summonEntity: {
-                  processEntitySummonPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.toggleSimulation: {
-                  processToggleSimulationPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.placeBlueprint: {
-                  processPlaceBlueprintPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.craftItem: {
-                  processPlayerCraftingPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.ascend: {
-                  processAscendPacket(playerClient);
-                  break;
-               }
-               case PacketType.devSetDebugEntity: {
-                  const entity: Entity = reader.readNumber();
-                  // @Cleanup: shouldn't be in the server!
-                  SERVER.setTrackedGameObject(entity);
-                  break;
-               }
-               case PacketType.devTPToEntity: {
-                  processTPToEntityPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.devSpectateEntity: {
-                  processSpectateEntityPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.devSetAutogiveBaseResource: {
-                  processSetAutogiveBaseResourcesPacket(reader);
-                  break;
-               }
-               case PacketType.structureInteract: {
-                  processStructureInteractPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.unlockTech: {
-                  processTechUnlockPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.selectTech: {
-                  processSelectTechPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.studyTech: {
-                  processTechStudyPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.animalStaffFollowCommand: {
-                  processAnimalStaffFollowCommandPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.mountCarrySlot: {
-                  processMountCarrySlotPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.dismountCarrySlot: {
-                  processDismountCarrySlotPacket(playerClient);
-                  break;
-               }
-               case PacketType.pickUpEntity: {
-                  processPickUpEntityPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.modifyBuilding: {
-                  processModifyBuildingPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.setMoveTargetPosition: {
-                  processSetMoveTargetPositionPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.setCarryTarget: {
-                  processSetCarryTargetPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.selectRiderDepositLocation: {
-                  receiveSelectRiderDepositLocation(reader);
-                  break;
-               }
-               case PacketType.setAttackTarget: {
-                  processSetAttackTargetPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.completeTamingTier: {
-                  processCompleteTamingTierPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.forceCompleteTamingTier: {
-                  processForceCompleteTamingTierPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.acquireTamingSkill: {
-                  processAcquireTamingSkillPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.forceAcquireTamingSkill: {
-                  processForceAcquireTamingSkillPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.setSpectatingPosition: {
-                  processSetSpectatingPositionPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.devSetViewedSpawnDistribution: {
-                  processDevSetViewedSpawnDistribution(playerClient, reader);
-                  break;
-               }
-               case PacketType.setSignMessage: {
-                  processSetSignMessagePacket(reader);
-                  break;
-               }
-               case PacketType.renameAnimal: {
-                  processRenameAnimalPacket(reader);
-                  break;
-               }
-               case PacketType.chatMessage: {
-                  receiveChatMessagePacket(reader, playerClient);
-                  break;
-               }
-               case PacketType.forceUnlockTech: {
-                  processForceUnlockTechPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.structureUninteract: {
-                  processStructureUninteractPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.recruitTribesman: {
-                  processRecruitTribesmanPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.respondToTitleOffer: {
-                  processRespondToTitleOfferPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.devGiveTitle: {
-                  processDevGiveTitlePacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.devRemoveTitle: {
-                  processDevRemoveTitlePacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.devCreateTribe: {
-                  processDevCreateTribePacket();
-                  break;
-               }
-               case PacketType.devChangeTribeType: {
-                  processDevChangeTribeTypePacket(reader);
-                  break;
-               }
-               case PacketType.terminalCommand: {
-                  processCommandPacket(playerClient, reader);
-                  break;
-               }
-               case PacketType.openEntityInventory: {
-                  processOpenEntityInventoryPacket(reader);
-                  break;
-               }
-               case PacketType.closeEntityInventory: {
-                  processCloseEntityInventoryPacket(reader);
-                  break;
-               }
+               case PacketType.playerData:                    processPlayerDataPacket(playerClient, reader); break;
+               case PacketType.activate:                      processActivatePacket(playerClient); break;
+               case PacketType.deactivate:                    processDeactivatePacket(playerClient); break;
+               case PacketType.syncRequest:                   processSyncRequestPacket(playerClient); break;
+               case PacketType.attack:                        processPlayerAttackPacket(playerClient, reader); break;
+               case PacketType.devGiveItem:                   processDevGiveItemPacket(playerClient, reader); break;
+               case PacketType.respawn:                       processRespawnPacket(playerClient); break;
+               case PacketType.startItemUse:                  processStartItemUsePacket(playerClient, reader); break;
+               case PacketType.useItem:                       processUseItemPacket(playerClient, reader); break;
+               case PacketType.stopItemUse:                   processStopItemUsePacket(playerClient); break;
+               case PacketType.dropItem:                      processItemDropPacket(playerClient, reader); break;
+               case PacketType.itemPickup:                    processItemPickupPacket(playerClient, reader); break;
+               case PacketType.itemTransfer:                  processItemTransferPacket(playerClient, reader); break;
+               case PacketType.itemRelease:                   processItemReleasePacket(playerClient, reader); break;
+               case PacketType.summonEntity:                  processEntitySummonPacket(playerClient, reader); break;
+               case PacketType.toggleSimulation:              processToggleSimulationPacket(playerClient, reader); break;
+               case PacketType.placeBlueprint:                processPlaceBlueprintPacket(playerClient, reader); break;
+               case PacketType.craftItem:                     processPlayerCraftingPacket(playerClient, reader); break;
+               case PacketType.ascend:                        processAscendPacket(playerClient); break;
+               case PacketType.devSetDebugEntity:             processSetDebugEntityPacket(reader); break;
+               case PacketType.devTPToEntity:                 processTPToEntityPacket(playerClient, reader); break;
+               case PacketType.devSpectateEntity:             processSpectateEntityPacket(playerClient, reader); break;
+               case PacketType.devSetAutogiveBaseResource:    processSetAutogiveBaseResourcesPacket(reader); break;
+               case PacketType.structureInteract:             processStructureInteractPacket(playerClient, reader); break;
+               case PacketType.unlockTech:                    processTechUnlockPacket(playerClient, reader); break;
+               case PacketType.selectTech:                    processSelectTechPacket(playerClient, reader); break;
+               case PacketType.studyTech:                     processTechStudyPacket(playerClient, reader); break;
+               case PacketType.animalStaffFollowCommand:      processAnimalStaffFollowCommandPacket(playerClient, reader); break;
+               case PacketType.mountCarrySlot:                processMountCarrySlotPacket(playerClient, reader); break;
+               case PacketType.dismountCarrySlot:             processDismountCarrySlotPacket(playerClient); break;
+               case PacketType.pickUpEntity:                  processPickUpEntityPacket(playerClient, reader); break;
+               case PacketType.modifyBuilding:                processModifyBuildingPacket(playerClient, reader); break;
+               case PacketType.setMoveTargetPosition:         processSetMoveTargetPositionPacket(playerClient, reader); break;
+               case PacketType.setCarryTarget:                processSetCarryTargetPacket(playerClient, reader); break;
+               case PacketType.selectRiderDepositLocation:    receiveSelectRiderDepositLocation(reader); break;
+               case PacketType.setAttackTarget:               processSetAttackTargetPacket(playerClient, reader); break;
+               case PacketType.completeTamingTier:            processCompleteTamingTierPacket(playerClient, reader); break;
+               case PacketType.forceCompleteTamingTier:       processForceCompleteTamingTierPacket(playerClient, reader); break;
+               case PacketType.acquireTamingSkill:            processAcquireTamingSkillPacket(playerClient, reader); break;
+               case PacketType.forceAcquireTamingSkill:       processForceAcquireTamingSkillPacket(playerClient, reader); break;
+               case PacketType.setSpectatingPosition:         processSetSpectatingPositionPacket(playerClient, reader); break;
+               case PacketType.devSetViewedSpawnDistribution: processDevSetViewedSpawnDistribution(playerClient, reader); break;
+               case PacketType.setSignMessage:                processSetSignMessagePacket(reader); break;
+               case PacketType.renameAnimal:                  processRenameAnimalPacket(reader); break;
+               case PacketType.chatMessage:                   receiveChatMessagePacket(reader, playerClient); break;
+               case PacketType.forceUnlockTech:               processForceUnlockTechPacket(playerClient, reader); break;
+               case PacketType.structureUninteract:           processStructureUninteractPacket(playerClient, reader); break;
+               case PacketType.recruitTribesman:              processRecruitTribesmanPacket(playerClient, reader); break;
+               case PacketType.respondToTitleOffer:           processRespondToTitleOfferPacket(playerClient, reader); break;
+               case PacketType.devGiveTitle:                  processDevGiveTitlePacket(playerClient, reader); break;
+               case PacketType.devRemoveTitle:                processDevRemoveTitlePacket(playerClient, reader); break;
+               case PacketType.devCreateTribe:                processDevCreateTribePacket(); break;
+               case PacketType.devChangeTribeType:            processDevChangeTribeTypePacket(reader); break;
+               case PacketType.terminalCommand:               processCommandPacket(playerClient, reader); break;
+               case PacketType.openEntityInventory:           processOpenEntityInventoryPacket(reader); break;
+               case PacketType.closeEntityInventory:          processCloseEntityInventoryPacket(reader); break;
                default: {
                   console.log("Unknown packet type: " + packetType);
                }
@@ -606,7 +455,6 @@ class GameServer {
          if (entityExists(playerClient.instance)) {
             entitiesToSend.add(playerClient.instance);
          }
-         const removedEntities = new Array<Entity>();
 
          // Add newly visible entities
          for (const entity of visibleEntities) {
@@ -615,7 +463,8 @@ class GameServer {
             }
          }
 
-         // Add removed entities
+         // Add removed entities - any entity that was previously visible but no longer.
+         const removedEntities = new Array<Entity>();
          for (const entity of playerClient.visibleEntities) {
             if (!visibleEntities.has(entity)) {
                removedEntities.push(entity);

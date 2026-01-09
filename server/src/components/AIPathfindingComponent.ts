@@ -3,7 +3,7 @@ import { Entity, EntityType } from "../../../shared/src/entities";
 import { InventoryName } from "../../../shared/src/items/items";
 import { Settings, PathfindingSettings } from "../../../shared/src/settings";
 import { TileType } from "../../../shared/src/tiles";
-import { assert, distance, polarVec2 } from "../../../shared/src/utils";
+import { angleToPoint, assert, distance, polarVec2 } from "../../../shared/src/utils";
 import { getEntitiesInRange, getVelocityClosenessAdjustmentFactor } from "../ai-shared";
 import { TRIBESMAN_TURN_SPEED } from "../entities/tribes/tribesman-ai/tribesman-ai";
 import { getHumanoidRadius, getTribesmanAcceleration } from "../entities/tribes/tribesman-ai/tribesman-ai-utils";
@@ -19,6 +19,7 @@ import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { changeEntityLayer, TransformComponentArray } from "./TransformComponent";
 import { EntityRelationship, getEntityRelationship, TribeComponentArray } from "./TribeComponent";
 import { TribesmanPathType } from "./TribesmanAIComponent";
+import { TribesmanComponentArray } from "./TribesmanComponent";
 
 const enum Vars {
    BLOCKING_TRIBESMAN_DISTANCE = 80,
@@ -144,13 +145,20 @@ export function continueCurrentPath(tribesman: Entity): boolean {
 
       const tribesmanHitbox = transformComponent.hitboxes[0];
 
+      // Turn to the target
       turnHitboxToAngle(tribesmanHitbox, targetDirection, TRIBESMAN_TURN_SPEED, 1, false);
 
-      // If the tribesman is close to the next node, slow down as to not overshoot it
-      const distanceFromNextNode = getDistanceToNode(transformComponent, nextNode);
-      const accel = getTribesmanAcceleration(tribesman);
-      const adjustmentFactor = getVelocityClosenessAdjustmentFactor(distanceFromNextNode, 80);
-      applyAccelerationFromGround(tribesmanHitbox, polarVec2(accel * adjustmentFactor, tribesmanHitbox.box.angle));
+      if (tribesmanHitbox.entity === tribesmanHitbox.rootEntity) {
+         // If the tribesman is close to the next node, slow down as to not overshoot it
+         const distanceFromNextNode = getDistanceToNode(transformComponent, nextNode);
+         const accel = getTribesmanAcceleration(tribesman);
+         const adjustmentFactor = getVelocityClosenessAdjustmentFactor(distanceFromNextNode, 80);
+         applyAccelerationFromGround(tribesmanHitbox, polarVec2(accel * adjustmentFactor, tribesmanHitbox.box.angle));
+      } else {
+         // If being carried by something, instead mark the move intention for the carrier to deal with
+         const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman);
+         tribesmanComponent.movementIntention = angleToPoint(tribesmanHitbox.box.angle);
+      }
 
       // @Speed: only do this if we know the path has a door in it
       // Open any doors in their way

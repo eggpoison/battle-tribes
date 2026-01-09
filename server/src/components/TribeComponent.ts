@@ -11,6 +11,7 @@ import { getEntityType } from "../world";
 import { PlantedComponentArray } from "./PlantedComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { getHitboxTile, Hitbox } from "../hitboxes";
+import { PlayerComponentArray } from "./PlayerComponent";
 
 /** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {
@@ -46,6 +47,11 @@ function onRemove(entity: Entity): void {
 }
 
 export function getEntityRelationship(entity: Entity, comparingEntity: Entity): EntityRelationship {
+   // @SQUEAM
+   if (PlayerComponentArray.hasComponent(comparingEntity) && PlayerComponentArray.getComponent(comparingEntity).client.username === "berryboy") {
+      return EntityRelationship.enemy;
+   }
+   
    // More complex if the entity is an AI tribesman: take into account the personal relationship between the entities
    if (TribesmanAIComponentArray.hasComponent(entity) && TribeMemberComponentArray.hasComponent(comparingEntity)) {
       return getTribesmanRelationship(entity, comparingEntity);

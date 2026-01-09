@@ -7,10 +7,8 @@ export enum PacketType {
    // -----------------
    initialPlayerData,
    activate,
-   // @Cleanup: unused?
    deactivate,
    playerData,
-   // @Cleanup: unused?
    syncRequest,
    attack,
    respawn,
@@ -71,10 +69,8 @@ export enum PacketType {
    // -----------------
    initialGameData,
    gameData,
+   syncGameData,
    devGameData, // ((DEV))
-   // @Cleanup: unused?
-   syncData,
-   sync,
    forcePositionUpdate,
    // @CLEANUP i snapped on the 'serverToClient' prefix to this cuz chatMessage was taken to the client-to-server packet
    serverToClientChatMessage,

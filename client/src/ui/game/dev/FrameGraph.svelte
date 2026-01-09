@@ -1,43 +1,10 @@
 <script lang="ts">
-   import { FRAME_GRAPH_RECORD_TIME } from "../../../game/rendering/webgl/frame-graph-rendering";
    import { frameGraphState } from "../../../ui-state/frame-graph-state.svelte";
    import { nerdVisionState } from "../../../ui-state/nerd-vision-state.svelte";
-
-   const frames = $derived(frameGraphState.trackedFrames);
-   
-   const fps = $derived(frames.length / FRAME_GRAPH_RECORD_TIME);
-
-   const frameStats = () => {
-      if (frames.length === 0) {
-         return { average: 0, min: 0, max: 0 };
-      }
-
-      let totalDuration = 0;
-      let min = Infinity;
-      let max = -Infinity;
-
-      for (const frame of frames) {
-         const duration = frame.endTime - frame.startTime;
-
-         totalDuration += duration;
-         if (duration < min) {
-            min = duration;
-         }
-         if (duration > max) {
-            max = duration;
-         }
-      }
-
-      const average = totalDuration / frames.length;
-
-      return { average, min, max };
-   };
-
-   const { average, min, max } = $derived(frameStats());
 </script>
 
 <div id="frame-graph" class:hidden={!nerdVisionState.isVisible}>
-   <p class="info"><span class="highlight">fps={fps}</span> <span class="highlight">t_avg={average.toFixed(2)}</span> <span class="highlight">t_min={min.toFixed(2)}</span> <span class="highlight">t_max={max.toFixed(2)}</span></p>
+   <p class="info"><span class="highlight">fps={frameGraphState.fps}</span> <span class="highlight">t_avg={frameGraphState.average.toFixed(2)}</span> <span class="highlight">t_min={frameGraphState.min.toFixed(2)}</span> <span class="highlight">t_max={frameGraphState.max.toFixed(2)}</span></p>
    <canvas id="frame-graph-canvas"></canvas>
 </div>
 

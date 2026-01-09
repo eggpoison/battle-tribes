@@ -165,6 +165,43 @@ const collectEntityCollisionsWithChunk = (collisionPairs: CollisionPairs, affect
    }
 }
 
+// @COPYNPASTE!! @Hack for speed
+const collectNonGrassEntityCollisionsWithChunk = (collisionPairs: CollisionPairs, affectedEntity: Entity, chunk: Chunk): void => {
+   for (const collidingEntity of chunk.nonGrassEntities) {
+      if (collidingEntity === affectedEntity) {
+         continue;
+      }
+
+      // @Speed: re-gotten further in the line
+      const entityTransformComponent = TransformComponentArray.getComponent(affectedEntity);
+      const otherEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
+
+      // Make sure the entities aren't in the same carry heirarchy
+      // @Hack
+      const entityHitbox = entityTransformComponent.hitboxes[0];
+      const otherEntityHitbox = otherEntityTransformComponent.hitboxes[0];
+      if (entityHitbox.rootEntity === otherEntityHitbox.rootEntity) {
+         continue;
+      }
+
+      if (entityCollisionPairHasAlreadyBeenChecked(collisionPairs, affectedEntity, collidingEntity)) {
+         continue;
+      }
+
+      const collisionInfo = calculateEntityPairCollisionInfo(affectedEntity, collidingEntity);
+      if (collisionInfo === null) {
+         continue;
+      }
+      
+      const existingCollisionPairs = collisionPairs.get(affectedEntity);
+      if (typeof existingCollisionPairs === "undefined") {
+         collisionPairs.set(affectedEntity, [collisionInfo]);
+      } else {
+         existingCollisionPairs.push(collisionInfo);
+      }
+   }
+}
+
 const resolveCollisionPairs = (collisionPairs: CollisionPairs, onlyResolvePlayerCollisions: boolean): void => {
    for (const [affectedEntity, collisionInfos] of collisionPairs.entries()) {
       for (const collisionInfo of collisionInfos) {
@@ -202,7 +239,7 @@ export function resolvePlayerCollisions(): void {
    const collisionPairs: CollisionPairs = new Map();
 
    for (const chunk of transformComponent.chunks) {
-      collectEntityCollisionsWithChunk(collisionPairs, playerInstance, chunk);
+      collectNonGrassEntityCollisionsWithChunk(collisionPairs, playerInstance, chunk);
    }
 
    resolveCollisionPairs(collisionPairs, true);

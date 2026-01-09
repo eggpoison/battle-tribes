@@ -72,7 +72,7 @@ export function createPlayerConfig(position: Point, angle: number, tribe: Tribe,
       handPosition.add(rotatePoint(offset, angle));
       
       // @HACK SQUEAM: the collision mask, so that the player can mine berries for a horse archer shot
-      const hitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(handPosition, offset, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, [HitboxFlag.HAND]);
+      const hitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(handPosition, offset, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, [HitboxFlag.HAND, HitboxFlag.IGNORES_WALL_COLLISIONS]);
       hitbox.box.flipX = isFlipped;
       // @Hack
       hitbox.box.totalFlipXMultiplier = isFlipped ? -1 : 1;

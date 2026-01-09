@@ -20,7 +20,7 @@ export function addLayerBuildingBlockingTiles(layer: Layer): void {
    }
 
    // Expand the tiles to their neighbours
-   for (let i = 0; i < 3; i++) {
+   for (let i = 0; i < 2; i++) {
       const tilesToExpand = Array.from(layer.buildingBlockingTiles);
 
       for (const tileIndex of tilesToExpand) {

@@ -452,7 +452,7 @@ const reconstructRawPath = (finalNode: PathfindingNodeIndex, cameFrom: Record<Pa
  * Attempts to find a path from one position to another in a single layer. Uses A* pathfinding.
  * @param pathfindingEntityFootprint Radius of the entity's footprint in nodes
  */
-export function findSingleLayerPath(layer: Layer, startX: number, startY: number, goalX: number, goalY: number, ignoredGroupID: number, pathfindingEntityFootprint: number, options: PathfindOptions): Path {
+export function runPathfindingSingleLayer(layer: Layer, startX: number, startY: number, goalX: number, goalY: number, ignoredGroupID: number, pathfindingEntityFootprint: number, options: PathfindOptions): Path {
    const start = getClosestPathfindNode(startX, startY);
    const goal = getClosestPathfindNode(goalX, goalY);
 
@@ -589,7 +589,7 @@ export function findSingleLayerPath(layer: Layer, startX: number, startY: number
    }
 }
 
-export function findMultiLayerPath(startLayer: Layer, endLayer: Layer, startX: number, startY: number, endX: number, endY: number, ignoredGroupID: number, pathfindingEntityFootprint: number, options: PathfindOptions): Array<Path> {
+export function runPathfindingMultiLayer(startLayer: Layer, endLayer: Layer, startX: number, startY: number, endX: number, endY: number, ignoredGroupID: number, pathfindingEntityFootprint: number, options: PathfindOptions): Array<Path> {
    const paths = new Array<Path>();
    
    let x1: number;
@@ -609,7 +609,7 @@ export function findMultiLayerPath(startLayer: Layer, endLayer: Layer, startX: n
          goalRadius: 0,
          failureDefault: PathfindFailureDefault.none
       };
-      const path = findSingleLayerPath(startLayer, startX, startY, x1, y1, ignoredGroupID, pathfindingEntityFootprint, changeLayerOptions);
+      const path = runPathfindingSingleLayer(startLayer, startX, startY, x1, y1, ignoredGroupID, pathfindingEntityFootprint, changeLayerOptions);
 
       paths.push(path);
    } else {
@@ -617,7 +617,7 @@ export function findMultiLayerPath(startLayer: Layer, endLayer: Layer, startX: n
       y1 = startY;
    }
 
-   const path = findSingleLayerPath(endLayer, x1, y1, endX, endY, ignoredGroupID, pathfindingEntityFootprint, options);
+   const path = runPathfindingSingleLayer(endLayer, x1, y1, endX, endY, ignoredGroupID, pathfindingEntityFootprint, options);
    paths.push(path);
 
    return paths;

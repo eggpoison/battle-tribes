@@ -12,7 +12,7 @@ import { addChatMessage } from "../chat";
 import { gameUIState } from "../../ui-state/game-ui-state.svelte";
 import { getSelectedItemInfo } from "../player-action-handling";
 import { playerActionState } from "../../ui-state/player-action-state.svelte";
-import { gameIsRunning, receiveInitialPacket, registerGameResync } from "../client";
+import { gameIsRunning, receiveInitialPacket, resyncGame } from "../client";
 
 const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {
    // Initially find all tiles below a dropdown tile
@@ -192,7 +192,7 @@ export function processSyncGameDataPacket(reader: PacketReader): void {
    // @Squeam
    // receiveInitialPacket(reader);
    
-   registerGameResync();
+   resyncGame();
 }
 
 export function processForcePositionUpdatePacket(reader: PacketReader): void {

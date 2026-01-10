@@ -9,6 +9,8 @@ import { getTamingSkill, TamingSkill, TamingSkillID, TamingTier } from "battletr
 import { PlayerComponentArray } from "./PlayerComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { TribesmanComponentArray } from "./TribesmanComponent";
+import PlayerClient from "../server/PlayerClient";
+import { getTamingSpec } from "../taming-specs";
 
 interface TamingSkillLearning {
    readonly skill: TamingSkill;
@@ -158,8 +160,7 @@ export function getRiderTargetPosition(rider: Entity): Point | null {
 
    if (TribesmanComponentArray.hasComponent(rider)) {
       const tribesmanComponent = TribesmanComponentArray.getComponent(rider);
-      
-      if (!tribesmanComponent.movementIntention.isZero()) {
+      if (tribesmanComponent.movementIntention.isNonZero()) {
          const transformComponent = TransformComponentArray.getComponent(rider);
          const playerHitbox = transformComponent.hitboxes[0];
    
@@ -179,4 +180,14 @@ export function hasTamingSkill(tamingComponent: TamingComponent, skillID: Taming
       }
    }
    return false;
+}
+
+export function incrementTamingTier(entity: Entity, playerClient: PlayerClient, tamingComponent: TamingComponent): void {
+   const tamingSpec = getTamingSpec(entity);
+   if (tamingComponent.tamingTier < tamingSpec.maxTamingTier) {
+      // @Cleanup @Copynpaste
+      tamingComponent.tamingTier++;
+      tamingComponent.foodEatenInTier = 0;
+      tamingComponent.tameTribe = playerClient.tribe;
+   }
 }

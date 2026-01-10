@@ -2,7 +2,7 @@ import { Settings } from "webgl-test-shared";
 import Board from "./Board";
 import { updateTextNumbers } from "./text-canvas";
 import { resizeCanvas } from "./webgl";
-import { createAudioContext, playRiverSounds, updateSounds } from "./sound";
+import { createAudioContext, getNumSounds, playRiverSounds, updateSounds } from "./sound";
 import { attemptToResearch, updateResearchOrb } from "./research";
 import { updateEntitySelections } from "./entity-selection";
 import { updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
@@ -66,16 +66,16 @@ document.addEventListener("visibilitychange", () => {
       }
    } else if (document.visibilityState === "hidden") {
       gameIsFocused = false;
-      registerGameUnsync();
+      unsyncGame();
       sendDeactivatePacket();
    }
 });
 
-export function registerGameResync(): void {
+export function resyncGame(): void {
    gameIsSynced = true;
 }
 
-function registerGameUnsync(): void {
+function unsyncGame(): void {
    gameIsSynced = false;
    // So that when the player returns to the game the dev frame graph doesn't show a maaassive frame
    resetFrameGraph();

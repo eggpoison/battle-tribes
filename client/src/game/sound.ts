@@ -43,6 +43,11 @@ export function createAudioContext(): void {
    audioContext = new AudioContext()
 }
 
+// @Squeam
+export function getNumSounds(): number {
+   return activeSounds.length;
+}
+
 // @Hack: For some reason if we decode the audio too fast, then shit breaks. So we have to do this evilness. Why? Because god is not real.
 // await (new Promise<void>(resolve => {
 //    setTimeout(() => {

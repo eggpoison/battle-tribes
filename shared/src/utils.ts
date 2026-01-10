@@ -163,6 +163,10 @@ export class Point {
    public isZero(): boolean {
       return this.x === 0 && this.y === 0;
    }
+
+   public isNonZero(): boolean {
+      return this.x !== 0 || this.y !== 0;
+   }
    
    public offset(offsetMagnitude: number, offsetDirection: number): Point {
       const x = this.x + offsetMagnitude * Math.sin(offsetDirection);

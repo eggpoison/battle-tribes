@@ -10,7 +10,7 @@ import { getHumanoidRadius, getTribesmanAcceleration } from "../entities/tribes/
 import { Hitbox, applyAccelerationFromGround, getHitboxTile, getHitboxVelocity, turnHitboxToAngle } from "../hitboxes";
 import Layer from "../Layer";
 import { surfaceLayer } from "../layers";
-import { convertEntityPathfindingGroupID, entityCanBlockPathfinding, entityHasReachedNode, findMultiLayerPath, getAngleToNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, getPathfindingNodePos, Path, PathfindFailureDefault, PathfindOptions, positionIsAccessible } from "../pathfinding";
+import { convertEntityPathfindingGroupID, entityCanBlockPathfinding, entityHasReachedNode, runPathfindingMultiLayer, getAngleToNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, getPathfindingNodePos, Path, PathfindFailureDefault, PathfindOptions, positionIsAccessible } from "../pathfinding";
 import Tribe from "../Tribe";
 import { getEntityAgeTicks, getEntityLayer, getEntityType, getGameTicks } from "../world";
 import { ComponentArray } from "./ComponentArray";
@@ -257,6 +257,10 @@ const cleanupPathfinding = (targetEntity: Entity | 0, tribe: Tribe, blockingTrib
 }
 
 export function pathfindTribesman(tribesman: Entity, goalX: number, goalY: number, goalLayer: Layer, targetEntityID: number, pathType: TribesmanPathType, goalRadius: number, failureDefault: PathfindFailureDefault): boolean {
+
+}
+
+export function pathfind(tribesman: Entity, goalX: number, goalY: number, goalLayer: Layer, targetEntityID: number, pathType: TribesmanPathType, goalRadius: number, failureDefault: PathfindFailureDefault): boolean {
    assert(goalX >= 0 && goalX < Settings.WORLD_UNITS && goalY >= 0 && goalY < Settings.WORLD_UNITS);
    
    // If moving to a new target node, recalculate path
@@ -278,7 +282,7 @@ export function pathfindTribesman(tribesman: Entity, goalX: number, goalY: numbe
          goalRadius: goalRadius,
          failureDefault: failureDefault
       };
-      aiPathfindingComponent.paths = findMultiLayerPath(layer, goalLayer, tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, goalX, goalY, tribe.pathfindingGroupID, footprint, options);
+      aiPathfindingComponent.paths = runPathfindingMultiLayer(layer, goalLayer, tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, goalX, goalY, tribe.pathfindingGroupID, footprint, options);
 
       cleanupPathfinding(targetEntityID, tribe, blockingTribesmen);
 
@@ -323,7 +327,7 @@ export function pathToEntityExists(tribesman: Entity, huntedEntity: Entity, goal
       goalRadius: Math.floor(goalRadius / PathfindingSettings.NODE_SEPARATION),
       failureDefault: PathfindFailureDefault.none
    };
-   const path = findMultiLayerPath(getEntityLayer(tribesman), getEntityLayer(huntedEntity), tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, targetHitbox.box.position.x, targetHitbox.box.position.y, tribeComponent.tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), queryOptions);
+   const path = runPathfindingMultiLayer(getEntityLayer(tribesman), getEntityLayer(huntedEntity), tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, targetHitbox.box.position.x, targetHitbox.box.position.y, tribeComponent.tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), queryOptions);
 
    cleanupPathfinding(huntedEntity, tribeComponent.tribe, blockingTribesmen);
 

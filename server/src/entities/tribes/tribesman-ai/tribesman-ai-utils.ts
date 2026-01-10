@@ -9,7 +9,7 @@ import { getEntityLayer, getEntityType, getGameTicks } from "../../../world";
 import { CircularBox } from "../../../../../shared/src/boxes/CircularBox";
 import { tribeMemberHasTitle, TribesmanComponentArray } from "../../../components/TribesmanComponent";
 import { Settings, PathfindingSettings } from "../../../../../shared/src/settings";
-import { Path, entityCanBlockPathfinding, getEntityPathfindingGroupID, convertEntityPathfindingGroupID, getEntityFootprint, findMultiLayerPath, positionIsAccessible, PathfindFailureDefault, PathfindOptions } from "../../../pathfinding";
+import { Path, entityCanBlockPathfinding, getEntityPathfindingGroupID, convertEntityPathfindingGroupID, getEntityFootprint, runPathfindingMultiLayer, positionIsAccessible, PathfindFailureDefault, PathfindOptions } from "../../../pathfinding";
 import Tribe from "../../../Tribe";
 import { AIPathfindingComponent, AIPathfindingComponentArray } from "../../../components/AIPathfindingComponent";
 
@@ -208,7 +208,7 @@ export function pathToEntityExists(tribesman: Entity, huntedEntity: Entity, goal
       goalRadius: Math.floor(goalRadius / PathfindingSettings.NODE_SEPARATION),
       failureDefault: PathfindFailureDefault.none
    };
-   const path = findMultiLayerPath(getEntityLayer(tribesman), getEntityLayer(huntedEntity), tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, targetHitbox.box.position.x, targetHitbox.box.position.y, tribeComponent.tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), options);
+   const path = runPathfindingMultiLayer(getEntityLayer(tribesman), getEntityLayer(huntedEntity), tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, targetHitbox.box.position.x, targetHitbox.box.position.y, tribeComponent.tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), options);
 
    cleanupPathfinding(huntedEntity, tribeComponent.tribe, blockingTribesmen);
 

@@ -129,7 +129,7 @@ const addLocalBiomeDataToPacket = (packet: Packet, playerClient: PlayerClient, l
          const density = count / numEligibleTiles;
          packet.writeNumber(density);
    
-         // @Hack!
+         // @Temporary @Incomplete!
          // packet.writeNumber(spawnInfo.maxDensity);
          packet.writeNumber(0);
       } else {
@@ -228,7 +228,7 @@ export function createDevGameDataPacket(playerClient: PlayerClient): Packet {
    const trackedEntity = SERVER.trackedEntityID;
    const debugData = typeof trackedEntity !== "undefined" ? createEntityDebugData(trackedEntity) : null;
    
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 0;
    
    // Subtile supports
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;

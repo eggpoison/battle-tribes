@@ -157,10 +157,8 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    const nearbyCollapses = getPlayerNearbyCollapses(playerClient);
    const visibleGrassBlockers = getVisibleGrassBlockers(playerClient);
    
-   // Packet type
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
    // Ticks, time
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
    // Layer
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
 
@@ -442,7 +440,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Point): ArrayBuffer {
    const tamingSpecsMap = getTamingSpecsMap();
 
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 5;
+   let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 4;
    // Layer idx
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    // Per-tile data
@@ -523,7 +521,7 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
 export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBuffer {
    const player = playerClient.instance;
 
-   const lengthBytes = 9 * Float32Array.BYTES_PER_ELEMENT;
+   const lengthBytes = 8 * Float32Array.BYTES_PER_ELEMENT;
    
    const packet = new Packet(PacketType.syncGameData, lengthBytes);
    
@@ -545,7 +543,7 @@ export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBuffe
 }
 
 const createSimulationStatusUpdatePacket = (isSimulating: boolean): Packet => {
-   const packet = new Packet(PacketType.simulationStatusUpdate, 2 * Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(PacketType.simulationStatusUpdate, Float32Array.BYTES_PER_ELEMENT);
    packet.writeBool(isSimulating);
    return packet;
 }
@@ -566,6 +564,6 @@ export function broadcastSimulationStatus(isSimulating: boolean): void {
 }
 
 export function createShieldKnockPacket(): Packet {
-   const packet = new Packet(PacketType.shieldKnock, Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(PacketType.shieldKnock, 0);
    return packet;
 }

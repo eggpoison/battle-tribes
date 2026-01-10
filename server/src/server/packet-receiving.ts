@@ -32,7 +32,7 @@ import { Tech, TechID, getTechByID } from "../../../shared/src/techs";
 import { CowComponentArray } from "../components/CowComponent";
 import { dismountMount, mountCarrySlot, RideableComponentArray } from "../components/RideableComponent";
 import { getTamingSkill, TamingSkillID, TamingTier } from "../../../shared/src/taming";
-import { getTamingSkillLearning, skillLearningIsComplete, TamingComponentArray } from "../components/TamingComponent";
+import { getTamingSkillLearning, incrementTamingTier, skillLearningIsComplete, TamingComponentArray } from "../components/TamingComponent";
 import { getTamingSpec } from "../taming-specs";
 import { getHitboxTile, getHitboxVelocity, setHitboxAngle, setHitboxAngularVelocity } from "../hitboxes";
 import { FloorSignComponentArray } from "../components/FloorSignComponent";
@@ -598,7 +598,7 @@ export function processTPToEntityPacket(playerClient: PlayerClient, reader: Pack
    const targetTransformComponent = TransformComponentArray.getComponent(targetEntity);
    const targetHitbox = targetTransformComponent.hitboxes[0];
 
-   const packet = new Packet(PacketType.forcePositionUpdate, 3 * Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(PacketType.forcePositionUpdate, 2 * Float32Array.BYTES_PER_ELEMENT);
    packet.writeNumber(targetHitbox.box.position.x);
    packet.writeNumber(targetHitbox.box.position.y);
    playerClient.socket.send(packet.buffer);
@@ -942,10 +942,7 @@ export function processCompleteTamingTierPacket(playerClient: PlayerClient, read
    // @Hack
    const foodRequired: number | undefined = getTamingSpec(entity).tierFoodRequirements[(tamingComponent.tamingTier + 1) as TamingTier];
    if (typeof foodRequired !== "undefined" && tamingComponent.foodEatenInTier >= foodRequired) {
-      // @Cleanup @Copynpaste
-      tamingComponent.tamingTier++;
-      tamingComponent.foodEatenInTier = 0;
-      tamingComponent.tameTribe = playerClient.tribe;
+      incrementTamingTier(entity, playerClient, tamingComponent);
    }
 }
 
@@ -960,10 +957,7 @@ export function processForceCompleteTamingTierPacket(playerClient: PlayerClient,
    }
    
    const tamingComponent = TamingComponentArray.getComponent(entity);
-   // @Cleanup @Copynpaste
-   tamingComponent.tamingTier++;
-   tamingComponent.foodEatenInTier = 0;
-   tamingComponent.tameTribe = playerClient.tribe;
+   incrementTamingTier(entity, playerClient, tamingComponent);
 }
 
 export function processAcquireTamingSkillPacket(playerClient: PlayerClient, reader: PacketReader): void {
@@ -1048,7 +1042,7 @@ export function processRenameAnimalPacket(reader: PacketReader): void {
 export function receiveChatMessagePacket(reader: PacketReader, playerClient: PlayerClient): void {
    const message = reader.readString();
 
-   const packet = new Packet(PacketType.serverToClientChatMessage, Float32Array.BYTES_PER_ELEMENT + getStringLengthBytes(playerClient.username) + getStringLengthBytes(message));
+   const packet = new Packet(PacketType.serverToClientChatMessage, getStringLengthBytes(playerClient.username) + getStringLengthBytes(message));
    packet.writeString(playerClient.username);
    packet.writeString(message);
 

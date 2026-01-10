@@ -112,7 +112,10 @@ export class Packet extends BasePacketObject {
    constructor(packetType: PacketType, lengthBytes: number) {
       super(0);
 
-      this.buffer = new ArrayBuffer(lengthBytes);
+      // One extra byte to store the packet type.
+      const fullLengthBytes = Float32Array.BYTES_PER_ELEMENT + lengthBytes;
+
+      this.buffer = new ArrayBuffer(fullLengthBytes);
       this.floatView = new Float32Array(this.buffer);
       this.uint8View = new Uint8Array(this.buffer);
 

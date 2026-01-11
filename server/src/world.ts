@@ -386,6 +386,7 @@ export function createEntityImmediate<ComponentTypes extends ServerComponentType
          attachEntityWithTether(entity, attachInfo.parentHitbox.entity, attachInfo.parentHitbox, attachInfo.idealDistance, attachInfo.springConstant, attachInfo.damping, attachInfo.isPartOfParent);
       } else {
          attachHitboxRaw(attachInfo.attachedHitbox, attachInfo.parentHitbox, attachInfo.isPartOfParent);
+         console.log(attachInfo.parentHitbox.rootEntity);
       }
    }
 

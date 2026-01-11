@@ -4,7 +4,7 @@ import { Settings } from "../../../shared/src/settings";
 import { distance, getTileX, getTileY, Point, TileIndex } from "../../../shared/src/utils";
 import { getHumanoidRadius } from "../entities/tribes/tribesman-ai/tribesman-ai-utils";
 import { Hitbox } from "../hitboxes";
-import { getEntityFootprint, PathfindFailureDefault, findSingleLayerPath, PathfindOptions } from "../pathfinding";
+import { getEntityFootprint, PathfindFailureDefault, runPathfindingSingleLayer, PathfindOptions } from "../pathfinding";
 import { getEntityLayer, getGameTicks } from "../world";
 import { TransformComponent, TransformComponentArray } from "../components/TransformComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
@@ -76,7 +76,7 @@ const generatePatrolTarget = (tribesman: Entity, patrolArea: ReadonlyArray<TileI
          failureDefault: 0,
          nodeBudget: 1000
       };
-      const path = findSingleLayerPath(layer, tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, x, y, tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), options);
+      const path = runPathfindingSingleLayer(layer, tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, x, y, tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), options);
       if (!path.isFailed) {
          return new Point(x, y);
       }

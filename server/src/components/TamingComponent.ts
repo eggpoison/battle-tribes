@@ -8,6 +8,9 @@ import { ComponentArray } from "./ComponentArray";
 import { getTamingSkill, TamingSkill, TamingSkillID, TamingTier } from "battletribes-shared/taming";
 import { PlayerComponentArray } from "./PlayerComponent";
 import { TransformComponentArray } from "./TransformComponent";
+import { TribesmanComponentArray } from "./TribesmanComponent";
+import PlayerClient from "../server/PlayerClient";
+import { getTamingSpec } from "../taming-specs";
 
 interface TamingSkillLearning {
    readonly skill: TamingSkill;
@@ -155,15 +158,14 @@ export function getRiderTargetPosition(rider: Entity): Point | null {
    // What will need to be done to return this to a functional state is to make all AI components report
    // what their current movement target is. (Use AIHelperComponent for now but add @Hack comment?)
 
-   if (PlayerComponentArray.hasComponent(rider)) {
-      const playerComponent = PlayerComponentArray.getComponent(rider);
-      
-      if (!playerComponent.movementIntention.isZero()) {
+   if (TribesmanComponentArray.hasComponent(rider)) {
+      const tribesmanComponent = TribesmanComponentArray.getComponent(rider);
+      if (tribesmanComponent.movementIntention.isNonZero()) {
          const transformComponent = TransformComponentArray.getComponent(rider);
          const playerHitbox = transformComponent.hitboxes[0];
    
-         const x = playerHitbox.box.position.x + 400 * playerComponent.movementIntention.x;
-         const y = playerHitbox.box.position.y + 400 * playerComponent.movementIntention.y;
+         const x = playerHitbox.box.position.x + 400 * tribesmanComponent.movementIntention.x;
+         const y = playerHitbox.box.position.y + 400 * tribesmanComponent.movementIntention.y;
          return new Point(x, y);
       }
    }
@@ -178,4 +180,14 @@ export function hasTamingSkill(tamingComponent: TamingComponent, skillID: Taming
       }
    }
    return false;
+}
+
+export function incrementTamingTier(entity: Entity, playerClient: PlayerClient, tamingComponent: TamingComponent): void {
+   const tamingSpec = getTamingSpec(entity);
+   if (tamingComponent.tamingTier < tamingSpec.maxTamingTier) {
+      // @Cleanup @Copynpaste
+      tamingComponent.tamingTier++;
+      tamingComponent.foodEatenInTier = 0;
+      tamingComponent.tameTribe = playerClient.tribe;
+   }
 }

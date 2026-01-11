@@ -3,6 +3,7 @@ import { Inventory, InventoryName, ItemType } from "../../shared/src/items/items
 import { Settings } from "../../shared/src/settings";
 import { addInventoryToInventoryComponent, InventoryComponent } from "./components/InventoryComponent";
 import { InventoryUseComponent } from "./components/InventoryUseComponent";
+import { createItem } from "./items";
 
 const getTribesmanHotbarSize = (entityType: EntityType): number => {
    switch (entityType) {
@@ -21,6 +22,12 @@ export function addHumanoidInventories(inventoryComponent: InventoryComponent, i
    // Hotbar
    const hotbarInventory = new Inventory(getTribesmanHotbarSize(entityType), 1, InventoryName.hotbar);
    addInventoryToInventoryComponent(inventoryComponent, hotbarInventory, { acceptsPickedUpItems: true, isDroppedOnDeath: true });
+
+   // @SQUEAM
+   if (entityType === EntityType.tribeWorker) {
+      hotbarInventory.addItem(createItem(ItemType.wooden_bow, 1, "", ""), 1);
+      hotbarInventory.addItem(createItem(ItemType.woodenArrow, 16, "", ""), 2);
+   }
 
    inventoryUseComponent.associatedInventoryNames.push(InventoryName.hotbar);
    
@@ -45,6 +52,10 @@ export function addHumanoidInventories(inventoryComponent: InventoryComponent, i
          // Armour slot
          const armourSlotInventory = new Inventory(1, 1, InventoryName.armourSlot);
          addInventoryToInventoryComponent(inventoryComponent, armourSlotInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
+         // @SQUEAM
+         if (entityType === EntityType.tribeWorker) {
+            armourSlotInventory.addItem(createItem(ItemType.leather_armour, 1, "", ""), 1);
+         }
          
          // Backpack slot
          const backpackSlotInventory = new Inventory(1, 1, InventoryName.backpackSlot);

@@ -97,7 +97,7 @@ export function removeHitboxFromEntity(transformComponent: TransformComponent, h
    }
 }
 
-export function hitboxIsInRiver(hitbox: Hitbox): boolean {
+export function hitboxIsInWater(hitbox: Hitbox): boolean {
    const tile = getHitboxTile(hitbox);
    if (tile.type !== TileType.water) {
       return false;
@@ -263,7 +263,7 @@ const applyHitboxKinematics = (hitbox: Hitbox): void => {
 
    // @Incomplete: here goes fish suit exception
    // Apply river flow to external velocity
-   if (hitboxIsInRiver(hitbox)) {
+   if (hitboxIsInWater(hitbox)) {
       const flowDirection = layer.getRiverFlowDirection(tile.x, tile.y);
       if (flowDirection > 0) {
          applyAccelerationFromGround(hitbox, 240 * Settings.DT_S * Math.sin(flowDirection - 1), 240 * Settings.DT_S * Math.cos(flowDirection - 1));
@@ -472,7 +472,7 @@ function onLoad(entity: Entity): void {
 function onTick(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
-   if (hitboxIsInRiver(hitbox)) {
+   if (hitboxIsInWater(hitbox)) {
       // Water droplet particles
       // @Hack @Cleanup: Don't hardcode fish condition
       if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.05) && (getEntityType(entity) !== EntityType.fish)) {
@@ -481,7 +481,7 @@ function onTick(entity: Entity): void {
 
       // Water splash particles
       // @Cleanup: Move to particles file
-      if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.15) && getHitboxVelocity(hitbox).magnitude() > 0 && getEntityType(entity) !== EntityType.fish) {
+      if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.15) && getHitboxVelocity(hitbox).isNonZero() && getEntityType(entity) !== EntityType.fish) {
          const lifetime = 2.5;
 
          const particle = new Particle(lifetime);
@@ -591,7 +591,7 @@ function updateFromData(data: TransformComponentData, entity: Entity): void {
          // }
       }
 
-      if (!getHitboxVelocity(hitbox).isZero()) {
+      if (getHitboxVelocity(hitbox).isNonZero()) {
          anyHitboxHasVelocity = true;
          // @Temporary @Squeam for optimisation
          const entityType = getEntityType(entity);
@@ -639,7 +639,7 @@ function updatePlayerFromData(data: TransformComponentData, isInitialData: boole
       updatePlayerHitboxFromData(hitbox, hitboxData);
 
       // @Copynpaste
-      if (!getHitboxVelocity(hitbox).isZero()) {
+      if (getHitboxVelocity(hitbox).isNonZero()) {
          anyHitboxHasVelocity = true;
       }
    }

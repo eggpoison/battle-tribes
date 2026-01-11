@@ -258,6 +258,11 @@ const addNodeData = (vertexData: Float32Array, segmentIdx: number, node: Pathfin
 
 export function renderPathfindingNodes(): void {
    const entityDebugData = hoverDebugState.entityDebugData;
+
+   const showEntityPathfindingNodes = nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID);
+   if (!debugDisplayState.showPathfindingNodes && !showEntityPathfindingNodes) {
+      return;
+   }
    
    if (nerdVisionState.isVisible && entityDebugData !== null && typeof entityDebugData.pathData !== "undefined") {
       renderConnectors(entityDebugData.pathData);
@@ -282,7 +287,7 @@ export function renderPathfindingNodes(): void {
          }
       }
    
-      if (nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+      if (showEntityPathfindingNodes) {
          const pathData = entityDebugData.pathData;
          if (typeof pathData !== "undefined") {
             for (const node of pathData.visitedNodes) {

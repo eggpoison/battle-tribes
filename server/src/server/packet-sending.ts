@@ -157,10 +157,8 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    const nearbyCollapses = getPlayerNearbyCollapses(playerClient);
    const visibleGrassBlockers = getVisibleGrassBlockers(playerClient);
    
-   // Packet type
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
    // Ticks, time
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
    // Layer
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
 
@@ -442,7 +440,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Point): ArrayBuffer {
    const tamingSpecsMap = getTamingSpecsMap();
 
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 5;
+   let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 4;
    // Layer idx
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    // Per-tile data
@@ -520,67 +518,41 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
    return packet.buffer;
 }
 
-// @Cleanup: is this even used?
-export  function createSyncPacket(): ArrayBuffer {
-   const packet = new Packet(PacketType.sync, Float32Array.BYTES_PER_ELEMENT);
-   return packet.buffer;
-}
-
-// @Cleanup: is this even used?
-export function createSyncDataPacket(playerClient: PlayerClient): ArrayBuffer {
+export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBuffer {
    const player = playerClient.instance;
 
-   // @Copynpaste @Robustness
-   const inventoryComponent = InventoryComponentArray.getComponent(player);
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-   const backpackInventory = getInventory(inventoryComponent, InventoryName.backpack);
-   const backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
-   const heldItemSlotInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
-   const craftingOutputSlotInventory = getInventory(inventoryComponent, InventoryName.craftingOutputSlot);
-   const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
-   const offhandInventory = getInventory(inventoryComponent, InventoryName.offhand);
-   const gloveSlotInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
+   const packet = new Packet(PacketType.syncGameData, 8 * Float32Array.BYTES_PER_ELEMENT);
 
-   let lengthBytes = 9 * Float32Array.BYTES_PER_ELEMENT;
+   let pos: Point;
+   let angle: number;
+   let previousPos: Point;
+   let acceleration: Point;
    
-   // Player inventories
-   lengthBytes += getInventoryDataLength(hotbarInventory);
-   lengthBytes += getInventoryDataLength(backpackInventory);
-   lengthBytes += getInventoryDataLength(backpackSlotInventory);
-   lengthBytes += getInventoryDataLength(heldItemSlotInventory);
-   lengthBytes += getInventoryDataLength(craftingOutputSlotInventory);
-   lengthBytes += getInventoryDataLength(armourSlotInventory);
-   lengthBytes += getInventoryDataLength(offhandInventory);
-   lengthBytes += getInventoryDataLength(gloveSlotInventory);
+   if (TransformComponentArray.hasComponent(player)) {
+      const transformComponent = TransformComponentArray.getComponent(player);
+      const hitbox = transformComponent.hitboxes[0];
 
-   const packet = new Packet(PacketType.syncData, lengthBytes);
+      pos = hitbox.box.position;
+      angle = hitbox.box.angle;
+      previousPos = hitbox.previousPosition;
+      acceleration = hitbox.acceleration;
+   } else {
+      pos = new Point(playerClient.lastViewedPositionX, playerClient.lastViewedPositionY);
+      angle = 0;
+      previousPos = pos.copy();
+      acceleration = new Point(0, 0);
+   }
    
-   const transformComponent = TransformComponentArray.getComponent(player);
-   const hitbox = transformComponent.hitboxes[0];
-   packet.writeNumber(hitbox.box.position.x);
-   packet.writeNumber(hitbox.box.position.y);
-   packet.writeNumber(hitbox.box.angle);
-
-   packet.writeNumber(hitbox.previousPosition.x);
-   packet.writeNumber(hitbox.previousPosition.y);
-   packet.writeNumber(hitbox.acceleration.x);
-   packet.writeNumber(hitbox.acceleration.y);
-
-   // Add inventory data
-   addInventoryDataToPacket(packet, hotbarInventory);
-   addInventoryDataToPacket(packet, backpackInventory);
-   addInventoryDataToPacket(packet, backpackSlotInventory);
-   addInventoryDataToPacket(packet, heldItemSlotInventory);
-   addInventoryDataToPacket(packet, craftingOutputSlotInventory);
-   addInventoryDataToPacket(packet, armourSlotInventory);
-   addInventoryDataToPacket(packet, offhandInventory);
-   addInventoryDataToPacket(packet, gloveSlotInventory);
+   packet.writePoint(pos);
+   packet.writeNumber(angle);
+   packet.writePoint(previousPos);
+   packet.writePoint(acceleration);
 
    return packet.buffer;
 }
 
 const createSimulationStatusUpdatePacket = (isSimulating: boolean): Packet => {
-   const packet = new Packet(PacketType.simulationStatusUpdate, 2 * Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(PacketType.simulationStatusUpdate, Float32Array.BYTES_PER_ELEMENT);
    packet.writeBool(isSimulating);
    return packet;
 }
@@ -601,6 +573,6 @@ export function broadcastSimulationStatus(isSimulating: boolean): void {
 }
 
 export function createShieldKnockPacket(): Packet {
-   const packet = new Packet(PacketType.shieldKnock, Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(PacketType.shieldKnock, 0);
    return packet;
 }

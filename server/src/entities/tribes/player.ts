@@ -27,7 +27,7 @@ import { Hitbox } from "../../hitboxes";
 import { LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES } from "../../../../shared/src/attack-patterns";
 
 // @COPYNPASTE a rare triple!!!!
-const BOW_HOLDING_LIMB_STATE: LimbState = {
+export const BOW_HOLDING_LIMB_STATE: LimbState = {
    direction: 0,
    extraOffset: 36,
    angle: -Math.PI * 0.4,

@@ -12,6 +12,7 @@ import { addChatMessage } from "../chat";
 import { gameUIState } from "../../ui-state/game-ui-state.svelte";
 import { getSelectedItemInfo } from "../player-action-handling";
 import { playerActionState } from "../../ui-state/player-action-state.svelte";
+import { gameIsRunning, receiveInitialPacket, resyncGame } from "../client";
 
 const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {
    // Initially find all tiles below a dropdown tile
@@ -169,29 +170,29 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
    registerTamingSpecsFromData(reader);
 }
 
-export function processSyncDataPacket(reader: PacketReader): void {
-   // @Incomplete
-   
-   
-   // if (!Game.isRunning || playerInstance === null) return;
 
-   // const transformComponent = TransformComponentArray.getComponent(playerInstance);
-   // const playerHitbox = transformComponent.hitboxes[0];
+export function processSyncGameDataPacket(reader: PacketReader): void {
+   if (!gameIsRunning) return;
    
-   // const x = reader.readNumber();
-   // const y = reader.readNumber();
-   // const angle = reader.readNumber();
+   const position = reader.readPoint();
+   const angle = reader.readNumber();
+   const previousPosition = reader.readPoint();
+   const acceleration = reader.readPoint();
 
-   // playerHitbox.previousPosition.x = reader.readNumber();
-   // playerHitbox.previousPosition.y = reader.readNumber();
-   // playerHitbox.acceleration.x = reader.readNumber();
-   // playerHitbox.acceleration.y = reader.readNumber();
+   if (playerInstance !== null) {
+      const transformComponent = TransformComponentArray.getComponent(playerInstance);
+      const playerHitbox = transformComponent.hitboxes[0];
    
-   // playerHitbox.box.position.x = x;
-   // playerHitbox.box.position.y = y;
-   // playerHitbox.box.angle = angle;
+      playerHitbox.box.position.set(position);
+      playerHitbox.box.angle = angle;
+      playerHitbox.previousPosition.set(previousPosition);
+      playerHitbox.acceleration.set(acceleration);
+   }
+
+   // @Squeam
+   // receiveInitialPacket(reader);
    
-   // Game.sync();
+   resyncGame();
 }
 
 export function processForcePositionUpdatePacket(reader: PacketReader): void {

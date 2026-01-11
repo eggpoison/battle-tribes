@@ -445,17 +445,9 @@ export function goKillEntity(tribesman: Entity, huntedEntity: Entity, isAggressi
                   drawingLimb.currentActionEndLimbState = copyLimbState(startDrawingLimbState);
                }
             }
-
-            clearPathfinding(tribesman);
-         } else {
-            const isFinished = pathfindTribesman(tribesman, huntedHitbox.box.position.x, huntedHitbox.box.position.y, getEntityLayer(huntedEntity), huntedEntity, TribesmanPathType.default, Math.floor(100 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnClosest);
-
-            // If reached goal, turn towards the enemy
-            if (isFinished) {
-               const targetAngle = tribesmanHitbox.box.position.angleTo(huntedHitbox.box.position);
-               turnHitboxToAngle(tribesmanHitbox, targetAngle, TRIBESMAN_TURN_SPEED, 0.5, false);
-            }
          }
+
+         pathfindTribesman(tribesman, huntedHitbox.box.position.x, huntedHitbox.box.position.y, getEntityLayer(huntedEntity), huntedEntity, TribesmanPathType.default, Math.floor(100 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnClosest);
 
          return;
       }

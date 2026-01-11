@@ -86,10 +86,9 @@ abstract class Board {
       this.updateParticleArray(this.highTexturedParticles, highTexturedBufferContainer);
    }
 
-   /** Ticks all entities without updating them */
+   /** Calls t he onTick function for all entities */
    public static tickEntities(): void {
       const componentArrays = getComponentArrays();
-      
       for (let i = 0; i < componentArrays.length; i++) {
          const componentArray = componentArrays[i];
          if (typeof componentArray.onTick !== "undefined") {

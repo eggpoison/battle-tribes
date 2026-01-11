@@ -186,7 +186,18 @@ const TITLELESS_ADJECTIVES: ReadonlyArray<string> = [
    "Lame"
 ];
 
+// @SQUEAM
+let a = false;
+
 export function generateTribesmanName(tribeType: TribeType): string {
+   // @SQUEAM
+   if (!a) {
+      a = true;
+      return "Chlamydia";
+   } else {
+      return "Claymation";
+   }
+   
    let nameArray: ReadonlyArray<string>;
    switch (tribeType) {
       case TribeType.plainspeople: {

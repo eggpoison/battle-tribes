@@ -171,10 +171,6 @@ export function addPlayerClient(playerClient: PlayerClient, layer: Layer, spawnP
    const initialGameDataPacket = createInitialGameDataPacket(layer, spawnPosition);
    socket.send(initialGameDataPacket);
 
-   socket.on("deactivate", () => {
-      playerClient.isActive = false;
-   });
-
    // -------------------------- //
    //       DEV-ONLY EVENTS      //
    // -------------------------- //

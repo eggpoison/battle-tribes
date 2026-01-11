@@ -21,9 +21,14 @@ let gl: WebGL2RenderingContext;
 let program: WebGLProgram;
 let buffer: WebGLBuffer;
 
+// @Garbage: turn into array of always fixed length
 const frames = new Array<FrameInfo>();
 
 let rectIdx = 0;
+
+export function resetFrameGraph(): void {
+   frames.splice(0, frames.length);
+}
 
 /** Registers that a frame has occured for use in showing the fps counter */
 export function registerFrame(frameStartTime: number, frameEndTime: number): void {
@@ -184,6 +189,10 @@ const addRectData = (vertexData: Float32Array, x1: number, y1: number, x2: numbe
 }
 
 export function renderFrameGraph(renderTime: number): void {
+   if (frames.length === 0) {
+      return;
+   }
+   
    const numRects = (frames.length * 3 + 1);
    const vertexData = new Float32Array(numRects * 6 * 6);
    rectIdx = 0;
@@ -201,7 +210,7 @@ export function renderFrameGraph(renderTime: number): void {
    
    const currentTimeSeconds = renderTime / 1000;
 
-   let previousX = -1;
+   let previousX = lerp(1, -1, currentTimeSeconds - frames[0].startTime / 1000);
    
    // Calculate vertices
    for (const frame of frames) {

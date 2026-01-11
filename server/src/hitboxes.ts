@@ -39,6 +39,7 @@ export class Hitbox {
    /** The entity the hitbox belongs to. */
    // @Cleanup would be really nice to make the entity field readonly, but rn it has to be set when it's initialised so idk how that would work
    public entity: Entity = 0;
+   // Should never be directly set, instead should be set using the propagateRootEntityChange function.
    public rootEntity: Entity = 0;
    
    public parent: Hitbox | null;

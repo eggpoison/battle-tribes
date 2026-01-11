@@ -163,6 +163,10 @@ export class Point {
    public isZero(): boolean {
       return this.x === 0 && this.y === 0;
    }
+
+   public isNonZero(): boolean {
+      return this.x !== 0 || this.y !== 0;
+   }
    
    public offset(offsetMagnitude: number, offsetDirection: number): Point {
       const x = this.x + offsetMagnitude * Math.sin(offsetDirection);
@@ -461,6 +465,7 @@ export function dotAngles(angle1: number, angle2: number): number {
    return Math.sin(angle1) * Math.sin(angle2) + Math.cos(angle1) * Math.cos(angle2);
 }
 
+// @Cleanup: rename to "unitVec2" (paired with polarVec2)
 export function angleToPoint(angle: number): Point {
    return new Point(Math.sin(angle), Math.cos(angle));
 }

@@ -11,7 +11,7 @@ import { HealthComponentArray, damageEntity } from "../components/HealthComponen
 import { addHungerEnergy } from "../components/EnergyStomachComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { turnHitboxToAngle } from "../hitboxes";
-import { convertEntityPathfindingGroupID, findSingleLayerPath, getEntityFootprint, Path, PathfindOptions } from "../pathfinding";
+import { convertEntityPathfindingGroupID, runPathfindingSingleLayer, getEntityFootprint, Path, PathfindOptions } from "../pathfinding";
 import { entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
 
 export class VegetationConsumeAI {
@@ -59,7 +59,7 @@ const getVegetationConsumeAITarget = (krumblid: Entity, aiHelperComponent: AIHel
          failureDefault: 0,
          nodeBudget: 200
       }
-      const path = findSingleLayerPath(layer, hitbox.box.position.x, hitbox.box.position.y, entityHitbox.box.position.x, entityHitbox.box.position.y, pathfindingGroupID, pathfindingEntityFootprint, options);
+      const path = runPathfindingSingleLayer(layer, hitbox.box.position.x, hitbox.box.position.y, entityHitbox.box.position.x, entityHitbox.box.position.y, pathfindingGroupID, pathfindingEntityFootprint, options);
 
       if (!path.isFailed) {
          const dist = hitbox.box.position.distanceTo(entityHitbox.box.position);

@@ -5,7 +5,6 @@ import { DamageSource, Entity } from "battletribes-shared/entities";
 import { getStringLengthBytes, Packet } from "battletribes-shared/packets";
 import PlayerClient from "../server/PlayerClient";
 import TombstoneDeathManager from "../tombstone-deaths";
-import { Point } from "../../../shared/src/utils";
 
 export class PlayerComponent {
    public readonly client: PlayerClient;
@@ -14,9 +13,6 @@ export class PlayerComponent {
    public interactingEntityID = 0;
 
    public titleOffer: TribesmanTitle | null = null;
-   
-   /** Way the player is intending on moving. Useful for controlling mounts when riding them. */
-   public movementIntention = new Point(0, 0);
 
    constructor(playerClient: PlayerClient) {
       this.client = playerClient;

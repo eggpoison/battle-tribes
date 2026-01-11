@@ -1,5 +1,5 @@
 import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, updateVertexPositionsAndSideAxes, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, TILE_PHYSICS_INFO_RECORD, TileType, Settings, PacketReader, Entity, CollisionBit, CircularBox, RectangularBox, distance, distBetweenPointAndRectangle, assert, getAngleDiff } from "webgl-test-shared";
-import { hitboxIsInRiver, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { hitboxIsInWater, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityRenderInfo } from "./world";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
 import { getTileIndexIncludingEdges } from "./Layer";
@@ -375,7 +375,7 @@ export function applyAccelerationFromGround(hitbox: Hitbox, accelerationX: numbe
    const tilePhysicsInfo = TILE_PHYSICS_INFO_RECORD[tile.type];
       
    let tileMoveSpeedMultiplier = tilePhysicsInfo.moveSpeedMultiplier;
-   if (transformComponent.ignoredTileSpeedMultipliers.includes(tile.type) || (tile.type === TileType.water && !hitboxIsInRiver(hitbox))) {
+   if (transformComponent.ignoredTileSpeedMultipliers.includes(tile.type) || (tile.type === TileType.water && !hitboxIsInWater(hitbox))) {
       tileMoveSpeedMultiplier = 1;
    }
    

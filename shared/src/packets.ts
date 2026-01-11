@@ -7,10 +7,8 @@ export enum PacketType {
    // -----------------
    initialPlayerData,
    activate,
-   // @Cleanup: unused?
    deactivate,
    playerData,
-   // @Cleanup: unused?
    syncRequest,
    attack,
    respawn,
@@ -71,10 +69,8 @@ export enum PacketType {
    // -----------------
    initialGameData,
    gameData,
+   syncGameData,
    devGameData, // ((DEV))
-   // @Cleanup: unused?
-   syncData,
-   sync,
    forcePositionUpdate,
    // @CLEANUP i snapped on the 'serverToClient' prefix to this cuz chatMessage was taken to the client-to-server packet
    serverToClientChatMessage,
@@ -116,7 +112,10 @@ export class Packet extends BasePacketObject {
    constructor(packetType: PacketType, lengthBytes: number) {
       super(0);
 
-      this.buffer = new ArrayBuffer(lengthBytes);
+      // One extra byte to store the packet type.
+      const fullLengthBytes = Float32Array.BYTES_PER_ELEMENT + lengthBytes;
+
+      this.buffer = new ArrayBuffer(fullLengthBytes);
       this.floatView = new Float32Array(this.buffer);
       this.uint8View = new Uint8Array(this.buffer);
 

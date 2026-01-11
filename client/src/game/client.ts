@@ -2,7 +2,7 @@ import { Settings } from "webgl-test-shared";
 import Board from "./Board";
 import { updateTextNumbers } from "./text-canvas";
 import { resizeCanvas } from "./webgl";
-import { createAudioContext, playRiverSounds, updateSounds } from "./sound";
+import { createAudioContext, getNumSounds, playRiverSounds, updateSounds } from "./sound";
 import { attemptToResearch, updateResearchOrb } from "./research";
 import { updateEntitySelections } from "./entity-selection";
 import { updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
@@ -14,13 +14,13 @@ import { playerInstance, setIsSpectating, setPlayerInstance, setPlayerUsername, 
 import { callEntityOnUpdateFunctions } from "./entity-components/ComponentArray";
 import { resolvePlayerCollisions } from "./collision";
 import { decodeSnapshotFromGameDataPacket, PacketSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
-import { sendActivatePacket, sendInitialPlayerDataPacket, sendPlayerDataPacket } from "./networking/packet-sending";
-import { processForcePositionUpdatePacket, processInitialGameDataPacket, processShieldKnockPacket, processSimulationStatusUpdatePacket, processSyncDataPacket, receiveChatMessagePacket } from "./networking/packet-receiving";
+import { sendActivatePacket, sendDeactivatePacket, sendInitialPlayerDataPacket, sendPlayerDataPacket, sendSyncRequestPacket } from "./networking/packet-sending";
+import { processForcePositionUpdatePacket, processInitialGameDataPacket, processShieldKnockPacket, processSimulationStatusUpdatePacket, processSyncGameDataPacket, receiveChatMessagePacket } from "./networking/packet-receiving";
 import { renderGame, setupRendering } from "./rendering/render";
 import { processDevGameDataPacket } from "./networking/dev-packets";
 import { LoadingScreenStage, loadingScreenState } from "../ui-state/loading-screen-state.svelte";
 import { appState, AppState } from "../ui-state/app-state.svelte";
-import { registerFrame, renderFrameGraph } from "./rendering/webgl/frame-graph-rendering";
+import { registerFrame, renderFrameGraph, resetFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { updateSpamFilter } from "./chat";
 import { updatePlayerMovement } from "./player-action-handling";
 import { PacketReader, PacketType, Packet, TribeType } from "webgl-test-shared";
@@ -47,7 +47,6 @@ let clientTickInterp = 0;
 
 // @Garbage: I could create a set fixed number of packet snapshots, and then just override their data!
 const snapshotBuffer = new Array<PacketSnapshot>();
-// const unprocessedGamePackets = new Array<PacketReader>();
 export let currentSnapshot: PacketSnapshot;
 export let nextSnapshot: PacketSnapshot;
 
@@ -56,34 +55,31 @@ let measuredServerPacketIntervalMS = 1000 / Settings.SERVER_PACKET_SEND_RATE; //
 
 let playerPacketAccumulator = 0;
 
-// @Temporary: testing out simply treating packets as usual while tabbed out.
 document.addEventListener("visibilitychange", () => {
    if (document.visibilityState === "visible") {
       gameIsFocused = true;
       lastPacketTime = performance.now();
 
-//       gameIsSynced = true;
-//       // If the ideal buffer length is 2, we want to revive the top 3 snapshots.
-//       // for (let i = Math.max(unprocessedGamePackets.length - SNAPSHOT_BUFFER_LENGTH - 1, 0); i < unprocessedGamePackets.length; i++) {
-//       //    const reader = unprocessedGamePackets[i];
-//       //    receivePacket(reader);
-//       // }
-//       // @HACK @SPEED im doing this all at once... if you're tabbed out for long enough this is going to be horrible.
-//       console.log("num processed from backed-up:",unprocessedGamePackets.length);
-//       for (const reader of unprocessedGamePackets) {
-//          const previousSnapshot = snapshotBuffer.length > 0 ? snapshotBuffer[snapshotBuffer.length - 1] : null;
-//          const snapshot = decodeSnapshotFromGameDataPacket(reader, previousSnapshot);
-//          updateGameStateToSnapshot(snapshot);
-//       }
-//       unprocessedGamePackets.splice(0, unprocessedGamePackets.length);
+      if (!gameIsSynced) {
+         // @Investigate: what if this request fails??? This is the only request sent, so will the client just be stuck?
+         sendSyncRequestPacket();
+      }
    } else if (document.visibilityState === "hidden") {
       gameIsFocused = false;
-      
-//       gameIsSynced = false;
-//       assert(unprocessedGamePackets.length === 0);
-//       unprocessedGamePackets.splice(0, unprocessedGamePackets.length);
+      unsyncGame();
+      sendDeactivatePacket();
    }
 });
+
+export function resyncGame(): void {
+   gameIsSynced = true;
+}
+
+function unsyncGame(): void {
+   gameIsSynced = false;
+   // So that when the player returns to the game the dev frame graph doesn't show a maaassive frame
+   resetFrameGraph();
+}
 
 const onSuccessfulConnection = (username: string, tribeType: TribeType, isSpectating: boolean): void => {
    loadingScreenState.setStage(LoadingScreenStage.sendingPlayerData);
@@ -155,22 +151,12 @@ const onPacket = (msg: MessageEvent): void => {
             if (snapshotBuffer.length === SNAPSHOT_BUFFER_LENGTH) {
                startGame();
             }
-         } else if (gameIsRunning) {
+         } else if (gameIsRunning && gameIsSynced) {
             receivePacket(reader);
-
-            // @Temporary: testing out simply treating packets as usual while tabbed out.
-            // // Only unload game packets when the game is running
-            // if (gameIsSynced) {
-            //    receivePacket(reader);
-            // } else {
-            //    console.log("receive packet",performance.now());
-            //    unprocessedGamePackets.push(reader);
-            // }
          }
          break;
       }
-      case PacketType.syncData: processSyncDataPacket(reader); break;
-      // case PacketType.sync: Game.sync(); break;              // @INCOMPLETE
+      case PacketType.syncGameData: processSyncGameDataPacket(reader); break;
       case PacketType.forcePositionUpdate: processForcePositionUpdatePacket(reader); break;
       case PacketType.serverToClientChatMessage: receiveChatMessagePacket(reader); break;
       case PacketType.simulationStatusUpdate: processSimulationStatusUpdatePacket(reader); break;
@@ -219,7 +205,7 @@ const receivePacket = (reader: PacketReader): PacketSnapshot => {
    return snapshot;
 }
 
-export function receiveInitialPacket(reader: PacketReader): PacketSnapshot {
+export function receiveInitialPacket(reader: PacketReader): void {
    lastPacketTime = performance.now();
    
    const snapshot = receivePacket(reader);
@@ -227,8 +213,6 @@ export function receiveInitialPacket(reader: PacketReader): PacketSnapshot {
    updateGameStateToSnapshot(snapshot);
    currentSnapshot = snapshot;
    clientTick = snapshot.tick; // Start the client tick off at the tick of the very first packet received.
-
-   return snapshot;
 }
 
 export function sendPacket(packet: Packet): void {
@@ -341,13 +325,11 @@ const runFrame = (frameStartTime: number): void => {
 
    if (gameIsSynced) {
       renderGame(clientTickInterp, serverTickInterp, deltaTimeMS);
-   }
 
-   const renderEndTime = performance.now();
-   registerFrame(frameStartTime, renderEndTime);
+      const frameEndTime = performance.now();
+      registerFrame(frameStartTime, frameEndTime);
 
-   if (gameIsSynced) {
-      renderFrameGraph(renderEndTime);
+      renderFrameGraph(frameEndTime);
    }
 
    updateTextNumbers();

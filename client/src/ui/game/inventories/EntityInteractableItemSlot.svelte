@@ -64,7 +64,6 @@
             case Menu.furnaceInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
             case Menu.ammoBoxInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
             case Menu.tombstoneEpitaph: openMenuInventory = null; openMenuEntity = null; break;
-            case Menu.healthInspector: openMenuInventory = null; openMenuEntity = null; break;
             case Menu.itemsDevTab: openMenuInventory = null; openMenuEntity = null; break;
             case Menu.summonDevTab: openMenuInventory = null; openMenuEntity = null; break;
             case Menu.titlesDevTab: openMenuInventory = null; openMenuEntity = null; break;

@@ -112,11 +112,15 @@ const blockProjectile = (blockAttack: Entity, projectile: Entity, blockingHitbox
       applyKnockback(blockingHitbox, projectileMomentum);
       
       // Stick the projectile into the shield
-      attachHitbox(projectileHitbox, blockingHitbox, false);
-
-      if (projectileMomentum.magnitude() >= 28) {
-         knockShield(blockAttack, owner);
+      // @HACK: this check
+      if (projectileHitbox.parent === null) {
+         attachHitbox(projectileHitbox, blockingHitbox, false);
       }
+
+      // @Temporary cuz it was sometimes kinda hard to actually reach this in a short distance even when riding a cow :\ ill remove this method anyway eventually
+      // if (projectileMomentum.magnitude() >= 28) {
+      knockShield(blockAttack, owner);
+      // }
    } else {
       const projectileComponent = ProjectileComponentArray.getComponent(projectile);
       projectileComponent.isBlocked = true;

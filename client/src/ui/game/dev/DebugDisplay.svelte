@@ -127,7 +127,7 @@
    <ul class="area">
       <li>
          <label>
-            <input type="range" name="zoom-input" defaultValue={debugDisplayState.cameraZoom} min={1} max={2.5} step={0.1} onchange={e => changeZoom(e)} />
+            <input type="range" name="zoom-input" defaultValue={debugDisplayState.cameraZoom} min={0.7} max={2.5} step={0.1} onchange={e => changeZoom(e)} />
             <br />Zoom ({debugDisplayState.cameraZoom})
          </label>
       </li>

@@ -705,6 +705,9 @@ export function entityIsInLineOfSight(sightRayStart: Point, targetEntity: Entity
    const targetEntityTransformComponent = TransformComponentArray.getComponent(targetEntity);
    const targetEntityHitbox = targetEntityTransformComponent.hitboxes[0];
 
+   const ignoredEntityTransformComponent = TransformComponentArray.getComponent(ignoredEntity);
+   const ignoredEntityHitbox = ignoredEntityTransformComponent.hitboxes[0];
+
    const layer = getEntityLayer(targetEntity);
 
    const rayStartX = sightRayStart.x;
@@ -735,11 +738,17 @@ export function entityIsInLineOfSight(sightRayStart: Point, targetEntity: Entity
          for (let i = 0; i < chunk.entities.length; i++) {
             const entity = chunk.entities[i];
             const pathfindingGroupID = getEntityPathfindingGroupID(entity);
-            if (entity === ignoredEntity || entity === targetEntity || pathfindingGroupID === ignoredPathfindingGroupID || !entityAffectsLineOfSight(entity)) {
+            if (entity === targetEntity || pathfindingGroupID === ignoredPathfindingGroupID || !entityAffectsLineOfSight(entity)) {
+               continue;
+            }
+
+            const transformComponent = TransformComponentArray.getComponent(entity);
+            // @Hack: all of this
+            const firstHitbox = transformComponent.hitboxes[0];
+            if (firstHitbox.rootEntity === ignoredEntityHitbox.rootEntity) {
                continue;
             }
             
-            const transformComponent = TransformComponentArray.getComponent(entity);
             for (const hitbox of transformComponent.rootHitboxes) {
                if (hitboxOrChildrenIntersectLineOfSight(hitbox, rayStartX, rayStartY, rayEndX, rayEndY)) {
                   return false;

@@ -482,9 +482,6 @@ function onTick(entity: Entity): void {
       // Water splash particles
       // @Cleanup: Move to particles file
       if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.15) && getHitboxVelocity(hitbox).isNonZero() && getEntityType(entity) !== EntityType.fish) {
-         if (getEntityType(entity) === EntityType.cow) {
-            console.log("a");
-         }
          const lifetime = 2.5;
 
          const particle = new Particle(lifetime);

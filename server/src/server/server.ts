@@ -1,7 +1,7 @@
 import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
 import { Settings } from "battletribes-shared/settings";
 import { TribeType } from "battletribes-shared/tribes";
-import { Point } from "battletribes-shared/utils";
+import { Point, randInt } from "battletribes-shared/utils";
 import { PacketReader, PacketType } from "battletribes-shared/packets";
 import WebSocket, { Server } from "ws";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
@@ -12,9 +12,9 @@ import { updateGrassBlockers } from "../grass-blockers";
 import { broadcastSimulationStatus, createGameDataPacket } from "./packet-sending";
 import PlayerClient, { PlayerClientVars } from "./PlayerClient";
 import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, processCommandPacket, resetDirtyEntities } from "./player-clients";
-import { createPlayerConfig } from "../entities/tribes/player";
+import { BOW_HOLDING_LIMB_STATE, createPlayerConfig } from "../entities/tribes/player";
 import { processAcquireTamingSkillPacket, processActivatePacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processCloseEntityInventoryPacket, processCompleteTamingTierPacket, processDeactivatePacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processItemTransferPacket, processModifyBuildingPacket, processMountCarrySlotPacket, processOpenEntityInventoryPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetDebugEntityPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processSyncRequestPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving";
-import { CowSpecies, Entity } from "battletribes-shared/entities";
+import { CowSpecies, Entity, LimbAction } from "battletribes-shared/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
@@ -34,12 +34,11 @@ import { Hitbox } from "../hitboxes";
 import { createCowConfig } from "../entities/mobs/cow";
 import { generateDecorations } from "../world-generation/decoration-generation";
 import { ServerComponentType } from "../../../shared/src/components";
-import { getTamingSkill, TamingSkillID } from "../../../shared/src/taming";
 import { createDevGameDataPacket } from "./dev-packets";
 import { createTribeWorkerConfig } from "../entities/tribes/tribe-worker";
-import OPTIONS from "../options";
-import { InventoryName, ItemType } from "../../../shared/src/items/items";
-import { createItem } from "../items";
+import { InventoryName, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS } from "../../../shared/src/items/items";
+import { getCurrentLimbState, InventoryUseComponentArray } from "../components/InventoryUseComponent";
+import { QUIVER_PULL_LIMB_STATE } from "../../../shared/src/attack-patterns";
 
 /*
 
@@ -153,6 +152,9 @@ class GameServer {
       // Cave:
       SRandom.seed(2950872542);
 
+      // bl river
+      // SRandom.seed(9028422602);
+
       const builtinRandomFunc = Math.random;
       Math.random = () => SRandom.next();
 
@@ -240,13 +242,13 @@ class GameServer {
                // @SQUEAM
                setTimeout(() => {
                   if (username === "Clementus") {
-                     // const config = createTribeWorkerConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, new Tribe(TribeType.plainspeople, true, new Point(spawnPosition.x + 200, spawnPosition.y)));
                      const config = createCowConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, CowSpecies.brown);
                      createEntity(config, layer, 0);
 
+                     // @Temporary
                      for (let i = 0; i < 2; i++) {
-                        const position = [new Point(2732 - 100, 2310), new Point(2662 - 130, 1792)][i];
-                        const cowAngle = [Math.PI * 0.35, Math.PI * 0.59][i];
+                        const position = [new Point(3135, 2263), new Point(3094, 1834)][i];
+                        const cowAngle = [Math.PI * 1.35, Math.PI * 1.65][i];
 
                         const tribesmanConfig = createTribeWorkerConfig(position, 0, tribe);
 
@@ -260,6 +262,32 @@ class GameServer {
                         createEntity(cowConfig, undergroundLayer, 0);
                         setTimeout(() => {
                            cowConfig.components[ServerComponentType.rideable]!.carrySlots[0].occupiedEntity = tribesmanConfig.components[ServerComponentType.transform]!.hitboxes[0].entity;
+
+                           const tribesman = tribesmanConfig.components[ServerComponentType.transform]!.hitboxes[0].entity;
+
+                           const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
+                           
+                           const holdingLimb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+                           const startHoldingLimbState = getCurrentLimbState(holdingLimb);
+                           
+                           holdingLimb.action = LimbAction.engageBow;
+                           holdingLimb.currentActionElapsedTicks = 0;
+                           holdingLimb.currentActionDurationTicks = QUIVER_ACCESS_TIME_TICKS + QUIVER_PULL_TIME_TICKS;
+                           holdingLimb.currentActionRate = 1;
+                           holdingLimb.currentActionStartLimbState = startHoldingLimbState;
+                           holdingLimb.currentActionEndLimbState = BOW_HOLDING_LIMB_STATE;
+            
+                           // Meanwhile the drawing limb pulls an arrow out
+                           
+                           const drawingLimb = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
+                           const startDrawingLimbState = getCurrentLimbState(drawingLimb);
+                           
+                           drawingLimb.action = LimbAction.moveLimbToQuiver;
+                           drawingLimb.currentActionElapsedTicks = 0;
+                           drawingLimb.currentActionDurationTicks = QUIVER_ACCESS_TIME_TICKS;
+                           drawingLimb.currentActionRate = 1;
+                           drawingLimb.currentActionStartLimbState = startDrawingLimbState;
+                           drawingLimb.currentActionEndLimbState = QUIVER_PULL_LIMB_STATE;
                         }, 200);
                      }
                   }

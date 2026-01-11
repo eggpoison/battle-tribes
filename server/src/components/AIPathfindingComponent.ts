@@ -3,7 +3,7 @@ import { Entity, EntityType } from "../../../shared/src/entities";
 import { InventoryName } from "../../../shared/src/items/items";
 import { Settings, PathfindingSettings } from "../../../shared/src/settings";
 import { TileType } from "../../../shared/src/tiles";
-import { angleToPoint, assert, distance, polarVec2 } from "../../../shared/src/utils";
+import { angleToPoint, assert, curveWeight, distance, Point, polarVec2, Vector } from "../../../shared/src/utils";
 import { getEntitiesInRange, getVelocityClosenessAdjustmentFactor } from "../ai-shared";
 import { TRIBESMAN_TURN_SPEED } from "../entities/tribes/tribesman-ai/tribesman-ai";
 import { getHumanoidRadius, getTribesmanAcceleration } from "../entities/tribes/tribesman-ai/tribesman-ai-utils";
@@ -13,6 +13,7 @@ import { surfaceLayer } from "../layers";
 import { convertEntityPathfindingGroupID, entityCanBlockPathfinding, entityHasReachedNode, runPathfindingMultiLayer, getAngleToNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, getPathfindingNodePos, Path, PathfindFailureDefault, PathfindOptions, positionIsAccessible } from "../pathfinding";
 import Tribe from "../Tribe";
 import { getEntityAgeTicks, getEntityLayer, getEntityType, getGameTicks } from "../world";
+import { AIHelperComponentArray } from "./AIHelperComponent";
 import { ComponentArray } from "./ComponentArray";
 import { doorIsClosed, toggleDoor } from "./DoorComponent";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
@@ -146,9 +147,12 @@ export function continueCurrentPath(tribesman: Entity): boolean {
       const tribesmanHitbox = transformComponent.hitboxes[0];
 
       // Turn to the target
-      turnHitboxToAngle(tribesmanHitbox, targetDirection, TRIBESMAN_TURN_SPEED, 1, false);
+      // turnHitboxToAngle(tribesmanHitbox, targetDirection, TRIBESMAN_TURN_SPEED, 1, false);
 
       if (tribesmanHitbox.entity === tribesmanHitbox.rootEntity) {
+         // @Temporary @Hack: have moved this inside this check so that the tribesman's AI can aim the bow while riding.
+         turnHitboxToAngle(tribesmanHitbox, targetDirection, TRIBESMAN_TURN_SPEED, 1, false);
+
          // If the tribesman is close to the next node, slow down as to not overshoot it
          const distanceFromNextNode = getDistanceToNode(transformComponent, nextNode);
          const accel = getTribesmanAcceleration(tribesman);
@@ -156,8 +160,97 @@ export function continueCurrentPath(tribesman: Entity): boolean {
          applyAccelerationFromGround(tribesmanHitbox, polarVec2(accel * adjustmentFactor, tribesmanHitbox.box.angle));
       } else {
          // If being carried by something, instead mark the move intention for the carrier to deal with
+
+         // @HACK so that tribesmen on cows shooting will avoid shooting each-other!!
+         // @HACK @HACK @HACK massive jiggling @ASS.
+         // @Copynpaste from ai-shared herd boid mechanics
+         
+
+         // @Copynpaste
+         const TURN_CONSTANT = Math.PI * Settings.DT_S;
+
+         // Average angle of nearby entities
+         let totalXVal: number = 0;
+         let totalYVal: number = 0;
+      
+         let centerX = 0;
+         let centerY = 0;
+
+         const findHerdMembers = (visibleEntities: ReadonlyArray<Entity>): ReadonlyArray<Entity> => {
+            const herdMembers = new Array<Entity>();
+            for (let i = 0; i < visibleEntities.length; i++) {
+               const entity = visibleEntities[i];
+               const relationship = getEntityRelationship(tribesman, entity);
+               if (relationship === EntityRelationship.friendly) {
+                  herdMembers.push(entity);
+               }
+            }
+            return herdMembers;
+         }
+
+         const aiHelperComponent = AIHelperComponentArray.getComponent(tribesman);
+         const herdMembers = findHerdMembers(aiHelperComponent.visibleEntities);
+      
+         let closestHerdMember: Entity | undefined;
+         let minDist = Number.MAX_SAFE_INTEGER;
+         let numHerdMembers = 0;
+         for (let i = 0; i < herdMembers.length; i++) {
+            const herdMember = herdMembers[i];
+      
+            const herdMemberTransformComponent = TransformComponentArray.getComponent(herdMember);
+            // @HACK
+            const herdMemberHitbox = herdMemberTransformComponent.hitboxes[0];
+      
+            const distance = tribesmanHitbox.box.position.distanceTo(herdMemberHitbox.box.position);
+            if (distance < minDist) {
+               closestHerdMember = herdMember;
+               minDist = distance;
+            }
+      
+            totalXVal += Math.sin(herdMemberHitbox.box.angle);
+            totalYVal += Math.cos(herdMemberHitbox.box.angle);
+      
+            centerX += herdMemberHitbox.box.position.x;
+            centerY += herdMemberHitbox.box.position.y;
+            numHerdMembers++;
+         }
+      
+         centerX /= numHerdMembers;
+         centerY /= numHerdMembers;
+      
+         // @Cleanup: We can probably clean up a lot of this code by using Entity's built in turn functions
+         let angularVelocity = 0;
+         
+         // SEPARATION
+         // Steer away from herd members who are too close
+         const minSeparationDistance = 180;
+         let distanceVector: Point | undefined;
+         if (minDist < minSeparationDistance && typeof closestHerdMember !== "undefined") {
+            // Calculate the weight of the separation
+            let weight = 1 - minDist / minSeparationDistance;
+            weight = curveWeight(weight, 2, 0.2);
+            
+            const herdMemberTransformComponent = TransformComponentArray.getComponent(closestHerdMember);
+            // @Hack
+            const herdMemberHitbox = herdMemberTransformComponent.hitboxes[0];
+            
+            // @Speed: Garbage collection
+            distanceVector = angleToPoint(herdMemberHitbox.box.position.angleTo(tribesmanHitbox.box.position));
+         }
+
+         const pathfindingAngle = angleToPoint(tribesmanHitbox.box.angle);
+         
+         if (typeof distanceVector === "undefined") {
+            distanceVector = pathfindingAngle.copy();
+         }
+
+         // @HACK average the angles (isn't even weighted holy shit!!!)
+         const a = pathfindingAngle;
+         const b = distanceVector;
+         const c = new Point(a.x + b.x, a.y + b.y);
+         
          const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman);
-         tribesmanComponent.movementIntention = angleToPoint(tribesmanHitbox.box.angle);
+         tribesmanComponent.movementIntention = c;
       }
 
       // @Speed: only do this if we know the path has a door in it
@@ -218,6 +311,18 @@ const getPotentialBlockingTribesmen = (tribesman: Entity): ReadonlyArray<Entity>
          }
       }
    }
+   // @HACK: to stop the tribesman from trying to pathfind around the cow its riding
+   if (tribesmanHitbox.entity !== tribesmanHitbox.rootEntity) {
+      blockingTribesmen.push(tribesmanHitbox.rootEntity);
+   }
+   // @HACK @Speed cuz the tribesman's held item is blocking pathfinding
+   for (const hitbox of transformComponent.hitboxes) {
+      for (const childHitbox of hitbox.children) {
+         if (getEntityType(childHitbox.entity) === EntityType.heldItem) {
+            blockingTribesmen.push(childHitbox.entity);
+         }
+      }
+   }
    return blockingTribesmen;
 }
 
@@ -257,10 +362,6 @@ const cleanupPathfinding = (targetEntity: Entity | 0, tribe: Tribe, blockingTrib
 }
 
 export function pathfindTribesman(tribesman: Entity, goalX: number, goalY: number, goalLayer: Layer, targetEntityID: number, pathType: TribesmanPathType, goalRadius: number, failureDefault: PathfindFailureDefault): boolean {
-
-}
-
-export function pathfind(tribesman: Entity, goalX: number, goalY: number, goalLayer: Layer, targetEntityID: number, pathType: TribesmanPathType, goalRadius: number, failureDefault: PathfindFailureDefault): boolean {
    assert(goalX >= 0 && goalX < Settings.WORLD_UNITS && goalY >= 0 && goalY < Settings.WORLD_UNITS);
    
    // If moving to a new target node, recalculate path

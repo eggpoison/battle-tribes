@@ -728,10 +728,6 @@ export function tickTribesman(tribesman: Entity): void {
    //    }
    // }
 
-   // @Cleanup: Remove once all paths set their limb actions
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-   setLimbActions(inventoryUseComponent, LimbAction.none);
-
    // Grab food from barrel
    if (getHealingItemUseInfo(tribesman) === null && !inventoryIsFull(hotbarInventory)) {
       let closestBarrelWithFood: Entity | undefined;

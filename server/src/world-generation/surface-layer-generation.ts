@@ -432,7 +432,9 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
          const temperature = temperatureMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
          const humidity = humidityMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
 
+         // @Squeam
          const biome = getBiome(height, temperature, humidity);
+         // const biome = Biome.grasslands;
          
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          surfaceLayer.tileBiomes[tileIndex] = biome;

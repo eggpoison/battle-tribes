@@ -521,23 +521,32 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
 export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBuffer {
    const player = playerClient.instance;
 
-   const lengthBytes = 8 * Float32Array.BYTES_PER_ELEMENT;
-   
-   const packet = new Packet(PacketType.syncGameData, lengthBytes);
-   
-   const transformComponent = TransformComponentArray.getComponent(player);
-   const hitbox = transformComponent.hitboxes[0];
-   packet.writeNumber(hitbox.box.position.x);
-   packet.writeNumber(hitbox.box.position.y);
-   packet.writeNumber(hitbox.box.angle);
+   const packet = new Packet(PacketType.syncGameData, 8 * Float32Array.BYTES_PER_ELEMENT);
 
-   packet.writeNumber(hitbox.previousPosition.x);
-   packet.writeNumber(hitbox.previousPosition.y);
-   packet.writeNumber(hitbox.acceleration.x);
-   packet.writeNumber(hitbox.acceleration.y);
-
-   // @HACK @SPEED: would be way better to have a way to write the game data to the packet directly!!
+   let pos: Point;
+   let angle: number;
+   let previousPos: Point;
+   let acceleration: Point;
    
+   if (TransformComponentArray.hasComponent(player)) {
+      const transformComponent = TransformComponentArray.getComponent(player);
+      const hitbox = transformComponent.hitboxes[0];
+
+      pos = hitbox.box.position;
+      angle = hitbox.box.angle;
+      previousPos = hitbox.previousPosition;
+      acceleration = hitbox.acceleration;
+   } else {
+      pos = new Point(playerClient.lastViewedPositionX, playerClient.lastViewedPositionY);
+      angle = 0;
+      previousPos = pos.copy();
+      acceleration = new Point(0, 0);
+   }
+   
+   packet.writePoint(pos);
+   packet.writeNumber(angle);
+   packet.writePoint(previousPos);
+   packet.writePoint(acceleration);
 
    return packet.buffer;
 }

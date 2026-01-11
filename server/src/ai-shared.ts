@@ -748,6 +748,11 @@ export function entityIsInLineOfSight(sightRayStart: Point, targetEntity: Entity
             if (firstHitbox.rootEntity === ignoredEntityHitbox.rootEntity) {
                continue;
             }
+
+            // @HACK @HARDCODED!! literally only works for moss!!
+            if (getEntityType(entity) === EntityType.moss) {
+               continue;
+            }
             
             for (const hitbox of transformComponent.rootHitboxes) {
                if (hitboxOrChildrenIntersectLineOfSight(hitbox, rayStartX, rayStartY, rayEndX, rayEndY)) {

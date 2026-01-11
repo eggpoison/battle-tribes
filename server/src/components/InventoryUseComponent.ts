@@ -664,10 +664,10 @@ function addDataToPacket(packet: Packet, entity: Entity): void {
 
 // @Cleanup: this shit is ASS. Kill it all
 export function setLimbActions(inventoryUseComponent: InventoryUseComponent, limbAction: LimbAction): void {
-   for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
-      const limbInfo = inventoryUseComponent.limbInfos[i];
-      limbInfo.action = limbAction;
-   }
+   // for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
+   //    const limbInfo = inventoryUseComponent.limbInfos[i];
+   //    limbInfo.action = limbAction;
+   // }
 }
 
 const shouldRepairBuilding = (entity: Entity, comparingEntity: Entity): boolean => {

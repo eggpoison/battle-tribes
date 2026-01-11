@@ -13,7 +13,7 @@ export enum AttackVars {
    SHIELD_BASH_PUSH_TIME_TICKS = (Settings.TICK_RATE * 0.15) | 0,
    SHIELD_BASH_RETURN_TIME_TICKS = (Settings.TICK_RATE * 0.4) | 0,
    SHIELD_BASH_REST_TIME_TICKS = (Settings.TICK_RATE * 0.4) | 0,
-   SHIELD_BLOCK_REST_TIME_TICKS = (Settings.TICK_RATE * 2) | 0
+   SHIELD_BLOCK_REST_TIME_TICKS = (Settings.TICK_RATE * 2.5) | 0
 }
 
 export enum LimbConfiguration {

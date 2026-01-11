@@ -1,7 +1,7 @@
 import { GameDataPacketOptions } from "../../../shared/src/client-server-types";
 import { Packet, PacketType } from "../../../shared/src/packets";
 import { Settings } from "../../../shared/src/settings";
-import { AIPlanType, clamp, getTileIndexIncludingEdges, TileIndex } from "../../../shared/src/utils";
+import { AIPlanType, clamp, clampToBoardDimensions, getTileIndexIncludingEdges, TileIndex } from "../../../shared/src/utils";
 import { getSubtileSupport, getVisibleSubtileSupports } from "../collapses";
 import { addEntityDebugDataToPacket, createEntityDebugData, getEntityDebugDataLength } from "../entity-debug-data";
 import {getSpawnInfoForEntityType, SpawnDistribution } from "../entity-spawn-info";
@@ -55,10 +55,10 @@ const getVisibleLocalBiomeInfo = (playerClient: PlayerClient): VisibleLocalBiome
    const localBiomes = new Array<LocalBiome>();
    const tileToLocalBiomeMap = new Map<TileIndex, LocalBiome>();
    
-   const minTileX = Math.floor(playerClient.minVisibleX / Settings.TILE_SIZE);
-   const maxTileX = Math.floor(playerClient.maxVisibleX / Settings.TILE_SIZE);
-   const minTileY = Math.floor(playerClient.minVisibleY / Settings.TILE_SIZE);
-   const maxTileY = Math.floor(playerClient.maxVisibleY / Settings.TILE_SIZE);
+   const minTileX = clampToBoardDimensions(Math.floor(playerClient.minVisibleX / Settings.TILE_SIZE));
+   const maxTileX = clampToBoardDimensions(Math.floor(playerClient.maxVisibleX / Settings.TILE_SIZE));
+   const minTileY = clampToBoardDimensions(Math.floor(playerClient.minVisibleY / Settings.TILE_SIZE));
+   const maxTileY = clampToBoardDimensions(Math.floor(playerClient.maxVisibleY / Settings.TILE_SIZE));
    for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
       for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);

@@ -39,6 +39,7 @@ import { createTribeWorkerConfig } from "../entities/tribes/tribe-worker";
 import { InventoryName, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS } from "../../../shared/src/items/items";
 import { getCurrentLimbState, InventoryUseComponentArray } from "../components/InventoryUseComponent";
 import { QUIVER_PULL_LIMB_STATE } from "../../../shared/src/attack-patterns";
+import OPTIONS from "../options";
 
 /*
 
@@ -150,10 +151,13 @@ class GameServer {
       // SRandom.seed(2763196645);
 
       // Cave:
-      SRandom.seed(2950872542);
+      // SRandom.seed(2950872542);
 
-      // bl river
+      // br river
       // SRandom.seed(9028422602);
+
+      // slime goop
+      SRandom.seed(2965725785);
 
       const builtinRandomFunc = Math.random;
       Math.random = () => SRandom.next();
@@ -244,52 +248,6 @@ class GameServer {
                   if (username === "Clementus") {
                      const config = createCowConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, CowSpecies.brown);
                      createEntity(config, layer, 0);
-
-                     // @Temporary
-                     for (let i = 0; i < 2; i++) {
-                        const position = [new Point(3135, 2263), new Point(3094, 1834)][i];
-                        const cowAngle = [Math.PI * 1.35, Math.PI * 1.65][i];
-
-                        const tribesmanConfig = createTribeWorkerConfig(position, 0, tribe);
-
-                        const cowConfig = createCowConfig(position, cowAngle, CowSpecies.brown);
-                        cowConfig.childConfigs = [{
-                           entityConfig: tribesmanConfig,
-                           attachedHitbox: tribesmanConfig.components[ServerComponentType.transform]!.hitboxes[0],
-                           parentHitbox: cowConfig.components[ServerComponentType.transform]!.hitboxes[0],
-                           isPartOfParent: false
-                        }];
-                        createEntity(cowConfig, undergroundLayer, 0);
-                        setTimeout(() => {
-                           cowConfig.components[ServerComponentType.rideable]!.carrySlots[0].occupiedEntity = tribesmanConfig.components[ServerComponentType.transform]!.hitboxes[0].entity;
-
-                           const tribesman = tribesmanConfig.components[ServerComponentType.transform]!.hitboxes[0].entity;
-
-                           const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-                           
-                           const holdingLimb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
-                           const startHoldingLimbState = getCurrentLimbState(holdingLimb);
-                           
-                           holdingLimb.action = LimbAction.engageBow;
-                           holdingLimb.currentActionElapsedTicks = 0;
-                           holdingLimb.currentActionDurationTicks = QUIVER_ACCESS_TIME_TICKS + QUIVER_PULL_TIME_TICKS;
-                           holdingLimb.currentActionRate = 1;
-                           holdingLimb.currentActionStartLimbState = startHoldingLimbState;
-                           holdingLimb.currentActionEndLimbState = BOW_HOLDING_LIMB_STATE;
-            
-                           // Meanwhile the drawing limb pulls an arrow out
-                           
-                           const drawingLimb = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
-                           const startDrawingLimbState = getCurrentLimbState(drawingLimb);
-                           
-                           drawingLimb.action = LimbAction.moveLimbToQuiver;
-                           drawingLimb.currentActionElapsedTicks = 0;
-                           drawingLimb.currentActionDurationTicks = QUIVER_ACCESS_TIME_TICKS;
-                           drawingLimb.currentActionRate = 1;
-                           drawingLimb.currentActionStartLimbState = startDrawingLimbState;
-                           drawingLimb.currentActionEndLimbState = QUIVER_PULL_LIMB_STATE;
-                        }, 200);
-                     }
                   }
                }, 1000);
 

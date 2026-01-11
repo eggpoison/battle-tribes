@@ -857,7 +857,7 @@ const propagateRootEntityChange = (hitbox: Hitbox, rootEntity: Entity): void => 
 
 export function attachHitboxRaw(hitbox: Hitbox, parentHitbox: Hitbox, isPartOfParent: boolean): void {
    assert(hitbox.rootEntity !== parentHitbox.rootEntity);
-   assert(hitbox.parent === null && hitbox.parent !== parentHitbox);
+   assert(hitbox.parent === null);
    assert(!parentHitbox.children.includes(hitbox));
    
    propagateRootEntityChange(hitbox, parentHitbox.rootEntity);

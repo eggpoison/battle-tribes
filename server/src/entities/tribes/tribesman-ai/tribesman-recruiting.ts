@@ -1,15 +1,15 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import Entity from "../../../Entity";
+import { Entity, EntityType } from "battletribes-shared/entities";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
 import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "../../../components/TribeComponent";
 import { TribeMemberComponentArray } from "../../../components/TribeMemberComponent";
 import { getItemGiftAppreciation, TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { InventoryName } from "battletribes-shared/items/items";
+import { getEntityType } from "../../../world";
 
 export function getGiftableItemSlot(tribesman: Entity): number {
    // @Incomplete: don't gift items useful to the tribesman
    
-   const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(tribesman);
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    let maxGiftWeight = 0;
@@ -31,29 +31,29 @@ export function getGiftableItemSlot(tribesman: Entity): number {
 }
 
 export function getRecruitTarget(tribesman: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
    
    let maxRelations = -100;
    let closestAcquaintance: Entity | null = null;
    for (let i = 0; i < visibleEntities.length; i++) {
       const entity = visibleEntities[i];
-      if (entity.type === EntityType.player || !TribeMemberComponentArray.hasComponent(entity.id)) {
+      if (getEntityType(entity) === EntityType.player || !TribeMemberComponentArray.hasComponent(entity)) {
          continue;
       }
 
       // Don't try to recuit enemies or tribesmen already in the same tribe
-      const relationship = getEntityRelationship(tribesman.id, entity);
+      const relationship = getEntityRelationship(tribesman, entity);
       if (relationship === EntityRelationship.friendly || relationship === EntityRelationship.enemy) {
          continue;
       }
 
       // Don't try to gift items to tribesman who are already in an established tribe
-      const tribeComponent = TribeComponentArray.getComponent(entity.id);
-      if (tribeComponent.tribe.hasTotem()) {
+      const tribeComponent = TribeComponentArray.getComponent(entity);
+      if (tribeComponent.tribe.getNumEntitiesOfType(EntityType.tribeTotem) >= 1) {
          continue;
       }
       
-      const relations = tribesmanComponent.tribesmanRelations[entity.id] || 0;
+      const relations = tribesmanComponent.tribesmanRelations[entity] || 0;
       if (relations > maxRelations) {
          maxRelations = relationship;
          closestAcquaintance = entity;

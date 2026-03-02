@@ -1,8 +1,9 @@
-export const enum StatusEffect {
+export enum StatusEffect {
    burning = 1,
    freezing = 2,
    poisoned = 4,
-   bleeding = 8
+   bleeding = 8,
+   heatSickness = 16
 }
 
 interface StatusEffectModifiers {
@@ -20,6 +21,9 @@ export const STATUS_EFFECT_MODIFIERS: Record<StatusEffect, StatusEffectModifiers
       moveSpeedMultiplier: 0.75
    },
    [StatusEffect.bleeding]: {
+      moveSpeedMultiplier: 1
+   },
+   [StatusEffect.heatSickness]: {
       moveSpeedMultiplier: 1
    }
 };

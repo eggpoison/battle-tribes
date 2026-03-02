@@ -1,23 +1,38 @@
-import { ServerComponentType, ThrowingProjectileComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { Item } from "webgl-test-shared/dist/items/items";
+import { Entity } from "battletribes-shared/entities";
+import { InventoryComponentArray } from "./InventoryComponent";
+import { entityExists } from "../world";
 
 export class ThrowingProjectileComponent {
-   readonly tribeMemberID: number;
-   readonly item: Item;
+   readonly tribeMember: Entity;
+   readonly itemID: number | null;
 
-   constructor(tribeMemberID: number, item: Item) {
-      this.tribeMemberID = tribeMemberID;
-      this.item = item;
+   constructor(tribeMember: Entity, itemID: number | null) {
+      this.tribeMember = tribeMember;
+      this.itemID = itemID;
    }
 }
 
-export const ThrowingProjectileComponentArray = new ComponentArray<ServerComponentType.throwingProjectile, ThrowingProjectileComponent>(true, {
-   serialise: serialise
-});
+export const ThrowingProjectileComponentArray = new ComponentArray<ThrowingProjectileComponent>(ServerComponentType.throwingProjectile, true, getDataLength, addDataToPacket);
+ThrowingProjectileComponentArray.onRemove = onRemove;
 
-function serialise(): ThrowingProjectileComponentData {
-   return {
-      componentType: ServerComponentType.throwingProjectile
-   };
+function onRemove(entity: Entity): void {
+   const throwingProjectileComponent = ThrowingProjectileComponentArray.getComponent(entity);
+   if (!entityExists(throwingProjectileComponent.tribeMember) || throwingProjectileComponent.itemID === null) {
+      return;
+   }
+
+   const ownerInventoryComponent = InventoryComponentArray.getComponent(throwingProjectileComponent.tribeMember);
+   
+   const idx = ownerInventoryComponent.absentItemIDs.indexOf(throwingProjectileComponent.itemID);
+   if (idx !== -1) {
+      ownerInventoryComponent.absentItemIDs.splice(idx, 1);
+   }
 }
+
+function getDataLength(): number {
+   return 0;
+}
+
+function addDataToPacket(): void {}

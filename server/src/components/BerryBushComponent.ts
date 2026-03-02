@@ -1,20 +1,48 @@
-import { BerryBushComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
+import { Entity } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
+import { registerDirtyEntity } from "../server/player-clients";
+import { Settings } from "../../../shared/src/settings";
+
+const enum Vars {
+   /** Number of seconds it takes for a berry bush to regrow one of its berries */
+   BERRY_GROW_TIME = 30
+}
 
 export class BerryBushComponent {
-   public numBerries = 0;
+   // @SQUEAM
+   // public numBerries = 0;
+   public numBerries = 5;
    public berryGrowTimer = 0;
 }
 
-export const BerryBushComponentArray = new ComponentArray<ServerComponentType.berryBush, BerryBushComponent>(true, {
-   serialise: serialise
-});
+export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(ServerComponentType.berryBush, true, getDataLength, addDataToPacket);
+BerryBushComponentArray.onTick = {
+   tickInterval: 1,
+   func: onTick
+};
 
-function serialise(entityID: number): BerryBushComponentData {
-   const berryComponent = BerryBushComponentArray.getComponent(entityID);
+function onTick(entity: Entity): void {
+   const berryBushComponent = BerryBushComponentArray.getComponent(entity);
+   if (berryBushComponent.numBerries >= 5) {
+      return;
+   }
 
-   return {
-      componentType: ServerComponentType.berryBush,
-      numBerries: berryComponent.numBerries
-   };
+   berryBushComponent.berryGrowTimer += Settings.DT_S;
+   if (berryBushComponent.berryGrowTimer >= Vars.BERRY_GROW_TIME) {
+      // Grow a new berry
+      berryBushComponent.berryGrowTimer = 0;
+      berryBushComponent.numBerries++;
+      registerDirtyEntity(entity);
+   }
+}
+
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: Entity): void {
+   const berryComponent = BerryBushComponentArray.getComponent(entity);
+   packet.writeNumber(berryComponent.numBerries);
 }

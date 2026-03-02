@@ -1,30 +1,50 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
 import Tribe from "../../Tribe";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { ResearchBenchComponent, ResearchBenchComponentArray } from "../../components/ResearchBenchComponent";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createResearchBenchHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { TribeComponent } from "../../components/TribeComponent";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { ResearchBenchComponent } from "../../components/ResearchBenchComponent";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../shared/src/utils";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
+import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../../shared/src/collision";
+import { StructureConnection } from "../../structure-placement";
 
-export function createResearchBench(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const bench = new Entity(position, rotation, EntityType.researchBench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxes = createResearchBenchHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      bench.addHitbox(hitboxes[i]);
-   }
+export function createResearchBenchConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
    
-   HealthComponentArray.addComponent(bench.id, new HealthComponent(40));
-   StatusEffectComponentArray.addComponent(bench.id, new StatusEffectComponent(StatusEffect.poisoned));
-   StructureComponentArray.addComponent(bench.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(bench.id, new TribeComponent(tribe));
-   ResearchBenchComponentArray.addComponent(bench.id, new ResearchBenchComponent());
+   const box = new RectangularBox(position, new Point(0, 0), rotation, 128, 80);
+   const hitbox = new Hitbox(transformComponent, null, true, box, 1.8, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-   return bench;
+   const healthComponent = new HealthComponent(40);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connections, virtualStructure);
+   
+   const tribeComponent = new TribeComponent(tribe);
+
+   const researchBenchComponent = new ResearchBenchComponent();
+   
+   return {
+      entityType: EntityType.researchBench,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.researchBench]: researchBenchComponent
+      },
+      lights: []
+   };
 }

@@ -1,11 +1,9 @@
-import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { LimbAction } from "webgl-test-shared/dist/entities";
-import { stopEntity } from "../../../ai-shared";
-import { InventoryUseComponentArray, getInventoryUseInfo } from "../../../components/InventoryUseComponent";
-import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
+import { TribesmanAIType } from "battletribes-shared/components";
+import { Entity, LimbAction } from "battletribes-shared/entities";
+import { InventoryUseComponentArray } from "../../../components/InventoryUseComponent";
 import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
-import { Inventory, InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory } from "webgl-test-shared/dist/items/items";
+import { Inventory, InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory } from "battletribes-shared/items/items";
 
 export interface HealingItemUseInfo {
    readonly itemSlot: number;
@@ -31,12 +29,17 @@ export function getHealingItemUseInfo(tribesmanID: number): HealingItemUseInfo |
    return null;
 }
 
-export function continueTribesmanHealing(tribesmanID: number, healingItemUseInfo: HealingItemUseInfo): void {
+export function continueTribesmanHealing(tribesmanID: Entity, healingItemUseInfo: HealingItemUseInfo): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesmanID);
-   const limbInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+   const limbInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    limbInfo.selectedItemSlot = healingItemUseInfo.itemSlot;
 
-   const foodItem = healingItemUseInfo.inventory.itemSlots[healingItemUseInfo.itemSlot]!;
+   const foodItem = healingItemUseInfo.inventory.itemSlots[healingItemUseInfo.itemSlot];
+   // @HACK
+   if (typeof foodItem === "undefined") {
+      console.warn("shite.")
+      return;
+   }
    const itemInfo = ITEM_INFO_RECORD[foodItem.type] as ConsumableItemInfo;
 
    let action: LimbAction;
@@ -50,15 +53,12 @@ export function continueTribesmanHealing(tribesmanID: number, healingItemUseInfo
          break;
       }
    }
-   limbInfo.action = action;
    
    // If the food is only just being eaten, reset the food timer so that the food isn't immediately eaten
    if (limbInfo.action !== action) {
       limbInfo.foodEatingTimer = itemInfo.consumeTime;
    }
-   
-   const physicsComponent = PhysicsComponentArray.getComponent(tribesmanID);
-   stopEntity(physicsComponent);
+   limbInfo.action = action;
    
    const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(tribesmanID);
    tribesmanAIComponent.currentAIType = TribesmanAIType.eating;

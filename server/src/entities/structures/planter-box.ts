@@ -1,30 +1,50 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
 import Tribe from "../../Tribe";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { PlanterBoxComponent, PlanterBoxComponentArray } from "../../components/PlanterBoxComponent";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createPlanterBoxHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { TribeComponent } from "../../components/TribeComponent";
+import { PlanterBoxComponent } from "../../components/PlanterBoxComponent";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../shared/src/utils";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
+import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
+import { StructureConnection } from "../../structure-placement";
 
-export function createPlanterBox(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const planterBox = new Entity(position, rotation, EntityType.planterBox, COLLISION_BITS.planterBox, DEFAULT_COLLISION_MASK);
+export function createPlanterBoxConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
 
-   const hitboxes = createPlanterBoxHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      planterBox.addHitbox(hitboxes[i]);
-   }
+   const box = new RectangularBox(position, new Point(0, 0), rotation, 80, 80);
+   const hitbox = new Hitbox(transformComponent, null, true, box, 1.5, HitboxCollisionType.hard, CollisionBit.planterBox, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-   HealthComponentArray.addComponent(planterBox.id, new HealthComponent(15));
-   StatusEffectComponentArray.addComponent(planterBox.id, new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding));
-   TribeComponentArray.addComponent(planterBox.id, new TribeComponent(tribe));
-   StructureComponentArray.addComponent(planterBox.id, new StructureComponent(connectionInfo));
-   PlanterBoxComponentArray.addComponent(planterBox.id, new PlanterBoxComponent());
+   const healthComponent = new HealthComponent(15);
    
-   return planterBox;
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connections, virtualStructure);
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const planterBoxComponent = new PlanterBoxComponent();
+   
+   return {
+      entityType: EntityType.planterBox,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.planterBox]: planterBoxComponent
+      },
+      lights: []
+   };
 }

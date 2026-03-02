@@ -1,78 +1,51 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Biome, TileType } from "webgl-test-shared/dist/tiles";
-import { Point, randInt, customTickIntervalHasPassed, randFloat } from "webgl-test-shared/dist/utils";
-import Entity, { getRandomPositionInEntity } from "../../Entity";
-import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { WanderAIComponent, WanderAIComponentArray } from "../../components/WanderAIComponent";
-import { entityHasReachedPosition, runHerdAI, stopEntity } from "../../ai-shared";
-import { shouldWander, getWanderTargetTile, wander } from "../../ai/wander-ai";
-import Tile from "../../Tile";
-import Board, { tileRaytraceMatchesTileTypes } from "../../Board";
+import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
+import { Entity, EntityType, FishColour } from "battletribes-shared/entities";
+import { angle, customTickIntervalHasPassed, Point, polarVec2, UtilVars } from "battletribes-shared/utils";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { FishComponent, FishComponentArray } from "../../components/FishComponent";
-import { createItemsOverEntity } from "../../entity-shared";
-import { EscapeAIComponent, EscapeAIComponentArray, updateEscapeAIComponent } from "../../components/EscapeAIComponent";
-import { chooseEscapeEntity, registerAttackingEntity, runFromAttackingEntity } from "../../ai/escape-ai";
-import { InventoryComponentArray, getInventory, hasInventory } from "../../components/InventoryComponent";
-import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
-import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
-import { CollisionVars, entitiesAreColliding } from "../../collision";
-import { TribeMemberComponentArray } from "../../components/TribeMemberComponent";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
+import WanderAI from "../../ai/WanderAI";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
+import { TileType } from "battletribes-shared/tiles";
+import Layer from "../../Layer";
+import { Settings } from "battletribes-shared/settings";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { EscapeAI } from "../../ai/EscapeAI";
+import { Biome } from "../../../../shared/src/biomes";
+import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
+import { ItemType } from "../../../../shared/src/items/items";
+import { applyAccelerationFromGround, getHitboxTile, Hitbox, addHitboxVelocity, turnHitboxToAngle } from "../../hitboxes";
+import { getEntityLayer } from "../../world";
 
-const TURN_SPEED = Math.PI / 1.5;
-
-const MAX_HEALTH = 5;
-
-const FISH_WIDTH = 7 * 4;
-const FISH_HEIGHT = 14 * 4;
-
-const ACCELERATION = 40;
-
-const TURN_RATE = 0.5;
-const SEPARATION_INFLUENCE = 0.7;
-const ALIGNMENT_INFLUENCE = 0.5;
-const COHESION_INFLUENCE = 0.3;
-const MIN_SEPARATION_DISTANCE = 40;
-
-const VISION_RANGE = 200;
-
-const TILE_VALIDATION_PADDING = 20;
-
-const LUNGE_FORCE = 200;
-const LUNGE_INTERVAL = 1;
-
-export function createFish(position: Point): Entity {
-   const fish = new Entity(position, 2 * Math.PI * Math.random(), EntityType.fish, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitbox = new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, FISH_WIDTH, FISH_HEIGHT, 0);
-   fish.addHitbox(hitbox);
-
-   PhysicsComponentArray.addComponent(fish.id, new PhysicsComponent(0, 0, 0, 0, true, false));
-   HealthComponentArray.addComponent(fish.id, new HealthComponent(MAX_HEALTH));
-   StatusEffectComponentArray.addComponent(fish.id, new StatusEffectComponent(0));
-   WanderAIComponentArray.addComponent(fish.id, new WanderAIComponent());
-   EscapeAIComponentArray.addComponent(fish.id, new EscapeAIComponent());
-   FishComponentArray.addComponent(fish.id, new FishComponent(randInt(0, 3)));
-   AIHelperComponentArray.addComponent(fish.id, new AIHelperComponent(VISION_RANGE));
-   
-   return fish;
+const enum Vars {
+   TURN_SPEED = UtilVars.PI / 1.5,
+   LUNGE_FORCE = 200,
+   LUNGE_INTERVAL = 1
 }
 
-const isValidWanderPosition = (x: number, y: number): boolean => {
-   const minTileX = Math.max(Math.floor((x - TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), 0);
-   const maxTileX = Math.min(Math.floor((x + TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
-   const minTileY = Math.max(Math.floor((y - TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), 0);
-   const maxTileY = Math.min(Math.floor((y + TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
+const enum Vars {
+   TILE_VALIDATION_PADDING = 20
+}
+
+registerEntityLootOnDeath(EntityType.fish, {
+   itemType: ItemType.raw_fish,
+   getAmount: () => 1
+});
+
+const positionIsOnlyNearWater = (layer: Layer, x: number, y: number): boolean => {
+   const minTileX = Math.max(Math.floor((x - Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), 0);
+   const maxTileX = Math.min(Math.floor((x + Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1);
+   const minTileY = Math.max(Math.floor((y - Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), 0);
+   const maxTileY = Math.min(Math.floor((y + Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1);
 
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
-         if (tile.biome !== Biome.river) {
+         if (layer.getTileXYBiome(tileX, tileY) !== Biome.river) {
             return false;
          }
       }
@@ -81,234 +54,115 @@ const isValidWanderPosition = (x: number, y: number): boolean => {
    return true;
 }
 
-const move = (fish: Entity, direction: number): void => {
-   const physicsComponent = PhysicsComponentArray.getComponent(fish.id);
+function wanderTargetIsValid(fish: Entity, layer: Layer, x: number, y: number): boolean {
+   if (layer.getBiomeAtPosition(x, y) !== Biome.river) {
+      return false;
+   }
+
+   if (!positionIsOnlyNearWater(layer, x, y)) {
+      return false;
+   }
+
+   const transformComponent = TransformComponentArray.getComponent(fish);
+   const fishHitbox = transformComponent.hitboxes[0];
    
-   if (fish.tile.type === TileType.water) {
+   if (!layer.tileRaytraceMatchesTileTypes(fishHitbox.box.position.x, fishHitbox.box.position.y, x, y, [TileType.water])) {
+      return false;
+   }
+
+   return true;
+}
+
+const moveFunc = (fish: Entity, pos: Point, acceleration: number): void => {
+   const transformComponent = TransformComponentArray.getComponent(fish);
+   const fishHitbox = transformComponent.hitboxes[0];
+
+   const direction = fishHitbox.box.position.angleTo(pos);
+
+   const layer = getEntityLayer(fish);
+   
+   const tileIndex = getHitboxTile(fishHitbox);
+   if (layer.tileTypes[tileIndex] === TileType.water) {
       // Swim on water
-      physicsComponent.acceleration.x = 40 * Math.sin(direction);
-      physicsComponent.acceleration.y = 40 * Math.cos(direction);
-      physicsComponent.targetRotation = direction;
-      physicsComponent.turnSpeed = TURN_SPEED;
+      applyAccelerationFromGround(fishHitbox, polarVec2(acceleration, direction));
    } else {
       // 
       // Lunge on land
       // 
 
-      stopEntity(physicsComponent);
-
-      const fishComponent = FishComponentArray.getComponent(fish.id);
-      if (customTickIntervalHasPassed(fishComponent.secondsOutOfWater * Settings.TPS, LUNGE_INTERVAL)) {
-         physicsComponent.velocity.x += LUNGE_FORCE * Math.sin(direction);
-         physicsComponent.velocity.y += LUNGE_FORCE * Math.cos(direction);
-         if (direction !== fish.rotation) {
-            fish.rotation = direction;
-
-            const physicsComponent = PhysicsComponentArray.getComponent(fish.id);
-            physicsComponent.hitboxesAreDirty = true;
-         }
+      const fishComponent = FishComponentArray.getComponent(fish);
+      if (customTickIntervalHasPassed(fishComponent.secondsOutOfWater * Settings.TICK_RATE, Vars.LUNGE_INTERVAL)) {
+         addHitboxVelocity(fishHitbox, polarVec2(Vars.LUNGE_FORCE, direction));
       }
    }
 }
 
-const followLeader = (fish: Entity, leader: Entity): void => {
-   const tribeMemberComponent = TribeMemberComponentArray.getComponent(leader.id);
-   tribeMemberComponent.fishFollowerIDs.push(fish.id);
-}
+const turnFunc = (fish: Entity, pos: Point, turnSpeed: number, turnDamping: number): void => {
+   const transformComponent = TransformComponentArray.getComponent(fish);
+   const fishHitbox = transformComponent.hitboxes[0];
 
-// @Cleanup: shouldn't be exported
-export function unfollowLeader(fishID: number, leader: Entity): void {
-   const tribeMemberComponent = TribeMemberComponentArray.getComponent(leader.id);
-   const idx = tribeMemberComponent.fishFollowerIDs.indexOf(fishID);
-   if (idx !== -1) {
-      tribeMemberComponent.fishFollowerIDs.splice(idx, 1);
-   }
-}
+   const direction = fishHitbox.box.position.angleTo(pos);
 
-const entityIsWearingFishlordSuit = (entityID: number): boolean => {
-   if (!InventoryComponentArray.hasComponent(entityID)) {
-      return false;
-   }
-
-   const inventoryComponent = InventoryComponentArray.getComponent(entityID);
-   if (!hasInventory(inventoryComponent, InventoryName.armourSlot)) {
-      return false;
-   }
+   const layer = getEntityLayer(fish);
    
-   const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
-
-   const armour = armourInventory.itemSlots[1];
-   return typeof armour !== "undefined" && armour.type === ItemType.fishlord_suit;
-}
-
-export function tickFish(fish: Entity): void {
-   const physicsComponent = PhysicsComponentArray.getComponent(fish.id);
-   physicsComponent.overrideMoveSpeedMultiplier = fish.tile.type === TileType.water;
-
-   const fishComponent = FishComponentArray.getComponent(fish.id);
-
-   if (fish.tile.type !== TileType.water) {
-      fishComponent.secondsOutOfWater += Settings.I_TPS;
-      if (fishComponent.secondsOutOfWater >= 5 && customTickIntervalHasPassed(fishComponent.secondsOutOfWater * Settings.TPS, 1.5)) {
-         const hitPosition = getRandomPositionInEntity(fish);
-         damageEntity(fish, null, 1, PlayerCauseOfDeath.lack_of_oxygen, AttackEffectiveness.effective, hitPosition, 0);
-      }
+   const tileIndex = getHitboxTile(fishHitbox);
+   if (layer.tileTypes[tileIndex] === TileType.water) {
+      // Swim on water
+      turnHitboxToAngle(fishHitbox, direction, turnSpeed, turnDamping, false);
    } else {
-      fishComponent.secondsOutOfWater = 0;
-   }
-   
-   const aiHelperComponent = AIHelperComponentArray.getComponent(fish.id);
+      // 
+      // Lunge on land
+      // 
 
-   // If the leader dies or is out of vision range, stop following them
-   if (fishComponent.leader !== null && (!Board.entityRecord.hasOwnProperty(fishComponent.leader.id) || !aiHelperComponent.visibleEntities.includes(fishComponent.leader))) {
-      unfollowLeader(fish.id, fishComponent.leader);
-      fishComponent.leader = null;
-   }
-
-   // Look for a leader
-   if (fishComponent.leader === null) {
-      for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
-         const entity = aiHelperComponent.visibleEntities[i];
-         if (entityIsWearingFishlordSuit(entity.id)) {
-            // New leader
-            fishComponent.leader = entity;
-            followLeader(fish, entity);
-            break;
+      const fishComponent = FishComponentArray.getComponent(fish);
+      if (customTickIntervalHasPassed(fishComponent.secondsOutOfWater * Settings.TICK_RATE, Vars.LUNGE_INTERVAL)) {
+         if (direction !== fishHitbox.box.angle) {
+            // @HACK @BUG
+            fishHitbox.box.angle = direction;
+            transformComponent.isDirty = true;
          }
       }
    }
+}
 
-   // If a tribe member is wearing a fishlord suit, follow them
-   if (fishComponent.leader !== null) {
-      const target = Board.entityRecord[fishComponent.attackTargetID];
-      if (typeof target === "undefined") {
-         // Follow leader
-         move(fish, fish.position.calculateAngleBetween(fishComponent.leader.position));
-      } else {
-         // Attack the target
-         move(fish, fish.position.calculateAngleBetween(target.position));
+export function createFishConfig(position: Point, rotation: number, colour: FishColour): EntityConfig {
+   const transformComponent = new TransformComponent();
 
-         if (entitiesAreColliding(fish, target) !== CollisionVars.NO_COLLISION) {
-            const healthComponent = HealthComponentArray.getComponent(target.id);
-            if (!canDamageEntity(healthComponent, "fish")) {
-               return;
-            }
-            
-            const hitDirection = fish.position.calculateAngleBetween(target.position);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 28, 56), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-            // @Hack
-            const collisionPoint = new Point((fish.position.x + target.position.x) / 2, (fish.position.y + target.position.y) / 2);
-            
-            damageEntity(target, fish, 2, PlayerCauseOfDeath.fish, AttackEffectiveness.effective, collisionPoint, 0);
-            applyKnockback(target, 100, hitDirection);
-            addLocalInvulnerabilityHash(healthComponent, "fish", 0.3);
-         }
-      }
-      return;
-   }
+   const healthComponent = new HealthComponent(5);
+
+   const statusEffectComponent = new StatusEffectComponent(0);
+
+   const aiHelperComponent = new AIHelperComponent(hitbox, 200, moveFunc, turnFunc);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, Math.PI, 0.5, 0.6, wanderTargetIsValid);
+   aiHelperComponent.ais[AIType.escape] = new EscapeAI(200, Math.PI * 2/3, 0.5, 1);
+
+   const attackingEntitiesComponent = new AttackingEntitiesComponent(3 * Settings.TICK_RATE);
    
-   // Flail on the ground when out of water
-   if (fish.tile.type !== TileType.water) {
-      fishComponent.flailTimer += Settings.I_TPS;
-      if (fishComponent.flailTimer >= 0.75) {
-         const flailDirection = 2 * Math.PI * Math.random();
-         fish.rotation = flailDirection + randFloat(-0.5, 0.5);
-         
-         physicsComponent.hitboxesAreDirty = true;
-         
-         physicsComponent.velocity.x += 200 * Math.sin(flailDirection);
-         physicsComponent.velocity.y += 200 * Math.cos(flailDirection);
+   const lootComponent = new LootComponent();
    
-         fishComponent.flailTimer = 0;
-      }
+   const fishComponent = new FishComponent(colour);
 
-      stopEntity(physicsComponent);
-      return;
-   }
-
-   // Escape AI
-   const escapeAIComponent = EscapeAIComponentArray.getComponent(fish.id);
-   updateEscapeAIComponent(escapeAIComponent, 3 * Settings.TPS);
-   if (escapeAIComponent.attackingEntityIDs.length > 0) {
-      const escapeEntity = chooseEscapeEntity(fish, aiHelperComponent.visibleEntities);
-      if (escapeEntity !== null) {
-         runFromAttackingEntity(fish, escapeEntity, 200, TURN_SPEED);
-         return;
-      }
-   }
-
-   // Herd AI
-   // @Incomplete: Make fish steer away from land
-   const herdMembers = new Array<Entity>();
-   for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
-      const entity = aiHelperComponent.visibleEntities[i];
-      if (entity.type === EntityType.fish) {
-         herdMembers.push(entity);
-      }
-   }
-   if (herdMembers.length >= 1) {
-      runHerdAI(fish, herdMembers, VISION_RANGE, TURN_RATE, MIN_SEPARATION_DISTANCE, SEPARATION_INFLUENCE, ALIGNMENT_INFLUENCE, COHESION_INFLUENCE);
-
-      physicsComponent.acceleration.x = 100 * Math.sin(fish.rotation);
-      physicsComponent.acceleration.y = 100 * Math.cos(fish.rotation);
-      return;
-   }
-
-   // Wander AI
-   const wanderAIComponent = WanderAIComponentArray.getComponent(fish.id);
-   if (wanderAIComponent.targetPositionX !== -1) {
-      if (entityHasReachedPosition(fish, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
-         wanderAIComponent.targetPositionX = -1;
-         stopEntity(physicsComponent);
-      }
-   } else if (shouldWander(physicsComponent, 0.5)) {
-      let attempts = 0;
-      let targetTile: Tile;
-      do {
-         targetTile = getWanderTargetTile(fish, VISION_RANGE);
-      } while (++attempts <= 50 && (targetTile.isWall || targetTile.biome !== Biome.river));
-
-      if (attempts > 50) {
-         stopEntity(physicsComponent);
-         return;
-      }
-      
-      // Find a position not too close to land
-      let x: number;
-      let y: number;
-      do {
-         x = (targetTile.x + Math.random()) * Settings.TILE_SIZE;
-         y = (targetTile.y + Math.random()) * Settings.TILE_SIZE;
-      } while (!isValidWanderPosition(x, y));
-
-      // Find a path which doesn't cross land
-      attempts = 0;
-      while (++attempts <= 10 && !tileRaytraceMatchesTileTypes(fish.position.x, fish.position.y, x, y, [TileType.water])) {
-         x = (targetTile.x + Math.random()) * Settings.TILE_SIZE;
-         y = (targetTile.x + Math.random()) * Settings.TILE_SIZE;
-      }
-
-      if (attempts <= 10) {
-         wander(fish, x, y, ACCELERATION, TURN_SPEED);
-      } else {
-         stopEntity(physicsComponent);
-      }
-   } else {
-      stopEntity(physicsComponent);
-   }
+   return {
+      entityType: EntityType.fish,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.attackingEntities]: attackingEntitiesComponent,
+         [ServerComponentType.loot]: lootComponent,
+         [ServerComponentType.fish]: fishComponent
+      },
+      lights: []
+   };
 }
 
-export function onFishLeaderHurt(fish: Entity, attackingEntityID: number): void {
-   if (HealthComponentArray.hasComponent(attackingEntityID)) {
-      const fishComponent = FishComponentArray.getComponent(fish.id);
-      fishComponent.attackTargetID = attackingEntityID;
+export function onFishLeaderHurt(fish: Entity, attackingEntity: Entity): void {
+   if (HealthComponentArray.hasComponent(attackingEntity)) {
+      const fishComponent = FishComponentArray.getComponent(fish);
+      fishComponent.attackTargetID = attackingEntity;
    }
-}
-
-export function onFishHurt(fish: Entity, attackingEntity: Entity): void {
-   registerAttackingEntity(fish, attackingEntity);
-}
-
-export function onFishDeath(fish: Entity): void {
-   createItemsOverEntity(fish, ItemType.raw_fish, 1, 40);
 }

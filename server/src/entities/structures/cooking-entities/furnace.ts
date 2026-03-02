@@ -1,44 +1,70 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../../Entity";
-import { CookingComponent, CookingComponentArray } from "../../../components/CookingComponent";
-import { HealthComponent, HealthComponentArray } from "../../../components/HealthComponent";
-import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../../components/InventoryComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../../components/StatusEffectComponent";
-import { tickCookingEntity } from "./cooking-entity";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Inventory, InventoryName } from "battletribes-shared/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../../components";
 import Tribe from "../../../Tribe";
-import { TribeComponent, TribeComponentArray } from "../../../components/TribeComponent";
-import { StructureComponent, StructureComponentArray } from "../../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createFurnaceHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { CookingComponent } from "../../../components/CookingComponent";
+import { HealthComponent } from "../../../components/HealthComponent";
+import { InventoryComponent, addInventoryToInventoryComponent } from "../../../components/InventoryComponent";
+import { StatusEffectComponent } from "../../../components/StatusEffectComponent";
+import { StructureComponent } from "../../../components/StructureComponent";
+import { addHitboxToTransformComponent, TransformComponent } from "../../../components/TransformComponent";
+import { TribeComponent } from "../../../components/TribeComponent";
+import { FurnaceComponent } from "../../../components/FurnaceComponent";
+import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../../shared/src/utils";
+import { HitboxCollisionType } from "../../../../../shared/src/boxes/boxes";
+import { RectangularBox } from "../../../../../shared/src/boxes/RectangularBox";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../../shared/src/collision";
+import { Hitbox } from "../../../hitboxes";
+import { StructureConnection } from "../../../structure-placement";
 
-export function createFurnace(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const furnace = new Entity(position, rotation, EntityType.furnace, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createFurnaceConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
 
-   const hitboxes = createFurnaceHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      furnace.addHitbox(hitboxes[i]);
-   }
+   const box = new RectangularBox(position, new Point(0, 0), rotation, 80, 80);
+   const hitbox = new Hitbox(transformComponent, null, true, box, 2, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-   HealthComponentArray.addComponent(furnace.id, new HealthComponent(25));
-   StatusEffectComponentArray.addComponent(furnace.id, new StatusEffectComponent(StatusEffect.poisoned));
-   TribeComponentArray.addComponent(furnace.id, new TribeComponent(tribe));
-   StructureComponentArray.addComponent(furnace.id, new StructureComponent(connectionInfo));
+   const healthComponent = new HealthComponent(25);
+
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding);
+
+   const structureComponent = new StructureComponent(connections, virtualStructure);
+
+   const tribeComponent = new TribeComponent(tribe);
 
    const inventoryComponent = new InventoryComponent();
-   InventoryComponentArray.addComponent(furnace.id, inventoryComponent);
-   createNewInventory(inventoryComponent, InventoryName.fuelInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-   createNewInventory(inventoryComponent, InventoryName.ingredientInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-   createNewInventory(inventoryComponent, InventoryName.outputInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
-   CookingComponentArray.addComponent(furnace.id, new CookingComponent());
+   // @Copynpaste @Cleanup: don't add here, add in cooking component
+   
+   const fuelInventory = new Inventory(1, 1, InventoryName.fuelInventory);
+   addInventoryToInventoryComponent(inventoryComponent, fuelInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
+   
+   const ingredientInventory = new Inventory(1, 1, InventoryName.ingredientInventory);
+   addInventoryToInventoryComponent(inventoryComponent, ingredientInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
-   return furnace;
-}
+   const outputInventory = new Inventory(1, 1, InventoryName.outputInventory);
+   addInventoryToInventoryComponent(inventoryComponent, outputInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
+   
+   const cookingComponent = new CookingComponent(0);
 
-export function tickFurnace(furnace: Entity): void {
-   tickCookingEntity(furnace);
+   const furnaceComponent = new FurnaceComponent();
+   
+   return {
+      entityType: EntityType.furnace,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.inventory]: inventoryComponent,
+         [ServerComponentType.cooking]: cookingComponent,
+         [ServerComponentType.furnace]: furnaceComponent
+      },
+      lights: []
+   };
 }

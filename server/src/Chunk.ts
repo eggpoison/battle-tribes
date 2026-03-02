@@ -1,17 +1,13 @@
-import { RiverSteppingStoneData } from "webgl-test-shared/dist/client-server-types";
-import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
-import Entity from "./Entity";
+import { Entity } from "battletribes-shared/entities";
+import { GrassBlocker } from "./grass-blockers";
 
-// @Speed: Change from array-of-objects to object-of-arrays
-
+// @Cleanup @Memory: A lot of these properties aren't used by collision chunks
 class Chunk {
-   /** Stores all game objects inside the chunk */
+   /** Stores all entities inside the chunk */
    public readonly entities = new Array<Entity>();
 
    /** Stores all mobs which have the chunk in their vision range */
    public readonly viewingEntities = new Array<Entity>();
-
-   public readonly riverSteppingStones = new Array<RiverSteppingStoneData>();
 
    public readonly grassBlockers = new Array<GrassBlocker>();
    

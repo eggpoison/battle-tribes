@@ -1,9 +1,10 @@
-import { TreeSize } from "webgl-test-shared/dist/entities";
+import { Entity, TreeSize } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
-import { GrassBlockerCircle } from "webgl-test-shared/dist/grass-blockers";
-import Board from "../Board";
-import { addGrassBlocker } from "../grass-blockers";
-import { ServerComponentType, TreeComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
+import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "battletribes-shared/packets";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
+import { Point } from "../../../shared/src/utils";
 
 const TREE_TRUNK_RADII: Record<TreeSize, number> = {
    [TreeSize.small]: 15,
@@ -13,37 +14,30 @@ const TREE_TRUNK_RADII: Record<TreeSize, number> = {
 export class TreeComponent {
    readonly treeSize: TreeSize;
 
-   constructor(treeSize: TreeSize) {
-      this.treeSize = treeSize;
+   constructor(size: number) {
+      this.treeSize = size;
    }
 }
 
-export const TreeComponentArray = new ComponentArray<ServerComponentType.tree, TreeComponent>(true, {
-   onJoin: onJoin,
-   serialise: serialise
-});
+export const TreeComponentArray = new ComponentArray<TreeComponent>(ServerComponentType.tree, true, getDataLength, addDataToPacket);
+TreeComponentArray.onJoin = onJoin;
 
-function onJoin(entityID: number): void {
-   const treeComponent = TreeComponentArray.getComponent(entityID);
+function onJoin(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const treeHitbox = transformComponent.hitboxes[0];
+   
+   const treeComponent = TreeComponentArray.getComponent(entity);
 
-   // @Hack
-   const tree = Board.entityRecord[entityID]!;
-
-   const blocker: GrassBlockerCircle = {
-      position: tree.position.copy(),
-      blockAmount: 0,
-      radius: TREE_TRUNK_RADII[treeComponent.treeSize],
-      maxBlockAmount: 0.9
-   };
-   // @Temporary
-   // addGrassBlocker(blocker, entityID);
+   const blockerBox = new CircularBox(treeHitbox.box.position.copy(), new Point(0, 0), 0, TREE_TRUNK_RADII[treeComponent.treeSize]);
+   // @SQUEAM for shot
+   // createGrassBlocker(blockerBox, getEntityLayer(entity), 0, 0.9, entity)
 }
 
-function serialise(entityID: number): TreeComponentData {
-   const treeComponent = TreeComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.tree,
-      treeSize: treeComponent.treeSize
-   };
+function addDataToPacket(packet: Packet, entity: Entity): void {
+   const treeComponent = TreeComponentArray.getComponent(entity);
+   packet.writeNumber(treeComponent.treeSize);
 }

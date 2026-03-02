@@ -1,36 +1,59 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { BuildingMaterial } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { EntityConfig } from "../../components";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
 import Tribe from "../../Tribe";
-import { DoorComponent, DoorComponentArray } from "../../components/DoorComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
-import { BuildingMaterialComponent, BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
-import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createDoorHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { TribeComponent } from "../../components/TribeComponent";
+import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
+import { DoorComponent } from "../../components/DoorComponent";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../shared/src/utils";
+import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
+import { StructureConnection } from "../../structure-placement";
 
-export const DOOR_HEALTHS = [15, 45];
+const HEALTHS = [15, 45];
 
-export function createDoor(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
-   const door = new Entity(position, rotation, EntityType.door, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxes = createDoorHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      door.addHitbox(hitboxes[i]);
-   }
+export function createDoorConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
    
-   PhysicsComponentArray.addComponent(door.id, new PhysicsComponent(0, 0, 0, 0, false, true));
-   HealthComponentArray.addComponent(door.id, new HealthComponent(DOOR_HEALTHS[material]));
-   StatusEffectComponentArray.addComponent(door.id, new StatusEffectComponent(0));
-   DoorComponentArray.addComponent(door.id, new DoorComponent(position.x, position.y, rotation));
-   StructureComponentArray.addComponent(door.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(door.id, new TribeComponent(tribe)); 
-   BuildingMaterialComponentArray.addComponent(door.id, new BuildingMaterialComponent(material));
+   transformComponent.isAffectedByAirFriction = false;
+   transformComponent.isAffectedByGroundFriction = false;
 
-   return door;
+   const box = new RectangularBox(position, new Point(0, 0), rotation, 64, 16);
+   const hitbox = new Hitbox(transformComponent, null, true, box, 0.5, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
+
+   const healthComponent = new HealthComponent(HEALTHS[material]);
+
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connections, virtualStructure);
+   
+   const tribeComponent = new TribeComponent(tribe);
+
+   const buildingMaterialComponent = new BuildingMaterialComponent(material, HEALTHS);
+
+   const doorComponent = new DoorComponent();
+   
+   return {
+      entityType: EntityType.door,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.buildingMaterial]: buildingMaterialComponent,
+         [ServerComponentType.door]: doorComponent
+      },
+      lights: []
+   };
 }

@@ -1,35 +1,52 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { BuildingMaterial } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
+import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { EntityConfig } from "../../components";
+import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { TribeComponent } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { BuildingMaterialComponent, BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createWallHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../shared/src/utils";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
+import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../../shared/src/collision";
+import { StructureConnection } from "../../structure-placement";
 
-export const WALL_HEALTHS = [25, 75];
+const HEALTHS = [25, 75];
 
-export function createWall(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const wall = new Entity(position, rotation, EntityType.wall, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxes = createWallHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      wall.addHitbox(hitboxes[i]);
-   }
-
-   const material = BuildingMaterial.wood;
+export function createWallConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualBuilding: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
    
-   HealthComponentArray.addComponent(wall.id, new HealthComponent(WALL_HEALTHS[material]));
-   StatusEffectComponentArray.addComponent(wall.id, new StatusEffectComponent(StatusEffect.bleeding));
-   StructureComponentArray.addComponent(wall.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(wall.id, new TribeComponent(tribe));
-   BuildingMaterialComponentArray.addComponent(wall.id, new BuildingMaterialComponent(material));
+   const box = new RectangularBox(position, new Point(0, 0), rotation, 64, 64);
+   const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-   return wall;
+   const healthComponent = new HealthComponent(HEALTHS[material]);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connections, virtualBuilding);
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const buildingMaterialComponent = new BuildingMaterialComponent(material, HEALTHS);
+   
+   return {
+      entityType: EntityType.wall,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.buildingMaterial]: buildingMaterialComponent
+      },
+      lights: []
+   };
 }

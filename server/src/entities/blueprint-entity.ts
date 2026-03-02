@@ -1,18 +1,21 @@
-import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
-import { BlueprintType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StructureType } from "webgl-test-shared/dist/structures";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
-import { HealthComponent, HealthComponentArray } from "../components/HealthComponent";
-import { BlueprintComponent, BlueprintComponentArray } from "../components/BlueprintComponent";
-import { TribeComponent, TribeComponentArray } from "../components/TribeComponent";
+import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
+import { Entity, EntityType } from "battletribes-shared/entities";
+import { EntityConfig } from "../components";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../components/TransformComponent";
+import { HealthComponent } from "../components/HealthComponent";
+import { BlueprintComponent } from "../components/BlueprintComponent";
 import Tribe from "../Tribe";
-import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { TribeComponent } from "../components/TribeComponent";
+import { HitboxCollisionType } from "../../../shared/src/boxes/boxes";
+import { StructureComponent } from "../components/StructureComponent";
+import { VirtualStructure } from "../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../shared/src/utils";
+import { cloneHitbox } from "../hitboxes";
+import { createStructureConfig, StructureConnection } from "../structure-placement";
 
 // @Incomplete: Remove if the associated entity is removed
 
-export function getBlueprintEntityType(blueprintType: BlueprintType): StructureType {
+export function getBlueprintEntityType(blueprintType: BlueprintType): EntityType {
    switch (blueprintType) {
       case BlueprintType.woodenTunnel:
       case BlueprintType.stoneTunnel:
@@ -30,23 +33,57 @@ export function getBlueprintEntityType(blueprintType: BlueprintType): StructureT
       case BlueprintType.stoneWallSpikes: return EntityType.wallSpikes;
       case BlueprintType.warriorHutUpgrade: return EntityType.warriorHut;
       case BlueprintType.fenceGate: return EntityType.fenceGate;
+      case BlueprintType.stoneBracings: return EntityType.bracings;
+      case BlueprintType.scrappy: return EntityType.scrappy;
+      case BlueprintType.cogwalker: return EntityType.cogwalker;
    }
 }
 
-export function createBlueprintEntity(position: Point, rotation: number, blueprintType: BlueprintType, associatedEntityID: number, tribe: Tribe): Entity {
-   const blueprintEntity = new Entity(position, rotation, EntityType.blueprintEntity, COLLISION_BITS.none, 0);
+export function createBlueprintEntityConfig(position: Point, rotation: number, tribe: Tribe, blueprintType: BlueprintType, associatedEntityID: Entity, virtualStructure: VirtualStructure | null, connections: Array<StructureConnection>): EntityConfig {
+   let transformComponent: TransformComponent;
 
-   const entityType = getBlueprintEntityType(blueprintType);
-   const hitboxes = createEntityHitboxes(entityType);
-   for (let i = 0; i < hitboxes.length; i++) {
-      blueprintEntity.addHitbox(hitboxes[i]);
+   if (associatedEntityID !== 0) {
+      const structureTransformComponent = TransformComponentArray.getComponent(associatedEntityID);
+      
+      transformComponent = new TransformComponent();
+
+      for (const structureHitbox of structureTransformComponent.hitboxes) {
+         const hitbox = cloneHitbox(transformComponent, structureHitbox);
+         hitbox.mass = 0;
+         hitbox.collisionType = HitboxCollisionType.soft;
+         // @Hack
+         hitbox.collisionMask = 0;
+         addHitboxToTransformComponent(transformComponent, hitbox);
+      }
+   } else {
+      const entityType = getBlueprintEntityType(blueprintType);
+      const entityConfig = createStructureConfig(tribe, entityType, position, rotation, []);
+
+      transformComponent = entityConfig.components[ServerComponentType.transform]!;
+
+      for (const hitbox of transformComponent.hitboxes) {
+         hitbox.mass = 0;
+         hitbox.collisionType = HitboxCollisionType.soft;
+      }
    }
 
-   HealthComponentArray.addComponent(blueprintEntity.id, new HealthComponent(5));
-   BlueprintComponentArray.addComponent(blueprintEntity.id, new BlueprintComponent(blueprintType, associatedEntityID, tribe.virtualEntityIDCounter));
-   TribeComponentArray.addComponent(blueprintEntity.id, new TribeComponent(tribe));
-
-   tribe.virtualEntityIDCounter++;
+   const healthComponent = new HealthComponent(5);
    
-   return blueprintEntity;
+   const structureComponent = new StructureComponent(connections, virtualStructure);
+   
+   const blueprintComponent = new BlueprintComponent(blueprintType, associatedEntityID);
+
+   const tribeComponent = new TribeComponent(tribe);
+   
+   return {
+      entityType: EntityType.blueprintEntity,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.blueprint]: blueprintComponent,
+         [ServerComponentType.tribe]: tribeComponent
+      },
+      lights: []
+   };
 }

@@ -1,0 +1,28 @@
+#cow-stamina-bar {
+   width: 25rem;
+   height: 2.25rem;
+   border: 5px solid #000;
+   background-color: #444;
+   position: absolute;
+   left: 50%;
+   bottom: 15rem;
+   transform: translateX(-50%);
+   z-index: 1;
+   pointer-events: none;
+}
+
+#cow-stamina-bar .stamina-slider {
+   height: 2.25rem;
+   background-color: rgb(255, 252, 63);
+   box-shadow: -5px -5px 0 0 rgb(197, 184, 0) inset, 5px 5px 0 0 rgb(248, 255, 188) inset;
+}
+
+#cow-stamina-bar .energy-blob {
+   width: 40px;
+   height: 36px;
+   position: absolute;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   image-rendering: pixelated;
+   z-index: 2;
+}

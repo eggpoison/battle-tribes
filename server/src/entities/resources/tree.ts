@@ -1,46 +1,71 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { createItemsOverEntity } from "../../entity-shared";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
+import { Entity, EntityType, TreeSize } from "battletribes-shared/entities";
+import { Point, randInt } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
 import { TreeComponent, TreeComponentArray } from "../../components/TreeComponent";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
+import { ItemType } from "../../../../shared/src/items/items";
+import { Hitbox } from "../../hitboxes";
 
 const TREE_MAX_HEALTHS = [10, 15];
-export const TREE_RADII: ReadonlyArray<number> = [40, 50];
-const SEED_DROP_CHANCES: ReadonlyArray<number> = [0.25, 0.5];
 
-const WOOD_DROP_AMOUNTS: ReadonlyArray<[number, number]> = [
-   [2, 4],
-   [5, 7]
-];
-
-export function createTree(position: Point, rotation: number): Entity {
-   const size = Math.random() > 1/3 ? 1 : 0;
-
-   const tree = new Entity(position, rotation, EntityType.tree, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
-
-   const mass = 1.25 + size * 0.25;
-   const hitbox = new CircularHitbox(mass, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, TREE_RADII[size]);
-   tree.addHitbox(hitbox);
-
-   HealthComponentArray.addComponent(tree.id, new HealthComponent(TREE_MAX_HEALTHS[size]));
-   StatusEffectComponentArray.addComponent(tree.id, new StatusEffectComponent(0));
-   TreeComponentArray.addComponent(tree.id, new TreeComponent(size));
-
-   return tree;
-}
-
-export function onTreeDeath(tree: Entity): void {
-   const treeComponent = TreeComponentArray.getComponent(tree.id);
-
-   createItemsOverEntity(tree, ItemType.wood, randInt(...WOOD_DROP_AMOUNTS[treeComponent.treeSize]), TREE_RADII[treeComponent.treeSize]);
-
-   const dropChance = SEED_DROP_CHANCES[treeComponent.treeSize];
-   if (Math.random() < dropChance) {
-      createItemsOverEntity(tree, ItemType.seed, 1, TREE_RADII[treeComponent.treeSize])
+registerEntityLootOnDeath(EntityType.tree, {
+   itemType: ItemType.wood,
+   getAmount: (tree: Entity) => {
+      const treeComponent = TreeComponentArray.getComponent(tree);
+      switch (treeComponent.treeSize) {
+         case TreeSize.small: return randInt(2, 4);
+         case TreeSize.large: return randInt(5, 7);
+      }
    }
+});
+registerEntityLootOnDeath(EntityType.tree, {
+   itemType: ItemType.seed,
+   getAmount: (tree: Entity) => {
+      const treeComponent = TreeComponentArray.getComponent(tree);
+
+      let dropChance: number;
+      switch (treeComponent.treeSize) {
+         case TreeSize.small: dropChance = 0.25; break;
+         case TreeSize.large: dropChance = 0.5; break;
+      }
+
+      return Math.random() < dropChance ? 1 : 0;
+   }
+});
+
+const TREE_RADII: ReadonlyArray<number> = [40, 50];
+
+export function createTreeConfig(position: Point, angle: number, size: TreeSize): EntityConfig {
+   const transformComponent = new TransformComponent();
+   
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, TREE_RADII[size]), 1.25 + size * 0.25, HitboxCollisionType.soft, CollisionBit.plant, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
+
+   const healthComponent = new HealthComponent(TREE_MAX_HEALTHS[size]);
+   
+   const statusEffectComponent = new StatusEffectComponent(0);
+
+   const lootComponent = new LootComponent();
+   
+   const treeComponent = new TreeComponent(size);
+   
+   return {
+      entityType: EntityType.tree,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.loot]: lootComponent,
+         [ServerComponentType.tree]: treeComponent
+      },
+      lights: []
+   };
 }

@@ -1,30 +1,50 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { HealthComponent } from "../../components/HealthComponent";
+import { HutComponent } from "../../components/HutComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { TribeComponent } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { HutComponent, HutComponentArray } from "../../components/HutComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createWorkerHutHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../shared/src/utils";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
+import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
+import { StructureConnection } from "../../structure-placement";
 
-export function createWorkerHut(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const hut = new Entity(position, rotation, EntityType.workerHut, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createWorkerHutConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
 
-   const hitboxes = createWorkerHutHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      hut.addHitbox(hitboxes[i]);
-   }
+   const box = new RectangularBox(position, new Point(0, 0), rotation, 88, 88);
+   const hitbox = new Hitbox(transformComponent, null, true, box, 1.8, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-   HealthComponentArray.addComponent(hut.id, new HealthComponent(50));
-   StatusEffectComponentArray.addComponent(hut.id, new StatusEffectComponent(StatusEffect.poisoned));
-   StructureComponentArray.addComponent(hut.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(hut.id, new TribeComponent(tribe));
-   HutComponentArray.addComponent(hut.id, new HutComponent());
+   const healthComponent = new HealthComponent(50);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structrureComponent = new StructureComponent(connections, virtualStructure);
 
-   return hut;
+   const tribeComponent = new TribeComponent(tribe);
+
+   const hutComponent = new HutComponent();
+   
+   return {
+      entityType: EntityType.workerHut,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structrureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.hut]: hutComponent
+      },
+      lights: []
+   };
 }

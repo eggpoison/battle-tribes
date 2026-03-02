@@ -1,14 +1,18 @@
 {
    "compilerOptions": {
-      "target": "es2015",
+      "target": "ESNext",
       "moduleResolution": "node",
       "esModuleInterop": true,
       "strict": true,
       "sourceMap": false,
       "removeComments": false,
-      "baseUrl": "./"
+      "baseUrl": "./",
+      "paths": {
+         "battletribes-shared/*": ["../shared/src/*"]
+       }
    },
-   "include": [
-      "src"
-   ]
+   "references": [
+     { "path": "../shared" }
+   ],
+   "include": ["src"]
 }

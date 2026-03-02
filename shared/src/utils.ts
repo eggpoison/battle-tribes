@@ -1,8 +1,86 @@
+import { RectangularBox } from "./boxes/RectangularBox";
 import { Settings } from "./settings";
+
+export enum UtilVars {
+   PI = 3.14159265358979
+}
+
+export type TileIndex = number;
+
+export interface TileCoordinates {
+   readonly x: number;
+   readonly y: number;
+}
 
 export type Mutable<T> = {
    -readonly [P in keyof T]: T[P];
 };
+
+export interface Colour {
+   r: number;
+   g: number;
+   b: number;
+   a: number;
+}
+
+// @Cleanup: location
+export enum AIPlanType {
+   root,
+   craftRecipe,
+   placeBuilding,
+   upgradeBuilding,
+   doTechStudy,
+   doTechItems,
+   completeTech,
+   gatherItem
+}
+
+const kRGBToYPrime = [0.299, 0.587, 0.114];
+const kRGBToI = [0.596, -0.275, -0.321];
+const kRGBToQ = [0.212, -0.523, 0.311];
+
+const kYIQToR = [1.0, 0.956, 0.621];
+const kYIQToG = [1.0, -0.272, -0.647];
+const kYIQToB = [1.0, -1.107, 1.704];
+
+export function hueShift(colour: Colour, hueAdjust: number): void {
+   // Convert to YIQ
+   const YPrime = colour.r * kRGBToYPrime[0] + colour.g * kRGBToYPrime[1] + colour.b * kRGBToYPrime[2];
+   let I = colour.r * kRGBToI[0] + colour.g * kRGBToI[1] + colour.b * kRGBToI[2];
+   let Q = colour.r * kRGBToQ[0] + colour.g * kRGBToQ[1] + colour.b * kRGBToQ[2];
+
+   // Calculate the hue and chroma
+   let hue = Math.atan2(Q, I);
+   const chroma = Math.sqrt(I * I + Q * Q);
+
+   // Make the user's adjustments
+   hue += hueAdjust;
+
+   // Convert back to YIQ
+   Q = chroma * Math.sin(hue);
+   I = chroma * Math.cos(hue);
+
+   // Convert back to RGB
+   colour.r = YPrime * kYIQToR[0] + I * kYIQToR[1] + Q * kYIQToR[2];
+   colour.g = YPrime * kYIQToG[0] + I * kYIQToG[1] + Q * kYIQToG[2];
+   colour.b = YPrime * kYIQToB[0] + I * kYIQToB[1] + Q * kYIQToB[2];
+}
+
+export function multiColourLerp(colours: ReadonlyArray<Colour>, u: number): Colour {
+   const progress = u * (colours.length - 1);
+   
+   const lowColour = colours[Math.floor(progress)];
+   const highColour = colours[Math.ceil(progress)];
+
+   const interLerp = progress % 1;
+
+   return {
+      r: lerp(lowColour.r, highColour.r, interLerp),
+      g: lerp(lowColour.g, highColour.g, interLerp),
+      b: lerp(lowColour.b, highColour.b, interLerp),
+      a: lerp(lowColour.a, highColour.a, interLerp)
+   };
+}
 
 /**
  * Returns a random integer inclusively.
@@ -14,7 +92,7 @@ export type Mutable<T> = {
    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export function randFloat (min: number, max: number): number {
+export function randFloat(min: number, max: number): number {
    return Math.random() * (max - min) + min;
 }
 
@@ -41,7 +119,7 @@ export class Point {
       return this.x * other.x + this.y * other.y;
    }
 
-   public calculateDistanceBetween(other: Point): number {
+   public distanceTo(other: Point): number {
       const xDiff = this.x - other.x;
       const yDiff = this.y - other.y;
       return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
@@ -53,7 +131,7 @@ export class Point {
       return diffX * diffX + diffY * diffY;
    }
 
-   public calculateAngleBetween(other: Point): number {
+   public angleTo(other: Point): number {
       let angle = Math.atan2(other.y - this.y, other.x - this.x);
       // @Hack @Speed: won't be necessary when we switch the angle system
       if (angle >= Math.PI) {
@@ -65,8 +143,8 @@ export class Point {
    public convertToVector(other?: Point): Vector {
       const targetPoint = other || new Point(0, 0);
 
-      const distance = this.calculateDistanceBetween(targetPoint);
-      const angle = targetPoint.calculateAngleBetween(this);
+      const distance = this.distanceTo(targetPoint);
+      const angle = targetPoint.angleTo(this);
       return new Vector(distance, angle);
    }
 
@@ -74,31 +152,36 @@ export class Point {
       return new Point(this.x, this.y);
    }
 
-   public length(): number {
+   public magnitude(): number {
       return Math.sqrt(this.x * this.x + this.y * this.y);
    }
 
    public lengthSquared(): number {
       return this.x * this.x + this.y * this.y;
    }
-   
-   public package(): [number, number] {
-      return [this.x, this.y];
+
+   public isZero(): boolean {
+      return this.x === 0 && this.y === 0;
    }
 
+   public isNonZero(): boolean {
+      return this.x !== 0 || this.y !== 0;
+   }
+   
    public offset(offsetMagnitude: number, offsetDirection: number): Point {
       const x = this.x + offsetMagnitude * Math.sin(offsetDirection);
       const y = this.y + offsetMagnitude * Math.cos(offsetDirection);
       return new Point(x, y);
    }
 
-   public static unpackage(packagedPoint: [number, number]): Point {
-      return new Point(packagedPoint[0], packagedPoint[1]);
+   /** Projects the point onto another point */
+   public scalarProj(pointB: Point): number {
+      return (this.x * pointB.x + this.y * pointB.y) / pointB.magnitude();
    }
-   public static fromVectorForm(magnitude: number, direction: number): Point {
-      const x = magnitude * Math.sin(direction);
-      const y = magnitude * Math.cos(direction);
-      return new Point(x, y);
+
+   public set(other: Point): void {
+      this.x = other.x;
+      this.y = other.y;
    }
 }
 
@@ -158,8 +241,20 @@ export class Vector {
    }
 }
 
-export function lerp(start: number, end: number, amount: number): number {
-   return start * (1 - amount) + end * amount;
+export function lerp(start: number, end: number, t: number): number {
+   return start * (1 - t) + end * t;
+}
+
+export function slerp(startAngle: number, endAngle: number, t: number): number {
+   const clockwiseDist = clampAngleA(endAngle - startAngle);
+   if (clockwiseDist < Math.PI) {
+      // Clockwise
+      return startAngle + clockwiseDist * t;
+   } else {
+      // Counterclockwise
+      const counterclockwiseDist = 2 * Math.PI - clockwiseDist;
+      return startAngle - counterclockwiseDist * t;
+   }
 }
 
 export function randItem<T>(arr: Array<T> | ReadonlyArray<T>): T {
@@ -188,9 +283,15 @@ export function rotateYAroundOrigin(x: number, y: number, rotation: number): num
    return -Math.sin(rotation) * x + Math.cos(rotation) * y;
 }
 
-export function rotatePoint(point: Point, pivotPoint: Point, rotation: number): Point {
+export function rotatePointAroundPivot(point: Point, pivotPoint: Point, rotation: number): Point {
    const x = Math.cos(rotation) * (point.x - pivotPoint.x) + Math.sin(rotation) * (point.y - pivotPoint.y) + pivotPoint.x;
    const y = -Math.sin(rotation) * (point.x - pivotPoint.x) + Math.cos(rotation) * (point.y - pivotPoint.y) + pivotPoint.y;
+   return new Point(x, y);
+}
+
+export function rotatePoint(point: Point, rotation: number): Point {
+   const x = Math.cos(rotation) * point.x + Math.sin(rotation) * point.y;
+   const y = -Math.sin(rotation) * point.x + Math.cos(rotation) * point.y;
    return new Point(x, y);
 }
 
@@ -228,10 +329,20 @@ export function clampToBoardDimensions(tileCoord: number): number {
    if (tileCoord < 0) {
       return 0;
    }
-   if (tileCoord >= Settings.BOARD_DIMENSIONS) {
-      return Settings.BOARD_DIMENSIONS - 1;
+   if (tileCoord >= Settings.WORLD_SIZE_TILES) {
+      return Settings.WORLD_SIZE_TILES - 1;
    }
    return tileCoord;
+}
+
+export function clampToSubtileBoardDimensions(subtileCoord: number): number {
+   if (subtileCoord < 0) {
+      return 0;
+   }
+   if (subtileCoord >= Settings.WORLD_SIZE_TILES * 4) {
+      return Settings.WORLD_SIZE_TILES * 4 - 1;
+   }
+   return subtileCoord;
 }
 
 export function clamp(num: number, min: number, max: number): number {
@@ -245,7 +356,7 @@ export function clamp(num: number, min: number, max: number): number {
 }
 
 export function randSign(): number {
-   return Math.random() < 0.5 ? 1 : 0;
+   return Math.random() < 0.5 ? 1 : -1;
 }
 
 export function distance(x1: number, y1: number, x2: number, y2: number): number {
@@ -268,7 +379,7 @@ export function angle(x: number, y: number): number {
 }
 
 export function customTickIntervalHasPassed(ticks: number, intervalSeconds: number): boolean {
-   const ticksPerInterval = intervalSeconds * Settings.TPS;
+   const ticksPerInterval = intervalSeconds * Settings.TICK_RATE;
    
    const previousCheck = (ticks - 1) / ticksPerInterval;
    const check = ticks / ticksPerInterval;
@@ -305,10 +416,10 @@ export function smoothstep(value: number): number {
    return clamped * clamped * (3 - 2 * clamped);
 }
 
-export function distBetweenPointAndRectangle(point: Point, rectPos: Point, rectWidth: number, rectHeight: number, rectRotation: number): number {
+export function distBetweenPointAndRectangle(pointX: number, pointY: number, rectPos: Point, rectWidth: number, rectHeight: number, rectRotation: number): number {
    // Rotate point around rect to make the situation axis-aligned
-   const alignedPointX = rotateXAroundPoint(point.x, point.y, rectPos.x, rectPos.y, -rectRotation);
-   const alignedPointY = rotateYAroundPoint(point.x, point.y, rectPos.x, rectPos.y, -rectRotation);
+   const alignedPointX = rotateXAroundPoint(pointX, pointY, rectPos.x, rectPos.y, -rectRotation);
+   const alignedPointY = rotateYAroundPoint(pointX, pointY, rectPos.x, rectPos.y, -rectRotation);
 
    const rectMinX = rectPos.x - rectWidth * 0.5;
    const rectMaxX = rectPos.x + rectWidth * 0.5;
@@ -320,15 +431,30 @@ export function distBetweenPointAndRectangle(point: Point, rectPos: Point, rectW
    return Math.sqrt(dx * dx + dy * dy);
 }
 
+export function distBetweenPointAndRectangularBox(pointX: number, pointY: number, rect: RectangularBox): number {
+   return distBetweenPointAndRectangle(pointX, pointY, rect.position, rect.width, rect.height, rect.angle);
+}
+
 export function assertUnreachable(x: never): never {
    console.warn(x);
    throw new Error("Why must I exist?");
 }
 
+export function assert(condition: unknown, errorMessage?: string | (() => string)): asserts condition {
+   if (!condition) {
+      if (typeof errorMessage === "string") {
+         throw new Error(errorMessage);
+      } else if (typeof errorMessage === "function") {
+         throw new Error(errorMessage());
+      } else {
+         throw new Error();
+      }
+   }
+}
+
+/** Gets the smallest angle you need to add/subtract to the source angle to reach the target angle, in the range [-pi, pi) */
 export function getAngleDiff(sourceAngle: number, targetAngle: number): number {
-   let a = targetAngle - sourceAngle;
-   a = Math.abs((a + Math.PI) % (Math.PI * 2)) - Math.PI;
-   return a;
+   return clampAngleB(targetAngle - sourceAngle);
 }
 
 export function getAbsAngleDiff(sourceAngle: number, targetAngle: number): number {
@@ -337,4 +463,82 @@ export function getAbsAngleDiff(sourceAngle: number, targetAngle: number): numbe
 
 export function dotAngles(angle1: number, angle2: number): number {
    return Math.sin(angle1) * Math.sin(angle2) + Math.cos(angle1) * Math.cos(angle2);
+}
+
+// @Cleanup: rename to "unitVec2" (paired with polarVec2)
+export function angleToPoint(angle: number): Point {
+   return new Point(Math.sin(angle), Math.cos(angle));
+}
+
+export function getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
+   return (tileY + Settings.EDGE_GENERATION_DISTANCE) * Settings.FULL_WORLD_SIZE_TILES + tileX + Settings.EDGE_GENERATION_DISTANCE;
+}
+
+export function getTileX(tileIndex: TileIndex): number {
+   return tileIndex % Settings.FULL_WORLD_SIZE_TILES - Settings.EDGE_GENERATION_DISTANCE;
+}
+
+export function getTileY(tileIndex: TileIndex): number {
+   return Math.floor(tileIndex / Settings.FULL_WORLD_SIZE_TILES) - Settings.EDGE_GENERATION_DISTANCE;
+}
+
+export function tileIsInWorld(tileX: number, tileY: number): boolean {
+   return tileX >= 0 && tileX < Settings.WORLD_SIZE_TILES && tileY >= 0 && tileY < Settings.WORLD_SIZE_TILES;
+}
+
+export function tileIsInWorldIncludingEdges(tileX: number, tileY: number): boolean {
+   return tileX >= -Settings.EDGE_GENERATION_DISTANCE && tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE && tileY >= -Settings.EDGE_GENERATION_DISTANCE && tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE;
+}
+
+export function positionIsInWorld(x: number, y: number): boolean {
+   return x >= 0 && x < Settings.WORLD_UNITS && y >= 0 && y < Settings.WORLD_UNITS;
+}
+
+/** Returns x modulo n (according to the mathematical definition related to congruence) */
+export function mod(x: number, n: number): number {
+   return ((x % n) + n) % n;
+}
+
+export function alignAngleToClosestAxis(sourceAngle: number, targetAngle: number): number {
+   return Math.round((sourceAngle - targetAngle) / (Math.PI * 0.5)) * Math.PI * 0.5 + targetAngle;
+}
+
+export function unitsToChunksClamped(a: number): number {
+   let aChunks = Math.floor(a / Settings.CHUNK_UNITS);
+   if (aChunks < 0) {
+      aChunks = 0;
+   }  else if (aChunks >= Settings.WORLD_SIZE_CHUNKS) {
+      aChunks = Settings.WORLD_SIZE_CHUNKS - 1;
+   }
+   return aChunks;
+}
+
+export function randAngle(): number {
+   return 2 * Math.PI * Math.random();
+}
+
+/** Clamps an angle into the [0, 2PI) range. */
+export function clampAngleA(angle: number): number {
+  const twoPi = Math.PI * 2;
+  return ((angle % twoPi) + twoPi) % twoPi;
+}
+
+/** Clamps an angle into the [-PI, PI) range. */
+export function clampAngleB(angle: number): number {
+   return clampAngleA(angle + Math.PI) - Math.PI;
+}
+
+/** converts the secs into the equivalent integer number of ticks */
+export function secondsToTicks(sex: number): number {
+   return Math.floor(sex * Settings.TICK_RATE);
+}
+
+export function polarVec2(magnitude: number, direction: number): Point {
+   const x = magnitude * Math.sin(direction);
+   const y = magnitude * Math.cos(direction);
+   return new Point(x, y);
+}
+
+export function averageVec2(v1: Point, v2: Point): Point {
+   return new Point((v1.x + v2.x) * 0.5, (v1.y + v2.y) * 0.5);
 }

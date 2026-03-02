@@ -37,6 +37,11 @@
    margin: 0.2rem;
    border: 1px solid #999;
 }
+.devmode-menu-section h3 {
+   color: #fff;
+   text-align: center;
+   margin: 0.2rem 0;
+}
 
 .devmode-menu-section h2.devmode-menu-section-title {
    color: #fff;
@@ -48,7 +53,7 @@
    margin: 0.2rem;
 }
 
-.devmode-container :is(.devmode-input, p) {
+.devmode-container :is(.devmode-input, p, label) {
    color: #ccc;
 }
 
@@ -75,6 +80,17 @@
    cursor: pointer;
 }
 
+.devmode-card {
+   border: 2px solid #666;
+   margin: 4px;
+}
+.devmode-card p {
+   margin: 0;
+}
+.devmode-card button {
+   float: right;
+}
+
 #tab-selection {
    position: absolute;
    top: 0;
@@ -95,6 +111,18 @@
    image-rendering: pixelated;
    margin-left: 50%;
    transform: translateX(-50%);
+}
+.tab-selector img:hover {
+   animation: Spinninator9000 1s infinite linear;
+}
+
+@keyframes Spinninator9000 {
+   0% {
+      transform: translateX(-50%) rotate(0deg);
+   }
+   100% {
+      transform: translateX(-50%) rotate(360deg);
+   }
 }
 
 .tab-selector span {
@@ -119,12 +147,14 @@
 .devmode-scrollable-options .option {
    min-width: 5rem;
    color: #ccc;
-   text-align: center;
    list-style-type: none;
    padding: 0.3rem 0;
    cursor: pointer;
    white-space: pre;
    position: relative;
+}
+.devmode-scrollable-options .option span.text {
+   margin-left: 0.5rem;
 }
 .devmode-scrollable-options .option.selected {
    color: #fff;
@@ -137,7 +167,7 @@
    border-radius: 100%;
    position: absolute;
    top: 50%;
-   left: 10px;
+   left: 0;
    transform: translate(-50%, -50%);
 }
 

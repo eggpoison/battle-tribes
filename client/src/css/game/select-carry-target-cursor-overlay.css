@@ -1,0 +1,20 @@
+#select-carry-target-cursor-overlay {
+   width: 36px;
+   height: 36px;
+   background-image: url("../../images/miscellaneous/carry-cursor.png");
+   background-size: 100% 100%;
+   position: absolute;
+   transform: translate(-50%, -50%) scale(var(--zoom));
+   image-rendering: pixelated;
+   z-index: 2;
+   pointer-events: none;
+}
+#select-carry-target-cursor-overlay.carry {
+   background-image: url("../../images/miscellaneous/carry-cursor.png");
+}
+#select-carry-target-cursor-overlay.move {
+   background-image: url("../../images/miscellaneous/move-cursor.png");
+}
+#select-carry-target-cursor-overlay.attack {
+   background-image: url("../../images/miscellaneous/attack-cursor.png");
+}

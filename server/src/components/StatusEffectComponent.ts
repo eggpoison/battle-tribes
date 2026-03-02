@@ -1,14 +1,13 @@
-import { StatusEffectData } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, StatusEffectComponentData } from "webgl-test-shared/dist/components";
-import { PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { StatusEffect, STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
-import { customTickIntervalHasPassed } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Entity, DamageSource } from "battletribes-shared/entities";
+import { StatusEffect, STATUS_EFFECT_MODIFIERS } from "battletribes-shared/status-effects";
+import { customTickIntervalHasPassed } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
-import { getRandomPositionInEntity } from "../Entity";
 import { damageEntity } from "./HealthComponent";
-import { PhysicsComponentArray } from "./PhysicsComponent";
-import Board from "../Board";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent";
+import { Packet } from "battletribes-shared/packets";
+import { Hitbox, hitboxIsInRiver } from "../hitboxes";
 
 export class StatusEffectComponent {
    public readonly activeStatusEffectTypes = new Array<StatusEffect>();
@@ -22,23 +21,27 @@ export class StatusEffectComponent {
    }
 }
 
-export const StatusEffectComponentArray = new ComponentArray<ServerComponentType.statusEffect, StatusEffectComponent>(false, {
-   serialise: serialise
-});
+export const StatusEffectComponentArray = new ComponentArray<StatusEffectComponent>(ServerComponentType.statusEffect, false, getDataLength, addDataToPacket);
+StatusEffectComponentArray.onTick = {
+   tickInterval: 1,
+   func: onTick
+};
 
 const entityIsImmuneToStatusEffect = (statusEffectComponent: StatusEffectComponent, statusEffect: StatusEffect): boolean => {
    return (statusEffectComponent.statusEffectImmunityBitset & statusEffect) !== 0;
 }
 
-export function applyStatusEffect(entityID: number, statusEffect: StatusEffect, durationTicks: number): void {
-   const statusEffectComponent = StatusEffectComponentArray.getComponent(entityID);
+export function applyStatusEffect(entity: Entity, statusEffect: StatusEffect, durationTicks: number): void {
+   if (!StatusEffectComponentArray.hasComponent(entity)) {
+      return;
+   }
+   
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
    if (entityIsImmuneToStatusEffect(statusEffectComponent, statusEffect)) {
       return;
    }
 
-   if (StatusEffectComponentArray.activeEntityToIndexMap[entityID] === undefined) {
-      StatusEffectComponentArray.activateComponent(statusEffectComponent, entityID);
-   }
+   StatusEffectComponentArray.activateComponent(entity);
    
    if (!hasStatusEffect(statusEffectComponent, statusEffect)) {
       // New status effect
@@ -47,10 +50,9 @@ export function applyStatusEffect(entityID: number, statusEffect: StatusEffect, 
       statusEffectComponent.activeStatusEffectTicksElapsed.push(0);
       statusEffectComponent.activeStatusEffectTicksRemaining.push(durationTicks);
 
-      if (PhysicsComponentArray.hasComponent(entityID)) {
-         const physicsComponent = PhysicsComponentArray.getComponent(entityID);
-         physicsComponent.moveSpeedMultiplier *= STATUS_EFFECT_MODIFIERS[statusEffect].moveSpeedMultiplier;
-      }
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      // @BUG: Over time this may accrue errors!!!!! fix!!!!
+      transformComponent.moveSpeedMultiplier *= STATUS_EFFECT_MODIFIERS[statusEffect].moveSpeedMultiplier;
    } else {
       // Existing status effect
 
@@ -75,12 +77,11 @@ export function hasStatusEffect(statusEffectComponent: StatusEffectComponent, st
 export function clearStatusEffect(entityID: number, statusEffectIndex: number): void {
    const statusEffectComponent = StatusEffectComponentArray.getComponent(entityID);
 
-   if (PhysicsComponentArray.hasComponent(entityID)) {
-      const statusEffect = statusEffectComponent.activeStatusEffectTypes[statusEffectIndex];
-      
-      const physicsComponent = PhysicsComponentArray.getComponent(entityID);
-      physicsComponent.moveSpeedMultiplier /= STATUS_EFFECT_MODIFIERS[statusEffect].moveSpeedMultiplier;
-   }
+   const statusEffect = statusEffectComponent.activeStatusEffectTypes[statusEffectIndex];
+   
+   const transformComponent = TransformComponentArray.getComponent(entityID);
+      // @BUG: Over time this may accrue errors!!!!! fix!!!!
+   transformComponent.moveSpeedMultiplier /= STATUS_EFFECT_MODIFIERS[statusEffect].moveSpeedMultiplier;
 
    statusEffectComponent.activeStatusEffectTypes.splice(statusEffectIndex, 1);
    statusEffectComponent.activeStatusEffectTicksRemaining.splice(statusEffectIndex, 1);
@@ -100,9 +101,8 @@ export function clearStatusEffects(entityID: number): void {
    }
 }
 
-export function tickStatusEffectComponent(statusEffectComponent: StatusEffectComponent, entityID: number): void {
-   const entity = Board.entityRecord[entityID]!;
-
+function onTick(entity: Entity): void {
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
    for (let i = 0; i < statusEffectComponent.activeStatusEffectTypes.length; i++) {
       const statusEffect = statusEffectComponent.activeStatusEffectTypes[i];
 
@@ -110,15 +110,18 @@ export function tickStatusEffectComponent(statusEffectComponent: StatusEffectCom
 
       switch (statusEffect) {
          case StatusEffect.burning: {
+            const transformComponent = TransformComponentArray.getComponent(entity);
+            // @Hack
+            const hitbox = transformComponent.hitboxes[0];
             // If the entity is in a river, clear the fire effect
-            if (entity.isInRiver) {
-               clearStatusEffect(entity.id, i);
+            if (hitboxIsInRiver(hitbox)) {
+               clearStatusEffect(entity, i);
             } else {
                // Fire tick
                const ticksElapsed = statusEffectComponent.activeStatusEffectTicksElapsed[i];
                if (customTickIntervalHasPassed(ticksElapsed, 0.75)) {
-                  const hitPosition = getRandomPositionInEntity(entity);
-                  damageEntity(entity, null, 1, PlayerCauseOfDeath.fire, AttackEffectiveness.effective, hitPosition, 0);
+                  const hitPosition = getRandomPositionInEntity(transformComponent);
+                  damageEntity(hitbox, null, 1, DamageSource.fire, AttackEffectiveness.effective, hitPosition, 0);
                }
             }
             break;
@@ -126,56 +129,61 @@ export function tickStatusEffectComponent(statusEffectComponent: StatusEffectCom
          case StatusEffect.poisoned: {
             const ticksElapsed = statusEffectComponent.activeStatusEffectTicksElapsed[i];
             if (customTickIntervalHasPassed(ticksElapsed, 0.5)) {
-               const hitPosition = getRandomPositionInEntity(entity);
-               damageEntity(entity, null, 1, PlayerCauseOfDeath.poison, AttackEffectiveness.effective, hitPosition, 0);
+               const transformComponent = TransformComponentArray.getComponent(entity);
+               // @Hack
+               const hitbox = transformComponent.hitboxes[0];
+               const hitPosition = getRandomPositionInEntity(transformComponent);
+               damageEntity(hitbox, null, 1, DamageSource.poison, AttackEffectiveness.effective, hitPosition, 0);
             }
             break;
          }
          case StatusEffect.bleeding: {
             const ticksElapsed = statusEffectComponent.activeStatusEffectTicksElapsed[i];
             if (customTickIntervalHasPassed(ticksElapsed, 1)) {
-               const hitPosition = getRandomPositionInEntity(entity);
-               damageEntity(entity, null, 1, PlayerCauseOfDeath.bloodloss, AttackEffectiveness.effective, hitPosition, 0);
+               const transformComponent = TransformComponentArray.getComponent(entity);
+               // @Hack
+               const hitbox = transformComponent.hitboxes[0];
+               const hitPosition = getRandomPositionInEntity(transformComponent);
+               damageEntity(hitbox, null, 1, DamageSource.bloodloss, AttackEffectiveness.effective, hitPosition, 0);
             }
             break;
+         }
+         case StatusEffect.heatSickness: {
+            const ticksElapsed = statusEffectComponent.activeStatusEffectTicksElapsed[i];
+            if (customTickIntervalHasPassed(ticksElapsed, 2)) {
+               const transformComponent = TransformComponentArray.getComponent(entity);
+               // @Hack
+               const hitbox = transformComponent.hitboxes[0];
+               const hitPosition = getRandomPositionInEntity(transformComponent);
+               damageEntity(hitbox, null, 1, DamageSource.bloodloss, AttackEffectiveness.effective, hitPosition, 0);
+            }
          }
       }
 
       statusEffectComponent.activeStatusEffectTicksRemaining[i]--;
       if (statusEffectComponent.activeStatusEffectTicksRemaining[i] === 0) {
-         clearStatusEffect(entity.id, i);
+         clearStatusEffect(entity, i);
          i--;
          continue;
       }
    }
 
    if (statusEffectComponent.activeStatusEffectTypes.length === 0) {
-      StatusEffectComponentArray.queueComponentDeactivate(entityID);
+      StatusEffectComponentArray.queueComponentDeactivate(entity);
    }
 }
 
-export function tickStatusEffectComponents(): void {
-   for (let i = 0; i < StatusEffectComponentArray.activeComponents.length; i++) {
-      const component = StatusEffectComponentArray.activeComponents[i];
-      const entityID = StatusEffectComponentArray.activeEntityIDs[i];
-      tickStatusEffectComponent(component, entityID);
-   }
-
-   StatusEffectComponentArray.deactivateQueue();
+function getDataLength(entity: Entity): number {
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
+   return Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * statusEffectComponent.activeStatusEffectTypes.length;
 }
 
-function serialise(entityID: number): StatusEffectComponentData {
-   const statusEffects = new Array<StatusEffectData>();
-   const statusEffectComponent = StatusEffectComponentArray.getComponent(entityID);
+function addDataToPacket(packet: Packet, entity: Entity): void {
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
+
+   packet.writeNumber(statusEffectComponent.activeStatusEffectTypes.length);
    for (let i = 0; i < statusEffectComponent.activeStatusEffectTypes.length; i++) {
-      statusEffects.push({
-         type: statusEffectComponent.activeStatusEffectTypes[i] as unknown as StatusEffect,
-         ticksElapsed: statusEffectComponent.activeStatusEffectTicksElapsed[i]
-      });
+      packet.writeNumber(statusEffectComponent.activeStatusEffectTypes[i]);
+      packet.writeNumber(statusEffectComponent.activeStatusEffectTicksElapsed[i]);
    }
-
-   return {
-      componentType: ServerComponentType.statusEffect,
-      statusEffects: statusEffects
-   };
 }

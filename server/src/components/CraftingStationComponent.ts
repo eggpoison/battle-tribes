@@ -1,24 +1,14 @@
-import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ComponentArray } from "./ComponentArray";
-import { CraftingStationComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
-export class CraftingStationComponent {
-   public readonly craftingStation: CraftingStation;
-   
-   constructor(craftingStation: CraftingStation) {
-      this.craftingStation = craftingStation;
-   }
+// @Cleanup: is this component necessary/used at all.
+
+export class CraftingStationComponent {}
+
+export const CraftingStationComponentArray = new ComponentArray<CraftingStationComponent>(ServerComponentType.craftingStation, true, getDataLength, addDataToPacket);
+
+function getDataLength(): number {
+   return 0;
 }
 
-export const CraftingStationComponentArray = new ComponentArray<ServerComponentType.craftingStation, CraftingStationComponent>(true, {
-   serialise: serialise
-});
-
-function serialise(entityID: number): CraftingStationComponentData {
-   const craftingStationComponent = CraftingStationComponentArray.getComponent(entityID);
-
-   return {
-      componentType: ServerComponentType.craftingStation,
-      craftingStation: craftingStationComponent.craftingStation
-   };
-}
+function addDataToPacket(): void {}

@@ -1,15 +1,16 @@
-import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, TribesmanAIComponentData, TribesmanAIType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { randInt } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
+import { ServerComponentType, TribesmanAIType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import { ComponentArray } from "./ComponentArray";
-import Board from "../Board";
-import Tribe, { BuildingPlan } from "../Tribe";
+import Tribe from "../Tribe";
 import { EntityRelationship, TribeComponentArray } from "./TribeComponent";
-import { TribesmanGoal } from "../entities/tribes/tribesman-ai/tribesman-goals";
-import { CRAFTING_RECIPES } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { CRAFTING_RECIPES } from "battletribes-shared/items/crafting-recipes";
+import { ItemType } from "battletribes-shared/items/items";
+import { Entity } from "battletribes-shared/entities";
+import { tickTribesman } from "../entities/tribes/tribesman-ai/tribesman-ai";
+import { Packet } from "battletribes-shared/packets";
+import { entityExists, getGameTicks } from "../world";
+import { HutComponentArray } from "./HutComponent";
+import { TribesmanComponentArray } from "./TribesmanComponent";
 
 // @Incomplete: periodically remove dead entities from the relations object
 // @Incomplete: only keep track of tribesman relations
@@ -17,7 +18,7 @@ import { ItemType } from "webgl-test-shared/dist/items/items";
 const enum Vars {
    MAX_ENEMY_RELATION_THRESHOLD = -30,
    MIN_ACQUAINTANCE_RELATION_THRESOLD = 50,
-   ITEM_THROW_COOLDOWN_TICKS = (0.2 * Settings.TPS) | 0
+   ITEM_THROW_COOLDOWN_TICKS = (0.2 * Settings.TICK_RATE) | 0
 }
 
 /** Stores how much gifting an item to a tribesman increases your relations with them */
@@ -47,23 +48,22 @@ const GIFT_APPRECIATION_WEIGHTS: Record<ItemType, number> = {
    [ItemType.tribe_totem]: 10,
    [ItemType.worker_hut]: 15,
    [ItemType.barrel]: 8,
-   [ItemType.frost_armour]: 10,
+   [ItemType.frostSword]: 10,
+   [ItemType.frostPickaxe]: 10,
+   [ItemType.frostAxe]: 10,
+   [ItemType.frostArmour]: 10,
    [ItemType.campfire]: 5,
    [ItemType.furnace]: 9,
    [ItemType.wooden_bow]: 7,
    [ItemType.meat_suit]: 4,
    [ItemType.deepfrost_heart]: 4,
-   [ItemType.deepfrost_sword]: 15,
-   [ItemType.deepfrost_pickaxe]: 15,
-   [ItemType.deepfrost_axe]: 15,
-   [ItemType.deepfrost_armour]: 20,
    [ItemType.raw_fish]: 1,
    [ItemType.cooked_fish]: 2,
    [ItemType.fishlord_suit]: 4,
    [ItemType.gathering_gloves]: 5,
-   [ItemType.throngler]: 7,
    [ItemType.leather_armour]: 8,
-   [ItemType.spear]: 5,
+   [ItemType.woodenSpear]: 5,
+   [ItemType.stoneSpear]: 5,
    [ItemType.paper]: 2,
    [ItemType.research_bench]: 12,
    [ItemType.wooden_wall]: 3,
@@ -87,7 +87,49 @@ const GIFT_APPRECIATION_WEIGHTS: Record<ItemType, number> = {
    [ItemType.wooden_fence]: 2,
    [ItemType.fertiliser]: 2,
    [ItemType.frostshaper]: 5,
-   [ItemType.stonecarvingTable]: 6
+   [ItemType.stonecarvingTable]: 6,
+   [ItemType.woodenShield]: 3,
+   [ItemType.slingshot]: 1,
+   [ItemType.woodenBracings]: 1,
+   [ItemType.fireTorch]: 1,
+   [ItemType.slurb]: 1,
+   [ItemType.slurbTorch]: 1,
+   [ItemType.rawYetiFlesh]: 1,
+   [ItemType.cookedYetiFlesh]: 1,
+   [ItemType.mithrilOre]: 1,
+   [ItemType.mithrilBar]: 1,
+   [ItemType.mithrilSword]: 1,
+   [ItemType.mithrilPickaxe]: 1,
+   [ItemType.mithrilAxe]: 1,
+   [ItemType.mithrilArmour]: 1,
+   [ItemType.scrappy]: 1,
+   [ItemType.cogwalker]: 1,
+   [ItemType.automatonAssembler]: 1,
+   [ItemType.mithrilAnvil]: 1,
+   [ItemType.animalStaff]: 1,
+   [ItemType.woodenArrow]: 1,
+   [ItemType.tamingAlmanac]: 1,
+   [ItemType.floorSign]: 1,
+   [ItemType.pricklyPear]: 1,
+   [ItemType.rawCrabMeat]: 1,
+   [ItemType.cookedCrabMeat]: 1,
+   [ItemType.chitin]: 1,
+   [ItemType.crabplateArmour]: 1,
+   [ItemType.dustfleaEgg]: 1,
+   [ItemType.snowberry]: 1,
+   [ItemType.rawSnobeMeat]: 1,
+   [ItemType.snobeStew]: 1,
+   [ItemType.snobeHide]: 1,
+   [ItemType.inguSerpentTooth]: 1,
+   [ItemType.iceWringer]: 1,
+   [ItemType.rawTukmokMeat]: 1,
+   [ItemType.cookedTukmokMeat]: 1,
+   [ItemType.tukmokFurHide]: 1,
+   [ItemType.winterskinArmour]: 1,
+   [ItemType.ivoryTusk]: 1,
+   [ItemType.ivorySpear]: 1,
+   [ItemType.sock]: 1,
+   [ItemType.mrpebbles]: 1
 };
 
 export const enum TribesmanPathType {
@@ -99,65 +141,56 @@ export const enum TribesmanPathType {
 
 export class TribesmanAIComponent {
    /** ID of the hut which spawned the tribesman */
-   public hutID: number;
+   public hut: Entity = 0;
 
    public currentAIType = TribesmanAIType.idle;
-   
-   public targetPatrolPositionX = -1;
-   public targetPatrolPositionY = -1;
 
    // @Memory @Speed: This is only used to clear the ResearchBenchComponent's preemptiveOccupeeID value when
    // the tribesmen finishes researching, is there some better way which doesn't need having this value?
    public targetResearchBenchID = 0;
 
-   public rawPath = new Array<PathfindingNodeIndex>();
-   public path: Array<PathfindingNodeIndex> = [];
-   public pathfindingTargetNode: PathfindingNodeIndex = Number.MAX_SAFE_INTEGER;
-   public pathType = TribesmanPathType.default;
-   public isPathfinding = false;
-
    /** Artificial cooldown added to tribesmen to make them a bit worse at bow combat */
    public extraBowCooldownTicks = 0;
 
    /** The number of ticks that had occured when the tribesman last had line of sight to an enemy */
-   public lastEnemyLineOfSightTicks: number;
+   public lastEnemyLineOfSightTicks = 0;
 
    // @Cleanup: name
    public helpX = 0;
    public helpY = 0;
    public ticksSinceLastHelpRequest = 99999;
 
-   public personalBuildingPlan: BuildingPlan | null = null;
-
    /** Stores relations with tribesman from other tribes */
    public tribesmanRelations: Partial<Record<number, number>> = {};
-
-   // @Cleanup: Unify with player username in tribemember component
-   public readonly name: number;
-   // @Bug: will favour certain names more.
-   public untitledDescriptor = randInt(0, 99);
-
-   public goals: ReadonlyArray<TribesmanGoal> = [];
 
    public currentCraftingRecipeIdx = 0;
    public currentCraftingTicks = 0;
 
    public lastItemThrowTicks = 0;
 
-   constructor(hutID: number) {
-      this.hutID = hutID;
-      this.lastEnemyLineOfSightTicks = Board.ticks;
-      // @Bug: will favour certain names more.
-      this.name = randInt(0, 99);
-   }
+   // @Hack
+   public targetEntity: Entity = 0;
 }
 
-export const TribesmanAIComponentArray = new ComponentArray<ServerComponentType.tribesmanAI, TribesmanAIComponent>(true, {
-   serialise: serialise
-});
+export const TribesmanAIComponentArray = new ComponentArray<TribesmanAIComponent>(ServerComponentType.tribesmanAI, true, getDataLength, addDataToPacket);
+TribesmanAIComponentArray.onJoin = onJoin;
+TribesmanAIComponentArray.onTick = {
+   tickInterval: 1,
+   func: tickTribesman
+};
+TribesmanAIComponentArray.onRemove = onRemove;
 
-function serialise(entityID: number, playerID: number | null): TribesmanAIComponentData {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(entityID);
+function onJoin(entity: Entity): void {
+   const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(entity);
+   tribesmanAIComponent.lastEnemyLineOfSightTicks = getGameTicks();
+}
+
+function getDataLength(): number {
+   return 4 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: Entity, player: Entity | null): void {
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
 
    let craftingProgress: number;
    let craftingItemType: ItemType;
@@ -170,16 +203,12 @@ function serialise(entityID: number, playerID: number | null): TribesmanAICompon
       craftingProgress = 0;
       craftingItemType = 0;
    }
-   
-   return {
-      componentType: ServerComponentType.tribesmanAI,
-      name: tribesmanComponent.name,
-      untitledDescriptor: tribesmanComponent.untitledDescriptor,
-      currentAIType: tribesmanComponent.currentAIType,
-      relationsWithPlayer: playerID !== null && typeof tribesmanComponent.tribesmanRelations[playerID] !== "undefined" ? tribesmanComponent.tribesmanRelations[playerID]! : 0,
-      craftingItemType: craftingItemType,
-      craftingProgress: craftingProgress
-   };
+
+   packet.writeNumber(tribesmanComponent.currentAIType);
+   const relationsWithPlayer = player !== null && typeof tribesmanComponent.tribesmanRelations[player] !== "undefined" ? tribesmanComponent.tribesmanRelations[player]! : 0;
+   packet.writeNumber(relationsWithPlayer);
+   packet.writeNumber(craftingItemType);
+   packet.writeNumber(craftingProgress);
 }
 
 const adjustTribesmanRelations = (tribesmanID: number, otherTribesmanID: number, adjustment: number): void => {
@@ -210,11 +239,15 @@ export function adjustTribeRelations(attackedTribe: Tribe, attackingTribe: Tribe
    }
    
    // @Speed
-   for (let i = 0; i < attackingTribe.tribesmanIDs.length; i++) {
-      const tribesmanID = attackingTribe.tribesmanIDs[i];
+   for (const tribesmanID of attackingTribe.entities) {
+      if (!TribesmanComponentArray.hasComponent(tribesmanID)) {
+         continue;
+      }
 
-      for (let j = 0; j < attackedTribe.tribesmanIDs.length; j++) {
-         const attackedTribesmanID = attackedTribe.tribesmanIDs[j];
+      for (const attackedTribesmanID of attackedTribe.entities) {
+         if (!TribesmanComponentArray.hasComponent(attackedTribesmanID)) {
+            continue;
+         }
 
          const adjustment = attackedTribesmanID === attackedEntityID ? attackedAdjustment : defaultAdjustment;
          adjustTribesmanRelations(attackedTribesmanID, tribesmanID, adjustment);
@@ -222,49 +255,38 @@ export function adjustTribeRelations(attackedTribe: Tribe, attackingTribe: Tribe
    }
 }
 
-export function adjustTribesmanRelationsAfterHurt(tribesman: Entity, attackingTribesmanID: number): void {
-   if (!TribeComponentArray.hasComponent(attackingTribesmanID)) {
-      return;
-   }
-   
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
-   const otherTribeComponent = TribeComponentArray.getComponent(attackingTribesmanID);
-
-   adjustTribeRelations(tribeComponent.tribe, otherTribeComponent.tribe, tribesman.id, -30, -15);
-}
-
 // @Incomplete @Bug: this doesn't do anything rn as the data is lost when the tribesman is removed. need to keep track of it across tribesman lives.
-export function adjustTribesmanRelationsAfterKill(tribesman: Entity, attackingTribesmanID: number): void {
-   if (!TribeComponentArray.hasComponent(attackingTribesmanID)) {
+export function adjustTribesmanRelationsAfterKill(tribesman: Entity, attackingTribesman: Entity): void {
+   if (!TribeComponentArray.hasComponent(attackingTribesman)) {
       return;
    }
    
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
-   const otherTribeComponent = TribeComponentArray.getComponent(attackingTribesmanID);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
+   const otherTribeComponent = TribeComponentArray.getComponent(attackingTribesman);
 
-   adjustTribeRelations(tribeComponent.tribe, otherTribeComponent.tribe, tribesman.id, -200, -200);
+   adjustTribeRelations(tribeComponent.tribe, otherTribeComponent.tribe, tribesman, -200, -200);
 }
 
-export function adjustTribesmanRelationsAfterGift(tribesmanID: number, giftingTribesmanID: number, giftItemType: ItemType, giftItemAmount: number): void {
+export function adjustTribesmanRelationsAfterGift(tribesman: Entity, giftingTribesman: Entity, giftItemType: ItemType, giftItemAmount: number): void {
    const adjustment = GIFT_APPRECIATION_WEIGHTS[giftItemType] * giftItemAmount;
-   adjustTribesmanRelations(tribesmanID, giftingTribesmanID, adjustment);
+   adjustTribesmanRelations(tribesman, giftingTribesman, adjustment);
 }
 
-export function getTribesmanRelationship(tribesmanID: number, comparingTribesmanID: number): EntityRelationship {
+export function getTribesmanRelationship(tribesman: Entity, comparingTribesman: Entity): EntityRelationship {
    // If the two tribesman are of the same tribe, they are friendly
-   const tribeComponent = TribeComponentArray.getComponent(tribesmanID);
-   const otherTribeComponent = TribeComponentArray.getComponent(comparingTribesmanID);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
+   const otherTribeComponent = TribeComponentArray.getComponent(comparingTribesman);
    if (tribeComponent.tribe === otherTribeComponent.tribe) {
       return EntityRelationship.friendly;
    } 
    
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesmanID);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
    const relations = tribesmanComponent.tribesmanRelations;
 
-   if (typeof relations[comparingTribesmanID] === "undefined") {
+   if (typeof relations[comparingTribesman] === "undefined") {
       return EntityRelationship.neutral;
    } else {
-      const relation = relations[comparingTribesmanID]!;
+      const relation = relations[comparingTribesman]!;
       if (relation <= Vars.MAX_ENEMY_RELATION_THRESHOLD) {
          return EntityRelationship.enemy;
       } else if (relation >= Vars.MIN_ACQUAINTANCE_RELATION_THRESOLD) {
@@ -280,6 +302,27 @@ export function getItemGiftAppreciation(itemType: ItemType): number {
 }
 
 export function itemThrowIsOnCooldown(tribesmanComponent: TribesmanAIComponent): boolean {
-   const ticksSinceThrow = Board.ticks - tribesmanComponent.lastItemThrowTicks;
+   const ticksSinceThrow = getGameTicks() - tribesmanComponent.lastItemThrowTicks;
    return ticksSinceThrow <= Vars.ITEM_THROW_COOLDOWN_TICKS;
+}
+
+function onRemove(worker: Entity): void {
+   // 
+   // Attempt to respawn the tribesman when it is killed
+   // 
+   
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(worker);
+
+   // Only respawn the tribesman if their hut is alive
+   if (!entityExists(tribesmanComponent.hut)) {
+      return;
+   }
+   
+   const hutComponent = HutComponentArray.getComponent(tribesmanComponent.hut);
+   if (hutComponent.isRecalling) {
+      hutComponent.hasSpawnedTribesman = false;
+   } else {
+      const tribeComponent = TribeComponentArray.getComponent(worker);
+      tribeComponent.tribe.respawnTribesman(tribesmanComponent.hut);
+   }
 }

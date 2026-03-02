@@ -9,6 +9,7 @@ abstract class SRandom {
    public static num = 0;
 
    public static seed(n: number): void {
+      console.log("seed: " + n);
       this.num = 0;
       this.state = n;
 

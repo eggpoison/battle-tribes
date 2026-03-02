@@ -1,4 +1,4 @@
-import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
+import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
 
 interface HeapItem {
    readonly node: PathfindingNodeIndex;
@@ -9,8 +9,13 @@ class PathfindingHeap {
    private readonly items = new Array<HeapItem>();
    public currentItemCount = 0;
 
-   public gScore: Record<PathfindingNodeIndex, number> = {};
-   public fScore: Record<PathfindingNodeIndex, number> = {};
+   public readonly gScore: Record<PathfindingNodeIndex, number>;
+   public readonly fScore: Record<PathfindingNodeIndex, number>;
+
+   constructor(gScore: Record<PathfindingNodeIndex, number>, fScore: Record<PathfindingNodeIndex, number>) {
+      this.gScore = gScore;
+      this.fScore = fScore;
+   }
    
    public addNode(node: PathfindingNodeIndex): void {
       const item: HeapItem = {

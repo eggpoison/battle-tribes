@@ -1,128 +1,119 @@
-import { StructureConnectionInfo, StructureType, getSnapDirection, getStructureSnapOrigin } from "webgl-test-shared/dist/structures";
-import Board from "../Board";
-import Entity from "../Entity";
+import { StructureType } from "battletribes-shared/structures";
 import { createStructureGrassBlockers } from "../grass-blockers";
 import { BlueprintComponentArray } from "./BlueprintComponent";
 import { ComponentArray } from "./ComponentArray";
-import { ConnectedEntityIDs } from "../entities/tribes/tribe-member";
-import { Mutable } from "webgl-test-shared/dist/utils";
-import { ServerComponentType, StructureComponentData } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Entity } from "battletribes-shared/entities";
 import { TribeComponentArray } from "./TribeComponent";
+import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "battletribes-shared/packets";
+import { destroyEntity, getEntityLayer, getEntityType } from "../world";
+import { createVirtualStructureFromHitboxes, VirtualStructure } from "../tribesman-ai/building-plans/TribeBuildingLayer";
+import { registerDirtyEntity } from "../server/player-clients";
+import { StructureConnection, calculateRelativeOffsetDirection, createStructureConnection } from "../structure-placement";
 
-export class StructureComponent implements Mutable<StructureConnectionInfo> {
-   /** The ID of any blueprint currently placed on the structure */
-   public activeBlueprintID = 0;
-   
-   public connectedSidesBitset: number;
-   public connectedEntityIDs: ConnectedEntityIDs;
+export class StructureComponent {
+   /** The blueprint currently placed on the structure. 0 if none is present */
+   public activeBlueprint = 0;
 
-   constructor(structureInfo: StructureConnectionInfo) {
-      this.connectedSidesBitset = structureInfo.connectedSidesBitset;
-      this.connectedEntityIDs = structureInfo.connectedEntityIDs;
+   public readonly connections = new Array<StructureConnection>();
+
+   /** The virtual structure associated with the structure. If null, will automatically create a virtual building for the structure. */
+   public virtualStructure: VirtualStructure | null;
+
+   constructor(connections: Array<StructureConnection>, virtualBuilding: VirtualStructure | null) {
+      this.connections = connections;
+      this.virtualStructure = virtualBuilding;
    }
 }
 
-export const StructureComponentArray = new ComponentArray<ServerComponentType.structure, StructureComponent>(true, {
-   onJoin: onJoin,
-   onRemove: onRemove,
-   serialise: serialise
-});
+export const StructureComponentArray = new ComponentArray<StructureComponent>(ServerComponentType.structure, true, getDataLength, addDataToPacket);
+StructureComponentArray.onJoin = onJoin;
+StructureComponentArray.onRemove = onRemove;
 
-const addConnection = (structureComponent: StructureComponent, connectionIdx: number, connectedEntityID: number): void => {
-   structureComponent.connectedEntityIDs[connectionIdx] = connectedEntityID;
-   structureComponent.connectedSidesBitset |= 1 << connectionIdx;
-}
-
-const removeConnection = (structureComponent: StructureComponent, connectionIdx: number): void => {
-   structureComponent.connectedEntityIDs[connectionIdx] = 0;
-   structureComponent.connectedSidesBitset &= ~(1 << connectionIdx);
-}
-
-const removeConnectionWithStructure = (structureID: number, connectedStructureID: number): void => {
-   const structureComponent = StructureComponentArray.getComponent(structureID);
+const addConnection = (entity: Entity, structureComponent: StructureComponent, connectedEntity: Entity): void => {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   // @Hack
+   const entityHitbox = transformComponent.hitboxes[0];
    
-   for (let i = 0; i < 4; i++) {
-      const entityID = structureComponent.connectedEntityIDs[i];
-      if (entityID === connectedStructureID) {
-         removeConnection(structureComponent, i);
-         break;
+   const connectedEntityTransformComponent = TransformComponentArray.getComponent(connectedEntity);
+   // @Hack
+   const connectedEntityHitbox = connectedEntityTransformComponent.hitboxes[0];
+   
+   const relativeOffsetDirection = calculateRelativeOffsetDirection(entityHitbox.box.position, entityHitbox.box.angle, connectedEntityHitbox.box.position);
+   const connection = createStructureConnection(connectedEntity, relativeOffsetDirection);
+   structureComponent.connections.push(connection)
+
+   registerDirtyEntity(entity);
+}
+
+const removeConnectionWithStructure = (structureComponent: StructureComponent, connectedStructure: Entity): void => {
+   for (let i = 0; i < structureComponent.connections.length; i++) {
+      const connection = structureComponent.connections[i];
+      if (connection.entity === connectedStructure) {
+         structureComponent.connections.splice(i, 1);
+         i--;
       }
    }
 }
 
-function onJoin(entityID: number): void {
-   // @Hack
-   const entity = Board.entityRecord[entityID]! as Entity<StructureType>;
+function onJoin(entity: Entity): void {
+   const structureComponent = StructureComponentArray.getComponent(entity);
+   const tribeComponent = TribeComponentArray.getComponent(entity);
 
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
-   tribeComponent.tribe.addBuilding(entity);
+   const layer = getEntityLayer(entity);
 
+   if (structureComponent.virtualStructure === null) {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const entityHitbox = transformComponent.hitboxes[0];
+      
+      const entityType = getEntityType(entity) as StructureType;
+      const buildingLayer = tribeComponent.tribe.buildingLayers[layer.depth];
+      
+      structureComponent.virtualStructure = createVirtualStructureFromHitboxes(buildingLayer, entityHitbox.box.position.copy(), entityHitbox.box.angle, entityType, transformComponent.hitboxes);
+   }
+   
    createStructureGrassBlockers(entity);
-
-   const structureComponent = StructureComponentArray.getComponent(entityID);
    
-   // Mark opposite connections
-   for (let i = 0; i < 4; i++) {
-      const connectedEntityID = structureComponent.connectedEntityIDs[i];
-
-      if (connectedEntityID !== 0 && StructureComponentArray.hasComponent(connectedEntityID)) {
-         const otherStructureComponent = StructureComponentArray.getComponent(connectedEntityID);
-
-         // @Cleanup
-         const entity = Board.entityRecord[entityID]! as Entity<StructureType>;
-         const connectedEntity = Board.entityRecord[connectedEntityID]! as Entity<StructureType>;
-         
-         const snapOrigin = getStructureSnapOrigin(entity);
-         const connectedSnapOrigin = getStructureSnapOrigin(connectedEntity);
-         const connectionDirection = getSnapDirection(connectedSnapOrigin.calculateAngleBetween(snapOrigin), connectedEntity.rotation);
-
-         addConnection(otherStructureComponent, connectionDirection, entityID);
-      }
+   // Register connections in any connected structures
+   for (const connection of structureComponent.connections) {
+      const connectedStructureComponent = StructureComponentArray.getComponent(connection.entity);
+      addConnection(connection.entity, connectedStructureComponent, entity);
    }
 }
 
-function onRemove(entityID: number): void {
-   // @Hack
-   const entity = Board.entityRecord[entityID]! as Entity<StructureType>;
+function onRemove(entity: Entity): void {
+   const structureComponent = StructureComponentArray.getComponent(entity);
 
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
-   tribeComponent.tribe.removeBuilding(entity);
-
-   const structureComponent = StructureComponentArray.getComponent(entityID);
-
-   for (let i = 0; i < 4; i++) {
-      const currentConnectedEntityID = structureComponent.connectedEntityIDs[i];
-      if (StructureComponentArray.hasComponent(currentConnectedEntityID)) {
-         removeConnectionWithStructure(currentConnectedEntityID, entityID);
+   for (const connection of structureComponent.connections) {
+      if (StructureComponentArray.hasComponent(connection.entity)) {
+         const structureComponent = StructureComponentArray.getComponent(connection.entity);
+         removeConnectionWithStructure(structureComponent, entity);
       }
    }
 
-   if (BlueprintComponentArray.hasComponent(structureComponent.activeBlueprintID)) {
-      const blueprintEntity = Board.entityRecord[structureComponent.activeBlueprintID]!;
-      blueprintEntity.destroy();
+   // Destroy the attached blueprint if it exists
+   if (BlueprintComponentArray.hasComponent(structureComponent.activeBlueprint)) {
+      destroyEntity(structureComponent.activeBlueprint);
    }
 }
 
-function serialise(entityID: number): StructureComponentData {
-   const structureComponent = StructureComponentArray.getComponent(entityID);
+function getDataLength(entity: Entity): number {
+   const structureComponent = StructureComponentArray.getComponent(entity);
    
-   return {
-      componentType: ServerComponentType.structure,
-      hasActiveBlueprint: BlueprintComponentArray.hasComponent(structureComponent.activeBlueprintID),
-      connectedSidesBitset: structureComponent.connectedSidesBitset
-   };
+   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * structureComponent.connections.length;
+   return lengthBytes;
 }
 
-export function isAttachedToWall(connectionInfo: StructureConnectionInfo): boolean {
-   for (let i = 0; i < connectionInfo.connectedEntityIDs.length; i++) {
-      const entityID = connectionInfo.connectedEntityIDs[i];
+function addDataToPacket(packet: Packet, entity: Entity): void {
+   const structureComponent = StructureComponentArray.getComponent(entity);
 
-      const entity = Board.entityRecord[entityID];
-      if (typeof entity !== "undefined" && entity.type === EntityType.wall) {
-         return true;
-      }
+   packet.writeBool(BlueprintComponentArray.hasComponent(structureComponent.activeBlueprint));
+
+   packet.writeNumber(structureComponent.connections.length);
+   for (const connection of structureComponent.connections) {
+      packet.writeNumber(connection.entity);
+      packet.writeNumber(connection.relativeOffsetDirection);
    }
-
-   return false;
 }

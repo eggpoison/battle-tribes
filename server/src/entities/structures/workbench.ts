@@ -1,30 +1,56 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import { EntityType } from "battletribes-shared/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import Tribe from "../../Tribe";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { CraftingStationComponent, CraftingStationComponentArray } from "../../components/CraftingStationComponent";
-import { createWorkbenchHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
-import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { StructureComponent } from "../../components/StructureComponent";
+import { TribeComponent } from "../../components/TribeComponent";
+import { CraftingStationComponent } from "../../components/CraftingStationComponent";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../shared/src/utils";
+import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
+import { Hitbox } from "../../hitboxes";
+import { StructureConnection } from "../../structure-placement";
 
-export function createWorkbench(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const workbench = new Entity(position, rotation, EntityType.workbench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createWorkbenchConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
 
-   const hitboxes = createWorkbenchHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      workbench.addHitbox(hitboxes[i]);
-   }
+   // @TEMPORARY @HACKK: So that the structure placement works for placing workbenches in the corner of walls
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position.copy(), new Point(0, 0), rotation, 80, 80), 1.6, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
+   
+   // const hitbox1 = new Hitbox(transformComponent, null, true, new RectangularBox(position.copy(), new Point(0, 0), rotation, 72, 80), 1.6, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   // addHitboxToTransformComponent(transformComponent, hitbox1);
+   
+   // const hitbox2 = new Hitbox(transformComponent, null, true, new RectangularBox(position.copy(), new Point(0, 0), rotation, 80, 72), 1.6, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   // addHitboxToTransformComponent(transformComponent, hitbox2);
 
-   HealthComponentArray.addComponent(workbench.id, new HealthComponent(15));
-   StatusEffectComponentArray.addComponent(workbench.id, new StatusEffectComponent(0));
-   StructureComponentArray.addComponent(workbench.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(workbench.id, new TribeComponent(tribe));
-   CraftingStationComponentArray.addComponent(workbench.id, new CraftingStationComponent(CraftingStation.workbench));
+   const healthComponent = new HealthComponent(15);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connections, virtualStructure);
 
-   return workbench;
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const craftingStationComponent = new CraftingStationComponent();
+   
+   return {
+      entityType: EntityType.workbench,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.craftingStation]: craftingStationComponent
+      },
+      lights: []
+   };
 }

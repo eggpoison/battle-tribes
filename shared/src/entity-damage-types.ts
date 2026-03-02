@@ -1,14 +1,16 @@
 import { EntityType } from "./entities";
-import { ITEM_TYPE_RECORD as ITEM_CATEGORY_RECORD, Item } from "./items/items";
+import { ITEM_TYPE_RECORD as ITEM_CATEGORY_RECORD, Item, ItemType } from "./items/items";
 
-const enum DamageType {
+// @Cleanup KILL THISSS
+
+enum DamageType {
    basic,
    weapon,
    axe,
    pickaxe
 }
 
-export const enum AttackEffectiveness {
+export enum AttackEffectiveness {
    stopped = 0,
    ineffective = 1,
    effective = 2
@@ -19,6 +21,7 @@ interface EntityDamageInfo {
    readonly stoppedDamageTypes: ReadonlyArray<DamageType>;
 }
 
+// @Cleanup: make this a parameter of the healthcomponent
 const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    [EntityType.cow]: {
       effectiveDamageTypes: [DamageType.weapon],
@@ -112,10 +115,6 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
       effectiveDamageTypes: [DamageType.weapon],
       stoppedDamageTypes: []
    },
-   [EntityType.frozenYeti]: {
-      effectiveDamageTypes: [DamageType.weapon],
-      stoppedDamageTypes: []
-   },
    [EntityType.fish]: {
       effectiveDamageTypes: [DamageType.weapon],
       stoppedDamageTypes: []
@@ -124,15 +123,35 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    },
-   [EntityType.woodenArrowProjectile]: {
+   [EntityType.fleshSwordItemEntity]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.woodenArrow]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.ballistaWoodenBolt]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.ballistaRock]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.ballistaSlimeball]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.ballistaFrostcicle]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.slingTurretRock]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    },
    [EntityType.iceShardProjectile]: {
-      effectiveDamageTypes: [],
-      stoppedDamageTypes: []
-   },
-   [EntityType.rockSpikeProjectile]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    },
@@ -152,7 +171,7 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    },
-   [EntityType.spitPoison]: {
+   [EntityType.spitPoisonArea]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    },
@@ -220,7 +239,15 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
       effectiveDamageTypes: [DamageType.axe],
       stoppedDamageTypes: []
    },
-   [EntityType.plant]: {
+   [EntityType.treePlanted]: {
+      effectiveDamageTypes: [DamageType.axe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.berryBushPlanted]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.iceSpikesPlanted]: {
       effectiveDamageTypes: [DamageType.weapon],
       stoppedDamageTypes: []
    },
@@ -239,25 +266,264 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    [EntityType.stonecarvingTable]: {
       effectiveDamageTypes: [DamageType.pickaxe],
       stoppedDamageTypes: []
+   },
+   [EntityType.grassStrand]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.decoration]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.riverSteppingStone]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.reed]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.lilypad]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.fibrePlant]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.guardian]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.guardianGemQuake]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.guardianGemFragmentProjectile]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.guardianSpikyBall]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.bracings]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.fireTorch]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.spikyBastard]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.glurbBodySegment]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.glurbHeadSegment]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.glurbTailSegment]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.slurbTorch]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.treeRootBase]: {
+      effectiveDamageTypes: [DamageType.axe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.treeRootSegment]: {
+      effectiveDamageTypes: [DamageType.axe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.mithrilOreNode]: {
+      effectiveDamageTypes: [DamageType.pickaxe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.scrappy]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.cogwalker]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.automatonAssembler]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.mithrilAnvil]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.heldItem]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.moss]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.floorSign]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.desertBushLively]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.desertBushSandy]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.desertSmallWeed]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.desertShrub]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.tumbleweedLive]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.tumbleweedDead]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.palmTree]: {
+      effectiveDamageTypes: [DamageType.axe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.pricklyPear]: {
+      effectiveDamageTypes: [DamageType.weapon, DamageType.axe, DamageType.pickaxe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.pricklyPearFragmentProjectile]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.dustflea]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.sandstoneRock]: {
+      effectiveDamageTypes: [DamageType.pickaxe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.okren]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.okrenClaw]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.dustfleaMorphCocoon]: {
+      effectiveDamageTypes: [DamageType.weapon, DamageType.axe, DamageType.pickaxe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.sandBall]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.krumblidMorphCocoon]: {
+      effectiveDamageTypes: [DamageType.weapon, DamageType.axe, DamageType.pickaxe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.okrenTongue]: {
+      effectiveDamageTypes: [DamageType.weapon, DamageType.axe, DamageType.pickaxe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.dustfleaEgg]: {
+      effectiveDamageTypes: [DamageType.weapon, DamageType.axe, DamageType.pickaxe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.spruceTree]: {
+      effectiveDamageTypes: [DamageType.axe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.tundraRock]: {
+      effectiveDamageTypes: [DamageType.pickaxe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.tundraRockFrozen]: {
+      effectiveDamageTypes: [DamageType.pickaxe],
+      stoppedDamageTypes: []
+   },
+   [EntityType.snowberryBush]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.snobe]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.snobeMound]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.inguSerpent]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.tukmok]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.tukmokTrunk]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.tukmokTailClub]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.tukmokSpur]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.inguYetuksnoglurblidokowflea]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.inguYetuksnoglurblidokowfleaSeekerHead]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.inguYetukLaser]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
    }
 };
 
-const getItemDamageTypes = (item: Item | null): ReadonlyArray<DamageType> => {
-   if (item === null) {
+const getItemDamageTypes = (itemType: ItemType | null): ReadonlyArray<DamageType> => {
+   if (itemType === null) {
       return [DamageType.basic];
    }
 
-   const category = ITEM_CATEGORY_RECORD[item.type];
+   const category = ITEM_CATEGORY_RECORD[itemType];
    switch (category) {
       case "backpack":
       case "bow":
       case "hammer":
-      case "bow":
       case "crossbow":
       case "glove":
       case "healing":
       case "material":
       case "placeable":
+      case "shield":
+      case "slingshot":
+      case "animalStaff":
+      case "tamingAlmanac":
       case "armour": return [DamageType.basic];
       case "axe": return [DamageType.axe];
       case "battleaxe": return [DamageType.axe, DamageType.weapon];
@@ -280,8 +546,8 @@ const getDamageTypeEffectiveness = (damageType: DamageType, entityDamageInfo: En
 }
 
 // @Incomplete: account for building material for walls, tunnels, etc.
-export function calculateAttackEffectiveness(item: Item | null, attackedEntityType: EntityType): AttackEffectiveness {
-   const damageTypes = getItemDamageTypes(item);
+export function calculateAttackEffectiveness(itemType: ItemType | null, attackedEntityType: EntityType): AttackEffectiveness {
+   const damageTypes = getItemDamageTypes(itemType);
    const damageInfo = ENTITY_DAMAGE_INFO_RECORD[attackedEntityType];
 
    // Return the maximum effectiveness that the item has against the entity

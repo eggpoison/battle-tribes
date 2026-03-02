@@ -2,6 +2,7 @@
 
 import { ItemRequirements } from "./items/crafting-recipes";
 import { ItemType } from "./items/items";
+import { createTallyFromRecord, ItemTally2 } from "./items/ItemTally";
 import { TribeType } from "./tribes";
 
 export enum TechID {
@@ -11,7 +12,6 @@ export enum TechID {
    stoneTools,
    furnace,
    woodworking,
-   throngling,
    archery,
    reinforcedBows,
    crossbows,
@@ -22,15 +22,18 @@ export enum TechID {
    basicArchitecture,
    storage,
    frostshaping,
+   mithrilworking,
    basicMachinery,
    herbalMedicine,
    gardening,
-   healingTotem
+   healingTotem,
+   lights,
+   exoticArmour
 }
 
 // @Cleanup: rename study to work everywhere
 
-interface TechUnlockProgress {
+export interface TechUnlockProgress {
    readonly itemProgress: ItemRequirements;
    studyProgress: number;
 }
@@ -38,26 +41,7 @@ interface TechUnlockProgress {
 /** The current amount of items used in each tech's research */
 export type TechTreeUnlockProgress = Partial<Record<TechID, TechUnlockProgress>>;
 
-export interface TribeData {
-   readonly name: string;
-   readonly id: number;
-   readonly tribeType: TribeType;
-}
-
-// @Cleanup: Should this be moved to tribes.ts?
-export interface PlayerTribeData extends TribeData {
-   readonly hasTotem: boolean;
-   readonly numHuts: number;
-   readonly tribesmanCap: number;
-   readonly area: ReadonlyArray<[tileX: number, tileY: number]>;
-   readonly selectedTechID: TechID | null;
-   readonly unlockedTechs: ReadonlyArray<TechID>;
-   readonly techTreeUnlockProgress: TechTreeUnlockProgress;
-}
-
-export interface EnemyTribeData extends TribeData {}
-
-export interface TechInfo {
+export interface Tech {
    readonly id: TechID;
    readonly name: string;
    readonly description: string;
@@ -66,14 +50,14 @@ export interface TechInfo {
    readonly positionX: number;
    readonly positionY: number;
    readonly dependencies: ReadonlyArray<TechID>;
-   readonly researchItemRequirements: ItemRequirements;
+   readonly researchItemRequirements: ItemTally2;
    readonly researchStudyRequirements: number;
    /** Tribes which are unable to research the tech */
    readonly blacklistedTribes: ReadonlyArray<TribeType>
    readonly conflictingTechs: ReadonlyArray<TechID>;
 }
 
-export const TECHS: ReadonlyArray<TechInfo> = [
+export const TECHS: ReadonlyArray<Tech> = [
    {
       id: TechID.fire,
       name: "Fire",
@@ -83,9 +67,9 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 0,
       positionY: 0,
       dependencies: [],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 10
-      },
+      }),
       researchStudyRequirements: 0,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -99,11 +83,13 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 1,
       positionY: 35,
       dependencies: [TechID.fire],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wooden_pickaxe]: 1,
          [ItemType.wood]: 10
-      },
-      researchStudyRequirements: 20,
+      }),
+      // @Temporary
+      // researchStudyRequirements: 20,
+      researchStudyRequirements: 1,
       blacklistedTribes: [],
       conflictingTechs: []
    },
@@ -116,10 +102,10 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 22,
       positionY: -28,
       dependencies: [TechID.fire],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 25,
          [ItemType.berry]: 10
-      },
+      }),
       researchStudyRequirements: 0,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -129,13 +115,13 @@ export const TECHS: ReadonlyArray<TechInfo> = [
        name: "Stoneworking",
        description: "Manipulation of stone in crafting.",
        iconSrc: "stoneworking.png",
-       unlockedItems: [ItemType.stone_pickaxe, ItemType.stone_axe, ItemType.stone_sword, ItemType.spear],
+       unlockedItems: [ItemType.stonecarvingTable, ItemType.stone_pickaxe, ItemType.stone_axe, ItemType.stone_sword, ItemType.stone_hammer, ItemType.stoneSpear],
        positionX: -40,
        positionY: -1,
        dependencies: [TechID.fire],
-       researchItemRequirements: {
+       researchItemRequirements: createTallyFromRecord({
          [ItemType.rock]: 20
-       },
+       }),
        researchStudyRequirements: 0,
        blacklistedTribes: [],
        conflictingTechs: []
@@ -149,9 +135,9 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 44,
       positionY: 4,
       dependencies: [TechID.fire],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 20
-      },
+      }),
       researchStudyRequirements: 0,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -165,30 +151,13 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 62,
       positionY: 15,
       dependencies: [TechID.woodworking],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.campfire]: 2,
          [ItemType.rock]: 20
-      },
+      }),
       // @Temporary
       // researchStudyRequirements: 10,
       researchStudyRequirements: 10000,
-      blacklistedTribes: [],
-      conflictingTechs: []
-   },
-   {
-      id: TechID.throngling,
-      name: "Throngling",
-      description: "The way of the throngle",
-      iconSrc: "throngling.png",
-      unlockedItems: [ItemType.throngler],
-      positionX: -28,
-      positionY: 18,
-      dependencies: [TechID.stoneTools],
-      researchItemRequirements: {
-         [ItemType.rock]: 20,
-         [ItemType.cactus_spine]: 30
-      },
-      researchStudyRequirements: 40,
       blacklistedTribes: [],
       conflictingTechs: []
    },
@@ -201,9 +170,9 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: -53,
       positionY: 19,
       dependencies: [TechID.stoneTools],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 35
-      },
+      }),
       // researchStudyRequirements: 75,
       researchStudyRequirements: 1,
       blacklistedTribes: [TribeType.barbarians],
@@ -218,9 +187,9 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: -67,
       positionY: 26,
       dependencies: [TechID.archery],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 35
-      },
+      }),
       researchStudyRequirements: 75,
       blacklistedTribes: [],
       conflictingTechs: [TechID.crossbows]
@@ -234,9 +203,9 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: -50,
       positionY: 34,
       dependencies: [TechID.archery],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 35
-      },
+      }),
       researchStudyRequirements: 75,
       blacklistedTribes: [],
       conflictingTechs: [TechID.reinforcedBows]
@@ -246,13 +215,13 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       name: "Ice Bows",
       description: "Ice bows",
       iconSrc: "ice-bows.png",
-      unlockedItems: [ItemType.ice_bow],
+      unlockedItems: [ItemType.frostshaper, ItemType.ice_bow],
       positionX: -76,
       positionY: 17,
       dependencies: [TechID.archery, TechID.frostshaping],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 35
-      },
+      }),
       researchStudyRequirements: 75,
       blacklistedTribes: [TribeType.plainspeople, TribeType.barbarians, TribeType.goblins],
       conflictingTechs: []
@@ -266,9 +235,9 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: -55,
       positionY: 21,
       dependencies: [TechID.stoneTools],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.living_rock]: 30
-      },
+      }),
       researchStudyRequirements: 75,
       blacklistedTribes: [TribeType.frostlings, TribeType.goblins, TribeType.plainspeople],
       conflictingTechs: []
@@ -276,15 +245,15 @@ export const TECHS: ReadonlyArray<TechInfo> = [
    {
       id: TechID.leatherworking,
       name: "Leatherworking",
-      description: "Stretch and meld leather into armour",
+      description: "Stretch and meld leather into useful items",
       iconSrc: "leatherworking.png",
-      unlockedItems: [ItemType.leather_armour],
+      unlockedItems: [ItemType.leather_armour, ItemType.leather_backpack],
       positionX: -56,
       positionY: -18,
       dependencies: [TechID.stoneTools],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.leather]: 20
-      },
+      }),
       researchStudyRequirements: 50,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -299,10 +268,10 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 14,
       positionY: 48,
       dependencies: [TechID.society],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 30,
          [ItemType.rock]: 50
-      },
+      }),
       researchStudyRequirements: 100,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -312,13 +281,13 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       name: "Basic Architecture",
       description: "Primitive structures to build your first defences with.",
       iconSrc: "basic-architecture.png",
-      unlockedItems: [ItemType.wooden_wall, ItemType.wooden_hammer, ItemType.wooden_spikes, ItemType.punji_sticks],
+      unlockedItems: [ItemType.wooden_wall, ItemType.wooden_hammer, ItemType.wooden_spikes, ItemType.punji_sticks, ItemType.wooden_fence, ItemType.woodenBracings],
       positionX: 69,
       positionY: -4,
       dependencies: [TechID.woodworking],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 40
-      },
+      }),
       researchStudyRequirements: 150,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -332,9 +301,9 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 51,
       positionY: -15,
       dependencies: [TechID.woodworking],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 50
-      },
+      }),
       researchStudyRequirements: 50,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -342,15 +311,31 @@ export const TECHS: ReadonlyArray<TechInfo> = [
    {
       id: TechID.frostshaping,
       name: "Frostshaping",
-      description: "",
+      description: "Make tundra gear from various tundra items.",
       iconSrc: "frostshaping.png",
-      unlockedItems: [ItemType.frost_armour, ItemType.deepfrost_pickaxe, ItemType.deepfrost_sword, ItemType.deepfrost_axe, ItemType.deepfrost_armour],
-      positionX: -65,
-      positionY: 0,
+      unlockedItems: [ItemType.frostArmour, ItemType.winterskinArmour, ItemType.iceWringer, ItemType.ivorySpear],
+      positionX: -57,
+      positionY: 7,
       dependencies: [TechID.stoneTools],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.frostcicle]: 15
-      },
+      }),
+      researchStudyRequirements: 50,
+      blacklistedTribes: [],
+      conflictingTechs: []
+   },
+   {
+      id: TechID.mithrilworking,
+      name: "Mithrilworking",
+      description: "Forge the strongest metal into the strongest equipment",
+      iconSrc: "mithrilworking.png",
+      unlockedItems: [ItemType.mithrilAnvil, ItemType.mithrilBar, ItemType.mithrilSword, ItemType.mithrilPickaxe, ItemType.mithrilAnvil, ItemType.mithrilPickaxe, ItemType.mithrilArmour],
+      positionX: -64,
+      positionY: -4,
+      dependencies: [TechID.stoneTools],
+      researchItemRequirements: createTallyFromRecord({
+         [ItemType.rock]: 50
+      }),
       researchStudyRequirements: 50,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -364,10 +349,10 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 81,
       positionY: -12,
       dependencies: [TechID.basicArchitecture],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 50,
          [ItemType.rock]: 50
-      },
+      }),
       researchStudyRequirements: 200,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -381,10 +366,10 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 45,
       positionY: -34,
       dependencies: [TechID.gathering],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.berry]: 20,
          [ItemType.slimeball]: 20
-      },
+      }),
       researchStudyRequirements: 0,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -398,11 +383,11 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 30,
       positionY: -51,
       dependencies: [TechID.gathering],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 40,
          [ItemType.leaf]: 30,
          [ItemType.berry]: 20
-      },
+      }),
       researchStudyRequirements: 30,
       blacklistedTribes: [],
       conflictingTechs: []
@@ -416,17 +401,52 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       positionX: 70,
       positionY: -28,
       dependencies: [TechID.herbalMedicine, TechID.basicArchitecture],
-      researchItemRequirements: {
+      researchItemRequirements: createTallyFromRecord({
          [ItemType.wood]: 50,
          [ItemType.herbal_medicine]: 15
-      },
+      }),
       researchStudyRequirements: 100,
       blacklistedTribes: [],
       conflictingTechs: []
-   }
+   },
+   {
+      id: TechID.lights,
+      name: "Lights",
+      description: "Items to fend off the dark",
+      iconSrc: "lights.png",
+      unlockedItems: [ItemType.fireTorch, ItemType.slurbTorch],
+      positionX: 83,
+      positionY: 4,
+      dependencies: [TechID.basicArchitecture],
+      researchItemRequirements: createTallyFromRecord({
+         [ItemType.campfire]: 3,
+         [ItemType.slurb]: 15
+      }),
+      researchStudyRequirements: 80,
+      blacklistedTribes: [],
+      conflictingTechs: []
+   },
+   {
+      id: TechID.exoticArmour,
+      name: "Exotic Armour",
+      description: "Armour for those best excluded from society",
+      iconSrc: "exotic-armour.png",
+      unlockedItems: [ItemType.leaf_suit, ItemType.meat_suit],
+      positionX: -66,
+      positionY: -33,
+      dependencies: [TechID.leatherworking],
+      researchItemRequirements: createTallyFromRecord({
+         [ItemType.leaf]: 50,
+         [ItemType.raw_beef]: 25
+      }),
+      researchStudyRequirements: 30,
+      blacklistedTribes: [],
+      conflictingTechs: []
+   },
 ];
 
-export function getTechByID(techID: TechID): TechInfo {
+export function getTechByID(techID: TechID): Tech {
+   // @Speed
    for (let i = 0; i < TECHS.length; i++) {
       const tech = TECHS[i];
       if (tech.id === techID) {
@@ -436,36 +456,13 @@ export function getTechByID(techID: TechID): TechInfo {
    throw new Error(`No tech with id '${techID}'`);
 }
 
-export function getTechRequiredForItem(itemType: ItemType): TechID | null {
+export function getTechRequiredForItem(itemType: ItemType): Tech | null {
    for (const tech of TECHS) {
+      // @Speed
       if (tech.unlockedItems.includes(itemType)) {
-         return tech.id;
+         return tech;
       }
    }
 
    return null;
-}
-
-/** Returns all techs required to get to the item type, in ascending order of depth */
-export function getTechChain(itemType: ItemType): ReadonlyArray<TechInfo> {
-   const initialTechID = getTechRequiredForItem(itemType);
-   if (initialTechID === null) {
-      return [];
-   }
-
-   const requiredTechs = [getTechByID(initialTechID)];
-   const techsToCheck = [getTechByID(initialTechID)];
-   while (techsToCheck.length > 0) {
-      const currentTech = techsToCheck[0];
-      techsToCheck.shift();
-
-      for (let i = 0; i < currentTech.dependencies.length; i++) {
-         const techID = currentTech.dependencies[i];
-         const tech = getTechByID(techID);
-         techsToCheck.push(tech);
-         requiredTechs.splice(0, 0, tech);
-      }
-   }
-
-   return requiredTechs;
 }

@@ -1,33 +1,50 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { TribeComponent } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
-import { FenceComponent, FenceComponentArray } from "../../components/FenceComponent";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponentArray, StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
-import { createStonecarvingTableHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
-import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { CraftingStationComponent } from "../../components/CraftingStationComponent";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../shared/src/utils";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
+import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../../shared/src/collision";
+import { StructureConnection } from "../../structure-placement";
 
-export function createStonecarvingTable(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const stonecarvingTable = new Entity(position, rotation, EntityType.stonecarvingTable, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxes = createStonecarvingTableHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      stonecarvingTable.addHitbox(hitboxes[i]);
-   }
-
-   HealthComponentArray.addComponent(stonecarvingTable.id, new HealthComponent(40));
-   StatusEffectComponentArray.addComponent(stonecarvingTable.id, new StatusEffectComponent(StatusEffect.freezing | StatusEffect.poisoned));
-   StructureComponentArray.addComponent(stonecarvingTable.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(stonecarvingTable.id, new TribeComponent(tribe));
-   FenceComponentArray.addComponent(stonecarvingTable.id, new FenceComponent());
-   CraftingStationComponentArray.addComponent(stonecarvingTable.id, new CraftingStationComponent(CraftingStation.stonecarvingTable));
+export function createStonecarvingTableConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
    
-   return stonecarvingTable;
+   const box = new RectangularBox(position, new Point(0, 0), rotation, 120, 80);
+   const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
+   
+   const healthComponent = new HealthComponent(40);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connections, virtualStructure);
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const craftingStationComponent = new CraftingStationComponent();
+   
+   return {
+      entityType: EntityType.stonecarvingTable,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.craftingStation]: craftingStationComponent
+      },
+      lights: []
+   };
 }

@@ -1,98 +1,95 @@
-import { PlayerCauseOfDeath, EntityType, getEntityTypeFromString } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Biome } from "webgl-test-shared/dist/tiles";
-import { Point, randItem } from "webgl-test-shared/dist/utils";
-import { parseCommand } from "webgl-test-shared/dist/commands";
-import { getTilesOfBiome } from "./census";
-import Board from "./Board";
-import Tile from "./Tile";
+import { DamageSource, Entity } from "battletribes-shared/entities";
+import { Point } from "battletribes-shared/utils";
+import { parseCommand } from "battletribes-shared/commands";
 import { damageEntity, healEntity } from "./components/HealthComponent";
-import Entity, { getRandomPositionInEntity } from "./Entity";
-import { InventoryComponentArray, addItem } from "./components/InventoryComponent";
-import { createEntity } from "./entity-creation";
-import { createItem } from "./items";
-import { forceBuildPlans } from "./ai-tribe-building/ai-building-plans";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { forcePlayerTeleport, getPlayerFromUsername } from "./server/player-clients";
+import { InventoryComponentArray, addItem, getInventory } from "./components/InventoryComponent";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { getPlayerFromUsername } from "./server/player-clients";
 import { TribeComponentArray } from "./components/TribeComponent";
-import { ItemType, getItemTypeFromString } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType, getItemTypeFromString } from "battletribes-shared/items/items";
+import { getRandomPositionInEntity, TransformComponentArray } from "./components/TransformComponent";
+import { Biome } from "../../shared/src/biomes";
+import { Hitbox } from "./hitboxes";
+import { getHeldItem, InventoryUseComponentArray } from "./components/InventoryUseComponent";
+import { createItem } from "./items";
+import PlayerClient from "./server/PlayerClient";
 
 const ENTITY_SPAWN_RANGE = 200;
 
 const killPlayer = (player: Entity): void => {
-   const hitPosition = getRandomPositionInEntity(player);
-   damageEntity(player, null, 999999, PlayerCauseOfDeath.god, AttackEffectiveness.effective, hitPosition, 0);
+   const transformComponent = TransformComponentArray.getComponent(player);
+   const hitbox = transformComponent.hitboxes[0];
+   
+   const hitPosition = getRandomPositionInEntity(transformComponent);
+   damageEntity(hitbox, null, 999999, DamageSource.god, AttackEffectiveness.effective, hitPosition, 0);
 }
 
 const damagePlayer = (player: Entity, damage: number): void => {
-   const hitPosition = getRandomPositionInEntity(player);
-   damageEntity(player, null, damage, PlayerCauseOfDeath.god, AttackEffectiveness.effective, hitPosition, 0);
+   const transformComponent = TransformComponentArray.getComponent(player);
+   const hitbox = transformComponent.hitboxes[0];
+
+   const hitPosition = getRandomPositionInEntity(transformComponent);
+   damageEntity(hitbox, null, damage, DamageSource.god, AttackEffectiveness.effective, hitPosition, 0);
 }
 
 const setTime = (time: number): void => {
-   Board.time = time;
+   // @Incomplete
+   // Board.time = time;
 }
 
-const giveItem = (player: Entity, itemType: ItemType, amount: number): void => {
+const giveItem = (player: Entity, itemType: ItemType, amount: number, nickname: string, namer: string): void => {
    if (amount === 0) {
       return;
    }
 
-   const item = createItem(itemType, amount);
-   addItem(InventoryComponentArray.getComponent(player.id), item);
+   addItem(player, InventoryComponentArray.getComponent(player), createItem(itemType, amount, nickname, namer));
 }
 
 const tp = (player: Entity, x: number, y: number): void => {
-   const newPosition = new Point(x, y);
-   forcePlayerTeleport(player, newPosition);
+   // const newPosition = new Point(x, y);
+   // forcePlayerTeleport(player, newPosition);
 }
 
-const tpBiome = (player: Entity, biomeName: Biome): void => {
-   const potentialTiles = getTilesOfBiome(biomeName);
-   if (potentialTiles.length === 0) {
-      console.warn(`No available tiles of biome '${biomeName}' to teleport to.`);
-      return;
-   }
+// @Incomplete
+// const tpBiome = (player: Entity, biomeName: Biome): void => {
+//    const potentialTiles = getTilesOfBiome(biomeName);
+//    if (potentialTiles.length === 0) {
+//       console.warn(`No available tiles of biome '${biomeName}' to teleport to.`);
+//       return;
+//    }
 
-   let numAttempts = 0;
-   let tile: Tile;
-   do {
-      tile = randItem(potentialTiles);
-      if (++numAttempts === 999) {
-         return;
-      }
-   } while (tile.isWall);
+//    let numAttempts = 0;
+//    let tileIndex: TileIndex;
+//    do {
+//       tileIndex = randItem(potentialTiles);
+//       if (++numAttempts === 999) {
+//          return;
+//       }
+//    } while (surfaceLayer.tileIsWalls[tileIndex] === 1);
    
-   const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
-   const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
+//    const tileX = getTileX(tileIndex);
+//    const tileY = getTileY(tileIndex);
+//    const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+//    const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 
-   const newPosition = new Point(x, y);
-   forcePlayerTeleport(player, newPosition);
-}
+//    const newPosition = new Point(x, y);
+//    forcePlayerTeleport(player, newPosition);
+// }
 
-const summonEntities = (player: Entity, entityType: EntityType, amount: number): void => {
-   for (let i = 0; i < amount; i++) {
-      const spawnPosition = player.position.copy();
+export function registerCommand(command: string, playerClient: PlayerClient): void {
+   const player = playerClient.instance;
 
-      const spawnOffsetMagnitude = ENTITY_SPAWN_RANGE * (Math.random() + 1) / 2;
-      const spawnOffsetDirection = 2 * Math.PI * Math.random();
-      spawnPosition.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-      spawnPosition.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+   const parseQuery = parseCommand(command);
+   
+   const parts = parseQuery.parts;
+   const numParameters = parts.length - 1;
 
-      createEntity(spawnPosition, entityType);
-   }
-}
-
-export function registerCommand(command: string, player: Entity): void {
-   const commandComponents = parseCommand(command);
-   const numParameters = commandComponents.length - 1;
-
-   switch (commandComponents[0]) {
+   switch (parts[0].val) {
       case "kill": {
          if (numParameters === 0) {
             killPlayer(player);
          } else if (numParameters === 1) {
-            const targetPlayerName = commandComponents[1] as string;
+            const targetPlayerName = parts[1].val as string;
             const player = getPlayerFromUsername(targetPlayerName);
             if (player !== null) {
                killPlayer(player);
@@ -103,11 +100,11 @@ export function registerCommand(command: string, player: Entity): void {
       }
       case "damage": {
          if (numParameters === 1) {
-            const damage = commandComponents[1] as number;
+            const damage = parts[1].val as number;
             damagePlayer(player, damage);
          } else if (numParameters === 2) {
-            const username = commandComponents[1] as string;
-            const damage = commandComponents[2] as number;
+            const username = parts[1].val as string;
+            const damage = parts[2].val as number;
 
             const player = getPlayerFromUsername(username);
             if (player !== null) {
@@ -121,11 +118,11 @@ export function registerCommand(command: string, player: Entity): void {
          if (numParameters === 0) {
             healEntity(player, 99999, -1);
          } else if (numParameters === 1) {
-            const healing = commandComponents[1] as number;
+            const healing = parts[1].val as number;
             healEntity(player, healing, -1);
          } else if (numParameters === 2) {
-            const username = commandComponents[1] as string;
-            const healing = commandComponents[2] as number;
+            const username = parts[1].val as string;
+            const healing = parts[2].val as number;
 
             const player = getPlayerFromUsername(username);
             if (player !== null) {
@@ -136,12 +133,12 @@ export function registerCommand(command: string, player: Entity): void {
          break;
       }
       case "set_time": {
-         setTime(commandComponents[1] as number);
+         setTime(parts[1].val as number);
 
          break;
       }
       case "give": {
-         const itemTypeString = commandComponents[1];
+         const itemTypeString = parts[1].val;
          if (typeof itemTypeString === "number") {
             break;
          }
@@ -152,53 +149,56 @@ export function registerCommand(command: string, player: Entity): void {
          }
 
          if (numParameters === 1) {
-            giveItem(player, itemType, 1);
+            giveItem(player, itemType, 1, "", "");
          } else if (numParameters === 2) {
-            const amount = commandComponents[2] as number;
-            giveItem(player, itemType, amount);
+            const amount = parts[2].val as number;
+            giveItem(player, itemType, amount, "", "");
          }
          
          break;
       }
       case "tp": {
-         const x = commandComponents[1] as number;
-         const y = commandComponents[2] as number;
+         const x = parts[1].val as number;
+         const y = parts[2].val as number;
          tp(player, x, y);
          break;
       }
       case "tpbiome": {
-         const biomeName = commandComponents[1] as Biome;
-         tpBiome(player, biomeName);
-         break;
-      }
-      case "summon": {
-         const entityTypeString = commandComponents[1];
-         if (typeof entityTypeString === "number") {
-            break;
-         }
-
-         const entityType = getEntityTypeFromString(entityTypeString);
-         if (entityType === null) {
-            break;
-         }
-         
-         if (numParameters === 1) {
-            summonEntities(player, entityType, 1);
-         } else {
-            const amount = commandComponents[2] as number;
-            summonEntities(player, entityType, amount);
-         }
+         const biomeName = parts[1].val as Biome;
+         // tpBiome(player, biomeName);
          break;
       }
       case "unlockall": {
-         const tribeComponent = TribeComponentArray.getComponent(player.id);
+         const tribeComponent = TribeComponentArray.getComponent(player);
          tribeComponent.tribe.unlockAllTechs();
          
          break;
       }
       case "build": {
-         const tribeComponent = TribeComponentArray.getComponent(player.id);
-         forceBuildPlans(tribeComponent.tribe);
+         const tribeComponent = TribeComponentArray.getComponent(player);
+         // @Incomplete
+         // forceBuildPlans(tribeComponent.tribe);
+      }
+      case "itemname": {
+         const itemNamePart = parts[1];
+         if (typeof itemNamePart === "undefined") {
+            break;
+         }
+         const itemNameString = itemNamePart.val;
+         if (typeof itemNameString === "number") {
+            break;
+         }
+
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
+         const rightHand = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+         const heldItem = getHeldItem(rightHand);
+
+         if (heldItem !== null) {
+            heldItem.nickname = itemNameString;
+            heldItem.namer = playerClient.username;
+         }
+         
+         break;
       }
    }
 }

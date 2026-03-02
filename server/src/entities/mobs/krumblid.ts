@@ -1,113 +1,174 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { createItemsOverEntity } from "../../entity-shared";
-import { WanderAIComponent, WanderAIComponentArray } from "../../components/WanderAIComponent";
-import { entityHasReachedPosition, moveEntityToPosition, stopEntity } from "../../ai-shared";
-import { shouldWander, getWanderTargetTile, wander } from "../../ai/wander-ai";
-import Tile from "../../Tile";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { FollowAIComponent, FollowAIComponentArray, entityWantsToFollow, startFollowingEntity, updateFollowAIComponent } from "../../components/FollowAIComponent";
-import Board from "../../Board";
-import { chooseEscapeEntity, registerAttackingEntity, runFromAttackingEntity } from "../../ai/escape-ai";
-import { EscapeAIComponent, EscapeAIComponentArray, updateEscapeAIComponent } from "../../components/EscapeAIComponent";
-import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
-import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
-import { Biome } from "webgl-test-shared/dist/tiles";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
+import { Entity, EntityType } from "battletribes-shared/entities";
+import { getAbsAngleDiff, Point, randInt } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { HitboxCollisionType, HitboxFlag } from "battletribes-shared/boxes/boxes";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
+import WanderAI from "../../ai/WanderAI";
+import { Biome } from "battletribes-shared/biomes";
+import Layer from "../../Layer";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
+import { EscapeAI } from "../../ai/EscapeAI";
+import { FollowAI } from "../../ai/FollowAI";
+import { KrumblidComponent } from "../../components/KrumblidComponent";
+import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent";
+import { Settings } from "../../../../shared/src/settings";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
+import { ItemType } from "../../../../shared/src/items/items";
+import {getHitboxVelocity, Hitbox } from "../../hitboxes";
+import { EnergyStomachComponent } from "../../components/EnergyStomachComponent";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
+import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared";
+import { SandBallingAI } from "../../ai/SandBallingAI";
+import { createNormalisedPivotPoint } from "../../../../shared/src/boxes/BaseBox";
+import { VegetationConsumeAI } from "../../ai/VegetationConsumeAI";
+import { KrumblidCombatAI } from "../../ai/KrumblidCombatAI";
+import { KrumblidHibernateAI } from "../../ai/KrumblidHibernateAI";
+import { getEntityType } from "../../world";
+import { EnergyStoreComponent } from "../../components/EnergyStoreComponent";
+import { TamingComponent } from "../../components/TamingComponent";
+import { getTamingSkill, TamingSkillID } from "../../../../shared/src/taming";
+import { registerEntityTamingSpec } from "../../taming-specs";
 
-const MAX_HEALTH = 15;
-const KRUMBLID_SIZE = 48;
-const VISION_RANGE = 224;
+registerEntityTamingSpec(EntityType.krumblid, {
+   maxTamingTier: 3,
+   skillNodes: [
+      {
+         skill: getTamingSkill(TamingSkillID.follow),
+         x: 0,
+         y: 10,
+         parent: null,
+         requiredTamingTier: 1
+      },
+      {
+         skill: getTamingSkill(TamingSkillID.attack),
+         x: 0,
+         y: 30,
+         parent: TamingSkillID.follow,
+         requiredTamingTier: 2
+      },
+      {
+         skill: getTamingSkill(TamingSkillID.imprint),
+         x: 0,
+         y: 50,
+         parent: TamingSkillID.attack,
+         requiredTamingTier: 3
+      }
+   ],
+   foodItemType: ItemType.leaf,
+   tierFoodRequirements: {
+      0: 0,
+      1: 5,
+      2: 20,
+      3: 60
+   }
+});
 
-const MIN_FOLLOW_COOLDOWN = 7;
-const MAX_FOLLOW_COOLDOWN = 9;
-const FOLLOW_CHANCE_PER_SECOND = 0.3;
+registerEntityLootOnDeath(EntityType.krumblid, {
+   itemType: ItemType.rawCrabMeat,
+   getAmount: () => randInt(2, 3)
+});
 
-const TURN_SPEED = Math.PI * 2;
-
-export function createKrumblid(position: Point): Entity {
-   const krumblid = new Entity(position, 2 * Math.PI * Math.random(), EntityType.krumblid, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.cactus);
-
-   const hitbox = new CircularHitbox(0.75, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, KRUMBLID_SIZE / 2);
-   krumblid.addHitbox(hitbox);
-
-   PhysicsComponentArray.addComponent(krumblid.id, new PhysicsComponent(0, 0, 0, 0, true, false));
-   HealthComponentArray.addComponent(krumblid.id, new HealthComponent(MAX_HEALTH));
-   StatusEffectComponentArray.addComponent(krumblid.id, new StatusEffectComponent(0));
-   WanderAIComponentArray.addComponent(krumblid.id, new WanderAIComponent());
-   FollowAIComponentArray.addComponent(krumblid.id, new FollowAIComponent(randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN), FOLLOW_CHANCE_PER_SECOND, 20));
-   EscapeAIComponentArray.addComponent(krumblid.id, new EscapeAIComponent());
-   AIHelperComponentArray.addComponent(krumblid.id, new AIHelperComponent(VISION_RANGE));
-
-   return krumblid;
+function wanderPositionIsValid(_entity: Entity, layer: Layer, x: number, y: number): boolean {
+   const biome = layer.getBiomeAtPosition(x, y);
+   return biome === Biome.desert || biome === Biome.desertOasis;
 }
 
-export function tickKrumblid(krumblid: Entity): void {
-   const aiHelperComponent = AIHelperComponentArray.getComponent(krumblid.id);
+const moveFunc = (krumblid: Entity, pos: Point, acceleration: number): void => {
+   accelerateEntityToPosition(krumblid, pos, acceleration);
+}
+
+const turnFunc = (krumblid: Entity, pos: Point, turnSpeed: number, turnDamping: number): void => {
+   turnToPosition(krumblid, pos, turnSpeed, turnDamping);
+}
+
+const extraEscapeCondition = (krumblid: Entity, escapeTarget: Entity): boolean => {
+   // Run from okrens which look like they are going for the krumblid
    
-   // Escape AI
-   const escapeAIComponent = EscapeAIComponentArray.getComponent(krumblid.id);
-   updateEscapeAIComponent(escapeAIComponent, 5 * Settings.TPS);
-   if (escapeAIComponent.attackingEntityIDs.length > 0) {
-      const escapeEntity = chooseEscapeEntity(krumblid, aiHelperComponent.visibleEntities);
-      if (escapeEntity !== null) {
-         runFromAttackingEntity(krumblid, escapeEntity, 500, TURN_SPEED);
-         return;
-      }
+   if (getEntityType(escapeTarget) !== EntityType.okren) {
+      return false;
+   }
+
+   const krumblidTransformComponent = TransformComponentArray.getComponent(krumblid);
+   const krumblidHitbox = krumblidTransformComponent.hitboxes[0];
+
+   const escapeTargetTransformComponent = TransformComponentArray.getComponent(escapeTarget);
+   const escapeTargetHitbox = escapeTargetTransformComponent.hitboxes[0];
+
+   const angleFromEscapeTarget = escapeTargetHitbox.box.position.angleTo(krumblidHitbox.box.position);
+   const positionFromEscapeTarget = new Point(krumblidHitbox.box.position.x - escapeTargetHitbox.box.position.x, krumblidHitbox.box.position.y - escapeTargetHitbox.box.position.y);
+
+   const escapeTargetVelocity = getHitboxVelocity(escapeTargetHitbox);
+   
+   return getAbsAngleDiff(angleFromEscapeTarget, escapeTargetHitbox.box.angle) < 0.4 && escapeTargetVelocity.calculateDotProduct(positionFromEscapeTarget) > 50;
+}
+
+export function createKrumblidConfig(position: Point, angle: number): EntityConfig {
+   const transformComponent = new TransformComponent();
+
+   transformComponent.traction = 1.5;
+   
+   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, 24), 0.75, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.cactus, [HitboxFlag.KRUMBLID_BODY]);
+   addHitboxToTransformComponent(transformComponent, bodyHitbox);
+   
+   // Mandibles
+   for (let i = 0; i < 2; i++) {
+      const sideIsFlipped = i === 1;
+      
+      const offset = new Point(12, 28);
+      const position = bodyHitbox.box.position.copy();
+      position.add(offset);
+      const mandibleHitbox = new Hitbox(transformComponent, bodyHitbox, true, new RectangularBox(position, offset, Math.PI * 0.1, 12, 16), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.cactus, [HitboxFlag.KRUMBLID_MANDIBLE]);
+      mandibleHitbox.box.flipX = sideIsFlipped;
+      // @Hack
+      mandibleHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
+      mandibleHitbox.box.pivot = createNormalisedPivotPoint(-0.5, -0.5);
+      addHitboxToTransformComponent(transformComponent, mandibleHitbox);
    }
    
-   // Follow AI: Make the krumblid like to hide in cacti
-   const followAIComponent = FollowAIComponentArray.getComponent(krumblid.id);
-   updateFollowAIComponent(krumblid, aiHelperComponent.visibleEntities, 5);
-   const followedEntity = Board.entityRecord[followAIComponent.followTargetID];
-   if (typeof followedEntity !== "undefined") {
-      // Continue following the entity
-      moveEntityToPosition(krumblid, followedEntity.position.x, followedEntity.position.y, 200, TURN_SPEED);
-      return;
-   } else if (entityWantsToFollow(followAIComponent)) {
-      for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
-         const entity = aiHelperComponent.visibleEntities[i];
-         if (entity.type === EntityType.player) {
-            // Follow the entity
-            startFollowingEntity(krumblid, entity, 200, TURN_SPEED, randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN));
-            return;
-         }
-      }
-   }
+   const healthComponent = new HealthComponent(15);
+   
+   const statusEffectComponent = new StatusEffectComponent(0);
 
-   const physicsComponent = PhysicsComponentArray.getComponent(krumblid.id);
+   const aiHelperComponent = new AIHelperComponent(bodyHitbox, 400, moveFunc, turnFunc);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(400, 5 * Math.PI, 0.4, 0.35, wanderPositionIsValid);
+   aiHelperComponent.ais[AIType.escape] = new EscapeAI(900, 5 * Math.PI, 0.4, 1, extraEscapeCondition);
+   aiHelperComponent.ais[AIType.follow] = new FollowAI(8 * Settings.TICK_RATE, 16 * Settings.TICK_RATE, 0.05, 34);
+   aiHelperComponent.ais[AIType.sandBalling] = new SandBallingAI(400, 1, 1);
+   aiHelperComponent.ais[AIType.vegetationConsume] = new VegetationConsumeAI(400, 5 * Math.PI, 0.4);
+   aiHelperComponent.ais[AIType.krumblidCombat] = new KrumblidCombatAI(900, 5 * Math.PI, 0.4);
+   aiHelperComponent.ais[AIType.krumblidHibernate] = new KrumblidHibernateAI(240, 5 * Math.PI, 0.4);
 
-   // Wander AI
-   const wanderAIComponent = WanderAIComponentArray.getComponent(krumblid.id);
-   if (wanderAIComponent.targetPositionX !== -1) {
-      if (entityHasReachedPosition(krumblid, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
-         wanderAIComponent.targetPositionX = -1;
-         stopEntity(physicsComponent);
-      }
-   } else if (shouldWander(physicsComponent, 0.25)) {
-      let attempts = 0;
-      let targetTile: Tile;
-      do {
-         targetTile = getWanderTargetTile(krumblid, VISION_RANGE);
-      } while (++attempts <= 50 && (targetTile.isWall || targetTile.biome !== Biome.desert));
+   const attackingEntitiesComponent = new AttackingEntitiesComponent(5 * Settings.TICK_RATE);
+   
+   const lootComponent = new LootComponent();
 
-      const x = (targetTile.x + Math.random()) * Settings.TILE_SIZE;
-      const y = (targetTile.y + Math.random()) * Settings.TILE_SIZE;
-      wander(krumblid, x, y, 200, TURN_SPEED);
-   } else {
-      stopEntity(physicsComponent);
-   }
-}
-
-export function onKrumblidHurt(cow: Entity, attackingEntity: Entity): void {
-   registerAttackingEntity(cow, attackingEntity);
-}
-
-export function onKrumblidDeath(krumblid: Entity): void {
-   createItemsOverEntity(krumblid, ItemType.leather, randInt(2, 3), 30);
+   const energyStoreComponent = new EnergyStoreComponent(500);
+   
+   const energyStomachComponent = new EnergyStomachComponent(300, 3, 1);
+   
+   const tamingComponent = new TamingComponent();
+   
+   const krumblidComponent = new KrumblidComponent();
+   
+   return {
+      entityType: EntityType.krumblid,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.attackingEntities]: attackingEntitiesComponent,
+         [ServerComponentType.loot]: lootComponent,
+         [ServerComponentType.energyStore]: energyStoreComponent,
+         [ServerComponentType.energyStomach]: energyStomachComponent,
+         [ServerComponentType.taming]: tamingComponent,
+         [ServerComponentType.krumblid]: krumblidComponent
+      },
+      lights: []
+   };
 }

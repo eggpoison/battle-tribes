@@ -1,47 +1,84 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { BuildingMaterial } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
+import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
+import { Entity, EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { EntityConfig } from "../../components";
+import { destroyEntity, getEntityType } from "../../world";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { TribeComponent } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { BuildingMaterialComponent, BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
-import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { ArrowComponentArray } from "../../components/ArrowComponent";
-import { createEmbrasureHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../shared/src/utils";
+import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
+import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
+import { StructureConnection } from "../../structure-placement";
 
-export const EMBRASURE_HEALTHS = [15, 45];
+const HEALTHS = [15, 45];
 
-export function createEmbrasure(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
-   const embrasure = new Entity(position, rotation, EntityType.embrasure, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxes = createEmbrasureHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      embrasure.addHitbox(hitboxes[i]);
-   }
+export function createEmbrasureConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
    
-   HealthComponentArray.addComponent(embrasure.id, new HealthComponent(EMBRASURE_HEALTHS[material]));
-   StatusEffectComponentArray.addComponent(embrasure.id, new StatusEffectComponent(StatusEffect.bleeding));
-   StructureComponentArray.addComponent(embrasure.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(embrasure.id, new TribeComponent(tribe));
-   BuildingMaterialComponentArray.addComponent(embrasure.id, new BuildingMaterialComponent(material));
+   const VERTICAL_HITBOX_WIDTH = 12;
+   const VERTICAL_HITBOX_HEIGHT = 20;
+   
+   const HORIZONTAL_HITBOX_WIDTH = 24;
+   const HORIZONTAL_HITBOX_HEIGHT = 16;
 
-   return embrasure;
+   // Add the two vertical hitboxes (can stop arrows)
+   const hitbox1 = new Hitbox(transformComponent, null, true, new RectangularBox(position.copy(), new Point(-(64 - VERTICAL_HITBOX_WIDTH) / 2 + 0.025, 0), rotation, VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox1.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox1);
+   const hitbox2 = new Hitbox(transformComponent, null, true, new RectangularBox(position.copy(), new Point((64 - VERTICAL_HITBOX_WIDTH) / 2 - 0.025, 0), rotation, VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox2.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox2);
+
+   // Add the two horizontal hitboxes (cannot stop arrows)
+   const hitbox3 = new Hitbox(transformComponent, null, true, new RectangularBox(position.copy(), new Point(-(64 - HORIZONTAL_HITBOX_WIDTH) / 2 + 0.025, 0), rotation, HORIZONTAL_HITBOX_WIDTH, HORIZONTAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.arrowPassable, DEFAULT_COLLISION_MASK, []);
+   hitbox3.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox3);
+   const hitbox4 = new Hitbox(transformComponent, null, true, new RectangularBox(position.copy(), new Point((64 - HORIZONTAL_HITBOX_WIDTH) / 2 + 0.025, 0), rotation, HORIZONTAL_HITBOX_WIDTH, HORIZONTAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.arrowPassable, DEFAULT_COLLISION_MASK, []);
+   hitbox4.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox4);
+
+   const healthComponent = new HealthComponent(HEALTHS[material]);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connections, virtualStructure);
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const buildingMaterialComponent = new BuildingMaterialComponent(material, HEALTHS);
+   
+   return {
+      entityType: EntityType.embrasure,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.buildingMaterial]: buildingMaterialComponent
+      },
+      lights: []
+   };
 }
 
 export function onEmbrasureCollision(collidingEntity: Entity, pushedHitboxIdx: number): void {
-   if (collidingEntity.type === EntityType.woodenArrowProjectile) {
-      const arrowComponent = ArrowComponentArray.getComponent(collidingEntity.id);
-      if (arrowComponent.ignoreFriendlyBuildings) {
-         return;
-      }
+   if (getEntityType(collidingEntity) === EntityType.woodenArrow) {
+      // @Incomplete?
+      // const arrowComponent = ProjectileComponentArray.getComponent(collidingEntity.id);
+      // if (arrowComponent.ignoreFriendlyBuildings) {
+      //    return;
+      // }
 
       if (pushedHitboxIdx <= 1) {
-         collidingEntity.destroy();
+         destroyEntity(collidingEntity);
       }
    }
 }

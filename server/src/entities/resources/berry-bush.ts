@@ -1,84 +1,60 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { createItemEntity } from "../item-entity";
-import Board from "../../Board";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Entity, EntityType } from "battletribes-shared/entities";
+import { Point } from "battletribes-shared/utils";
 import { BerryBushComponent, BerryBushComponentArray } from "../../components/BerryBushComponent";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { EntityConfig } from "../../components";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { LootComponent, registerEntityLootOnHit } from "../../components/LootComponent";
+import { ItemType } from "../../../../shared/src/items/items";
+import { registerDirtyEntity } from "../../server/player-clients";
+import { Hitbox } from "../../hitboxes";
 
-export const BERRY_BUSH_RADIUS = 40;
-
-/** Number of seconds it takes for a berry bush to regrow one of its berries */
-const BERRY_GROW_TIME = 30;
-
-export function createBerryBush(position: Point, rotation: number): Entity {
-   const berryBush = new Entity(position, rotation, EntityType.berryBush, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
-
-   const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, BERRY_BUSH_RADIUS);
-   berryBush.addHitbox(hitbox);
-
-   HealthComponentArray.addComponent(berryBush.id, new HealthComponent(10));
-   StatusEffectComponentArray.addComponent(berryBush.id, new StatusEffectComponent(0));
-   BerryBushComponentArray.addComponent(berryBush.id, new BerryBushComponent());
-
-   return berryBush;
-}
-
-export function tickBerryBush(berryBush: Entity): void {
-   const berryBushComponent = BerryBushComponentArray.getComponent(berryBush.id);
-   if (berryBushComponent.numBerries >= 5) {
-      return;
+registerEntityLootOnHit(EntityType.berryBush, {
+   itemType: ItemType.berry,
+   getAmount: (berryBush: Entity) => {
+      const berryBushComponent = BerryBushComponentArray.getComponent(berryBush);
+      return berryBushComponent.numBerries > 0 ? 1 : 0;
+   },
+   onItemDrop: (berryBush: Entity) => {
+      // @Hack: this type of logic feels like it should be done in a component
+      const berryBushComponent = BerryBushComponentArray.getComponent(berryBush);
+      if (berryBushComponent.numBerries > 0) {
+         berryBushComponent.numBerries--;
+         registerDirtyEntity(berryBush);
+      }
    }
+});
 
-   berryBushComponent.berryGrowTimer += Settings.I_TPS;
-   if (berryBushComponent.berryGrowTimer >= BERRY_GROW_TIME) {
-      // Grow a new berry
-      berryBushComponent.berryGrowTimer = 0;
-      berryBushComponent.numBerries++;
-   }
-}
+export function createBerryBushConfig(position: Point, rotation: number): EntityConfig {
+   const transformComponent = new TransformComponent();
 
-export function dropBerryOverEntity(entity: Entity): void {
-   // Generate new spawn positions until we find one inside the board
-   let position: Point;
-   let spawnDirection: number;
-   do {
-      // @Speed: Garbage collection
-      position = entity.position.copy();
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 40), 1, HitboxCollisionType.soft, CollisionBit.plant, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-      spawnDirection = 2 * Math.PI * Math.random();
-      const spawnOffset = Point.fromVectorForm(40, spawnDirection);
-
-      position.add(spawnOffset);
-   } while (!Board.isInBoard(position));
-
-   const itemEntityCreationInfo = createItemEntity(position, 2 * Math.PI * Math.random(), ItemType.berry, 1, 0);
+   const healthComponent = new HealthComponent(10);
    
-   const velocityDirectionOffset = (Math.random() - 0.5) * Math.PI * 0.15
-   const physicsComponent = itemEntityCreationInfo.components[ServerComponentType.physics]!;
-   physicsComponent.velocity.x = 40 * Math.sin(spawnDirection + velocityDirectionOffset);
-   physicsComponent.velocity.y = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
-}
-
-export function dropBerry(berryBush: Entity, multiplier: number): void {
-   const berryBushComponent = BerryBushComponentArray.getComponent(berryBush.id);
-   if (berryBushComponent.numBerries === 0) {
-      return;
-   }
-
-   for (let i = 0; i < multiplier; i++) {
-      dropBerryOverEntity(berryBush);
-   }
-
-   berryBushComponent.numBerries--;
-}
-
-export function onBerryBushHurt(berryBush: Entity): void {
-   dropBerry(berryBush, 1);
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding);
+   
+   const lootComponent = new LootComponent();
+   
+   const berryBushComponent = new BerryBushComponent();
+   
+   return {
+      entityType: EntityType.berryBush,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.loot]: lootComponent,
+         [ServerComponentType.berryBush]: berryBushComponent
+      },
+      lights: []
+   };
 }

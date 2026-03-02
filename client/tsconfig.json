@@ -17,13 +17,14 @@
       "resolveJsonModule": true,
       "noEmit": false,
       "outDir": "./build",
-      "jsx": "react-jsx",
       "sourceMap": true,
-      "isolatedModules": false,
-      "declaration": true
+      "declaration": true,
+      "isolatedModules": true,
+      "baseUrl": ".",
+      "paths": {
+         "webgl-test-shared": ["../shared/src"]
+      }
    },
-   "include": [
-      "src",
-      "node_modules/webgl-test-shared/**/*.d.ts"
-   ]
+   "include": ["src"],
+   "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
 }

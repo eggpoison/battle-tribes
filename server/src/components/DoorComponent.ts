@@ -1,54 +1,54 @@
-import { DoorComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { DoorToggleType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { angle, lerp } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
-import { PhysicsComponentArray } from "./PhysicsComponent";
+import { ServerComponentType } from "battletribes-shared/components";
+import { DoorToggleType, Entity } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { angle, lerp, Point } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
-import { HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { EntityConfig } from "../components";
+import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "battletribes-shared/packets";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { setHitboxAngle, teleportHitbox } from "../hitboxes";
 
-const DOOR_SWING_SPEED = 5 / Settings.TPS;
+const DOOR_SWING_SPEED = 5 * Settings.DT_S;
 
 export class DoorComponent {
-   public readonly originX: number;
-   public readonly originY: number;
-   public readonly closedRotation: number;
+   public originX = 0;
+   public originY = 0;
+   public closedAngle = 0;
    
    public toggleType = DoorToggleType.none;
    public openProgress = 0;
-
-   constructor(originX: number, originY: number, closedRotation: number) {
-      this.originX = originX;
-      this.originY = originY;
-      this.closedRotation = closedRotation;
-   }
 }
 
-export const DoorComponentArray = new ComponentArray<ServerComponentType.door, DoorComponent>(true, {
-   serialise: serialise
-});
+export const DoorComponentArray = new ComponentArray<DoorComponent>(ServerComponentType.door, true, getDataLength, addDataToPacket);
+DoorComponentArray.onTick = {
+   tickInterval: 1,
+   func: onTick
+};
+DoorComponentArray.onInitialise = onInitialise;
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 64 * 64) / 2;
 const angleToCenter = angle(16, 64);
 
 const updateDoorOpenProgress = (door: Entity, doorComponent: DoorComponent): void => {
-   const rotation = doorComponent.closedRotation + lerp(0, -Math.PI/2 + 0.1, doorComponent.openProgress);
+   const transformComponent = TransformComponentArray.getComponent(door);
+   const doorHitbox = transformComponent.hitboxes[0];
+   
+   const angle = doorComponent.closedAngle + lerp(0, -Math.PI/2 + 0.1, doorComponent.openProgress);
    
    // Rotate around the top left corner of the door
-   const offsetDirection = rotation + Math.PI/2 + angleToCenter;
-   const xOffset = doorHalfDiagonalLength * Math.sin(offsetDirection) - doorHalfDiagonalLength * Math.sin(doorComponent.closedRotation + Math.PI/2 + angleToCenter);
-   const yOffset = doorHalfDiagonalLength * Math.cos(offsetDirection) - doorHalfDiagonalLength * Math.cos(doorComponent.closedRotation + Math.PI/2 + angleToCenter);
+   const offsetDirection = angle + Math.PI/2 + angleToCenter;
+   const xOffset = doorHalfDiagonalLength * Math.sin(offsetDirection) - doorHalfDiagonalLength * Math.sin(doorComponent.closedAngle + Math.PI/2 + angleToCenter);
+   const yOffset = doorHalfDiagonalLength * Math.cos(offsetDirection) - doorHalfDiagonalLength * Math.cos(doorComponent.closedAngle + Math.PI/2 + angleToCenter);
 
-   door.position.x = doorComponent.originX + xOffset;
-   door.position.y = doorComponent.originY + yOffset;
-   door.rotation = rotation;
-
-   const physicsComponent = PhysicsComponentArray.getComponent(door.id);
-   physicsComponent.hitboxesAreDirty = true;
+   teleportHitbox(doorHitbox, new Point(doorComponent.originX + xOffset, doorComponent.originY + yOffset));
+   setHitboxAngle(doorHitbox, angle);
+   transformComponent.isDirty = true;
 }
 
-export function tickDoorComponent(door: Entity): void {
-   const doorComponent = DoorComponentArray.getComponent(door.id);
+function onTick(door: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(door);
+   const doorComponent = DoorComponentArray.getComponent(door);
    
    switch (doorComponent.toggleType) {
       case DoorToggleType.open: {
@@ -59,7 +59,7 @@ export function tickDoorComponent(door: Entity): void {
          }
          updateDoorOpenProgress(door, doorComponent);
 
-         door.hitboxes[0].collisionType = HitboxCollisionType.soft;
+         (transformComponent.hitboxes[0]).collisionType = HitboxCollisionType.soft;
          break;
       }
       case DoorToggleType.close: {
@@ -70,14 +70,14 @@ export function tickDoorComponent(door: Entity): void {
          }
          updateDoorOpenProgress(door, doorComponent);
 
-         door.hitboxes[0].collisionType = HitboxCollisionType.hard;
+         (transformComponent.hitboxes[0]).collisionType = HitboxCollisionType.hard;
          break;
       }
    }
 }
 
 export function toggleDoor(door: Entity): void {
-   const doorComponent = DoorComponentArray.getComponent(door.id);
+   const doorComponent = DoorComponentArray.getComponent(door);
 
    // Don't toggle if already in the middle of opening/closing
    if (doorComponent.toggleType !== DoorToggleType.none) {
@@ -93,16 +93,28 @@ export function toggleDoor(door: Entity): void {
    }
 }
 
-function serialise(entityID: number): DoorComponentData {
-   const doorComponent = DoorComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.door,
-      toggleType: doorComponent.toggleType,
-      openProgress: doorComponent.openProgress
-   }
+// @Hack
+function onInitialise(config: EntityConfig): void {
+   const transformComponent = config.components[ServerComponentType.transform]!;
+   const doorHitbox = transformComponent.hitboxes[0];
+   
+   config.components[ServerComponentType.door]!.originX = doorHitbox.box.position.x;
+   config.components[ServerComponentType.door]!.originY = doorHitbox.box.position.y;
+   config.components[ServerComponentType.door]!.closedAngle = doorHitbox.box.relativeAngle;
+}
+
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: Entity): void {
+   const doorComponent = DoorComponentArray.getComponent(entity);
+
+   packet.writeNumber(doorComponent.toggleType);
+   packet.writeNumber(doorComponent.openProgress);
 }
 
 export function doorIsClosed(door: Entity): boolean {
-   const doorComponent = DoorComponentArray.getComponent(door.id);
+   const doorComponent = DoorComponentArray.getComponent(door);
    return doorComponent.openProgress === 0;
 }

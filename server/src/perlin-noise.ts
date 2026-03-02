@@ -1,4 +1,4 @@
-import { Vector, Point } from "webgl-test-shared/dist/utils";
+import { Vector, Point, randAngle } from "battletribes-shared/utils";
 import SRandom from "./SRandom";
 
 const lerp = (start: number, end: number, amount: number): number => {
@@ -85,7 +85,7 @@ export function generatePerlinNoise(width: number, height: number, scale: number
 /**
  * 
  * @param octaves The number of perlin noise layers to use
- * @param lacunarity Controls the increase in scale between octaves (1+)
+ * @param lacunarity Controls the decrease in scale between octaves (1+)
  * @param persistance Controls the decrease in weight between octaves (0-1)
  */
 export function generateOctavePerlinNoise(width: number, height: number, startingScale: number, octaves: number, lacunarity: number, persistance: number): Array<Array<number>> {
@@ -126,10 +126,27 @@ export function generateOctavePerlinNoise(width: number, height: number, startin
    return totalNoise;
 }
 
-let pointPerlinNoiseGrids: Partial<Record<string, Partial<Record<string, Vector>>>> = {};
+let pointPerlinNoiseGrids: Partial<Record<string, Partial<Record<string, Point>>>> = {};
 
 export function resetPerlinNoiseCache(): void {
    pointPerlinNoiseGrids = {};
+}
+
+const calculatePointCornerDotProduct = (grid: Partial<Record<string, Point>>, sampleX: number, sampleY: number, cornerX: number, cornerY: number): number => {
+   const key = cornerY + "-" + cornerX; // @Speed
+   let corner = grid[key];
+   
+   if (typeof corner === "undefined") {
+      const dir = randAngle();
+      corner = new Point(Math.sin(dir), Math.cos(dir));
+      grid[key] = corner;
+   }
+
+   const directionVectorX = sampleX - cornerX;
+   const directionVectorY = sampleY - cornerY;
+
+   // Calculate the dot product
+   return corner.x * directionVectorX + corner.y * directionVectorY;
 }
 
 export function generatePointPerlinNoise(x: number, y: number, scale: number, name: string): number {
@@ -141,39 +158,20 @@ export function generatePointPerlinNoise(x: number, y: number, scale: number, na
 
    const sampleX = x / scale;
    const sampleY = y / scale;
-   const samplePoint = new Point(sampleX, sampleY);
 
    const x0 = Math.floor(sampleX);
    const x1 = x0 + 1;
    const y0 = Math.floor(sampleY);
    const y1 = y0 + 1;
 
-   const cornerCoords: ReadonlyArray<[number, number]> = [[y0, x0], [y0, x1], [y1, x0], [y1, x1]];
-
-   const dotProducts = new Array<number>();
-   for (let i = 0; i < 4; i++) {
-      const coords = cornerCoords[i];
-
-      const key = coords[0] + "-" + coords[1]; // @Speed
-      let corner = grid[key];
-      
-      if (typeof corner === "undefined") {
-         corner = new Vector(1, 2 * Math.PI * SRandom.next());
-         grid[key] = corner;
-      }
-
-      const cornerPos = new Point(coords[1], coords[0]);
-      const offsetVector = samplePoint.convertToVector(cornerPos);
-
-      // Calculate the dot product
-      const cornerCartesian = corner.convertToPoint();
-      const dotProduct = cornerCartesian.calculateDotProduct(offsetVector.convertToPoint());
-      dotProducts.push(dotProduct);
-   }
+   const dot0 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x0, y0);
+   const dot1 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x1, y0);
+   const dot2 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x0, y1);
+   const dot3 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x1, y1);
 
    const u = fade(sampleX % 1);
    const v = fade(sampleY % 1);
-   let val = interpolate(dotProducts[0], dotProducts[1], dotProducts[2], dotProducts[3], u, v);
+   let val = interpolate(dot0, dot1, dot2, dot3, u, v);
    val = Math.min(Math.max(val, -0.5), 0.5);
    return val + 0.5;
 }

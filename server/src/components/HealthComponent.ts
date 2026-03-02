@@ -1,31 +1,17 @@
-import { HealthComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { PlayerCauseOfDeath, EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { Point, clamp } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
-import TombstoneDeathManager from "../tombstone-deaths";
-import { onBerryBushHurt } from "../entities/resources/berry-bush";
-import { onCowHurt } from "../entities/mobs/cow";
-import { onKrumblidHurt } from "../entities/mobs/krumblid";
-import { onTombstoneDeath } from "../entities/tombstone";
-import { onZombieHurt, onZombieVisibleEntityHurt } from "../entities/mobs/zombie";
-import { onSlimeDeath, onSlimeHurt } from "../entities/mobs/slime";
-import { onYetiHurt } from "../entities/mobs/yeti";
-import { onFishHurt } from "../entities/mobs/fish";
-import { onBoulderDeath } from "../entities/resources/boulder";
-import { onFrozenYetiDeath, onFrozenYetiHurt } from "../entities/mobs/frozen-yeti";
-import { onPlayerHurt } from "../entities/tribes/player";
-import { onGolemDeath, onGolemHurt } from "../entities/mobs/golem";
+import { ServerComponentType } from "battletribes-shared/components";
+import { DamageSource, EntityType, Entity } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { Point, clamp } from "battletribes-shared/utils";
+import { onZombieVisibleEntityHurt } from "../entities/mobs/zombie";
 import { AIHelperComponentArray } from "./AIHelperComponent";
-import { adjustTribesmanRelationsAfterHurt, adjustTribesmanRelationsAfterKill } from "./TribesmanAIComponent";
-import { onTribeMemberHurt } from "../entities/tribes/tribe-member";
-import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
-import { TribeMemberComponentArray, awardTitle } from "./TribeMemberComponent";
-import { onPlantDeath, onPlantHit } from "../entities/plant";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { registerEntityDeath, registerEntityHeal, registerEntityHit } from "../server/player-clients";
-import { ComponentArray } from "./ComponentArray";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { registerDirtyEntity, registerEntityHeal, registerEntityHit } from "../server/player-clients";
+import { ComponentArray, getComponentArrayRecord } from "./ComponentArray";
+import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "battletribes-shared/packets";
+import { destroyEntity, getEntityComponentTypes, getEntityType } from "../world";
+import { Hitbox } from "../hitboxes";
+import { HitFlags } from "../../../shared/src/client-server-types";
 
 export class HealthComponent {
    public maxHealth: number;
@@ -44,18 +30,23 @@ export class HealthComponent {
    }
 }
 
-export const HealthComponentArray = new ComponentArray<ServerComponentType.health, HealthComponent>(true, {
-   serialise: serialiseHealthComponent
-});
+export const HealthComponentArray = new ComponentArray<HealthComponent>(ServerComponentType.health, false, getDataLength, addDataToPacket);
+HealthComponentArray.onTick = {
+   tickInterval: 1,
+   func: onTick
+};
 
-export function tickHealthComponent(healthComponent: HealthComponent): void {
+function onTick(entity: Entity): void {
+   const healthComponent = HealthComponentArray.getComponent(entity);
+   
    // Update local invulnerability hashes
    for (let i = 0; i < healthComponent.localIframeHashes.length; i++) {
-      healthComponent.localIframeDurations[i] -= Settings.I_TPS;
+      healthComponent.localIframeDurations[i] -= Settings.DT_S;
       if (healthComponent.localIframeDurations[i] <= 0) {
          healthComponent.localIframeHashes.splice(i, 1);
          healthComponent.localIframeDurations.splice(i, 1);
          i--;
+         HealthComponentArray.queueComponentDeactivate(entity);
       }
    }
 }
@@ -69,181 +60,111 @@ export function canDamageEntity(healthComponent: HealthComponent, attackHash: st
    return true;
 }
 
+const callOnTakeDamageCallbacks = (entity: Entity, hitHitbox: Hitbox, attackingEntity: Entity | null, damageSource: DamageSource, damage: number): void => {
+   const componentArrayRecord = getComponentArrayRecord();
+   const entityComponentTypes = getEntityComponentTypes(entity);
+   for (const componentType of entityComponentTypes) {
+      const componentArray = componentArrayRecord[componentType];
+      if (typeof componentArray.onTakeDamage !== "undefined") {
+         componentArray.onTakeDamage(entity, hitHitbox, attackingEntity, damageSource, damage);
+      }
+   }
+}
+
+const callOnDeathCallbacks = (entity: Entity, attackingEntity: Entity | null, damageSource: DamageSource): void => {
+   const componentArrayRecord = getComponentArrayRecord();
+   const entityComponentTypes = getEntityComponentTypes(entity);
+   
+   for (const componentType of entityComponentTypes) {
+      const componentArray = componentArrayRecord[componentType];
+      if (typeof componentArray.onDeath !== "undefined") {
+         componentArray.onDeath(entity, attackingEntity, damageSource);
+      }
+   }
+}
+
 /**
  * Attempts to apply damage to an entity
  * @param damage The amount of damage given
  * @returns Whether the damage was received
  */
-export function damageEntity(entity: Entity, attackingEntity: Entity | null, damage: number, causeOfDeath: PlayerCauseOfDeath, attackEffectiveness: AttackEffectiveness, hitPosition: Point, hitFlags: number): boolean {
-   const healthComponent = HealthComponentArray.getComponent(entity.id);
-
-   const absorbedDamage = damage * clamp(healthComponent.defence, 0, 1);
-   const actualDamage = damage - absorbedDamage;
+export function damageEntity(hitHitbox: Hitbox, attackingEntity: Entity | null, damage: number, damageSource: DamageSource, attackEffectiveness: AttackEffectiveness, hitPosition: Point, hitFlags: number): boolean {
+   const entity = hitHitbox.entity;
    
-   healthComponent.health -= actualDamage;
+   const componentArrayRecord = getComponentArrayRecord();
 
-   registerEntityHit(entity.id, attackingEntity, hitPosition, attackEffectiveness, damage, hitFlags);
+   let damageMultiplier = 1;
+   const attackedEntityComponentTypes = getEntityComponentTypes(entity);
+   for (const componentType of attackedEntityComponentTypes) {
+      const componentArray = componentArrayRecord[componentType];
+      if (typeof componentArray.getDamageTakenMultiplier !== "undefined") {
+         damageMultiplier *= componentArray.getDamageTakenMultiplier(entity, hitHitbox);
+      }
+   }
+   const damageDealt = damage * damageMultiplier;
+
+   const healthComponent = HealthComponentArray.getComponent(entity);
+
+   if (damageDealt !== 0) {
+      const absorbedDamage = damageDealt * clamp(healthComponent.defence, 0, 1);
+      const actualDamage = damageDealt - absorbedDamage;
+      
+      healthComponent.health -= actualDamage;
+      
+      registerEntityHit(entity, hitHitbox, attackingEntity, hitPosition, attackEffectiveness, damageDealt, hitFlags);
+      registerDirtyEntity(entity);
+   }
 
    // If the entity was killed by the attack, destroy the entity
    if (healthComponent.health <= 0) {
-      entity.destroy();
-      registerEntityDeath(entity);
+      destroyEntity(entity);
 
-      switch (entity.type) {
-         case EntityType.tombstone: {
-            onTombstoneDeath(entity, attackingEntity);
-            break;
-         }
-         case EntityType.slime: {
-            if (attackingEntity !== null) {
-               onSlimeDeath(entity, attackingEntity);
-            }
-            break;
-         }
-         case EntityType.boulder: {
-            if (attackingEntity !== null) {
-               onBoulderDeath(entity, attackingEntity);
-            }
-            break;
-         }
-         case EntityType.frozenYeti: {
-            onFrozenYetiDeath(entity, attackingEntity);
-            break;
-         }
-         case EntityType.player:
-         case EntityType.tribeWorker:
-         case EntityType.tribeWarrior: {
-            if (attackingEntity !== null) {
-               adjustTribesmanRelationsAfterKill(entity, attackingEntity.id);
-            }
-            break;
-         }
-         case EntityType.plant: {
-            onPlantDeath(entity);
-            break;
-         }
-         case EntityType.golem: {
-            onGolemDeath(entity);
-            break;
-         }
-      }
+      // Call onDeath events for the dead entity
+      callOnDeathCallbacks(entity, attackingEntity, damageSource);
 
-      if (attackingEntity !== null && TribeMemberComponentArray.hasComponent(attackingEntity.id)) {
-         if (Math.random() < TITLE_REWARD_CHANCES.BLOODAXE_REWARD_CHANCE) {
-            awardTitle(attackingEntity, TribesmanTitle.bloodaxe);
-         } else if (Math.random() < TITLE_REWARD_CHANCES.DEATHBRINGER_REWARD_CHANCE) {
-            awardTitle(attackingEntity, TribesmanTitle.deathbringer);
-         } else if (entity.type === EntityType.yeti && Math.random() < TITLE_REWARD_CHANCES.YETISBANE_REWARD_CHANCE) {
-            awardTitle(attackingEntity, TribesmanTitle.yetisbane);
-         } else if (entity.type === EntityType.frozenYeti && Math.random() < TITLE_REWARD_CHANCES.WINTERSWRATH_REWARD_CHANCE) {
-            awardTitle(attackingEntity, TribesmanTitle.winterswrath);
+      // Call onKill events for the attacking entity
+      if (attackingEntity !== null) {
+         const attackingEntityComponentTypes = getEntityComponentTypes(attackingEntity);
+         for (const componentType of attackingEntityComponentTypes) {
+            const componentArray = componentArrayRecord[componentType];
+            if (typeof componentArray.onKill !== "undefined") {
+               componentArray.onKill(attackingEntity, entity);
+            }
          }
-      }
-
-      if (entity.type === EntityType.player) {
-         TombstoneDeathManager.registerNewDeath(entity, causeOfDeath);
       }
    }
 
-   switch (entity.type) {
-      case EntityType.berryBush: {
-         onBerryBushHurt(entity);
+   // Call onTakeDamage events for the attacked entity
+   callOnTakeDamageCallbacks(entity, hitHitbox, attackingEntity, damageSource, damageDealt);
 
-         // Award gardener title
-         if (attackingEntity !== null && TribeMemberComponentArray.hasComponent(attackingEntity.id) && Math.random() < TITLE_REWARD_CHANCES.GARDENER_REWARD_CHANCE) {
-            awardTitle(attackingEntity, TribesmanTitle.gardener);
+   // Call onDealDamage events for the attacking entity
+   if (attackingEntity !== null) {
+      const attackingEntityComponentTypes = getEntityComponentTypes(attackingEntity);
+      for (const componentType of attackingEntityComponentTypes) {
+         const componentArray = componentArrayRecord[componentType];
+         if (typeof componentArray.onDealDamage !== "undefined") {
+            componentArray.onDealDamage(attackingEntity, entity, damageSource);
          }
-         break;
-      }
-      case EntityType.cow: {
-         if (attackingEntity !== null) {
-            onCowHurt(entity, attackingEntity);
-         }
-         break;
-      }
-      case EntityType.krumblid: {
-         if (attackingEntity !== null) {
-            onKrumblidHurt(entity, attackingEntity);
-         }
-         break;
-      }
-      case EntityType.zombie: {
-         if (attackingEntity !== null) {
-            onZombieHurt(entity, attackingEntity);
-         }
-         break;
-      }
-      case EntityType.slime: {
-         if (attackingEntity !== null) {
-            onSlimeHurt(entity, attackingEntity);
-         }
-         break;
-      }
-      case EntityType.yeti: {
-         if (attackingEntity !== null) {
-            onYetiHurt(entity, attackingEntity, damage);
-         }
-         break;
-      }
-      case EntityType.fish: {
-         if (attackingEntity !== null) {
-            onFishHurt(entity, attackingEntity);
-         }
-         break;
-      }
-      case EntityType.frozenYeti: {
-         if (attackingEntity !== null) {
-            onFrozenYetiHurt(entity, attackingEntity, damage);
-         }
-         break;
-      }
-      case EntityType.player: {
-         if (attackingEntity !== null) {
-            onPlayerHurt(entity, attackingEntity.id);
-         }
-         break;
-      }
-      case EntityType.golem: {
-         if (attackingEntity !== null) {
-            onGolemHurt(entity, attackingEntity, damage);
-         }
-         break;
-      }
-      case EntityType.player: {
-         if (attackingEntity !== null) {
-            adjustTribesmanRelationsAfterHurt(entity, attackingEntity.id);
-         }
-         break;
-      }
-      case EntityType.tribeWorker:
-      case EntityType.tribeWarrior: {
-         if (attackingEntity !== null) {
-            onTribeMemberHurt(entity, attackingEntity.id);
-            adjustTribesmanRelationsAfterHurt(entity, attackingEntity.id);
-         }
-         break;
-      }
-      case EntityType.plant: {
-         onPlantHit(entity);
-         break;
       }
    }
 
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   
    // @Speed
    const alertedEntityIDs = new Array<number>();
-   for (let i = 0; i < entity.chunks.length; i++) {
-      const chunk = entity.chunks[i];
+   for (let i = 0; i < transformComponent.chunks.length; i++) {
+      const chunk = transformComponent.chunks[i];
       for (let j = 0; j < chunk.viewingEntities.length; j++) {
          const viewingEntity = chunk.viewingEntities[j];
-         if (alertedEntityIDs.indexOf(viewingEntity.id) !== -1) {
+         if (alertedEntityIDs.indexOf(viewingEntity) !== -1) {
             continue;
          }
 
-         const aiHelperComponent = AIHelperComponentArray.getComponent(viewingEntity.id);
+         const aiHelperComponent = AIHelperComponentArray.getComponent(viewingEntity);
          if (aiHelperComponent.visibleEntities.includes(entity)) {
-            switch (viewingEntity.type) {
+            switch (getEntityType(viewingEntity)) {
                case EntityType.zombie: {
-                  if (causeOfDeath !== PlayerCauseOfDeath.fire && causeOfDeath !== PlayerCauseOfDeath.poison) {
+                  if (damageSource !== DamageSource.fire && damageSource !== DamageSource.poison) {
                      onZombieVisibleEntityHurt(viewingEntity, entity);
                   }
                   break;
@@ -251,44 +172,57 @@ export function damageEntity(entity: Entity, attackingEntity: Entity | null, dam
             }
          }
 
-         alertedEntityIDs.push(viewingEntity.id);
+         alertedEntityIDs.push(viewingEntity);
       }
    }
 
    return true;
 }
 
-export function healEntity(entity: Entity, healAmount: number, healerID: number): void {
+/** Basically every effect of hitEntity, but doesn't reduce the entity's health. */
+export function hitEntityWithoutDamage(entity: Entity, hitHitbox: Hitbox, attackingEntity: Entity | null, hitPosition: Point): void {
+   // @Incomplete
+   // damageEntity(entity, hitHitbox, attackingEntity, 0, 0, AttackEffectiveness.effective, hitPosition, hitFlags);
+   registerEntityHit(entity, hitHitbox, attackingEntity, hitPosition, AttackEffectiveness.effective, 0, HitFlags.NON_DAMAGING_HIT);
+}
+
+export function healEntity(entity: Entity, healAmount: number, healer: Entity): void {
    if (healAmount <= 0) {
       return;
    }
    
-   const healthComponent = HealthComponentArray.getComponent(entity.id);
+   const healthComponent = HealthComponentArray.getComponent(entity);
 
    healthComponent.health += healAmount;
 
    // @Speed: Is there a smart way to remove this branch?
    if (healthComponent.health > healthComponent.maxHealth) {
       const amountHealed = healAmount - (healthComponent.health - healthComponent.maxHealth); // Calculate by removing excess healing from amount healed
-      registerEntityHeal(entity, healerID, amountHealed);
+      registerEntityHeal(entity, healer, amountHealed);
 
       healthComponent.health = healthComponent.maxHealth;
    } else {
-      registerEntityHeal(entity, healerID, healAmount);
+      registerEntityHeal(entity, healer, healAmount);
    }
+
+   registerDirtyEntity(entity);
 }
 
-export function addLocalInvulnerabilityHash(healthComponent: HealthComponent, hash: string, invulnerabilityDurationSeconds: number): void {
+export function addLocalInvulnerabilityHash(entity: Entity, hash: string, invulnerabilityDurationSeconds: number): void {
+   const healthComponent = HealthComponentArray.getComponent(entity);
+
    const idx = healthComponent.localIframeHashes.indexOf(hash);
    if (idx === -1) {
       // Add new entry
       healthComponent.localIframeHashes.push(hash);
       healthComponent.localIframeDurations.push(invulnerabilityDurationSeconds);
+
+      HealthComponentArray.activateComponent(entity);
    }
 }
 
 export function getEntityHealth(entity: Entity): number {
-   const healthComponent = HealthComponentArray.getComponent(entity.id);
+   const healthComponent = HealthComponentArray.getComponent(entity);
    return healthComponent.health;
 }
 
@@ -310,11 +244,13 @@ export function removeDefence(healthComponent: HealthComponent, name: string): v
    delete healthComponent.defenceFactors[name];
 }
 
-export function serialiseHealthComponent(entityID: number): HealthComponentData {
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entityID: number): void {
    const healthComponent = HealthComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.health,
-      health: healthComponent.health,
-      maxHealth: healthComponent.maxHealth
-   };
+
+   packet.writeNumber(healthComponent.health);
+   packet.writeNumber(healthComponent.maxHealth);
 }

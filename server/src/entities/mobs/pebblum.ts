@@ -1,61 +1,42 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { PebblumComponent, PebblumComponentArray } from "../../components/PebblumComponent";
-import { moveEntityToPosition, stopEntity } from "../../ai-shared";
-import Board from "../../Board";
-import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point } from "battletribes-shared/utils";
+import { HealthComponent } from "../../components/HealthComponent";
+import { PebblumComponent } from "../../components/PebblumComponent";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { Hitbox } from "../../hitboxes";
 
-const TURN_SPEED = Math.PI * 2;
-
-export function createPebblum(position: Point, rotation: number, targetID: number): Entity {
-   const pebblum = new Entity(position, rotation, EntityType.pebblum, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
+export function createPebblumConfig(position: Point, rotation: number): EntityConfig {
+   const transformComponent = new TransformComponent();
+   
    // Body
-   pebblum.addHitbox(new CircularHitbox(0.4, new Point(0, -4), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 10 * 2));
+   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, -4), rotation, 10 * 2), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   addHitboxToTransformComponent(transformComponent, bodyHitbox);
    // Nose
-   pebblum.addHitbox(new CircularHitbox(0.3, new Point(0, 6), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 8 * 2));
+   const noseHitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(new Point(0, 0), new Point(0, 6), 0, 8 * 2), 0.3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   addHitboxToTransformComponent(transformComponent, noseHitbox);
    
-   PhysicsComponentArray.addComponent(pebblum.id, new PhysicsComponent(0, 0, 0, 0, true, false));
-   HealthComponentArray.addComponent(pebblum.id, new HealthComponent(20));
-   StatusEffectComponentArray.addComponent(pebblum.id, new StatusEffectComponent(StatusEffect.burning | StatusEffect.bleeding | StatusEffect.poisoned));
-   PebblumComponentArray.addComponent(pebblum.id, new PebblumComponent(targetID));
-   
-   return pebblum;
-}
+   const healthComponent = new HealthComponent(20);
 
-export function tickPebblum(pebblum: Entity): void {
-   const pebblumComponent = PebblumComponentArray.getComponent(pebblum.id);
-
-   const target = Board.entityRecord[pebblumComponent.targetEntityID];
-   if (typeof target !== "undefined") {
-      moveEntityToPosition(pebblum, target.position.x, target.position.y, 850, TURN_SPEED);
-   } else {
-      const physicsComponent = PhysicsComponentArray.getComponent(pebblum.id);
-      stopEntity(physicsComponent);
-   }
-}
-
-export function onPebblumCollision(pebblum: Entity, collidingEntity: Entity, collisionPoint: Point): void {
-   const pebblumComponent = PebblumComponentArray.getComponent(pebblum.id);
-   if (collidingEntity.id !== pebblumComponent.targetEntityID) {
-      return;
-   }
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.burning | StatusEffect.poisoned);
    
-   const healthComponent = HealthComponentArray.getComponent(collidingEntity.id);
-   if (!canDamageEntity(healthComponent, "pebblum")) {
-      return;
-   }
+   // @Incomplete?
+   const pebblumComponent = new PebblumComponent(0);
    
-   const hitDirection = pebblum.position.calculateAngleBetween(collidingEntity.position);
-   // @Incomplete: Cause of death
-   damageEntity(collidingEntity, pebblum, 1, PlayerCauseOfDeath.yeti, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingEntity, 100, hitDirection);
-   addLocalInvulnerabilityHash(healthComponent, "pebblum", 0.3);
+   return {
+      entityType: EntityType.pebblum,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.pebblum]: pebblumComponent
+      },
+      lights: []
+   };
 }

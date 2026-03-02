@@ -1,3 +1,31 @@
+@import "./game/menus/settings.css";
+@import "./game/inventories/inventory.css";
+@import "./game/inventories/hotbar.css";
+@import "./game/inventories/cooking-inventory.css";
+@import "./game/inventories/tribesman-inventory.css";
+@import "./game/inventories/barrel-inventory.css";
+@import "./game/inventories/tombstone-epitaph.css";
+@import "./game/inventories/ammo-box-inventory.css";
+@import "./game/charge-meter.css";
+@import "./game/menus/crafting-menu.css";
+@import "./game/nerd-vision/nerd-vision.css";
+@import "./game/nerd-vision/game-info-display.css";
+@import "./game/nerd-vision/terminal-button.css";
+@import "./game/nerd-vision/terminal.css";
+@import "./game/nerd-vision/debug-info.css";
+@import "./game/tech-tree.css";
+@import "./game/tech-infocard.css";
+@import "./game/research-bench-caption.css";
+@import "./game/build-menu.css";
+@import "./game/health-inspector.css";
+@import "./game/infocards.css";
+@import "./game/layer-change-message.css";
+@import "./game/tribe-plan-visualiser.css";
+@import "./game/select-carry-target-cursor-overlay.css";
+@import "./game/taming-menu.css";
+@import "./game/sign-inscribe-menu.css";
+@import "./game/cow-stamina-bar.css";
+
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
 
@@ -17,13 +45,21 @@ body {
 
 #canvas-wrapper > canvas {
    position: absolute;
-}
-
-/* Vignette */
-#game-canvas-vignette {
    pointer-events: none;
 }
-#game-canvas-vignette.summoning-entity {
+
+#game-interactable-layer {
+   position: absolute;
+   top: 0;
+   right: 0;
+   bottom: 0;
+   left: 0;
+   -webkit-user-drag: none;
+   -webkit-user-select: none;
+   user-select: none;
+}
+
+#summon-entity-veil {
    position: absolute;
    top: 0;
    right: 0;
@@ -31,14 +67,7 @@ body {
    left: 0;
    box-shadow: 0 0 80px 10px rgba(0, 0, 0, 0.7) inset;
    z-index: 1;
-}
-
-#game-canvas.summoning-entity {
    cursor: pointer;
-}
-
-#text-canvas {
-   pointer-events: none;
 }
 
 .game-message {
@@ -60,26 +89,6 @@ body {
    pointer-events: none !important;
 }
 
-/* Held item */
-
-#held-item {
-   width: var(--item-slot-size);
-   height: var(--item-slot-size);
-   position: absolute;
-   pointer-events: none;
-   z-index: 3;
-   user-select: none;
-}
-#held-item img {
-   width: var(--item-image-size);
-   height: var(--item-image-size);
-   image-rendering: pixelated;
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   z-index: 1;
-}
 /* NOTE: The held item count style is defined in inventory.css file. */
 
 #summon-prompt {
@@ -122,4 +131,19 @@ body {
    width: 32px;
    height: 32px;
    image-rendering: pixelated;
+}
+
+.simulation-pause-label {
+   font-size: 2rem;
+   font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+   color: red;
+   position: absolute;
+   left: 50%;
+   top: 25%;
+   transform: translate(-50%, -50%);
+   z-index: 2;
+   white-space: pre;
+   text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.75);
+   letter-spacing: 0.05rem;
+   pointer-events: none;
 }

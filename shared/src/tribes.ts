@@ -1,10 +1,11 @@
-import { Biome } from "./tiles";
+import { Biome } from "./biomes";
 
 export enum TribeType {
    plainspeople,
    barbarians,
    frostlings,
-   goblins
+   goblins,
+   dwarves
 }
 
 interface TribeInfo {
@@ -43,7 +44,14 @@ export const TRIBE_INFO_RECORD: Record<TribeType, TribeInfo> = {
       maxHealthWorker: 10,
       biomes: [Biome.grasslands, Biome.desert, Biome.tundra],
       baseTribesmanCap: 8,
-      moveSpeedMultiplier: 1.1
+      moveSpeedMultiplier: 1
+   },
+   [TribeType.dwarves]: {
+      maxHealthPlayer: 20,
+      maxHealthWorker: 14,
+      biomes: [Biome.caves],
+      baseTribesmanCap: 4,
+      moveSpeedMultiplier: 0.9
    }
 };
 

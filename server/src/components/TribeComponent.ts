@@ -1,14 +1,19 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { ServerComponentType, TribeComponentData } from "webgl-test-shared/dist/components";
+import { Entity, EntityType } from "battletribes-shared/entities";
+import { ServerComponentType } from "battletribes-shared/components";
 import Tribe from "../Tribe";
 import { ComponentArray } from "./ComponentArray";
-import Entity from "../Entity";
 import { TribesmanAIComponentArray, getTribesmanRelationship } from "./TribesmanAIComponent";
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
-import { PlantComponentArray } from "./PlantComponent";
 import { GolemComponentArray } from "./GolemComponent";
+import { StructureComponentArray } from "./StructureComponent";
+import { Packet } from "battletribes-shared/packets";
+import { getEntityType } from "../world";
+import { PlantedComponentArray } from "./PlantedComponent";
+import { TransformComponentArray } from "./TransformComponent";
+import { getHitboxTile, Hitbox } from "../hitboxes";
+import { PlayerComponentArray } from "./PlayerComponent";
 
-// /** Relationships a tribe member can have, in increasing order of threat */
+/** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {
    friendly = 1,
    friendlyBuilding = 1 << 1,
@@ -27,70 +32,81 @@ export class TribeComponent {
    }
 }
 
-export const TribeComponentArray = new ComponentArray<ServerComponentType.tribe, TribeComponent>(true, {
-   serialise: serialiseTribeComponent
-});
+export const TribeComponentArray = new ComponentArray<TribeComponent>(ServerComponentType.tribe, true, getDataLength, addDataToPacket);
+TribeComponentArray.onJoin = onJoin;
+TribeComponentArray.onRemove = onRemove;
 
-export function getEntityRelationship(entityID: number, comparingEntity: Entity): EntityRelationship {
+function onJoin(entity: Entity): void {
+   const tribeComponent = TribeComponentArray.getComponent(entity);
+   tribeComponent.tribe.registerEntity(entity);
+}
+
+function onRemove(entity: Entity): void {
+   const tribeComponent = TribeComponentArray.getComponent(entity);
+   tribeComponent.tribe.deregisterEntity(entity);
+}
+
+export function getEntityRelationship(entity: Entity, comparingEntity: Entity): EntityRelationship {
+   // @SQUEAM
+   if (PlayerComponentArray.hasComponent(comparingEntity) && PlayerComponentArray.getComponent(comparingEntity).client.username === "berryboy") {
+      return EntityRelationship.enemy;
+   }
+   
    // More complex if the entity is an AI tribesman: take into account the personal relationship between the entities
-   if (TribesmanAIComponentArray.hasComponent(entityID) && TribeMemberComponentArray.hasComponent(comparingEntity.id)) {
-      return getTribesmanRelationship(entityID, comparingEntity.id);
+   if (TribesmanAIComponentArray.hasComponent(entity) && TribeMemberComponentArray.hasComponent(comparingEntity)) {
+      return getTribesmanRelationship(entity, comparingEntity);
    }
 
-   // @Cleanup: do this based on which components they have
-   
-   switch (comparingEntity.type) {
-      // Buildings
-      case EntityType.wall:
-      case EntityType.fence:
-      case EntityType.fenceGate:
-      case EntityType.door:
-      case EntityType.floorSpikes:
-      case EntityType.wallSpikes:
-      case EntityType.floorPunjiSticks:
-      case EntityType.wallPunjiSticks:
-      case EntityType.embrasure:
-      case EntityType.ballista:
-      case EntityType.slingTurret:
-      case EntityType.blueprintEntity:
-      case EntityType.tunnel:
-      case EntityType.workerHut:
-      case EntityType.warriorHut:
-      case EntityType.tribeTotem:
-      case EntityType.furnace:
-      case EntityType.barrel:
-      case EntityType.workbench:
-      case EntityType.planterBox:
-      case EntityType.researchBench:
-      case EntityType.healingTotem:
-      case EntityType.campfire:
-      case EntityType.frostshaper:
-      case EntityType.stonecarvingTable: {
-         const tribeComponent = TribeComponentArray.getComponent(entityID);
-         const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity.id);
+   // @Cleanup @Robustness: do this based on which components they have
 
-         if (comparingEntityTribeComponent.tribe === tribeComponent.tribe) {
-            return EntityRelationship.friendlyBuilding;
-         }
-         return EntityRelationship.enemyBuilding;
+   // Structures
+   if (StructureComponentArray.hasComponent(comparingEntity)) {
+      const tribeComponent = TribeComponentArray.getComponent(entity);
+      const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity);
+
+      if (comparingEntityTribeComponent.tribe === tribeComponent.tribe) {
+         return EntityRelationship.friendlyBuilding;
       }
-      case EntityType.plant: {
-         const plantComponent = PlantComponentArray.getComponent(comparingEntity.id);
+      return EntityRelationship.enemyBuilding;
+   }
+
+   const entityType = getEntityType(comparingEntity);
+   switch (entityType) {
+      case EntityType.treePlanted:
+      case EntityType.berryBushPlanted:
+      case EntityType.iceSpikesPlanted: {
+         const plantedComponent = PlantedComponentArray.getComponent(comparingEntity);
          
-         const tribeComponent = TribeComponentArray.getComponent(entityID);
-         const planterBoxTribeComponent = TribeComponentArray.getComponent(plantComponent.planterBoxID);
+         const tribeComponent = TribeComponentArray.getComponent(entity);
+         const planterBoxTribeComponent = TribeComponentArray.getComponent(plantedComponent.planterBox);
 
          return planterBoxTribeComponent.tribe === tribeComponent.tribe ? EntityRelationship.neutral : EntityRelationship.enemyBuilding;
       }
+      // Projectiles, although they do belong to a tribe, damage every tribe. so they should just be considered neutral
+      case EntityType.woodenArrow:
+      case EntityType.ballistaWoodenBolt:
+      case EntityType.ballistaRock:
+      case EntityType.ballistaFrostcicle:
+      case EntityType.ballistaSlimeball:
+      case EntityType.slingTurretRock:
+      case EntityType.iceArrow: {
+         return EntityRelationship.neutral;
+      }
       // Friendlies
+      // @Hack @Hardcoded
       case EntityType.player:
       case EntityType.tribeWorker:
       case EntityType.tribeWarrior:
-      case EntityType.woodenArrowProjectile:
-      case EntityType.iceArrow: {
-         const tribeComponent = TribeComponentArray.getComponent(entityID);
-         const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity.id);
+      case EntityType.scrappy:
+      case EntityType.cogwalker:{
+         const tribeComponent = TribeComponentArray.getComponent(entity);
+         const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity);
 
+         // @HACK @TEMPORARY
+         if (typeof tribeComponent === "undefined") {
+            return EntityRelationship.neutral;
+         }
+         
          if (comparingEntityTribeComponent.tribe === tribeComponent.tribe) {
             return EntityRelationship.friendly;
          }
@@ -99,23 +115,27 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
       // Hostile mobs
       case EntityType.tombstone: // So that they try to destroy them
       case EntityType.zombie:
-      case EntityType.pebblum: {
+      case EntityType.pebblum:
+      case EntityType.okren:
+      case EntityType.inguSerpent: {
          return EntityRelationship.hostileMob;
       }
       // Golem (hostile mob / neutral)
       case EntityType.golem: {
-         const golemComponent = GolemComponentArray.getComponent(comparingEntity.id);
+         const golemComponent = GolemComponentArray.getComponent(comparingEntity);
          return Object.keys(golemComponent.attackingEntities).length > 0 ? EntityRelationship.hostileMob : EntityRelationship.neutral;
       }
-      // @Temporary
-      case EntityType.frozenYeti: return EntityRelationship.hostileMob;
-      
-      // Hostile if attacking, neutral otherwise
-      case EntityType.frozenYeti:
+      // Hostile if attacking a tribesman or on tribe territory, neutral otherwise
       case EntityType.yeti:
-      case EntityType.slime: {
-         const tribeComponent = TribeComponentArray.getComponent(entityID);
-         return tribeComponent.tribe.attackingEntities[comparingEntity.id] !== undefined ? EntityRelationship.hostileMob : EntityRelationship.neutral;
+      case EntityType.slime:
+      case EntityType.guardian: {
+         const transformComponent = TransformComponentArray.getComponent(entity);
+         // @Hack
+         const hitbox = transformComponent.hitboxes[0];
+         const tileIndex = getHitboxTile(hitbox);
+
+         const tribeComponent = TribeComponentArray.getComponent(entity);
+         return tribeComponent.tribe.tileIsInArea(tileIndex) || tribeComponent.tribe.attackingEntities[comparingEntity] !== undefined ? EntityRelationship.hostileMob : EntityRelationship.neutral;
       }
       // Neutrals
       case EntityType.boulder:
@@ -128,31 +148,42 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
       case EntityType.iceShardProjectile:
       case EntityType.itemEntity:
       case EntityType.krumblid:
-      case EntityType.rockSpikeProjectile:
       case EntityType.slimeSpit:
       case EntityType.slimewisp:
       case EntityType.snowball:
       case EntityType.spearProjectile:
-      case EntityType.spitPoison:
-      case EntityType.battleaxeProjectile:{
+      case EntityType.spitPoisonArea:
+      case EntityType.battleaxeProjectile:
+      case EntityType.grassStrand: {
          return EntityRelationship.neutral;
       }
+      // @Hack @Temporary
       default: {
-         const unreachable: never = comparingEntity.type;
-         return unreachable;
+         return EntityRelationship.neutral
       }
    }
 }
 
-function serialiseTribeComponent(entityID: number): TribeComponentData {
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.tribe,
-      tribeID: tribeComponent.tribe.id
-   };
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: Entity): void {
+   const tribeComponent = TribeComponentArray.getComponent(entity);
+   packet.writeNumber(tribeComponent.tribe.id);
+   // Not strictly necessary, as it can be inferred from the tribe data sent and the tribe ID,
+   // but this helps eliminate/convert-to-warning crashes where a tribe ID gets sent but the data
+   // for that tribe isn't sent for some reason.
+   packet.writeNumber(tribeComponent.tribe.tribeType);
 }
 
 export function recruitTribesman(tribesman: Entity, newTribe: Tribe): void {
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
    tribeComponent.tribe = newTribe;
+}
+
+export function entitiesBelongToSameTribe(entity1: Entity, entity2: Entity): boolean {
+   const tribeComponent1 = TribeComponentArray.getComponent(entity1);
+   const tribeComponent2 = TribeComponentArray.getComponent(entity2);
+   return tribeComponent1.tribe === tribeComponent2.tribe;
 }

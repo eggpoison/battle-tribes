@@ -1,33 +1,47 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { createItemsOverEntity } from "../../entity-shared";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { wasTribeMemberKill } from "../tribes/tribe-member";
-import { BoulderComponent, BoulderComponentArray } from "../../components/BoulderComponent";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point, randInt } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { BoulderComponent } from "../../components/BoulderComponent";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
+import { ItemType } from "../../../../shared/src/items/items";
+import { Hitbox } from "../../hitboxes";
 
-const RADIUS = 40;
+registerEntityLootOnDeath(EntityType.boulder, {
+   itemType: ItemType.rock,
+   getAmount: () => randInt(5, 7)
+});
 
-export function createBoulder(position: Point, rotation: number): Entity {
-   const boulder = new Entity(position, rotation, EntityType.boulder, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createBoulderConfig(position: Point, rotation: number): EntityConfig {
+   const transformComponent = new TransformComponent();
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 40), 1.25, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-   const hitbox = new CircularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, RADIUS);
-   boulder.addHitbox(hitbox);
+   const healthComponent = new HealthComponent(40);
 
-   HealthComponentArray.addComponent(boulder.id, new HealthComponent(40));
-   StatusEffectComponentArray.addComponent(boulder.id, new StatusEffectComponent(StatusEffect.poisoned));
-   BoulderComponentArray.addComponent(boulder.id, new BoulderComponent());
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned);
    
-   return boulder;
-}
-
-export function onBoulderDeath(boulder: Entity, attackingEntity: Entity): void {
-   if (wasTribeMemberKill(attackingEntity)) {
-      createItemsOverEntity(boulder, ItemType.rock, randInt(5, 7), 40);
-   }
+   const lootComponent = new LootComponent();
+   
+   const boulderComponent = new BoulderComponent();
+   
+   return {
+      entityType: EntityType.boulder,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.loot]: lootComponent,
+         [ServerComponentType.boulder]: boulderComponent
+      },
+      lights: []
+   };
 }

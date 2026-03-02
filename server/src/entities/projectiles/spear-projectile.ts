@@ -1,77 +1,38 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { createItemEntity } from "../item-entity";
+import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
+import { Entity, EntityType, DamageSource } from "battletribes-shared/entities";
+import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { ThrowingProjectileComponent, ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
-import Board from "../../Board";
-import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityCreationInfo } from "../../components";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { Item, ItemType } from "webgl-test-shared/dist/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
+import { destroyEntity, entityExists } from "../../world";
+import { SpearProjectileComponent } from "../../components/SpearProjectileComponent";
+import { Hitbox } from "../../hitboxes";
 
-type ComponentTypes = [ServerComponentType.physics, ServerComponentType.throwingProjectile];
+export function createSpearProjectileConfig(position: Point, rotation: number, tribeMember: Entity, itemID: number | null): EntityConfig {
+   const transformComponent = new TransformComponent();
+   
+   transformComponent.isAffectedByGroundFriction = false;
 
-const DROP_VELOCITY = 400;
-
-export function createSpearProjectile(position: Point, rotation: number, tribeMemberID: number, item: Item): EntityCreationInfo<ComponentTypes> {
-   const spear = new Entity(position, rotation, EntityType.spearProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitbox = new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 12, 60, 0);
-   spear.addHitbox(hitbox);
-
-   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
-   PhysicsComponentArray.addComponent(spear.id, physicsComponent);
-
-   const throwingProjectileComponent = new ThrowingProjectileComponent(tribeMemberID, item);
-   ThrowingProjectileComponentArray.addComponent(spear.id, throwingProjectileComponent);
-
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 12, 60), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   addHitboxToTransformComponent(transformComponent, hitbox);
+   
+   const throwingProjectileComponent = new ThrowingProjectileComponent(tribeMember, itemID);
+   
+   const spearProjectileComponent = new SpearProjectileComponent();
+   
    return {
-      entity: spear,
+      entityType: EntityType.spearProjectile,
       components: {
-         [ServerComponentType.physics]: physicsComponent,
-         [ServerComponentType.throwingProjectile]: throwingProjectileComponent
-      }
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.throwingProjectile]: throwingProjectileComponent,
+         [ServerComponentType.spearProjectile]: spearProjectileComponent
+      },
+      lights: []
    };
-}
-
-export function tickSpearProjectile(spear: Entity): void {
-   const physicsComponent = PhysicsComponentArray.getComponent(spear.id);
-
-   if (physicsComponent.velocity.lengthSquared() <= DROP_VELOCITY * DROP_VELOCITY) {
-      createItemEntity(spear.position.copy(), 2 * Math.PI * Math.random(), ItemType.spear, 1, 0);
-      spear.destroy();
-   }
-}
-
-export function onSpearProjectileCollision(spear: Entity, collidingEntity: Entity, collisionPoint: Point): void {
-   // Don't hurt the entity who threw the spear
-   const spearComponent = ThrowingProjectileComponentArray.getComponent(spear.id);
-   if (typeof Board.entityRecord[spearComponent.tribeMemberID] !== "undefined" && getEntityRelationship(spearComponent.tribeMemberID, collidingEntity) === EntityRelationship.friendly) {
-      return;
-   }
-   
-   if (!HealthComponentArray.hasComponent(collidingEntity.id)) {
-      return;
-   }
-
-   let tribeMember: Entity | null | undefined = Board.entityRecord[spearComponent.tribeMemberID];
-   if (typeof tribeMember === "undefined") {
-      tribeMember = null;
-   }
-
-   const physicsComponent = PhysicsComponentArray.getComponent(spear.id);
-   const damage = Math.floor(physicsComponent.velocity.length() / 140);
-   
-   // Damage the entity
-   // @Temporary
-   const hitDirection = spear.position.calculateAngleBetween(collidingEntity.position);
-   damageEntity(collidingEntity, tribeMember, damage, PlayerCauseOfDeath.spear, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingEntity, 200, hitDirection);
-   
-   spear.destroy();
 }

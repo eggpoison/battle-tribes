@@ -1,6 +1,7 @@
-export type EntityID = number;
+/** Unique identifier for each entity */
+export type Entity = number;
 
-export const enum EntityType {
+export enum EntityType {
    cow,
    zombie,
    tombstone,
@@ -24,17 +25,21 @@ export const enum EntityType {
    furnace,
    snowball,
    krumblid,
-   frozenYeti,
    fish,
    itemEntity,
-   woodenArrowProjectile,
+   fleshSwordItemEntity,
+   woodenArrow,
+   ballistaWoodenBolt,
+   ballistaRock,
+   ballistaSlimeball,
+   ballistaFrostcicle,
+   slingTurretRock,
    iceShardProjectile,
-   rockSpikeProjectile,
    spearProjectile,
    researchBench,
    wall,
    slimeSpit,
-   spitPoison,
+   spitPoisonArea,
    door,
    battleaxeProjectile,
    golem,
@@ -51,11 +56,72 @@ export const enum EntityType {
    ballista,
    slingTurret,
    healingTotem,
-   plant,
+   treePlanted,
+   berryBushPlanted,
+   iceSpikesPlanted,
    fence,
    fenceGate,
    frostshaper,
-   stonecarvingTable
+   stonecarvingTable,
+   grassStrand,
+   decoration,
+   riverSteppingStone,
+   reed,
+   lilypad,
+   fibrePlant,
+   guardian,
+   guardianGemQuake,
+   guardianGemFragmentProjectile,
+   guardianSpikyBall,
+   bracings,
+   fireTorch,
+   spikyBastard,
+   glurbHeadSegment,
+   glurbBodySegment,
+   glurbTailSegment,
+   slurbTorch,
+   treeRootBase,
+   treeRootSegment,
+   mithrilOreNode,
+   scrappy,
+   cogwalker,
+   automatonAssembler,
+   mithrilAnvil,
+   heldItem,
+   moss,
+   floorSign,
+   desertBushLively,
+   desertBushSandy,
+   desertSmallWeed,
+   desertShrub,
+   tumbleweedLive,
+   tumbleweedDead,
+   palmTree,
+   pricklyPear,
+   pricklyPearFragmentProjectile,
+   dustflea,
+   sandstoneRock,
+   okren,
+   okrenClaw,
+   dustfleaMorphCocoon,
+   sandBall,
+   krumblidMorphCocoon,
+   okrenTongue,
+   dustfleaEgg,
+   spruceTree,
+   tundraRock,
+   tundraRockFrozen,
+   snowberryBush,
+   snobe,
+   snobeMound,
+   inguSerpent,
+   tukmok,
+   tukmokTrunk,
+   tukmokTailClub,
+   tukmokSpur,
+   inguYetuksnoglurblidokowflea,
+   inguYetuksnoglurblidokowfleaSeekerHead,
+   inguYetukLaser
 }
 
 export const EntityTypeString: Record<EntityType, string> = {
@@ -65,55 +131,120 @@ export const EntityTypeString: Record<EntityType, string> = {
    [EntityType.tree]: "tree",
    [EntityType.workbench]: "workbench",
    [EntityType.boulder]: "boulder",
-   [EntityType.berryBush]: "berry_bush",
+   [EntityType.berryBush]: "berryBush",
    [EntityType.cactus]: "cactus",
    [EntityType.yeti]: "yeti",
-   [EntityType.iceSpikes]: "ice_spikes",
+   [EntityType.iceSpikes]: "iceSpikes",
    [EntityType.slime]: "slime",
    [EntityType.slimewisp]: "slimewisp",
    [EntityType.player]: "player",
-   [EntityType.tribeWorker]: "tribe_worker",
-   [EntityType.tribeWarrior]: "tribe_warrior",
-   [EntityType.tribeTotem]: "tribe_totem",
-   [EntityType.workerHut]: "worker_hut",
-   [EntityType.warriorHut]: "warrior_hut",
+   [EntityType.tribeWorker]: "tribeWorker",
+   [EntityType.tribeWarrior]: "tribeWarrior",
+   [EntityType.tribeTotem]: "tribeTotem",
+   [EntityType.workerHut]: "workerHut",
+   [EntityType.warriorHut]: "warriorHut",
    [EntityType.barrel]: "barrel",
    [EntityType.campfire]: "campfire",
    [EntityType.furnace]: "furnace",
    [EntityType.snowball]: "snowball",
    [EntityType.krumblid]: "krumblid",
-   [EntityType.frozenYeti]: "frozen_yeti",
    [EntityType.fish]: "fish",
-   [EntityType.itemEntity]: "item_entity",
-   [EntityType.woodenArrowProjectile]: "wooden_arrow_projectile",
-   [EntityType.iceShardProjectile]: "ice_shard_projectile",
-   [EntityType.rockSpikeProjectile]: "rock_spike_projectile",
-   [EntityType.spearProjectile]: "spear_projectile",
-   [EntityType.researchBench]: "research_bench",
+   [EntityType.itemEntity]: "Item Entity",
+   [EntityType.fleshSwordItemEntity]: "Flesh Sword Item Entity",
+   [EntityType.woodenArrow]: "woodenArrow",
+   [EntityType.ballistaWoodenBolt]: "ballistaWoodenBolt",
+   [EntityType.ballistaRock]: "ballistaRock",
+   [EntityType.ballistaSlimeball]: "ballistaSlimeball",
+   [EntityType.ballistaFrostcicle]: "ballistaFrostcicle",
+   [EntityType.slingTurretRock]: "slingTurretRock",
+   [EntityType.iceShardProjectile]: "iceShardProjectile",
+   [EntityType.spearProjectile]: "spearProjectile",
+   [EntityType.researchBench]: "researchBench",
    [EntityType.wall]: "wall",
-   [EntityType.slimeSpit]: "slime_spit",
-   [EntityType.spitPoison]: "spit_poison",
+   [EntityType.slimeSpit]: "slimeSpit",
+   [EntityType.spitPoisonArea]: "spitPoisonArea",
    [EntityType.door]: "door",
-   [EntityType.battleaxeProjectile]: "battleaxe_projectile",
+   [EntityType.battleaxeProjectile]: "battleaxeProjectile",
    [EntityType.golem]: "golem",
-   [EntityType.planterBox]: "planter_box",
-   [EntityType.iceArrow]: "ice_arrow",
+   [EntityType.planterBox]: "planterBox",
+   [EntityType.iceArrow]: "iceArrow",
    [EntityType.pebblum]: "pebblum",
    [EntityType.embrasure]: "embrasure",
    [EntityType.tunnel]: "tunnel",
-   [EntityType.floorSpikes]: "floor_spikes",
-   [EntityType.wallSpikes]: "wall_spikes",
-   [EntityType.floorPunjiSticks]: "floor_punji_sticks",
-   [EntityType.wallPunjiSticks]: "wall_punji_sticks",
-   [EntityType.blueprintEntity]: "blueprint_entity",
+   [EntityType.floorSpikes]: "floorSpikes",
+   [EntityType.wallSpikes]: "wallSpikes",
+   [EntityType.floorPunjiSticks]: "floorPunjiSticks",
+   [EntityType.wallPunjiSticks]: "wallPunjiSticks",
+   [EntityType.blueprintEntity]: "blueprintEntity",
    [EntityType.ballista]: "ballista",
-   [EntityType.slingTurret]: "sling_turret",
-   [EntityType.healingTotem]: "healing_totem",
-   [EntityType.plant]: "plant",
+   [EntityType.slingTurret]: "slingTurret",
+   [EntityType.healingTotem]: "healingTotem",
+   [EntityType.treePlanted]: "treePlanted",
+   [EntityType.berryBushPlanted]: "berryBushPlanted",
+   [EntityType.iceSpikesPlanted]: "iceSpikesPlanted",
    [EntityType.fence]: "fence",
-   [EntityType.fenceGate]: "fence_gate",
+   [EntityType.fenceGate]: "fenceGate",
    [EntityType.frostshaper]: "frostshaper",
-   [EntityType.stonecarvingTable]: "stonecarving_table"
+   [EntityType.stonecarvingTable]: "stonecarvingTable",
+   [EntityType.grassStrand]: "grassStrand",
+   [EntityType.decoration]: "decoration",
+   [EntityType.riverSteppingStone]: "riverSteppingStone",
+   [EntityType.reed]: "reed",
+   [EntityType.lilypad]: "lilypad",
+   [EntityType.fibrePlant]: "fibrePlant",
+   [EntityType.guardian]: "guardian",
+   [EntityType.guardianGemQuake]: "guardianGemQuake",
+   [EntityType.guardianGemFragmentProjectile]: "guardianGemFragmentProjectile",
+   [EntityType.guardianSpikyBall]: "guardianSpikyBall",
+   [EntityType.bracings]: "bracings",
+   [EntityType.fireTorch]: "fireTorch",
+   [EntityType.spikyBastard]: "spikyBastard",
+   [EntityType.glurbHeadSegment]: "Glurb Head Segment",
+   [EntityType.glurbBodySegment]: "Glurb Body Segment",
+   [EntityType.glurbTailSegment]: "Glurb Tail Segment",
+   [EntityType.slurbTorch]: "slurbTorch",
+   [EntityType.treeRootBase]: "treeRootBase",
+   [EntityType.treeRootSegment]: "treeRootSegment",
+   [EntityType.mithrilOreNode]: "Mithril Ore Node",
+   [EntityType.scrappy]: "Scrappy",
+   [EntityType.cogwalker]: "Cogwalker",
+   [EntityType.automatonAssembler]: "Automaton Assembler",
+   [EntityType.mithrilAnvil]: "Mithril Anvil",
+   [EntityType.heldItem]: "Held Item",
+   [EntityType.moss]: "Moss",
+   [EntityType.floorSign]: "Floor Sign",
+   [EntityType.desertBushLively]: "Desert Bush Lively",
+   [EntityType.desertBushSandy]: "Desert Bush Sandy",
+   [EntityType.desertSmallWeed]: "Desert Small Weed",
+   [EntityType.desertShrub]: "Desert Shrub",
+   [EntityType.tumbleweedLive]: "Tumbleweed Live",
+   [EntityType.tumbleweedDead]: "Tumbleweed Dead",
+   [EntityType.palmTree]: "Palm Tree",
+   [EntityType.pricklyPear]: "Prickly Pear",
+   [EntityType.pricklyPearFragmentProjectile]: "Prickly Pear Fragment Projectile",
+   [EntityType.dustflea]: "Dustflea",
+   [EntityType.sandstoneRock]: "Sandstone Rock",
+   [EntityType.okren]: "Okren",
+   [EntityType.okrenClaw]: "Okren Claw",
+   [EntityType.dustfleaMorphCocoon]: "Dustflea Morph Cocoon",
+   [EntityType.sandBall]: "Sand Ball",
+   [EntityType.krumblidMorphCocoon]: "Krumblid Morph Cocoon",
+   [EntityType.okrenTongue]: "Okren Tongue",
+   [EntityType.dustfleaEgg]: "Dustflea Egg",
+   [EntityType.spruceTree]: "Spruce Tree",
+   [EntityType.tundraRock]: "Tundra Rock",
+   [EntityType.tundraRockFrozen]: "Tundra Frozen Rock",
+   [EntityType.snowberryBush]: "Snowberry Bush",
+   [EntityType.snobe]: "Snobe",
+   [EntityType.snobeMound]: "Snobe Mound",
+   [EntityType.inguSerpent]: "Ingu Serpent",
+   [EntityType.tukmok]: "Tukmok",
+   [EntityType.tukmokTrunk]: "Tukmok Trunk",
+   [EntityType.tukmokTailClub]: "Tukmok Tail Club",
+   [EntityType.tukmokSpur]: "Tukmok Spur",
+   [EntityType.inguYetuksnoglurblidokowflea]: "Ingu-Yetuksnoglurblidokowflea",
+   [EntityType.inguYetuksnoglurblidokowfleaSeekerHead]: "Ingu-Yetuksnoglurblidokowflea Seeker Head",
+   [EntityType.inguYetukLaser]: "Ingu-Yetuk Laser",
 };
 
 export const NUM_ENTITY_TYPES = Object.keys(EntityTypeString).length;
@@ -128,9 +259,6 @@ export function getEntityTypeFromString(entityTypeString: string): EntityType | 
    return null;
 }
    
-export const RESOURCE_ENTITY_TYPES: ReadonlyArray<EntityType> = [EntityType.tree, EntityType.berryBush, EntityType.iceSpikes, EntityType.cactus, EntityType.boulder];
-export const MOB_ENTITY_TYPES: ReadonlyArray<EntityType> = [EntityType.cow, EntityType.zombie, EntityType.yeti, EntityType.slime, EntityType.slimewisp, EntityType.krumblid, EntityType.frozenYeti];
-
 // @Cleanup: move all of this
 
 export enum CowSpecies {
@@ -148,26 +276,6 @@ export enum CactusFlowerSize {
    large = 1
 }
 
-export interface CactusFlowerData {
-   readonly type: number;
-   readonly height: number;
-   readonly rotation: number;
-}
-
-export interface CactusBodyFlowerData extends CactusFlowerData {
-   readonly size: CactusFlowerSize
-   readonly column: number;
-}
-
-export interface CactusLimbFlowerData extends CactusFlowerData {
-   readonly direction: number;
-}
-
-export interface CactusLimbData {
-   readonly direction: number;
-   readonly flower?: CactusLimbFlowerData;
-}
-
 export enum SlimeSize {
    small = 0,
    medium = 1,
@@ -181,46 +289,44 @@ export interface TribeTotemBanner {
    readonly direction: number;
 }
 
-export enum SnowballSize {
-   small,
-   large
-}
-
-export const SNOWBALL_SIZES: Record<SnowballSize, number> = {
-   [SnowballSize.small]: 44,
-   [SnowballSize.large]: 60
-};
-
-// @Cleanup: Rename to something like HitCause
-export enum PlayerCauseOfDeath {
+export enum DamageSource {
    yeti,
    zombie,
    poison,
    fire,
-   tribe_member,
+   tribeMember,
    arrow,
-   ice_spikes,
-   ice_shards,
+   iceSpikes,
+   iceShards,
    cactus,
    snowball,
    slime,
    god,
-   frozen_yeti,
+   frozenYeti,
    bloodloss,
-   rock_spike,
-   lack_of_oxygen,
+   rockSpike,
+   lackOfOxygen,
    fish,
    spear
 }
 
 export interface DeathInfo {
    readonly username: string;
-   readonly causeOfDeath: PlayerCauseOfDeath;
+   readonly damageSource: DamageSource;
 }
 
+// @Refactor: It might be easier to send the animation info instead of whichever action which the client has to infer
 export enum LimbAction {
-   // @Cleanup: Maybe we can combine all 3 of these into one?
+   none,
+   engageBow,
+   moveLimbToQuiver,
+   moveLimbFromQuiver,
+   pullBackArrow,
+   arrowReleased,
+   mainArrowReleased,
+   returnFromBow,
    chargeBow,
+   disengageBow,
    chargeSpear,
    chargeBattleaxe,
    loadCrossbow,
@@ -228,7 +334,16 @@ export enum LimbAction {
    useMedicine,
    eat,
    craft,
-   none
+   windAttack,
+   attack,
+   returnAttackToRest,
+   engageBlock,
+   block,
+   returnBlockToRest,
+   feignAttack,
+   windShieldBash,
+   pushShieldBash,
+   returnShieldBashToRest
 }
 
 export enum FrozenYetiAttackType {
@@ -258,11 +373,4 @@ export enum DoorToggleType {
    open
 }
 
-export enum GenericArrowType {
-   woodenArrow,
-   woodenBolt,
-   ballistaRock,
-   ballistaSlimeball,
-   ballistaFrostcicle,
-   slingRock
-}
+export type PlantedEntityType = EntityType.treePlanted | EntityType.berryBushPlanted | EntityType.iceSpikesPlanted;

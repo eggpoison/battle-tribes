@@ -1,132 +1,70 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityType, GenericArrowType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point, getAngleDiff } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
+import { EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { AIHelperComponent } from "../../components/AIHelperComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { TribeComponent } from "../../components/TribeComponent";
+import { TurretComponent } from "../../components/TurretComponent";
 import Tribe from "../../Tribe";
-import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
-import { TurretComponent, TurretComponentArray } from "../../components/TurretComponent";
-import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createSlingTurretHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { SlingTurretComponent } from "../../components/SlingTurretComponent";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../shared/src/utils";
+import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
+import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
+import { StructureConnection } from "../../structure-placement";
 
-// @Cleanup: A lot of copy and paste from ballista.ts
+export const SLING_TURRET_SHOT_COOLDOWN_TICKS = 1.5 * Settings.TICK_RATE;
+export const SLING_TURRET_RELOAD_TIME_TICKS = Math.floor(0.4 * Settings.TICK_RATE);
 
-export const SLING_TURRET_SHOT_COOLDOWN_TICKS = 1.5 * Settings.TPS;
-export const SLING_TURRET_RELOAD_TIME_TICKS = Math.floor(0.4 * Settings.TPS);
-const VISION_RANGE = 400;
+const moveFunc = () => {
+   throw new Error();
+}
 
-export function createSlingTurret(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const slingTurret = new Entity(position, rotation, EntityType.slingTurret, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+const turnFunc = () => {
+   throw new Error();
+}
 
-   const hitboxes = createSlingTurretHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      slingTurret.addHitbox(hitboxes[i]);
-   }
-
-   HealthComponentArray.addComponent(slingTurret.id, new HealthComponent(25));
-   StatusEffectComponentArray.addComponent(slingTurret.id, new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned));
-   TurretComponentArray.addComponent(slingTurret.id, new TurretComponent(SLING_TURRET_SHOT_COOLDOWN_TICKS + SLING_TURRET_RELOAD_TIME_TICKS));
-   StructureComponentArray.addComponent(slingTurret.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(slingTurret.id, new TribeComponent(tribe));
-   AIHelperComponentArray.addComponent(slingTurret.id, new AIHelperComponent(VISION_RANGE));
+export function createSlingTurretConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
    
-   return slingTurret;
-}
+   const box = new CircularBox(position, new Point(0, 0), rotation, 40);
+   const hitbox = new Hitbox(transformComponent, null, true, box, 1.5, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-const entityIsTargetted = (turret: Entity, entity: Entity): boolean => {
-   if (!HealthComponentArray.hasComponent(entity.id)) {
-      return false;
-   }
+   const healthComponent = new HealthComponent(25);
    
-   const relationship = getEntityRelationship(turret.id, entity);
-   return relationship > EntityRelationship.friendlyBuilding;
-}
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding);
+   
+   const structureComponent = new StructureComponent(connections, virtualStructure);
+   
+   const tribeComponent = new TribeComponent(tribe);
 
-const getTarget = (turret: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
-   let closestValidTarget: Entity;
-   let minDist = 9999999.9;
-   for (let i = 0; i < visibleEntities.length; i++) {
-      const entity = visibleEntities[i];
-      if (!entityIsTargetted(turret, entity)) {
-         continue;
-      }
+   const turretComponent = new TurretComponent(SLING_TURRET_SHOT_COOLDOWN_TICKS + SLING_TURRET_RELOAD_TIME_TICKS);
+   
+   const aiHelperComponent = new AIHelperComponent(transformComponent.hitboxes[0], 400, moveFunc, turnFunc);
 
-      const dist = entity.position.calculateDistanceSquaredBetween(turret.position);
-      if (dist < minDist) {
-         minDist = dist;
-         closestValidTarget = entity;
-      }
-   }
-
-   if (minDist < 9999999.9) {
-      return closestValidTarget!;
-   }
-   return null;
-}
-
-const fire = (turret: Entity, slingTurretComponent: TurretComponent): void => {
-   const arrowInfo: GenericArrowInfo = {
-      type: GenericArrowType.slingRock,
-      damage: 2,
-      knockback: 75,
-      hitboxWidth: 20,
-      hitboxHeight: 20,
-      ignoreFriendlyBuildings: true,
-      statusEffect: null
+   const slingTurretComponent = new SlingTurretComponent();
+   
+   return {
+      entityType: EntityType.slingTurret,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.turret]: turretComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.slingTurret]: slingTurretComponent
+      },
+      lights: []
    };
-   
-   const fireDirection = slingTurretComponent.aimDirection + turret.rotation;
-   const arrowCreationInfo = createWoodenArrow(turret.position.copy(), fireDirection, turret.id, arrowInfo);
-
-   // @Cleanup: copy and paste
-   const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics]!;
-   physicsComponent.velocity.x = 550 * Math.sin(fireDirection);
-   physicsComponent.velocity.y = 550 * Math.cos(fireDirection);
-}
-
-export function tickSlingTurret(turret: Entity): void {
-   const aiHelperComponent = AIHelperComponentArray.getComponent(turret.id);
-   const slingTurretComponent = TurretComponentArray.getComponent(turret.id);
-
-   if (aiHelperComponent.visibleEntities.length > 0) {
-      const target = getTarget(turret, aiHelperComponent.visibleEntities);
-      if (target !== null) {
-         const targetDirection = turret.position.calculateAngleBetween(target.position);
-
-         const turretAimDirection = slingTurretComponent.aimDirection + turret.rotation;
-
-         // Turn to face the target
-         const angleDiff = getAngleDiff(turretAimDirection, targetDirection);
-         if (angleDiff < 0) {
-            slingTurretComponent.aimDirection -= Math.PI * Settings.I_TPS;
-         } else {
-            slingTurretComponent.aimDirection += Math.PI * Settings.I_TPS;
-         }
-
-         if (slingTurretComponent.fireCooldownTicks > 0) {
-            slingTurretComponent.fireCooldownTicks--;
-         }
-
-         const newAngleDiff = getAngleDiff(slingTurretComponent.aimDirection + turret.rotation, targetDirection);
-         if (Math.abs(newAngleDiff) > Math.abs(angleDiff) || Math.sign(newAngleDiff) !== Math.sign(angleDiff)) {
-            slingTurretComponent.aimDirection = targetDirection - turret.rotation;
-            if (slingTurretComponent.fireCooldownTicks === 0) {
-               fire(turret, slingTurretComponent);
-               slingTurretComponent.fireCooldownTicks = SLING_TURRET_SHOT_COOLDOWN_TICKS + SLING_TURRET_RELOAD_TIME_TICKS;
-            }
-         }
-         return;
-      }
-   }
-
-   if (slingTurretComponent.fireCooldownTicks < SLING_TURRET_SHOT_COOLDOWN_TICKS) {
-      slingTurretComponent.fireCooldownTicks = SLING_TURRET_SHOT_COOLDOWN_TICKS;
-   }
 }

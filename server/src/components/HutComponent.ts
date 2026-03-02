@@ -1,5 +1,7 @@
-import { HutComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
+import { Entity } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
 
 export class HutComponent {
    public lastDoorSwingTicks = 0;
@@ -9,15 +11,14 @@ export class HutComponent {
    public isRecalling = false;
 }
 
-export const HutComponentArray = new ComponentArray<ServerComponentType.hut, HutComponent>(true, {
-   serialise: serialise
-});
+export const HutComponentArray = new ComponentArray<HutComponent>(ServerComponentType.hut, true, getDataLength, addDataToPacket);
 
-function serialise(entityID: number): HutComponentData {
-   const hutComponent = HutComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.hut,
-      lastDoorSwingTicks: hutComponent.lastDoorSwingTicks,
-      isRecalling: hutComponent.isRecalling
-   };
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: Entity): void {
+   const hutComponent = HutComponentArray.getComponent(entity);
+   packet.writeNumber(hutComponent.lastDoorSwingTicks);
+   packet.writeBool(hutComponent.isRecalling);
 }

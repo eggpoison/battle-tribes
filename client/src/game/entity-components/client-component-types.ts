@@ -1,0 +1,21 @@
+export enum ClientComponentType {
+   equipment,
+   footprint,
+   randomSound,
+   embrasure,
+   frostshaper,
+   lilypad,
+   regularSpikes,
+   stonecarvingTable,
+   wall,
+   warriorHut,
+   workbench,
+   workerHut,
+   ballistaFrostcicle,
+   ballistaRock,
+   ballistaSlimeball,
+   ballistaWoodenBolt,
+   thrownBattleaxe,
+   woodenArrow,
+   glurbTailSegment
+}

@@ -1,29 +1,36 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { ScarInfo, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
-import { randInt, Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
+import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
+import { ScarInfo, ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
+import { randInt, Point, randAngle } from "battletribes-shared/utils";
+import { TribesmanAIComponent } from "../../components/TribesmanAIComponent";
+import { TribeComponent } from "../../components/TribeComponent";
+import { EntityConfig } from "../../components";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
+import { HealthComponent } from "../../components/HealthComponent";
+import { InventoryComponent } from "../../components/InventoryComponent";
+import { InventoryUseComponent } from "../../components/InventoryUseComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { TribeMemberComponent } from "../../components/TribeMemberComponent";
 import Tribe from "../../Tribe";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { InventoryComponent, InventoryComponentArray } from "../../components/InventoryComponent";
-import { InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
-import { TribesmanAIComponent, TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
-import Board from "../../Board";
-import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
-import { tickTribesman } from "./tribesman-ai/tribesman-ai";
-import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { TribeWarriorComponent, TribeWarriorComponentArray } from "../../components/TribeWarriorComponent";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { ComponentRecord, EntityCreationInfo } from "../../components";
+import { TribeWarriorComponent } from "../../components/TribeWarriorComponent";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
+import { AIAssignmentComponent } from "../../components/AIAssignmentComponent";
+import { PatrolAI } from "../../ai/PatrolAI";
+import { generateTribesmanName } from "../../tribesman-names";
+import { TribesmanComponent } from "../../components/TribesmanComponent";
+import { Hitbox } from "../../hitboxes";
+import { AIPathfindingComponent } from "../../components/AIPathfindingComponent";
 
-type ComponentTypes = [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.tribesmanAI, ServerComponentType.aiHelper, ServerComponentType.tribeWarrior, ServerComponentType.inventoryUse, ServerComponentType.inventory];
+const moveFunc = () => {
+   throw new Error();
+}
 
-export const TRIBE_WARRIOR_RADIUS = 32;
-export const TRIBE_WARRIOR_VISION_RANGE = 560;
+const turnFunc = () => {
+   throw new Error();
+}
 
 const generateScars = (): ReadonlyArray<ScarInfo> => {
    let numScars = 1;
@@ -33,7 +40,7 @@ const generateScars = (): ReadonlyArray<ScarInfo> => {
 
    const scars = new Array<ScarInfo>();
    for (let i = 0; i < numScars; i++) {
-      const offsetDirection = 2 * Math.PI * Math.random();
+      const offsetDirection = randAngle();
       const offsetMagnitude = 20 * Math.random();
       scars.push({
          offsetX: offsetMagnitude * Math.sin(offsetDirection),
@@ -45,80 +52,71 @@ const generateScars = (): ReadonlyArray<ScarInfo> => {
    return scars;
 }
 
-export function createTribeWarrior(position: Point, rotation: number, tribe: Tribe, hutID: number): EntityCreationInfo<ComponentTypes> {
-   const warrior = new Entity(position, rotation, EntityType.tribeWarrior, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+const getHitboxRadius = (tribeType: TribeType): number => {
+   switch (tribeType) {
+      case TribeType.barbarians:
+      case TribeType.frostlings:
+      case TribeType.goblins:
+      case TribeType.plainspeople: {
+         return 32;
+      }
+      case TribeType.dwarves: {
+         return 28;
+      }
+   }
+}
 
-   const hitbox = new CircularHitbox(1.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, TRIBE_WARRIOR_RADIUS);
-   warrior.addHitbox(hitbox);
+export function createTribeWarriorConfig(position: Point, rotation: number, tribe: Tribe): EntityConfig {
+   const transformComponent = new TransformComponent();
+
+   transformComponent.traction = 1.4;
+
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, getHitboxRadius(tribe.tribeType)), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   addHitboxToTransformComponent(transformComponent, hitbox);
    
    const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];
-
-   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
-   PhysicsComponentArray.addComponent(warrior.id, physicsComponent);
-
    const healthComponent = new HealthComponent(tribeInfo.maxHealthPlayer);
-   HealthComponentArray.addComponent(warrior.id, healthComponent);
 
    const statusEffectComponent = new StatusEffectComponent(0);
-   StatusEffectComponentArray.addComponent(warrior.id, statusEffectComponent);
 
    const tribeComponent = new TribeComponent(tribe);
-   TribeComponentArray.addComponent(warrior.id, tribeComponent);
 
-   const tribeMemberComponent = new TribeMemberComponent(tribe.tribeType, EntityType.tribeWarrior);
-   TribeMemberComponentArray.addComponent(warrior.id, tribeMemberComponent);
+   const tribeMemberComponent = new TribeMemberComponent(generateTribesmanName(tribe.tribeType));
 
-   const tribesmanAIComponent = new TribesmanAIComponent(hutID);
-   TribesmanAIComponentArray.addComponent(warrior.id, tribesmanAIComponent);
+   const tribesmanComponent = new TribesmanComponent();
+   
+   const tribesmanAIComponent = new TribesmanAIComponent();
 
-   const aiHelperComponent = new AIHelperComponent(TRIBE_WARRIOR_VISION_RANGE);
-   AIHelperComponentArray.addComponent(warrior.id, aiHelperComponent);
+   const aiHelperComponent = new AIHelperComponent(transformComponent.hitboxes[0], 560, moveFunc, turnFunc);
+   aiHelperComponent.ais[AIType.patrol] = new PatrolAI();
+   
+   const aiPathfindingComponent = new AIPathfindingComponent();
 
-   const tribeWarriorComponent = new TribeWarriorComponent(generateScars());
-   TribeWarriorComponentArray.addComponent(warrior.id, tribeWarriorComponent);
+   const aiAssignmentComponent = new AIAssignmentComponent();
+   
+   const inventoryComponent = new InventoryComponent();
 
    const inventoryUseComponent = new InventoryUseComponent();
-   InventoryUseComponentArray.addComponent(warrior.id, inventoryUseComponent);
 
-   const inventoryComponent = new InventoryComponent();
-   InventoryComponentArray.addComponent(warrior.id, inventoryComponent);
-
-   const componentRecord: ComponentRecord = {
-      [ServerComponentType.physics]: physicsComponent,
-      [ServerComponentType.health]: healthComponent,
-      [ServerComponentType.statusEffect]: statusEffectComponent,
-      [ServerComponentType.tribe]: tribeComponent,
-      [ServerComponentType.tribeMember]: tribeMemberComponent,
-      [ServerComponentType.tribesmanAI]: tribesmanAIComponent,
-      [ServerComponentType.aiHelper]: aiHelperComponent,
-      [ServerComponentType.tribeWarrior]: tribeWarriorComponent,
-      [ServerComponentType.inventoryUse]: inventoryUseComponent,
-      [ServerComponentType.inventory]: inventoryComponent
-   };
-
-   // @Hack @Copynpaste
-   TribeMemberComponentArray.onInitialise!(warrior, componentRecord);
+   const tribeWarriorComponent = new TribeWarriorComponent(generateScars());
 
    return {
-      entity: warrior,
-      components: componentRecord
+      entityType: EntityType.tribeWarrior,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.tribeMember]: tribeMemberComponent,
+         [ServerComponentType.tribesman]: tribesmanComponent,
+         [ServerComponentType.tribesmanAI]: tribesmanAIComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.aiPathfinding]: aiPathfindingComponent,
+         [ServerComponentType.aiAssignment]: aiAssignmentComponent,
+         [ServerComponentType.inventory]: inventoryComponent,
+         [ServerComponentType.inventoryUse]: inventoryUseComponent,
+         [ServerComponentType.tribeWarrior]: tribeWarriorComponent
+      },
+      lights: []
    };
-}
-
-export function tickTribeWarrior(warrior: Entity): void {
-   tickTribesman(warrior);
-}
-
-export function onTribeWarriorDeath(warrior: Entity): void {
-   // Attempt to respawn the tribesman when it is killed
-   // Only respawn the tribesman if their hut is alive
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(warrior.id);
-
-   const hut = Board.entityRecord[tribesmanComponent.hutID];
-   if (typeof hut === "undefined") {
-      return;
-   }
-   
-   const tribeComponent = TribeComponentArray.getComponent(warrior.id);
-   tribeComponent.tribe.respawnTribesman(hut);
 }

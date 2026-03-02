@@ -1,0 +1,290 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
+
+#taming-menu {
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+}
+
+#taming-menu h1 {
+   color: #fff;
+   display: inline-flex;
+   align-items: center;
+   margin-top: 0.2rem;
+   margin-left: 50%;
+   margin-bottom: 0;
+   transform: translateX(-50%);
+   white-space: pre;
+}
+#taming-menu h1 .rename-icon {
+   width: 48px;
+   height: 28px;
+   image-rendering: pixelated;
+   margin-left: 8px;
+   cursor: pointer;
+} 
+
+#taming-menu .taming-tier {
+   font-family: "Noto Sans";
+   text-align: center;
+   color: #fff;
+   display: inline-flex;
+   align-items: center;
+   margin-left: 50%;
+   transform: translateX(-50%);
+}
+#taming-menu .taming-tier img {
+   width: 28px;
+   height: 28px;
+   image-rendering: pixelated;
+   margin-left: 3px;
+}
+
+#taming-menu .progress-area {
+   margin: 1.4rem 0 2rem 0;
+}
+
+#taming-menu .progress-area .row {
+   /* @INCOMPLETE: need to make it be centered! */
+   /* width: 70%; */
+   display: flex;
+   /* margin-left: 15%; */
+}
+
+#taming-menu .berry-progress-bar {
+   width: 100%;
+   border: 4px solid #222;
+   padding: 0.3rem 2.5rem;
+   position: relative;
+}
+
+#taming-menu .berry-progress-bar-bg {
+   background-color: #555;
+   position: absolute;
+   top: 0;
+   right: 0;
+   bottom: 0;
+   left: 0;
+   box-shadow: 0 0 0 4px #666 inset;
+   z-index: -1;
+}
+
+#taming-menu .berry-progress-bar-fill {
+   width: var(--width-percentage);
+   position: absolute;
+   top: 0;
+   bottom: 0;
+   left: 0;
+}
+#taming-menu .berry-progress-bar-fill.green {
+   background-color: #6def42;
+   box-shadow: 0 0 0 4px #3dcf00 inset;
+}
+#taming-menu .berry-progress-bar-fill.blue {
+   background-color: #27bfed;
+   box-shadow: 0 0 0 4px #218dcb inset;
+}
+#taming-menu .berry-progress-bar-fill.purple {
+   background-color: #6339e1;
+   box-shadow: 0 0 0 4px #5c00ef inset;
+}
+
+#taming-menu .berry-progress-bar .progress-counter {
+   font-family: "Noto Sans";
+   font-size: 1rem;
+   color: #fff;
+   margin-left: 50%;
+   transform: translateX(-50%);
+   z-index: 2;
+   white-space: pre;
+   display: inline-flex;
+   align-items: center;
+}
+#taming-menu .berry-progress-bar .progress-counter span {
+   text-shadow: 1px 1px 3px #000;
+   font-style: italic;
+}
+#taming-menu .berry-progress-bar .progress-counter img {
+   width: 32px;
+   height: 32px;
+   image-rendering: pixelated;
+   margin-left: 4px;
+}
+#taming-menu .berry-progress-bar .progress-counter .height-padder {
+   height: 32px;
+   display: flex;
+   align-items: center;
+}
+
+#taming-menu .berry-progress-bar::after {
+   content: "Progress to next tier";
+   color: #eee;
+   font-family: "Noto Sans";
+   font-weight: bold;
+   letter-spacing: 0.6px;
+   text-align: center;
+   position: absolute;
+   top: -1.7rem;
+   left: 50%;
+   white-space: pre;
+   transform: translateX(-50%);
+}
+
+#taming-menu .progress-area button {
+   font-family: "Noto Sans";
+   font-size: 1rem;
+   font-weight: bold;
+   color: #b7b297;
+   background-color: #47392f;
+   border: 4px solid #7f6b56;
+   margin-left: 10px;
+   box-shadow: 0 0 0 4px #332822 inset;
+   padding: 0 8px;
+}
+#taming-menu .progress-area button.clickable {
+   color: #ffe772;
+   border-color: #ddbc1c;
+   background-color: #655819;
+   box-shadow: 0 0 0 4px #494d11 inset;
+   cursor: pointer;
+}
+#taming-menu .progress-area button.clickable:hover {
+   filter: brightness(1.1);
+}
+#taming-menu .progress-area button.clickable:active {
+   filter: brightness(0.9);
+}
+
+#taming-menu .skill-map-container {
+   position: relative;
+}
+
+#taming-menu .skill {
+   position: absolute;
+   transform: translate(-50%, -50%);
+   display: flex;
+   flex-direction: column;
+}
+
+#taming-menu .skill .skill-icon-wrapper {
+   display: inline-block;
+   position: relative;
+   margin-left: 50%;
+   transform: translateX(-50%);
+}
+#taming-menu .skill:not(.acquired) .skill-icon-wrapper {
+   cursor: pointer;
+}
+#taming-menu .skill .skill-icon {
+   width: 52px;
+   height: 52px;
+   image-rendering: pixelated;
+   position: absolute;
+   top: 0;
+   left: 0;
+   transform: translate(8px, 8px);
+}
+#taming-menu .skill.inaccessible .skill-icon {
+   filter: brightness(0);
+   opacity: 0.3;
+}
+#taming-menu .skill .skill-bg {
+   width: 68px;
+   height: 68px;
+   background-image: url(../../images/menus/taming-almanac/skill-bg.png);
+   background-size: 100% 100%;
+   image-rendering: pixelated;
+}
+#taming-menu .skill.inaccessible .skill-bg {
+   background-image: url(../../images/menus/taming-almanac/skill-bg-inaccessible.png);
+}
+#taming-menu .skill.acquired .skill-bg {
+   background-image: url(../../images/menus/taming-almanac/skill-bg-acquired.png);
+}
+
+#taming-menu .skill p {
+   color: #fff;
+   text-align: center;
+   font-family: "Noto Sans";
+   white-space: pre;
+   background-color: #222;
+   padding: 0 10px;
+   margin: 0;
+   letter-spacing: 0.6px;
+}
+#taming-menu .skill.inaccessible p {
+   color: #797979;
+}
+#taming-menu .skill.acquired p {
+   color: #fff083;
+   font-weight: bold;
+}
+
+#taming-menu .tier-separator-container {
+   position: absolute;
+   left: 0;
+   right: 0;
+}
+#taming-menu .tier-icon {
+   width: 28px;
+   height: 28px;
+   image-rendering: pixelated;
+   position: absolute;
+   left: 0;
+   transform: translateY(-50%);
+}
+#taming-menu .tier-separator {
+   width: 100%;
+   height: 4px;
+   background-image: url(../../images/menus/taming-almanac/tier-separator.png);
+   background-size: 16px 4px;
+   image-rendering: pixelated;
+}
+
+#taming-menu .skill-connector {
+   width: var(--magnitude);
+   height: 10px;
+   background-color: #5b5856;
+   position: absolute;
+   left: calc(50% + var(--x));
+   top: var(--y);
+   transform-origin: 0% 50%;
+   transform: rotate(var(--direction-rad));
+   z-index: -1;
+}
+#taming-menu .skill-connector.confirmed {
+   background-color: #d3c375;
+}
+
+
+
+
+/* TAMING SKILL TOOLTIP */
+
+#taming-skill-tooltip {
+   max-width: 24rem;
+   font-family: "Noto Sans";
+   color: #fff;
+   background-color: #888;
+   padding: 6px;
+   border: 4px solid #222;
+   position: absolute;
+   z-index: 3;
+   pointer-events: none;
+   box-shadow: 0 0 0 4px #707070 inset;
+}
+
+#taming-skill-tooltip p {
+   margin: 0;
+}
+#taming-skill-tooltip p:not(:first-child) {
+   margin-top: 0.5rem;
+}
+#taming-skill-tooltip p:not(:last-child) {
+   margin-bottom: 0.5rem;
+}
+#taming-skill-tooltip .complete-text {
+   color: rgb(153, 241, 150);
+   font-style: italic;
+}

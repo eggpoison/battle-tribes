@@ -1,181 +1,208 @@
-import { DecorationInfo, DecorationType } from "webgl-test-shared/dist/client-server-types";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
-import { randInt, randFloat } from "webgl-test-shared/dist/utils";
+import { DecorationType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
+import { TileType } from "battletribes-shared/tiles";
+import { randInt, randFloat, TileIndex, getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorldIncludingEdges, Point, randAngle } from "battletribes-shared/utils";
+import { getTilesInRange } from "../Layer";
+import { createDecorationConfig } from "../entities/decoration";
+import { surfaceLayer } from "../layers";
+import { createEntityImmediate } from "../world";
+
+const enum Vars {
+   RIVERSIDE_DECORATION_SPAWN_ATTEMPT_DENSITY_PER_TILE = 0.5,
+   RIVERSIDE_DECORATION_MAX_RIVER_DIST = 50
+}
 
 interface DecorationGenerationInfo {
-   readonly decorationType: DecorationType;
+   readonly decorationTypes: ReadonlyArray<DecorationType>;
    readonly spawnableTileTypes: ReadonlyArray<TileType>;
    readonly spawnChancePerTile: number;
    readonly minGroupSize: number;
    readonly maxGroupSize: number;
-   readonly numVariants: number;
+   readonly isAffectedByTemperature: boolean;
+   readonly hasUniformGroups: boolean;
 }
 
-export function generateDecorations(tileTypeArray: ReadonlyArray<ReadonlyArray<TileType>>, temperatureMap: ReadonlyArray<ReadonlyArray<number>>): ReadonlyArray<DecorationInfo> {
+const createDecoration = (x: number, y: number, decorationType: DecorationType): void => {
+   const config = createDecorationConfig(new Point(x, y), randAngle(), decorationType);
+   createEntityImmediate(config, surfaceLayer);
+}
+
+const generateRiversideDecorations = (): void => {
+   // @Speed
+   
+   // @Incomplete: generate everywhere
+
+   const numAttempts = Vars.RIVERSIDE_DECORATION_SPAWN_ATTEMPT_DENSITY_PER_TILE * Settings.WORLD_SIZE_TILES * Settings.WORLD_SIZE_TILES;
+   
+   for (let i = 0; i < numAttempts; i++) {
+      const x = Settings.WORLD_UNITS * Math.random();
+      const y = Settings.WORLD_UNITS * Math.random();
+
+      const tileX = Math.floor(x / Settings.TILE_SIZE);
+      const tileY = Math.floor(y / Settings.TILE_SIZE);
+      const tileType = surfaceLayer.getTileXYType(tileX, tileY);
+      if (tileType === TileType.water) {
+         continue;
+      }
+      
+      const tilesInRange = getTilesInRange(x, y, Vars.RIVERSIDE_DECORATION_MAX_RIVER_DIST);
+      let isGood = false;
+      for (const tileIndex of tilesInRange) {
+         const tileX = getTileX(tileIndex);
+         const tileY = getTileY(tileIndex);
+         if (surfaceLayer.getTileXYType(tileX, tileY) === TileType.water) {
+            isGood = true;
+            break;
+         }
+      }
+      if (!isGood) {
+         continue;
+      }
+
+      createDecoration(x, y, Math.random() < 0.5 ? DecorationType.rock : DecorationType.pebble);
+   }
+}
+
+export function generateDecorations(): void {
    const GROUP_SPAWN_RANGE = 256;
    
    const DECORATION_GENERATION_INFO: ReadonlyArray<DecorationGenerationInfo> = [
       {
-         decorationType: DecorationType.pebble,
+         decorationTypes: [DecorationType.pebble],
          spawnableTileTypes: [TileType.grass],
          spawnChancePerTile: 0.007,
          minGroupSize: 2,
          maxGroupSize: 4,
-         numVariants: 1
+         isAffectedByTemperature: false,
+         hasUniformGroups: false
       },
       {
-         decorationType: DecorationType.rock,
+         decorationTypes: [DecorationType.rock],
          spawnableTileTypes: [TileType.grass, TileType.rock],
          spawnChancePerTile: 0.003,
          minGroupSize: 1,
          maxGroupSize: 2,
-         numVariants: 1
+         isAffectedByTemperature: false,
+         hasUniformGroups: false
       },
       {
-         decorationType: DecorationType.sandstoneRock,
+         decorationTypes: [DecorationType.sandstoneRock],
          spawnableTileTypes: [TileType.sand],
          spawnChancePerTile: 0.02,
          minGroupSize: 1,
          maxGroupSize: 3,
-         numVariants: 1
+         isAffectedByTemperature: false,
+         hasUniformGroups: false
       },
       {
-         decorationType: DecorationType.sandstoneRockBig,
+         decorationTypes: [DecorationType.sandstoneRockBig1, DecorationType.sandstoneRockBig2],
          spawnableTileTypes: [TileType.sand],
          spawnChancePerTile: 0.01,
          minGroupSize: 1,
          maxGroupSize: 2,
-         numVariants: 2
+         isAffectedByTemperature: false,
+         hasUniformGroups: false
       },
       {
-         decorationType: DecorationType.blackRockSmall,
-         spawnableTileTypes: [TileType.snow, TileType.permafrost],
-         spawnChancePerTile: 0.02,
-         minGroupSize: 1,
-         maxGroupSize: 2,
-         numVariants: 1
+         decorationTypes: [DecorationType.sandstoneRockDark],
+         spawnableTileTypes: [TileType.sandyDirt],
+         spawnChancePerTile: 0.06,
+         minGroupSize: 3,
+         maxGroupSize: 5,
+         isAffectedByTemperature: false,
+         hasUniformGroups: false
       },
       {
-         decorationType: DecorationType.blackRock,
-         spawnableTileTypes: [TileType.snow, TileType.permafrost],
-         spawnChancePerTile: 0.02,
-         minGroupSize: 1,
-         maxGroupSize: 1,
-         numVariants: 1
+         decorationTypes: [DecorationType.sandstoneRockDarkBig1, DecorationType.sandstoneRockDarkBig2],
+         spawnableTileTypes: [TileType.sandyDirt],
+         spawnChancePerTile: 0.04,
+         minGroupSize: 2,
+         maxGroupSize: 4,
+         isAffectedByTemperature: false,
+         hasUniformGroups: false
       },
       {
-         decorationType: DecorationType.snowPile,
-         spawnableTileTypes: [TileType.ice, TileType.permafrost],
-         spawnChancePerTile: 0.02,
-         minGroupSize: 1,
-         maxGroupSize: 1,
-         numVariants: 1
-      },
-      {
-         decorationType: DecorationType.flower1,
+         decorationTypes: [DecorationType.flower1, DecorationType.flower2, DecorationType.flower3, DecorationType.flower4],
          spawnableTileTypes: [TileType.grass],
-         spawnChancePerTile: 0.0015,
+         spawnChancePerTile: 0.005,
          minGroupSize: 2,
          maxGroupSize: 6,
-         numVariants: 1
-      },
-      {
-         decorationType: DecorationType.flower2,
-         spawnableTileTypes: [TileType.grass],
-         spawnChancePerTile: 0.0015,
-         minGroupSize: 2,
-         maxGroupSize: 6,
-         numVariants: 1
-      },
-      {
-         decorationType: DecorationType.flower3,
-         spawnableTileTypes: [TileType.grass],
-         spawnChancePerTile: 0.0015,
-         minGroupSize: 2,
-         maxGroupSize: 6,
-         numVariants: 1
-      },
-      {
-         decorationType: DecorationType.flower4,
-         spawnableTileTypes: [TileType.grass],
-         spawnChancePerTile: 0.0015,
-         minGroupSize: 2,
-         maxGroupSize: 6,
-         numVariants: 1
+         isAffectedByTemperature: true,
+         hasUniformGroups: true
       }
    ];
 
-   const getDecorationGenerationInfoIndex = (tileType: TileType, temperature: number): number => {
+   const getDecorationGenerationInfo = (tileIndex: TileIndex): DecorationGenerationInfo | null => {
+      const tileType = surfaceLayer.tileTypes[tileIndex];
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
+      
       for (let i = 0; i < DECORATION_GENERATION_INFO.length; i++) {
          const generationInfo = DECORATION_GENERATION_INFO[i];
-         if (generationInfo.spawnableTileTypes.includes(tileType)) {
+         if (!generationInfo.spawnableTileTypes.includes(tileType)) {
+            continue;
+         }
+
+         if (generationInfo.isAffectedByTemperature) {
             // Flowers spawn less frequently the colder the tile is
-            if (generationInfo.decorationType >= DecorationType.flower1 && generationInfo.decorationType <= DecorationType.flower2) {
-               if (Math.random() > Math.pow(temperature, 0.3)) {
-                  continue;
-               }
+            const idx = getTileIndexIncludingEdges(tileX, tileY);
+            const temperature = surfaceLayer.tileTemperatures[idx];
+            if (Math.random() > Math.pow(temperature, 0.3)) {
+               continue;
             }
-            
-            if (Math.random() < generationInfo.spawnChancePerTile) {
-               return i;
-            }
+         }
+
+         if (Math.random() < generationInfo.spawnChancePerTile) {
+            return generationInfo;
          }
       }
 
-      return 99999;
+      return null;
    }
 
-   // @Speed: Triple-nested loop, and a whole bunch of continues (unnecessary iterations)!!
-   const decorations = new Array<DecorationInfo>();
-   for (let i = 0; i < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2; i++) {
-      for (let j = 0; j < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2; j++) {
-         const tileType = tileTypeArray[i][j];
-         const temperature = temperatureMap[i][j];
-         const generationInfoIndex = getDecorationGenerationInfoIndex(tileType, temperature);
-         if (generationInfoIndex !== 99999) {
-            const generationInfo = DECORATION_GENERATION_INFO[generationInfoIndex];
-            // Spawn a group of that decoration
+   for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
+      for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         
+         const generationInfo = getDecorationGenerationInfo(tileIndex);
+         if (generationInfo === null) {
+            continue;
+         }
             
-            const x = (i - Settings.EDGE_GENERATION_DISTANCE + Math.random()) * Settings.TILE_SIZE;
-            const y = (j - Settings.EDGE_GENERATION_DISTANCE + Math.random()) * Settings.TILE_SIZE;
-            decorations.push({
-               positionX: x,
-               positionY: y,
-               rotation: 2 * Math.PI * Math.random(),
-               type: generationInfo.decorationType,
-               variant: randInt(0, generationInfo.numVariants - 1)
-            });
+         let decorationType = generationInfo.decorationTypes[randInt(0, generationInfo.decorationTypes.length - 1)];
 
-            const numOthers = randInt(generationInfo.minGroupSize, generationInfo.maxGroupSize) - 1;
-            for (let k = 0; k < numOthers; k++) {
-               const spawnOffsetMagnitude = randFloat(0, GROUP_SPAWN_RANGE);
-               const spawnOffsetDirection = 2 * Math.PI * Math.random();
-               const spawnX = x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-               const spawnY = y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+         const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+         const y = (tileY + Math.random()) * Settings.TILE_SIZE;
+         createDecoration(x, y, decorationType)
 
-               // Don't spawn outside the world
-               if (spawnX < -Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || spawnX >= Settings.BOARD_UNITS + Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || spawnY < -Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || spawnY >= Settings.BOARD_UNITS + Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE) {
-                  continue;
-               }
+         const numOthers = randInt(generationInfo.minGroupSize, generationInfo.maxGroupSize) - 1;
+         for (let i = 0; i < numOthers; i++) {
+            const spawnOffsetMagnitude = randFloat(0, GROUP_SPAWN_RANGE);
+            const spawnOffsetDirection = randAngle();
+            const spawnX = x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnY = y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
-               // Don't spawn in different tile types
-               const currentTileType = tileTypeArray[Math.floor(spawnX / Settings.TILE_SIZE) + Settings.EDGE_GENERATION_DISTANCE][Math.floor(spawnY / Settings.TILE_SIZE) + Settings.EDGE_GENERATION_DISTANCE];
-               if (currentTileType !== tileType) {
-                  continue;
-               }
-               
-               decorations.push({
-                  positionX: spawnX,
-                  positionY: spawnY,
-                  rotation: 2 * Math.PI * Math.random(),
-                  type: generationInfo.decorationType,
-                  variant: randInt(0, generationInfo.numVariants - 1)
-               });
+            const currentTileX = Math.floor(spawnX / Settings.TILE_SIZE);
+            const currentTileY = Math.floor(spawnY / Settings.TILE_SIZE);
+            if (!tileIsInWorldIncludingEdges(currentTileX, currentTileY)) {
+               continue;
+            }
+            
+            // Don't spawn in different tile types
+            const currentTileIndex = getTileIndexIncludingEdges(currentTileX, currentTileY);
+            const tileType = surfaceLayer.tileTypes[currentTileIndex];
+            if (!generationInfo.spawnableTileTypes.includes(tileType)) {
+               continue;
+            }
+
+            createDecoration(spawnX, spawnY, decorationType);
+
+            if (!generationInfo.hasUniformGroups) {
+               decorationType = generationInfo.decorationTypes[randInt(0, generationInfo.decorationTypes.length - 1)];
             }
          }
       }
    }
 
-   return decorations;
+   generateRiversideDecorations();
 }

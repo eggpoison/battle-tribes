@@ -1,18 +1,19 @@
-import { angle } from "webgl-test-shared/dist/utils";
-import Entity from "../../../Entity";
-import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
+import { angle, polarVec2 } from "battletribes-shared/utils";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
-import { clearTribesmanPath, getTribesmanAcceleration, getTribesmanVisionRange } from "./tribesman-ai-utils";
-import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { getTribesmanAcceleration } from "./tribesman-ai-utils";
+import { Entity, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { HealthComponent } from "../../../components/HealthComponent";
+import { TransformComponentArray } from "../../../components/TransformComponent";
+import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
+import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../../hitboxes";
+import { clearPathfinding } from "../../../components/AIPathfindingComponent";
 
-export function tribesmanShouldEscape(entityType: EntityType, healthComponent: HealthComponent): boolean {
-   // @Temporary
-   return false;
-   
+export function tribeMemberShouldEscape(entityType: EntityType, healthComponent: HealthComponent): boolean {
    const remainingHealthRatio = healthComponent.health / healthComponent.maxHealth;
    
    switch (entityType) {
+      case EntityType.cogwalker:
+      case EntityType.scrappy:
       case EntityType.tribeWorker: return remainingHealthRatio <= 0.5;
       case EntityType.tribeWarrior: return remainingHealthRatio <= 0.4;
       // @Robustness
@@ -22,24 +23,35 @@ export function tribesmanShouldEscape(entityType: EntityType, healthComponent: H
    }
 }
 
+// @Cleanup: just pass in visibleThreats
 export function escapeFromEnemies(tribesman: Entity, visibleEnemies: ReadonlyArray<Entity>, visibleHostileMobs: ReadonlyArray<Entity>): void {
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const tribesmanHitbox = transformComponent.hitboxes[0];
+   
+   const aiHelperComponent = AIHelperComponentArray.getComponent(tribesman);
+   const visionRange = aiHelperComponent.visionRange;
+   
    // Calculate the escape position based on the position of all visible enemies
    let averageEnemyX = 0;
    let averageEnemyY = 0;
    for (let i = 0; i < visibleEnemies.length; i++) {
       const enemy = visibleEnemies[i];
 
-      let distance = tribesman.position.calculateDistanceBetween(enemy.position);
-      if (distance > getTribesmanVisionRange(tribesman)) {
-         distance = getTribesmanVisionRange(tribesman);
+      const enemyTransformComponent = TransformComponentArray.getComponent(enemy);
+      const enemyHitbox = enemyTransformComponent.hitboxes[0];
+      
+      let distance = tribesmanHitbox.box.position.distanceTo(enemyHitbox.box.position);
+      // @Hack
+      if (distance > visionRange) {
+         distance = visionRange;
       }
-      const weight = Math.pow(1 - distance / getTribesmanVisionRange(tribesman) / 1.25, 0.5);
+      const weight = Math.pow(1 - distance / visionRange / 1.25, 0.5);
 
-      const relativeX = (enemy.position.x - tribesman.position.x) * weight;
-      const relativeY = (enemy.position.y - tribesman.position.y) * weight;
+      const relativeX = (enemyHitbox.box.position.x - tribesmanHitbox.box.position.x) * weight;
+      const relativeY = (enemyHitbox.box.position.y - tribesmanHitbox.box.position.y) * weight;
 
-      averageEnemyX += relativeX + tribesman.position.x;
-      averageEnemyY += relativeY + tribesman.position.y;
+      averageEnemyX += relativeX + tribesmanHitbox.box.position.x;
+      averageEnemyY += relativeY + tribesmanHitbox.box.position.y;
       // @Temporary: shouldn't occur, fix root cause
       if (isNaN(averageEnemyX) || isNaN(averageEnemyY)) {
          console.warn("NaN!");
@@ -50,17 +62,20 @@ export function escapeFromEnemies(tribesman: Entity, visibleEnemies: ReadonlyArr
    for (let i = 0; i < visibleHostileMobs.length; i++) {
       const enemy = visibleHostileMobs[i];
 
-      let distance = tribesman.position.calculateDistanceBetween(enemy.position);
-      if (distance > getTribesmanVisionRange(tribesman)) {
-         distance = getTribesmanVisionRange(tribesman);
+      const enemyTransformComponent = TransformComponentArray.getComponent(enemy);
+      const enemyHitbox = enemyTransformComponent.hitboxes[0];
+
+      let distance = tribesmanHitbox.box.position.distanceTo(enemyHitbox.box.position);
+      if (distance > visionRange) {
+         distance = visionRange;
       }
-      const weight = Math.pow(1 - distance / getTribesmanVisionRange(tribesman) / 1.25, 0.5);
+      const weight = Math.pow(1 - distance / visionRange / 1.25, 0.5);
 
-      const relativeX = (enemy.position.x - tribesman.position.x) * weight;
-      const relativeY = (enemy.position.y - tribesman.position.y) * weight;
+      const relativeX = (enemyHitbox.box.position.x - tribesmanHitbox.box.position.x) * weight;
+      const relativeY = (enemyHitbox.box.position.y - tribesmanHitbox.box.position.y) * weight;
 
-      averageEnemyX += relativeX + tribesman.position.x;
-      averageEnemyY += relativeY + tribesman.position.y;
+      averageEnemyX += relativeX + tribesmanHitbox.box.position.x;
+      averageEnemyY += relativeY + tribesmanHitbox.box.position.y;
       // @Temporary: shouldn't occur, fix root cause
       if (isNaN(averageEnemyX) || isNaN(averageEnemyY)) {
          console.warn("NaN!");
@@ -74,13 +89,12 @@ export function escapeFromEnemies(tribesman: Entity, visibleEnemies: ReadonlyArr
    // Run away from that position
    // 
 
-   const runDirection = angle(averageEnemyX - tribesman.position.x, averageEnemyY - tribesman.position.y) + Math.PI;
-   const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+   const runDir = angle(averageEnemyX - tribesmanHitbox.box.position.x, averageEnemyY - tribesmanHitbox.box.position.y) + Math.PI;
 
-   physicsComponent.acceleration.x = getTribesmanAcceleration(tribesman.id) * Math.sin(runDirection);
-   physicsComponent.acceleration.y = getTribesmanAcceleration(tribesman.id) * Math.cos(runDirection);
-   physicsComponent.targetRotation = runDirection;
-   physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
+   const acceleration = getTribesmanAcceleration(tribesman);
+   applyAccelerationFromGround(tribesmanHitbox, polarVec2(acceleration, runDir));
 
-   clearTribesmanPath(tribesman);
+   turnHitboxToAngle(tribesmanHitbox, runDir, TRIBESMAN_TURN_SPEED, 0.5, false);
+
+   clearPathfinding(tribesman);
 }

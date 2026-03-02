@@ -1,53 +1,58 @@
-import { ItemComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import { ComponentArray } from "./ComponentArray";
-import { removeFleshSword } from "../flesh-sword-ai";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { Item } from "battletribes-shared/items/items";
+import { Entity } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
+import { destroyEntity, getEntityAgeTicks } from "../world";
+
+const enum Vars {
+   TICKS_TO_DESPAWN = 300 * Settings.TICK_RATE,
+   THROWING_ENTITY_PICKUP_COOLDOWN_TICKS = Settings.TICK_RATE
+}
 
 export class ItemComponent {
-   readonly itemType: ItemType;
-   amount: number;
+   public readonly item: Item;
    
-   /** Stores which entities are on cooldown to pick up the item, and their remaining cooldowns */
-   readonly entityPickupCooldowns: Partial<Record<number, number>> = {};
+   public throwingEntity: Entity | null;
+   /** Number of ticks after throwing for which the throwing entity cannot pick up the item */
+   public throwingEntityPickupCooldownTicks: number;
 
-   /** The ID of the entity which threw the item. 0 if was not thrown by an entity */
-   public readonly throwingEntityID: number;
-
-   constructor(itemType: ItemType, amount: number, throwingEntityID: number) {
-      this.itemType = itemType;
-      this.amount = amount;
-      this.throwingEntityID = throwingEntityID;
+   constructor(item: Item, throwingEntity: Entity | null) {
+      this.item = item;
+      this.throwingEntity = throwingEntity;
+      this.throwingEntityPickupCooldownTicks = Vars.THROWING_ENTITY_PICKUP_COOLDOWN_TICKS;
    }
 }
 
-export const ItemComponentArray = new ComponentArray<ServerComponentType.item, ItemComponent>(true, {
-   onRemove: onRemove,
-   serialise: serialise
-});
+export const ItemComponentArray = new ComponentArray<ItemComponent>(ServerComponentType.item, true, getDataLength, addDataToPacket);
+ItemComponentArray.onTick = {
+   tickInterval: 1,
+   func: onTick
+};
 
-function onRemove(entityID: number): void {
-   // Remove flesh sword item entities
-   const itemComponent = ItemComponentArray.getComponent(entityID);
-   if (itemComponent.itemType === ItemType.flesh_sword) {
-      removeFleshSword(entityID);
+function onTick(itemEntity: Entity): void {
+   const itemComponent = ItemComponentArray.getComponent(itemEntity);
+   if (itemComponent.throwingEntityPickupCooldownTicks > 0) {
+      itemComponent.throwingEntityPickupCooldownTicks--;
+   }
+
+   // @HACK: this is shit for gameplay. disallows storerooms and stuff. instead probably make items decompose if left in poor conditions.
+   if (getEntityAgeTicks(itemEntity) >= Vars.TICKS_TO_DESPAWN) {
+      destroyEntity(itemEntity);
    }
 }
 
-export function tickItemComponent(itemComponent: ItemComponent): void {
-   // @Speed
-   for (const entityID of Object.keys(itemComponent.entityPickupCooldowns).map(idString => Number(idString))) {
-      itemComponent.entityPickupCooldowns[entityID]! -= Settings.I_TPS;
-      if (itemComponent.entityPickupCooldowns[entityID]! <= 0) {
-         delete itemComponent.entityPickupCooldowns[entityID];
-      }
-   }
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT;
 }
 
-function serialise(entityID: number): ItemComponentData {
-   const itemComponent = ItemComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.item,
-      itemType: itemComponent.itemType
-   };
+function addDataToPacket(packet: Packet, entity: Entity): void {
+   const itemComponent = ItemComponentArray.getComponent(entity);
+   packet.writeNumber(itemComponent.item.type);
+}
+
+export function itemEntityCanBePickedUp(itemEntity: Entity, entity: Entity): boolean {
+   const itemComponent = ItemComponentArray.getComponent(itemEntity);
+   return entity !== itemComponent.throwingEntity || itemComponent.throwingEntityPickupCooldownTicks === 0;
 }

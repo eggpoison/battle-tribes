@@ -1,13 +1,15 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { HealingTotemComponentData, HealingTotemTargetData, ServerComponentType } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
-import Board from "../Board";
+import { Settings } from "battletribes-shared/settings";
+import { ServerComponentType } from "battletribes-shared/components";
 import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
 import { HealthComponentArray, healEntity } from "./HealthComponent";
 import { ComponentArray } from "./ComponentArray";
+import { Entity } from "battletribes-shared/entities";
+import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "battletribes-shared/packets";
+import { entityExists } from "../world";
+import { AIHelperComponentArray } from "./AIHelperComponent";
 
 const enum Vars {
-   HEALING_RANGE = 270,
    HEALING_PER_SECOND = 1
 }
 
@@ -16,45 +18,34 @@ export class HealingTotemComponent {
    public readonly healTargetsTicksHealed = new Array<number>();
 }
 
-export const HealingTotemComponentArray = new ComponentArray<ServerComponentType.healingTotem, HealingTotemComponent>(true, {
-   serialise: serialise
-});
+export const HealingTotemComponentArray = new ComponentArray<HealingTotemComponent>(ServerComponentType.healingTotem, true, getDataLength, addDataToPacket);
+HealingTotemComponentArray.onTick = {
+   tickInterval: 1,
+   func: onTick
+};
 
-const getHealingTargets = (healingTotem: Entity): ReadonlyArray<Entity> => {
-   const minChunkX = Math.max(Math.floor((healingTotem.position.x - Vars.HEALING_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((healingTotem.position.x + Vars.HEALING_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   const minChunkY = Math.max(Math.floor((healingTotem.position.y - Vars.HEALING_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((healingTotem.position.y + Vars.HEALING_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-
+const getHealingTargets = (healingTotem: Entity, visibleEntities: ReadonlyArray<Entity>): ReadonlyArray<Entity> => {
    const targets = new Array<Entity>();
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-         for (const entity of chunk.entities) {
-            if (targets.indexOf(entity) !== -1) {
-               continue;
-            }
-
-            if (!HealthComponentArray.hasComponent(entity.id)) {
-               continue;
-            }
-            
-            const healthComponent = HealthComponentArray.getComponent(entity.id);
-            if (healthComponent.health === healthComponent.maxHealth) {
-               continue;
-            }
-            
-            const relationship = getEntityRelationship(healingTotem.id, entity);
-            if (relationship !== EntityRelationship.friendly) {
-               continue;
-            }
-            
-            const distance = healingTotem.position.calculateDistanceBetween(entity.position);
-            if (distance <= Vars.HEALING_RANGE) {
-               targets.push(entity);
-            }
-         }
+   for (const entity of visibleEntities) {
+      if (targets.indexOf(entity) !== -1) {
+         continue;
       }
+
+      if (!HealthComponentArray.hasComponent(entity)) {
+         continue;
+      }
+      
+      const healthComponent = HealthComponentArray.getComponent(entity);
+      if (healthComponent.health === healthComponent.maxHealth) {
+         continue;
+      }
+      
+      const relationship = getEntityRelationship(healingTotem, entity);
+      if (relationship !== EntityRelationship.friendly) {
+         continue;
+      }
+
+      targets.push(entity);
    }
 
    return targets;
@@ -63,7 +54,7 @@ const getHealingTargets = (healingTotem: Entity): ReadonlyArray<Entity> => {
 const idIsInHealTargets = (id: number, healTargets: ReadonlyArray<Entity>): boolean => {
    for (let i = 0; i < healTargets.length; i++) {
       const entity = healTargets[i];
-      if (entity.id === id) {
+      if (entity === id) {
          return true;
       }
    }
@@ -73,16 +64,19 @@ const idIsInHealTargets = (id: number, healTargets: ReadonlyArray<Entity>): bool
 const healTargetIsInIDs = (target: Entity, ids: ReadonlyArray<number>): boolean => {
    for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
-      if (id === target.id) {
+      if (id === target) {
          return true;
       }
    }
    return false;
 }
 
-export function tickHealingTotemComponent(healingTotem: Entity, healingTotemComponent: HealingTotemComponent): void {
+function onTick(healingTotem: Entity): void {
+   const aiHelperComponent = AIHelperComponentArray.getComponent(healingTotem);
+   const healingTotemComponent = HealingTotemComponentArray.getComponent(healingTotem);
+   
    // @Speed: shouldn't call every tick
-   const healingTargets = getHealingTargets(healingTotem);
+   const healingTargets = getHealingTargets(healingTotem, aiHelperComponent.visibleEntities);
 
    const healTargetIDs = healingTotemComponent.healTargetIDs;
    const healTargetsTicksHealed = healingTotemComponent.healTargetsTicksHealed;
@@ -90,7 +84,7 @@ export function tickHealingTotemComponent(healingTotem: Entity, healingTotemComp
    // Check for removed healing targets
    for (let i = 0; i < healTargetIDs.length; i++) {
       const targetID = healTargetIDs[i];
-      if (!idIsInHealTargets(targetID, healingTargets) || typeof Board.entityRecord[targetID] === "undefined") {
+      if (!idIsInHealTargets(targetID, healingTargets) || !entityExists(targetID)) {
          healTargetIDs.splice(i, 1);
          healTargetsTicksHealed.splice(i, 1);
          i--;
@@ -101,7 +95,7 @@ export function tickHealingTotemComponent(healingTotem: Entity, healingTotemComp
    for (let i = 0; i < healingTargets.length; i++) {
       const target = healingTargets[i];
       if (!healTargetIsInIDs(target, healTargetIDs)) {
-         healTargetIDs.push(target.id);
+         healTargetIDs.push(target);
          healTargetsTicksHealed.push(0);
       }
    }
@@ -109,34 +103,36 @@ export function tickHealingTotemComponent(healingTotem: Entity, healingTotemComp
    // Update heal targets
    for (let i = 0; i < healTargetIDs.length; i++) {
       healTargetsTicksHealed[i]++;
-      if (healTargetsTicksHealed[i] % Settings.TPS === 0) {
-         const id = healTargetIDs[i];
-         const target = Board.entityRecord[id]!;
-         healEntity(target, Vars.HEALING_PER_SECOND, healingTotem.id);
+      if (healTargetsTicksHealed[i] % Settings.TICK_RATE === 0) {
+         const target = healTargetIDs[i];
+         healEntity(target, Vars.HEALING_PER_SECOND, healingTotem);
       }
    }
 }
 
-function serialise(entityID: number): HealingTotemComponentData {
-   const healingTotemComponent = HealingTotemComponentArray.getComponent(entityID);
+function getDataLength(entity: Entity): number {
+   const healingTotemComponent = HealingTotemComponentArray.getComponent(entity);
 
-   const healingData = new Array<HealingTotemTargetData>();
+   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT * healingTotemComponent.healTargetIDs.length;
+
+   return lengthBytes;
+}
+
+function addDataToPacket(packet: Packet, entity: Entity): void {
+   const healingTotemComponent = HealingTotemComponentArray.getComponent(entity);
+
+   packet.writeNumber(healingTotemComponent.healTargetIDs.length);
    for (let i = 0; i < healingTotemComponent.healTargetIDs.length; i++) {
-      const entityID = healingTotemComponent.healTargetIDs[i];
+      const healTarget = healingTotemComponent.healTargetIDs[i];
       const ticksHealed = healingTotemComponent.healTargetsTicksHealed[i];
 
-      const entity = Board.entityRecord[entityID]!;
+      const transformComponent = TransformComponentArray.getComponent(healTarget);
+      const hitbox = transformComponent.hitboxes[0];
 
-      healingData.push({
-         entityID: entityID,
-         x: entity.position.x,
-         y: entity.position.y,
-         ticksHealed: ticksHealed
-      });
+      packet.writeNumber(healTarget);
+      packet.writeNumber(hitbox.box.position.x);
+      packet.writeNumber(hitbox.box.position.y);
+      packet.writeNumber(ticksHealed);
    }
-   
-   return {
-      componentType: ServerComponentType.healingTotem,
-      healingTargetsData: healingData
-   };
 }

@@ -1,34 +1,58 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../components/InventoryComponent";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Inventory, InventoryName } from "battletribes-shared/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../components";
+import { addInventoryToInventoryComponent, InventoryComponent } from "../../components/InventoryComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { TribeComponent } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createBarrelHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { BarrelComponent } from "../../components/BarrelComponent";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../shared/src/utils";
+import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
+import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
+import { Hitbox } from "../../hitboxes";
+import { StructureConnection } from "../../structure-placement";
 
-export function createBarrel(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const barrel = new Entity(position, rotation, EntityType.barrel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createBarrelConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
 
-   const hitboxes = createBarrelHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      barrel.addHitbox(hitboxes[i]);
-   }
+   const box = new CircularBox(position, new Point(0, 0), rotation, 40);
+   const hitbox = new Hitbox(transformComponent, null, true, box, 1.5, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-   HealthComponentArray.addComponent(barrel.id, new HealthComponent(20));
-   StatusEffectComponentArray.addComponent(barrel.id, new StatusEffectComponent(StatusEffect.poisoned));
-   TribeComponentArray.addComponent(barrel.id, new TribeComponent(tribe));
-   StructureComponentArray.addComponent(barrel.id, new StructureComponent(connectionInfo));
-
+   const healthComponent = new HealthComponent(20);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connections, virtualStructure);
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
    const inventoryComponent = new InventoryComponent();
-   InventoryComponentArray.addComponent(barrel.id, inventoryComponent);
-   createNewInventory(inventoryComponent, InventoryName.inventory, 3, 3, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
-   return barrel;
+   const inventory = new Inventory(3, 3, InventoryName.inventory);
+   addInventoryToInventoryComponent(inventoryComponent, inventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
+   
+   const barrelComponent = new BarrelComponent();
+   
+   return {
+      entityType: EntityType.barrel,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.inventory]: inventoryComponent,
+         [ServerComponentType.barrel]: barrelComponent
+      },
+      lights: []
+   };
 }

@@ -1,0 +1,45 @@
+#health-inspector {
+   position: absolute;
+   z-index: 1;
+   transform: translate(-50%, 100%) scale(var(--zoom));
+   pointer-events: none;
+   user-select: none;
+}
+
+#health-inspector :is(.bg, .fill) {
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   image-rendering: pixelated;
+}
+
+#health-inspector .bg {
+   width: 48px;
+   height: 48px;
+   background-image: url(../../images/miscellaneous/health-inspector-bg.png);
+   background-size: 100% 100%;
+   z-index: 0;
+}
+
+#health-inspector .fill {
+   width: 36px;
+   height: 36px;
+   background-image: url(../../images/miscellaneous/health-inspector-fill.png);
+   background-size: 100% 100%;
+   mask-image: linear-gradient(to top, #fff 0%, #fff var(--fullness), transparent var(--fullness));
+   z-index: 1;
+}
+
+#health-inspector .health-counter {
+   color: #fff;
+   font-family: "Inconsolata";
+   font-size: 1.55rem;
+   font-weight: 700;
+   text-shadow: 2px 0 0 #000, 0 2px 0 #000, -2px 0 0 #000, 0 -2px 0 #000;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   z-index: 2;
+}

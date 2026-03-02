@@ -1,135 +1,116 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { ArrowStatusEffectInfo, ServerComponentType } from "webgl-test-shared/dist/components";
-import { GenericArrowType, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
-import { ArrowComponent, ArrowComponentArray } from "../../components/ArrowComponent";
-import Board from "../../Board";
-import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
-import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
+import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
+import { AMMO_INFO_RECORD, ServerComponentType } from "battletribes-shared/components";
+import { EntityType, DamageSource, Entity, EntityTypeString } from "battletribes-shared/entities";
+import { angleToPoint, Point, polarVec2 } from "battletribes-shared/utils";
+import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { EntityCreationInfo } from "../../components";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { EntityConfig } from "../../components";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { addHitboxToTransformComponent, attachHitbox, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
+import { ProjectileComponent, ProjectileComponentArray } from "../../components/ProjectileComponent";
+import { ItemType } from "battletribes-shared/items/items";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
+import { entityExists, getEntityType } from "../../world";
+import Tribe from "../../Tribe";
+import { applyKnockback, getHitboxVelocity, Hitbox } from "../../hitboxes";
 
-// @Cleanup: should we break this up into many projectile entities?
-// @Cleanup: Rename file to something more generic
-
-type ComponentTypes = [ServerComponentType.physics, ServerComponentType.tribe, ServerComponentType.arrow];
-
-const ARROW_WIDTH = 12;
-const ARROW_HEIGHT = 64;
-// @Incomplete: Use width and height from generic arrow info
-const ARROW_DESTROY_DISTANCE = Math.sqrt(Math.pow(ARROW_WIDTH / 2, 2) + Math.pow(ARROW_HEIGHT, 2));
-
-export interface GenericArrowInfo {
-   readonly type: GenericArrowType;
-   readonly damage: number;
-   readonly knockback: number;
-   readonly hitboxWidth: number;
-   readonly hitboxHeight: number;
-   readonly ignoreFriendlyBuildings: boolean;
-   readonly statusEffect: ArrowStatusEffectInfo | null;
-}
-
-export function createWoodenArrow(position: Point, rotation: number, throwerID: number, arrowInfo: GenericArrowInfo): EntityCreationInfo<ComponentTypes> {
-   const arrow = new Entity(position, rotation, EntityType.woodenArrowProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createWoodenArrowConfig(position: Point, rotation: number, tribe: Tribe, owner: Entity): EntityConfig {
+   const transformComponent = new TransformComponent();
+   transformComponent.isAffectedByGroundFriction = false;
    
-   const hitbox = new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, 0, arrowInfo.hitboxWidth, arrowInfo.hitboxHeight, 0);
-   arrow.addHitbox(hitbox);
-
-   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, false, true);
-   PhysicsComponentArray.addComponent(arrow.id, physicsComponent);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 12, 64), 0.025, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable, []);
+   addHitboxToTransformComponent(transformComponent, hitbox);
    
-   const throwerTribeComponent = TribeComponentArray.getComponent(throwerID);
-   const tribeComponent = new TribeComponent(throwerTribeComponent.tribe);
-   TribeComponentArray.addComponent(arrow.id, tribeComponent);
 
-   const arrowComponent = new ArrowComponent(throwerID, arrowInfo.type, arrowInfo.damage, arrowInfo.knockback, arrowInfo.ignoreFriendlyBuildings, arrowInfo.statusEffect);
-   ArrowComponentArray.addComponent(arrow.id, arrowComponent);
+   const tribeComponent = new TribeComponent(tribe);
+
+   const projectileComponent = new ProjectileComponent(owner);
    
    return {
-      entity: arrow,
+      entityType: EntityType.woodenArrow,
       components: {
-         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.transform]: transformComponent,
          [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.arrow]: arrowComponent
-      }
+         [ServerComponentType.projectile]: projectileComponent
+      },
+      lights: []
    };
 }
 
-export function tickArrowProjectile(arrow: Entity): void {
-   if (arrow.ageTicks >= 1.5 * Settings.TPS) {
-      arrow.destroy();
-      return;
-   }
-   
-   // 
-   // Air resistance
-   // 
-
-   const physicsComponent = PhysicsComponentArray.getComponent(arrow.id);
-
-   const xSignBefore = Math.sign(physicsComponent.velocity.x);
-   
-   const velocityLength = physicsComponent.velocity.length();
-   physicsComponent.velocity.x = (velocityLength - 3) * physicsComponent.velocity.x / velocityLength;
-   physicsComponent.velocity.y = (velocityLength - 3) * physicsComponent.velocity.y / velocityLength;
-   if (Math.sign(physicsComponent.velocity.x) !== xSignBefore) {
-      physicsComponent.velocity.x = 0;
-      physicsComponent.velocity.y = 0;
-   }
-   
-   // Destroy the arrow if it reaches the border
-   if (arrow.position.x <= ARROW_DESTROY_DISTANCE || arrow.position.x >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - ARROW_DESTROY_DISTANCE || arrow.position.y <= ARROW_DESTROY_DISTANCE || arrow.position.y >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - ARROW_DESTROY_DISTANCE) {
-      arrow.destroy();
-      return;
-   }
-}
-
-export function onWoodenArrowCollision(arrow: Entity, collidingEntity: Entity, collisionPoint: Point): void {
-   const arrowComponent = ArrowComponentArray.getComponent(arrow.id);
-
-   // Ignore friendlies, and friendly buildings if the ignoreFriendlyBuildings flag is set
-   const relationship = getEntityRelationship(arrow.id, collidingEntity);
-   if (relationship === EntityRelationship.friendly || (arrowComponent.ignoreFriendlyBuildings && relationship === EntityRelationship.friendlyBuilding)) {
-      return;
-   }
-   
-   const tribeComponent = TribeComponentArray.getComponent(arrow.id);
+// @Cleanup: Copy and paste
+export function onWoodenArrowHitboxCollision(arrow: Entity, collidingEntity: Entity, affectedHitbox: Hitbox, collidingHitbox: Hitbox, collisionPoint: Point): void {
+   const tribeComponent = TribeComponentArray.getComponent(arrow);
+   const collidingEntityType = getEntityType(collidingEntity);
 
    // Collisions with embrasures are handled in the embrasures collision function
-   if (collidingEntity.type === EntityType.embrasure) {
-      const collidingEntityTribeComponent = TribeComponentArray.getComponent(collidingEntity.id);
+   if (collidingEntityType === EntityType.embrasure) {
+      const collidingEntityTribeComponent = TribeComponentArray.getComponent(collidingEntity);
       if (tribeComponent.tribe === collidingEntityTribeComponent.tribe) {
+         return;
+      }
+   }
+
+   // Don't collide with anything attached to the owner
+   const projectileComponent = ProjectileComponentArray.getComponent(arrow);
+   if (entityExists(projectileComponent.creator)) {
+      const creatorTransformComponent = TransformComponentArray.getComponent(projectileComponent.creator);
+      const creatorHitbox = creatorTransformComponent.hitboxes[0];
+      if (collidingHitbox.rootEntity === creatorHitbox.rootEntity) {
          return;
       }
    }
 
    // @Hack: do with collision bits
    // Pass over friendly spikes
-   if (collidingEntity.type === EntityType.floorSpikes || collidingEntity.type === EntityType.wallSpikes || collidingEntity.type === EntityType.floorPunjiSticks || collidingEntity.type === EntityType.wallPunjiSticks) {
-      const collidingEntityTribeComponent = TribeComponentArray.getComponent(collidingEntity.id);
+   if (collidingEntityType === EntityType.floorSpikes || collidingEntityType === EntityType.wallSpikes || collidingEntityType === EntityType.floorPunjiSticks || collidingEntityType === EntityType.wallPunjiSticks) {
+      const collidingEntityTribeComponent = TribeComponentArray.getComponent(collidingEntity);
       if (tribeComponent.tribe === collidingEntityTribeComponent.tribe) {
          return;
       }
    }
 
-   if (HealthComponentArray.hasComponent(collidingEntity.id)) {
-      const arrowComponent = ArrowComponentArray.getComponent(arrow.id);
-
-      const thrower = Board.tentativelyGetEntity(arrowComponent.throwerID);
-      const hitDirection = arrow.position.calculateAngleBetween(collidingEntity.position);
-      
-      damageEntity(collidingEntity, thrower, arrowComponent.damage, PlayerCauseOfDeath.arrow, AttackEffectiveness.effective, collisionPoint, 0);
-      applyKnockback(collidingEntity, arrowComponent.knockback, hitDirection);
-
-      if (StatusEffectComponentArray.hasComponent(collidingEntity.id) && arrowComponent.statusEffect !== null) {
-         applyStatusEffect(collidingEntity.id, arrowComponent.statusEffect.type, arrowComponent.statusEffect.durationTicks);
-      }
-
-      arrow.destroy();
+   if (!HealthComponentArray.hasComponent(collidingEntity)) {
+      return;
    }
+
+   // Don't collide with anything when the arrow is being carried
+   // @Speed: faster to just change its collision group
+   if (affectedHitbox.parent !== null) {
+      return;
+   }
+
+   // Don't damage if the arrow is moving too slow
+   if (getHitboxVelocity(affectedHitbox).magnitude() < 10) {
+      return;
+   } 
+
+   const healthComponent = HealthComponentArray.getComponent(collidingEntity);
+   const attackHash = "wooden-arrow-" + arrow;
+   if (canDamageEntity(healthComponent, attackHash)) {
+      const ammoInfo = AMMO_INFO_RECORD[ItemType.wood];
+   
+      const hitDirection = affectedHitbox.box.position.angleTo(collidingHitbox.box.position);
+      
+      const attacker = entityExists(projectileComponent.creator) ? projectileComponent.creator : arrow;
+
+      const damage = 2 * (projectileComponent.isBlocked ? 0.5 : 1);
+      const knockback = 150 * (projectileComponent.isBlocked ? 0.5 : 1);
+      damageEntity(collidingHitbox, attacker, damage, DamageSource.arrow, AttackEffectiveness.effective, collisionPoint, 0);
+      applyKnockback(collidingHitbox, polarVec2(knockback, hitDirection));
+      addLocalInvulnerabilityHash(collidingEntity, attackHash, 9);
+   
+      if (StatusEffectComponentArray.hasComponent(collidingEntity) && ammoInfo.statusEffect !== null) {
+         applyStatusEffect(collidingEntity, ammoInfo.statusEffect.type, ammoInfo.statusEffect.durationTicks);
+      }
+   }
+
+   // When the hitbox is pushed to the point that it is no longer travelling in the direction it is facing, attach it to the colliding hitbox
+   // Lodge the arrow in the entity when it's slow enough
+   // @HACK commented out the if check so that it just always attaches so a shot is easier to get
+   // const arrowVelocity = getHitboxVelocity(affectedHitbox);
+   // if (arrowVelocity.magnitude() < 50 || arrowVelocity.calculateDotProduct(angleToPoint(affectedHitbox.box.angle)) < 0) {
+      attachHitbox(affectedHitbox, collidingHitbox, false);
+   // }
 }

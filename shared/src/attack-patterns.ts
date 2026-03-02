@@ -1,0 +1,365 @@
+import { Settings } from "./settings";
+import { lerp } from "./utils";
+
+export enum AttackVars {
+   MAX_EXTRA_ATTACK_RANGE = 24,
+   // The speed needed to have the max attack range
+   MAX_EXTRA_ATTACK_RANGE_SPEED = 300,
+   BOW_REST_TIME_TICKS = (Settings.TICK_RATE * 0.25) | 0,
+   // Number of ticks into a swing that the attack can still be feigned
+   FEIGN_SWING_TICKS_LEEWAY = (Settings.TICK_RATE * 0.1) | 0,
+   FEIGN_TIME_TICKS = (Settings.TICK_RATE * 0.1) | 0,
+   SHIELD_BASH_WINDUP_TIME_TICKS = (Settings.TICK_RATE * 0.3) | 0,
+   SHIELD_BASH_PUSH_TIME_TICKS = (Settings.TICK_RATE * 0.15) | 0,
+   SHIELD_BASH_RETURN_TIME_TICKS = (Settings.TICK_RATE * 0.4) | 0,
+   SHIELD_BASH_REST_TIME_TICKS = (Settings.TICK_RATE * 0.4) | 0,
+   SHIELD_BLOCK_REST_TIME_TICKS = (Settings.TICK_RATE * 2.25) | 0
+}
+
+export enum LimbConfiguration {
+   singleHanded,
+   twoHanded
+}
+
+export interface LimbState {
+   /** Limb direction */
+   direction: number;
+   /** Extra offset out from the entity's resting limb offset */
+   extraOffset: number;
+   angle: number;
+   extraOffsetX: number;
+   extraOffsetY: number;
+}
+
+export interface AttackPatternInfo {
+   readonly windedBack: LimbState;
+   readonly swung: LimbState;
+}
+
+export interface AttackTimingsInfo {
+   readonly windupTimeTicks: number;
+   readonly swingTimeTicks: number;
+   readonly returnTimeTicks: number;
+   readonly restTimeTicks: number;
+   /** If null, then the attack cannot block. */
+   readonly blockTimeTicks: number | null;
+}
+
+// @Cleanup: rename. not just damage box
+export interface LimbHeldItemDamageBoxInfo {
+   readonly width: number;
+   readonly height: number;
+   readonly rotation: number;
+   readonly offsetX: number;
+   offsetY: number;
+}
+
+/* --------------- */
+/* ATTACK PATTERNS */
+/* --------------- */
+
+export const UNARMED_ATTACK_PATTERNS: Record<LimbConfiguration, AttackPatternInfo> = {
+   [LimbConfiguration.singleHanded]: {
+      windedBack: {
+         direction: 0,
+         extraOffset: 0,
+         angle: 0,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      },
+      swung: {
+         direction: 0,
+         extraOffset: 16,
+         angle: 0,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      }
+   },
+   [LimbConfiguration.twoHanded]: {
+      windedBack: {
+         direction: Math.PI * 0.6,
+         extraOffset: 0,
+         angle: Math.PI * 1/3,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      },
+      swung: {
+         direction: 0,
+         extraOffset: 16,
+         angle: Math.PI * -2/3,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      }
+   }
+};
+
+export const PICKAXE_ATTACK_PATTERNS: Record<LimbConfiguration, AttackPatternInfo> = {
+   [LimbConfiguration.singleHanded]: {
+      windedBack: {
+         direction: Math.PI * 0.6,
+         extraOffset: 0,
+         angle: Math.PI * 1/3,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      },
+      swung: {
+         direction: 0,
+         extraOffset: 16,
+         angle: 0,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      }
+   },
+   [LimbConfiguration.twoHanded]: {
+      windedBack: {
+         direction: Math.PI * 0.6,
+         extraOffset: 0,
+         angle: Math.PI * 1/3,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      },
+      swung: {
+         direction: 0,
+         extraOffset: 16,
+         angle: 0,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      }
+   }
+};
+
+export const SPEAR_ATTACK_PATTERNS: Record<LimbConfiguration, AttackPatternInfo> = {
+   [LimbConfiguration.singleHanded]: {
+      windedBack: {
+         direction: Math.PI * 0.6,
+         extraOffset: 0,
+         angle: 0,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      },
+      swung: {
+         direction: Math.PI * 0.06,
+         extraOffset: 28,
+         angle: Math.PI * -0.75/6,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      }
+   },
+   [LimbConfiguration.twoHanded]: {
+      windedBack: {
+         direction: Math.PI * 0.6,
+         extraOffset: 0,
+         angle: 0,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      },
+      swung: {
+         direction: Math.PI * 0.13,
+         extraOffset: 26,
+         angle: Math.PI * -1/6,
+         extraOffsetX: 0,
+         extraOffsetY: 0
+      }
+   }
+};
+
+/* -------------- */
+/* ATTACK TIMINGS */
+/* -------------- */
+
+export const DEFAULT_ATTACK_TIMINGS: AttackTimingsInfo = {
+   windupTimeTicks: Math.floor(0.1 * Settings.TICK_RATE),
+   swingTimeTicks: Math.floor(0.15 * Settings.TICK_RATE),
+   returnTimeTicks: Math.floor(0.2 * Settings.TICK_RATE),
+   restTimeTicks: Math.floor(0.2 * Settings.TICK_RATE),
+   blockTimeTicks: null
+};
+
+export const AXE_ATTACK_TIMINGS: AttackTimingsInfo = {
+   windupTimeTicks: Math.floor(0.15 * Settings.TICK_RATE),
+   swingTimeTicks: Math.floor(0.2 * Settings.TICK_RATE),
+   returnTimeTicks: Math.floor(0.3 * Settings.TICK_RATE),
+   restTimeTicks: Math.floor(0.3 * Settings.TICK_RATE),
+   blockTimeTicks: Math.floor(0.3 * Settings.TICK_RATE)
+};
+
+export const PICKAXE_ATTACK_TIMINGS: AttackTimingsInfo = {
+   windupTimeTicks: Math.floor(0.3 * Settings.TICK_RATE),
+   swingTimeTicks: Math.floor(0.2 * Settings.TICK_RATE),
+   returnTimeTicks: Math.floor(0.35 * Settings.TICK_RATE),
+   restTimeTicks: Math.floor(0.35 * Settings.TICK_RATE),
+   blockTimeTicks: Math.floor(0.3 * Settings.TICK_RATE)
+};
+
+export const SWORD_ATTACK_TIMINGS: AttackTimingsInfo = {
+   windupTimeTicks: Math.floor(0.1 * Settings.TICK_RATE),
+   swingTimeTicks: Math.floor(0.2 * Settings.TICK_RATE),
+   returnTimeTicks: Math.floor(0.15 * Settings.TICK_RATE),
+   restTimeTicks: Math.floor(0.15 * Settings.TICK_RATE),
+   blockTimeTicks: Math.floor(0.15 * Settings.TICK_RATE)
+};
+
+export const SPEAR_ATTACK_TIMINGS: AttackTimingsInfo = {
+   windupTimeTicks: Math.floor(0.25 * Settings.TICK_RATE),
+   swingTimeTicks: Math.floor(0.2 * Settings.TICK_RATE),
+   returnTimeTicks: Math.floor(0.35 * Settings.TICK_RATE),
+   restTimeTicks: Math.floor(0.35 * Settings.TICK_RATE),
+   blockTimeTicks: null
+};
+
+export const HAMMER_ATTACK_TIMINGS: AttackTimingsInfo = {
+   windupTimeTicks: Math.floor(0.3 * Settings.TICK_RATE),
+   swingTimeTicks: Math.floor(0.2 * Settings.TICK_RATE),
+   returnTimeTicks: Math.floor(0.35 * Settings.TICK_RATE),
+   restTimeTicks: Math.floor(0.35 * Settings.TICK_RATE),
+   blockTimeTicks: Math.floor(0.3 * Settings.TICK_RATE)
+};
+
+/* ----------- */
+/* LIMB STATES */
+/* ----------- */
+
+export const RESTING_LIMB_STATES: Record<LimbConfiguration, Readonly<LimbState>> = {
+   [LimbConfiguration.singleHanded]: {
+      direction: 0,
+      extraOffset: 0,
+      angle: 0,
+      extraOffsetX: 0,
+      extraOffsetY: 0
+   },
+   [LimbConfiguration.twoHanded]: {
+      direction: Math.PI * 0.4,
+      extraOffset: 0,
+      angle: 0,
+      extraOffsetX: 0,
+      extraOffsetY: 0
+   }
+};
+
+export const QUIVER_PULL_LIMB_STATE: LimbState = {
+   direction: Math.PI * 0.8,
+   extraOffset: 0,
+   angle: Math.PI * 0.3,
+   extraOffsetX: 0,
+   extraOffsetY: 0
+};
+
+export const SPEAR_CHARGED_LIMB_STATE: LimbState = {
+   direction: Math.PI * 0.6,
+   extraOffset: 0,
+   angle: Math.PI * 0.3,
+   extraOffsetX: 0,
+   extraOffsetY: 0
+};
+
+export const BLOCKING_LIMB_STATE: LimbState = {
+   direction: Math.PI * 0.3,
+   extraOffset: 6,
+   angle: Math.PI * -0.65,
+   extraOffsetX: 0,
+   extraOffsetY: 0
+};
+
+export const SHIELD_BLOCKING_LIMB_STATE: LimbState = {
+   direction: 0,
+   extraOffset: 0,
+   angle: Math.PI * -0.25,
+   extraOffsetX: 0,
+   extraOffsetY: 0
+};
+
+export const SHIELD_BASH_WIND_UP_LIMB_STATE = copyLimbState(SHIELD_BLOCKING_LIMB_STATE);
+SHIELD_BASH_WIND_UP_LIMB_STATE.extraOffset -= 6;
+
+export const SHIELD_BASH_PUSHED_LIMB_STATE = copyLimbState(SHIELD_BLOCKING_LIMB_STATE);
+SHIELD_BASH_PUSHED_LIMB_STATE.extraOffset += 16;
+
+/* ---------------- */
+/* DAMAGE BOX INFOS */
+/* ---------------- */
+
+export const DEFAULT_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
+   width: 20,
+   height: 20,
+   rotation: 0,
+   offsetX: 8,
+   offsetY: 8
+};
+
+export const SWORD_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
+   width: 20,
+   height: 72,
+   rotation: Math.PI / 4, // 45 degrees to the right
+   offsetX: 28,
+   offsetY: 28
+};
+
+export const SHIELD_BLOCKING_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
+   width: 52,
+   height: 24,
+   rotation: Math.PI * 0.25,
+   offsetX: 8,
+   offsetY: 10
+};
+
+export const TOOL_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
+   width: 30,
+   height: 48,
+   rotation: Math.PI / 4, // 45 degrees to the right
+   offsetX: 20,
+   offsetY: 20
+};
+
+export const PICKAXE_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
+   width: 54,
+   height: 16,
+   rotation: Math.PI * 0.155,
+   offsetX: 26,
+   offsetY: 33
+};
+
+export const SPEAR_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
+   width: 20,
+   height: 96,
+   rotation: 0,
+   offsetX: 5,
+   offsetY: 30
+};
+// @HACK
+export const IVORY_SPEAR_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
+   width: 20,
+   height: 112,
+   rotation: 0,
+   offsetX: 5,
+   offsetY: 38
+};
+
+export function createZeroedLimbState(): LimbState {
+   return {
+      direction: 0,
+      extraOffset: 0,
+      angle: 0,
+      extraOffsetX: 0,
+      extraOffsetY: 0
+   };
+}
+
+export function copyLimbState(limbState: LimbState): LimbState {
+   return {
+      direction: limbState.direction,
+      extraOffset: limbState.extraOffset,
+      angle: limbState.angle,
+      extraOffsetX: limbState.extraOffsetX,
+      extraOffsetY: limbState.extraOffsetY
+   };
+}
+
+export function interpolateLimbState(startLimbState: LimbState, endLimbState: LimbState, progress: number): LimbState {
+   return {
+      direction: lerp(startLimbState.direction, endLimbState.direction, progress),
+      extraOffset: lerp(startLimbState.extraOffset, endLimbState.extraOffset, progress),
+      angle: lerp(startLimbState.angle, endLimbState.angle, progress),
+      extraOffsetX: lerp(startLimbState.extraOffsetX, endLimbState.extraOffsetX, progress),
+      extraOffsetY: lerp(startLimbState.extraOffsetY, endLimbState.extraOffsetY, progress)
+   };
+}

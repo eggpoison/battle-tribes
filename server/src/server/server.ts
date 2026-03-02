@@ -1,30 +1,45 @@
-import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TribeType } from "webgl-test-shared/dist/tribes";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
-import { Server, Socket } from "socket.io";
-import Board from "../Board";
+import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
+import { Settings } from "battletribes-shared/settings";
+import { TribeType } from "battletribes-shared/tribes";
+import { Point, randInt } from "battletribes-shared/utils";
+import { PacketReader, PacketType } from "battletribes-shared/packets";
+import WebSocket, { Server } from "ws";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
 import Tribe from "../Tribe";
-import OPTIONS from "../options";
-import { resetComponents } from "../components/ComponentArray";
-import { createPlayer } from "../entities/tribes/player";
-import { resetCensus } from "../census";
-import { forceMaxGrowAllIceSpikes } from "../entities/resources/ice-spikes";
 import SRandom from "../SRandom";
-import { resetYetiTerritoryTiles } from "../entities/mobs/yeti";
-import { resetPerlinNoiseCache } from "../perlin-noise";
 import { updateDynamicPathfindingNodes } from "../pathfinding";
-import { updateResourceDistributions } from "../resource-distributions";
 import { updateGrassBlockers } from "../grass-blockers";
-import { createGameDataPacket } from "./game-data-packets";
-import PlayerClient from "./PlayerClient";
-import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, getPlayerFromUsername } from "./player-clients";
+import { broadcastSimulationStatus, createGameDataPacket } from "./packet-sending";
+import PlayerClient, { PlayerClientVars } from "./PlayerClient";
+import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, processCommandPacket, resetDirtyEntities } from "./player-clients";
+import { BOW_HOLDING_LIMB_STATE, createPlayerConfig } from "../entities/tribes/player";
+import { processAcquireTamingSkillPacket, processActivatePacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processCloseEntityInventoryPacket, processCompleteTamingTierPacket, processDeactivatePacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processItemTransferPacket, processModifyBuildingPacket, processMountCarrySlotPacket, processOpenEntityInventoryPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetDebugEntityPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processSyncRequestPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving";
+import { CowSpecies, Entity, LimbAction } from "battletribes-shared/entities";
+import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
-import { createTribeWarrior } from "../entities/tribes/tribe-warrior";
-
-const isTimed = process.argv[2] === "timed";
-const averageTickTimes = new Array<number>();
+import { TransformComponentArray } from "../components/TransformComponent";
+import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
+import { sortComponentArrays } from "../components/ComponentArray";
+import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, destroyEntity } from "../world";
+import { resolveEntityCollisions } from "../collision-detection";
+import { runCollapses } from "../collapses";
+import { updateTribes } from "../tribes";
+import { surfaceLayer, layers, undergroundLayer } from "../layers";
+import { generateReeds } from "../world-generation/reed-generation";
+import { riverMainTiles } from "../world-generation/surface-layer-generation";
+import { updateWind } from "../wind";
+import { applyTethers } from "../tethers";
+import { generateGrassStrands } from "../world-generation/grass-generation";
+import { Hitbox } from "../hitboxes";
+import { createCowConfig } from "../entities/mobs/cow";
+import { generateDecorations } from "../world-generation/decoration-generation";
+import { ServerComponentType } from "../../../shared/src/components";
+import { createDevGameDataPacket } from "./dev-packets";
+import { createTribeWorkerConfig } from "../entities/tribes/tribe-worker";
+import { InventoryName, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS } from "../../../shared/src/items/items";
+import { getCurrentLimbState, InventoryUseComponentArray } from "../components/InventoryUseComponent";
+import { QUIVER_PULL_LIMB_STATE } from "../../../shared/src/attack-patterns";
+import OPTIONS from "../options";
 
 /*
 
@@ -33,7 +48,63 @@ node --prof-process isolate-0xnnnnnnnnnnnn-v8.log > processed.txt
 
 */
 
-export type ISocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
+const entityIsHiddenFromPlayer = (entity: Entity, playerTribe: Tribe): boolean => {
+   if (SpikesComponentArray.hasComponent(entity) && TribeComponentArray.hasComponent(entity)) {
+      const tribeComponent = TribeComponentArray.getComponent(entity);
+      const spikesComponent = SpikesComponentArray.getComponent(entity);
+      
+      if (spikesComponent.isCovered && tribeComponent.tribe !== playerTribe) {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+const addHitboxHeirarchyToEntities = (playerClient: PlayerClient, entitiesToSend: Set<Entity>, hitbox: Hitbox): void => {
+   entitiesToSend.add(hitbox.entity);
+   for (const child of hitbox.children) {
+      addHitboxHeirarchyToEntities(playerClient, entitiesToSend, child);
+   }
+}
+
+const getPlayerVisibleEntities = (playerClient: PlayerClient): Set<Entity> => {
+   const layer = playerClient.lastLayer;
+
+   const visibleEntities = new Set<Entity>();
+   
+   // @Copynpaste
+   const minVisibleX = playerClient.lastViewedPositionX - playerClient.screenWidth * 0.5 - PlayerClientVars.VIEW_PADDING;
+   const maxVisibleX = playerClient.lastViewedPositionX + playerClient.screenWidth * 0.5 + PlayerClientVars.VIEW_PADDING;
+   const minVisibleY = playerClient.lastViewedPositionY - playerClient.screenHeight * 0.5 - PlayerClientVars.VIEW_PADDING;
+   const maxVisibleY = playerClient.lastViewedPositionY + playerClient.screenHeight * 0.5 + PlayerClientVars.VIEW_PADDING;
+   
+   for (let chunkX = playerClient.minVisibleChunkX; chunkX <= playerClient.maxVisibleChunkX; chunkX++) {
+      for (let chunkY = playerClient.minVisibleChunkY; chunkY <= playerClient.maxVisibleChunkY; chunkY++) {
+         const chunk = layer.getChunk(chunkX, chunkY);
+         for (const entity of chunk.entities) {
+            if (entityIsHiddenFromPlayer(entity, playerClient.tribe)) {
+               continue;
+            }
+
+            const transformComponent = TransformComponentArray.getComponent(entity);
+            if (transformComponent.boundingAreaMinX <= maxVisibleX && transformComponent.boundingAreaMaxX >= minVisibleX && transformComponent.boundingAreaMinY <= maxVisibleY && transformComponent.boundingAreaMaxY >= minVisibleY) {
+               // Add the roots of the entity
+               for (const rootHitbox of transformComponent.rootHitboxes) {
+                  const rootEntity = rootHitbox.rootEntity;
+                  const rootTransformComponent = TransformComponentArray.getComponent(rootEntity);
+                  // @Cleanup lolllllllll
+                  for (const rootRootHitbox of rootTransformComponent.rootHitboxes) {
+                     addHitboxHeirarchyToEntities(playerClient, visibleEntities, rootRootHitbox);
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   return visibleEntities;
+}
 
 const estimateVisibleChunkBounds = (spawnPosition: Point, screenWidth: number, screenHeight: number): VisibleChunkBounds => {
    const zoom = 1;
@@ -42,9 +113,9 @@ const estimateVisibleChunkBounds = (spawnPosition: Point, screenWidth: number, s
    const halfScreenHeight = screenHeight * 0.5;
    
    const minChunkX = Math.max(Math.floor((spawnPosition.x - halfScreenWidth / zoom) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((spawnPosition.x + halfScreenWidth / zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   const maxChunkX = Math.min(Math.floor((spawnPosition.x + halfScreenWidth / zoom) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
    const minChunkY = Math.max(Math.floor((spawnPosition.y - halfScreenHeight / zoom) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((spawnPosition.y + halfScreenHeight / zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   const maxChunkY = Math.min(Math.floor((spawnPosition.y + halfScreenHeight / zoom) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
 
    return [minChunkX, maxChunkX, minChunkY, maxChunkY];
 }
@@ -52,7 +123,7 @@ const estimateVisibleChunkBounds = (spawnPosition: Point, screenWidth: number, s
 // @Cleanup: Remove class, just have functions
 /** Communicates between the server and players */
 class GameServer {
-   private io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> | null = null;
+   private server: Server | null = null;
 
    private tickInterval: NodeJS.Timeout | undefined;
 
@@ -61,303 +132,365 @@ class GameServer {
    public isRunning = false;
    public isSimulating = true;
 
-   private nextTickTime = 0;
-   
-   /** Sets up the various stuff */
-   public setup() {
-      updateResourceDistributions();
-      spawnInitialEntities();
-      forceMaxGrowAllIceSpikes();
-   }
-
    public setTrackedGameObject(id: number): void {
       SERVER.trackedEntityID = id;
    }
 
    public async start(): Promise<void> {
-      if (!isTimed) {
-         // Seed the random number generator
-         if (OPTIONS.inBenchmarkMode) {
-            SRandom.seed(40404040404);
-         } else {
-            SRandom.seed(randInt(0, 9999999999));
-         }
+      // Seed the random number generator
+      // if (OPTIONS.inBenchmarkMode) {
+      //    SRandom.seed(40404040404);
+      // } else {
+      //    SRandom.seed(randInt(0, 9999999999));
+      // }
 
-         Board.setup();
-         SERVER.setup();
-      }
+      // Desert:
+      // SRandom.seed(2767843904);
+
+      // Tundra:
+      // SRandom.seed(2763196645);
+
+      // Cave:
+      // SRandom.seed(2950872542);
+
+      // br river
+      // SRandom.seed(9028422602);
+
+      // slime goop
+      SRandom.seed(2965725785);
+
+      const builtinRandomFunc = Math.random;
+      Math.random = () => SRandom.next();
+
+      let _SHITTYCUMMERY = performance.now();
+      console.log("start",_SHITTYCUMMERY)
+
+      // Setup
+      sortComponentArrays();
+      console.log("Generating terrain...")
+      generateLayers();
+      console.log("terrain",performance.now() - _SHITTYCUMMERY)
+      _SHITTYCUMMERY = performance.now();
+
+      console.log("resources",performance.now() - _SHITTYCUMMERY)
+      _SHITTYCUMMERY = performance.now();
       
-      if (SERVER.io === null) {
-         // Start the server
-         // SERVER.io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(Settings.SERVER_PORT);
-         SERVER.io = new Server(Settings.SERVER_PORT, { transports: ["websocket"], allowUpgrades: false });
-         SERVER.handlePlayerConnections();
-         console.log("Server started on port " + Settings.SERVER_PORT);
-      }
+      generateReeds(surfaceLayer, riverMainTiles);
+
+      console.log("Spawning entities...");
+      spawnInitialEntities();
+      console.log("initial entities",performance.now() - _SHITTYCUMMERY)
+      _SHITTYCUMMERY = performance.now();
+      forceMaxGrowAllIceSpikes();
+      console.log("ice spikes",performance.now() - _SHITTYCUMMERY)
+      _SHITTYCUMMERY = performance.now();
+      generateGrassStrands();
+      console.log("grass",performance.now() - _SHITTYCUMMERY)
+      _SHITTYCUMMERY = performance.now();
+      generateDecorations();
+      console.log("decorations",performance.now() - _SHITTYCUMMERY)
+      _SHITTYCUMMERY = performance.now();
+      // spawnGuardians();
+      // console.log("guardians",performance.now() - a)
+      // a = performance.now();
+
+      Math.random = builtinRandomFunc;
+
+      this.server = new Server({
+         port: Settings.SERVER_PORT
+      });
+
+      // Handle player connections
+      this.server.on("connection", (socket: WebSocket) => {
+         let playerClient: PlayerClient | undefined;
+
+         socket.on("close", () => {
+            // If the connection closes before the intial player data is sent then the player client will be undefined
+            if (typeof playerClient !== "undefined") {
+               handlePlayerDisconnect(playerClient);
+            }
+         });
+         
+         socket.on("message", (message: Buffer) => {
+            const reader = new PacketReader(message.buffer, message.byteOffset);
+            const packetType = reader.readNumber() as PacketType;
+
+            if (packetType === PacketType.initialPlayerData) {
+               const username = reader.readString();
+               // @Temporary
+               const tribeType = reader.readNumber() as TribeType;
+               const screenWidth = reader.readNumber();
+               const screenHeight = reader.readNumber();
+
+               const isSpectating = reader.readBool();
+
+               const spawnPosition = generatePlayerSpawnPosition(tribeType);
+               // @Incomplete? Unused?
+               const visibleChunkBounds = estimateVisibleChunkBounds(spawnPosition, screenWidth, screenHeight);
+   
+               const tribe = new Tribe(tribeType, false, spawnPosition.copy());
+               // @TEMPORARY @HACK
+               // const layer = isSpectating ? undergroundLayer : surfaceLayer;
+               const layer = surfaceLayer;
+   
+               // @Temporary @Incomplete
+               const isDev = true;
+
+               playerClient = new PlayerClient(socket, tribe, layer, screenWidth, screenHeight, spawnPosition, 0, username, isSpectating, isDev);
+   
+               if (!isSpectating) {
+                  const config = createPlayerConfig(spawnPosition, 0, tribe, playerClient);
+                  createEntity(config, layer, 0);
+               }
+
+               // @SQUEAM
+               setTimeout(() => {
+                  if (username === "Clementus") {
+                     const config = createCowConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, CowSpecies.brown);
+                     createEntity(config, layer, 0);
+                  }
+               }, 1000);
+
+               // if (!isSpectating) {
+               //    setTimeout(() => {
+               //       if (typeof playerClient !== "undefined") {
+               //          destroyEntity(playerClient.instance);
+               //       }
+               //    }, 20000);
+               // }
+               
+               addPlayerClient(playerClient, surfaceLayer, spawnPosition);
+
+               return;
+            }
+
+            if (typeof playerClient === "undefined") {
+               return;
+            }
+            
+            // @Cleanup: so weird to have this in server.ts
+            switch (packetType) {
+               case PacketType.playerData:                    processPlayerDataPacket(playerClient, reader); break;
+               case PacketType.activate:                      processActivatePacket(playerClient); break;
+               case PacketType.deactivate:                    processDeactivatePacket(playerClient); break;
+               case PacketType.syncRequest:                   processSyncRequestPacket(playerClient); break;
+               case PacketType.attack:                        processPlayerAttackPacket(playerClient, reader); break;
+               case PacketType.devGiveItem:                   processDevGiveItemPacket(playerClient, reader); break;
+               case PacketType.respawn:                       processRespawnPacket(playerClient); break;
+               case PacketType.startItemUse:                  processStartItemUsePacket(playerClient, reader); break;
+               case PacketType.useItem:                       processUseItemPacket(playerClient, reader); break;
+               case PacketType.stopItemUse:                   processStopItemUsePacket(playerClient); break;
+               case PacketType.dropItem:                      processItemDropPacket(playerClient, reader); break;
+               case PacketType.itemPickup:                    processItemPickupPacket(playerClient, reader); break;
+               case PacketType.itemTransfer:                  processItemTransferPacket(playerClient, reader); break;
+               case PacketType.itemRelease:                   processItemReleasePacket(playerClient, reader); break;
+               case PacketType.summonEntity:                  processEntitySummonPacket(playerClient, reader); break;
+               case PacketType.toggleSimulation:              processToggleSimulationPacket(playerClient, reader); break;
+               case PacketType.placeBlueprint:                processPlaceBlueprintPacket(playerClient, reader); break;
+               case PacketType.craftItem:                     processPlayerCraftingPacket(playerClient, reader); break;
+               case PacketType.ascend:                        processAscendPacket(playerClient); break;
+               case PacketType.devSetDebugEntity:             processSetDebugEntityPacket(reader); break;
+               case PacketType.devTPToEntity:                 processTPToEntityPacket(playerClient, reader); break;
+               case PacketType.devSpectateEntity:             processSpectateEntityPacket(playerClient, reader); break;
+               case PacketType.devSetAutogiveBaseResource:    processSetAutogiveBaseResourcesPacket(reader); break;
+               case PacketType.structureInteract:             processStructureInteractPacket(playerClient, reader); break;
+               case PacketType.unlockTech:                    processTechUnlockPacket(playerClient, reader); break;
+               case PacketType.selectTech:                    processSelectTechPacket(playerClient, reader); break;
+               case PacketType.studyTech:                     processTechStudyPacket(playerClient, reader); break;
+               case PacketType.animalStaffFollowCommand:      processAnimalStaffFollowCommandPacket(playerClient, reader); break;
+               case PacketType.mountCarrySlot:                processMountCarrySlotPacket(playerClient, reader); break;
+               case PacketType.dismountCarrySlot:             processDismountCarrySlotPacket(playerClient); break;
+               case PacketType.pickUpEntity:                  processPickUpEntityPacket(playerClient, reader); break;
+               case PacketType.modifyBuilding:                processModifyBuildingPacket(playerClient, reader); break;
+               case PacketType.setMoveTargetPosition:         processSetMoveTargetPositionPacket(playerClient, reader); break;
+               case PacketType.setCarryTarget:                processSetCarryTargetPacket(playerClient, reader); break;
+               case PacketType.selectRiderDepositLocation:    receiveSelectRiderDepositLocation(reader); break;
+               case PacketType.setAttackTarget:               processSetAttackTargetPacket(playerClient, reader); break;
+               case PacketType.completeTamingTier:            processCompleteTamingTierPacket(playerClient, reader); break;
+               case PacketType.forceCompleteTamingTier:       processForceCompleteTamingTierPacket(playerClient, reader); break;
+               case PacketType.acquireTamingSkill:            processAcquireTamingSkillPacket(playerClient, reader); break;
+               case PacketType.forceAcquireTamingSkill:       processForceAcquireTamingSkillPacket(playerClient, reader); break;
+               case PacketType.setSpectatingPosition:         processSetSpectatingPositionPacket(playerClient, reader); break;
+               case PacketType.devSetViewedSpawnDistribution: processDevSetViewedSpawnDistribution(playerClient, reader); break;
+               case PacketType.setSignMessage:                processSetSignMessagePacket(reader); break;
+               case PacketType.renameAnimal:                  processRenameAnimalPacket(reader); break;
+               case PacketType.chatMessage:                   receiveChatMessagePacket(reader, playerClient); break;
+               case PacketType.forceUnlockTech:               processForceUnlockTechPacket(playerClient, reader); break;
+               case PacketType.structureUninteract:           processStructureUninteractPacket(playerClient, reader); break;
+               case PacketType.recruitTribesman:              processRecruitTribesmanPacket(playerClient, reader); break;
+               case PacketType.respondToTitleOffer:           processRespondToTitleOfferPacket(playerClient, reader); break;
+               case PacketType.devGiveTitle:                  processDevGiveTitlePacket(playerClient, reader); break;
+               case PacketType.devRemoveTitle:                processDevRemoveTitlePacket(playerClient, reader); break;
+               case PacketType.devCreateTribe:                processDevCreateTribePacket(); break;
+               case PacketType.devChangeTribeType:            processDevChangeTribeTypePacket(reader); break;
+               case PacketType.terminalCommand:               processCommandPacket(playerClient, reader); break;
+               case PacketType.openEntityInventory:           processOpenEntityInventoryPacket(reader); break;
+               case PacketType.closeEntityInventory:          processCloseEntityInventoryPacket(reader); break;
+               default: {
+                  console.log("Unknown packet type: " + packetType);
+               }
+            }
+         });
+      });
 
       SERVER.isRunning = true;
       
-      if (isTimed) {
-         if (typeof global.gc === "undefined") {
-            throw new Error("GC function is undefined! Most likely need to pass in the '--expose-gc' flag.");
-         }
-
-         Math.random = () => SRandom.next();
-
-         let j = 0;
-         for (;;) {
-            // Collect garbage from previous run
-            for (let i = 0; i < 10; i++) {
-               global.gc();
-            }
-            
-            // Reset the board state
-            Board.reset();
-            resetYetiTerritoryTiles();
-            resetCensus();
-            resetComponents();
-            resetPerlinNoiseCache();
-
-            // Seed the random number generator
-            if (OPTIONS.inBenchmarkMode) {
-               SRandom.seed(40404040404);
-            } else {
-               SRandom.seed(randInt(0, 9999999999));
-            }
-            
-            Board.setup();
-            SERVER.setup();
-
-            // Warm up the JIT
-            for (let i = 0; i < 50; i++) {
-               SERVER.tick();
-            }
-            
-            // @Bug: When at 5000, the average tps starts at around 1.8, while at 1000 it starts at .6
-            const numTicks = 1000;
-            
-            const startTime = performance.now();
-
-            const a = [];
-            let l = startTime;
-            for (let i = 0; i < numTicks; i++) {
-               SERVER.tick();
-               const n = performance.now();
-               a.push(n - l);
-               l = n;
-            }
-
-            const timeElapsed = performance.now() - startTime;
-            const averageTickTimeMS = timeElapsed / numTicks;
-            averageTickTimes.push(averageTickTimeMS);
-            console.log("(#" + (j + 1) + ") Average tick MS: " + averageTickTimeMS);
-            console.log(Math.min(...a), Math.max(...a));
-            j++;
-         }
-      }
-
       if (typeof SERVER.tickInterval === "undefined") {
-         while (SERVER.isRunning) {
-            await SERVER.tick();
-         }
+         console.log("Server started on port " + Settings.SERVER_PORT);
+         // @SQUEAM to test low TPS scenario
+         setInterval(SERVER.tick, 1000 / Settings.TICK_RATE);
+         // setInterval(SERVER.tick, 1000 / Settings.TICK_RATE * 2);
       }
    }
 
    private async tick(): Promise<void> {
       // These are done before each tick to account for player packets causing entities to be removed/added between ticks.
-      Board.pushJoinBuffer();
-      Board.destroyFlaggedEntities();
+      pushEntityJoinBuffer(false);
+      preDestroyFlaggedEntities();
+      destroyFlaggedEntities();
 
-      if (this.isSimulating) {
-         Board.updateTribes();
+      if (SERVER.isSimulating) {
+         updateTribes();
          
          updateGrassBlockers();
-         
-         Board.updateEntities();
-         updateDynamicPathfindingNodes();
-         Board.resolveEntityCollisions();
-         
-         runSpawnAttempt();
-         
-         Board.pushJoinBuffer();
-         Board.destroyFlaggedEntities();
-         // @Bug @Incomplete: Called twice!!!!
-         Board.updateTribes();
-      }
+         runCollapses();
 
-      if (!isTimed) {
-         await SERVER.sendGameDataPackets();
+         updateWind();
+         
+         tickEntities();
+         applyTethers();
+         updateDynamicPathfindingNodes();
+
+         for (const layer of layers) {
+            resolveEntityCollisions(layer);
+         }
+         
+         // if (getGameTicks() % Settings.TICK_RATE === 0) {
+            // @Incomplete
+            // updateResourceDistributions();
+            runSpawnAttempt();
+         // }
+
+         // @Bug @Incomplete: Called twice!!!!
+         updateTribes();
+         
+         pushEntityJoinBuffer(true);
+      } else {
+         // If not simulating, regularly broadcast so to all players
+         if (tickIntervalHasPassed(0.5)) {
+            broadcastSimulationStatus(SERVER.isSimulating);
+         }
       }
+      preDestroyFlaggedEntities();
+
+      // @HACKKK @HACK only works for this specific network send rate!!
+      // seems to reduce jitters, cuz there were some moments when packets were sent at server ticks with a diff 3 instead of 2.
+      if (getGameTicks() % 2 === 0) {
+         SERVER.sendGameDataPackets();
+      }
+      // const deltaTime = tickTime - lastTickTime;
+      // packetSendTimer -= deltaTime;
+      // if (packetSendTimer <= 0) {
+      //    SERVER.sendGameDataPackets();
+      //    while (packetSendTimer <= 0) {
+      //       packetSendTimer += 1000 / Settings.SERVER_PACKET_SEND_RATE;
+      //    }
+      // }
+
+      destroyFlaggedEntities();
 
       // Update server ticks and time
       // This is done at the end of the tick so that information sent by players is associated with the next tick to run
-      Board.ticks++;
-      Board.time += Settings.TIME_PASS_RATE / Settings.TPS / 3600;
-      if (Board.time >= 24) {
-         Board.time -= 24;
-      }
-
-      if (Board.ticks % Settings.TPS === 0) {
-         updateResourceDistributions();
-      }
-   }
-
-   private handlePlayerConnections(): void {
-      if (SERVER.io === null) return;
-
-      SERVER.io.on("connection", (socket: ISocket) => {
-         
-         // @Temporary
-         
-         // setTimeout(() => {
-         //    createTribeWorker(new Point(spawnPosition.x + 500, spawnPosition.y + 150), -1, 0);
-         // }, 5000);
-         
-         // setTimeout(() => {
-         //    if(1+1===2)return;
-         //    const p = this.getPlayerFromUsername(username)!;
-         //    const tc = TribeComponentArray.getComponent(p.id);
-         //    const tribe = tc.tribe;
-         //    const TRIB = tribe;
-            
-         //    // const TRIB = new Tribe(TribeType.goblins, true);
-
-         //    createTribeTotem(new Point(spawnPosition.x + 500, spawnPosition.y), 0, TRIB);
-
-         //    const h1 = createWorkerHut(new Point(spawnPosition.x + 380, spawnPosition.y + 50), Math.PI * 1.27, TRIB);
-         //    const h2 = createWorkerHut(new Point(spawnPosition.x + 547, spawnPosition.y - 100), Math.PI * 2.87, TRIB);
-         //    const h3 = createWorkerHut(new Point(spawnPosition.x + 600, spawnPosition.y + 65), 0.7, TRIB);
-         //    const h4 = createWorkerHut(new Point(spawnPosition.x + 700, spawnPosition.y - 65), -0.7, TRIB);
-         //    const h5 = createWorkerHut(new Point(spawnPosition.x + 320, spawnPosition.y + 100), -Math.PI*0.4, TRIB);
-
-         //    const w1 = createTribeWorker(h1.position.copy(), 0, TRIB.id, h1.id);
-         //    const w2 = createTribeWorker(h2.position.copy(), 0, TRIB.id, h2.id);
-         //    const w3 = createTribeWorker(h3.position.copy(), 0, TRIB.id, h3.id);
-         //    const w4 = createTribeWorker(h4.position.copy(), 0, TRIB.id, h4.id);
-         //    const w5 = createTribeWorker(h5.position.copy(), 0, TRIB.id, h5.id);
-
-         //    const ps = new Array<Entity>();
-
-         //    for (let y = -2; y <= 1; y++) {
-         //       const yo = randFloat(-3, 3);
-         //       for (let x = 0; x <= 10; x++) {
-         //          const p = createPlanterBox(new Point(spawnPosition.x - 0 - 80 * x, spawnPosition.y + 150 * y + yo), 0, tribe);
-         //          ps.push(p);
-         //       }
-         //    }
-
-         //    // top walls
-         //    for (let x = 0; x <= 14; x++) {
-         //       createWall(new Point(spawnPosition.x - 64 * x, spawnPosition.y + 220), 0, tribe);
-         //    }
-
-         //    // bottom walls
-         //    for (let x = 0; x <= 14; x++) {
-         //       createWall(new Point(spawnPosition.x - 64 * x, spawnPosition.y - 368), 0, tribe);
-         //    }
-
-         //    // left walls
-         //    for (let y = -4; y <= 3; y++) {
-         //       createWall(new Point(spawnPosition.x - 64 * 14, spawnPosition.y + y * 64 - 40), 0, tribe);
-         //    }
-
-         //    // const p1 = createPlanterBox(new Point(spawnPosition.x - 50, spawnPosition.y + 80), 0, tribe);
-         //    // const p2 = createPlanterBox(new Point(spawnPosition.x - 50, spawnPosition.y - 80), 0.1, tribe);
-         //    // const p3 = createPlanterBox(new Point(spawnPosition.x - 210, spawnPosition.y + 80), 0, tribe);
-         //    // const p4 = createPlanterBox(new Point(spawnPosition.x - 210, spawnPosition.y - 80), 0.1, tribe);
-
-         //    setTimeout(() => {
-         //       // placePlantInPlanterBox(p1, PlanterBoxPlant.berryBush);
-         //       // placePlantInPlanterBox(p2, PlanterBoxPlant.berryBush);
-         //       // placePlantInPlanterBox(p3, PlanterBoxPlant.berryBush);
-         //       // placePlantInPlanterBox(p4, PlanterBoxPlant.berryBush);
-         //       for (let i = 0; i < ps.length; i++) {
-         //          const p = ps[i];
-         //          placePlantInPlanterBox(p, PlanterBoxPlant.tree);
-         //       }
-         //    }, 100);
-
-         //    // createWorkbench(new Point(spawnPosition.x + 520, spawnPosition.y + 230), 0.8, TRIB);
-         //    // createTree(new Point(spawnPosition.x, spawnPosition.y + 200), 0, tribe);
-         //    // createWall(new Point(spawnPosition.x + 64, spawnPosition.y + 200), 0, TRIB);
-         //    createBarrel(new Point(spawnPosition.x + 170, spawnPosition.y - 150), Math.PI * 0.38, TRIB);
-         //    createBarrel(new Point(spawnPosition.x + 230, spawnPosition.y - 210), Math.PI * 0.8, TRIB);
-         //    // createDoor(new Point(spawnPosition.x, spawnPosition.y + 200), 0, TRIB, BuildingMaterial.wood);
-         // }, 4000);
-
-
-         socket.on("initial_player_data", (username: string, tribeType: TribeType, screenWidth: number, screenHeight: number) => {
-            const spawnPosition = generatePlayerSpawnPosition(tribeType);
-            const visibleChunkBounds = estimateVisibleChunkBounds(spawnPosition, screenWidth, screenHeight);
-
-            // @Temporary
-            // setTimeout(() => {
-            //    const p = getPlayerFromUsername(username)!;
-            //    const tc = TribeComponentArray.getComponent(p.id);
-            //    const tribe = tc.tribe;
-
-            //    createTribeWarrior(new Point(spawnPosition.x - 800, spawnPosition.y - 100), Math.PI * 0.45, tribe, 0);
-            //    createTribeWarrior(new Point(spawnPosition.x - 900, spawnPosition.y - 170), Math.PI * 0.5, tribe, 0);
-            //    createTribeWarrior(new Point(spawnPosition.x - 950, spawnPosition.y - 80), Math.PI * 0.5, tribe, 0);
-            //    createTribeWarrior(new Point(spawnPosition.x - 1050, spawnPosition.y + 105), Math.PI * 0.45, tribe, 0);
-            // }, 2000);
-
-            const tribe = new Tribe(tribeType, false);
-            const player = createPlayer(spawnPosition, tribe, username);
-
-            const playerClient = new PlayerClient(socket, tribe, visibleChunkBounds, player.id, username);
-            addPlayerClient(playerClient, player);
-         });
-      });
+      tickGameTime();
    }
 
    // @Cleanup: maybe move this function to player-clients?
    /** Send data about the server to all players */
-   public async sendGameDataPackets(): Promise<void> {
-      if (SERVER.io === null) return;
+   public sendGameDataPackets(): void {
+      if (this.server === null) return;
       
-      return new Promise(async resolve => {
-         const currentTime = performance.now();
-         while (this.nextTickTime < currentTime) {
-            this.nextTickTime += 1000 * Settings.I_TPS;
+      // @Cleanup: should this all be in this file?
+      
+      const playerClients = getPlayerClients();
+      for (let i = 0; i < playerClients.length; i++) {
+         const playerClient = playerClients[i];
+         if (!playerClient.isActive) {
+            continue;
+         }
+
+         const viewedEntity = playerClient.cameraSubject;
+
+         // Update player client info
+         if (entityExists(viewedEntity)) {
+            const transformComponent = TransformComponentArray.getComponent(viewedEntity);
+            const hitbox = transformComponent.hitboxes[0];
+            playerClient.updatePosition(hitbox.box.position.x, hitbox.box.position.y);
+
+            playerClient.lastLayer = getEntityLayer(viewedEntity);
+         }
+      
+         const visibleEntities = getPlayerVisibleEntities(playerClient);
+         
+         const entitiesToSend = new Set<Entity>();
+
+         // Always send the viewed entity (if alive)
+         if (entityExists(viewedEntity)) {
+            entitiesToSend.add(viewedEntity);
+         }
+         // Also always add the player instance. This is so that the player instance can fly far away from the spectated entity and not make the client die
+         if (entityExists(playerClient.instance)) {
+            entitiesToSend.add(playerClient.instance);
+         }
+
+         // Add newly visible entities
+         for (const entity of visibleEntities) {
+            if (!playerClient.visibleEntities.has(entity)) {
+               entitiesToSend.add(entity);
+            }
+         }
+
+         // Add removed entities - any entity that was previously visible but no longer.
+         const removedEntities = new Array<Entity>();
+         for (const entity of playerClient.visibleEntities) {
+            if (!visibleEntities.has(entity)) {
+               removedEntities.push(entity);
+            }
+         }
+
+         // Send dirty entities
+         for (const entity of playerClient.visibleDirtiedEntities) {
+            // Sometimes entities are simultaneously removed from the board and on the visible dirtied list, this catches that
+            if (entityExists(entity)) {
+               entitiesToSend.add(entity);
+            }
          }
          
-         // @Speed: use while loop instead maybe?
-         await (() => {
-            return new Promise<void>(resolve => {
-               // console.log(currentTime, this.nextTickTime, OPTIONS.warp ? 2 : this.nextTickTime - currentTime);
-               setTimeout(() => {
-                  resolve();
-               }, OPTIONS.warp ? 2 : this.nextTickTime - currentTime);
-            })
-         })();
+         // Send the game data to the player
+         playerClient.visibleEntities = visibleEntities; // Done just before creating the game data packet, as adding the lights data requires .visibleEntities to be up-to-date.
+         const gameDataPacket = createGameDataPacket(playerClient, entitiesToSend, removedEntities);
+         playerClient.socket.send(gameDataPacket);
 
-         // setTimeout(() => {
-            const playerClients = getPlayerClients();
-            for (let i = 0; i < playerClients.length; i++) {
-               const playerClient = playerClients[i];
-               if (!playerClient.clientIsActive) {
-                  continue;
-               }
+         // @Cleanup: should these be here?
+         playerClient.visibleHits = [];
+         playerClient.playerKnockbacks = [];
+         playerClient.heals = [];
+         playerClient.orbCompletes = [];
+         playerClient.hasPickedUpItem = false;
+         playerClient.entityTickEvents = [];
+         playerClient.visibleDirtiedEntities = [];
 
-               // Send the game data to the player
-               const gameDataPacket = createGameDataPacket(playerClient);
-               playerClient.socket.emit("game_data_packet", gameDataPacket);
-   
-               // @Cleanup: should these be here?
-               playerClient.visibleHits = [];
-               playerClient.playerKnockbacks = [];
-               playerClient.heals = [];
-               playerClient.orbCompletes = [];
-               playerClient.pickedUpItem = false;
-               playerClient.entityTickEvents = [];
-            }
+         if (playerClient.isDev) {
+            const packet = createDevGameDataPacket(playerClient);
+            playerClient.socket.send(packet.buffer);
+         }
+      }
 
-            // console.log(performance.now());
+      // @Hack?
+      for (const layer of layers) {
+         layer.wallSubtileUpdates = [];
+      }
 
-            resolve();
-         // }, this.nextTickTime - currentTime);
-      });
+      resetDirtyEntities();
    }
 }
 

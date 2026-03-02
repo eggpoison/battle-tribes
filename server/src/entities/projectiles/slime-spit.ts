@@ -1,76 +1,29 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { SlimeSpitComponent, SlimeSpitComponentArray } from "../../components/SlimeSpitComponent";
-import { createSpitPoison } from "./spit-poison";
-import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
-import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
-import { EntityCreationInfo } from "../../components";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
+import { EntityType } from "battletribes-shared/entities";
+import { Point } from "battletribes-shared/utils";
+import { SlimeSpitComponent } from "../../components/SlimeSpitComponent";
+import { EntityConfig } from "../../components";
+import { ServerComponentType } from "battletribes-shared/components";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
+import { Hitbox } from "../../hitboxes";
 
-type ComponentTypes = [ServerComponentType.physics, ServerComponentType.slimeSpit];
+export function createSlimeSpitConfig(position: Point, rotation: number, size: number): EntityConfig {
+   const transformComponent = new TransformComponent();
 
-const BREAK_VELOCITY = 100;
-
-const SIZES = [20, 30];
-
-export function createSlimeSpit(position: Point, rotation: number, size: number): EntityCreationInfo<ComponentTypes> {
-   const spit = new Entity(position, rotation, EntityType.slimeSpit, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxSize = SIZES[size];
-   const hitbox = new RectangularHitbox(0.2, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, hitboxSize, hitboxSize, 0);
-   spit.addHitbox(hitbox);
-
-   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
-   PhysicsComponentArray.addComponent(spit.id, physicsComponent);
-
-   const slimeSpitComponent = new SlimeSpitComponent(size);
-   SlimeSpitComponentArray.addComponent(spit.id, slimeSpitComponent);
-
-   return {
-      entity: spit,
-      components: {
-         [ServerComponentType.physics]: physicsComponent,
-         [ServerComponentType.slimeSpit]: slimeSpitComponent
-      }
-   };
-}
-
-export function tickSlimeSpit(spit: Entity): void {
-   const physicsComponent = PhysicsComponentArray.getComponent(spit.id);
-   if (physicsComponent.velocity.lengthSquared() <= BREAK_VELOCITY * BREAK_VELOCITY) {
-      spit.destroy();
-   }
-}
-
-export function onSlimeSpitCollision(spit: Entity, collidingEntity: Entity, collisionPoint: Point): void {
-   if (collidingEntity.type === EntityType.slime || collidingEntity.type === EntityType.slimewisp || !HealthComponentArray.hasComponent(collidingEntity.id)) {
-      return;
-   }
-
-   const spitComponent = SlimeSpitComponentArray.getComponent(spit.id);
-   const damage = spitComponent.size === 0 ? 2 : 3;
-   const hitDirection = spit.position.calculateAngleBetween(collidingEntity.position);
-
-   damageEntity(collidingEntity, spit, damage, PlayerCauseOfDeath.poison, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingEntity, 150, hitDirection);
+   const hitboxSize = size === 0 ? 20 : 30;
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, hitboxSize, hitboxSize), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   addHitboxToTransformComponent(transformComponent, hitbox);
    
-   if (StatusEffectComponentArray.hasComponent(collidingEntity.id)) {
-      applyStatusEffect(collidingEntity.id, StatusEffect.poisoned, 2 * Settings.TPS);
-   }
-
-   spit.destroy();
-}
-
-export function onSlimeSpitDeath(spit: Entity): void {
-   const spitComponent = SlimeSpitComponentArray.getComponent(spit.id);
-   if (spitComponent.size === 1) {
-      createSpitPoison(spit.position.copy(), 2 * Math.PI * Math.random());
-   }
+   const slimeSpitComponent = new SlimeSpitComponent(size);
+   
+   return {
+      entityType: EntityType.slimeSpit,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.slimeSpit]: slimeSpitComponent
+      },
+      lights: []
+   };
 }

@@ -3,6 +3,33 @@ export enum CommandPermissions {
    dev = 1
 };
 
+export enum CommandPartType {
+   string,
+   number,
+   commandName
+}
+
+interface BaseCommandPart {
+   readonly type: CommandPartType;
+}
+
+interface CommandPartString extends BaseCommandPart {
+   readonly type: CommandPartType.string;
+   readonly val: string;
+}
+
+interface CommandPartNumber extends BaseCommandPart {
+   readonly type: CommandPartType.number;
+   readonly val: number;
+}
+
+interface CommandPartCommandName extends BaseCommandPart {
+   readonly type: CommandPartType.commandName;
+   readonly val: string;
+}
+
+export type CommandPart = CommandPartString | CommandPartNumber | CommandPartCommandName;
+
 interface CommandParameterSpecifications {
    readonly id: number;
    readonly prompt: string | null;
@@ -18,6 +45,17 @@ export interface CommandSpecifications {
 interface CommandConfiguration {
    readonly parameterConfigurations: ReadonlyArray<number>;
    readonly permissions: CommandPermissions;
+}
+
+interface CommandValidityQuery {
+   readonly isValid: boolean;
+   readonly errorMessage: string;
+}
+
+interface CommandParseQuery {
+   readonly isValid: boolean;
+   readonly errorMessage: string;
+   readonly parts: ReadonlyArray<CommandPart>;
 }
 
 type Commands = ReadonlyArray<CommandSpecifications>;
@@ -333,6 +371,22 @@ export const COMMANDS: Commands = [
             permissions: CommandPermissions.dev
          }
       ]
+   },
+   {
+      name: "itemname",
+      parameters: [
+         {
+            id: 1,
+            prompt: null,
+            dataType: "string"
+         }
+      ],
+      configurations: [
+         {
+            parameterConfigurations: [1],
+            permissions: CommandPermissions.dev
+         }
+      ]
    }
 ];
 
@@ -345,18 +399,32 @@ export function userHasCommandPermissions(requiredPermissions: CommandPermission
    }
 }
 
-export function commandComponentMatchesParameter(commandComponent: string | number, parameter: CommandParameterSpecifications): boolean {
-   // Make sure the data type matches
+const partMatchesParameter = (part: CommandPart, parameter: CommandParameterSpecifications): CommandValidityQuery => {
    switch (parameter.dataType) {
-      case "number":
-         if (typeof commandComponent !== "number") return false;
+      case "number": {
+         if (part.type !== CommandPartType.number) {
+            return {
+               isValid: false,
+               errorMessage: "Expected a number, but got a string!"
+            };
+         }
          break;
-      case "string":
-         if (typeof commandComponent !== "string") return false;
+      }
+      case "string": {
+         if (part.type !== CommandPartType.string) {
+            return {
+               isValid: false,
+               errorMessage: "Expected a string, but got a number!"
+            };
+         }
          break;
+      }
    }
 
-   return true;
+   return {
+      isValid: true,
+      errorMessage: ""
+   };
 }
 
 export function findParameterSpecifications(commandSpecifications: CommandSpecifications, parameterID: number): CommandParameterSpecifications | null {
@@ -373,58 +441,144 @@ export function findParameterSpecifications(commandSpecifications: CommandSpecif
    return parameter;
 }
 
-/**
- * Parses a console command into its components.
- * @param command The command to parse.
- * @returns The command's components.
- */
-export function parseCommand(command: string): Array<string | number> {
-   // Split the command
-   let commandComponents: Array<string | number> = command.split(" ");
+/** Parses a console command into its parts. */
+export function parseCommand(command: string): CommandParseQuery {
+   const parts = new Array<CommandPart>();
+   let isInString = false;
+   let currentPartChars = "";
+   
+   for (let i = 0; i < command.length; i++) {
+      const char = command[i];
 
-   // Number-ise any numbers
-   commandComponents = commandComponents.map(component => !isNaN(Number(component)) ? Number(component) : component);
-
-   // Remove any whitespace
-   for (let i = commandComponents.length - 1; i >= 0; i--) {
-      if (commandComponents[i] === "") {
-         commandComponents.splice(i, 1);
+      if (isInString) {
+         if (char === '"') {
+            // Complete the part
+            isInString = false;
+            parts.push({
+               type: CommandPartType.string,
+               val: currentPartChars
+            });
+            currentPartChars = "";
+         } else {
+            currentPartChars += char;
+         }
+      } else {
+         if (char === " ") {
+            // Complete the part
+            const numberised = Number(currentPartChars);
+            if (!isNaN(numberised)) {
+               // Number!
+               parts.push({
+                  type: CommandPartType.number,
+                  val: numberised
+               });
+            } else if (parts.length === 0) {
+               // Command name
+               parts.push({
+                  type: CommandPartType.commandName,
+                  val: currentPartChars
+               });
+            } else {
+               return {
+                  isValid: false,
+                  errorMessage: "Strings must begin and end with double quotation marks!",
+                  parts: []
+               };
+            }
+            currentPartChars = "";
+         } else if (char === '"') {
+            // Begin a new string
+            isInString = true;
+         } else {
+            currentPartChars += char;
+         }
       }
    }
-   return commandComponents;
+   
+   if (isInString) {
+      return {
+         isValid: false,
+         errorMessage: "Unclosed string!",
+         parts: []
+      };
+   }
+
+   if (currentPartChars !== "") {
+      // Complete the part
+      // @Copynpaste
+      const numberised = Number(currentPartChars);
+      if (!isNaN(numberised)) {
+         // Number!
+         parts.push({
+            type: CommandPartType.number,
+            val: numberised
+         });
+      } else if (parts.length === 0) {
+         // Command name
+         parts.push({
+            type: CommandPartType.commandName,
+            val: currentPartChars
+         });
+      } else {
+         return {
+            isValid: false,
+            errorMessage: "Strings must begin and end with double quotation marks!",
+            parts: []
+         };
+      }
+   }
+
+   return {
+      isValid: true,
+      errorMessage: "",
+      parts: parts
+   };
 }
 
-/**
- * Checks whether the given command is valid or not.
- * @param commandComponents 
- * @param permissions 
- * @returns 
- */
-export function commandIsValid(command: string, permissions: CommandPermissions): boolean {
-   const commandComponents = parseCommand(command);
+export function commandIsValid(command: string, permissions: CommandPermissions): CommandValidityQuery {
+   const parseQuery = parseCommand(command);
+   if (!parseQuery.isValid) {
+      return {
+         isValid: false,
+         errorMessage: parseQuery.errorMessage
+      };
+   }
+   
+   const parts = parseQuery.parts;
    
    // Find the command
+   const commandName = parts[0].val;
    let commandSpecifications: CommandSpecifications | null = null;
    for (const currentCommand of COMMANDS) {
-      if (currentCommand.name === commandComponents[0]) {
+      if (currentCommand.name === commandName) {
          commandSpecifications = currentCommand;
          break;
       }
    }
 
    // If there is no matching command, it isn't valid
-   if (commandSpecifications === null) return false;
+   if (commandSpecifications === null) {
+      return {
+         isValid: false,
+         errorMessage: `Unknown command '${commandName}'!`
+      };
+   }
+      
+   let result: CommandValidityQuery = {
+      isValid: true,
+      errorMessage: ""
+   };
+
+   // @BUG the logic for this is so bad and limited
 
    // See if there is a configuration of parameters which matches the command
    for (const configuration of commandSpecifications.configurations) {
       // Skip if the user doesn't have the required permissions
       if (!userHasCommandPermissions(configuration.permissions, permissions)) continue;
 
-      if (configuration.parameterConfigurations.length !== commandComponents.length - 1) {
+      if (configuration.parameterConfigurations.length !== parts.length - 1) {
          continue;
       }
-      
-      let isValid = true;
       
       // Check each parameter in the command
       for (let i = 0; i < configuration.parameterConfigurations.length; i++) {
@@ -433,14 +587,17 @@ export function commandIsValid(command: string, permissions: CommandPermissions)
          const parameterSpecifications = findParameterSpecifications(commandSpecifications, parameterID);
          if (parameterSpecifications === null) throw new Error("Couldn't find the corresponding parameter!");
 
-         if (!commandComponentMatchesParameter(commandComponents[i + 1], parameterSpecifications)) {
-            isValid = false;
+         const currentResult = partMatchesParameter(parts[i + 1], parameterSpecifications);
+         if (!currentResult.isValid) {
+            result = currentResult;
             break;
          }
       }
 
-      if (isValid) return true;
+      if (result.isValid) {
+         return result;
+      }
    }
    
-   return false;
+   return result;
 }

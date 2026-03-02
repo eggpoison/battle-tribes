@@ -1,5 +1,7 @@
-import { ScarInfo, ServerComponentType, TribeWarriorComponentData } from "webgl-test-shared/dist/components";
+import { ScarInfo, ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
+import { Entity } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
 
 export class TribeWarriorComponent {
    public readonly scars: ReadonlyArray<ScarInfo>;
@@ -9,15 +11,23 @@ export class TribeWarriorComponent {
    }
 }
 
-export const TribeWarriorComponentArray = new ComponentArray<ServerComponentType.tribeWarrior, TribeWarriorComponent>(true, {
-   serialise: serialise
-});
+export const TribeWarriorComponentArray = new ComponentArray<TribeWarriorComponent>(ServerComponentType.tribeWarrior, true, getDataLength, addDataToPacket);
 
-function serialise(entityID: number): TribeWarriorComponentData {
-   const tribeWarriorComponent = TribeWarriorComponentArray.getComponent(entityID);
+function getDataLength(entity: Entity): number {
+   const tribeWarriorComponent = TribeWarriorComponentArray.getComponent(entity);
+   return Float32Array.BYTES_PER_ELEMENT + 4 * Float32Array.BYTES_PER_ELEMENT * tribeWarriorComponent.scars.length;
+}
 
-   return {
-      componentType: ServerComponentType.tribeWarrior,
-      scars: tribeWarriorComponent.scars
-   };
+function addDataToPacket(packet: Packet, entity: Entity): void {
+   const tribeWarriorComponent = TribeWarriorComponentArray.getComponent(entity);
+
+   packet.writeNumber(tribeWarriorComponent.scars.length);
+   for (let i = 0; i < tribeWarriorComponent.scars.length; i++) {
+      const scar = tribeWarriorComponent.scars[i];
+
+      packet.writeNumber(scar.offsetX);
+      packet.writeNumber(scar.offsetY);
+      packet.writeNumber(scar.rotation);
+      packet.writeNumber(scar.type);
+   }
 }

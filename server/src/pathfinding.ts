@@ -1,66 +1,63 @@
-import { PathfindingNodeIndex, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
-import { distBetweenPointAndRectangle, angle, calculateDistanceSquared, Point } from "webgl-test-shared/dist/utils";
-import Entity from "./Entity";
-import Board from "./Board";
+import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
+import { Entity, EntityType } from "battletribes-shared/entities";
+import { PathfindingSettings, Settings } from "battletribes-shared/settings";
+import { distance, distBetweenPointAndRectangularBox, getTileX, getTileY, Point, TileIndex } from "battletribes-shared/utils";
 import PathfindingHeap from "./PathfindingHeap";
-import OPTIONS from "./options";
-import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { TribeComponentArray } from "./components/TribeComponent";
-import { CircularHitbox, HitboxCollisionType, RectangularHitbox, Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
+import { ProjectileComponentArray } from "./components/ProjectileComponent";
+import { CircularBox } from "battletribes-shared/boxes/CircularBox";
+import { boxIsCircular, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
+import { getEntityLayer, getEntityType } from "./world";
+import PlayerClient, { PlayerClientVars } from "./server/PlayerClient";
+import { CollisionGroup, getEntityCollisionGroup } from "../../shared/src/collision-groups";
+import Layer from "./Layer";
+import { getPathfindingNode, PathfindingServerVars } from "./pathfinding-utils";
+import { TileType } from "../../shared/src/tiles";
+import { getTilesOfType } from "./census";
+import { surfaceLayer } from "./layers";
+import { TribeMemberComponentArray } from "./components/TribeMemberComponent";
+import { Hitbox } from "./hitboxes";
+import { getDistanceFromPointToEntity } from "./ai-shared";
 
 const enum Vars {
-   NODE_ACCESSIBILITY_RESOLUTION = 3,
-   WALL_TILE_OCCUPIED_ID = 3427823
+   NODE_ACCESSIBILITY_RESOLUTION = 3
+}
+
+export interface Path {
+   readonly layer: Layer;
+   readonly goalX: number;
+   readonly goalY: number;
+   readonly rawPath: ReadonlyArray<PathfindingNodeIndex>;
+   // @Cleanup: rename to something like 'active path'
+   readonly smoothPath: Array<PathfindingNodeIndex>;
+   readonly visitedNodes: ReadonlyArray<PathfindingNodeIndex>;
+   readonly isFailed: boolean;
+}
+
+export const enum PathfindFailureDefault {
+   /** Default */
+   none,
+   /** Returns the path to the node which was closest to the goal */
+   returnClosest
+}
+
+export interface PathfindOptions {
+   readonly goalRadius: number;
+   readonly failureDefault: PathfindFailureDefault;
+   /** Determines the node budget used when finding a path. If not present, an appropriate node budget will be automatically determined. */
+   readonly nodeBudget?: number;
 }
 
 const activeGroupIDs = new Array<number>();
 
-let dirtyPathfindingEntities = new Array<Entity>();
-
-export function addDirtyPathfindingEntity(entity: Entity): void {
-   dirtyPathfindingEntities.push(entity);
+const markPathfindingNodeOccupance = (layer: Layer, node: PathfindingNodeIndex, groupID: number): void => {
+   layer.nodeGroupIDs[node].push(groupID);
 }
 
-export function removeDirtyPathfindingEntity(entity: Entity): void {
-   for (let i = 0 ; i < dirtyPathfindingEntities.length; i++) {
-      const currentEntity = dirtyPathfindingEntities[i];
-      if (currentEntity === entity) {
-         dirtyPathfindingEntities.splice(i, 1);
-         break;
-      }
-   }
-}
-
-export function getPathfindingGroupID(): number {
-   let lastNum = 0;
-   for (let i = 0; i < activeGroupIDs.length; i++) {
-      const groupID = activeGroupIDs[i];
-      // If a group was skipped, return that group
-      if (groupID > lastNum + 1) {
-         return lastNum + 1;
-      }
-      lastNum = groupID;
-   }
-
-   // None were skipped
-   return activeGroupIDs.length + 1;
-}
-
-const nodeGroupIDs = new Array<Array<number>>();
-
-for (let i = 0; i < PathfindingSettings.NODES_IN_WORLD_WIDTH * PathfindingSettings.NODES_IN_WORLD_WIDTH; i++) {
-   const groupIDs = new Array<number>();
-   nodeGroupIDs.push(groupIDs);
-}
-
-const markPathfindingNodeOccupance = (node: PathfindingNodeIndex, groupID: number): void => {
-   nodeGroupIDs[node].push(groupID);
-}
-
-const markPathfindingNodeClearance = (node: PathfindingNodeIndex, groupID: number): void => {
-   const groupIDs = nodeGroupIDs[node];
+const markPathfindingNodeClearance = (layer: Layer, node: PathfindingNodeIndex, groupID: number): void => {
+   const groupIDs = layer.nodeGroupIDs[node];
    for (let i = 0; i < groupIDs.length; i++) {
       const currentGroupID = groupIDs[i];
       if (currentGroupID === groupID) {
@@ -71,35 +68,6 @@ const markPathfindingNodeClearance = (node: PathfindingNodeIndex, groupID: numbe
 }
 
 const footprintNodeOffsets = new Array<Array<number>>();
-
-const getNode = (nodeX: number, nodeY: number): number => {
-   return (nodeY + 1) * PathfindingSettings.NODES_IN_WORLD_WIDTH + nodeX + 1;
-}
-
-// 
-// Mark borders as inaccessible
-// 
-
-// Bottom border
-for (let nodeX = 0; nodeX < PathfindingSettings.NODES_IN_WORLD_WIDTH - 2; nodeX++) {
-   const node = getNode(nodeX, -1);
-   markPathfindingNodeOccupance(node, Vars.WALL_TILE_OCCUPIED_ID);
-}
-// Top border
-for (let nodeX = 0; nodeX < PathfindingSettings.NODES_IN_WORLD_WIDTH - 2; nodeX++) {
-   const node = getNode(nodeX, PathfindingSettings.NODES_IN_WORLD_WIDTH - 2);
-   markPathfindingNodeOccupance(node, Vars.WALL_TILE_OCCUPIED_ID);
-}
-// Left border
-for (let nodeY = -1; nodeY < PathfindingSettings.NODES_IN_WORLD_WIDTH - 1; nodeY++) {
-   const node = getNode(-1, nodeY);
-   markPathfindingNodeOccupance(node, Vars.WALL_TILE_OCCUPIED_ID);
-}
-// Right border
-for (let nodeY = -1; nodeY < PathfindingSettings.NODES_IN_WORLD_WIDTH - 1; nodeY++) {
-   const node = getNode(PathfindingSettings.NODES_IN_WORLD_WIDTH - 2, nodeY);
-   markPathfindingNodeOccupance(node, Vars.WALL_TILE_OCCUPIED_ID);
-}
 
 // Calculate footprint node offsets
 const MAX_FOOTPRINT = 3;
@@ -121,8 +89,23 @@ for (let footprint = 1; footprint <= MAX_FOOTPRINT; footprint++) {
    footprintNodeOffsets.push(offsets);
 }
 
-const nodeIsOccupied = (node: PathfindingNodeIndex, ignoredGroupID: number): boolean => {
-   const groupIDs = nodeGroupIDs[node];
+export function getPathfindingGroupID(): number {
+   let lastNum = 0;
+   for (let i = 0; i < activeGroupIDs.length; i++) {
+      const groupID = activeGroupIDs[i];
+      // If a group was skipped, return that group
+      if (groupID > lastNum + 1) {
+         return lastNum + 1;
+      }
+      lastNum = groupID;
+   }
+
+   // None were skipped
+   return activeGroupIDs.length + 1;
+}
+
+const nodeIsOccupied = (layer: Layer, node: PathfindingNodeIndex, ignoredGroupID: number): boolean => {
+   const groupIDs = layer.nodeGroupIDs[node];
    for (let i = 0; i < groupIDs.length; i++) {
       const currentGroupID = groupIDs[i];
       if (currentGroupID !== ignoredGroupID) {
@@ -132,7 +115,7 @@ const nodeIsOccupied = (node: PathfindingNodeIndex, ignoredGroupID: number): boo
    return false;
 }
 
-const slowAccessibilityCheck = (node: PathfindingNodeIndex, ignoredGroupID: number, pathfindingEntityFootprint: number): boolean => {
+const slowAccessibilityCheck = (layer: Layer, node: PathfindingNodeIndex, ignoredGroupID: number, pathfindingEntityFootprint: number): boolean => {
    const originNodeX = node % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1;
    const originNodeY = Math.floor(node / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1;
 
@@ -169,9 +152,9 @@ const slowAccessibilityCheck = (node: PathfindingNodeIndex, ignoredGroupID: numb
             const xDiff = nodeX - centerX;
             const yDiff = nodeY - centerY;
             if (xDiff * xDiff + yDiff * yDiff <= hitboxNodeRadiusSquared) {
-               const node = getNode(Math.round(nodeX), Math.round(nodeY));
+               const node = getPathfindingNode(Math.round(nodeX), Math.round(nodeY));
 
-               if (nodeIsOccupied(node, ignoredGroupID)) {
+               if (nodeIsOccupied(layer, node, ignoredGroupID)) {
                   isAccessible = false;
                   break outer;
                }
@@ -204,20 +187,22 @@ const slowAccessibilityCheck = (node: PathfindingNodeIndex, ignoredGroupID: numb
 // }
 
 // @Temporary: a parameter
-const nodeIsAccessibleForEntity = (node: PathfindingNodeIndex, ignoredGroupID: number, pathfindingEntityFootprint: number): boolean => {
+const nodeIsAccessibleForEntity = (layer: Layer, node: PathfindingNodeIndex, ignoredGroupID: number, pathfindingEntityFootprint: number): boolean => {
    // @Temporary: fast doesn't seem to work properly?
    // return fastAccessibilityCheck(node, ignoredGroupID, pathfindingEntityFootprint, a) || slowAccessibilityCheck(node, ignoredGroupID, pathfindingEntityFootprint, a);
-   return slowAccessibilityCheck(node, ignoredGroupID, pathfindingEntityFootprint);
+   return slowAccessibilityCheck(layer, node, ignoredGroupID, pathfindingEntityFootprint);
 }
 
-const getCircularHitboxOccupiedNodes = (hitbox: CircularHitbox): ReadonlyArray<PathfindingNodeIndex> => {
-   const minX = hitbox.calculateHitboxBoundsMinX();
-   const maxX = hitbox.calculateHitboxBoundsMaxX();
-   const minY = hitbox.calculateHitboxBoundsMinY();
-   const maxY = hitbox.calculateHitboxBoundsMaxY();
+const addCircularHitboxOccupiedNodes = (layer: Layer, occupiedPathfindingNodes: Set<PathfindingNodeIndex>, pathfindingGroupID: number, hitbox: Hitbox, entityType: EntityType): void => {
+   const box = hitbox.box as CircularBox;
+   
+   const minX = box.calculateBoundsMinX();
+   const maxX = box.calculateBoundsMaxX();
+   const minY = box.calculateBoundsMinY();
+   const maxY = box.calculateBoundsMaxY();
 
-   const centerX = hitbox.position.x / PathfindingSettings.NODE_SEPARATION;
-   const centerY = hitbox.position.y / PathfindingSettings.NODE_SEPARATION;
+   const centerX = box.position.x / PathfindingSettings.NODE_SEPARATION;
+   const centerY = box.position.y / PathfindingSettings.NODE_SEPARATION;
    
    let minNodeX = Math.floor(minX / PathfindingSettings.NODE_SEPARATION);
    let maxNodeX = Math.ceil(maxX / PathfindingSettings.NODE_SEPARATION);
@@ -236,31 +221,38 @@ const getCircularHitboxOccupiedNodes = (hitbox: CircularHitbox): ReadonlyArray<P
       maxNodeY = PathfindingSettings.NODES_IN_WORLD_WIDTH - 2;
    }
 
-   // @Incomplete: Also take up more if it's ice spikes
    // Make soft hitboxes take up less node radius so that it easier to pathfind around them
-   const radiusOffset = hitbox.collisionType === HitboxCollisionType.hard ? 0.5 : 0;
-   const hitboxNodeRadius = hitbox.radius / PathfindingSettings.NODE_SEPARATION + radiusOffset;
+   let extraRadius = hitbox.collisionType === HitboxCollisionType.hard ? 8 : 0;
+   if (entityType === EntityType.iceSpikes || entityType === EntityType.cactus) {
+      extraRadius += 16;
+   }
+   
+   const hitboxNodeRadius = (box.radius + extraRadius) / PathfindingSettings.NODE_SEPARATION;
    const hitboxNodeRadiusSquared = hitboxNodeRadius * hitboxNodeRadius;
 
-   const occupiedNodes = new Array<PathfindingNodeIndex>();
    for (let nodeX = minNodeX; nodeX <= maxNodeX; nodeX++) {
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
          const xDiff = nodeX - centerX;
          const yDiff = nodeY - centerY;
          if (xDiff * xDiff + yDiff * yDiff <= hitboxNodeRadiusSquared) {
-            const node = getNode(nodeX, nodeY);
-            occupiedNodes.push(node);
+            const node = getPathfindingNode(nodeX, nodeY);
+            // Add
+            if (!occupiedPathfindingNodes.has(node)) {
+               markPathfindingNodeOccupance(layer, node, pathfindingGroupID);
+               occupiedPathfindingNodes.add(node);
+            }
          }
       }
    }
-   return occupiedNodes;
 }
 
-const getRectangularHitboxOccupiedNodes = (hitbox: RectangularHitbox): ReadonlyArray<PathfindingNodeIndex> => {
-   const minX = hitbox.calculateHitboxBoundsMinX();
-   const maxX = hitbox.calculateHitboxBoundsMaxX();
-   const minY = hitbox.calculateHitboxBoundsMinY();
-   const maxY = hitbox.calculateHitboxBoundsMaxY();
+const addRectangularHitboxOccupiedNodes = (layer: Layer, occupiedPathfindingNodes: Set<PathfindingNodeIndex>, pathfindingGroupID: number, hitbox: Hitbox): void => {
+   const box = hitbox.box as RectangularBox;
+   
+   const minX = box.calculateBoundsMinX();
+   const maxX = box.calculateBoundsMaxX();
+   const minY = box.calculateBoundsMinY();
+   const maxY = box.calculateBoundsMaxY();
 
    // @Speed: Math.round might also work
    let minNodeX = Math.floor(minX / PathfindingSettings.NODE_SEPARATION);
@@ -285,36 +277,38 @@ const getRectangularHitboxOccupiedNodes = (hitbox: RectangularHitbox): ReadonlyA
    const nodeClearance = hitbox.collisionType === HitboxCollisionType.hard ? PathfindingSettings.NODE_SEPARATION * 0.5 : 0;
    // const nodeClearance = hitbox.collisionType === HitboxCollisionType.hard ? PathfindingSettings.NODE_SEPARATION * 1 : PathfindingSettings.NODE_SEPARATION * 0.5;
 
-   const occupiedNodes = new Array<PathfindingNodeIndex>();
    for (let nodeX = minNodeX; nodeX <= maxNodeX; nodeX++) {
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
          const x = nodeX * PathfindingSettings.NODE_SEPARATION;
          const y = nodeY * PathfindingSettings.NODE_SEPARATION;
-         const nodePos = new Point(x, y);
          
-         if (distBetweenPointAndRectangle(nodePos, hitbox.position, hitbox.width, hitbox.height, hitbox.rotation) <= nodeClearance) {
-            const node = getNode(nodeX, nodeY);
+         if (distBetweenPointAndRectangularBox(x, y, box) <= nodeClearance) {
+            const node = getPathfindingNode(nodeX, nodeY);
             // @Temporary
             if (node >= PathfindingSettings.NODES_IN_WORLD_WIDTH*PathfindingSettings.NODES_IN_WORLD_WIDTH) {
                throw new Error();
             }
-            occupiedNodes.push(node);
+
+            // Add
+            if (!occupiedPathfindingNodes.has(node)) {
+               markPathfindingNodeOccupance(layer, node, pathfindingGroupID);
+               occupiedPathfindingNodes.add(node);
+            }
          }
       }
    }
-   return occupiedNodes;
 }
 
-export function getHitboxOccupiedNodes(hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> {
-   if (hitboxIsCircular(hitbox)) {
-      return getCircularHitboxOccupiedNodes(hitbox);
+const addHitboxOccupiedNodes = (layer: Layer, occupiedPathfindingNodes: Set<PathfindingNodeIndex>, pathfindingGroupID: number, hitbox: Hitbox, entityType: EntityType): void => {
+   if (boxIsCircular(hitbox.box)) {
+      addCircularHitboxOccupiedNodes(layer, occupiedPathfindingNodes, pathfindingGroupID, hitbox, entityType);
    } else {
-      return getRectangularHitboxOccupiedNodes(hitbox);
+      addRectangularHitboxOccupiedNodes(layer, occupiedPathfindingNodes, pathfindingGroupID, hitbox);
    }
 }
 
-export function replacePathfindingNodeGroupID(node: PathfindingNodeIndex, oldGroupID: number, newGroupID: number): void {
-   const groupIDs = nodeGroupIDs[node];
+export function replacePathfindingNodeGroupID(layer: Layer, node: PathfindingNodeIndex, oldGroupID: number, newGroupID: number): void {
+   const groupIDs = layer.nodeGroupIDs[node];
    for (let i = 0; i < groupIDs.length; i++) {
       const currentGroupID = groupIDs[i];
       if (currentGroupID === oldGroupID) {
@@ -326,7 +320,7 @@ export function replacePathfindingNodeGroupID(node: PathfindingNodeIndex, oldGro
    // throw new Error();
 }
 
-export function markWallTileInPathfinding(tileX: number, tileY: number): void {
+export function markWallTileInPathfinding(layer: Layer, tileX: number, tileY: number): void {
    const x = tileX * Settings.TILE_SIZE;
    const y = tileY * Settings.TILE_SIZE;
 
@@ -337,62 +331,53 @@ export function markWallTileInPathfinding(tileX: number, tileY: number): void {
 
    for (let nodeX = minNodeX; nodeX <= maxNodeX; nodeX++) {
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
-         const node = getNode(nodeX, nodeY);
-         markPathfindingNodeOccupance(node, Vars.WALL_TILE_OCCUPIED_ID);
+         const node = getPathfindingNode(nodeX, nodeY);
+         markPathfindingNodeOccupance(layer, node, PathfindingServerVars.WALL_TILE_OCCUPIED_ID);
       }
    }
 }
 
 export function getClosestPathfindNode(x: number, y: number): PathfindingNodeIndex {
-   const nodeX = Math.round(x / PathfindingSettings.NODE_SEPARATION);
-   const nodeY = Math.round(y / PathfindingSettings.NODE_SEPARATION);
-   return getNode(nodeX, nodeY);
+   // use floor not round cuz that makes sense for this
+   const nodeX = Math.floor(x / PathfindingSettings.NODE_SEPARATION);
+   const nodeY = Math.floor(y / PathfindingSettings.NODE_SEPARATION);
+   return getPathfindingNode(nodeX, nodeY);
 }
 
-export function positionIsAccessible(x: number, y: number, ignoredGroupID: number, pathfindingEntityFootprint: number): boolean {
+export function positionIsAccessible(layer: Layer, x: number, y: number, ignoredGroupID: number, pathfindingEntityFootprint: number): boolean {
    const node = getClosestPathfindNode(x, y);
-   return nodeIsAccessibleForEntity(node, ignoredGroupID, pathfindingEntityFootprint);
+   return nodeIsAccessibleForEntity(layer, node, ignoredGroupID, pathfindingEntityFootprint);
 }
 
-export function getAngleToNode(entity: Entity, node: PathfindingNodeIndex): number {
-   const x = (node % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1) * PathfindingSettings.NODE_SEPARATION;
-   const y = (Math.floor(node / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1) * PathfindingSettings.NODE_SEPARATION;
-   return angle(x - entity.position.x, y - entity.position.y);
+const nodeIndexToXY = (node: PathfindingNodeIndex): Point => {
+   const nodeX = node % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1;
+   const nodeY = Math.floor(node / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1;
+   return new Point(nodeX, nodeY);
 }
 
-export function getDistanceToNode(entity: Entity, node: PathfindingNodeIndex): number {
-   const x = (node % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1) * PathfindingSettings.NODE_SEPARATION;
-   const y = (Math.floor(node / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1) * PathfindingSettings.NODE_SEPARATION;
-
-   const diffX = entity.position.x - x;
-   const diffY = entity.position.y - y;
-   return Math.sqrt(diffX * diffX + diffY * diffY);
+const nodeXYToWorldPos = (nodeXY: Point): Point => {
+   const x = (nodeXY.x + 0.5) * PathfindingSettings.NODE_SEPARATION;
+   const y = (nodeXY.y + 0.5) * PathfindingSettings.NODE_SEPARATION;
+   return new Point(x, y);
 }
 
-export function getDistFromNode(entity: Entity, node: PathfindingNodeIndex): number {
-   const x = (node % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1) * PathfindingSettings.NODE_SEPARATION;
-   const y = (Math.floor(node / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1) * PathfindingSettings.NODE_SEPARATION;
-
-   return Math.sqrt(Math.pow(x - entity.position.x, 2) + Math.pow(y - entity.position.y, 2));
+export function getPathfindingNodePos(node: PathfindingNodeIndex): Point {
+   return nodeXYToWorldPos(nodeIndexToXY(node));
 }
 
-export function getDistBetweenNodes(node1: PathfindingNodeIndex, node2: PathfindingNodeIndex): number {
-   const x1 = node1 % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1;
-   const y1 = Math.floor(node1 / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1;
-
-   const x2 = node2 % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1;
-   const y2 = Math.floor(node2 / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1;
-
-   const diffX = x1 - x2;
-   const diffY = y1 - y2;
-   return Math.sqrt(diffX * diffX + diffY * diffY);
+export function getDistanceToNode(transformComponent: TransformComponent, node: PathfindingNodeIndex): number {
+   const nodeWorldPos = getPathfindingNodePos(node);
+   return getDistanceFromPointToEntity(nodeWorldPos, transformComponent);
 }
 
-export function entityHasReachedNode(entity: Entity, node: PathfindingNodeIndex): boolean {
-   const x = (node % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1) * PathfindingSettings.NODE_SEPARATION;
-   const y = (Math.floor(node / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1) * PathfindingSettings.NODE_SEPARATION;
-   const distSquared = calculateDistanceSquared(entity.position.x, entity.position.y, x, y);
-   return distSquared <= PathfindingSettings.NODE_REACH_DIST * PathfindingSettings.NODE_SEPARATION;
+export function getAngleToNode(transformComponent: TransformComponent, node: PathfindingNodeIndex): number {
+   const hitbox = transformComponent.hitboxes[0]; // @Hack
+   const nodePos = getPathfindingNodePos(node);
+   return hitbox.box.position.angleTo(nodePos);
+}
+
+export function entityHasReachedNode(transformComponent: TransformComponent, node: PathfindingNodeIndex): boolean {
+   return getDistanceToNode(transformComponent, node) <= PathfindingSettings.NODE_REACH_DIST;
 }
 
 const aStarHeuristic = (startNode: PathfindingNodeIndex, endNode: PathfindingNodeIndex): number => {
@@ -406,17 +391,10 @@ const aStarHeuristic = (startNode: PathfindingNodeIndex, endNode: PathfindingNod
    return Math.sqrt(diffX * diffX + diffY * diffY);
 }
 
-export const enum PathfindFailureDefault {
-   /** Returns an empty path */
-   returnEmpty,
-   /** Returns the path to the node which was closest to the goal */
-   returnClosest,
-   throwError
-}
-
-export interface PathfindOptions {
-   readonly goalRadius: number;
-   readonly failureDefault: PathfindFailureDefault;
+const getNodeDistBetweenNodes = (node1: PathfindingNodeIndex, node2: PathfindingNodeIndex): number => {
+   const node1XY = nodeIndexToXY(node1);
+   const node2XY = nodeIndexToXY(node2);
+   return node1XY.distanceTo(node2XY);
 }
 
 export function getEntityFootprint(radius: number): number {
@@ -426,36 +404,57 @@ export function getEntityFootprint(radius: number): number {
    return radius / PathfindingSettings.NODE_SEPARATION;
 }
 
-export function pathIsClear(startX: number, startY: number, endX: number, endY: number, ignoredGroupID: number, pathfindingEntityFootprint: number): boolean {
+export function pathIsClear(layer: Layer, startX: number, startY: number, endX: number, endY: number, ignoredGroupID: number, pathfindingEntityFootprint: number): boolean {
    const start = getClosestPathfindNode(startX, startY);
    const goal = getClosestPathfindNode(endX, endY);
 
-   return pathBetweenNodesIsClear(start, goal, ignoredGroupID, pathfindingEntityFootprint);
+   return pathBetweenNodesIsClear(layer, start, goal, ignoredGroupID, pathfindingEntityFootprint);
+}
+
+// @Incomplete: we don't want to find the closest in terms of absolute distance, we want the closest in terms of walking distance.
+export function findClosestDropdownTile(startX: number, startY: number): TileIndex {
+   const dropdownTiles = getTilesOfType(surfaceLayer, TileType.dropdown);
+   
+   let minDist = Number.MAX_SAFE_INTEGER;
+   let closestTileIndex = 0;
+   for (const tileIndex of dropdownTiles) {
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
+
+      const x = (tileX + 0.5) * Settings.TILE_SIZE;
+      const y = (tileY + 0.5) * Settings.TILE_SIZE;
+
+      const dist = distance(startX, startY, x, y);
+      if (dist < minDist) {
+         minDist = dist;
+         closestTileIndex = tileIndex;
+      }
+   }
+
+   return closestTileIndex;
+}
+
+const reconstructRawPath = (finalNode: PathfindingNodeIndex, cameFrom: Record<PathfindingNodeIndex, number>): Array<PathfindingNodeIndex> => {
+   let currentNode: PathfindingNodeIndex | undefined = finalNode;
+   
+   // Reconstruct the path
+   const path = new Array<PathfindingNodeIndex>();
+   // @Speed: two accesses
+   while (typeof currentNode !== "undefined") {
+      path.splice(0, 0, currentNode);
+      currentNode = cameFrom[currentNode];
+   }
+
+   return path;
 }
 
 /**
- * A-star pathfinding algorithm
- * @param startX 
-* @param startY 
- * @param endX 
- * @param endY 
- * @param ignoredEntityIDs 
+ * Attempts to find a path from one position to another in a single layer. Uses A* pathfinding.
  * @param pathfindingEntityFootprint Radius of the entity's footprint in nodes
- * @param options 
- * @returns 
  */
-export function pathfind(startX: number, startY: number, endX: number, endY: number, ignoredGroupID: number, pathfindingEntityFootprint: number, options: PathfindOptions): Array<PathfindingNodeIndex> {
+export function runPathfindingSingleLayer(layer: Layer, startX: number, startY: number, goalX: number, goalY: number, ignoredGroupID: number, pathfindingEntityFootprint: number, options: PathfindOptions): Path {
    const start = getClosestPathfindNode(startX, startY);
-   const goal = getClosestPathfindNode(endX, endY);
-
-   if (options.goalRadius === 0 && !nodeIsAccessibleForEntity(goal, ignoredGroupID, pathfindingEntityFootprint)) {
-      // @Temporary
-      // If we don't stop this from occuring in the first place. Ideally should throw an error, this will cause a massive slowdown
-      console.trace();
-      console.warn("Goal is inaccessible! @ " + endX + " " + endY);
-      // throw new Error();
-      return [];
-   }
+   const goal = getClosestPathfindNode(goalX, goalY);
 
    const cameFrom: Record<PathfindingNodeIndex, number> = {};
    
@@ -465,139 +464,76 @@ export function pathfind(startX: number, startY: number, endX: number, endY: num
    const fScore: Record<PathfindingNodeIndex, number> = {};
    fScore[start] = aStarHeuristic(start, goal);
 
-   const openSet = new PathfindingHeap(); // @Speed
-   openSet.gScore = gScore;
-   openSet.fScore = fScore;
+   const openSet = new PathfindingHeap(gScore, fScore);
    openSet.addNode(start);
 
    const closedSet = new Set<PathfindingNodeIndex>();
 
-   // @Speed: attempt prioritising the neighbour closest to direction
-   
-   let i = 0;
-   while (openSet.currentItemCount > 0) {
-      // @Temporary
-      if (++i >= 500) {
-      // if (++i >= 10000) {
-         // @Temporary
-         // console.warn("!!! POTENTIAL UNRESOLVEABLE PATH !!!");
-         // console.log("goal @ " + endX + " " + endY);
-         // console.trace();
-         break;
-      }
-
-      // @Cleanup: name
-      const current = openSet.removeFirst();
-      closedSet.add(current);
-
-      // If reached the goal, return the path from start to the goal
-      if ((options.goalRadius === 0 && current === goal) || (options.goalRadius > 0 && getDistBetweenNodes(current, goal) <= options.goalRadius)) {
-         let currentNode: PathfindingNodeIndex | undefined = current;
+   const checkNeighbour = (currentNode: PathfindingNodeIndex, neighbour: PathfindingNodeIndex): void => {
+      if (!closedSet.has(neighbour)) {
+         if (nodeIsAccessibleForEntity(layer, neighbour, ignoredGroupID, pathfindingEntityFootprint)) {
+            const tentativeGScore = gScore[currentNode] + aStarHeuristic(currentNode, neighbour);
+            const neighbourGScore = gScore[neighbour];
+            if (typeof neighbourGScore === "undefined" || tentativeGScore < neighbourGScore) {
+               cameFrom[neighbour] = currentNode;
+               gScore[neighbour] = tentativeGScore;
+               fScore[neighbour] = tentativeGScore + aStarHeuristic(neighbour, goal);
          
-         // Reconstruct the path
-         const path = new Array<PathfindingNodeIndex>();
-         // @Speed: two accesses
-         while (typeof currentNode !== "undefined") {
-            path.splice(0, 0, currentNode);
-            currentNode = cameFrom[currentNode];
-         }
-         return path;
-      }
-
-      const currentGScore = gScore[current];
-      
-      const nodeX = current % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1;
-      const nodeY = Math.floor(current / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1;
-      
-      const neighbours = new Array<PathfindingNodeIndex>();
-
-      // Left neighbour
-      const leftNode = getNode(nodeX - 1, nodeY);
-      if (!closedSet.has(leftNode)) {
-         if (nodeIsAccessibleForEntity(leftNode, ignoredGroupID, pathfindingEntityFootprint)) {
-            neighbours.push(leftNode);
-         }
-         closedSet.add(leftNode);
-      }
-      
-      // Right neighbour
-      const rightNode = getNode(nodeX + 1, nodeY);
-      if (!closedSet.has(rightNode)) {
-         if (nodeIsAccessibleForEntity(rightNode, ignoredGroupID, pathfindingEntityFootprint)) {
-            neighbours.push(rightNode);
-         }
-         closedSet.add(rightNode);
-      }
-
-      // Bottom neighbour
-      const bottomNode = getNode(nodeX, nodeY - 1);
-      if (!closedSet.has(bottomNode)) {
-         if (nodeIsAccessibleForEntity(bottomNode, ignoredGroupID, pathfindingEntityFootprint)) {
-            neighbours.push(bottomNode);
-         }
-         closedSet.add(bottomNode);
-      }
-
-      // Top neighbour
-      const topNode = getNode(nodeX, nodeY + 1);
-      if (!closedSet.has(topNode)) {
-         if (nodeIsAccessibleForEntity(topNode, ignoredGroupID, pathfindingEntityFootprint)) {
-            neighbours.push(topNode);
-         }
-         closedSet.add(topNode);
-      }
-
-      // Top left neighbour
-      const topLeftNode = getNode(nodeX - 1, nodeY + 1);
-      if (!closedSet.has(topLeftNode)) {
-         if (nodeIsAccessibleForEntity(topLeftNode, ignoredGroupID, pathfindingEntityFootprint)) {
-            neighbours.push(topLeftNode);
-         }
-         closedSet.add(topLeftNode);
-      }
-
-      // Top right neighbour
-      const topRightNode = getNode(nodeX + 1, nodeY + 1);
-      if (!closedSet.has(topRightNode)) {
-         if (nodeIsAccessibleForEntity(topRightNode, ignoredGroupID, pathfindingEntityFootprint)) {
-            neighbours.push(topRightNode);
-         }
-         closedSet.add(topRightNode);
-      }
-
-      // Bottom left neighbour
-      const bottomLeftNode = getNode(nodeX - 1, nodeY - 1);
-      if (!closedSet.has(bottomLeftNode)) {
-         if (nodeIsAccessibleForEntity(bottomLeftNode, ignoredGroupID, pathfindingEntityFootprint)) {
-            neighbours.push(bottomLeftNode);
-         }
-         closedSet.add(bottomLeftNode);
-      }
-
-      // Bottom right neighbour
-      const bottomRightNode = getNode(nodeX + 1, nodeY - 1);
-      if (!closedSet.has(bottomRightNode)) {
-         if (nodeIsAccessibleForEntity(bottomRightNode, ignoredGroupID, pathfindingEntityFootprint)) {
-            neighbours.push(bottomRightNode);
-         }
-         closedSet.add(bottomRightNode);
-      }
-
-      for (let i = 0; i < neighbours.length; i++) {
-         const neighbour = neighbours[i];
-
-         const tentativeGScore = currentGScore + aStarHeuristic(current, neighbour);
-         const neighbourGScore = gScore[neighbour] !== undefined ? gScore[neighbour] : 999999;
-         if (tentativeGScore < neighbourGScore) {
-            cameFrom[neighbour] = current;
-            gScore[neighbour] = tentativeGScore;
-            fScore[neighbour] = tentativeGScore + aStarHeuristic(neighbour, goal);
-
-            if (!openSet.containsNode(neighbour)) {
-               openSet.addNode(neighbour);
+               if (!openSet.containsNode(neighbour)) {
+                  openSet.addNode(neighbour);
+               }
             }
          }
+         closedSet.add(neighbour);
       }
+   }
+
+   const nodeBudget = options.nodeBudget || (Math.floor(distance(startX, startY, goalX, goalY) * 4) + 40);
+   
+   for (let i = 0; openSet.currentItemCount > 0 && i < nodeBudget; i++) {
+      const currentNode = openSet.removeFirst();
+      closedSet.add(currentNode);
+
+      // If reached the goal, return the path from start to the goal
+      if ((options.goalRadius === 0 && currentNode === goal) || (options.goalRadius > 0 && getNodeDistBetweenNodes(currentNode, goal) <= options.goalRadius)) {
+         const rawPath = reconstructRawPath(currentNode, cameFrom);
+         return {
+            layer: layer,
+            goalX: goalX,
+            goalY: goalY,
+            rawPath: rawPath,
+            smoothPath: smoothPath(layer, rawPath, ignoredGroupID, pathfindingEntityFootprint),
+            visitedNodes: Array.from(closedSet),
+            isFailed: false
+         };
+      }
+
+      const nodeX = currentNode % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1;
+      const nodeY = Math.floor(currentNode / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1;
+      
+      const leftNode = getPathfindingNode(nodeX - 1, nodeY);
+      checkNeighbour(currentNode, leftNode);
+      
+      const rightNode = getPathfindingNode(nodeX + 1, nodeY);
+      checkNeighbour(currentNode, rightNode);
+
+      const bottomNode = getPathfindingNode(nodeX, nodeY - 1);
+      checkNeighbour(currentNode, bottomNode);
+
+      const topNode = getPathfindingNode(nodeX, nodeY + 1);
+      checkNeighbour(currentNode, topNode);
+
+      const topLeftNode = getPathfindingNode(nodeX - 1, nodeY + 1);
+      checkNeighbour(currentNode, topLeftNode);
+
+      const topRightNode = getPathfindingNode(nodeX + 1, nodeY + 1);
+      checkNeighbour(currentNode, topRightNode);
+
+      const bottomLeftNode = getPathfindingNode(nodeX - 1, nodeY - 1);
+      checkNeighbour(currentNode, bottomLeftNode);
+
+      const bottomRightNode = getPathfindingNode(nodeX + 1, nodeY - 1);
+      checkNeighbour(currentNode, bottomRightNode);
    }
 
    switch (options.failureDefault) {
@@ -629,24 +565,65 @@ export function pathfind(startX: number, startY: number, endX: number, endY: num
             current = cameFrom[current];
             path.splice(0, 0, current);
          }
-         return path;
+         return {
+            layer: layer,
+            goalX: goalX,
+            goalY: goalY,
+            rawPath: path,
+            smoothPath: smoothPath(layer, path, ignoredGroupID, pathfindingEntityFootprint),
+            visitedNodes: Array.from(closedSet),
+            isFailed: false
+         };
       }
-      case PathfindFailureDefault.returnEmpty: {
-         if (!OPTIONS.inBenchmarkMode) {
-            console.warn("FAILURE");
-            console.trace();
-         }
-         return [];
-      }
-      case PathfindFailureDefault.throwError: {
-         // @Temporary
-         // throw new Error("Pathfinding failed!");
-         return [];
+      case PathfindFailureDefault.none: {
+         return {
+            layer: layer,
+            goalX: goalX,
+            goalY: goalY,
+            rawPath: [],
+            smoothPath: [],
+            visitedNodes: Array.from(closedSet),
+            isFailed: true
+         };
       }
    }
 }
 
-const pathBetweenNodesIsClear = (node1: PathfindingNodeIndex, node2: PathfindingNodeIndex, ignoredGroupID: number, pathfindingEntityFootprint: number): boolean => {
+export function runPathfindingMultiLayer(startLayer: Layer, endLayer: Layer, startX: number, startY: number, endX: number, endY: number, ignoredGroupID: number, pathfindingEntityFootprint: number, options: PathfindOptions): Array<Path> {
+   const paths = new Array<Path>();
+   
+   let x1: number;
+   let y1: number;
+   
+   // If the goal is in a different layer, first move to the correct layer
+   if (startLayer !== endLayer) {
+      const targetDropdownTile = findClosestDropdownTile(startX, startY);
+      
+      const tileX = getTileX(targetDropdownTile);
+      const tileY = getTileY(targetDropdownTile);
+      x1 = (tileX + 0.5) * Settings.TILE_SIZE;
+      y1 = (tileY + 0.5) * Settings.TILE_SIZE;
+
+      const changeLayerOptions: PathfindOptions = {
+         // Should move right on the goal
+         goalRadius: 0,
+         failureDefault: PathfindFailureDefault.none
+      };
+      const path = runPathfindingSingleLayer(startLayer, startX, startY, x1, y1, ignoredGroupID, pathfindingEntityFootprint, changeLayerOptions);
+
+      paths.push(path);
+   } else {
+      x1 = startX;
+      y1 = startY;
+   }
+
+   const path = runPathfindingSingleLayer(endLayer, x1, y1, endX, endY, ignoredGroupID, pathfindingEntityFootprint, options);
+   paths.push(path);
+
+   return paths;
+}
+
+const pathBetweenNodesIsClear = (layer: Layer, node1: PathfindingNodeIndex, node2: PathfindingNodeIndex, ignoredGroupID: number, pathfindingEntityFootprint: number): boolean => {
    // Convert to node coordinates
    const x0 = node1 % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1;
    const y0 = Math.floor(node1 / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1;
@@ -694,8 +671,8 @@ const pathBetweenNodesIsClear = (node1: PathfindingNodeIndex, node2: Pathfinding
    }
 
    for (; n > 0; n--) {
-      const node = getNode(x, y);
-      if (!nodeIsAccessibleForEntity(node, ignoredGroupID, pathfindingEntityFootprint)) {
+      const node = getPathfindingNode(x, y);
+      if (!nodeIsAccessibleForEntity(layer, node, ignoredGroupID, pathfindingEntityFootprint)) {
          return false;
       }
 
@@ -711,14 +688,14 @@ const pathBetweenNodesIsClear = (node1: PathfindingNodeIndex, node2: Pathfinding
    return true;
 }
 
-export function smoothPath(path: ReadonlyArray<PathfindingNodeIndex>, ignoredGroupID: number, pathfindingEntityFootprint: number): Array<PathfindingNodeIndex> {
+export function smoothPath(layer: Layer, path: ReadonlyArray<PathfindingNodeIndex>, ignoredGroupID: number, pathfindingEntityFootprint: number): Array<PathfindingNodeIndex> {
    const smoothedPath = new Array<PathfindingNodeIndex>();
    let lastCheckpoint = path[0];
    let previousNode = path[1];
    for (let i = 2; i < path.length; i++) {
       const node = path[i];
 
-      if (!pathBetweenNodesIsClear(node, lastCheckpoint, ignoredGroupID, pathfindingEntityFootprint)) {
+      if (!pathBetweenNodesIsClear(layer, node, lastCheckpoint, ignoredGroupID, pathfindingEntityFootprint + 20 / PathfindingSettings.NODE_SEPARATION)) {
          smoothedPath.push(previousNode);
          lastCheckpoint = previousNode;
       }
@@ -735,18 +712,33 @@ export function smoothPath(path: ReadonlyArray<PathfindingNodeIndex>, ignoredGro
    return smoothedPath;
 }
 
-export function getVisiblePathfindingNodeOccupances(visibleChunkBounds: VisibleChunkBounds): ReadonlyArray<PathfindingNodeIndex> {
-   // @Hack @Incomplete: Adding 1 to the max vals may cause extra nodes to be sent
-   const minNodeX = Math.ceil(visibleChunkBounds[0] * Settings.CHUNK_UNITS / PathfindingSettings.NODE_SEPARATION);
-   const maxNodeX = Math.floor((visibleChunkBounds[1] + 1) * Settings.CHUNK_UNITS / PathfindingSettings.NODE_SEPARATION);
-   const minNodeY = Math.ceil(visibleChunkBounds[2] * Settings.CHUNK_UNITS / PathfindingSettings.NODE_SEPARATION);
-   const maxNodeY = Math.floor((visibleChunkBounds[3] + 1) * Settings.CHUNK_UNITS / PathfindingSettings.NODE_SEPARATION);
+const clampPathfindingNodeXY = (x: number): number => {
+   if (x < -1) {
+      return -1;
+   }
+   if (x >= PathfindingSettings.NODES_IN_WORLD_WIDTH - 1) {
+      return PathfindingSettings.NODES_IN_WORLD_WIDTH - 2;
+   }
+   return x;
+}
+
+export function getVisiblePathfindingNodeOccupances(playerClient: PlayerClient): ReadonlyArray<PathfindingNodeIndex> {
+   // @Copynpaste
+   const minVisibleX = playerClient.lastViewedPositionX - playerClient.screenWidth * 0.5 - PlayerClientVars.VIEW_PADDING;
+   const maxVisibleX = playerClient.lastViewedPositionX + playerClient.screenWidth * 0.5 + PlayerClientVars.VIEW_PADDING;
+   const minVisibleY = playerClient.lastViewedPositionY - playerClient.screenHeight * 0.5 - PlayerClientVars.VIEW_PADDING;
+   const maxVisibleY = playerClient.lastViewedPositionY + playerClient.screenHeight * 0.5 + PlayerClientVars.VIEW_PADDING;
+
+   const minNodeX = clampPathfindingNodeXY(Math.floor(minVisibleX / PathfindingSettings.NODE_SEPARATION));
+   const maxNodeX = clampPathfindingNodeXY(Math.floor(maxVisibleX / PathfindingSettings.NODE_SEPARATION));
+   const minNodeY = clampPathfindingNodeXY(Math.floor(minVisibleY / PathfindingSettings.NODE_SEPARATION));
+   const maxNodeY = clampPathfindingNodeXY(Math.floor(maxVisibleY / PathfindingSettings.NODE_SEPARATION));
 
    const occupances = new Array<PathfindingNodeIndex>();
    for (let nodeX = minNodeX; nodeX <= maxNodeX; nodeX++) {
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
-         const node = getNode(nodeX, nodeY);
-         if (nodeGroupIDs[node].length > 0) {
+         const node = getPathfindingNode(nodeX, nodeY);
+         if (playerClient.lastLayer.nodeGroupIDs[node].length > 0) {
             occupances.push(node);
          }
       }
@@ -755,81 +747,85 @@ export function getVisiblePathfindingNodeOccupances(visibleChunkBounds: VisibleC
    return occupances;
 }
 
-export function entityCanBlockPathfinding(entityType: EntityType): boolean {
+export function entityCanBlockPathfinding(entity: Entity): boolean {
+   const entityType = getEntityType(entity);
+   const collisionGroup = getEntityCollisionGroup(entityType);
+   if (collisionGroup === CollisionGroup.none || collisionGroup === CollisionGroup.decoration) {
+      return false;
+   }
+   
    return entityType !== EntityType.itemEntity
       && entityType !== EntityType.slimeSpit
-      && entityType !== EntityType.woodenArrowProjectile
-      && entityType !== EntityType.slimewisp
-      && entityType !== EntityType.blueprintEntity;
+      && !ProjectileComponentArray.hasComponent(entity)
+      && entityType !== EntityType.slimewisp;
 }
 
 export function getEntityPathfindingGroupID(entity: Entity): number {
-   switch (entity.type) {
-      case EntityType.door:
-      case EntityType.player:
-      case EntityType.tribeWorker:
-      case EntityType.tribeWarrior: {
-         const tribeComponent = TribeComponentArray.getComponent(entity.id);
-         return tribeComponent.tribe.pathfindingGroupID;
-      }
-      default: {
-         return 0;
-      }
+   if (getEntityType(entity) === EntityType.door || TribeMemberComponentArray.hasComponent(entity)) {
+      const tribeComponent = TribeComponentArray.getComponent(entity);
+      return tribeComponent.tribe.pathfindingGroupID;
    }
-}
 
-const thingA = (entity: Entity, pathfindingGroupID: number): void => {
-   for (const node of entity.occupiedPathfindingNodes) {
-      markPathfindingNodeClearance(node, pathfindingGroupID);
-   }
-   entity.occupiedPathfindingNodes = new Set();
-}
-
-const thingB = (entity: Entity, pathfindingGroupID: number): void => {
-   for (let i = 0; i < entity.hitboxes.length; i++) {
-      const hitbox = entity.hitboxes[i];
-   
-      // Add to occupied pathfinding nodes
-      const occupiedNodes = getHitboxOccupiedNodes(hitbox);
-      for (let i = 0; i < occupiedNodes.length; i++) {
-         const node = occupiedNodes[i];
-         if (!entity.occupiedPathfindingNodes.has(node)) {
-            markPathfindingNodeOccupance(node, pathfindingGroupID);
-            entity.occupiedPathfindingNodes.add(node);
-         }
-      }
-   }
+   return 0;
 }
 
 export function updateEntityPathfindingNodeOccupance(entity: Entity): void {
    const pathfindingGroupID = getEntityPathfindingGroupID(entity);
+   const layer = getEntityLayer(entity);
 
-   // @Temporary: to see performance
-   thingA(entity, pathfindingGroupID);
-   thingB(entity, pathfindingGroupID);
+   const transformComponent = TransformComponentArray.getComponent(entity);
+
+   for (const node of transformComponent.occupiedPathfindingNodes) {
+      markPathfindingNodeClearance(layer, node, pathfindingGroupID);
+   }
+   transformComponent.occupiedPathfindingNodes = new Set();
+
+   const occupiedPathfindingNodes = transformComponent.occupiedPathfindingNodes;
+   const entityType = getEntityType(entity);
+   
+   for (const hitbox of transformComponent.hitboxes) {
+      addHitboxOccupiedNodes(layer, occupiedPathfindingNodes, pathfindingGroupID, hitbox, entityType);
+   }
 }
 
 export function updateDynamicPathfindingNodes(): void {
-   if (Board.ticks % 3 !== 0) {
-      return;
+   // @Hack: This is done to reduce the fluctuation in tick time. However it also kinda bricks performance.
+   // ideally instead we would just rotate between updating 3 groups of entities, doing one group each tick,
+   // for constant performance while still doing a third of the work as usual.
+   // if (getGameTicks() % 3 !== 0) {
+   //    return;
+   // }
+
+   // Here I prefer to loop over all the entities instead of using a dirty array, to make
+   // the performance more constant thanks to no garbage collection
+   const activeEntities = TransformComponentArray.activeEntities;
+   const activeComponents = TransformComponentArray.activeComponents;
+   for (let i = 0; i < activeEntities.length; i++) {
+      const transformComponent = activeComponents[i];
+      if (transformComponent.pathfindingNodesAreDirty) {
+         const entity = activeEntities[i];
+         updateEntityPathfindingNodeOccupance(entity);
+   
+         transformComponent.pathfindingNodesAreDirty = false;
+      }
    }
-
-   for (let i = 0; i < dirtyPathfindingEntities.length; i++) {
-      const entity = dirtyPathfindingEntities[i];
-      updateEntityPathfindingNodeOccupance(entity);
-
-      const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
-      physicsComponent.pathfindingNodesAreDirty = false;
-   }
-
-   dirtyPathfindingEntities = [];
 }
 
 export function clearEntityPathfindingNodes(entity: Entity): void {
    const groupID = getEntityPathfindingGroupID(entity);
+   const layer = getEntityLayer(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    // Remove occupied pathfinding nodes
-   for (const node of entity.occupiedPathfindingNodes) {
-      markPathfindingNodeClearance(node, groupID);
+   for (const node of transformComponent.occupiedPathfindingNodes) {
+      markPathfindingNodeClearance(layer, node, groupID);
+   }
+}
+
+export function convertEntityPathfindingGroupID(entity: Entity, oldGroupID: number, newGroupID: number): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const layer = getEntityLayer(entity);
+   for (const node of transformComponent.occupiedPathfindingNodes) {
+      replacePathfindingNodeGroupID(layer, node, oldGroupID, newGroupID);
    }
 }

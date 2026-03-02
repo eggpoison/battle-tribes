@@ -1,14 +1,14 @@
-import { FenceComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+// @Incomplete: why do we have this component?
+
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 
 export class FenceComponent {}
 
-export const FenceComponentArray = new ComponentArray<ServerComponentType.fence, FenceComponent>(true, {
-   serialise: serialise
-});
+export const FenceComponentArray = new ComponentArray<FenceComponent>(ServerComponentType.fence, true, getDataLength, addDataToPacket);
 
-function serialise(): FenceComponentData {
-   return {
-      componentType: ServerComponentType.fence
-   };
+function getDataLength(): number {
+   return 0;
 }
+
+function addDataToPacket(): void {}

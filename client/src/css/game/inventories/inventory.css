@@ -5,7 +5,7 @@
 }
 
 .menu {
-   background-color: #3a3a3a;
+   background-color: #4a4a4a;
    border: 5px solid black;
    padding: 0 0.25rem 0.25rem;
    position: absolute;
@@ -34,6 +34,13 @@
 }
 .menu .area:last-child {
    margin-bottom: 0;
+}
+
+.menu h1 {
+   color: #ddd;
+   font-size: 1.5rem;
+   margin: 0 0 1rem 0;
+   text-align: center;
 }
 
 .menu h2 {
@@ -77,26 +84,26 @@
 .flex-container.column {
    flex-direction: column;
 }
-.menu .flex-container:not(:first-child) {
-   margin-top: 0.3rem;
-}
 
-.inventory-container {
-   background-color: #666;
+.item-slots-container {
+   /* background-color: #666; */
    display: inline-block;
+   /* @Hack Disgusting, must be done for the code comments due to white-space: nowrap */
+   font-size: 0;
 }
-
-.inventory-container.bordered {
+.item-slots-container.bordered {
    border: 5px solid #000;
 }
 
-.inventory {
-   background-color: #444;
-   border: 5px solid black;
+.item-slots-container.set-width {
+   width: calc(var(--item-slot-size) * var(--width-items));
 }
-
-.inventory-row {
-   display: flex;
+.item-slots-container.min-height {
+   min-height: calc(var(--item-slot-size) * var(--min-height-items));
+}
+.item-slots-container:not(.set-width) {
+   /* Stops item slots from spilling down if there "isn't enough space" */
+   white-space: nowrap;
 }
 
 .item-slot {
@@ -107,6 +114,7 @@
    image-rendering: pixelated;
    position: relative;
    user-select: none;
+   display: inline-block;
 }
 
 .item-slot.selected {
@@ -124,16 +132,15 @@
 }
 
 .item-slot img {
-   width: var(--item-image-size);
-   height: var(--item-image-size);
    image-rendering: pixelated;
    position: absolute;
    top: 50%;
    left: 50%;
-   transform: translate(-50%, -50%);
+   transform: translate(-50%, -50%) scale(3.75);
    z-index: 1;
 }
 
+/* @HACK: #held-item */
 .item-slot .item-count, #held-item .held-item-count {
    color: #fff;
    font-family: "Inconsolata";
@@ -146,6 +153,15 @@
    bottom: 25%;
    transform: translate(50%, 50%);
    z-index: 2;
+}
+.item-slot .cooldown-bg {
+   width: 100%;
+   height: calc(var(--item-slot-size) * var(--cooldown));
+   background-color: rgba(0, 0, 0, 0.5);
+   position: absolute;
+   bottom: 0;
+   right: 0;
+   left: 0;
 }
 
 .sub-menu {
@@ -195,3 +211,4 @@
    margin: 0.3rem 0 0.5rem 50%;
    transform: translateX(-50%);
 }
+

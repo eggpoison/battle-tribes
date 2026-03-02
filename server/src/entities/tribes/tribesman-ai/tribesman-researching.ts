@@ -1,102 +1,175 @@
-import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { LimbAction } from "webgl-test-shared/dist/entities";
-import { TechInfo } from "webgl-test-shared/dist/techs";
-import Board from "../../../Board";
-import Entity from "../../../Entity";
-import { moveEntityToPosition, getDistanceFromPointToEntity } from "../../../ai-shared";
+import { TribesmanAIType } from "battletribes-shared/components";
+import { Entity, EntityType, LimbAction } from "battletribes-shared/entities";
+import { Tech } from "battletribes-shared/techs";
+import { getDistanceFromPointToEntity } from "../../../ai-shared";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
-import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { continueResearching, markPreemptiveMoveToBench, attemptToOccupyResearchBench, canResearchAtBench, shouldMoveToResearchBench } from "../../../components/ResearchBenchComponent";
-import { TribeComponent, TribeComponentArray } from "../../../components/TribeComponent";
-import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
+import { TribeComponentArray } from "../../../components/TribeComponent";
+import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
-import { getTribesmanSlowAcceleration, getTribesmanAcceleration, getTribesmanRadius } from "./tribesman-ai-utils";
+import { getTribesmanSlowAcceleration, getHumanoidRadius } from "./tribesman-ai-utils";
+import { TransformComponentArray } from "../../../components/TransformComponent";
+import { Inventory, ItemType } from "../../../../../shared/src/items/items";
+import { consumeItemFromSlot } from "../../../components/InventoryComponent";
+import Tribe from "../../../Tribe";
+import { assert, polarVec2 } from "../../../../../shared/src/utils";
+import { getEntityLayer } from "../../../world";
+import { PathfindingSettings } from "../../../../../shared/src/settings";
+import { PathfindFailureDefault } from "../../../pathfinding";
+import { applyAccelerationFromGround, turnHitboxToAngle } from "../../../hitboxes";
+import { pathfindTribesman } from "../../../components/AIPathfindingComponent";
 
-const getOccupiedResearchBenchID = (tribesman: Entity, tribeComponent: TribeComponent): number => {
-   for (let i = 0; i < tribeComponent.tribe.researchBenches.length; i++) {
-      const bench = tribeComponent.tribe.researchBenches[i];
+const getOccupiedResearchBenchID = (tribesman: Entity, tribe: Tribe): Entity => {
+   for (const bench of tribe.getEntitiesByType(EntityType.researchBench)) {
       if (canResearchAtBench(bench, tribesman)) {
-         return bench.id;
+         return bench;
       }
    }
-
    return 0;
 }
 
-const getAvailableResearchBenchID = (tribesman: Entity, tribeComponent: TribeComponent): number => {
+const getAvailableResearchBenchID = (tribesman: Entity, tribe: Tribe): Entity => {
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const tribesmanHitbox = transformComponent.hitboxes[0];
+   
    let id = 0;
    let minDist = Number.MAX_SAFE_INTEGER;
 
-   for (let i = 0; i < tribeComponent.tribe.researchBenches.length; i++) {
-      const bench = tribeComponent.tribe.researchBenches[i];
-
+   for (const bench of tribe.getEntitiesByType(EntityType.researchBench)) {
       if (!shouldMoveToResearchBench(bench, tribesman)) {
          continue;
       }
 
-      const dist = tribesman.position.calculateDistanceBetween(bench.position);
+      const benchTransformComponent = TransformComponentArray.getComponent(bench);
+      const researchBenchHitbox = benchTransformComponent.hitboxes[0];
+
+      const dist = tribesmanHitbox.box.position.distanceTo(researchBenchHitbox.box.position);
       if (dist < minDist) {
          minDist = dist;
-         id = bench.id;
+         id = bench;
       }
    }
 
    return id;
 }
 
-export function goResearchTech(tribesman: Entity, tech: TechInfo): boolean {
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-
-   // @Incomplete: use pathfinding
+export function goResearchTech(tribesman: Entity, tech: Tech): void {
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const tribesmanHitbox = transformComponent.hitboxes[0];
    
-   // Continue researching at an occupied bench
-   const occupiedBenchID = getOccupiedResearchBenchID(tribesman, tribeComponent);
-   if (occupiedBenchID !== 0) {
-      const bench = Board.entityRecord[occupiedBenchID]!;
-      
-      const targetDirection = tribesman.position.calculateAngleBetween(bench.position);
-      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
+   const tribe = tribeComponent.tribe;
+   
+   const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(tribesman);
 
-      const slowAcceleration = getTribesmanSlowAcceleration(tribesman.id);
-      physicsComponent.acceleration.x = slowAcceleration * Math.sin(targetDirection);
-      physicsComponent.acceleration.y = slowAcceleration * Math.cos(targetDirection);
+   // Make sure that the tech requires researching
+   assert(tribe.techRequiresResearching(tech));
 
-      physicsComponent.targetRotation = targetDirection;
-      physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
+   // If already researching at a bench, continue researching at an occupied bench
+   const occupiedBench = getOccupiedResearchBenchID(tribesman, tribe);
+   if (occupiedBench !== 0) {
+      const benchTransformComponent = TransformComponentArray.getComponent(occupiedBench);
+      const researchBenchHitbox = benchTransformComponent.hitboxes[0];
       
-      continueResearching(bench, tribesman, tech);
-      
-      tribesmanComponent.targetResearchBenchID = occupiedBenchID;
-      tribesmanComponent.currentAIType = TribesmanAIType.researching;
+      const targetDir = tribesmanHitbox.box.position.angleTo(researchBenchHitbox.box.position);
 
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
+      const slowAcceleration = getTribesmanSlowAcceleration(tribesman);
+      applyAccelerationFromGround(tribesmanHitbox, polarVec2(slowAcceleration, targetDir));
+
+      turnHitboxToAngle(tribesmanHitbox, targetDir, TRIBESMAN_TURN_SPEED, 0.5, false);
+      
+      continueResearching(occupiedBench, tribesman, tech);
+      
+      tribesmanAIComponent.targetResearchBenchID = occupiedBench;
+      tribesmanAIComponent.currentAIType = TribesmanAIType.researching;
+
+      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
       setLimbActions(inventoryUseComponent, LimbAction.researching);
-      
-      return true;
+
+      return;
    }
    
-   const benchID = getAvailableResearchBenchID(tribesman, tribeComponent);
-   if (benchID !== 0) {
-      const bench = Board.entityRecord[benchID]!;
-      
+   const bench = getAvailableResearchBenchID(tribesman, tribe);
+   if (bench !== 0) {
+      const benchTransformComponent = TransformComponentArray.getComponent(bench);
+      const researchBenchHitbox = benchTransformComponent.hitboxes[0];
+
+      const benchLayer = getEntityLayer(bench);
+
       markPreemptiveMoveToBench(bench, tribesman);
-      moveEntityToPosition(tribesman, bench.position.x, bench.position.y, getTribesmanAcceleration(tribesman.id), TRIBESMAN_TURN_SPEED);
+      pathfindTribesman(tribesman, researchBenchHitbox.box.position.x, researchBenchHitbox.box.position.y, benchLayer, bench, TribesmanPathType.default, Math.floor(64 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
       
-      tribesmanComponent.targetResearchBenchID = benchID;
-      tribesmanComponent.currentAIType = TribesmanAIType.researching;
+      tribesmanAIComponent.targetResearchBenchID = bench;
+      tribesmanAIComponent.currentAIType = TribesmanAIType.researching;
 
       // If close enough, switch to doing research
-      const dist = getDistanceFromPointToEntity(tribesman.position, bench) - getTribesmanRadius(tribesman);
-      if (dist < 50) {
-         attemptToOccupyResearchBench(bench, tribesman);
+      if (benchLayer === getEntityLayer(tribesman)) {
+         const dist = getDistanceFromPointToEntity(tribesmanHitbox.box.position, benchTransformComponent) - getHumanoidRadius(transformComponent);
+         if (dist < 30) {
+            attemptToOccupyResearchBench(bench, tribesman);
+         }
       }
 
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-      setLimbActions(inventoryUseComponent, LimbAction.none);
-
-      return true;
+      return;
    }
 
-   return false;
+   // Somehow there aren't any research benches to work at.
+   // This can happen if the research bench is placed but is still in the join queue (not in the world).
+   // If we can get here without there being a bench in the join queue then that would be preeetty bad.
+}
+
+export function techStudyIsComplete(tribe: Tribe, tech: Tech): boolean {
+   return !tribe.techRequiresResearching(tech);
+}
+
+const useItemInTechResearch = (tribe: Tribe, tech: Tech, itemType: ItemType, amount: number): number => {
+   const amountRequiredToResearch = tech.researchItemRequirements.getItemCount(itemType);
+   
+   let amountUsed = 0;
+
+   const techUnlockProgress = tribe.techTreeUnlockProgress[tech.id];
+   if (typeof techUnlockProgress === "undefined") {
+      amountUsed = Math.min(amount, amountRequiredToResearch);
+      tribe.techTreeUnlockProgress[tech.id] = {
+         itemProgress: { [itemType]: amountUsed },
+         studyProgress: 0
+      };
+   } else if (typeof techUnlockProgress.itemProgress[itemType] === "undefined") {
+      amountUsed = Math.min(amount, amountRequiredToResearch);
+      techUnlockProgress.itemProgress[itemType] = amountUsed;
+   } else {
+      amountUsed = Math.min(amount, amountRequiredToResearch - techUnlockProgress.itemProgress[itemType]!);
+      techUnlockProgress.itemProgress[itemType]! += amountUsed;
+   }
+
+   return amountUsed;
+}
+
+const techHasEnoughItems = (tribe: Tribe, tech: Tech, itemType: ItemType): boolean => {
+   const amountRequiredToResearch = tech.researchItemRequirements.getItemCount(itemType);
+   
+   const techUnlockProgress = tribe.techTreeUnlockProgress[tech.id];
+   return (techUnlockProgress?.itemProgress[itemType] || 0) >= amountRequiredToResearch;
+}
+
+export function useItemsInResearch(tribesman: Entity, tech: Tech, itemType: ItemType, hotbarInventory: Inventory): boolean {
+   // @Incomplete: take into account backpack
+
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
+   const tribe = tribeComponent.tribe;
+
+   for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
+      const item = hotbarInventory.itemSlots[itemSlot];
+      if (typeof item === "undefined" || item.type !== itemType) {
+         continue;
+      }
+
+      const amountUsed = useItemInTechResearch(tribe, tech, item.type, item.count);
+      if (amountUsed > 0) {
+         consumeItemFromSlot(tribesman, hotbarInventory, itemSlot, amountUsed);
+      }
+   }
+
+   // Return whether or not the item requirements have been fulfilled
+   return techHasEnoughItems(tribe, tech, itemType);
 }

@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
+
+#layer-change-message {
+   color: rgb(255, 187, 0);
+   font-family: "Inconsolata";
+   font-weight: bold;
+   background-color: #6e6e6e;
+   padding: 2px 5px;
+   border: 3px solid #111;
+   position: absolute;
+   left: 50%;
+   bottom: 30%;
+   transform: translate(-50%, 50%) scale(var(--zoom));
+   z-index: 1;
+   box-shadow: 0 0 5px 1px rgba(0, 0, 0, 0.3) inset;
+}

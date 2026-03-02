@@ -1,49 +1,72 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../../components/StatusEffectComponent";
-import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../../components/InventoryComponent";
-import { tickCookingEntity } from "./cooking-entity";
-import { CookingComponent, CookingComponentArray } from "../../../components/CookingComponent";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Inventory, InventoryName } from "battletribes-shared/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityConfig } from "../../../components";
+import { addHitboxToTransformComponent, TransformComponent } from "../../../components/TransformComponent";
+import { HealthComponent } from "../../../components/HealthComponent";
+import { StatusEffectComponent } from "../../../components/StatusEffectComponent";
+import { StructureComponent } from "../../../components/StructureComponent";
 import Tribe from "../../../Tribe";
-import { TribeComponent, TribeComponentArray } from "../../../components/TribeComponent";
-import { StructureComponent, StructureComponentArray } from "../../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createCampfireHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { TribeComponent } from "../../../components/TribeComponent";
+import { addInventoryToInventoryComponent, InventoryComponent } from "../../../components/InventoryComponent";
+import { CookingComponent } from "../../../components/CookingComponent";
+import { CampfireComponent } from "../../../components/CampfireComponent";
+import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { Point } from "../../../../../shared/src/utils";
+import { HitboxCollisionType, HitboxFlag } from "../../../../../shared/src/boxes/boxes";
+import { CircularBox } from "../../../../../shared/src/boxes/CircularBox";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../../shared/src/collision";
+import { Hitbox } from "../../../hitboxes";
+import { StructureConnection } from "../../../structure-placement";
 
-const LIFETIME_SECONDS = 30;
+// @Incomplete: Destroy campfire when remaining heat reaches 0
 
-export function createCampfire(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const campfire = new Entity(position, rotation, EntityType.campfire, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createCampfireConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+   const transformComponent = new TransformComponent();
 
-   const hitboxes = createCampfireHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      campfire.addHitbox(hitboxes[i]);
-   }
+   const box = new CircularBox(position, new Point(0, 0), rotation, 52);
+   const hitbox = new Hitbox(transformComponent, null, true, box, 2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
+   hitbox.isStatic = true;
+   addHitboxToTransformComponent(transformComponent, hitbox);
 
-   HealthComponentArray.addComponent(campfire.id, new HealthComponent(25));
-   StatusEffectComponentArray.addComponent(campfire.id, new StatusEffectComponent(StatusEffect.poisoned));
-   TribeComponentArray.addComponent(campfire.id, new TribeComponent(tribe));
-   StructureComponentArray.addComponent(campfire.id, new StructureComponent(connectionInfo));
+   const healthComponent = new HealthComponent(25);
+
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding);
+
+   const structureComponent = new StructureComponent(connections, virtualStructure);
+
+   const tribeComponent = new TribeComponent(tribe);
 
    const inventoryComponent = new InventoryComponent();
-   InventoryComponentArray.addComponent(campfire.id, inventoryComponent);
-   createNewInventory(inventoryComponent, InventoryName.fuelInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-   createNewInventory(inventoryComponent, InventoryName.ingredientInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-   createNewInventory(inventoryComponent, InventoryName.outputInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
-   const cookingEntityComponent = new CookingComponent();
-   cookingEntityComponent.remainingHeatSeconds = LIFETIME_SECONDS;
-   CookingComponentArray.addComponent(campfire.id, cookingEntityComponent);
+   // @Copynpaste @Cleanup: don't add here, add in cooking component
+   
+   const fuelInventory = new Inventory(1, 1, InventoryName.fuelInventory);
+   addInventoryToInventoryComponent(inventoryComponent, fuelInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
+   
+   const ingredientInventory = new Inventory(1, 1, InventoryName.ingredientInventory);
+   addInventoryToInventoryComponent(inventoryComponent, ingredientInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
-   return campfire;
-}
+   const outputInventory = new Inventory(1, 1, InventoryName.outputInventory);
+   addInventoryToInventoryComponent(inventoryComponent, outputInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
+   
+   const cookingComponent = new CookingComponent(30);
 
-export function tickCampfire(campfire: Entity): void {
-   // @Incomplete: Destroy campfire when remaining heat reaches 0
-   tickCookingEntity(campfire);
+   const campfireComponent = new CampfireComponent();
+   
+   return {
+      entityType: EntityType.campfire,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.inventory]: inventoryComponent,
+         [ServerComponentType.cooking]: cookingComponent,
+         [ServerComponentType.campfire]: campfireComponent
+      },
+      lights: []
+   };
 }

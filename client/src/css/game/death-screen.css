@@ -73,3 +73,11 @@
    background-color: #aaa;
    box-shadow: none;
 }
+
+#death-screen .respawn-countdown {
+   font-family: "PT Serif";
+   font-weight: bold;
+   font-size: 2.5rem;
+   color: red;
+   text-shadow: 2px 2px 5px 1px rgba(0, 0, 0, 0.4);
+}

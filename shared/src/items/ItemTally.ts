@@ -1,4 +1,4 @@
-import { Inventory, ItemType, ItemTypeString } from "./items";
+import { Inventory, ItemType } from "./items";
 
 interface ItemTallyEntry {
    readonly itemType: ItemType;

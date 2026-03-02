@@ -1,12 +1,17 @@
-import { WaterRockData, RiverSteppingStoneData, RiverSteppingStoneSize, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, lerp } from "webgl-test-shared/dist/utils";
-import { TileCoordinates } from "../Tile";
+import { WaterRockData } from "battletribes-shared/client-server-types";
+import { Settings } from "battletribes-shared/settings";
+import { Point, TileCoordinates, lerp, randAngle, randFloat, randInt, tileIsInWorld } from "battletribes-shared/utils";
 import { generateOctavePerlinNoise } from "../perlin-noise";
-import Board from "../Board";
-import SRandom from "../SRandom";
+import { Hitbox } from "../hitboxes";
+import { createRiverSteppingStoneConfig, RiverSteppingStoneSize } from "../entities/plains/river-stepping-stone";
+import { ServerComponentType } from "../../../shared/src/components";
+import { createEntityImmediate } from "../world";
+import Layer from "../Layer";
+import { getDistanceFromPointToHitbox } from "../ai-shared";
+import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 
-const NUM_RIVERS = 20;
+// Kinda hacky, used to be just set to 20, but that meant the density of rivers changed with the world size, no good.
+const NUM_RIVERS = 20 * ((Settings.WORLD_SIZE_CHUNKS / 64) ** 2);
 
 const ADJACENT_TILE_OFFSETS: ReadonlyArray<[xOffset: number, yOffset: number]> = [
    [1, 0],
@@ -32,19 +37,44 @@ const BORDER_PADDING = Settings.EDGE_GENERATION_DISTANCE + 5;
 export interface WaterTileGenerationInfo {
    readonly tileX: number;
    readonly tileY: number;
-   readonly flowDirection: number;
+   /** Index of the river flow direction */
+   readonly flowDirectionIdx: number;
 }
 
-export function generateRiverTiles(): ReadonlyArray<WaterTileGenerationInfo> {
+export interface RiverGenerationInfo {
+   readonly waterTiles: ReadonlyArray<WaterTileGenerationInfo>;
+   readonly riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>;
+}
+
+const getFlowDirectionIdx = (flowDirection: number): number => {
+   // @Hack
+
+   if (flowDirection >= 2 * Math.PI) {
+      flowDirection -= 2 * Math.PI;
+   } else if (flowDirection < 0) {
+      flowDirection += 2 * Math.PI;
+   }
+
+   for (let i = 0; i < 8; i++) {
+      const angle = i / 4 * Math.PI;
+      if (Math.abs(angle - flowDirection) < 0.01) {
+         return i;
+      }
+   }
+
+   throw new Error();
+}
+
+export function generateRiverTiles(): RiverGenerationInfo {
    const rootTiles = new Array<WaterTileGenerationInfo>();
 
    for (let i = 0; i < NUM_RIVERS; i++) {
-      const riverNoise = generateOctavePerlinNoise(Settings.BOARD_DIMENSIONS + BORDER_PADDING * 2, Settings.BOARD_DIMENSIONS + BORDER_PADDING * 2, 200, 5, 2, 0.5);
+      const riverNoise = generateOctavePerlinNoise(Settings.WORLD_SIZE_TILES + BORDER_PADDING * 2, Settings.WORLD_SIZE_TILES + BORDER_PADDING * 2, 200, 5, 2, 0.5);
 
       let maxWeight = -1;
       let currentTileCoordinates: TileCoordinates | undefined;
-      for (let x = 0; x < Settings.BOARD_DIMENSIONS; x++) {
-         for (let y = 0; y < Settings.BOARD_DIMENSIONS; y++) {
+      for (let x = 0; x < Settings.WORLD_SIZE_TILES; x++) {
+         for (let y = 0; y < Settings.WORLD_SIZE_TILES; y++) {
             const weight = riverNoise[x + BORDER_PADDING][y + BORDER_PADDING];
             if (weight > maxWeight) {
                maxWeight = weight;
@@ -68,7 +98,7 @@ export function generateRiverTiles(): ReadonlyArray<WaterTileGenerationInfo> {
          for (const offset of NEIGHBOUR_TILE_OFFSETS) {
             const tileX = currentTileCoordinates.x + offset[0];
             const tileY = currentTileCoordinates.y + offset[1];
-            if (tileX < -BORDER_PADDING || tileX >= Settings.BOARD_DIMENSIONS + BORDER_PADDING || tileY < -BORDER_PADDING || tileY >= Settings.BOARD_DIMENSIONS + BORDER_PADDING) {
+            if (tileX < -BORDER_PADDING || tileX >= Settings.WORLD_SIZE_TILES + BORDER_PADDING || tileY < -BORDER_PADDING || tileY >= Settings.WORLD_SIZE_TILES + BORDER_PADDING) {
                continue;
             }
             const weight = riverNoise[tileX + BORDER_PADDING][tileY + BORDER_PADDING];
@@ -86,20 +116,20 @@ export function generateRiverTiles(): ReadonlyArray<WaterTileGenerationInfo> {
             break;
          }
 
-         let flowDirection: number;
+         let flowDirectionIdx: number;
          if (rootTiles.length > 0 && typeof secondMinTileCoordinates !== "undefined" && Math.random() < 0.3) {
             minTileCoordinates = secondMinTileCoordinates;
-            flowDirection = rootTiles[rootTiles.length - 1].flowDirection;
+            flowDirectionIdx = rootTiles[rootTiles.length - 1].flowDirectionIdx;
          } else {
             const startPos = new Point(currentTileCoordinates.x, currentTileCoordinates.y);
             const endPos = new Point(minTileCoordinates.x, minTileCoordinates.y);
-            flowDirection = startPos.calculateAngleBetween(endPos);
+            flowDirectionIdx = 1 + getFlowDirectionIdx(startPos.angleTo(endPos));
          }
 
          rootTiles.push({
             tileX: currentTileCoordinates.x,
             tileY: currentTileCoordinates.y,
-            flowDirection: flowDirection
+            flowDirectionIdx: flowDirectionIdx
          });
          currentTileCoordinates = minTileCoordinates;
       }
@@ -107,7 +137,7 @@ export function generateRiverTiles(): ReadonlyArray<WaterTileGenerationInfo> {
       rootTiles.push({
          tileX: currentTileCoordinates.x,
          tileY: currentTileCoordinates.y,
-         flowDirection: rootTiles[rootTiles.length - 2].flowDirection
+         flowDirectionIdx: rootTiles[rootTiles.length - 2].flowDirectionIdx
       });
    }
 
@@ -119,40 +149,43 @@ export function generateRiverTiles(): ReadonlyArray<WaterTileGenerationInfo> {
          minTileX = -BORDER_PADDING;
       }
       let maxTileX = rootTile.tileX + 1;
-      if (maxTileX >= Settings.BOARD_DIMENSIONS + BORDER_PADDING) {
-         maxTileX = Settings.BOARD_DIMENSIONS + BORDER_PADDING - 1;
+      if (maxTileX >= Settings.WORLD_SIZE_TILES + BORDER_PADDING) {
+         maxTileX = Settings.WORLD_SIZE_TILES + BORDER_PADDING - 1;
       }
       let minTileY = rootTile.tileY - 1;
       if (minTileY < -BORDER_PADDING) {
          minTileY = -BORDER_PADDING;
       }
       let maxTileY = rootTile.tileY + 1;
-      if (maxTileY >= Settings.BOARD_DIMENSIONS + BORDER_PADDING) {
-         maxTileY = Settings.BOARD_DIMENSIONS + BORDER_PADDING - 1;
+      if (maxTileY >= Settings.WORLD_SIZE_TILES + BORDER_PADDING) {
+         maxTileY = Settings.WORLD_SIZE_TILES + BORDER_PADDING - 1;
       }
-      for (let x = minTileX; x <= maxTileX; x++) {
-         outerLoop: for (let y = minTileY; y <= maxTileY; y++) {
-            if (x < -Settings.EDGE_GENERATION_DISTANCE || x >= Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE || y < -Settings.EDGE_GENERATION_DISTANCE || y >= Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) {
+      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+         outerLoop: for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+            if (tileX < -Settings.EDGE_GENERATION_DISTANCE || tileX >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE || tileY < -Settings.EDGE_GENERATION_DISTANCE || tileY >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
                continue;
             }
             
             // Make sure the tile isn't already in the tiles array
             // @Speed
             for (const tile of tiles) {
-               if (tile.tileX === x && tile.tileY === 0) {
+               if (tile.tileX === tileX && tile.tileY === tileY) {
                   continue outerLoop;
                }
             }
             tiles.push({
-               tileX: x,
-               tileY: y,
-               flowDirection: rootTile.flowDirection
+               tileX: tileX,
+               tileY: tileY,
+               flowDirectionIdx: rootTile.flowDirectionIdx
             });
          }
       }
    }
 
-   return tiles;
+   return {
+      waterTiles: tiles,
+      riverMainTiles: rootTiles
+   };
 }
 
 const tileIsWater = (tileX: number, tileY: number, riverTiles: ReadonlyArray<WaterTileGenerationInfo>): boolean => {
@@ -168,10 +201,8 @@ const tileIsAdjacentToLand = (tileX: number, tileY: number, riverTiles: Readonly
    for (const offset of ADJACENT_TILE_OFFSETS) {
       const currentTileX = tileX + offset[0];
       const currentTileY = tileY + offset[1];
-      if (Board.tileIsInBoard(currentTileX, currentTileY)) {
-         if (!tileIsWater(currentTileX, currentTileY, riverTiles)) {
-            return true;
-         }
+      if (tileIsInWorld(currentTileX, currentTileY) && !tileIsWater(currentTileX, currentTileY, riverTiles)) {
+         return true;
       }
    }
 
@@ -200,21 +231,21 @@ const calculateRiverCrossingPositions = (riverTiles: ReadonlyArray<WaterTileGene
          continue;
       }
 
-      const sign = SRandom.next() < 0.5 ? 1 : -1;
-      const directionOffset = SRandom.randFloat(0, Math.PI/10) * sign;
+      const sign = Math.random() < 0.5 ? 1 : -1;
+      const directionOffset = randFloat(0, Math.PI/10) * sign;
 
       let crossingDirection: number | undefined;
-      const clockwiseIsWater = tileAtOffsetIsWater(startTile.tileX, startTile.tileY, startTile.flowDirection + directionOffset + Math.PI/2, riverTiles);
-      const anticlockwiseIsWater = tileAtOffsetIsWater(startTile.tileX, startTile.tileY, startTile.flowDirection + directionOffset - Math.PI/2, riverTiles);
+      const clockwiseIsWater = tileAtOffsetIsWater(startTile.tileX, startTile.tileY, startTile.flowDirectionIdx + directionOffset + Math.PI/2, riverTiles);
+      const anticlockwiseIsWater = tileAtOffsetIsWater(startTile.tileX, startTile.tileY, startTile.flowDirectionIdx + directionOffset - Math.PI/2, riverTiles);
 
       // Only generate a river if only one side of the river is water
       if ((!clockwiseIsWater && !anticlockwiseIsWater) || (clockwiseIsWater && anticlockwiseIsWater)) {
          continue;
       }
       if (clockwiseIsWater) {
-         crossingDirection = startTile.flowDirection + directionOffset + Math.PI/2;
+         crossingDirection = startTile.flowDirectionIdx + directionOffset + Math.PI/2;
       } else {
-         crossingDirection = startTile.flowDirection + directionOffset - Math.PI/2;
+         crossingDirection = startTile.flowDirectionIdx + directionOffset - Math.PI/2;
       }
 
       // Calculate distance of crossing
@@ -225,7 +256,7 @@ const calculateRiverCrossingPositions = (riverTiles: ReadonlyArray<WaterTileGene
          const newTileX = currentTileX + Math.sin(crossingDirection);
          const newTileY = currentTileY + Math.cos(crossingDirection);
 
-         if (!Board.tileIsInBoard(newTileX - 0.5, newTileY - 0.5)) {
+         if (!tileIsInWorld(newTileX - 0.5, newTileY - 0.5)) {
             endTileIsValid = false;
             break;
          }
@@ -260,24 +291,24 @@ const calculateRiverCrossingPositions = (riverTiles: ReadonlyArray<WaterTileGene
    return riverCrossings;
 }
 
-export function generateRiverFeatures(riverTiles: ReadonlyArray<WaterTileGenerationInfo>, waterRocks: Array<WaterRockData>, riverSteppingStones: Array<RiverSteppingStoneData>, edgeRiverSteppingStones: Array<RiverSteppingStoneData>): void {
+export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: ReadonlyArray<WaterTileGenerationInfo>, waterRocks: Array<WaterRockData>): void {
    const MIN_CROSSING_DISTANCE = 325;
    /** Minimum distance between crossings */
    const RIVER_CROSSING_WIDTH = 100;
    const RIVER_CROSSING_WATER_ROCK_WIDTH = 150;
    const NUM_STONE_SPAWN_ATTEMPTS_PER_RIVER = 25;
-   const RIVER_STEPPING_STONE_SPACING = -5;
+   const MIN_RIVER_STEPPING_STONE_SPACING = -5;
 
    // Generate random water rocks throughout all river tiles
    for (const tile of riverTiles) {
-      if (SRandom.next() < 0.075) {
-         const x = (tile.tileX + SRandom.next()) * Settings.TILE_SIZE;
-         const y = (tile.tileY + SRandom.next()) * Settings.TILE_SIZE;
+      if (Math.random() < 0.075) {
+         const x = (tile.tileX + Math.random()) * Settings.TILE_SIZE;
+         const y = (tile.tileY + Math.random()) * Settings.TILE_SIZE;
          waterRocks.push({
             position: [x, y],
-            rotation: 2 * Math.PI * SRandom.next(),
-            size: SRandom.randInt(0, 1),
-            opacity: SRandom.next()
+            rotation: randAngle(),
+            size: randInt(0, 1),
+            opacity: Math.random()
          });
       }
    }
@@ -288,7 +319,7 @@ export function generateRiverFeatures(riverTiles: ReadonlyArray<WaterTileGenerat
    const riverCrossings = new Array<RiverCrossingInfo>();
    mainLoop:
    for (const crossingInfo of potentialRiverCrossings) {
-      if (SRandom.next() >= 0.15) {
+      if (Math.random() >= 0.15) {
          continue;
       }
       
@@ -303,15 +334,17 @@ export function generateRiverFeatures(riverTiles: ReadonlyArray<WaterTileGenerat
       riverCrossings.push(crossingInfo);
    }
 
+   // 
    // Generate features for the crossings
-   let currentCrossingGroupID = 0;
+   // 
+   
    for (const crossing of riverCrossings) {
       const minX = (crossing.startTileX + 0.5) * Settings.TILE_SIZE;
       const maxX = (crossing.endTileX + 0.5) * Settings.TILE_SIZE;
       const minY = (crossing.startTileY + 0.5) * Settings.TILE_SIZE;
       const maxY = (crossing.endTileY + 0.5) * Settings.TILE_SIZE;
 
-      const localCrossingStones = new Array<RiverSteppingStoneData>();
+      const localStoneHitboxes = new Array<Hitbox>();
 
       stoneCreationLoop:
       for (let i = 0; i < NUM_STONE_SPAWN_ATTEMPTS_PER_RIVER; i++) {
@@ -321,12 +354,12 @@ export function generateRiverFeatures(riverTiles: ReadonlyArray<WaterTileGenerat
          let x = lerp(minX, maxX, dist);
          let y = lerp(minY, maxY, dist);
 
-         const offsetMultiplier = SRandom.randFloat(-1, 1);
+         const offsetMultiplier = randFloat(-1, 1);
          x += RIVER_CROSSING_WIDTH/2 * Math.sin(crossing.direction + Math.PI/2) * offsetMultiplier;
          y += RIVER_CROSSING_WIDTH/2 * Math.cos(crossing.direction + Math.PI/2) * offsetMultiplier;
 
          // Don't create stepping stones which would be outside the world
-         if (x < -Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || x >= Settings.BOARD_UNITS + Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || y < -Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || y >= Settings.BOARD_UNITS + Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE) {
+         if (x < -Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || x >= Settings.WORLD_UNITS + Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || y < -Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || y >= Settings.WORLD_UNITS + Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE) {
             continue;
          }
 
@@ -337,48 +370,38 @@ export function generateRiverFeatures(riverTiles: ReadonlyArray<WaterTileGenerat
             continue;
          }
 
-         const stoneSize: RiverSteppingStoneSize = SRandom.randInt(0, 2);
-         const radius = RIVER_STEPPING_STONE_SIZES[stoneSize]/2;
+         const stoneSize: RiverSteppingStoneSize = randInt(0, 2);
+         const stoneConfig = createRiverSteppingStoneConfig(new Point(x, y), randAngle(), stoneSize);
+         const stoneHitbox = stoneConfig.components[ServerComponentType.transform]!.hitboxes[0];
 
          // Don't overlap with existing stones in the crossing
-         for (const stone of localCrossingStones) {
-            const dist = Math.sqrt(Math.pow(x - stone.positionX, 2) + Math.pow(y - stone.positionY, 2));
-            if (dist - RIVER_STEPPING_STONE_SIZES[stone.size]/2 - radius < RIVER_STEPPING_STONE_SPACING) {
+         for (const otherHitbox of localStoneHitboxes) {
+            // @HACK @Cleanup should use the hitboxToHitboxDist function once i make that!!!!!
+            const dist = getDistanceFromPointToHitbox(stoneHitbox.box.position, otherHitbox) - (stoneHitbox.box as CircularBox).radius;
+            if (dist < MIN_RIVER_STEPPING_STONE_SPACING) {
                continue stoneCreationLoop;
             }
          }
 
-         const data: RiverSteppingStoneData = {
-            positionX: x,
-            positionY: y,
-            size: stoneSize,
-            rotation: 2 * Math.PI * SRandom.next(),
-            groupID: currentCrossingGroupID
-         };
-         localCrossingStones.push(data);
-
-         if (Board.positionIsInBoard(x, y)) {
-            riverSteppingStones.push(data);
-         } else {
-            edgeRiverSteppingStones.push(data);
-         }
+         localStoneHitboxes.push(stoneHitbox);
+         createEntityImmediate(stoneConfig, surfaceLayer);
       }
 
       // Create water rocks
       const crossingDist = Math.sqrt(Math.pow(minX - maxX, 2) + Math.pow(minY - maxY, 2));
       const numWaterRocks = Math.floor(crossingDist / 6);
       for (let i = 0; i < numWaterRocks; i++) {
-         const dist = SRandom.next();
+         const dist = Math.random();
          
          let x = lerp(minX, maxX, dist);
          let y = lerp(minY, maxY, dist);
 
-         const offsetMultiplier = SRandom.randFloat(-1, 1);
+         const offsetMultiplier = randFloat(-1, 1);
          x += RIVER_CROSSING_WATER_ROCK_WIDTH/2 * Math.sin(crossing.direction + Math.PI/2) * offsetMultiplier;
          y += RIVER_CROSSING_WATER_ROCK_WIDTH/2 * Math.cos(crossing.direction + Math.PI/2) * offsetMultiplier;
 
          // Don't create water rocks outside the world
-         if (x < -Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || x >= Settings.BOARD_UNITS + Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || y < -Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || y >= Settings.BOARD_UNITS + Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE) {
+         if (x < -Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || x >= Settings.WORLD_UNITS + Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || y < -Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE || y >= Settings.WORLD_UNITS + Settings.EDGE_GENERATION_DISTANCE * Settings.TILE_SIZE) {
             continue;
          }
 
@@ -391,12 +414,10 @@ export function generateRiverFeatures(riverTiles: ReadonlyArray<WaterTileGenerat
 
          waterRocks.push({
             position: [x, y],
-            size: SRandom.randInt(0, 1),
-            rotation: 2 * Math.PI * SRandom.next(),
-            opacity: SRandom.next()
+            size: randInt(0, 1),
+            rotation: 2 * Math.PI * Math.random(),
+            opacity: randFloat(0.6, 1)
          });
       }
-
-      currentCrossingGroupID++;
    }
 }

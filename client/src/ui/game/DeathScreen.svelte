@@ -1,6 +1,6 @@
 <script lang="ts">
    import { randItem } from "webgl-test-shared";
-   import { sendRespawnPacket } from "../../game/networking/packet-sending";
+   import { sendRespawnPacket } from "../../game/networking/packet-sending/packet-sending";
    import { quitGame } from "../../game/client";
 
    const RESPAWN_TIME_SECONDS = 8;

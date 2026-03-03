@@ -45,10 +45,10 @@ function decodeData(reader: PacketReader): DustfleaMorphCocoonComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const dustfleaMorphCocoonComponentData = entityComponentData.serverComponentData[ServerComponentType.dustfleaMorphCocoon]!;
+   const dustfleaMorphCocoonComponentData = entityComponentData.serverComponentData.get(ServerComponentType.dustfleaMorphCocoon)!;
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -64,7 +64,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): DustfleaMorphCocoonComponent {
-   const dustfleaMorphCocoonComponentData = entityComponentData.serverComponentData[ServerComponentType.dustfleaMorphCocoon]!;
+   const dustfleaMorphCocoonComponentData = entityComponentData.serverComponentData.get(ServerComponentType.dustfleaMorphCocoon)!;
 
    return {
       stage: dustfleaMorphCocoonComponentData.stage,

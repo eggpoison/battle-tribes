@@ -1,5 +1,5 @@
 import { TribeType, getTechByID, Tech, TechID, TechTreeUnlockProgress, PacketReader, ItemType, Entity, EntityType, ItemRequirements } from "webgl-test-shared";
-import { techTreeState } from "../ui-state/tech-tree-state.svelte";
+import { techTreeState } from "../ui-state/tech-tree-state";
 import { playHeadSound } from "./sound";
 
 export interface TribesmanInfo {

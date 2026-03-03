@@ -3,10 +3,9 @@ import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
 import { removeRenderable } from "./rendering/render-loop";
 import { renderParentIsHitbox, RenderPart } from "./render-parts/render-parts";
 import { RenderLayer } from "./render-layers";
-import { getEntityLayer, getEntityType } from "./world";
-import { getServerComponentArrays } from "./entity-components/ComponentArray";
+import { getEntityComponentArrays, getEntityLayer, getEntityType } from "./world";
 import { gl } from "./webgl";
-import { EntityRenderingVars, setRenderInfoInVertexData } from "./rendering/webgl/entity-rendering";
+import { createEntityRenderData, setRenderInfoInVertexData } from "./rendering/webgl/entity-rendering";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
 
 export interface ComponentTint {
@@ -61,51 +60,12 @@ export class EntityRenderInfo {
       this.renderHeight = renderHeight;
       this.maxRenderParts = maxRenderParts;
 
-      this.vao = gl.createVertexArray()!;
-      gl.bindVertexArray(this.vao);
-      
-      this.vertexData = new Float32Array(maxRenderParts * 4 * EntityRenderingVars.ATTRIBUTES_PER_VERTEX);
-   
-      this.indicesData = new Uint16Array(maxRenderParts * 6);
-      for (let i = 0; i < maxRenderParts; i++) {
-         const dataOffset = i * 6;
-         
-         this.indicesData[dataOffset] = i * 4;
-         this.indicesData[dataOffset + 1] = i * 4 + 1;
-         this.indicesData[dataOffset + 2] = i * 4 + 2;
-         this.indicesData[dataOffset + 3] = i * 4 + 2;
-         this.indicesData[dataOffset + 4] = i * 4 + 1;
-         this.indicesData[dataOffset + 5] = i * 4 + 3;
-      }
-   
-      this.vertexBuffer = gl.createBuffer()!;
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
-   
-      this.indexBuffer = gl.createBuffer()!;
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indicesData, gl.STATIC_DRAW);
-   
-      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
-      gl.vertexAttribPointer(1, 1, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-      gl.vertexAttribPointer(2, 1, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-      gl.vertexAttribPointer(3, 3, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-      gl.vertexAttribPointer(4, 1, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 7 * Float32Array.BYTES_PER_ELEMENT);
-   
-      gl.vertexAttribPointer(5, 3, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 8 * Float32Array.BYTES_PER_ELEMENT);
-      gl.vertexAttribPointer(6, 3, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 11 * Float32Array.BYTES_PER_ELEMENT);
-      gl.vertexAttribPointer(7, 3, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 14 * Float32Array.BYTES_PER_ELEMENT);
-      
-      gl.enableVertexAttribArray(0);
-      gl.enableVertexAttribArray(1);
-      gl.enableVertexAttribArray(2);
-      gl.enableVertexAttribArray(3);
-      gl.enableVertexAttribArray(4);
-      gl.enableVertexAttribArray(5);
-      gl.enableVertexAttribArray(6);
-      gl.enableVertexAttribArray(7);
-
-      gl.bindVertexArray(null);
+      const entityRenderData = createEntityRenderData(maxRenderParts);
+      this.vao = entityRenderData.vao;
+      this.indexBuffer = entityRenderData.indexBuffer;
+      this.indicesData = entityRenderData.indicesData;
+      this.vertexBuffer = entityRenderData.vertexBuffer;
+      this.vertexData = entityRenderData.vertexData;
    }
 
    public attachRenderPart(renderPart: RenderPart): void {
@@ -155,9 +115,7 @@ export class EntityRenderInfo {
    }
 
    public getRenderThing(tag: string): RenderPart {
-      for (let i = 0; i < this.renderPartsByZIndex.length; i++) {
-         const renderThing = this.renderPartsByZIndex[i];
-
+      for (const renderThing of this.renderPartsByZIndex) {
          if (renderThing.tags.includes(tag)) {
             return renderThing;
          }
@@ -168,9 +126,7 @@ export class EntityRenderInfo {
 
    public getRenderThings(tag: string, expectedAmount?: number): Array<RenderPart> {
       const renderThings = new Array<RenderPart>();
-      for (let i = 0; i < this.renderPartsByZIndex.length; i++) {
-         const renderThing = this.renderPartsByZIndex[i];
-
+      for (const renderThing of this.renderPartsByZIndex) {
          if (renderThing.tags.includes(tag)) {
             renderThings.push(renderThing);
          }
@@ -197,12 +153,10 @@ export class EntityRenderInfo {
       this.tintG = 0;
       this.tintB = 0;
 
-      // @Speed
-      const serverComponentArrays = getServerComponentArrays();
-      for (let i = 0; i < serverComponentArrays.length; i++) {
-         const componentArray = serverComponentArrays[i];
+      const componentArrays = getEntityComponentArrays(this.entity);
+      for (const componentArray of componentArrays) {
          if (componentArray.hasComponent(this.entity) && typeof componentArray.calculateTint !== "undefined") {
-            const tint = componentArray.calculateTint!(this.entity);
+            const tint = componentArray.calculateTint(this.entity);
 
             this.tintR += tint.tintR;
             this.tintG += tint.tintG;

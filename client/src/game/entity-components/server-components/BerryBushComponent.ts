@@ -48,14 +48,14 @@ function decodeData(reader: PacketReader): BerryBushComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
-      getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[entityComponentData.serverComponentData[ServerComponentType.berryBush]!.numBerries])
+      getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[entityComponentData.serverComponentData.get(ServerComponentType.berryBush)!.numBerries])
    );
    renderPart.addTag("berryBushComponent:renderPart");
    renderInfo.attachRenderPart(renderPart)
@@ -67,7 +67,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): BerryBushComponent {
    return {
-      numBerries: entityComponentData.serverComponentData[ServerComponentType.berryBush]!.numBerries,
+      numBerries: entityComponentData.serverComponentData.get(ServerComponentType.berryBush)!.numBerries,
       renderPart: intermediateInfo.renderPart
    };
 }

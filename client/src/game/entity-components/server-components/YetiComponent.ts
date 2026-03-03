@@ -3,7 +3,7 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createSnowParticle, createWhiteSmokeParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { RandomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { TransformComponentArray, TransformComponentData } from "./TransformComponent";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import ServerComponentArray from "../ServerComponentArray";
@@ -60,7 +60,7 @@ function decodeData(reader: PacketReader): YetiComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
 
    const pawRenderParts = new Array<VisualRenderPart>();
    for (const hitbox of transformComponentData.hitboxes) {
@@ -101,7 +101,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): YetiComponent {
-   const yetiComponentData = entityComponentData.serverComponentData[ServerComponentType.yeti]!;
+   const yetiComponentData = entityComponentData.serverComponentData.get(ServerComponentType.yeti)!;
    
    return {
       lastAttackProgress: yetiComponentData.attackProgress,

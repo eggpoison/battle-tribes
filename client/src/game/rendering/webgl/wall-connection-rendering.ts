@@ -1,7 +1,7 @@
 import { WallConnectionData, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
+import { debugDisplayState } from "../../../ui-state/debug-display-state";
 
 const CONNECTION_WIDTH = 4;
 const CONNECTION_HEIGHT = 8;

@@ -25,7 +25,7 @@ function decodeData(): TukmokComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
 
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
       const hitbox = transformComponentData.hitboxes[i];

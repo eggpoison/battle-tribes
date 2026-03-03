@@ -30,7 +30,8 @@ let TECH_TREE_ENTITY_TEXTURE_ATLAS: TextureAtlasInfo;
 export async function createTextureAtlases(): Promise<void> {
    const entityTextureAtlasGenerationInfo = await generateTextureAtlas(TEXTURE_SOURCES);
    
-   ENTITY_TEXTURE_ATLAS = stitchTextureAtlas(entityTextureAtlasGenerationInfo, gl)
+   ENTITY_TEXTURE_ATLAS = stitchTextureAtlas(entityTextureAtlasGenerationInfo, gl);
+   console.log(ENTITY_TEXTURE_ATLAS.atlasSize);
    TECH_TREE_ENTITY_TEXTURE_ATLAS = stitchTextureAtlas(entityTextureAtlasGenerationInfo, getTechTreeGL());
 }
 

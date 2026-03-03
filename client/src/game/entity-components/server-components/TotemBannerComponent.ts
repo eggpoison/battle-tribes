@@ -99,7 +99,7 @@ const createBannerRenderPart = (tribeType: TribeType, renderInfo: EntityRenderIn
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
    // Main render part
@@ -112,8 +112,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       )
    );
    
-   const bannerComponentData = entityComponentData.serverComponentData[ServerComponentType.totemBanner]!;
-   const tribeComponentData = entityComponentData.serverComponentData[ServerComponentType.tribe]!;
+   const bannerComponentData = entityComponentData.serverComponentData.get(ServerComponentType.totemBanner)!;
+   const tribeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribe)!;
    
    const renderParts = new Array<TexturedRenderPart>();
    
@@ -129,7 +129,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TotemBannerComponent {
    return {
-      banners: entityComponentData.serverComponentData[ServerComponentType.totemBanner]!.banners,
+      banners: entityComponentData.serverComponentData.get(ServerComponentType.totemBanner)!.banners,
       bannerRenderParts: intermediateInfo.bannerRenderParts
    };
 }

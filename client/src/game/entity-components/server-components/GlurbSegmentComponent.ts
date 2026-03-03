@@ -59,11 +59,11 @@ const createMossBallRenderPart = (mossBallCompleteness: number, parentHitbox: Hi
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const glurbSegmentComponentData = entityComponentData.serverComponentData[ServerComponentType.glurbSegment]!;
+   const glurbSegmentComponentData = entityComponentData.serverComponentData.get(ServerComponentType.glurbSegment)!;
 
    let renderPart: TexturedRenderPart | null;
    if (glurbSegmentComponentData.mossBallCompleteness > 0) {
-      const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+      const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
       const hitbox = transformComponentData.hitboxes[0];
    
       renderPart = createMossBallRenderPart(glurbSegmentComponentData.mossBallCompleteness, hitbox);

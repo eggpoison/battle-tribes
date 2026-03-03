@@ -76,7 +76,7 @@ const getLayerColour = (entityComponentData: EntityComponentData, r: number, g: 
       case EntityType.grassStrand: {
          // @Speed: a lot of this is shared for all strands
          
-         const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+         const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
          const hitbox = transformComponentData.hitboxes[0];
    
          const tileX = Math.floor(hitbox.box.position.x / Settings.TILE_SIZE);
@@ -156,10 +156,10 @@ function decodeData(reader: PacketReader): LayeredRodComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const layeredRodComponentData = entityComponentData.serverComponentData[ServerComponentType.layeredRod]!;
+   const layeredRodComponentData = entityComponentData.serverComponentData.get(ServerComponentType.layeredRod)!;
 
    const naturalBendX = layeredRodComponentData.naturalBendX;
    const naturalBendY = layeredRodComponentData.naturalBendY;
@@ -186,7 +186,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): LayeredRodComponent {
-   const layeredRodComponentData = entityComponentData.serverComponentData[ServerComponentType.layeredRod]!;
+   const layeredRodComponentData = entityComponentData.serverComponentData.get(ServerComponentType.layeredRod)!;
 
    const naturalBendX = layeredRodComponentData.naturalBendX;
    const naturalBendY = layeredRodComponentData.naturalBendY;
@@ -201,7 +201,7 @@ function createComponent(entityComponentData: EntityComponentData): LayeredRodCo
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const layeredRodComponentData = entityComponentData.serverComponentData[ServerComponentType.layeredRod]!;
+   const layeredRodComponentData = entityComponentData.serverComponentData.get(ServerComponentType.layeredRod)!;
    return layeredRodComponentData.numLayers;
 }
 

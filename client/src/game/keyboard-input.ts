@@ -1,9 +1,9 @@
 import { gameIsRunning } from "./client";
-import { chatboxState } from "../ui-state/chatbox-state.svelte";
-import { gameUIState } from "../ui-state/game-ui-state.svelte";
-import { nerdVisionState } from "../ui-state/nerd-vision-state.svelte";
-import { sendAscendPacket } from "./networking/packet-sending";
-import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
+import { chatboxState } from "../ui-state/chatbox-state";
+import { gameUIState } from "../ui-state/game-ui-state";
+import { sendAscendPacket } from "./networking/packet-sending/packet-sending";
+import { Menu, menuSelectorState } from "../ui-state/menu-selector-state";
+import { nerdVisionIsVisible, setNerdVisionIsVisible, setTerminalIsVisible } from "../ui/game/dev/NerdVision";
 
 const keyListeners: { [key: string]: Array<(e: KeyboardEvent) => void> } = {};
 
@@ -86,11 +86,11 @@ export function onKeyDown(e: KeyboardEvent): void {
          gameUIState.setSettingsIsOpen(false);
       // Open/close nerd vision
       } else if (key === "`") {
-         nerdVisionState.setIsVisible(!nerdVisionState.isVisible);
+         setNerdVisionIsVisible(!nerdVisionIsVisible());
       // Open terminal on tilda press
       } else if (key === "~") {
-         nerdVisionState.setIsVisible(true);
-         nerdVisionState.setTerminalIsVisible(true);
+         setNerdVisionIsVisible(true);
+         setTerminalIsVisible(true);
       // Open/close tech tree
       } else if (key === "p") {
          menuSelectorState.toggleMenu(Menu.techTree);

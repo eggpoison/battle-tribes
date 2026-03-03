@@ -1,7 +1,7 @@
 <script lang="ts">
    import {ITEM_TYPE_RECORD, ITEM_INFO_RECORD, type Item, type AnimalStaffItemInfo, type ArmourItemInfo, itemInfoIsTool, ItemType } from "webgl-test-shared";
    import CLIENT_ITEM_INFO_RECORD from "../../../game/client-item-info";
-   import { gameUIState } from "../../../ui-state/game-ui-state.svelte";
+   import { gameUIState } from "../../../ui-state/game-ui-state";
 
    interface Props {
       readonly item: Item;

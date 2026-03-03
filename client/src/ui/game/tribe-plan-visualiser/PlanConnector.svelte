@@ -1,7 +1,7 @@
 <script lang="ts">
    import { distance } from "webgl-test-shared";
    import { type AIPlan } from "../../../game/rendering/tribe-plan-visualiser/tribe-plan-visualiser";
-   import { getPlanX, getPlanY } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
+   import { getPlanX, getPlanY } from "../../../ui-state/tribe-plan-visualiser-state";
 
    interface Props {
       readonly offsetX: number;

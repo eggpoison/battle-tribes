@@ -2,12 +2,12 @@
    import { assert, type Entity, TamingSkillID, type TamingSkillNode } from "webgl-test-shared";
    import CLIENT_ENTITY_INFO_RECORD from "../../../game/client-entity-info";
    import { keyIsPressed } from "../../../game/keyboard-input";
-   import { sendForceAcquireTamingSkillPacket, sendAcquireTamingSkillPacket } from "../../../game/networking/packet-sending";
+   import { sendForceAcquireTamingSkillPacket, sendAcquireTamingSkillPacket } from "../../../game/networking/packet-sending/packet-sending";
    import { playHeadSound } from "../../../game/sound";
    import { isDev } from "../../../game/utils";
    import { getEntityType } from "../../../game/world";
-   import { SKILL_TRANSFORM_SCALE_FACTOR, tamingMenuState } from "../../../ui-state/taming-menu-state.svelte";
-   import { tamingSkillTooltipState } from "../../../ui-state/taming-skill-tooltip-state.svelte";
+   import { SKILL_TRANSFORM_SCALE_FACTOR, tamingMenuState } from "../../../ui-state/taming-menu-state";
+   import { tamingSkillTooltipState } from "../../../ui-state/taming-skill-tooltip-state";
 
    interface Props {
       skillNode: TamingSkillNode;

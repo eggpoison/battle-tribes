@@ -3,7 +3,7 @@
    import { getItemTypeImage } from "../../../game/client-item-info";
    import { type ItemRestTime } from "../../../game/player-action-handling";
    import type { HTMLAttributes } from "svelte/elements";
-   import { itemTooltipState } from "../../../ui-state/item-tooltip-state.svelte";
+   import { itemTooltipState } from "../../../ui-state/item-tooltip-state";
    import { onDestroy } from "svelte";
 
    interface Props extends HTMLAttributes<HTMLDivElement> {

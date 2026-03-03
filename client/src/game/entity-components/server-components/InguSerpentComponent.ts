@@ -64,7 +64,7 @@ const createIceSpeckProjectile = (hitbox: Hitbox): void => {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
 
    for (const hitbox of transformComponentData.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.INGU_SERPENT_HEAD)) {

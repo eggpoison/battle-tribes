@@ -29,10 +29,10 @@ function decodeData(reader: PacketReader): DesertBushSandyComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const desertBushSandyComponentData = entityComponentData.serverComponentData[ServerComponentType.desertBushSandy]!;
+   const desertBushSandyComponentData = entityComponentData.serverComponentData.get(ServerComponentType.desertBushSandy)!;
    
    let textureSource: string;
    if (desertBushSandyComponentData.size === 0) {

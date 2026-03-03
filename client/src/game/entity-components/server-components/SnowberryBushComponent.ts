@@ -33,10 +33,10 @@ const getTextureSource = (numBerries: number): string => {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const snowberryBushComponentData = entityComponentData.serverComponentData[ServerComponentType.snowberryBush]!;
+   const snowberryBushComponentData = entityComponentData.serverComponentData.get(ServerComponentType.snowberryBush)!;
 
    const renderPart = new TexturedRenderPart(
       hitbox,

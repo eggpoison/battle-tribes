@@ -7,7 +7,7 @@ import { TurretComponentArray } from "../../entity-components/server-components/
 import { playerInstance } from "../../player";
 import { calculateEntityPlaceInfo } from "../../structure-placement";
 import { getPlayerSelectedItem } from "../../player-action-handling";
-import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 
 const CIRCLE_DETAIL = 300;
 

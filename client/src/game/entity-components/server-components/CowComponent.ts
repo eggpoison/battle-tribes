@@ -55,9 +55,9 @@ function decodeData(reader: PacketReader): CowComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    
-   const cowComponentData = entityComponentData.serverComponentData[ServerComponentType.cow]!;
+   const cowComponentData = entityComponentData.serverComponentData.get(ServerComponentType.cow)!;
    const cowNum = cowComponentData.species === CowSpecies.brown ? 1 : 2;
 
    let headRenderPart!: RenderPart;
@@ -89,7 +89,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): CowComponent {
-   const cowComponentData = entityComponentData.serverComponentData[ServerComponentType.cow]!;
+   const cowComponentData = entityComponentData.serverComponentData.get(ServerComponentType.cow)!;
    
    return {
       species: cowComponentData.species,

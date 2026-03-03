@@ -46,10 +46,10 @@ function decodeData(reader: PacketReader): GuardianGemFragmentProjectileComponen
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const guardianGemFragmentProjectileComponentData = entityComponentData.serverComponentData[ServerComponentType.guardianGemFragmentProjectile]!;
+   const guardianGemFragmentProjectileComponentData = entityComponentData.serverComponentData.get(ServerComponentType.guardianGemFragmentProjectile)!;
    
    const renderPart = new TexturedRenderPart(
       hitbox,

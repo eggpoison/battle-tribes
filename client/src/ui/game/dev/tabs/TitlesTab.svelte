@@ -1,8 +1,8 @@
 <script lang="ts">
    import { NUM_TRIBESMAN_TITLES, TribesmanTitle } from "webgl-test-shared";
-   import { sendDevGiveTitlePacket, sendDevRemoveTitlePacket } from "../../../../game/networking/packet-sending";
+   import { sendDevGiveTitlePacket, sendDevRemoveTitlePacket } from "../../../../game/networking/packet-sending/packet-sending";
    import TitlesList from "./TitlesList.svelte";
-   import { tabSelectorState } from "../../../../ui-state/tab-selector-state.svelte";
+   import { tabSelectorState } from "../../../../ui-state/tab-selector-state";
 
    const getUnclaimedTitles = (titles: ReadonlyArray<TribesmanTitle>): ReadonlyArray<TribesmanTitle> => {
       const unclaimedTitles = new Array<TribesmanTitle>();

@@ -4,7 +4,7 @@
    import { setRenderedTribePlanID } from "../../../../game/rendering/tribe-plan-visualiser/tribe-plan-visualiser";
    import { tribeHasExtendedInfo, tribes } from "../../../../game/tribes";
    import CLIENT_ENTITY_INFO_RECORD from "../../../../game/client-entity-info";
-   import { sendDevChangeTribeTypePacket, sendDevCreateTribePacket, sendSetAutogiveBaseResourcesPacket, sendTPTOEntityPacket } from "../../../../game/networking/packet-sending";
+   import { sendDevChangeTribeTypePacket, sendDevCreateTribePacket, sendSetAutogiveBaseResourcesPacket, sendTPTOEntityPacket } from "../../../../game/networking/packet-sending/packet-sending";
    import DevmodeScrollableOptions from "../DevmodeScrollableOptions.svelte";
    import DevmodeDropdownInput from "../DevmodeDropdownInput.svelte";
 

@@ -59,7 +59,7 @@ function decodeData(reader: PacketReader): HealingTotemComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
    renderInfo.attachRenderPart(
@@ -76,7 +76,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): HealingTotemComponent {
    return {
-      healingTargetsData: entityComponentData.serverComponentData[ServerComponentType.healingTotem]!.healingTargetsData,
+      healingTargetsData: entityComponentData.serverComponentData.get(ServerComponentType.healingTotem)!.healingTargetsData,
       ticksSpentHealing: 0,
       eyeLights: []
    };

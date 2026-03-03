@@ -12,7 +12,7 @@ import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices"
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
 import { TamingComponentArray } from "./entity-components/server-components/TamingComponent";
 import { cameraPosition, cameraZoom, cursorWorldPos } from "./camera";
-import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
+import { debugDisplayState } from "../ui-state/debug-display-state";
 
 // @Cleanup: The logic for damage, research and heal numbers is extremely similar, can probably be combined
 

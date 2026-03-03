@@ -250,7 +250,7 @@ export function continueCurrentPath(tribesman: Entity): boolean {
          const c = new Point(a.x + b.x, a.y + b.y);
          
          const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman);
-         tribesmanComponent.movementIntention = c;
+         tribesmanComponent.moveIntention = c.angle();
       }
 
       // @Speed: only do this if we know the path has a door in it

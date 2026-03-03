@@ -2,9 +2,9 @@ import { assert, Point, Entity, EntityType, ServerComponentType } from "webgl-te
 import ServerComponentArray from "./ServerComponentArray";
 import ClientComponentArray from "./ClientComponentArray";
 import { ClientComponentType } from "./client-component-types";
-import { EntityComponentData } from "../world";
+import { EntityComponentData, getEntityComponentArrays } from "../world";
 import { Hitbox } from "../hitboxes";
-import { EntityRenderInfo } from "../EntityRenderInfo";
+import { ComponentTint, EntityRenderInfo } from "../EntityRenderInfo";
 
 export const enum ComponentArrayType {
    server,
@@ -13,16 +13,16 @@ export const enum ComponentArrayType {
 
 let componentArrayIDCounter = 0;
 
-type ComponentTypeForArray = {
+interface ComponentTypeForArray {
    [ComponentArrayType.server]: ServerComponentType,
    [ComponentArrayType.client]: ClientComponentType
 };
 
-let componentArrays = new Array<ComponentArray>();
-let serverComponentArrays = new Array<ServerComponentArray>();
+const componentArrays = new Array<ComponentArray>();
+const serverComponentArrays = new Array<ServerComponentArray>();
 
-let clientComponentArrayRecord: Record<ClientComponentType, ClientComponentArray> = {} as any;
-let serverComponentArrayRecord: Record<ServerComponentType, ServerComponentArray> = {} as any;
+const clientComponentArrayRecord: Record<ClientComponentType, ClientComponentArray> = {} as unknown as Record<ClientComponentType, ClientComponentArray>;
+const serverComponentArrayRecord: Record<ServerComponentType, ServerComponentArray> = {} as unknown as Record<ServerComponentType, ServerComponentArray>;
 
 export abstract class ComponentArray<
    T extends object = object,
@@ -34,7 +34,7 @@ export abstract class ComponentArray<
    private readonly isActiveByDefault: boolean;
 
    // @HACK here for hack
-   private readonly componentType: ComponentType;
+   public readonly componentType: ComponentType;
    
    public entities = new Array<Entity>();
    public components = new Array<T>();
@@ -72,6 +72,9 @@ export abstract class ComponentArray<
    /** Called when the entity dies, not when the entity leaves the player's vision. */
    public onDie?(entity: Entity): void;
    public onRemove?(entity: Entity): void;
+   /** Called whenever the entity is first selected or its data is changed while selected. */
+   public updateSelectedEntityState?(entity: Entity): void;
+   public calculateTint?(entity: Entity): ComponentTint;
 
    constructor(arrayType: ArrayType, componentType: ComponentType, isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderInfo: EntityRenderInfo) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number) {
       this.isActiveByDefault = isActiveByDefault;
@@ -82,6 +85,7 @@ export abstract class ComponentArray<
       this.getMaxRenderParts = getMaxRenderParts;
 
       componentArrays.push(this as unknown as ComponentArray);
+      // @Hacke
       if (arrayType === ComponentArrayType.server) {
          assert(typeof serverComponentArrayRecord[componentType as ServerComponentType] === "undefined");
          
@@ -115,7 +119,8 @@ export abstract class ComponentArray<
 
    public removeComponent(entity: Entity): void {
 		// Copy element at end into deleted element's place to maintain density
-      const indexOfRemovedEntity = this.entityToIndexMap[entity]!;
+      const indexOfRemovedEntity = this.entityToIndexMap[entity];
+      assert(typeof indexOfRemovedEntity !== "undefined");
       this.components[indexOfRemovedEntity] = this.components[this.components.length - 1];
       this.entities[indexOfRemovedEntity] = this.entities[this.entities.length - 1];
 
@@ -195,8 +200,7 @@ export abstract class ComponentArray<
    }
 
    public deactivateQueue(): void {
-      for (let i = 0; i < this.deactivateBuffer.length; i++) {
-         const entityID = this.deactivateBuffer[i];
+      for (const entityID of this.deactivateBuffer) {
          this.deactivateComponent(entityID);
       }
       this.deactivateBuffer = [];
@@ -238,13 +242,9 @@ export function getServerComponentArray(componentType: ServerComponentType): Ser
 }
 
 export function callEntityOnUpdateFunctions(entity: Entity): void {
-   for (let i = 0; i < componentArrays.length; i++) {
-      const componentArray = componentArrays[i];
-      if (typeof componentArray.onUpdate === "undefined") {
-         continue;
-      }
-      
-      if (componentArray.hasComponent(entity)) {
+   const componentArrays = getEntityComponentArrays(entity);
+   for (const componentArray of componentArrays) {
+      if (typeof componentArray.onUpdate !== "undefined") {
          componentArray.onUpdate(entity);
       }
    }

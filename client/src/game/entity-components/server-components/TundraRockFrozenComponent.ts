@@ -26,10 +26,10 @@ function decodeData(reader: PacketReader): TundraRockFrozenComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const tundraRockFrozenComponentData = entityComponentData.serverComponentData[ServerComponentType.tundraRockFrozen]!;
+   const tundraRockFrozenComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tundraRockFrozen)!;
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -51,7 +51,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): TundraRockFrozenComponent {
    return {
-      variant: entityComponentData.serverComponentData[ServerComponentType.tundraRockFrozen]!.variant
+      variant: entityComponentData.serverComponentData.get(ServerComponentType.tundraRockFrozen)!.variant
    };
 }
 

@@ -42,10 +42,10 @@ function decodeData(reader: PacketReader): TribeWarriorComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const tribeWarriorComponentData = entityComponentData.serverComponentData[ServerComponentType.tribeWarrior]!;
+   const tribeWarriorComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribeWarrior)!;
    for (let i = 0; i < tribeWarriorComponentData.scars.length; i++) {
       const scarInfo = tribeWarriorComponentData.scars[i];
 
@@ -66,12 +66,12 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): TribeWarriorComponent {
    return {
-      scars: entityComponentData.serverComponentData[ServerComponentType.tribeWarrior]!.scars
+      scars: entityComponentData.serverComponentData.get(ServerComponentType.tribeWarrior)!.scars
    };
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const tribeWarriorComponentData = entityComponentData.serverComponentData[ServerComponentType.tribeWarrior]!;
+   const tribeWarriorComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribeWarrior)!;
    return tribeWarriorComponentData.scars.length;
 }
 

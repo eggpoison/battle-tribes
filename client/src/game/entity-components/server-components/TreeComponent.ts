@@ -44,10 +44,10 @@ function decodeData(reader: PacketReader): TreeComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const treeComponentData = entityComponentData.serverComponentData[ServerComponentType.tree]!;
+   const treeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tree)!;
    
    renderInfo.attachRenderPart(
       new TexturedRenderPart(
@@ -63,7 +63,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): TreeComponent {
    return {
-      treeSize: entityComponentData.serverComponentData[ServerComponentType.tree]!.treeSize
+      treeSize: entityComponentData.serverComponentData.get(ServerComponentType.tree)!.treeSize
    };
 }
 

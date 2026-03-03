@@ -1,0 +1,102 @@
+import { Settings, Inventory, InventoryName } from "webgl-test-shared";
+
+let selectedItemSlot = 1;
+
+let hotbarThrownBattleaxeItemID = -1;
+let offhandThrownBattleaxeItemID = -1;
+
+let hotbar = new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar);
+let offhand = new Inventory(1, 1, InventoryName.offhand);
+let heldItemSlot = new Inventory(1, 1, InventoryName.heldItemSlot);
+let craftingOutputSlot = new Inventory(1, 1, InventoryName.craftingOutputSlot);
+let backpack = new Inventory(1, 1, InventoryName.backpack);
+let backpackSlot = new Inventory(1, 1, InventoryName.backpackSlot);
+let armourSlot = new Inventory(1, 1, InventoryName.armourSlot);
+let gloveSlot = new Inventory(1, 1, InventoryName.gloveSlot);
+
+export const inventoryState = {
+   get selectedItemSlot() {
+      return selectedItemSlot;
+   },
+   setSelectedItemSlot(newSelectedItemSlot: number): void {
+      selectedItemSlot = newSelectedItemSlot;
+   },
+
+   get hotbarThrownBattleaxeItemID() {
+      return hotbarThrownBattleaxeItemID;
+   },
+   setHotbarThrownBattleaxeItemID(newHotbarThrownBattleaxeItemID: number): void {
+      hotbarThrownBattleaxeItemID = newHotbarThrownBattleaxeItemID;
+   },
+
+   get offhandThrownBattleaxeItemID() {
+      return offhandThrownBattleaxeItemID;
+   },
+   setOffhandThrownBattleaxeItemID(newOffhandThrownBattleaxeItemID: number): void {
+      offhandThrownBattleaxeItemID = newOffhandThrownBattleaxeItemID;
+   },
+
+   get hotbar() {
+      return hotbar;
+   },
+   // @Garbage
+   setHotbar(newHotbar: Inventory): void {
+      hotbar = newHotbar;
+   },
+
+   get offhand() {
+      return offhand;
+   },
+   // @Garbage
+   setOffhand(newOffhand: Inventory): void {
+      offhand = newOffhand;
+   },
+
+   get heldItemSlot() {
+      return heldItemSlot;
+   },
+   // @Garbage
+   setHeldItemSlot(newHeldItemSlot: Inventory): void {
+      heldItemSlot = newHeldItemSlot;
+   },
+
+   get craftingOutputSlot() {
+      return craftingOutputSlot;
+   },
+   // @Garbage
+   setCraftingOutputSlot(newCraftingOutputSlot: Inventory): void {
+      craftingOutputSlot = newCraftingOutputSlot;
+   },
+
+   get backpack() {
+      return backpack;
+   },
+   // @Garbage
+   setBackpack(newBackpack: Inventory): void {
+      backpack = newBackpack;
+   },
+
+   get backpackSlot() {
+      return backpackSlot;
+   },
+   // @Garbage
+   setBackpackSlot(newBackpackSlot: Inventory): void {
+      backpackSlot = newBackpackSlot;
+   },
+
+   get armourSlot() {
+      return armourSlot;
+   },
+   // @Garbage
+   setArmourSlot(newArmourSlot: Inventory): void {
+      armourSlot = newArmourSlot;
+   },
+
+   get gloveSlot() {
+      return gloveSlot;
+   },
+   // @Garbage
+   setGloveSlot(newGloveSlot: Inventory): void {
+      gloveSlot = newGloveSlot;
+   }
+};

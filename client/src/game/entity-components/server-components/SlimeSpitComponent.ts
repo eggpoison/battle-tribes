@@ -29,7 +29,7 @@ function decodeData(reader: PacketReader): SlimeSpitComponentData {
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
    // @Incomplete: SIZE DOESN'T ACTUALLY AFFECT ANYTHING
 
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
    const renderPart1 = new TexturedRenderPart(

@@ -4,7 +4,7 @@ import { TransformComponentArray } from "./entity-components/server-components/T
 import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { cameraPosition, maxVisibleChunkX, maxVisibleChunkY, minVisibleChunkX, minVisibleChunkY } from "./camera";
-import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
+import { debugDisplayState } from "../ui-state/debug-display-state";
 import { gameIsFocused } from "./client";
 
 type SoundID = number;
@@ -536,25 +536,36 @@ export function playBuildingHitSound(entity: Entity, hitbox: Hitbox): void {
 export function playRiverSounds(): void {
    const layer = getCurrentLayer();
    
+   // @INCOMPLETE: This should be a square- even circular check, not a rectangular one. Otherwise some tiles might have potential to make sound to the left and right, but not top and bottom.
    const minTileX = minVisibleChunkX * Settings.CHUNK_SIZE;
    const maxTileX = (maxVisibleChunkX + 1) * Settings.CHUNK_SIZE - 1;
    const minTileY = minVisibleChunkY * Settings.CHUNK_SIZE;
    const maxTileY = (maxVisibleChunkY + 1) * Settings.CHUNK_SIZE - 1;
+   
+   // Calculate the number of random checks to conduct
+   const width = maxTileX - minTileX;
+   const height = maxTileY - minTileY;
+   let numSamples = width * height * 0.1 * Settings.DT_S;
+   if (Math.random() < numSamples % 1) {
+      numSamples = Math.ceil(numSamples);
+   } else {
+      numSamples = Math.floor(numSamples);
+   }
 
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = layer.getTileFromCoords(tileX, tileY);
-         if (tile === null) {
-            continue;
-         }
+   for (let i = 0; i < numSamples; i++) {
+      const tileX = randInt(minTileX, maxTileX);
+      const tileY = randInt(minTileY, maxTileY);
+      const tile = layer.getTileFromCoords(tileX, tileY);
+      if (tile === null) {
+         throw new Error();
+      }
 
-         if (tile.type === TileType.water && Math.random() < 0.1 * Settings.DT_S) {
-            const flowDirection = layer.getRiverFlowDirection(tileX, tileY);
-            if (flowDirection > 0) {
-               const x = (tileX + Math.random()) * Settings.TILE_SIZE;
-               const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-               playSound("water-flowing-" + randInt(1, 4) + ".mp3", 0.2, 1, new Point(x, y), layer);
-            }
+      if (tile.type === TileType.water && Math.random() < 0.1 * Settings.DT_S) {
+         const flowDirection = layer.getRiverFlowDirection(tileX, tileY);
+         if (flowDirection > 0) {
+            const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+            const y = (tileY + Math.random()) * Settings.TILE_SIZE;
+            playSound("water-flowing-" + randInt(1, 4) + ".mp3", 0.2, 1, new Point(x, y), layer);
          }
       }
    }

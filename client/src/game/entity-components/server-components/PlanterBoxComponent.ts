@@ -58,7 +58,7 @@ function decodeData(reader: PacketReader): PlanterBoxComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
    renderInfo.attachRenderPart(
@@ -70,7 +70,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       )
    );
    
-   const planterBoxComponentData = entityComponentData.serverComponentData[ServerComponentType.planterBox]!;
+   const planterBoxComponentData = entityComponentData.serverComponentData.get(ServerComponentType.planterBox)!;
 
    let renderPart: TexturedRenderPart | null;
    if (planterBoxComponentData.plantedEntityType !== -1) {
@@ -86,7 +86,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): PlanterBoxComponent {
-   const planterBoxComponentData = entityComponentData.serverComponentData[ServerComponentType.planterBox]!;
+   const planterBoxComponentData = entityComponentData.serverComponentData.get(ServerComponentType.planterBox)!;
    
    return {
       hasPlant: planterBoxComponentData.plantedEntityType !== -1,

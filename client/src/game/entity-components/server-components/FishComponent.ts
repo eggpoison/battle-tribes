@@ -42,10 +42,10 @@ function decodeData(reader: PacketReader): FishComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const fishComponentData = entityComponentData.serverComponentData[ServerComponentType.fish]!;
+   const fishComponentData = entityComponentData.serverComponentData.get(ServerComponentType.fish)!;
    
    renderInfo.attachRenderPart(
       new TexturedRenderPart(
@@ -61,7 +61,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): FishComponent {
    return {
-      colour: entityComponentData.serverComponentData[ServerComponentType.fish]!.colour,
+      colour: entityComponentData.serverComponentData.get(ServerComponentType.fish)!.colour,
       waterOpacityMultiplier: randFloat(0.6, 1)
    };
 }

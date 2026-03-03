@@ -45,10 +45,10 @@ function decodeData(reader: PacketReader): DoorComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const buildingMaterialComponentData = entityComponentData.serverComponentData[ServerComponentType.buildingMaterial]!;
+   const buildingMaterialComponentData = entityComponentData.serverComponentData.get(ServerComponentType.buildingMaterial)!;
 
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -64,7 +64,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): DoorComponent {
-   const doorComponentData = entityComponentData.serverComponentData[ServerComponentType.door]!;
+   const doorComponentData = entityComponentData.serverComponentData.get(ServerComponentType.door)!;
    
    return {
       toggleType: doorComponentData.toggleType,

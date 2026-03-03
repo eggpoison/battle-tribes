@@ -2,12 +2,12 @@
    import { randAngle, InventoryName, type ItemSlots, EntityComponents, ServerComponentType, type ComponentSummonData, type EntitySummonData, type EntitySummonPacket, EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared";
    import CLIENT_ENTITY_INFO_RECORD from "../../../../game/client-entity-info";
    import DevmodeScrollableOptions from "../DevmodeScrollableOptions.svelte";
-   import { ENTITY_INVENTORY_NAME_RECORD, tabSelectorState } from "../../../../ui-state/tab-selector-state.svelte";
-   import { GameInteractState, gameUIState } from "../../../../ui-state/game-ui-state.svelte";
+   import { ENTITY_INVENTORY_NAME_RECORD, tabSelectorState } from "../../../../ui-state/tab-selector-state";
+   import { GameInteractState, gameUIState } from "../../../../ui-state/game-ui-state";
    import DevmodeRangeInput from "../DevmodeRangeInput.svelte";
    import InventoryComponentInput from "./InventoryComponentInput.svelte";
    import TribeComponentInput from "./TribeComponentInput.svelte";
-   import { menuSelectorState } from "../../../../ui-state/menu-selector-state.svelte";
+   import { menuSelectorState } from "../../../../ui-state/menu-selector-state";
 
    type EntityTypeTuple = [EntityType, string];
 

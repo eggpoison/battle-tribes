@@ -1,12 +1,12 @@
 import { PacketReader, InventoryName, Item, ITEM_TYPE_RECORD, Inventory, ItemType, Entity, LimbAction, ServerComponentType, copyInventoryShallow, copyInventoryDeep } from "webgl-test-shared";
-import { inventoryState } from "../../../ui-state/inventory-state.svelte";
+import { inventoryState } from "../../../ui-state/inventory-state";
 import { inventoriesAreDifferent } from "../../inventory-manipulation";
 import { playerInstance } from "../../player";
 import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../player-action-handling";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";
-import { selectedEntityInventoryState } from "../../../ui-state/selected-entity-inventory-state.svelte";
+import { selectedEntityInventoryState } from "../../../ui-state/selected-entity-inventory-state";
 
 export interface InventoryComponentData {
    readonly inventories: Partial<Record<InventoryName, Inventory>>;
@@ -196,7 +196,7 @@ function decodeData(reader: PacketReader): InventoryComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): InventoryComponent {
-   const inventoryComponentData = entityComponentData.serverComponentData[ServerComponentType.inventory]!;
+   const inventoryComponentData = entityComponentData.serverComponentData.get(ServerComponentType.inventory)!;
    
    return {
       inventoryRecord: inventoryComponentData.inventories,

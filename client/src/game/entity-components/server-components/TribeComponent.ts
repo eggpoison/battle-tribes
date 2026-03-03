@@ -40,7 +40,7 @@ function decodeData(reader: PacketReader): TribeComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): TribeComponent {
-   const tribeComponentData = entityComponentData.serverComponentData[ServerComponentType.tribe]!;
+   const tribeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribe)!;
 
    if (!tribeExists(tribeComponentData.tribeID)) {
       console.warn("In creating tribe component from data, no tribe with id '" + tribeComponentData.tribeID + "' exists!");

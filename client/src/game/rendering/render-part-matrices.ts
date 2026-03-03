@@ -139,7 +139,7 @@ const calculateAndOverrideRenderThingMatrix = (thing: RenderPart): void => {
 }
 
 const getHitboxDataFromEntityData = (hitbox: Hitbox, entityData: EntitySnapshot): Hitbox => {
-   for (const data of entityData.serverComponentData[ServerComponentType.transform]!.hitboxes) {
+   for (const data of entityData.serverComponentData.get(ServerComponentType.transform)!.hitboxes) {
       if (data.localID === hitbox.localID) {
          return data;
       }

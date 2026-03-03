@@ -27,10 +27,10 @@ function decodeData(reader: PacketReader): MossComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const mossComponentData = entityComponentData.serverComponentData[ServerComponentType.moss]!;
+   const mossComponentData = entityComponentData.serverComponentData.get(ServerComponentType.moss)!;
 
    let colourString: string;
    switch (mossComponentData.colour) {

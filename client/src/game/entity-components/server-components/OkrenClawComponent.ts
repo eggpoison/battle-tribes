@@ -66,7 +66,7 @@ const getSlashingArmSegmentTextureSource = (sizeString: string, growthStageStrin
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const okrenClawComponentData = entityComponentData.serverComponentData[ServerComponentType.okrenClaw]!;
+   const okrenClawComponentData = entityComponentData.serverComponentData.get(ServerComponentType.okrenClaw)!;
 
    const sizeString = getSizeString(okrenClawComponentData.size);
    const growthStageString = getGrowthStageString(okrenClawComponentData.growthStage);
@@ -75,7 +75,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    let mediumArmSegment!: TexturedRenderPart;
    let slashingArmSegment!: TexturedRenderPart;
    
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    for (const hitbox of transformComponentData.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.OKREN_BIG_ARM_SEGMENT)) {
          bigArmSegment = new TexturedRenderPart(
@@ -112,7 +112,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): OkrenClawComponent {
-   const okrenClawComponentData = entityComponentData.serverComponentData[ServerComponentType.okrenClaw]!;
+   const okrenClawComponentData = entityComponentData.serverComponentData.get(ServerComponentType.okrenClaw)!;
 
    return {
       growthStage: okrenClawComponentData.growthStage,

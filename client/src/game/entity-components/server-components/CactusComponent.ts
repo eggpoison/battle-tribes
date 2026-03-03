@@ -72,7 +72,7 @@ function decodeData(reader: PacketReader): CactusComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
       const hitbox = transformComponentData.hitboxes[i];
 
@@ -86,7 +86,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    }
 
    // Flowers
-   const cactusComponentConfig = entityComponentData.serverComponentData[ServerComponentType.cactus]!;
+   const cactusComponentConfig = entityComponentData.serverComponentData.get(ServerComponentType.cactus)!;
    for (const flower of cactusComponentConfig.flowers) {
       const hitbox = getHitboxByLocalID(transformComponentData.hitboxes, flower.parentHitboxLocalID);
       assert(hitbox !== null);
@@ -106,15 +106,15 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): CactusComponent {
-   const cactusComponentConfig = entityComponentData.serverComponentData[ServerComponentType.cactus]!;
+   const cactusComponentConfig = entityComponentData.serverComponentData.get(ServerComponentType.cactus)!;
    return {
       flowers: cactusComponentConfig.flowers
    };
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
-   const cactusComponentConfig = entityComponentData.serverComponentData[ServerComponentType.cactus]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const cactusComponentConfig = entityComponentData.serverComponentData.get(ServerComponentType.cactus)!;
    return transformComponentData.hitboxes.length + cactusComponentConfig.flowers.length;
 }
 

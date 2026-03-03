@@ -7,10 +7,10 @@
    import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
    import { TunnelComponentArray } from "../../../game/entity-components/server-components/TunnelComponent";
    import { TransformComponentArray } from "../../../game/entity-components/server-components/TransformComponent";
-   import { sendDeconstructBuildingPacket, sendModifyBuildingPacket, sendPlaceBlueprintPacket } from "../../../game/networking/packet-sending";
+   import { sendDeconstructBuildingPacket, sendModifyBuildingPacket, sendPlaceBlueprintPacket } from "../../../game/networking/packet-sending/packet-sending";
    import { playerInstance } from "../../../game/player";
-   import { type BuildMenuOption, buildMenuState, OptionType } from "../../../ui-state/build-menu-state.svelte";
-   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+   import { type BuildMenuOption, buildMenuState, OptionType } from "../../../ui-state/build-menu-state";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 
    let hoveredGhostType: GhostType | null = null;
    export function getHoveredBlueprintGhostType(): GhostType | null {

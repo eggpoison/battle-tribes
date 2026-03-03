@@ -4,8 +4,8 @@
    import { playerInstance } from "../../../game/player";
    import { playerTribe } from "../../../game/tribes";
    import EmptyItemSlot from "./EmptyItemSlot.svelte";
-   import { inventoryState } from "../../../ui-state/inventory-state.svelte";
-   import { playerActionState } from "../../../ui-state/player-action-state.svelte";
+   import { inventoryState } from "../../../ui-state/inventory-state";
+   import { playerActionState } from "../../../ui-state/player-action-state";
    import BackpackWireframe from "../../../images/miscellaneous/backpack-wireframe.png";
    import ArmourWireframe from "../../../images/miscellaneous/armour-wireframe.png";
    import GloveWireframe from "../../../images/miscellaneous/glove-wireframe.png";

@@ -1,8 +1,8 @@
 import { BuildingPlanData, SafetyNodeData, TribeWallData, WallSideNodeData, Settings, distance, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
-import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
+import { entitySelectionState } from "../../../ui-state/entity-selection-state";
+import { debugDisplayState } from "../../../ui-state/debug-display-state";
 import { cursorWorldPos } from "../../camera";
 
 const OCCUPIED_NODE_THICKNESS = 3;

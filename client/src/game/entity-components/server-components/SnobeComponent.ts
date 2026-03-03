@@ -42,7 +42,7 @@ function decodeData(reader: PacketReader): SnobeComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    for (const hitbox of transformComponentData.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.SNOBE_BODY)) {
          const renderPart = new TexturedRenderPart(
@@ -78,7 +78,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): SnobeComponent {
-   const snobeComponentData = entityComponentData.serverComponentData[ServerComponentType.snobe]!;
+   const snobeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.snobe)!;
    
    return {
       isDigging: snobeComponentData.isDigging,

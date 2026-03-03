@@ -12,8 +12,8 @@ import { playSoundOnHitbox } from "../../sound";
 import { entitiesAreColliding, resolveWallCollisions } from "../../collision";
 import { keyIsPressed } from "../../keyboard-input";
 import { currentSnapshot } from "../../client";
-import { gameUIState } from "../../../ui-state/game-ui-state.svelte";
-import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+import { gameUIState } from "../../../ui-state/game-ui-state";
+import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 import { worldToScreenPos } from "../../camera";
 
 export interface TransformComponentData {
@@ -431,7 +431,7 @@ TransformComponentArray.updatePlayerFromData = updatePlayerFromData;
 TransformComponentArray.updateSelectedEntityState = updateSelectedEntityState;
 
 function createComponent(entityComponentData: EntityComponentData): TransformComponent {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    
    const hitboxes = new Array<Hitbox>();
    const rootHitboxes = new Array<Hitbox>();

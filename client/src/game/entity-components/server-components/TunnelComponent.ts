@@ -76,10 +76,10 @@ function decodeData(reader: PacketReader): TunnelComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const buildingMaterialComponentData = entityComponentData.serverComponentData[ServerComponentType.buildingMaterial]!;
+   const buildingMaterialComponentData = entityComponentData.serverComponentData.get(ServerComponentType.buildingMaterial)!;
 
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -94,7 +94,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): TunnelComponent {
-   const tunnelComponentData = entityComponentData.serverComponentData[ServerComponentType.tunnel]!;
+   const tunnelComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tunnel)!;
    
    return {
       doorBitset: tunnelComponentData.doorBitset,

@@ -63,8 +63,8 @@ function decodeData(reader: PacketReader): AmmoBoxComponentData {
 
 function createIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
    let ammoWarningRenderPart: VisualRenderPart | null;
-   if (entityComponentData.serverComponentData[ServerComponentType.ammoBox]!.ammoType === null) {
-      const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   if (entityComponentData.serverComponentData.get(ServerComponentType.ammoBox)!.ammoType === null) {
+      const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
       const hitbox = transformComponentData.hitboxes[0];
       
       ammoWarningRenderPart = createAmmoWarningRenderPart(hitbox);
@@ -79,7 +79,7 @@ function createIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentDat
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): AmmoBoxComponent {
-   const ammoBoxComponentData = entityComponentData.serverComponentData[ServerComponentType.ammoBox]!;
+   const ammoBoxComponentData = entityComponentData.serverComponentData.get(ServerComponentType.ammoBox)!;
    
    return {
       ammoType: ammoBoxComponentData.ammoType,

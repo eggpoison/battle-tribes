@@ -1,7 +1,7 @@
 import { BuildingMaterial, ServerComponentType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, SubtileType, getSubtileIndex, subtileIsInWorld, getSubtileX, getSubtileY, STRUCTURE_TYPES, StructureType, Settings, Entity, EntityType, getEntityCollisionGroup, CollisionGroup, boxIsCollidingWithSubtile, RectangularBox, boxIsCircular } from "webgl-test-shared";
 import { Hitbox } from "./hitboxes";
 import { ItemComponentArray } from "./entity-components/server-components/ItemComponent";
-import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray, TransformComponentData } from "./entity-components/server-components/TransformComponent";
 import Layer from "./Layer";
 import { EntityComponentData, getEntityType } from "./world";
 import { playerTribe } from "./tribes";
@@ -274,7 +274,7 @@ const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityRotation
    
    // @SUPAHACK!!!!
    const entityComponentData = createStructureConfig(entityType, new Point(0, 0), 0);
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
 
    let entityMinX = Number.MAX_SAFE_INTEGER;
    let entityMaxX = Number.MIN_SAFE_INTEGER;
@@ -331,7 +331,7 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
    
    // @SUPAHACK!!!!
    const entityComponentData = createStructureConfig(entityType, new Point(0, 0), 0);
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const placingEntityHitboxes = transformComponentData.hitboxes;
    const snapOrigin = getStructureSnapOrigin(connectingEntity);
    
@@ -422,7 +422,7 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
 
             // @SUPAHACK!!!!
             const entityComponentData = createStructureConfig(entityType, position, placingEntityAngle);
-            const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+            const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
             const hitboxes = transformComponentData.hitboxes;
             
             // Don't add the position if it would be colliding with the connecting entity
@@ -717,7 +717,7 @@ const getBracingsPlaceInfo = (regularPlacePosition: Point, layer: Layer): Struct
    
    // @SUPAHACK!!!!
    const entityComponentData = createStructureConfig(EntityType.bracings, position, rotation);
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitboxes = transformComponentData.hitboxes;
    
    if (structureIntersectsWithBuildingBlockingTiles(layer, hitboxes)) {
@@ -747,7 +747,7 @@ const calculatePlaceInfo = (desiredPlacePosition: Point, desiredPlaceAngle: numb
    if (placeInfos.length === 0) {
       // @SUPAHACK!!!!
       const entityComponentData = createStructureConfig(entityType, desiredPlacePosition.copy(), desiredPlaceAngle);
-      const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+      const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
       const hitboxes = transformComponentData.hitboxes;
 
       // If no connections are found, use the regular place position

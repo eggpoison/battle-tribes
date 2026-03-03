@@ -1,6 +1,6 @@
 <script lang="ts">
    import Tab from "./Tab.svelte";
-   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
+   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state";
 
    const updateSelectedTab = (e: MouseEvent, clickedTab: Menu): void => {
       menuSelectorState.toggleMenu(clickedTab);

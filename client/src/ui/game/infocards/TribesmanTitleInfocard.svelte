@@ -1,8 +1,8 @@
 <script lang="ts">
    import { TRIBESMAN_TITLE_RECORD } from "webgl-test-shared";
    import { CLIENT_TITLE_INFO_RECORD } from "../../../game/client-title-info";
-   import { sendRespondToTitleOfferPacket } from "../../../game/networking/packet-sending";
-   import { infocardsState } from "../../../ui-state/infocards-state.svelte";
+   import { sendRespondToTitleOfferPacket } from "../../../game/networking/packet-sending/packet-sending";
+   import { infocardsState } from "../../../ui-state/infocards-state";
 
    const titleOffer = infocardsState.titleOffer;
 </script>

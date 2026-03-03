@@ -3,7 +3,7 @@
    import CLIENT_ENTITY_INFO_RECORD from "../../../game/client-entity-info";
    import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../game/client-item-info";
    import { keyIsPressed } from "../../../game/keyboard-input";
-   import { sendForceCompleteTamingTierPacket, sendCompleteTamingTierPacket } from "../../../game/networking/packet-sending";
+   import { sendForceCompleteTamingTierPacket, sendCompleteTamingTierPacket } from "../../../game/networking/packet-sending/packet-sending";
    import { playHeadSound } from "../../../game/sound";
    import { getEntityTamingSpec } from "../../../game/taming-specs";
    import { isDev } from "../../../game/utils";
@@ -14,10 +14,10 @@
    import TierSeparator from "./TierSeparator.svelte";
    import NametagUnused from "../../../images/menus/taming-almanac/nametag-unused.png";
    import NametagUsed from "../../../images/menus/taming-almanac/nametag-used.png";
-   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
-   import { SKILL_TRANSFORM_SCALE_FACTOR, TAMING_TIER_ICONS, tamingMenuState } from "../../../ui-state/taming-menu-state.svelte";
+   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state";
+   import { SKILL_TRANSFORM_SCALE_FACTOR, TAMING_TIER_ICONS, tamingMenuState } from "../../../ui-state/taming-menu-state";
    import TamingSkillTooltip from "./TamingSkillTooltip.svelte";
-   import { tamingSkillTooltipState } from "../../../ui-state/taming-skill-tooltip-state.svelte";
+   import { tamingSkillTooltipState } from "../../../ui-state/taming-skill-tooltip-state";
    import { onDestroy } from "svelte";
 
    interface Props {

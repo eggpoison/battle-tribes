@@ -21,7 +21,7 @@ function decodeData(reader: PacketReader): PlayerComponentData {
 
 function createComponent(entityComponentData: EntityComponentData): PlayerComponent {
    return {
-      username: entityComponentData.serverComponentData[ServerComponentType.player]!.username
+      username: entityComponentData.serverComponentData.get(ServerComponentType.player)!.username
    };
 }
 

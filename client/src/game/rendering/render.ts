@@ -10,7 +10,7 @@ import { preloadTextureAtlasImages } from "../texture-atlases/texture-atlas-stit
 import { createTextureAtlases } from "../texture-atlases/texture-atlases";
 import { preloadTextureImages, loadTextures } from "../textures";
 import { isDev } from "../utils";
-import { gl, windowWidth, windowHeight, createTexture, createWebGLContext } from "../webgl";
+import { gl, windowWidth, windowHeight, createTexture, createGameCanvasWebGLContext } from "../webgl";
 import { layers, getCurrentLayer, entityExists, getEntityRenderInfo } from "../world";
 import { renderLightLevelsText } from "./light-levels-text-rendering";
 import { createRenderChunks, RENDER_CHUNK_SIZE } from "./render-chunks";
@@ -54,10 +54,10 @@ import { createWallConnectionShaders, renderWallConnections } from "./webgl/wall
 import { createForcefieldShaders, renderForcefield } from "./webgl/world-border-forcefield-rendering";
 import { createWorldBorderShaders, renderWorldBorder } from "./webgl/world-border-rendering";
 import { playerIsHoldingPlaceableItem } from "../player-action-handling";
-import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
-import { nerdVisionState } from "../../ui-state/nerd-vision-state.svelte";
-import { hoverDebugState } from "../../ui-state/hover-debug-state.svelte";
-import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
+import { entitySelectionState } from "../../ui-state/entity-selection-state";
+import { hoverDebugState } from "../../ui-state/hover-debug-state";
+import { debugDisplayState } from "../../ui-state/debug-display-state";
+import { nerdVisionIsVisible } from "../../ui/game/dev/NerdVision";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -73,7 +73,7 @@ export async function setupRendering(): Promise<void> {
       return new Promise(async resolve => {
          const start = performance.now();
          let l = performance.now();
-         createWebGLContext();
+         createGameCanvasWebGLContext();
          createTechTreeGLContext();
          createTextCanvasContext();
 
@@ -192,14 +192,14 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    renderTurretRange();
 
    const entityDebugData = hoverDebugState.entityDebugData;
-   if (nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
       renderTriangleDebugData(entityDebugData);
    }
    renderRestrictedBuildingAreas();
-   if (nerdVisionState.isVisible && debugDisplayState.showChunkBorders) {
+   if (nerdVisionIsVisible() && debugDisplayState.showChunkBorders) {
       renderChunkBorders(minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY, Settings.CHUNK_SIZE, 1);
    }
-   if (nerdVisionState.isVisible && debugDisplayState.showRenderChunkBorders) {
+   if (nerdVisionIsVisible() && debugDisplayState.showRenderChunkBorders) {
       renderChunkBorders(minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY, RENDER_CHUNK_SIZE, 2);
    }
 
@@ -262,7 +262,7 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    if (debugDisplayState.showHitboxes) {
       renderHitboxes(layer);
    }
-   if (nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
       renderLineDebugData(entityDebugData);
    }
 

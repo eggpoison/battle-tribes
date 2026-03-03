@@ -51,7 +51,7 @@ function decodeData(reader: PacketReader): BuildingMaterialComponentData {
 
 function createComponent(entityComponentData: EntityComponentData): BuildingMaterialComponent {
    return {
-      material: entityComponentData.serverComponentData[ServerComponentType.buildingMaterial]!.material
+      material: entityComponentData.serverComponentData.get(ServerComponentType.buildingMaterial)!.material
    };
 }
 

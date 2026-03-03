@@ -4,7 +4,7 @@
    import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
    import { AmmoBoxComponentArray } from "../../../game/entity-components/server-components/AmmoBoxComponent";
    import RemainingAmmoSlider from "./RemainingAmmoSlider.svelte";
-   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state";
    import InventoryContainer from "./ItemSlotsContainer.svelte";
    import { CLIENT_STATUS_EFFECT_INFO_RECORD } from "../../../game/status-effects";
     import ItemSlotsContainer from "./ItemSlotsContainer.svelte";

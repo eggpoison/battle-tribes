@@ -47,138 +47,115 @@ export type ClientComponentData<T extends ClientComponentType> = ReturnType<type
 
 // @Cleanup: if this gets too large/unwieldy i should rework this
 export function getEntityClientComponentConfigs(entityType: EntityType): EntityClientComponentData {
+   const clientComponentData: EntityClientComponentData = new Map();
+   
    switch (entityType) {
       case EntityType.cow: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.3, 20, 64, 5, 40, false)
-         };
+         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.3, 20, 64, 5, 40, false));
+         break;
       }
       case EntityType.player: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.2, 20, 64, 4, 64, false),
-            [ClientComponentType.equipment]: createEquipmentComponentData()
-         };
+         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.2, 20, 64, 4, 64, false));
+         clientComponentData.set(ClientComponentType.equipment, createEquipmentComponentData());
+         break;
       }
       case EntityType.tribeWorker: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.15, 20, 64, 4, 50, false),
-            [ClientComponentType.equipment]: createEquipmentComponentData()
-         };
+         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.15, 20, 64, 4, 50, false));
+         clientComponentData.set(ClientComponentType.equipment, createEquipmentComponentData());
+         break;
       }
       case EntityType.tribeWarrior: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.15, 20, 64, 4, 64, false),
-            [ClientComponentType.equipment]: createEquipmentComponentData()
-         };
+         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.15, 20, 64, 4, 64, false));
+         clientComponentData.set(ClientComponentType.equipment, createEquipmentComponentData());
+         break;
       }
       case EntityType.krumblid: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.3, 20, 64, 5, 50, false)
-         };
+         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.3, 20, 64, 5, 50, false));
+         break;
       }
       case EntityType.lilypad: {
-         return {
-            [ClientComponentType.lilypad]: createLilypadComponentData()
-         };
+         clientComponentData.set(ClientComponentType.lilypad, createLilypadComponentData());
+         break;
       }
       case EntityType.frostshaper: {
-         return {
-            [ClientComponentType.frostshaper]: createFrostshaperComponentData()
-         };
+         clientComponentData.set(ClientComponentType.frostshaper, createFrostshaperComponentData());
+         break;
       }
       case EntityType.embrasure: {
-         return {
-            [ClientComponentType.embrasure]: createEmbrasureComponentData()
-         };
+         clientComponentData.set(ClientComponentType.embrasure, createEmbrasureComponentData());
+         break;
       }
       case EntityType.pebblum: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.3, 20, 64, 5, 40, false)
-         };
+         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.3, 20, 64, 5, 40, false));
+         break;
       }
       case EntityType.wallSpikes:
       case EntityType.floorSpikes: {
-         return {
-            [ClientComponentType.regularSpikes]: createRegularSpikesComponentData()
-         };
+         clientComponentData.set(ClientComponentType.regularSpikes, createRegularSpikesComponentData());
+         break;
       }
       case EntityType.stonecarvingTable: {
-         return {
-            [ClientComponentType.stonecarvingTable]: createStonecarvingTableComponentData()
-         };
+         clientComponentData.set(ClientComponentType.stonecarvingTable, createStonecarvingTableComponentData());
+         break;
       }
       case EntityType.wall: {
-         return {
-            [ClientComponentType.wall]: createWallComponentData()
-         };
+         clientComponentData.set(ClientComponentType.wall, createWallComponentData());
+         break;
       }
       case EntityType.warriorHut: {
-         return {
-            [ClientComponentType.warriorHut]: createWarriorHutComponentData()
-         };
+         clientComponentData.set(ClientComponentType.warriorHut, createWarriorHutComponentData());
+         break;
       }
       case EntityType.workbench: {
-         return {
-            [ClientComponentType.workbench]: createWorkbenchComponentData()
-         };
+         clientComponentData.set(ClientComponentType.workbench, createWorkbenchComponentData());
+         break;
       }
       case EntityType.workerHut: {
-         return {
-            [ClientComponentType.workerHut]: createWorkerHutComponentData()
-         };
+         clientComponentData.set(ClientComponentType.workerHut, createWorkerHutComponentData());
+         break;
       }
       case EntityType.yeti: {
-         return {
-            [ClientComponentType.randomSound]: createRandomSoundComponentData()
-         };
+         clientComponentData.set(ClientComponentType.randomSound, createRandomSoundComponentData());
+         break;
       }
       case EntityType.ballistaFrostcicle: {
-         return {
-            [ClientComponentType.ballistaFrostcicle]: createBallistaFrostcicleComponentData()
-         };
+         clientComponentData.set(ClientComponentType.ballistaFrostcicle, createBallistaFrostcicleComponentData());
+         break;
       }
       case EntityType.ballistaRock: {
-         return {
-            [ClientComponentType.ballistaRock]: createBallistaRockComponentData()
-         };
+         clientComponentData.set(ClientComponentType.ballistaRock, createBallistaRockComponentData());
+         break;
       }
       case EntityType.ballistaSlimeball: {
-         return {
-            [ClientComponentType.ballistaSlimeball]: createBallistaSlimeballComponentData()
-         };
+         clientComponentData.set(ClientComponentType.ballistaSlimeball, createBallistaSlimeballComponentData());
+         break;
       }
       case EntityType.ballistaWoodenBolt: {
-         return {
-            [ClientComponentType.ballistaWoodenBolt]: createBallistaWoodenBoltComponentData()
-         };
+         clientComponentData.set(ClientComponentType.ballistaWoodenBolt, createBallistaWoodenBoltComponentData());
+         break;
       }
       case EntityType.battleaxeProjectile: {
-         return {
-            [ClientComponentType.thrownBattleaxe]: createThrownBattleaxeComponentData()
-         };
+         clientComponentData.set(ClientComponentType.thrownBattleaxe, createThrownBattleaxeComponentData());
+         break;
       }
       case EntityType.woodenArrow: {
-         return {
-            [ClientComponentType.woodenArrow]: createWoodenArrowComponentData()
-         };
+         clientComponentData.set(ClientComponentType.woodenArrow, createWoodenArrowComponentData());
+         break;
       }
       case EntityType.glurbTailSegment: {
-         return {
-            [ClientComponentType.glurbTailSegment]: {}
-         };
+         clientComponentData.set(ClientComponentType.glurbTailSegment, {});
+         break;
       }
       case EntityType.snobe: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.3, 20, 48, 5, 40, true),
-            [ClientComponentType.randomSound]: createRandomSoundComponentData()
-         };
+         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.3, 20, 48, 5, 40, true));
+         clientComponentData.set(ClientComponentType.randomSound, createRandomSoundComponentData());
+         break;
       }
       case EntityType.snobe: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.3, 20, 64, 5, 40, false),
-         };
+         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.3, 20, 64, 5, 40, false));
+         break;
       }
    }
 
-   return {};
+   return clientComponentData;
 }

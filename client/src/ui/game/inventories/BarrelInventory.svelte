@@ -3,7 +3,7 @@
    import MenuElem from "../menus/MenuElem.svelte";
    import ItemSlotsContainer from "./ItemSlotsContainer.svelte";
    import InventoryItemSlots from "./InventoryItemSlots.svelte";
-   import { selectedEntityInventoryState } from "../../../ui-state/selected-entity-inventory-state.svelte";
+   import { selectedEntityInventoryState } from "../../../ui-state/selected-entity-inventory-state";
 
    interface Props {
       entity: Entity;

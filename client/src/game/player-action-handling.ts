@@ -1,9 +1,9 @@
 import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, EntityComponents, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp } from "webgl-test-shared";
-import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
-import { GameInteractState, gameUIState } from "../ui-state/game-ui-state.svelte";
-import { inventoryState } from "../ui-state/inventory-state.svelte";
-import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
-import { playerActionState } from "../ui-state/player-action-state.svelte";
+import { entitySelectionState } from "../ui-state/entity-selection-state";
+import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
+import { inventoryState } from "../ui-state/inventory-state";
+import { Menu, menuSelectorState } from "../ui-state/menu-selector-state";
+import { playerActionState } from "../ui-state/player-action-state";
 import { getElapsedTimeInSeconds } from "./Board";
 import { currentSnapshot } from "./client";
 import { getEntityClientComponentConfigs } from "./entity-components/client-components";
@@ -30,7 +30,7 @@ import { EntityRenderInfo } from "./EntityRenderInfo";
 import { getHitboxVelocity, applyAccelerationFromGround, Hitbox, setHitboxRelativeAngle } from "./hitboxes";
 import { countItemTypesInInventory } from "./inventory-manipulation";
 import { addKeyListener, keyIsPressed } from "./keyboard-input";
-import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSpectateEntityPacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket } from "./networking/packet-sending";
+import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSpectateEntityPacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket } from "./networking/packet-sending/packet-sending";
 import { EntityServerComponentData } from "./networking/packet-snapshots";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
 import { playerInstance, isSpectating } from "./player";
@@ -102,9 +102,9 @@ export function setShittyCarrier(entity: Entity): void {
    carrier = entity;
 }
 
-const playerMoveIntention = new Point(0, 0);
+let playerMoveIntention = -999;
 
-export function getPlayerMoveIntention(): Point {
+export function getPlayerMoveIntention(): number {
    return playerMoveIntention;
 }
 
@@ -961,8 +961,7 @@ const updateNonSpectatorMovement = (moveDirection: number | null): void => {
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
 
    if (moveDirection !== null) {
-      playerMoveIntention.x = Math.sin(moveDirection);
-      playerMoveIntention.y = Math.cos(moveDirection);
+      playerMoveIntention = moveDirection;
 
       const playerAction = getInstancePlayerAction(InventoryName.hotbar);
       
@@ -995,8 +994,7 @@ const updateNonSpectatorMovement = (moveDirection: number | null): void => {
 
       applyAccelerationFromGround(playerHitbox, accelerationX, accelerationY);
    } else {
-      playerMoveIntention.x = 0;
-      playerMoveIntention.y = 0;
+      playerMoveIntention = -999;
    }
 }
 
@@ -1516,152 +1514,152 @@ const tickItem = (itemType: ItemType): void => {
                      hitboxes
                   );
 
-                  components[componentType] = transformComponentData;
+                  components.set(componentType, transformComponentData);
                   break;
                }
                case ServerComponentType.health: {
                   const data = createHealthComponentData();
-                  components[componentType] = data;
+                  components.set(componentType, data);
                   break;
                }
                case ServerComponentType.statusEffect: {
                   const data = createStatusEffectComponentData();
-                  components[componentType] = data;
+                  components.set(componentType, data);
                   break;
                }
                case ServerComponentType.structure: {
-                  components[componentType] = createStructureComponentData();
+                  components.set(componentType, createStructureComponentData());
                   break;
                }
                case ServerComponentType.tribe: {
-                  components[componentType] = createTribeComponentData(playerTribe);
+                  components.set(componentType, createTribeComponentData(playerTribe));
                   break;
                }
                case ServerComponentType.buildingMaterial: {
-                  components[componentType] = createBuildingMaterialComponentData(BuildingMaterial.wood);
+                  components.set(componentType, createBuildingMaterialComponentData(BuildingMaterial.wood));
                   break;
                }
                case ServerComponentType.bracings: {
-                  components[componentType] = createBracingsComponentData();
+                  components.set(componentType, createBracingsComponentData());
                   break;
                }
                case ServerComponentType.inventory: {
-                  components[componentType] = createInventoryComponentData({});
+                  components.set(componentType, createInventoryComponentData({}));
                   break;
                }
                case ServerComponentType.cooking: {
-                  components[componentType] = createCookingComponentData();
+                  components.set(componentType, createCookingComponentData());
                   break;
                }
                case ServerComponentType.campfire: {
-                  components[componentType] = createCampfireComponentData();
+                  components.set(componentType, createCampfireComponentData());
                   break;
                }
                case ServerComponentType.furnace: {
-                  components[componentType] = createFurnaceComponentData();
+                  components.set(componentType, createFurnaceComponentData());
                   break;
                }
                case ServerComponentType.spikes: {
-                  components[componentType] = createSpikesComponentData();
+                  components.set(componentType, createSpikesComponentData());
                   break;
                }
                case ServerComponentType.fireTorch: {
-                  components[componentType] = createFireTorchComponentData();
+                  components.set(componentType, createFireTorchComponentData());
                   break;
                }
                case ServerComponentType.slurbTorch: {
-                  components[componentType] = createSlurbTorchComponentData();
+                  components.set(componentType, createSlurbTorchComponentData());
                   break;
                }
                case ServerComponentType.barrel: {
-                  components[componentType] = createBarrelComponentData();
+                  components.set(componentType, createBarrelComponentData());
                   break;
                }
                case ServerComponentType.researchBench: {
-                  components[componentType] = createResearchBenchComponentData();
+                  components.set(componentType, createResearchBenchComponentData());
                   break;
                }
                case ServerComponentType.scrappy: {
-                  components[componentType] = {};
+                  components.set(componentType, {});
                   break;
                }
                case ServerComponentType.cogwalker: {
-                  components[componentType] = {};
+                  components.set(componentType, {});
                   break;
                }
                case ServerComponentType.craftingStation: {
-                  components[componentType] = {
+                  components.set(componentType, {
                      craftingStation: 0
-                  };
+                  });
                   break;
                }
                case ServerComponentType.automatonAssembler: {
-                  components[componentType] = {};
+                  components.set(componentType, {});
                   break;
                }
                case ServerComponentType.turret: {
-                  components[componentType] = {
+                  components.set(componentType, {
                      aimDirection: 0,
                      chargeProgress: 0,
                      reloadProgress: 0
-                  };
+                  });
                   break;
                }
                case ServerComponentType.aiHelper: {
-                  components[componentType] = {};
+                  components.set(componentType, {});
                   break;
                }
                case ServerComponentType.slingTurret: {
-                  components[componentType] = {};
+                  components.set(componentType, {});
                   break;
                }
                case ServerComponentType.ammoBox: {
-                  components[componentType] = {
+                  components.set(componentType, {
                      ammoType: 0,
                      ammoRemaining: 0
-                  };
+                  });
                   break;
                }
                case ServerComponentType.ballista: {
-                  components[componentType] = {};
+                  components.set(componentType, {});
                   break;
                }
                case ServerComponentType.mithrilAnvil: {
-                  components[componentType] = {};
+                  components.set(componentType, {});
                   break;
                }
                case ServerComponentType.punjiSticks: {
-                  components[componentType] = {};
+                  components.set(componentType, {});
                   break;
                }
                case ServerComponentType.fence: {
-                  components[componentType] = {};
+                  components.set(componentType, {});
                   break;
                }
                case ServerComponentType.planterBox: {
-                  components[componentType] = {
+                  components.set(componentType, {
                      plantedEntityType: -1,
                      isFertilised: false
-                  };
+                  });
                   break;
                }
                case ServerComponentType.hut: {
-                  components[componentType] = {
+                  components.set(componentType, {
                      doorSwingAmount: 0,
                      isRecalling: false
-                  };
+                  });
                   break;
                }
                case ServerComponentType.totemBanner: {
-                  components[componentType] = {
+                  components.set(componentType, {
                      banners: []
-                  };
+                  });
                   break;
                }
                case ServerComponentType.floorSign: {
-                  components[componentType] = {
+                  components.set(componentType, {
                      message: ""
-                  };
+                  });
                   break;
                }
                default: {
@@ -1679,7 +1677,7 @@ const tickItem = (itemType: ItemType): void => {
          };
 
          // Create the entity
-         assert(entityComponentData.serverComponentData[ServerComponentType.transform]!.hitboxes.length > 0);
+         assert(entityComponentData.serverComponentData.get(ServerComponentType.transform)!.hitboxes.length > 0);
          const creationInfo = createEntityCreationInfo(0, entityComponentData);
 
          const renderInfo = creationInfo.renderInfo;

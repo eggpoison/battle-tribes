@@ -7,7 +7,7 @@ import { PlanterBoxComponentArray } from "./entity-components/server-components/
 import { CraftingStationComponentArray } from "./entity-components/server-components/CraftingStationComponent";
 import { getLimbByInventoryName, InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { sendMountCarrySlotPacket, sendPickUpEntityPacket, sendStructureInteractPacket, sendModifyBuildingPacket, sendSetCarryTargetPacket, sendSetAttackTargetPacket, sendOpenEntityInventoryPacket } from "./networking/packet-sending";
+import { sendMountCarrySlotPacket, sendPickUpEntityPacket, sendStructureInteractPacket, sendModifyBuildingPacket, sendSetCarryTargetPacket, sendSetAttackTargetPacket, sendOpenEntityInventoryPacket as sendStartEntityInteractionPacket } from "./networking/packet-sending/packet-sending";
 import { EntityRenderInfo } from "./EntityRenderInfo";
 import { RideableComponentArray } from "./entity-components/server-components/RideableComponent";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
@@ -17,13 +17,13 @@ import { HealthComponentArray } from "./entity-components/server-components/Heal
 import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "./entity-components/server-components/TamingComponent";
 import { createHitboxQuick, getDistanceFromPointToEntity, getHitboxVelocity } from "./hitboxes";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
-import { Menu, menuIsInventory, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
+import { Menu, menuIsInventory, menuSelectorState } from "../ui-state/menu-selector-state";
 import { getPlayerSelectedItem, playerIsPlacingEntity } from "./player-action-handling";
 import { cameraPosition, cameraZoom, cursorWorldPos } from "./camera";
-import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
-import { GameInteractState, gameUIState } from "../ui-state/game-ui-state.svelte";
+import { entitySelectionState } from "../ui-state/entity-selection-state";
+import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
-import { BuildMenuOption, buildMenuState, getBuildMenuOptions } from "../ui-state/build-menu-state.svelte";
+import { BuildMenuOption, buildMenuState, getBuildMenuOptions } from "../ui-state/build-menu-state";
 import { setActiveResearchBench } from "./research";
 
 const enum InteractActionType {
@@ -503,7 +503,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          menuSelectorState.openMenu(action.menu);
 
          if (menuIsInventory(action.menu)) {
-            sendOpenEntityInventoryPacket(entity);
+            sendStartEntityInteractionPacket(entity);
          }
          break;
       }

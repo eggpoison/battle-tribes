@@ -47,10 +47,10 @@ function decodeData(reader: PacketReader): SpruceTreeComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const spruceTreeComponentData = entityComponentData.serverComponentData[ServerComponentType.spruceTree]!;
+   const spruceTreeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.spruceTree)!;
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -82,7 +82,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): SpruceTreeComponent {
    return {
-      treeSize: entityComponentData.serverComponentData[ServerComponentType.spruceTree]!.treeSize
+      treeSize: entityComponentData.serverComponentData.get(ServerComponentType.spruceTree)!.treeSize
    };
 }
 

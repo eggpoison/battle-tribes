@@ -1,5 +1,5 @@
 <script lang="ts">
-   import { sendDevGiveItemPacket } from "../../../../game/networking/packet-sending";
+   import { sendDevGiveItemPacket } from "../../../../game/networking/packet-sending/packet-sending";
    import { getItemStackSize, ItemType } from "webgl-test-shared";
    import ItemCatalogue from "./ItemCatalogue.svelte";
 

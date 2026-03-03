@@ -40,11 +40,11 @@ function decodeData(reader: PacketReader): ZombieComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const zombieComponentData = entityComponentData.serverComponentData[ServerComponentType.zombie]!;
-   const inventoryUseComponentData = entityComponentData.serverComponentData[ServerComponentType.inventoryUse]!;
+   const zombieComponentData = entityComponentData.serverComponentData.get(ServerComponentType.zombie)!;
+   const inventoryUseComponentData = entityComponentData.serverComponentData.get(ServerComponentType.inventoryUse)!;
 
    const bodyRenderPart = new TexturedRenderPart(
       hitbox,
@@ -87,7 +87,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): ZombieComponent {
    return {
-      zombieType: entityComponentData.serverComponentData[ServerComponentType.zombie]!.zombieType
+      zombieType: entityComponentData.serverComponentData.get(ServerComponentType.zombie)!.zombieType
    };
 }
 

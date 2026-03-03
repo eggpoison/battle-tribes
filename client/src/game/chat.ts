@@ -1,5 +1,5 @@
-import { chatboxState } from "../ui-state/chatbox-state.svelte";
-import { sendChatMessagePacket } from "./networking/packet-sending";
+import { chatboxState } from "../ui-state/chatbox-state";
+import { sendChatMessagePacket } from "./networking/packet-sending/packet-sending";
 
 export interface ChatMessage {
    readonly username: string;

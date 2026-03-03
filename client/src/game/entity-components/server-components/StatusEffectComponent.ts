@@ -82,7 +82,7 @@ function decodeData(reader: PacketReader): StatusEffectComponentData {
 
 function createComponent(entityComponentData: EntityComponentData): StatusEffectComponent {
    return {
-      statusEffects: entityComponentData.serverComponentData[ServerComponentType.statusEffect]!.statusEffects,
+      statusEffects: entityComponentData.serverComponentData.get(ServerComponentType.statusEffect)!.statusEffects,
       burningLight: null
    };
 }

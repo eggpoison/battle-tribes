@@ -44,10 +44,7 @@ export function resizeCanvas(): void {
    updateTechTreeCanvasSize();
 }
 
-// Run the resizeCanvas function whenever the window is resize
-window.addEventListener("resize", resizeCanvas);
-
-export function createWebGLContext(): void {
+export function createGameCanvasWebGLContext(): void {
    const canvasCheck = document.getElementById("game-canvas");
    if (canvasCheck instanceof HTMLCanvasElement) {
       canvas = canvasCheck;
@@ -63,7 +60,7 @@ export function createWebGLContext(): void {
 
    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-   MAX_ACTIVE_TEXTURE_UNITS = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+   MAX_ACTIVE_TEXTURE_UNITS = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) as number;
 }
 
 export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText: string, fragmentShaderText: string): WebGLProgram {
@@ -79,7 +76,7 @@ export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText:
    // Create the program and attach shaders to the program
    // 
 
-   const program = gl.createProgram()!;
+   const program = gl.createProgram();
 
    gl.attachShader(program, vertexShader);
    gl.attachShader(program, fragmentShader);
@@ -182,7 +179,7 @@ export function getCirclePoint(numPoints: number, i: number, origin: Readonly<Po
 }
 
 export function createTexture(width: number, height: number): WebGLTexture {
-   const texture = gl.createTexture()!;
+   const texture = gl.createTexture();
    gl.bindTexture(gl.TEXTURE_2D, texture);
    
    // Define size and format of level 0
@@ -203,7 +200,7 @@ export function createTexture(width: number, height: number): WebGLTexture {
 }
 
 export function createTextureArray(textureSources: ReadonlyArray<string>, width: number, height: number, numLevels: number): WebGLTexture {
-   const textureArray = gl.createTexture()!;
+   const textureArray = gl.createTexture();
    gl.bindTexture(gl.TEXTURE_2D_ARRAY, textureArray);
    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, numLevels, gl.RGBA8, width, height, textureSources.length);
 

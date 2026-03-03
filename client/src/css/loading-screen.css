@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
+
+#loading-screen {
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+}
+#loading-screen * {
+   font-family: "Inconsolata";
+   text-align: center;
+}
+#loading-screen h1 {
+   font-weight: 70;
+}
+
+#loading-screen.is-error .ls-loading-view {
+   display: none;
+}
+#loading-screen:not(.is-error) .ls-error-view {
+   display: none;
+}

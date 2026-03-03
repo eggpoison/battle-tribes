@@ -1,6 +1,6 @@
 <script lang="ts">
    import { onChatboxKeyPress } from "../../game/chat";
-   import { chatboxState } from "../../ui-state/chatbox-state.svelte";
+   import { chatboxState } from "../../ui-state/chatbox-state";
 
    let chatMessage = $state("");
 

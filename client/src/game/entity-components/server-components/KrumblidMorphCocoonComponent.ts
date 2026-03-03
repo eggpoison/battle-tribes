@@ -45,10 +45,10 @@ function decodeData(reader: PacketReader): KrumblidMorphCocoonComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const krumblidMorphCocoonComponentData = entityComponentData.serverComponentData[ServerComponentType.krumblidMorphCocoon]!;
+   const krumblidMorphCocoonComponentData = entityComponentData.serverComponentData.get(ServerComponentType.krumblidMorphCocoon)!;
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -64,7 +64,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): KrumblidMorphCocoonComponent {
-   const krumblidMorphCocoonComponentData = entityComponentData.serverComponentData[ServerComponentType.krumblidMorphCocoon]!;
+   const krumblidMorphCocoonComponentData = entityComponentData.serverComponentData.get(ServerComponentType.krumblidMorphCocoon)!;
 
    return {
       stage: krumblidMorphCocoonComponentData.stage,

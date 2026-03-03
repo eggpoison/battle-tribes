@@ -1,7 +1,7 @@
 <script lang="ts">
    import CLIENT_TRIBE_INFO_RECORD from "../../../../game/client-tribe-info";
    import { tribes } from "../../../../game/tribes";
-   import { tabSelectorState } from "../../../../ui-state/tab-selector-state.svelte";
+   import { tabSelectorState } from "../../../../ui-state/tab-selector-state";
    import DevmodeDropdownInput from "../DevmodeDropdownInput.svelte";
 
    const tribeIDs = new Array<number>();

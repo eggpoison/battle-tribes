@@ -36,7 +36,7 @@ export class TribesmanComponent {
    public lastPlantCollisionTicks = getGameTicks();
 
    /** Way the player is intending on moving. Useful for controlling mounts when riding them. */
-   public movementIntention = new Point(0, 0);
+   public moveIntention: number | null = null;
 }
 
 export const TribesmanComponentArray = new ComponentArray<TribesmanComponent>(ServerComponentType.tribesman, true, getDataLength, addDataToPacket);

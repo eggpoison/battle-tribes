@@ -26,10 +26,10 @@ export function createRegularSpikesComponentData(): RegularSpikesComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const materialComponentData = entityComponentData.serverComponentData[ServerComponentType.buildingMaterial]!;
+   const materialComponentData = entityComponentData.serverComponentData.get(ServerComponentType.buildingMaterial)!;
 
    const isAttachedToWall = entityComponentData.entityType === EntityType.wallSpikes;
    let textureArrayIndex: number;

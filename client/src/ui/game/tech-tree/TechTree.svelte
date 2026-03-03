@@ -1,9 +1,9 @@
 <script lang="ts">
    import { TECHS } from "webgl-test-shared";
    import { techIsDirectlyAccessible } from "../../../game/rendering/webgl/tech-tree-rendering";
-   import { techTreeState } from "../../../ui-state/tech-tree-state.svelte";
+   import { techTreeState } from "../../../ui-state/tech-tree-state";
    import TechNode from "./TechNode.svelte";
-   import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
+   import { debugDisplayState } from "../../../ui-state/debug-display-state";
    import { onDestroy, onMount } from "svelte";
 
    const boundsScale = 16;

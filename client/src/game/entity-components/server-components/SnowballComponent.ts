@@ -34,10 +34,10 @@ function decodeData(reader: PacketReader): SnowballComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const snowballComponentData = entityComponentData.serverComponentData[ServerComponentType.snowball]!;
+   const snowballComponentData = entityComponentData.serverComponentData.get(ServerComponentType.snowball)!;
 
    renderInfo.attachRenderPart(
       new TexturedRenderPart(

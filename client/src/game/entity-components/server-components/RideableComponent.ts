@@ -62,7 +62,7 @@ function decodeData(reader: PacketReader): RideableComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): RideableComponent {
-   const rideableComponentData = entityComponentData.serverComponentData[ServerComponentType.rideable]!;
+   const rideableComponentData = entityComponentData.serverComponentData.get(ServerComponentType.rideable)!;
    return {
       carrySlots: rideableComponentData.carrySlots
    };

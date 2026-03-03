@@ -27,7 +27,7 @@ function decodeData(reader: PacketReader): TribeMemberComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): TribeMemberComponent {
-   const tribeMemberComponentData = entityComponentData.serverComponentData[ServerComponentType.tribeMember]!;
+   const tribeMemberComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribeMember)!;
    return {
       name: tribeMemberComponentData.name
    };

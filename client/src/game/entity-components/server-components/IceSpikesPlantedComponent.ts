@@ -41,10 +41,10 @@ function decodeData(reader: PacketReader): IceSpikesPlantedComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const iceSpikesPlantedComponentData = entityComponentData.serverComponentData[ServerComponentType.iceSpikesPlanted]!;
+   const iceSpikesPlantedComponentData = entityComponentData.serverComponentData.get(ServerComponentType.iceSpikesPlanted)!;
    
    const renderPart = new TexturedRenderPart(
       hitbox,

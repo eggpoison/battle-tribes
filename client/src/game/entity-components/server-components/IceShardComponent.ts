@@ -19,7 +19,7 @@ function decodeData(): IceShardComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IceShardComponent {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponent.hitboxes[0];
    
    renderInfo.attachRenderPart(

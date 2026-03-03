@@ -5,8 +5,8 @@ import { TransformComponentArray } from "./entity-components/server-components/T
 import { setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
 import { calculateHitboxRenderPosition, getEntityTickInterp, registerDirtyRenderInfo } from "./rendering/render-part-matrices";
 import { getEntityRenderInfo } from "./world";
-import { gameUIState } from "../ui-state/game-ui-state.svelte";
-import { menuSelectorState } from "../ui-state/menu-selector-state.svelte";
+import { gameUIState } from "../ui-state/game-ui-state";
+import { menuSelectorState } from "../ui-state/menu-selector-state";
 
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
 // but this is in the client so these optimisations are less important. The ease-of-use is worth it

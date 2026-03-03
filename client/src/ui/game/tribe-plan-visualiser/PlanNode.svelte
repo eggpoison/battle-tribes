@@ -2,7 +2,7 @@
    import { AIPlanType } from "webgl-test-shared";
    import CLIENT_ENTITY_INFO_RECORD from "../../../game/client-entity-info";
    import CLIENT_ITEM_INFO_RECORD from "../../../game/client-item-info";
-   import { getPlanX, getPlanY } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
+   import { getPlanX, getPlanY } from "../../../ui-state/tribe-plan-visualiser-state";
    import { type AIPlan } from "../../../game/rendering/tribe-plan-visualiser/tribe-plan-visualiser";
    import PlanNode from "./PlanNode.svelte";
    import PlanConnector from "./PlanConnector.svelte";

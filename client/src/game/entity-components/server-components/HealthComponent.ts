@@ -4,7 +4,7 @@ import { ComponentTint, createComponentTint } from "../../EntityRenderInfo";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import { playerInstance } from "../../player";
 import { Hitbox } from "../../hitboxes";
-import { healthBarState } from "../../../ui-state/health-bar-state.svelte";
+import { healthBarState } from "../../../ui-state/health-bar-state";
 import { discombobulate } from "../../player-action-handling";
 
 export interface HealthComponentData {
@@ -48,7 +48,7 @@ function decodeData(reader: PacketReader): HealthComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): HealthComponent {
-   const healthComponentData = entityComponentData.serverComponentData[ServerComponentType.health]!;
+   const healthComponentData = entityComponentData.serverComponentData.get(ServerComponentType.health)!;
    
    return {
       health: healthComponentData.health,

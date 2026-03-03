@@ -66,7 +66,7 @@ const getEyeTextureSource = (okrenSize: number, eyeHardenTimer: number): string 
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const okrenComponentData = entityComponentData.serverComponentData[ServerComponentType.okren]!;
+   const okrenComponentData = entityComponentData.serverComponentData.get(ServerComponentType.okren)!;
    
    let sizeString: string;
    switch (okrenComponentData.size) {
@@ -78,7 +78,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       default: throw new Error();
    }
    
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    for (const hitbox of transformComponentData.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.OKREN_BODY)) {
          const bodyRenderPart = new TexturedRenderPart(
@@ -115,7 +115,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): OkrenComponent {
-   const okrenComponentData = entityComponentData.serverComponentData[ServerComponentType.okren]!;
+   const okrenComponentData = entityComponentData.serverComponentData.get(ServerComponentType.okren)!;
    
    return {
       size: okrenComponentData.size

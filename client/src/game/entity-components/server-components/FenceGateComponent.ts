@@ -23,7 +23,7 @@ function decodeData(): FenceGateComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    
    for (const hitbox of transformComponent.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.FENCE_GATE_DOOR)) {

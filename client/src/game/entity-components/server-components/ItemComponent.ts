@@ -30,10 +30,10 @@ function decodeData(reader: PacketReader): ItemComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const itemComponentData = entityComponentData.serverComponentData[ServerComponentType.item]!;
+   const itemComponentData = entityComponentData.serverComponentData.get(ServerComponentType.item)!;
       
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -48,7 +48,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): ItemComponent {
    return {
-      itemType: entityComponentData.serverComponentData[ServerComponentType.item]!.itemType
+      itemType: entityComponentData.serverComponentData.get(ServerComponentType.item)!.itemType
    };
 }
 

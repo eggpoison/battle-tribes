@@ -6,7 +6,7 @@ import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import { getTechTreeGL } from "./tech-tree-rendering";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 import { TEXTURE_SOURCES } from "../../texture-atlases/texture-sources";
-import { techTreeState } from "../../../ui-state/tech-tree-state.svelte";
+import { techTreeState } from "../../../ui-state/tech-tree-state";
 
 interface TechTreeItem {
    readonly itemType: ItemType;

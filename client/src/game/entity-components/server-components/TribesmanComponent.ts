@@ -17,7 +17,7 @@ import { playerInstance } from "../../player";
 import { getHitboxTile, getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { currentSnapshot } from "../../client";
-import { tabSelectorState } from "../../../ui-state/tab-selector-state.svelte";
+import { tabSelectorState } from "../../../ui-state/tab-selector-state";
 
 export interface TribesmanComponentData {
    readonly warpaintType: number | null;
@@ -335,8 +335,8 @@ const getBodyTextureSource = (entityType: EntityType, tribeType: TribeType): str
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
-   const tribeComponentData = entityComponentData.serverComponentData[ServerComponentType.tribe]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const tribeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribe)!;
    
    // @Temporary @Hack
    // const radius = tribesman.type === EntityType.player || tribesman.type === EntityType.tribeWarrior ? 32 : 28;
@@ -355,7 +355,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    renderInfo.attachRenderPart(bodyRenderPart);
 
    if (tribeComponentData.tribeType === TribeType.goblins) {
-      const tribesmanComponentData = entityComponentData.serverComponentData[ServerComponentType.tribesman]!;
+      const tribesmanComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribesman)!;
       const warPaintType = tribesmanComponentData.warpaintType;
       assert(warPaintType !== null);
       
@@ -434,7 +434,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TribesmanComponent {
-   const tribesmanComponentData = entityComponentData.serverComponentData[ServerComponentType.tribesman]!;
+   const tribesmanComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribesman)!;
    
    return {
       bodyRenderPart: intermediateInfo.bodyRenderPart,
@@ -446,7 +446,7 @@ function createComponent(entityComponentData: EntityComponentData, intermediateI
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const tribeComponentData = entityComponentData.serverComponentData[ServerComponentType.tribe]!;
+   const tribeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribe)!;
 
    let maxRenderParts = 0;
 

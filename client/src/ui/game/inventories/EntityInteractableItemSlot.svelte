@@ -2,12 +2,12 @@
    import { type Entity, type Inventory, InventoryName, ItemType } from "webgl-test-shared";
    import { type ItemRestTime } from "../../../game/player-action-handling";
    import ItemSlot from "./ItemSlot.svelte";
-   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
+   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state";
    import { InventoryComponentArray, getInventory } from "../../../game/entity-components/server-components/InventoryComponent";
-   import { sendItemPickupPacket, sendItemReleasePacket, sendItemTransferPacket } from "../../../game/networking/packet-sending";
+   import { sendItemPickupPacket, sendItemReleasePacket, sendItemTransferPacket } from "../../../game/networking/packet-sending/packet-sending";
    import { playerInstance } from "../../../game/player";
    import { keyIsPressed } from "../../../game/keyboard-input";
-   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 
    export interface ItemSlotCallbackInfo {
       readonly itemSlot: number;

@@ -8,7 +8,7 @@
    import { getHitboxVelocity } from "../../../game/hitboxes";
    import CLIENT_ENTITY_INFO_RECORD from "../../../game/client-entity-info";
    import { getEntityType } from "../../../game/world";
-   import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
+   import { hoverDebugState } from "../../../ui-state/hover-debug-state";
    import ItemSlotsContainer from "../inventories/ItemSlotsContainer.svelte";
    import ItemSlot from "../inventories/ItemSlot.svelte";
 

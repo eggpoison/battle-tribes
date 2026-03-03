@@ -1,6 +1,6 @@
 <script lang="ts">
    import { entityExists, getCurrentLayer } from "../../../game/world";
-   import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
+   import { hoverDebugState } from "../../../ui-state/hover-debug-state";
    import HoverDebugTile from "./tabs/HoverDebugTile.svelte";
    import HoverDebugEntity from "./HoverDebugEntity.svelte";
    import { cursorWorldPos } from "../../../game/camera";

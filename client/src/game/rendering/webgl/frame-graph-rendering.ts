@@ -1,6 +1,6 @@
 import { lerp } from "webgl-test-shared";
 import { createWebGLProgram } from "../../webgl";
-import { frameGraphState } from "../../../ui-state/frame-graph-state.svelte";
+import { frameGraphState } from "../../../ui-state/frame-graph-state";
 
 export interface FrameInfo {
    readonly startTime: number;

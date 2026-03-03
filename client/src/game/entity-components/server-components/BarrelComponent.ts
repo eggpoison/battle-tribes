@@ -31,10 +31,10 @@ const getTextureSource = (isOpened: boolean): string => {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const barrelComponentData = entityComponentData.serverComponentData[ServerComponentType.barrel]!;
+   const barrelComponentData = entityComponentData.serverComponentData.get(ServerComponentType.barrel)!;
    
    const renderPart = new TexturedRenderPart(
       hitbox,

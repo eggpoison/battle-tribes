@@ -44,7 +44,7 @@ export function createFootprintComponentData(footstepParticleIntervalSeconds: nu
 }
 
 function createComponent(entityComponentData: EntityComponentData): FootprintComponent {
-   const footprintComponentData = entityComponentData.clientComponentData[ClientComponentType.footprint]!;
+   const footprintComponentData = entityComponentData.clientComponentData.get(ClientComponentType.footprint)!;
    
    return {
       footstepParticleIntervalSeconds: footprintComponentData.footstepParticleIntervalSeconds,

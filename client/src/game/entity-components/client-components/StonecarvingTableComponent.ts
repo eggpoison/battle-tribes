@@ -20,7 +20,7 @@ export function createStonecarvingTableComponentData(): StonecarvingTableCompone
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponent.hitboxes[0];
    
    renderInfo.attachRenderPart(

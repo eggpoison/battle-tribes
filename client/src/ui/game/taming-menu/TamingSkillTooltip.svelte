@@ -2,7 +2,7 @@
    import { type TamingSkillNode, EntityType } from "webgl-test-shared";
    import CLIENT_ENTITY_INFO_RECORD from "../../../game/client-entity-info";
    import { skillLearningIsComplete, type TamingSkillLearning } from "../../../game/entity-components/server-components/TamingComponent";
-   import { tamingMenuState } from "../../../ui-state/taming-menu-state.svelte";
+   import { tamingMenuState } from "../../../ui-state/taming-menu-state";
 
    interface Props {
       entityType: EntityType;

@@ -1,7 +1,7 @@
 <script lang="ts">
    import { getItemTypeImage } from "../../game/client-item-info";
-    import { gameUIState } from "../../ui-state/game-ui-state.svelte";
-   import { inventoryState } from "../../ui-state/inventory-state.svelte";
+    import { gameUIState } from "../../ui-state/game-ui-state";
+   import { inventoryState } from "../../ui-state/inventory-state";
 
    const heldItem = $derived(inventoryState.heldItemSlot.getItem(1));
 </script>

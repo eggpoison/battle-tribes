@@ -47,7 +47,7 @@ function decodeData(reader: PacketReader): StructureComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): StructureComponent {
-   const structureComponentData = entityComponentData.serverComponentData[ServerComponentType.structure]!;
+   const structureComponentData = entityComponentData.serverComponentData.get(ServerComponentType.structure)!;
    
    return {
       hasActiveBlueprint: structureComponentData.hasActiveBlueprint,

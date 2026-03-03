@@ -43,10 +43,10 @@ const getTextureSource = (size: number): string => {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const sandBallComponentData = entityComponentData.serverComponentData[ServerComponentType.sandBall]!;
+   const sandBallComponentData = entityComponentData.serverComponentData.get(ServerComponentType.sandBall)!;
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -62,7 +62,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): SandBallComponent {
-   const sandBallComponentData = entityComponentData.serverComponentData[ServerComponentType.sandBall]!;
+   const sandBallComponentData = entityComponentData.serverComponentData.get(ServerComponentType.sandBall)!;
 
    return {
       size: sandBallComponentData.size,

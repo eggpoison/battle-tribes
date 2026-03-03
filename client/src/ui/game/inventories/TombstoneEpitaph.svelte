@@ -1,7 +1,7 @@
 <script lang="ts">
    import { DamageSource, veryBadHash } from "webgl-test-shared";
    import { TombstoneComponentArray } from "../../../game/entity-components/server-components/TombstoneComponent";
-   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 
    // __NAME__'s brain exploded.
 

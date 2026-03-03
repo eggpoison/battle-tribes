@@ -7,7 +7,7 @@ import { getEntityRenderInfo, getEntityType, layers } from "../world";
 import Layer from "../Layer";
 import { Entity, EntityType } from "webgl-test-shared";
 import { gl } from "../webgl";
-import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
+import { debugDisplayState } from "../../ui-state/debug-display-state";
 
 export const enum RenderableType {
    entity,

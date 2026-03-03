@@ -19,7 +19,7 @@ import { playerInstance } from "../../player";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { currentSnapshot, tickIntervalHasPassed } from "../../client";
 import { tickPlayerItems } from "../../player-action-handling";
-import { inventoryState } from "../../../ui-state/inventory-state.svelte";
+import { inventoryState } from "../../../ui-state/inventory-state";
 import { playSoundOnHitbox } from "../../sound";
 
 export interface LimbInfo {
@@ -581,7 +581,7 @@ function decodeData(reader: PacketReader): InventoryUseComponentData {
 
 function createComponent(entityComponentData: EntityComponentData): InventoryUseComponent {
    return {
-      limbInfos: entityComponentData.serverComponentData[ServerComponentType.inventoryUse]!.limbInfos,
+      limbInfos: entityComponentData.serverComponentData.get(ServerComponentType.inventoryUse)!.limbInfos,
       limbAttachPoints: [],
       limbRenderParts: [],
       activeItemRenderParts: [],
@@ -594,7 +594,7 @@ function createComponent(entityComponentData: EntityComponentData): InventoryUse
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
    // Each limb can hold an active item render part
-   const inventoryUseComponentData = entityComponentData.serverComponentData[ServerComponentType.inventoryUse]!;
+   const inventoryUseComponentData = entityComponentData.serverComponentData.get(ServerComponentType.inventoryUse)!;
    // (@Hack: plus one arrow render part)
    return inventoryUseComponentData.limbInfos.length + 1;
 }

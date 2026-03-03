@@ -96,7 +96,7 @@ function decodeData(reader: PacketReader): GuardianComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponent.hitboxes[0];
    
    const rubyRenderParts = new Array<VisualRenderPart>();
@@ -160,7 +160,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const limbCrackLights = new Array<Light>();
    
    // Attach limb render parts
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
       const hitbox = transformComponentData.hitboxes[i];
       
@@ -215,7 +215,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GuardianComponent {
-   const guardianComponentData = entityComponentData.serverComponentData[ServerComponentType.guardian]!;
+   const guardianComponentData = entityComponentData.serverComponentData.get(ServerComponentType.guardian)!;
 
    return {
       rubyRenderParts: intermediateInfo.rubyRenderParts,
@@ -241,7 +241,7 @@ function createComponent(entityComponentData: EntityComponentData, intermediateI
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
    let maxRenderParts = 5;
    
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    maxRenderParts += 2 * transformComponentData.hitboxes.length;
 
    return maxRenderParts;

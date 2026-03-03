@@ -68,10 +68,10 @@ function decodeData(reader: PacketReader): TombstoneComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const tombstoneComponentData = entityComponentData.serverComponentData[ServerComponentType.tombstone]!;
+   const tombstoneComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tombstone)!;
    
    renderInfo.attachRenderPart(
       new TexturedRenderPart(
@@ -86,7 +86,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): TombstoneComponent {
-   const tombstoneComponentData = entityComponentData.serverComponentData[ServerComponentType.tombstone]!;
+   const tombstoneComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tombstone)!;
    return {
       tombstoneType: tombstoneComponentData. tombstoneType,
       zombieSpawnProgress: tombstoneComponentData. zombieSpawnProgress,

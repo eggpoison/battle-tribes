@@ -1,5 +1,5 @@
 <script lang="ts">
-   import { GameInteractState, gameUIState } from "../../ui-state/game-ui-state.svelte";
+   import { GameInteractState, gameUIState } from "../../ui-state/game-ui-state";
 
    interface Props {
       readonly mouseX: number;

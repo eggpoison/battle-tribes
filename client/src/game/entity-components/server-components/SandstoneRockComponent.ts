@@ -24,10 +24,10 @@ function decodeData(reader: PacketReader): SandstoneRockComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const sandstoneRockComponentData = entityComponentData.serverComponentData[ServerComponentType.sandstoneRock]!;
+   const sandstoneRockComponentData = entityComponentData.serverComponentData.get(ServerComponentType.sandstoneRock)!;
 
    let typeString: string;
    switch (sandstoneRockComponentData.size) {

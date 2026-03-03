@@ -2,7 +2,7 @@ import { Settings } from "webgl-test-shared";
 import Board from "./Board";
 import { updateTextNumbers } from "./text-canvas";
 import { resizeCanvas } from "./webgl";
-import { createAudioContext, getNumSounds, playRiverSounds, updateSounds } from "./sound";
+import { createAudioContext, playRiverSounds, updateSounds } from "./sound";
 import { attemptToResearch, updateResearchOrb } from "./research";
 import { updateEntitySelections } from "./entity-selection";
 import { updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
@@ -10,21 +10,23 @@ import { entityUsesClientInterp } from "./rendering/render-part-matrices";
 import { createCollapseParticles } from "./collapses";
 import { updateSlimeTrails } from "./rendering/webgl/slime-trail-rendering";
 import { updateDebugEntity } from "./entity-debugging";
-import { playerInstance, setIsSpectating, setPlayerInstance, setPlayerUsername, updatePlayerDirection } from "./player";
+import { isSpectating, playerInstance, playerUsername, setIsSpectating, setPlayerInstance, setPlayerUsername, updatePlayerDirection } from "./player";
 import { callEntityOnUpdateFunctions } from "./entity-components/ComponentArray";
 import { resolvePlayerCollisions } from "./collision";
 import { decodeSnapshotFromGameDataPacket, PacketSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
-import { sendActivatePacket, sendDeactivatePacket, sendInitialPlayerDataPacket, sendPlayerDataPacket, sendSyncRequestPacket } from "./networking/packet-sending";
+import { sendActivatePacket, sendDeactivatePacket, sendInitialPlayerDataPacket, sendSyncRequestPacket } from "./networking/packet-sending/packet-sending";
 import { processForcePositionUpdatePacket, processInitialGameDataPacket, processShieldKnockPacket, processSimulationStatusUpdatePacket, processSyncGameDataPacket, receiveChatMessagePacket } from "./networking/packet-receiving";
 import { renderGame, setupRendering } from "./rendering/render";
 import { processDevGameDataPacket } from "./networking/dev-packets";
-import { LoadingScreenStage, loadingScreenState } from "../ui-state/loading-screen-state.svelte";
-import { appState, AppState } from "../ui-state/app-state.svelte";
+import { setAppState, AppState } from "../ui-state/app-state";
 import { registerFrame, renderFrameGraph, resetFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { updateSpamFilter } from "./chat";
 import { updatePlayerMovement } from "./player-action-handling";
-import { PacketReader, PacketType, Packet, TribeType } from "webgl-test-shared";
-import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
+import { PacketReader, PacketType, TribeType } from "webgl-test-shared";
+import { debugDisplayState } from "../ui-state/debug-display-state";
+import { LoadingScreenStage, setLoadingScreenStage } from "../ui/LoadingScreen";
+import { sendPlayerDataPacket } from "./networking/packet-sending/player-data-packet-sending";
+import { playerTribe } from "./tribes";
 
 const SNAPSHOT_BUFFER_LENGTH = 2;
 /** The number of ticks it takes for the measured server packet interval to fully adjust (if going from a constant tps of A to a constant tps of B) */
@@ -64,7 +66,7 @@ document.addEventListener("visibilitychange", () => {
          // @Investigate: what if this request fails??? This is the only request sent, so will the client just be stuck?
          sendSyncRequestPacket();
       }
-   } else if (document.visibilityState === "hidden") {
+   } else {
       gameIsFocused = false;
       unsyncGame();
       sendDeactivatePacket();
@@ -81,26 +83,31 @@ function unsyncGame(): void {
    resetFrameGraph();
 }
 
-const onSuccessfulConnection = (username: string, tribeType: TribeType, isSpectating: boolean): void => {
-   loadingScreenState.setStage(LoadingScreenStage.sendingPlayerData);
+function onSuccessfulConnection(username: string, tribeType: TribeType, isSpectating: boolean): void {
+   setLoadingScreenStage(LoadingScreenStage.sendingPlayerData);
    sendInitialPlayerDataPacket(username, tribeType, isSpectating);
 
    setPlayerUsername(username);
    setIsSpectating(isSpectating);
 }
 
-const onFailedConnection = (): void => {
+function onFailedConnection(): void {
    gameIsRunning = false;
-   appState.setState(AppState.loading);
-   loadingScreenState.setStage(LoadingScreenStage.connectionError);
+   setAppState(AppState.loading);
+   setLoadingScreenStage(LoadingScreenStage.connectionError);
 
    setPlayerInstance(null);
 }
 
-const startGame = (): void => {
+export function reconnectClient(): void {
+   socket = null;
+   establishNetworkConnection(playerUsername, playerTribe.tribeType, isSpectating);
+}
+
+function startGame(): void {
    gameIsRunning = true;
    gameIsSynced = true;
-   appState.setState(AppState.game);
+   setAppState(AppState.game);
 
    resizeCanvas();
 
@@ -113,7 +120,7 @@ const startGame = (): void => {
 
 export function quitGame(): void {
    gameIsRunning = false;
-   appState.setState(AppState.mainMenu);
+   setAppState(AppState.mainMenu);
    
    if (socket !== null) {
       socket.close();
@@ -121,24 +128,24 @@ export function quitGame(): void {
    }
 }
 
-const onInitialGameDataPacket = async (reader: PacketReader): Promise<void> => {
+async function onInitialGameDataPacket(reader: PacketReader): Promise<void> {
    processInitialGameDataPacket(reader);
    
    // Initialise game
 
-   loadingScreenState.setStage(LoadingScreenStage.initialisingGame);
+   setLoadingScreenStage(LoadingScreenStage.initialisingGame);
    
    await setupRendering();
    
    sendActivatePacket();
 }
 
-const onPacket = (msg: MessageEvent): void => {
-   const reader = new PacketReader(msg.data, 0);
+async function onPacket(msg: MessageEvent): Promise<void> {
+   const reader = new PacketReader(msg.data as ArrayBufferLike, 0);
    
    const packetType = reader.readNumber() as PacketType;
    switch (packetType) {
-      case PacketType.initialGameData: onInitialGameDataPacket(reader); break;
+      case PacketType.initialGameData: await onInitialGameDataPacket(reader); break;
       case PacketType.gameData: {
          if (!gameIsRunning && snapshotBuffer.length < SNAPSHOT_BUFFER_LENGTH) {
             if (typeof currentSnapshot === "undefined") {
@@ -171,12 +178,12 @@ export function establishNetworkConnection(username: string, tribeType: TribeTyp
    }
    
    // @SQUEAM
-   socket = new WebSocket(`ws://10.0.0.10:${Settings.SERVER_PORT}`);
-   // socket = new WebSocket(`ws://127.0.0.1:${Settings.SERVER_PORT}`);
-   // socket = new WebSocket(`ws://localhost:${Settings.SERVER_PORT}`);
+   // socket = new WebSocket(`ws://10.0.0.10:${Settings.SERVER_PORT}`);
+   // Use 127.0.0.1 instea of localhost cuz localhost sometimes breaks it for reasons
+   socket = new WebSocket(`ws://127.0.0.1:${Settings.SERVER_PORT}`);
    socket.binaryType = "arraybuffer";
 
-   socket.onopen = () => onSuccessfulConnection(username, tribeType, isSpectating);
+   socket.onopen = (): void => { onSuccessfulConnection(username, tribeType, isSpectating); };
    socket.onclose = onFailedConnection;
    socket.onmessage = onPacket;
 
@@ -184,7 +191,7 @@ export function establishNetworkConnection(username: string, tribeType: TribeTyp
    createAudioContext();
 }
 
-const receivePacket = (reader: PacketReader): PacketSnapshot => {
+function receivePacket(reader: PacketReader): PacketSnapshot {
    const previousSnapshot = snapshotBuffer.length > 0 ? snapshotBuffer[snapshotBuffer.length - 1] : null;
    const snapshot = decodeSnapshotFromGameDataPacket(reader, previousSnapshot);
    
@@ -215,10 +222,8 @@ export function receiveInitialPacket(reader: PacketReader): void {
    clientTick = snapshot.tick; // Start the client tick off at the tick of the very first packet received.
 }
 
-export function sendPacket(packet: Packet): void {
-   if (socket !== null) {
-      socket.send(packet.buffer);
-   }
+export function sendData(buffer: ArrayBufferLike): void {
+   socket?.send(buffer);
 }
 
 export function setCurrentSnapshot(snapshot: PacketSnapshot): void {
@@ -236,7 +241,7 @@ export function tickIntervalHasPassed(intervalSeconds: number): boolean {
    return Math.floor(previousCheck) !== Math.floor(check);
 }
 
-const runFrame = (frameStartTime: number): void => {
+function runFrame(frameStartTime: number): void {
    const deltaTimeMS = frameStartTime - lastFrameTime;
    lastFrameTime = frameStartTime;
 

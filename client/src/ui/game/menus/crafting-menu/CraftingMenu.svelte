@@ -2,15 +2,15 @@
    import { Inventory, Item, ItemTally2, tallyInventoryItems, type CraftingRecipe, CRAFTING_RECIPES, type CraftingStationEntityType, getTechRequiredForItem } from "webgl-test-shared";
    import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../../game/client-item-info";
    import { playHeadSound } from "../../../../game/sound";
-   import { sendCraftItemPacket } from "../../../../game/networking/packet-sending";
+   import { sendCraftItemPacket } from "../../../../game/networking/packet-sending/packet-sending";
    import { playerTribe } from "../../../../game/tribes";
    import { playerInstance } from "../../../../game/player";
    import ItemSlot from "../../inventories/ItemSlot.svelte";
    import CraftingIngredients from "./CraftingIngredients.svelte";
-   import { entitySelectionState } from "../../../../ui-state/entity-selection-state.svelte";
+   import { entitySelectionState } from "../../../../ui-state/entity-selection-state";
    import { getEntityType } from "../../../../game/world";
    import RecipeViewer from "./RecipeViewer.svelte";
-   import { inventoryState } from "../../../../ui-state/inventory-state.svelte";
+   import { inventoryState } from "../../../../ui-state/inventory-state";
    import EntityInteractableItemSlot from "../../inventories/EntityInteractableItemSlot.svelte";
    import ItemSlotsContainer from "../../inventories/ItemSlotsContainer.svelte";
    import MenuElem from "../MenuElem.svelte";

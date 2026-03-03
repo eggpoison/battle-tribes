@@ -36,7 +36,7 @@ function decodeData(reader: PacketReader): ResearchBenchComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
    renderInfo.attachRenderPart(
@@ -53,7 +53,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): ResearchBenchComponent {
    return {
-      isOccupied: entityComponentData.serverComponentData[ServerComponentType.researchBench]!.isOccupied
+      isOccupied: entityComponentData.serverComponentData.get(ServerComponentType.researchBench)!.isOccupied
    };
 }
 

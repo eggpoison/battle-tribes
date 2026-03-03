@@ -5,7 +5,7 @@
    import { CookingComponentArray } from "../../../game/entity-components/server-components/CookingComponent";
    import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
    import MenuElem from "../menus/MenuElem.svelte";
-   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 
    // @Hack: "!"
    const cookingEntity = entitySelectionState.selectedEntity!;

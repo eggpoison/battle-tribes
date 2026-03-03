@@ -1,7 +1,7 @@
 import { RestrictedBuildingAreaData, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
+import { debugDisplayState } from "../../../ui-state/debug-display-state";
 
 const BORDER_WIDTH = 5;
 

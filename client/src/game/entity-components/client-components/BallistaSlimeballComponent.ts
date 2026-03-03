@@ -7,7 +7,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
-import { TransformComponentArray } from "../server-components/TransformComponent";
+import { TransformComponentArray, TransformComponentData } from "../server-components/TransformComponent";
 
 export interface BallistaSlimeballComponentData {}
 
@@ -24,7 +24,7 @@ export function createBallistaSlimeballComponentData(): BallistaSlimeballCompone
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
    renderInfo.attachRenderPart(

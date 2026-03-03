@@ -107,17 +107,17 @@ const createRecallMarker = (parentHitbox: Hitbox): TexturedRenderPart => {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
    return {
       doorRenderParts: renderInfo.getRenderThings("hutComponent:door") as Array<VisualRenderPart>,
-      recallMarker: entityComponentData.serverComponentData[ServerComponentType.hut]!.isRecalling ? createRecallMarker(hitbox) : null
+      recallMarker: entityComponentData.serverComponentData.get(ServerComponentType.hut)!.isRecalling ? createRecallMarker(hitbox) : null
    };
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): HutComponent {
-   const hutComponentData = entityComponentData.serverComponentData[ServerComponentType.hut]!;
+   const hutComponentData = entityComponentData.serverComponentData.get(ServerComponentType.hut)!;
    
    return {
       doorRenderParts: intermediateInfo.doorRenderParts,

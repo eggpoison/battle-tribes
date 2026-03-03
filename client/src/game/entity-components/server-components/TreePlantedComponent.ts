@@ -44,10 +44,10 @@ function decodeData(reader: PacketReader): TreePlantedComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponent.hitboxes[0];
 
-   const growthProgress = entityComponentData.serverComponentData[ServerComponentType.treePlanted]!.growthProgress;
+   const growthProgress = entityComponentData.serverComponentData.get(ServerComponentType.treePlanted)!.growthProgress;
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -63,7 +63,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TreePlantedComponent {
-   const growthProgress = entityComponentData.serverComponentData[ServerComponentType.treePlanted]!.growthProgress;
+   const growthProgress = entityComponentData.serverComponentData.get(ServerComponentType.treePlanted)!.growthProgress;
    return {
       growthProgress: growthProgress,
       renderPart: intermediateInfo.renderPart

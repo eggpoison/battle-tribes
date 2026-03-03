@@ -1,7 +1,7 @@
 import { AIPlanType, getTechByID, TechID, Tech,StructureType, PacketReader, ItemType, CRAFTING_RECIPES, CraftingRecipe, Entity, EntityType, BlueprintType } from "webgl-test-shared";
-import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
+import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state";
 import { ExtendedTribe, getTribeByID } from "../../tribes";
-import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
+import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state";
 
 const enum Vars {
    NODE_DISPLAY_SIZE = 100

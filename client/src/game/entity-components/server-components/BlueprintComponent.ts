@@ -427,7 +427,7 @@ function decodeData(reader: PacketReader): BlueprintComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): BlueprintComponent {
-   const blueprintComponentData = entityComponentData.serverComponentData[ServerComponentType.blueprint]!;
+   const blueprintComponentData = entityComponentData.serverComponentData.get(ServerComponentType.blueprint)!;
    
    return {
       partialRenderParts: [],
@@ -438,7 +438,7 @@ function createComponent(entityComponentData: EntityComponentData): BlueprintCom
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const blueprintComponentData = entityComponentData.serverComponentData[ServerComponentType.blueprint]!;
+   const blueprintComponentData = entityComponentData.serverComponentData.get(ServerComponentType.blueprint)!;
    return 2 * BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponentData.blueprintType].length;
 }
 

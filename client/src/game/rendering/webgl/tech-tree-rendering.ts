@@ -1,7 +1,7 @@
 import { angle, TECHS, TechID, Tech, getTechByID } from "webgl-test-shared";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "../../webgl";
 import { playerTribe } from "../../tribes";
-import { techTreeState } from "../../../ui-state/tech-tree-state.svelte";
+import { techTreeState } from "../../../ui-state/tech-tree-state";
 
 const ConnectorType = {
    unlocked: 0,

@@ -38,10 +38,10 @@ function decodeData(reader: PacketReader): BoulderComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const boulderComponentData = entityComponentData.serverComponentData[ServerComponentType.boulder]!;
+   const boulderComponentData = entityComponentData.serverComponentData.get(ServerComponentType.boulder)!;
    
    renderInfo.attachRenderPart(
       new TexturedRenderPart(
@@ -57,7 +57,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): BoulderComponent {
    return {
-      boulderType: entityComponentData.serverComponentData[ServerComponentType.boulder]!.boulderType
+      boulderType: entityComponentData.serverComponentData.get(ServerComponentType.boulder)!.boulderType
    };
 }
 

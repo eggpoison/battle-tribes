@@ -6,9 +6,9 @@ import { getRandomPositionInEntity, TransformComponentArray } from "./entity-com
 import { getEntityType } from "./world";
 import { InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
 import { TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
-import { sendStudyTechPacket } from "./networking/packet-sending";
+import { sendStudyTechPacket } from "./networking/packet-sending/packet-sending";
 import { playerInstance } from "./player";
-import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
+import { entitySelectionState } from "../ui-state/entity-selection-state";
 import { cursorWorldPos } from "./camera";
 
 export interface ResearchOrb {

@@ -21,7 +21,7 @@ import ServerComponentArray from "../ServerComponentArray";
 // }
 
 // function createComponent(entityComponentData: EntityComponentData): BlockAttackComponent {
-//    const blockAttackComponentData = entityComponentData.serverComponentData[ServerComponentType.blockAttack]!;
+//    const blockAttackComponentData = entityComponentData.serverComponentData.get(ServerComponentType.blockAttack)!;
    
 //    return {
 //       hasBlocked: blockAttackComponentData.hasBlocked

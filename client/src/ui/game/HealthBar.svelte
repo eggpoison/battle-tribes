@@ -2,7 +2,7 @@
    import HealthIcon from "../../images/miscellaneous/health.png";
    import { HealthComponentArray } from "../../game/entity-components/server-components/HealthComponent";
    import { playerInstance } from "../../game/player";
-   import { healthBarState } from "../../ui-state/health-bar-state.svelte";
+   import { healthBarState } from "../../ui-state/health-bar-state";
 </script>
 
 {#if playerInstance !== null && HealthComponentArray.hasComponent(playerInstance)}

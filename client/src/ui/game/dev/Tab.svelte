@@ -1,5 +1,5 @@
 <script lang="ts">
-   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
+   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state";
    import ItemTabImage from "/src/images/ui/item-tab.png";
    import SummonTabImage from "/src/images/ui/summon-tab.png";
    import TitlesTabImage from "/src/images/ui/titles-tab.png";

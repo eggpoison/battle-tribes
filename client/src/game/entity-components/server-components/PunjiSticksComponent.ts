@@ -40,7 +40,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       textureArrayIndex = getTextureArrayIndex("entities/floor-punji-sticks/floor-punji-sticks.png");
    }
 
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
    const renderPart = new TexturedRenderPart(

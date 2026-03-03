@@ -16,7 +16,7 @@ export const GlurbTailSegmentComponentArray = new ClientComponentArray<GlurbTail
 GlurbTailSegmentComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
    const textureSource = "entities/glurb/glurb-tail-segment.png";

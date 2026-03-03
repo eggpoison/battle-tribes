@@ -27,7 +27,7 @@ function decodeData(reader: PacketReader): FloorSignComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
    const renderPart = new TexturedRenderPart(
@@ -42,7 +42,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): FloorSignComponentData {
-   const floorSignComponent = entityComponentData.serverComponentData[ServerComponentType.floorSign]!;
+   const floorSignComponent = entityComponentData.serverComponentData.get(ServerComponentType.floorSign)!;
    
    return {
       message: floorSignComponent.message

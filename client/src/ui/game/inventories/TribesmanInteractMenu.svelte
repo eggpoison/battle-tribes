@@ -6,7 +6,7 @@
    import { playerTribe } from "../../../game/tribes";
    import { playerInstance } from "../../../game/player";
    import TribesmanInfocard from "./TribesmanInfocard.svelte";
-   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state";
    import InventoryContainer from "./ItemSlotsContainer.svelte";
    import BackpackWireframeImage from "../../../images/miscellaneous/backpack-wireframe.png";
    import ArmourWireframeImage from "../../../images/miscellaneous/armour-wireframe.png";

@@ -1,5 +1,5 @@
 <script lang="ts">
-   import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
+   import { hoverDebugState } from "../../../ui-state/hover-debug-state";
 
    interface Props {
       mouseX: number;

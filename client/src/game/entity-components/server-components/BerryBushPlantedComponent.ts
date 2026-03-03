@@ -62,10 +62,10 @@ function decodeData(reader: PacketReader): BerryBushPlantedComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const berryBushPlantedComponentData = entityComponentData.serverComponentData[ServerComponentType.berryBushPlanted]!;
+   const berryBushPlantedComponentData = entityComponentData.serverComponentData.get(ServerComponentType.berryBushPlanted)!;
    
    const renderPart = new TexturedRenderPart(
       hitbox,

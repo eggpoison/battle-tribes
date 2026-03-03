@@ -39,7 +39,7 @@ function decodeData(reader: PacketReader): CookingComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): CookingComponent {
-   const cookingComponentData = entityComponentData.serverComponentData[ServerComponentType.cooking]!;
+   const cookingComponentData = entityComponentData.serverComponentData.get(ServerComponentType.cooking)!;
    
    return {
       heatingProgress: cookingComponentData.heatingProgress,

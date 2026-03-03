@@ -158,7 +158,7 @@ function decodeData(reader: PacketReader): TurretComponentData {
 
 function createComponent(entityComponentData: EntityComponentData, _: never, renderInfo: EntityRenderInfo): TurretComponent {
    return {
-      chargeProgress: entityComponentData.serverComponentData[ServerComponentType.turret]!.chargeProgress,
+      chargeProgress: entityComponentData.serverComponentData.get(ServerComponentType.turret)!.chargeProgress,
       aimingRenderPart: renderInfo.getRenderThing("turretComponent:aiming") as TexturedRenderPart,
       pivotingRenderPart: renderInfo.getRenderThing("turretComponent:pivoting") as VisualRenderPart,
       gearRenderParts: renderInfo.getRenderThings("turretComponent:gear") as Array<VisualRenderPart>,

@@ -32,10 +32,10 @@ function decodeData(reader: PacketReader): TreeRootSegmentComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const treeRootSegmentComponentData = entityComponentData.serverComponentData[ServerComponentType.treeRootSegment]!;
+   const treeRootSegmentComponentData = entityComponentData.serverComponentData.get(ServerComponentType.treeRootSegment)!;
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -53,7 +53,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData): TreeRootSegmentComponent {
    return {
-      variant: entityComponentData.serverComponentData[ServerComponentType.treeRootSegment]!.variant
+      variant: entityComponentData.serverComponentData.get(ServerComponentType.treeRootSegment)!.variant
    };
 }
 

@@ -77,7 +77,7 @@ const createConnectingRenderPart = (connection: StructureConnection, parentHitbo
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponent.hitboxes[0];
    
    renderInfo.attachRenderPart(
@@ -92,7 +92,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const connectingRenderParts: Record<Entity, RenderPart> = {};
 
    // Create initial connecting render parts
-   const structureComponentData = entityComponentData.serverComponentData[ServerComponentType.structure]!;
+   const structureComponentData = entityComponentData.serverComponentData.get(ServerComponentType.structure)!;
    for (const connection of structureComponentData.connections) {
       const renderPart = createConnectingRenderPart(connection, hitbox);
       renderInfo.attachRenderPart(renderPart);

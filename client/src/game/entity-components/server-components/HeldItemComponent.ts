@@ -24,7 +24,7 @@ function decodeData(reader: PacketReader): HeldItemComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): HeldItemComponent {
-   const blockAttackComponentData = entityComponentData.serverComponentData[ServerComponentType.heldItem]!;
+   const blockAttackComponentData = entityComponentData.serverComponentData.get(ServerComponentType.heldItem)!;
    
    return {
       hasBlocked: blockAttackComponentData.hasBlocked

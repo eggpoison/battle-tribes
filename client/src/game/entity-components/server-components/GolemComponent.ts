@@ -118,7 +118,7 @@ function decodeData(reader: PacketReader): GolemComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    
    const rockRenderParts = new Array<VisualRenderPart>();
    const eyeRenderParts = new Array<VisualRenderPart>();
@@ -167,7 +167,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GolemComponent {
    return {
-      wakeProgress: entityComponentData.serverComponentData[ServerComponentType.golem]!.wakeProgress,
+      wakeProgress: entityComponentData.serverComponentData.get(ServerComponentType.golem)!.wakeProgress,
       rockRenderParts: intermediateInfo.rockRenderParts,
       eyeRenderParts: intermediateInfo.eyeRenderParts,
       eyeLights: intermediateInfo.eyeLights
@@ -175,7 +175,7 @@ function createComponent(entityComponentData: EntityComponentData, intermediateI
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    
    let maxRenderParts = 0;
    for (const hitbox of transformComponentData.hitboxes) {

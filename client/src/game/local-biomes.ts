@@ -74,6 +74,7 @@ const updateLocalBiomeFromData = (reader: PacketReader, localBiome: LocalBiome):
       });
    }
 
+   // @Speed: 329ms
    for (const pair of localBiome.entityCensus) {
       const entityCensusInfo = pair[1];
       if (entityCensusInfo.count === 0) {

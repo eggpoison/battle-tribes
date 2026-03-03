@@ -52,7 +52,7 @@ function decodeData(reader: PacketReader): TribesmanAIComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): TribesmanAIComponent {
-   const tribesmanAIComponentData = entityComponentData.serverComponentData[ServerComponentType.tribesmanAI]!;
+   const tribesmanAIComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribesmanAI)!;
 
    return {
       aiType: tribesmanAIComponentData.aiType,

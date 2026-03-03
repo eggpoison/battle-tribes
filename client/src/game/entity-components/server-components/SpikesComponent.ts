@@ -73,7 +73,7 @@ const createLeafRenderPart = (isSmall: boolean, parentHitbox: Hitbox): VisualRen
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
    const leafRenderParts = new Array<VisualRenderPart>();
@@ -99,7 +99,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): SpikesComponent {
    return {
-      isCovered: entityComponentData.serverComponentData[ServerComponentType.spikes]!.isCovered,
+      isCovered: entityComponentData.serverComponentData.get(ServerComponentType.spikes)!.isCovered,
       leafRenderParts: intermediateInfo.leafRenderParts
    };
 }

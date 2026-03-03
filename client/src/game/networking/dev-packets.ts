@@ -1,5 +1,5 @@
 import { assert, PacketReader, CircleDebugData, EntityDebugData, LineDebugData, PathData, PathfindingNodeIndex, TileHighlightData, SafetyNodeData } from "webgl-test-shared";
-import { hoverDebugState } from "../../ui-state/hover-debug-state.svelte";
+import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { readTribeBuildingSafeties, resetBuildingSafeties } from "../building-safety";
 import { updateLightLevelsFromData } from "../light-levels";
 import { updateLocalBiomesFromData } from "../local-biomes";

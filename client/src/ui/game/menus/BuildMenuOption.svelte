@@ -2,7 +2,7 @@
    import { ItemType, BlueprintType, type Entity } from "webgl-test-shared";
    import { getItemTypeImage } from "../../../game/client-item-info";
    import { GhostType } from "../../../game/rendering/webgl/entity-ghost-rendering";
-   import { OptionType } from "../../../ui-state/build-menu-state.svelte";
+   import { OptionType } from "../../../ui-state/build-menu-state";
 
    interface OptionCost {
       readonly itemType: ItemType;

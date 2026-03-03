@@ -3,7 +3,7 @@
    import { ItemType, ITEM_INFO_RECORD, Item } from "webgl-test-shared";
    import ItemSlotsContainer from "../../inventories/ItemSlotsContainer.svelte";
    import ItemSlot from "../../inventories/ItemSlot.svelte";
-    import { menuSelectorState } from "../../../../ui-state/menu-selector-state.svelte";
+    import { menuSelectorState } from "../../../../ui-state/menu-selector-state";
 
    interface Props {
       readonly hasAmountInput?: boolean;

@@ -1,6 +1,6 @@
 <script lang="ts">
    import { type EntityTamingSpec, type TamingSkillNode } from "webgl-test-shared";
-   import { SKILL_TRANSFORM_SCALE_FACTOR } from "../../../ui-state/taming-menu-state.svelte";
+   import { SKILL_TRANSFORM_SCALE_FACTOR } from "../../../ui-state/taming-menu-state";
 
    interface Props {
       tamingSpec: EntityTamingSpec;

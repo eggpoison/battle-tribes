@@ -9,9 +9,9 @@ import { initialiseRenderables } from "../rendering/render-loop";
 import { playerInstance } from "../player";
 import { registerTamingSpecsFromData } from "../taming-specs";
 import { addChatMessage } from "../chat";
-import { gameUIState } from "../../ui-state/game-ui-state.svelte";
+import { gameUIState } from "../../ui-state/game-ui-state";
 import { getSelectedItemInfo } from "../player-action-handling";
-import { playerActionState } from "../../ui-state/player-action-state.svelte";
+import { playerActionState } from "../../ui-state/player-action-state";
 import { gameIsRunning, receiveInitialPacket, resyncGame } from "../client";
 
 const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {

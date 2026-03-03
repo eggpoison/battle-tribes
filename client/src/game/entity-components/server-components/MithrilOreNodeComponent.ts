@@ -36,10 +36,10 @@ function decodeData(reader: PacketReader): MithrilOreNodeComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
    
-   const mithrilOreNodeComponentData = entityComponentData.serverComponentData[ServerComponentType.mithrilOreNode]!;
+   const mithrilOreNodeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.mithrilOreNode)!;
    const size = mithrilOreNodeComponentData.size;
    const variant = mithrilOreNodeComponentData.variant;
 

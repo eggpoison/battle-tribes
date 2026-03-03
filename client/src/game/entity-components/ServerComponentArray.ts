@@ -1,5 +1,5 @@
 import { PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
-import { ComponentTint, EntityRenderInfo } from "../EntityRenderInfo";
+import { EntityRenderInfo } from "../EntityRenderInfo";
 import { EntityComponentData } from "../world";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
@@ -15,9 +15,6 @@ export default class ServerComponentArray<
    public updateFromData?(data: ComponentData, entity: Entity): void;
    /** Updates the player instance from server data */
    public updatePlayerFromData?(data: ComponentData, isInitialData: boolean): void;
-   /** Called whenever the entity is first selected or its data is changed while selected. */
-   public updateSelectedEntityState?(entity: Entity): void;
-   public calculateTint?(entity: Entity): ComponentTint;
 
    constructor(componentType: ComponentType, isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderInfo: EntityRenderInfo) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number, decodeData: (reader: PacketReader) => ComponentData) {
       super(ComponentArrayType.server, componentType, isActiveByDefault, createComponent, getMaxRenderParts);

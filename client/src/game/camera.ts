@@ -7,8 +7,8 @@ import { entityExists, getCurrentLayer } from "./world";
 import { calculateHitboxRenderPosition, getEntityTickInterp } from "./rendering/render-part-matrices";
 import { Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
-import { hoverDebugState } from "../ui-state/hover-debug-state.svelte";
+import { debugDisplayState } from "../ui-state/debug-display-state";
+import { hoverDebugState } from "../ui-state/hover-debug-state";
 import { Tile } from "./Tile";
 import { isSpectating } from "./player";
 

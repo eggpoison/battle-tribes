@@ -7,7 +7,7 @@ import { surfaceLayer } from "../../world";
 import { currentSnapshot } from "../../client";
 import { cameraPosition } from "../../camera";
 import { gameFramebufferTexture } from "../render";
-import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
+import { debugDisplayState } from "../../../ui-state/debug-display-state";
 
 const enum Vars {
    MAX_LIGHTS = 64,

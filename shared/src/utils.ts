@@ -140,6 +140,10 @@ export class Point {
       return Math.PI/2 - angle;
    }
 
+   public angle() {
+      return Math.PI/2 - Math.atan2(this.y, this.x);
+   }
+
    public convertToVector(other?: Point): Vector {
       const targetPoint = other || new Point(0, 0);
 

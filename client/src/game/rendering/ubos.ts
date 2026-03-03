@@ -26,9 +26,6 @@ export function getEntityTextureAtlasUBO(): string {
    layout(std140) uniform ${UBO_NAME_RECORD[UBOBindingIndex.ENTITY_TEXTURE_ATLAS]} {
       // @Cleanup @Speed: might be better to premultiply this by ATLAS_SLOT_SIZE if it isn't used
       float u_atlasSize;
-      // @Cleanup: Use a struct for these 2
-      float u_textureSlotIndexes[${TEXTURE_SOURCES.length}];
-      vec2 u_textureSizes[${TEXTURE_SOURCES.length}];
    };
    `;
 }

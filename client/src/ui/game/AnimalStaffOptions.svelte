@@ -1,13 +1,13 @@
 <script lang="ts">
    import { type Entity, TamingSkillID } from "webgl-test-shared";
-   import { sendAnimalStaffFollowCommandPacket } from "../../game/networking/packet-sending";
+   import { sendAnimalStaffFollowCommandPacket } from "../../game/networking/packet-sending/packet-sending";
    import { entityExists } from "../../game/world";
    import { hasTamingSkill, type TamingComponent } from "../../game/entity-components/server-components/TamingComponent";
    import { RideableComponentArray } from "../../game/entity-components/server-components/RideableComponent";
    import { preventDefault } from "../ui-utils.svelte";
    import { AnimalStaffCommandType, createControlCommandParticles } from "../../game/particles";
-   import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
-   import { GameInteractState, gameUIState } from "../../ui-state/game-ui-state.svelte";
+   import { entitySelectionState } from "../../ui-state/entity-selection-state";
+   import { GameInteractState, gameUIState } from "../../ui-state/game-ui-state";
    import { setShittyCarrier } from "../../game/player-action-handling";
 
    interface Props {

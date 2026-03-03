@@ -96,10 +96,10 @@ function decodeData(reader: PacketReader): SlimeComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
    const hitbox = transformComponentData.hitboxes[0];
 
-   const size = entityComponentData.serverComponentData[ServerComponentType.slime]!.size;
+   const size = entityComponentData.serverComponentData.get(ServerComponentType.slime)!.size;
    const sizeString = SIZE_STRINGS[size];
 
    // Body
@@ -140,7 +140,7 @@ function createComponent(entityComponentData: EntityComponentData, intermediateI
       bodyRenderPart: intermediateInfo.bodyRenderPart,
       eyeRenderPart: intermediateInfo.eyeRenderPart,
       orbRenderParts: [],
-      size: entityComponentData.serverComponentData[ServerComponentType.slime]!.size,
+      size: entityComponentData.serverComponentData.get(ServerComponentType.slime)!.size,
       orbs: new Array<SlimeOrbInfo>,
       internalTickCounter: 0
    };

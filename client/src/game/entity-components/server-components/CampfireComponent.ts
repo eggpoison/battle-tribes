@@ -7,7 +7,7 @@ import { CookingComponentArray } from "./CookingComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { tickIntervalHasPassed } from "../../client";
+import { tickIntervalHasPassed } from "../../game";
 
 export interface CampfireComponentData {}
 

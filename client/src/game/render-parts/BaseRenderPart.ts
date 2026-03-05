@@ -1,7 +1,7 @@
 import { Point } from "webgl-test-shared";
 import { createIdentityMatrix } from "../rendering/matrices";
 import { RenderPartParent, RenderPart } from "./render-parts";
-import { currentSnapshot } from "../client";
+import { currentSnapshot } from "../game";
 
 let idCounter = 0;
 
@@ -13,6 +13,7 @@ export default abstract class BaseRenderPart {
    private creationTicks = currentSnapshot.tick;
    
    /** Estimated position of the object during the current frame */
+   // @CLEANUP: not set at all!! but is read, from old code, which won't work!!
    public renderPosition = new Point(-1, -1);
 
    public readonly offset = new Point(0, 0);

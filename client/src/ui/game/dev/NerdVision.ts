@@ -1,16 +1,14 @@
 // @SQUEAM
 import { openDebugInfoDisplay } from "./DebugInfoDisplay";
-// import HoverDebugDisplay from "./HoverDebugDisplay.svelte";
-// import TabSelector from "./TabSelector.svelte";
-// import Terminal from "./Terminal.svelte";
+import { nerdVision } from "./nerd-vision-funcs";
 
 let isVisible = false;
 let _terminalIsVisible = false;
 
-export function nerdVisionIsVisible(): boolean {
+nerdVision.isVisible = (): boolean => {
    return isVisible;
 }
-export function setNerdVisionIsVisible(newIsVisible: boolean): void {
+nerdVision.setIsVisible = (newIsVisible: boolean): void => {
    if (!isVisible && newIsVisible) {
       openNerdVision();
    } else if (isVisible && !newIsVisible) {
@@ -20,14 +18,16 @@ export function setNerdVisionIsVisible(newIsVisible: boolean): void {
    isVisible = newIsVisible;
 }
 
-export function terminalIsVisible(): boolean {
+nerdVision.terminalIsVisible = (): boolean => {
    return _terminalIsVisible;
 }
-export function setTerminalIsVisible(newTerminalIsVisible: boolean): void {
+nerdVision.setTerminalIsVisible = (newTerminalIsVisible: boolean): void => {
    _terminalIsVisible =  newTerminalIsVisible;
 }
 
-const openNerdVision = (): void => {
+function openNerdVision(): void {
+   console.log("opened nerd vision!!");
+   console.log("2!!");
    const nerdVisionElem = document.createElement("div");
    nerdVisionElem.id = "nerd-vision-wrapper";
 
@@ -36,7 +36,7 @@ const openNerdVision = (): void => {
    document.body.appendChild(nerdVisionElem);
 };
 
-const closeNerdVision = (): void => {
+function closeNerdVision(): void {
    document.getElementById("nerd-vision-wrapper")?.remove();
 };
 

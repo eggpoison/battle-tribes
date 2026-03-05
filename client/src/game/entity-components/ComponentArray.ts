@@ -1,40 +1,18 @@
-import { assert, Point, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "./ServerComponentArray";
-import ClientComponentArray from "./ClientComponentArray";
-import { ClientComponentType } from "./client-component-types";
-import { EntityComponentData, getEntityComponentArrays } from "../world";
+import { assert, Point, Entity, EntityType } from "webgl-test-shared";
+import { EntityComponentData } from "../world";
 import { Hitbox } from "../hitboxes";
 import { ComponentTint, EntityRenderInfo } from "../EntityRenderInfo";
 
-export const enum ComponentArrayType {
-   server,
-   client
-}
-
 let componentArrayIDCounter = 0;
 
-interface ComponentTypeForArray {
-   [ComponentArrayType.server]: ServerComponentType,
-   [ComponentArrayType.client]: ClientComponentType
-};
-
 const componentArrays = new Array<ComponentArray>();
-const serverComponentArrays = new Array<ServerComponentArray>();
-
-const clientComponentArrayRecord: Record<ClientComponentType, ClientComponentArray> = {} as unknown as Record<ClientComponentType, ClientComponentArray>;
-const serverComponentArrayRecord: Record<ServerComponentType, ServerComponentArray> = {} as unknown as Record<ServerComponentType, ServerComponentArray>;
 
 export abstract class ComponentArray<
    T extends object = object,
-   ComponentIntermediateInfo extends object | never = object | never,
-   ArrayType extends ComponentArrayType = ComponentArrayType,
-   ComponentType extends ComponentTypeForArray[ArrayType] = ComponentTypeForArray[ArrayType]
+   ComponentIntermediateInfo extends object | never = object | never
 > {
    public readonly id = componentArrayIDCounter++;
    private readonly isActiveByDefault: boolean;
-
-   // @HACK here for hack
-   public readonly componentType: ComponentType;
    
    public entities = new Array<Entity>();
    public components = new Array<T>();
@@ -76,28 +54,14 @@ export abstract class ComponentArray<
    public updateSelectedEntityState?(entity: Entity): void;
    public calculateTint?(entity: Entity): ComponentTint;
 
-   constructor(arrayType: ArrayType, componentType: ComponentType, isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderInfo: EntityRenderInfo) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number) {
+   constructor(isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderInfo: EntityRenderInfo) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number) {
       this.isActiveByDefault = isActiveByDefault;
-
-      this.componentType = componentType;
       
       this.createComponent = createComponent;
       this.getMaxRenderParts = getMaxRenderParts;
 
+      // @Cleanup: cast
       componentArrays.push(this as unknown as ComponentArray);
-      // @Hacke
-      if (arrayType === ComponentArrayType.server) {
-         assert(typeof serverComponentArrayRecord[componentType as ServerComponentType] === "undefined");
-         
-         // @Cleanup: casts
-         serverComponentArrays.push(this as unknown as ServerComponentArray);
-         serverComponentArrayRecord[componentType as ServerComponentType] = this as unknown as ServerComponentArray;
-      } else {
-         assert(typeof clientComponentArrayRecord[componentType as ClientComponentType] === "undefined");
-
-         // @Cleanup: casts
-         clientComponentArrayRecord[componentType as ClientComponentType] = this as unknown as ClientComponentArray;
-      }
    }
 
    // @HACK: the entity type param
@@ -110,10 +74,11 @@ export abstract class ComponentArray<
       this.entities.push(entity);
 
       if (this.isActiveByDefault) {
-         // @Hack so that Board.updateEntities doesn't kill everything with slow
-         if (!(this.componentType === ServerComponentType.transform && entityType === EntityType.grassStrand)) {
+         // @INCOMPLETE @SQUEAM
+         // @Hack so that tickEntities doesn't kill everything with slow
+         // if (!(this.componentType === ServerComponentType.transform && entityType === EntityType.grassStrand)) {
             this.activateComponent(component, entity);
-         }
+         // }
       }
    }
 
@@ -227,25 +192,4 @@ export abstract class ComponentArray<
 
 export function getComponentArrays(): ReadonlyArray<ComponentArray> {
    return componentArrays;
-}
-
-export function getServerComponentArrays(): ReadonlyArray<ServerComponentArray> {
-   return serverComponentArrays;
-}
-
-export function getClientComponentArray(componentType: ClientComponentType): ClientComponentArray {
-   return clientComponentArrayRecord[componentType];
-}
-
-export function getServerComponentArray(componentType: ServerComponentType): ServerComponentArray {
-   return serverComponentArrayRecord[componentType];
-}
-
-export function callEntityOnUpdateFunctions(entity: Entity): void {
-   const componentArrays = getEntityComponentArrays(entity);
-   for (const componentArray of componentArrays) {
-      if (typeof componentArray.onUpdate !== "undefined") {
-         componentArray.onUpdate(entity);
-      }
-   }
 }

@@ -15,6 +15,8 @@ export interface PivotPoint {
    readonly pos: Point;
 }
 
+export const _bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+
 export function createNormalisedPivotPoint(normalisedX: number, normalisedY: number): PivotPoint {
    return {
       type: PivotPointType.normalised,
@@ -53,10 +55,6 @@ export abstract class BaseBox {
       this.angle = rotation;
    }
 
-   public abstract calculateBoundsMinX(): number;
-   public abstract calculateBoundsMaxX(): number;
-   public abstract calculateBoundsMinY(): number;
-   public abstract calculateBoundsMaxY(): number;
-
+   public abstract calculateBounds(): void;
    public abstract getCollisionResult(otherBox: Box, epsilon?: number): CollisionResult;
 }

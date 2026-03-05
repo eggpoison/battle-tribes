@@ -33,8 +33,11 @@ const getDot = (x: number, y: number, axisX: number, axisY: number): number => {
 const findMinWithOffset = (box: RectangularBox, x: number, y: number, axisX: number, axisY: number): number => {
    // @Speed: can combine bits of this in the getDot function
 
+   // @Speed! @Temporary
+   const topLeftVertex = box.getTopLeftVertexOffset();
+   const topRightVertex = box.getTopRightVertexOffset();
+
    // Top left and bottom right
-   const topLeftVertex = box.topLeftVertexOffset;
    let min = getDot(x + topLeftVertex.x, y + topLeftVertex.y, axisX, axisY);
    const bottomRight = getDot(x - topLeftVertex.x, y - topLeftVertex.y, axisX, axisY);
    if (bottomRight < min) {
@@ -42,7 +45,6 @@ const findMinWithOffset = (box: RectangularBox, x: number, y: number, axisX: num
    }
 
    // Top right and bottom left
-   const topRightVertex = box.topRightVertexOffset;
    const topRight = getDot(x + topRightVertex.x, y + topRightVertex.y, axisX, axisY);
    if (topRight < min) {
       min = topRight;
@@ -58,8 +60,11 @@ const findMinWithOffset = (box: RectangularBox, x: number, y: number, axisX: num
 const findMaxWithOffset = (box: RectangularBox, x: number, y: number, axisX: number, axisY: number): number => {
    // @Speed: can combine bits of this in the getDot function
 
+   // @Speed! @Temporary
+   const topLeftVertex = box.getTopLeftVertexOffset();
+   const topRightVertex = box.getTopRightVertexOffset();
+
    // Top left and bottom right
-   const topLeftVertex = box.topLeftVertexOffset;
    let max = getDot(x + topLeftVertex.x, y + topLeftVertex.y, axisX, axisY);
    const bottomRight = getDot(x - topLeftVertex.x, y - topLeftVertex.y, axisX, axisY);
    if (bottomRight > max) {
@@ -67,7 +72,6 @@ const findMaxWithOffset = (box: RectangularBox, x: number, y: number, axisX: num
    }
 
    // Top right and bottom left
-   const topRightVertex = box.topRightVertexOffset;
    const topRight = getDot(x + topRightVertex.x, y + topRightVertex.y, axisX, axisY);
    if (topRight > max) {
       max = topRight;

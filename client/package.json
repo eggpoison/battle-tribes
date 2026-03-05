@@ -6,6 +6,7 @@
       "globals": "^17.4.0",
       "typescript": "^5.9.3",
       "typescript-eslint": "^8.56.1",
+      "unplugin-inline-const-enum": "^0.0.4",
       "vite": "^7.1.12"
    },
    "scripts": {
@@ -13,7 +14,8 @@
       "start": "vite",
       "build": "vite build",
       "preview": "vite preview",
-      "lint": "eslint ."
+      "lint": "eslint .",
+      "debughmr": "vite --debug hmr"
    },
    "browserslist": {
       "production": [

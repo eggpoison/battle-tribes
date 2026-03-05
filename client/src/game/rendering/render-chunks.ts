@@ -1,4 +1,4 @@
-import { Settings, WaterRockData } from "webgl-test-shared";
+import { assert, Settings, WaterRockData } from "webgl-test-shared";
 import { createTileRenderChunks, recalculateSolidTileRenderChunkData } from "./webgl/solid-tile-rendering";
 import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
 import { calculateShadowInfo, TileShadowType } from "./webgl/tile-shadow-rendering";
@@ -54,7 +54,7 @@ export interface RenderChunkWallBorderInfo {
 // @Hack
 // @Speed: Polymorphism
 let tileShadowInfoArrays = new Array<Record<TileShadowType, Array<RenderChunkTileShadowInfo | null>>>();
-let wallBorderInfoArrays = new Array<Array<RenderChunkWallBorderInfo>>();
+let wallBorderInfoArrays = new Array<Array<RenderChunkWallBorderInfo | null>>();
 
 export function getRenderChunkIndex(renderChunkX: number, renderChunkY: number): number {
    const x = renderChunkX + RENDER_CHUNK_EDGE_GENERATION;
@@ -66,10 +66,19 @@ export function getRenderChunkRiverInfo(layer: Layer, renderChunkX: number, rend
    return layer.riverInfoArray[getRenderChunkIndex(renderChunkX, renderChunkY)];
 }
 
-export function getRenderChunkWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo {
+export function getRenderChunkWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo | null {
    // @Hack
    const layerIdx = layers.indexOf(layer);
    return wallBorderInfoArrays[layerIdx][getRenderChunkIndex(renderChunkX, renderChunkY)];
+}
+
+export function setRenderChunkWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number, data: RenderChunkWallBorderInfo): void {
+   const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
+   
+   // @Hack
+   const layerIdx = layers.indexOf(layer);
+   assert(wallBorderInfoArrays[layerIdx][renderChunkIdx] === null);
+   wallBorderInfoArrays[layerIdx][renderChunkIdx] = data;
 }
 
 export function getRenderChunkTileShadowInfo(layer: Layer, renderChunkX: number, renderChunkY: number, tileShadowType: TileShadowType): RenderChunkTileShadowInfo | null {
@@ -155,7 +164,7 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    tileShadowInfoArrays[layerIdx] = tileShadowInfoArray;
 
    // Wall border info
-   const wallBorderInfoArray = [];
+   const wallBorderInfoArray = new Array<RenderChunkWallBorderInfo | null>;
    for (let renderChunkY = -RENDER_CHUNK_EDGE_GENERATION; renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
       for (let renderChunkX = -RENDER_CHUNK_EDGE_GENERATION; renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
          const data = calculateWallBorderInfo(layer, renderChunkX, renderChunkY);

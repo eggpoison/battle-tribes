@@ -1,6 +1,9 @@
-import { assert } from "../../../shared/src";
-import { reconnectClient } from "../game/client";
-import { AppState, setAppState } from "../ui-state/app-state";
+import { TribeType } from "../../../shared/src";
+import { establishNetworkConnection, reconnectClient } from "../game/networking/networking";
+import { playerUsername, isSpectating } from "../game/player";
+import { playerTribe } from "../game/tribes";
+import { closeGameScreen } from "./GameScreen";
+import { openMainMenu } from "./MainMenu";
 
 export const enum LoadingScreenStage {
    establishingConnection,
@@ -9,22 +12,46 @@ export const enum LoadingScreenStage {
    connectionError
 }
 
-function getLoadingScreenText(stage: LoadingScreenStage): string {
-   switch (stage) {
-      case LoadingScreenStage.establishingConnection: return "Connecting to server...";
-      case LoadingScreenStage.sendingPlayerData:      return "Sending player data...";
-      case LoadingScreenStage.initialisingGame:       return "Initialising game...";
-      case LoadingScreenStage.connectionError:        return "";
-   }
+const TXT_CONNECT = "Connecting to server...";
+const TXT_SEND = "Sending player data...";
+const TXT_INIT = "Initialising game...";
+
+const loadingScreenElem = document.getElementById("loading-screen")!;
+
+const textNode = document.getElementById("ls-text")!.firstChild as Text;
+
+document.getElementById("ls-reconnect-button")!.addEventListener("click", () => {
+   reconnectClient(playerUsername, playerTribe.tribeType, isSpectating);
+
+   loadingScreenElem.classList.remove("is-error");
+   textNode.data = TXT_CONNECT;
+});
+document.getElementById("ls-main-menu-button")!.addEventListener("click", () => {
+   // Reset the text state back to the initial text
+   textNode.data = TXT_CONNECT;
+   closeLoadingScreen();
+   openMainMenu();
+});
+
+export function openLoadingScreenFromMainMenu(username: string, tribeType: TribeType, isSpectating: boolean): void {
+   // Assume that the loading screen is in a non-error state, and in the "connecting" text state.
+   loadingScreenElem.classList.remove("hidden");
+   establishNetworkConnection(username, tribeType, isSpectating);
 }
 
-export function setLoadingScreenStage(stage: LoadingScreenStage): void {
-   const loadingScreenElem = document.getElementById("loading-screen");
-   if (!loadingScreenElem) {
-      openLoadingScreen(stage);
-      return;
+export function openLoadingScreenFromNotMainMenu(): void {
+   if (loadingScreenElem.classList.contains("hidden")) {
+      loadingScreenElem.classList.remove("hidden");
+      closeGameScreen();
    }
-   
+
+   loadingScreenElem.classList.add("is-error");
+}
+
+// @Speed: can ensure difference
+export function setLoadingScreenStage(stage: LoadingScreenStage): void {
+   loadingScreenElem.classList.remove("hidden");
+
    if (stage === LoadingScreenStage.connectionError) {
       loadingScreenElem.classList.add("is-error");
       return;
@@ -32,52 +59,13 @@ export function setLoadingScreenStage(stage: LoadingScreenStage): void {
 
    loadingScreenElem.classList.remove("is-error");
    
-   const textElem = loadingScreenElem.querySelector("#loading-screen p");
-   assert(textElem);
-   textElem.textContent = getLoadingScreenText(stage);
-}
-
-function reconnect(): void {
-   reconnectClient();
-   setLoadingScreenStage(LoadingScreenStage.establishingConnection);
-}
-
-function openMainMenu(): void {
-   setAppState(AppState.mainMenu);
-}
-
-function openLoadingScreen(stage: LoadingScreenStage): void {
-   const loadingScreenElem = document.createElement("div");
-   loadingScreenElem.id = "loading-screen";
-   if (stage === LoadingScreenStage.connectionError) {
-      loadingScreenElem.classList.add("is-error");
+   switch (stage) {
+      case LoadingScreenStage.establishingConnection: textNode.data = "Connecting to server..."; break;
+      case LoadingScreenStage.sendingPlayerData:      textNode.data = "Sending player data..."; break;
+      case LoadingScreenStage.initialisingGame:       textNode.data = "Initialising game..."; break;
    }
-   loadingScreenElem.innerHTML = `
-      <div class="ls-loading-view">
-         <h1 class="title">Loading</h1>
-         <div class="loading-message">
-            <p>${getLoadingScreenText(stage)}</p>
-         </div>
-      </div>
-
-      <div class="ls-error-view">
-         <h1 class="title">Connection closed</h1>
-         <div class="loading-message">
-            <p>Connection with server failed.</p>
-            <button class="reconnect-button">Reconnect</button>
-            <button class="open-main-menu-button">Back</button>
-         </div>
-      </div>
-   `;
-
-   // Don't cache any of the elements here, so that the loading screen has no memory impact on the player when they play the actual game.
-
-   loadingScreenElem.querySelector(".reconnect-button")!.addEventListener("click", reconnect);
-   loadingScreenElem.querySelector(".open-main-menu-button")!.addEventListener("click", openMainMenu);
-   
-   document.body.appendChild(loadingScreenElem);
 }
 
 export function closeLoadingScreen(): void {
-   document.getElementById("loading-screen")?.remove();
+   loadingScreenElem.classList.add("hidden");
 }

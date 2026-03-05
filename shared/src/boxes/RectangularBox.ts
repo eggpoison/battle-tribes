@@ -1,39 +1,66 @@
 import { CollisionResult, getCircleRectangleCollisionResult, rectanglesAreColliding } from "../collision";
 import { Point } from "../utils";
-import { BaseBox } from "./BaseBox";
-import { Box, boxIsCircular, updateVertexPositionsAndSideAxes } from "./boxes";
+import { _bounds, BaseBox } from "./BaseBox";
+import { Box, boxIsCircular, updateSideAxes } from "./boxes";
+
+/*
+   @Temporary
+   might be useful idk
+
+   const x1 = -box.width * box.scale * 0.5;
+   const x2 = box.width * box.scale * 0.5;
+   const y2 = box.height * box.scale * 0.5;
+   box.topLeftVertexOffset.x = cosRotation * x1 + sinRotation * y2;
+   box.topLeftVertexOffset.y = cosRotation * y2 - sinRotation * x1;
+   box.topRightVertexOffset.x = cosRotation * x2 + sinRotation * y2;
+   box.topRightVertexOffset.y = cosRotation * y2 - sinRotation * x2;
+*/
 
 export class RectangularBox extends BaseBox {
    public width: number;
    public height: number;
 
-   public topLeftVertexOffset = new Point(0, 0);
-   public topRightVertexOffset = new Point(0, 0);
-
    public axisX = 0;
    public axisY = 0;
 
-   // @Cleanup: move rotation to just after offset
    constructor(position: Point, offset: Point, angle: number, width: number, height: number) {
       super(position, offset, angle);
 
       this.width = width;
       this.height = height;
 
-      updateVertexPositionsAndSideAxes(this);
+      updateSideAxes(this);
    }
 
-   public calculateBoundsMinX(): number {
-      return this.position.x + Math.min(this.topLeftVertexOffset.x, this.topRightVertexOffset.x, -this.topLeftVertexOffset.x, -this.topRightVertexOffset.x);
+   public calculateBounds(): void {
+      const xxa = this.axisX * this.width;
+      const xya = this.axisY * this.height;
+      const halfX = Math.max(Math.abs(xxa + xya), Math.abs(xxa - xya)) * this.scale * 0.5;
+
+      const yxa = this.axisX * this.height;
+      const yya = this.axisY * this.width;
+      const halfY = Math.max(Math.abs(yxa - yya), Math.abs(yxa + yya)) * this.scale * 0.5;
+
+      const x = this.position.x;
+      const y = this.position.y;
+      _bounds.minX = x - halfX;
+      _bounds.maxX = x + halfX;
+      _bounds.minY = y - halfY;
+      _bounds.maxY = y + halfY;
    }
-   public calculateBoundsMaxX(): number {
-      return this.position.x + Math.max(this.topLeftVertexOffset.x, this.topRightVertexOffset.x, -this.topLeftVertexOffset.x, -this.topRightVertexOffset.x);
+
+   // @Hack
+   public getTopLeftVertexOffset(): Point {
+      const tlX = (this.axisX * -this.width - this.axisY * this.height) * this.scale * 0.5;
+      const tlY = (this.axisX * this.height + this.axisY * -this.width) * this.scale * 0.5;
+      return new Point(tlX, tlY);
    }
-   public calculateBoundsMinY(): number {
-      return this.position.y + Math.min(this.topLeftVertexOffset.y, this.topRightVertexOffset.y, -this.topLeftVertexOffset.y, -this.topRightVertexOffset.y);
-   }
-   public calculateBoundsMaxY(): number {
-      return this.position.y + Math.max(this.topLeftVertexOffset.y, this.topRightVertexOffset.y, -this.topLeftVertexOffset.y, -this.topRightVertexOffset.y);
+
+   // @Hack
+   public getTopRightVertexOffset(): Point {
+      const tlX = (this.axisX * this.width - this.axisY * this.height) * this.scale * 0.5;
+      const tlY = (this.axisX * this.height + this.axisY * this.width) * this.scale * 0.5;
+      return new Point(tlX, tlY);
    }
 
    public getCollisionResult(otherHitbox: Box, epsilon: number = 0): CollisionResult {
@@ -70,8 +97,6 @@ export class RectangularBox extends BaseBox {
          if (epsilon > 0) {
             this.width -= epsilon * 0.5;
             this.height -= epsilon * 0.5;
-
-            updateVertexPositionsAndSideAxes(this);
          }
          
          const collisionResult = rectanglesAreColliding(this, otherHitbox);
@@ -79,8 +104,6 @@ export class RectangularBox extends BaseBox {
          if (epsilon > 0) {
             this.width = thisWidthBefore;
             this.height = thisHeightBefore;
-
-            updateVertexPositionsAndSideAxes(this);
          }
          
          return collisionResult;

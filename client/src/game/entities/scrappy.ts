@@ -9,6 +9,7 @@ import { createTribesmanAIComponentData } from "../entity-components/server-comp
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
+import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createScrappyConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -19,15 +20,16 @@ export function createScrappyConfig(position: Point, rotation: number, tribe: Tr
 
    return {
       entityType: EntityType.scrappy,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.tribeMember]: createTribeMemberComponentData(),
-         [ServerComponentType.tribesmanAI]: createTribesmanAIComponentData(),
-         [ServerComponentType.aiHelper]: createAIHelperComponentData(),
-      },
-      clientComponentData: {}
+      serverComponentData: new Map([
+         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
+         [ServerComponentType.health, createHealthComponentData()],
+         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
+         [ServerComponentType.tribe, createTribeComponentData(tribe)],
+         [ServerComponentType.tribeMember, createTribeMemberComponentData()],
+         [ServerComponentType.tribesmanAI, createTribesmanAIComponentData()],
+         [ServerComponentType.aiHelper, createAIHelperComponentData()]
+      // @HACK
+      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
+      clientComponentData: new Map()
    };
 }

@@ -1,9 +1,8 @@
 import { Entity, customTickIntervalHasPassed, lerp, randAngle, randFloat, randItem, PacketReader, StatusEffect, StatusEffectData, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
-import Board from "../../Board";
 import Particle from "../../Particle";
 import { createPoisonBubble, createBloodParticle, BloodParticleSize, createHeatParticle } from "../../particles";
-import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour } from "../../rendering/webgl/particle-rendering";
+import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour, lowTexturedParticles, highMonocolourParticles, highTexturedParticles } from "../../rendering/webgl/particle-rendering";
 import { Light, removeLight } from "../../lights";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
@@ -11,7 +10,7 @@ import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import { ComponentTint, createComponentTint } from "../../EntityRenderInfo";
 import { playerInstance } from "../../player";
 import { getHitboxVelocity } from "../../hitboxes";
-import { tickIntervalHasPassed } from "../../client";
+import { tickIntervalHasPassed } from "../../game";
 
 export interface StatusEffectComponentData {
    readonly statusEffects: Array<StatusEffectData>;
@@ -128,7 +127,7 @@ function onTick(entity: Entity): void {
             6,
             0, 0, 0
          );
-         Board.lowTexturedParticles.push(particle);
+         lowTexturedParticles.push(particle);
       }
 
       // Poison bubbles
@@ -203,7 +202,7 @@ function onTick(entity: Entity): void {
             0,
             colour[0], colour[1], colour[2]
          );
-         Board.highMonocolourParticles.push(particle);
+         highMonocolourParticles.push(particle);
       }
 
       // Smoke particles
@@ -249,7 +248,7 @@ function onTick(entity: Entity): void {
             5,
             0, 0, 0
          );
-         Board.highTexturedParticles.push(particle);
+         highTexturedParticles.push(particle);
       }
    } else if (statusEffectComponent.burningLight !== null) {
       removeLight(statusEffectComponent.burningLight);

@@ -23,6 +23,7 @@ import { addEntityTethersToWorld, destroyTether as destroyTether } from "../teth
 import { TILE_PHYSICS_INFO_RECORD, TileType } from "../../../shared/src/tiles";
 import { getSubtileIndex } from "../../../shared/src/subtiles";
 import { CarrySlot, RideableComponentArray } from "./RideableComponent";
+import { _bounds } from "../../../shared/src/boxes/BaseBox";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which could take advantage of that extraction?)
 
@@ -105,29 +106,28 @@ export function addHitboxToEntity(entity: Entity, hitbox: Hitbox): void {
       hitbox.parent.children.push(hitbox);
    }
 
-   const box = hitbox.box;
-   
-   const boundsMinX = box.calculateBoundsMinX();
-   const boundsMaxX = box.calculateBoundsMaxX();
-   const boundsMinY = box.calculateBoundsMinY();
-   const boundsMaxY = box.calculateBoundsMaxY();
+   hitbox.box.calculateBounds();
+   const minX = _bounds.minX;
+   const maxX = _bounds.maxX;
+   const minY = _bounds.minY;
+   const maxY = _bounds.maxY;
 
    // Update bounding area
-   if (boundsMinX < transformComponent.boundingAreaMinX) {
-      transformComponent.boundingAreaMinX = boundsMinX;
+   if (minX < transformComponent.boundingAreaMinX) {
+      transformComponent.boundingAreaMinX = minX;
    }
-   if (boundsMaxX > transformComponent.boundingAreaMaxX) {
-      transformComponent.boundingAreaMaxX = boundsMaxX;
+   if (maxX > transformComponent.boundingAreaMaxX) {
+      transformComponent.boundingAreaMaxX = maxX;
    }
-   if (boundsMinY < transformComponent.boundingAreaMinY) {
-      transformComponent.boundingAreaMinY = boundsMinY;
+   if (minY < transformComponent.boundingAreaMinY) {
+      transformComponent.boundingAreaMinY = minY;
    }
-   if (boundsMaxY > transformComponent.boundingAreaMaxY) {
-      transformComponent.boundingAreaMaxY = boundsMaxY;
+   if (maxY > transformComponent.boundingAreaMaxY) {
+      transformComponent.boundingAreaMaxY = maxY;
    }
 
    // If the hitbox is clipping into a border, clean the entities' position so that it doesn't clip
-   if (boundsMinX < 0 || boundsMaxX >= Settings.WORLD_UNITS || boundsMinY < 0 || boundsMaxY >= Settings.WORLD_UNITS) {
+   if (minX < 0 || maxX >= Settings.WORLD_UNITS || minY < 0 || maxY >= Settings.WORLD_UNITS) {
       cleanEntityTransform(entity);
    }
 }
@@ -226,17 +226,11 @@ const updateContainingChunks = (transformComponent: TransformComponent, entity: 
    // Calculate containing chunks
    const containingChunks = new Array<Chunk>();
    for (const hitbox of transformComponent.hitboxes) {
-      const box = hitbox.box;
-
-      const boundsMinX = box.calculateBoundsMinX();
-      const boundsMaxX = box.calculateBoundsMaxX();
-      const boundsMinY = box.calculateBoundsMinY();
-      const boundsMaxY = box.calculateBoundsMaxY();
-
-      const minChunkX = Math.max(Math.min(Math.floor(boundsMinX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-      const maxChunkX = Math.max(Math.min(Math.floor(boundsMaxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-      const minChunkY = Math.max(Math.min(Math.floor(boundsMinY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-      const maxChunkY = Math.max(Math.min(Math.floor(boundsMaxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+      hitbox.box.calculateBounds();
+      const minChunkX = Math.max(Math.min(Math.floor(_bounds.minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+      const maxChunkX = Math.max(Math.min(Math.floor(_bounds.maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+      const minChunkY = Math.max(Math.min(Math.floor(_bounds.minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+      const maxChunkY = Math.max(Math.min(Math.floor(_bounds.maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
 
       for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -286,27 +280,25 @@ const cleanHitboxTransformIncludingChildren = (hitbox: Hitbox): void => {
    
    // An object only changes their chunks if a hitboxes' bounds change chunks.
    let hitboxChunkBoundsHaveChanged = false;
-   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-      const hitbox = transformComponent.hitboxes[i];
-      const box = hitbox.box;
-
-      const boundsMinX = box.calculateBoundsMinX();
-      const boundsMaxX = box.calculateBoundsMaxX();
-      const boundsMinY = box.calculateBoundsMinY();
-      const boundsMaxY = box.calculateBoundsMaxY();
+   for (const hitbox of transformComponent.hitboxes) {
+      hitbox.box.calculateBounds();
+      const minX = _bounds.minX;
+      const maxX = _bounds.maxX;
+      const minY = _bounds.minY;
+      const maxY = _bounds.maxY;
 
       // Update bounding area
-      if (boundsMinX < transformComponent.boundingAreaMinX) {
-         transformComponent.boundingAreaMinX = boundsMinX;
+      if (minX < transformComponent.boundingAreaMinX) {
+         transformComponent.boundingAreaMinX = minX;
       }
-      if (boundsMaxX > transformComponent.boundingAreaMaxX) {
-         transformComponent.boundingAreaMaxX = boundsMaxX;
+      if (maxX > transformComponent.boundingAreaMaxX) {
+         transformComponent.boundingAreaMaxX = maxX;
       }
-      if (boundsMinY < transformComponent.boundingAreaMinY) {
-         transformComponent.boundingAreaMinY = boundsMinY;
+      if (minY < transformComponent.boundingAreaMinY) {
+         transformComponent.boundingAreaMinY = minY;
       }
-      if (boundsMaxY > transformComponent.boundingAreaMaxY) {
-         transformComponent.boundingAreaMaxY = boundsMaxY;
+      if (maxY > transformComponent.boundingAreaMaxY) {
+         transformComponent.boundingAreaMaxY = maxY;
       }
 
       // Check if the hitboxes' chunk bounds have changed
@@ -314,18 +306,18 @@ const cleanHitboxTransformIncludingChildren = (hitbox: Hitbox): void => {
       // @Speed
       // @Speed
       if (!hitboxChunkBoundsHaveChanged) {
-         if (Math.floor(boundsMinX / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMinX / Settings.CHUNK_UNITS) ||
-             Math.floor(boundsMaxX / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMaxX / Settings.CHUNK_UNITS) ||
-             Math.floor(boundsMinY / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMinY / Settings.CHUNK_UNITS) ||
-             Math.floor(boundsMaxY / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMaxY / Settings.CHUNK_UNITS)) {
+         if (Math.floor(minX / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMinX / Settings.CHUNK_UNITS) ||
+             Math.floor(maxX / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMaxX / Settings.CHUNK_UNITS) ||
+             Math.floor(minY / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMinY / Settings.CHUNK_UNITS) ||
+             Math.floor(maxY / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMaxY / Settings.CHUNK_UNITS)) {
             hitboxChunkBoundsHaveChanged = true;
          }
       }
 
-      hitbox.boundsMinX = boundsMinX;
-      hitbox.boundsMaxX = boundsMaxX;
-      hitbox.boundsMinY = boundsMinY;
-      hitbox.boundsMaxY = boundsMaxY;
+      hitbox.boundsMinX = minX;
+      hitbox.boundsMaxX = maxX;
+      hitbox.boundsMinY = minY;
+      hitbox.boundsMaxY = maxY;
    }
 
    transformComponent.isDirty = false;
@@ -377,31 +369,33 @@ export function resolveEntityBorderCollisions(transformComponent: TransformCompo
    const EPSILON = 0.0001;
    
    for (const hitbox of transformComponent.hitboxes) {
+      hitbox.box.calculateBounds();
+      const minX = _bounds.minX;
+      const maxX = _bounds.maxX;
+      const minY = _bounds.minY;
+      const maxY = _bounds.maxY;
+      
       let hasCorrected = false;
       
       // Left border
-      const minX = hitbox.box.calculateBoundsMinX();
       if (minX < 0) {
          collideWithVerticalWorldBorder(hitbox, -minX + EPSILON);
          hasCorrected = true;
       }
 
       // Right border
-      const maxX = hitbox.box.calculateBoundsMaxX();
       if (maxX > Settings.WORLD_UNITS) {
          collideWithVerticalWorldBorder(hitbox, Settings.WORLD_UNITS - maxX - EPSILON);
          hasCorrected = true;
       }
 
       // Bottom border
-      const minY = hitbox.box.calculateBoundsMinY();
       if (minY < 0) {
          hasCorrected = true;
          collideWithHorizontalWorldBorder(hitbox, -minY + EPSILON);
       }
 
       // Top border
-      const maxY = hitbox.box.calculateBoundsMaxY();
       if (maxY > Settings.WORLD_UNITS) {
          hasCorrected = true;
          collideWithHorizontalWorldBorder(hitbox, Settings.WORLD_UNITS - maxY - EPSILON);
@@ -536,17 +530,11 @@ const resolveWallCollisions = (entity: Entity, transformComponent: TransformComp
          continue;
       }
       
-      const box = hitbox.box;
-
-      const boundsMinX = box.calculateBoundsMinX();
-      const boundsMaxX = box.calculateBoundsMaxX();
-      const boundsMinY = box.calculateBoundsMinY();
-      const boundsMaxY = box.calculateBoundsMaxY();
-
-      const minSubtileX = Math.max(Math.floor(boundsMinX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
-      const maxSubtileX = Math.min(Math.floor(boundsMaxX / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
-      const minSubtileY = Math.max(Math.floor(boundsMinY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
-      const maxSubtileY = Math.min(Math.floor(boundsMaxY / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
+      hitbox.box.calculateBounds();
+      const minSubtileX = Math.max(Math.floor(_bounds.minX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+      const maxSubtileX = Math.min(Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
+      const minSubtileY = Math.max(Math.floor(_bounds.minY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+      const maxSubtileY = Math.min(Math.floor(_bounds.maxY / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
 
       for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
          for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {

@@ -1,5 +1,5 @@
 import { TribesmanTitle, Settings, Entity, EntityType, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize, distance, randAngle } from "webgl-test-shared";
-import { currentSnapshot } from "./client";
+import { currentSnapshot } from "./game";
 import { playHeadSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
 import { getRandomPositionInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";

@@ -1,7 +1,7 @@
 import { EntityTickEventType, TribesmanTitle, SubtileType, TileType, STRUCTURE_TYPES, HitFlags, AttackEffectiveness, assert, Point, randAngle, randFloat, PacketReader, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
 import { setCameraSubject } from "../camera";
-import { getComponentArrays, getServerComponentArray } from "../entity-components/ComponentArray";
-import { setCurrentSnapshot } from "../client";
+import { getComponentArrays } from "../entity-components/ComponentArray";
+import { currentSnapshot, setCurrentSnapshot, setNextSnapshot } from "../game";
 import Layer from "../Layer";
 import { playerInstance, setPlayerInstance } from "../player";
 import { playHeadSound, playSound } from "../sound";
@@ -19,22 +19,23 @@ import { createDamageNumber, createHealNumber, createResearchNumber } from "../t
 import { processTickEvent } from "../entity-tick-events";
 import { setMinedSubtiles, tickCollapse } from "../collapses";
 import { GrassBlockerData, readGrassBlockers, updateGrassBlockersFromData } from "../grass-blockers";
-import Board from "../Board";
 import { tribesTabState } from "../../ui-state/tribes-tab-state";
 import { infocardsState } from "../../ui-state/infocards-state";
 import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
 import { entitySelectionState } from "../../ui-state/entity-selection-state";
-import ServerComponentArray from "../entity-components/ServerComponentArray";
+import ServerComponentArray, { getServerComponentArray } from "../entity-components/ServerComponentArray";
+import { updateParticles } from "../rendering/webgl/particle-rendering";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
+
+// @HACK! Shouldn't be necessary
+export type EntityServerComponentDataEntries<T extends ServerComponentType> = ReadonlyArray<[T, ServerComponentData<T>]>;
 
 export interface EntityServerComponentData extends Map<ServerComponentType, any> {
    get<K extends ServerComponentType>(key: K): ServerComponentData<K> | undefined;
    set<K extends ServerComponentType>(key: K, value: ServerComponentData<K>): this;
 
    // @Incomplete?
-   // Optional: If you iterate over the map, you get the Union of all values
-   // (This is usually fine for loops, but strict gets are needed for logic)
    // [Symbol.iterator](): IterableIterator<[ServerComponentType, ComponentTypeMap[ServerComponentType]]>;
 }
 export interface EntityClientComponentData extends Map<ClientComponentType, any> {
@@ -42,8 +43,6 @@ export interface EntityClientComponentData extends Map<ClientComponentType, any>
    set<K extends ClientComponentType>(key: K, value: ClientComponentData<K>): this;
 
    // @Incomplete?
-   // Optional: If you iterate over the map, you get the Union of all values
-   // (This is usually fine for loops, but strict gets are needed for logic)
    // [Symbol.iterator](): IterableIterator<[ServerComponentType, ComponentTypeMap[ServerComponentType]]>;
 }
 
@@ -148,6 +147,19 @@ export interface PacketSnapshot {
 // @Cleanup: when i rework shit this awful existence will go away
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
+
+// @Incomplete. Once lived in Board.ts
+/** Updates the client's copy of the tiles array to match any tile updates that have occurred */
+// public static loadTileUpdates(tileUpdates: ReadonlyArray<ServerTileUpdateData>): void {
+//    for (const update of tileUpdates) {
+//       const tileX = update.tileIndex % Settings.WORLD_SIZE_TILES;
+//       const tileY = Math.floor(update.tileIndex / Settings.WORLD_SIZE_TILES);
+      
+//       let tile = this.getTile(tileX, tileY);
+//       tile.type = update.type;
+//       tile.isWall = update.isWall;
+//    }
+// }
 
 const entityShouldInterpolate = (newTransformData: TransformComponentData, previousTransformData: TransformComponentData): boolean => {
    // If any hitboxes' positions or angles have changed
@@ -501,9 +513,13 @@ const updatePlayerFromData = (playerInstance: number, data: EntitySnapshot): voi
 }
 
 export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
-   // @HACK @CLEANUP impure Done before so that server data can override particles
-   Board.updateParticles();
+   // @HACK @CLEANUP impure. Done before so that server data can override particles
+   updateParticles();
 
+   // @HACKY! So that initial chunk-rendered-entities can fill their render info without crashing, because that requires currentSnapshot and nextSnapshot when interpolating
+   if (typeof currentSnapshot === "undefined") {
+      setNextSnapshot(snapshot);
+   }
    setCurrentSnapshot(snapshot);
 
    if (snapshot.layer !== getCurrentLayer()) {

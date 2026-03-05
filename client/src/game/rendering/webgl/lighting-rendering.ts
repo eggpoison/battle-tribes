@@ -4,7 +4,7 @@ import { getLightPositionMatrix } from "../../lights";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import Layer from "../../Layer";
 import { surfaceLayer } from "../../world";
-import { currentSnapshot } from "../../client";
+import { currentSnapshot } from "../../game";
 import { cameraPosition } from "../../camera";
 import { gameFramebufferTexture } from "../render";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
@@ -39,6 +39,13 @@ let lastTextureHeight = 0;
 let darknessVAO: WebGLVertexArrayObject;
 
 let ambientLightLevelUniformLocation: WebGLUniformLocation;
+let darknessNumLightsLocation: WebGLUniformLocation;
+let lightPosLocation: WebGLUniformLocation;
+let lightIntensityLocation: WebGLUniformLocation;
+let lightStrengthLocation: WebGLUniformLocation;
+let lightRadiiLocation: WebGLUniformLocation;
+let lightColourLocation: WebGLUniformLocation;
+let numRectLightsLocation: WebGLUniformLocation;
 
 const lightPositionMatricesData = new Float32Array(9 * Vars.MAX_LIGHTS);
 const lightIntensitiesData = new Float32Array(Vars.MAX_LIGHTS);
@@ -246,7 +253,14 @@ export function createNightShaders(): void {
    gl.useProgram(lightingProgram);
 
    ambientLightLevelUniformLocation = gl.getUniformLocation(lightingProgram, "u_ambientLightLevel")!;
-   
+   darknessNumLightsLocation = gl.getUniformLocation(lightingProgram, "u_numLights")!;
+   lightPosLocation = gl.getUniformLocation(lightingProgram, "u_lightPositionMatrices")!;
+   lightIntensityLocation = gl.getUniformLocation(lightingProgram, "u_lightIntensities")!;
+   lightStrengthLocation = gl.getUniformLocation(lightingProgram, "u_lightStrengths")!;
+   lightRadiiLocation = gl.getUniformLocation(lightingProgram, "u_lightRadii")!;
+   lightColourLocation = gl.getUniformLocation(lightingProgram, "u_lightColours")!;
+   numRectLightsLocation = gl.getUniformLocation(lightingProgram, "u_numRectLights")!;
+
    // Framebuffer Program
 
    darknessFramebufferProgram = createWebGLProgram(gl, darknessFramebufferVertexShader, darknessFramebufferFragmentShader);
@@ -429,22 +443,15 @@ export function renderLighting(layer: Layer): void {
 
    gl.uniform1f(ambientLightLevelUniformLocation, ambientLightLevel);
 
-   const darknessNumLightsLocation = gl.getUniformLocation(lightingProgram, "u_numLights")!;
    gl.uniform1i(darknessNumLightsLocation, pointLights.length);
    if (pointLights.length > 0) {
-      const lightPosLocation = gl.getUniformLocation(lightingProgram, "u_lightPositionMatrices")!;
       gl.uniformMatrix3fv(lightPosLocation, false, lightPositionMatricesData);
-      const lightIntensityLocation = gl.getUniformLocation(lightingProgram, "u_lightIntensities")!;
       gl.uniform1fv(lightIntensityLocation, lightIntensitiesData);
-      const lightStrengthLocation = gl.getUniformLocation(lightingProgram, "u_lightStrengths")!;
       gl.uniform1fv(lightStrengthLocation, lightStrengthsData);
-      const lightRadiiLocation = gl.getUniformLocation(lightingProgram, "u_lightRadii")!;
       gl.uniform1fv(lightRadiiLocation, lightRadiiData);
-      const lightColourLocation = gl.getUniformLocation(lightingProgram, "u_lightColours")!;
       gl.uniform3fv(lightColourLocation, lightColoursData);
    }
 
-   const numRectLightsLocation = gl.getUniformLocation(lightingProgram, "u_numRectLights")!;
    gl.uniform1i(numRectLightsLocation, rectLights.length);
    for (let i = 0; i < rectLights.length; i++) {
       const rectLight = rectLights[i];

@@ -2,7 +2,7 @@ import { Light, removeLight } from "../../lights";
 import { Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
-import { tickIntervalHasPassed } from "../../client";
+import { tickIntervalHasPassed } from "../../game";
 
 export interface CookingComponentData {
    readonly heatingProgress: number;

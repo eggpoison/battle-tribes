@@ -7,6 +7,7 @@ import { getEntityComponentArrays, getEntityLayer, getEntityType } from "./world
 import { gl } from "./webgl";
 import { createEntityRenderData, setRenderInfoInVertexData } from "./rendering/webgl/entity-rendering";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
+import { renderLayerIsChunkRendered } from "./rendering/webgl/chunked-entity-rendering";
 
 export interface ComponentTint {
    readonly tintR: number;
@@ -48,11 +49,9 @@ export class EntityRenderInfo {
 
    private readonly maxRenderParts: number;
 
-   public readonly vao: WebGLVertexArrayObject;
-   public readonly indexBuffer: WebGLBuffer;
-   public readonly indicesData: Uint16Array;
-   public readonly vertexBuffer: WebGLBuffer;
-   public readonly vertexData: Float32Array;
+   public readonly vao: WebGLVertexArrayObject | null;
+   public readonly vertexBuffer: WebGLBuffer | null;
+   public readonly vertexData: Float32Array | null;
 
    constructor(associatedEntity: Entity, renderLayer: RenderLayer, renderHeight: number, maxRenderParts: number) {
       this.entity = associatedEntity;
@@ -60,12 +59,16 @@ export class EntityRenderInfo {
       this.renderHeight = renderHeight;
       this.maxRenderParts = maxRenderParts;
 
-      const entityRenderData = createEntityRenderData(maxRenderParts);
-      this.vao = entityRenderData.vao;
-      this.indexBuffer = entityRenderData.indexBuffer;
-      this.indicesData = entityRenderData.indicesData;
-      this.vertexBuffer = entityRenderData.vertexBuffer;
-      this.vertexData = entityRenderData.vertexData;
+      if (!renderLayerIsChunkRendered(renderLayer)) {
+         const entityRenderData = createEntityRenderData(maxRenderParts);
+         this.vao = entityRenderData.vao;
+         this.vertexBuffer = entityRenderData.vertexBuffer;
+         this.vertexData = entityRenderData.vertexData;
+      } else {
+         this.vao = null;
+         this.vertexBuffer = null;
+         this.vertexData = null;
+      }
    }
 
    public attachRenderPart(renderPart: RenderPart): void {
@@ -167,12 +170,14 @@ export class EntityRenderInfo {
 }
 
 export function updateEntityRenderInfoRenderData(renderInfo: EntityRenderInfo): void {
+   assert(renderInfo.vertexData);
+   
    // @Hack @Speed: only need to override places where there were render parts that no longer exist
    for (let i = 0; i < renderInfo.vertexData.length; i++) {
       renderInfo.vertexData[i] = 0;
    }
    
-   setRenderInfoInVertexData(renderInfo, renderInfo.vertexData, renderInfo.indicesData, 0);
+   setRenderInfoInVertexData(renderInfo, renderInfo.vertexData, 0);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, renderInfo.vertexBuffer);
    gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderInfo.vertexData);

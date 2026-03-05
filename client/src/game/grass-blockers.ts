@@ -1,5 +1,5 @@
 import { Box, PacketReader } from "webgl-test-shared";
-import { currentSnapshot } from "./client";
+import { currentSnapshot } from "./game";
 import Layer from "./Layer";
 import { readBoxFromData } from "./networking/packet-hitboxes";
 import { calculateGrassBlockerVertexData } from "./rendering/webgl/grass-blocker-rendering";

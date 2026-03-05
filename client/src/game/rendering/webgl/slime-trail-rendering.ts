@@ -1,4 +1,4 @@
-import { distBetweenPointAndRectangularBox, Settings, RectangularBox, CircularBox, Box, boxIsCircular } from "webgl-test-shared";
+import { distBetweenPointAndRectangularBox, Settings, RectangularBox, CircularBox, Box, boxIsCircular, _bounds } from "webgl-test-shared";
 import Layer from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";
 import { layers } from "../../world";
@@ -70,18 +70,14 @@ export function createSlimeTrailShaders(): void {
 }
 
 const coatFromCircularBox = (layer: Layer, box: CircularBox): void => {
-   const minX = box.calculateBoundsMinX();
-   const maxX = box.calculateBoundsMaxX();
-   const minY = box.calculateBoundsMinY();
-   const maxY = box.calculateBoundsMaxY();
-
    const centerX = box.position.x / 4;
    const centerY = box.position.y / 4;
    
-   const minGamePixelX = convertToGamePixel(minX);
-   const maxGamePixelX = convertToGamePixel(maxX);
-   const minGamePixelY = convertToGamePixel(minY);
-   const maxGamePixelY = convertToGamePixel(maxY);
+   box.calculateBounds();
+   const minGamePixelX = convertToGamePixel(_bounds.minX);
+   const maxGamePixelX = convertToGamePixel(_bounds.maxX);
+   const minGamePixelY = convertToGamePixel(_bounds.minY);
+   const maxGamePixelY = convertToGamePixel(_bounds.maxY);
 
    const pixelRadiusSquared = box.radius * box.radius / 16;
 
@@ -101,15 +97,11 @@ const coatFromCircularBox = (layer: Layer, box: CircularBox): void => {
 }
 
 const coatFromRectangularBox = (layer: Layer, box: RectangularBox): void => {
-   const minX = box.calculateBoundsMinX();
-   const maxX = box.calculateBoundsMaxX();
-   const minY = box.calculateBoundsMinY();
-   const maxY = box.calculateBoundsMaxY();
-   
-   const minGamePixelX = convertToGamePixel(minX);
-   const maxGamePixelX = convertToGamePixel(maxX);
-   const minGamePixelY = convertToGamePixel(minY);
-   const maxGamePixelY = convertToGamePixel(maxY);
+   box.calculateBounds();
+   const minGamePixelX = convertToGamePixel(_bounds.minX);
+   const maxGamePixelX = convertToGamePixel(_bounds.maxX);
+   const minGamePixelY = convertToGamePixel(_bounds.minY);
+   const maxGamePixelY = convertToGamePixel(_bounds.maxY);
 
    for (let gamePixelX = minGamePixelX; gamePixelX <= maxGamePixelX; gamePixelX++) {
       for (let gamePixelY = minGamePixelY; gamePixelY <= maxGamePixelY; gamePixelY++) {

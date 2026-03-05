@@ -1,8 +1,7 @@
 import { Settings } from "webgl-test-shared";
-import Board from "./Board";
 import { updateTextNumbers } from "./text-canvas";
 import { resizeCanvas } from "./webgl";
-import { createAudioContext, playRiverSounds, updateSounds } from "./sound";
+import { playRiverSounds, updateSounds } from "./sound";
 import { attemptToResearch, updateResearchOrb } from "./research";
 import { updateEntitySelections } from "./entity-selection";
 import { updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
@@ -10,34 +9,33 @@ import { entityUsesClientInterp } from "./rendering/render-part-matrices";
 import { createCollapseParticles } from "./collapses";
 import { updateSlimeTrails } from "./rendering/webgl/slime-trail-rendering";
 import { updateDebugEntity } from "./entity-debugging";
-import { isSpectating, playerInstance, playerUsername, setIsSpectating, setPlayerInstance, setPlayerUsername, updatePlayerDirection } from "./player";
-import { callEntityOnUpdateFunctions } from "./entity-components/ComponentArray";
+import { playerInstance, updatePlayerDirection } from "./player";
 import { resolvePlayerCollisions } from "./collision";
 import { decodeSnapshotFromGameDataPacket, PacketSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
-import { sendActivatePacket, sendDeactivatePacket, sendInitialPlayerDataPacket, sendSyncRequestPacket } from "./networking/packet-sending/packet-sending";
-import { processForcePositionUpdatePacket, processInitialGameDataPacket, processShieldKnockPacket, processSimulationStatusUpdatePacket, processSyncGameDataPacket, receiveChatMessagePacket } from "./networking/packet-receiving";
-import { renderGame, setupRendering } from "./rendering/render";
-import { processDevGameDataPacket } from "./networking/dev-packets";
-import { setAppState, AppState } from "../ui-state/app-state";
+import { sendDeactivatePacket, sendSyncRequestPacket } from "./networking/packet-sending/packet-sending";
+import { renderGame } from "./rendering/render";
 import { registerFrame, renderFrameGraph, resetFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { updateSpamFilter } from "./chat";
 import { updatePlayerMovement } from "./player-action-handling";
-import { PacketReader, PacketType, TribeType } from "webgl-test-shared";
-import { debugDisplayState } from "../ui-state/debug-display-state";
-import { LoadingScreenStage, setLoadingScreenStage } from "../ui/LoadingScreen";
-import { sendPlayerDataPacket } from "./networking/packet-sending/player-data-packet-sending";
-import { playerTribe } from "./tribes";
+import { PacketReader } from "webgl-test-shared";
+import { sendPlayerDataPacket } from "./networking/packet-sending/player-data-packet";
+import { updateParticles } from "./rendering/webgl/particle-rendering";
+import { callEntityOnUpdateFunctions } from "./entity-components/component-arrays";
+import { debugInfoDisplay } from "../ui/game/dev/debug-info-display-funcs";
+import { getComponentArrays } from "./entity-components/ComponentArray";
+import { closeLoadingScreen } from "../ui/LoadingScreen";
+import { openGameScreen } from "../ui/GameScreen";
+
+interface TickCallback {
+   time: number;
+   readonly callback: () => void;
+}
 
 const SNAPSHOT_BUFFER_LENGTH = 2;
 /** The number of ticks it takes for the measured server packet interval to fully adjust (if going from a constant tps of A to a constant tps of B) */
 const PACKET_INTERVAL_ADJUST_TIME = 10;
 
-let socket: WebSocket | null = null;
-
 export let gameIsRunning = false;
-/** If the game has recevied up-to-date game data from the server. Set to false when paused */
-// @Cleanup: unused???
-let gameIsSynced = true;
 
 // @Location: completely unused by all the client netcode stuff in here.
 export let gameIsFocused = true;
@@ -57,16 +55,18 @@ let measuredServerPacketIntervalMS = 1000 / Settings.SERVER_PACKET_SEND_RATE; //
 
 let playerPacketAccumulator = 0;
 
+const tickCallbacks = new Array<TickCallback>();
+
 document.addEventListener("visibilitychange", () => {
    if (document.visibilityState === "visible") {
       gameIsFocused = true;
       lastPacketTime = performance.now();
 
-      if (!gameIsSynced) {
+      if (!gameIsRunning) {
          // @Investigate: what if this request fails??? This is the only request sent, so will the client just be stuck?
          sendSyncRequestPacket();
       }
-   } else {
+   } else { // Now hidden!
       gameIsFocused = false;
       unsyncGame();
       sendDeactivatePacket();
@@ -74,129 +74,42 @@ document.addEventListener("visibilitychange", () => {
 });
 
 export function resyncGame(): void {
-   gameIsSynced = true;
+   gameIsRunning = true;
 }
 
 function unsyncGame(): void {
-   gameIsSynced = false;
+   gameIsRunning = false;
+   // @Cleanup: unnecessary??
    // So that when the player returns to the game the dev frame graph doesn't show a maaassive frame
    resetFrameGraph();
 }
 
-function onSuccessfulConnection(username: string, tribeType: TribeType, isSpectating: boolean): void {
-   setLoadingScreenStage(LoadingScreenStage.sendingPlayerData);
-   sendInitialPlayerDataPacket(username, tribeType, isSpectating);
-
-   setPlayerUsername(username);
-   setIsSpectating(isSpectating);
-}
-
-function onFailedConnection(): void {
-   gameIsRunning = false;
-   setAppState(AppState.loading);
-   setLoadingScreenStage(LoadingScreenStage.connectionError);
-
-   setPlayerInstance(null);
-}
-
-export function reconnectClient(): void {
-   socket = null;
-   establishNetworkConnection(playerUsername, playerTribe.tribeType, isSpectating);
-}
-
 function startGame(): void {
    gameIsRunning = true;
-   gameIsSynced = true;
-   setAppState(AppState.game);
+   // @Cleanup weird to touch UI here. Also, this is redundant work if the game is resyncing instead of just starting.
+   closeLoadingScreen();
+   openGameScreen();
 
    resizeCanvas();
 
    // Initial player direction
+   // @Cleanup: shouldn't this be the default state, and this be unnecessary?
    updatePlayerDirection(0, 0);
             
    lastFrameTime = performance.now();
    requestAnimationFrame(runFrame);
 }
 
-export function quitGame(): void {
+export function stopGame(): void {
    gameIsRunning = false;
-   setAppState(AppState.mainMenu);
-   
-   if (socket !== null) {
-      socket.close();
-      socket = null;
-   }
 }
 
-async function onInitialGameDataPacket(reader: PacketReader): Promise<void> {
-   processInitialGameDataPacket(reader);
-   
-   // Initialise game
-
-   setLoadingScreenStage(LoadingScreenStage.initialisingGame);
-   
-   await setupRendering();
-   
-   sendActivatePacket();
-}
-
-async function onPacket(msg: MessageEvent): Promise<void> {
-   const reader = new PacketReader(msg.data as ArrayBufferLike, 0);
-   
-   const packetType = reader.readNumber() as PacketType;
-   switch (packetType) {
-      case PacketType.initialGameData: await onInitialGameDataPacket(reader); break;
-      case PacketType.gameData: {
-         if (!gameIsRunning && snapshotBuffer.length < SNAPSHOT_BUFFER_LENGTH) {
-            if (typeof currentSnapshot === "undefined") {
-               receiveInitialPacket(reader);
-            } else {
-               receivePacket(reader);
-            }
-            
-            // Once enough packets are received to show the gameplay, start the game
-            if (snapshotBuffer.length === SNAPSHOT_BUFFER_LENGTH) {
-               startGame();
-            }
-         } else if (gameIsRunning && gameIsSynced) {
-            receivePacket(reader);
-         }
-         break;
-      }
-      case PacketType.syncGameData: processSyncGameDataPacket(reader); break;
-      case PacketType.forcePositionUpdate: processForcePositionUpdatePacket(reader); break;
-      case PacketType.serverToClientChatMessage: receiveChatMessagePacket(reader); break;
-      case PacketType.simulationStatusUpdate: processSimulationStatusUpdatePacket(reader); break;
-      case PacketType.devGameData: processDevGameDataPacket(reader); break;
-      case PacketType.shieldKnock: processShieldKnockPacket(); break;
-   }
-}
-
-export function establishNetworkConnection(username: string, tribeType: TribeType, isSpectating: boolean): void {
-   if (socket !== null) {
-      return;
-   }
-   
-   // @SQUEAM
-   // socket = new WebSocket(`ws://10.0.0.10:${Settings.SERVER_PORT}`);
-   // Use 127.0.0.1 instea of localhost cuz localhost sometimes breaks it for reasons
-   socket = new WebSocket(`ws://127.0.0.1:${Settings.SERVER_PORT}`);
-   socket.binaryType = "arraybuffer";
-
-   socket.onopen = (): void => { onSuccessfulConnection(username, tribeType, isSpectating); };
-   socket.onclose = onFailedConnection;
-   socket.onmessage = onPacket;
-
-   // This is guaranteed to have occurred after a mouse press
-   createAudioContext();
-}
-
-function receivePacket(reader: PacketReader): PacketSnapshot {
+function receivePacket(reader: PacketReader): void {
    const previousSnapshot = snapshotBuffer.length > 0 ? snapshotBuffer[snapshotBuffer.length - 1] : null;
    const snapshot = decodeSnapshotFromGameDataPacket(reader, previousSnapshot);
    
    snapshotBuffer.push(snapshot);
-   debugDisplayState.snapshotBufferSize = snapshotBuffer.length;
+   debugInfoDisplay.updateSnapshotBufferSize(snapshotBuffer.length);
 
    const timeNow = performance.now();
    
@@ -205,30 +118,36 @@ function receivePacket(reader: PacketReader): PacketSnapshot {
    // Calculate new server packet interval using la "Exponential Moving Average"
    const smoothingFactor = 2 / (PACKET_INTERVAL_ADJUST_TIME + 1);
    measuredServerPacketIntervalMS = measuredServerPacketIntervalMS * (1 - smoothingFactor) + smoothingFactor * delta;
-   debugDisplayState.measuredServerTPS = 1000 / measuredServerPacketIntervalMS;
+   debugInfoDisplay.updateServerTPS(1000 / measuredServerPacketIntervalMS);
    
    lastPacketTime = timeNow;
 
-   return snapshot;
+   // First game packet
+   if (typeof currentSnapshot === "undefined") {
+      lastPacketTime = performance.now();
+      // Set currentSnapshot, and the game state, to the first game packet received.
+      updateGameStateToSnapshot(snapshot);
+      clientTick = snapshot.tick; // Start the client tick off at the tick of the very first packet received.
+   }
 }
 
-export function receiveInitialPacket(reader: PacketReader): void {
-   lastPacketTime = performance.now();
-   
-   const snapshot = receivePacket(reader);
-
-   updateGameStateToSnapshot(snapshot);
-   currentSnapshot = snapshot;
-   clientTick = snapshot.tick; // Start the client tick off at the tick of the very first packet received.
-}
-
-export function sendData(buffer: ArrayBufferLike): void {
-   socket?.send(buffer);
+export function onGameDataPacket(reader: PacketReader): void {
+   receivePacket(reader);
+      
+   // Once enough packets are received to show the gameplay, start the game
+   if (!gameIsRunning && snapshotBuffer.length >= SNAPSHOT_BUFFER_LENGTH) {
+      startGame();
+   }
 }
 
 export function setCurrentSnapshot(snapshot: PacketSnapshot): void {
    currentSnapshot = snapshot;
-   debugDisplayState.currentSnapshot = snapshot;
+   debugInfoDisplay.updateCurrentSnapshot(snapshot);
+}
+
+// @TEmporary? only for a hack
+export function setNextSnapshot(snapshot: PacketSnapshot): void {
+   nextSnapshot = snapshot;
 }
 
 export function tickIntervalHasPassed(intervalSeconds: number): boolean {
@@ -239,6 +158,47 @@ export function tickIntervalHasPassed(intervalSeconds: number): boolean {
    const previousCheck = (currentTick - 1) / ticksPerInterval;
    const check = currentTick / ticksPerInterval;
    return Math.floor(previousCheck) !== Math.floor(check);
+}
+
+export function getSecondsSinceTickTimestamp(ticks: number): number {
+   const ticksSince = currentSnapshot.tick - ticks;
+   let secondsSince = ticksSince * Settings.DT_S;
+
+   return secondsSince;
+}
+
+export function getElapsedTimeInSeconds(elapsedTicks: number): number {
+   return elapsedTicks * Settings.DT_S;
+}
+
+export function addTickCallback(time: number, callback: () => void): void {
+   tickCallbacks.push({
+      time: time,
+      callback: callback
+   });
+}
+
+export function updateTickCallbacks(): void {
+   for (let i = tickCallbacks.length - 1; i >= 0; i--) {
+      const tickCallbackInfo = tickCallbacks[i];
+      tickCallbackInfo.time -= 1 * Settings.DT_S;
+      if (tickCallbackInfo.time <= 0) {
+         tickCallbackInfo.callback();
+         tickCallbacks.splice(i, 1);
+      }
+   }
+}
+function tickEntities(): void {
+   const componentArrays = getComponentArrays();
+   for (const componentArray of componentArrays) {
+      if (typeof componentArray.onTick !== "undefined") {
+         for (const entity of componentArray.activeEntities) {
+            componentArray.onTick(entity);
+         }
+      }
+      
+      componentArray.deactivateQueue();
+   }
 }
 
 function runFrame(frameStartTime: number): void {
@@ -277,7 +237,7 @@ function runFrame(frameStartTime: number): void {
    if (i > 0) {
       snapshotBuffer.splice(0, i - 1);
    }
-   debugDisplayState.snapshotBufferSize = snapshotBuffer.length;
+   debugInfoDisplay.updateSnapshotBufferSize(snapshotBuffer.length);
 
    // @Cleanup kinda unclear at a glance
    nextSnapshot = (snapshotBuffer[snapshotBuffer.indexOf(currentSnapshot) + 1]) || currentSnapshot;
@@ -308,7 +268,7 @@ function runFrame(frameStartTime: number): void {
       clientTickInterp--;
 
       // Tick all entities (cuz the client interp loop is based on the network update rate not the tick rate)
-      Board.tickEntities();
+      tickEntities();
       
       updateSpamFilter(deltaTimeMS);
 
@@ -328,20 +288,23 @@ function runFrame(frameStartTime: number): void {
       updateDebugEntity();
    }
 
-   if (gameIsSynced) {
-      renderGame(clientTickInterp, serverTickInterp, deltaTimeMS);
+   renderGame(clientTickInterp, serverTickInterp, deltaTimeMS);
 
-      const frameEndTime = performance.now();
-      registerFrame(frameStartTime, frameEndTime);
+   const frameEndTime = performance.now();
+   registerFrame(frameStartTime, frameEndTime);
 
-      renderFrameGraph(frameEndTime);
-   }
+   renderFrameGraph(frameEndTime);
 
    updateTextNumbers();
-   Board.updateTickCallbacks();
-   Board.updateParticles();
+   updateTickCallbacks();
+   updateParticles();
+   debugInfoDisplay.refreshTickDebugData();
 
    if (gameIsRunning) {
       requestAnimationFrame(runFrame);
    }
+}
+
+if (import.meta.hot) {
+   import.meta.hot.accept();
 }

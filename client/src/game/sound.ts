@@ -4,8 +4,7 @@ import { TransformComponentArray } from "./entity-components/server-components/T
 import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { cameraPosition, maxVisibleChunkX, maxVisibleChunkY, minVisibleChunkX, minVisibleChunkY } from "./camera";
-import { debugDisplayState } from "../ui-state/debug-display-state";
-import { gameIsFocused } from "./client";
+import { gameIsFocused } from "./game";
 
 type SoundID = number;
 
@@ -16,7 +15,7 @@ export const ROCK_DESTROY_SOUNDS: ReadonlyArray<string> = ["rock-destroy-1.mp3",
 let idCounter: SoundID = 0;
 
 let audioContext: AudioContext;
-let audioBuffers: Partial<Record<string, AudioBuffer>>;
+let audioBuffers: Partial<Record<string, AudioBuffer>> = {};
 
 export interface Sound {
    readonly id: SoundID;
@@ -341,20 +340,16 @@ export async function loadSoundEffects(): Promise<void> {
       "lazur.mp3"
    ];
 
-   const tempAudioBuffers: Partial<Record<string, AudioBuffer>> = {};
-   
    const audioBufferPromises = AUDIO_FILE_PATHS.map(async (filePath) => {
       const sound = soundFiles["../sounds/" + filePath] as string;
       
       const response = await fetch(sound);
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      tempAudioBuffers[filePath] = audioBuffer;
+      audioBuffers[filePath] = audioBuffer;
    });
 
    await Promise.all(audioBufferPromises);
-   
-   audioBuffers = tempAudioBuffers as Record<string, AudioBuffer>;
 }
 
 const calculateSoundVolume = (volume: number, position: Point): number => {
@@ -524,8 +519,6 @@ export function updateSounds(): void {
          sound.gainNode.gain.value = calculateSoundVolume(sound.volume, sound.position);
       }
    }
-
-   debugDisplayState.numActiveSounds = activeSounds.length;
 }
 
 // @Hack: There should really be unique sounds for each entity type, not one generic sound.

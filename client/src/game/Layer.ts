@@ -1,13 +1,12 @@
 import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings } from "webgl-test-shared";
-import Board from "./Board";
 import Chunk from "./Chunk";
 import { Light } from "./lights";
 import Particle from "./Particle";
 import { RenderLayer } from "./render-layers";
 import { RENDER_CHUNK_SIZE, RenderChunkRiverInfo } from "./rendering/render-chunks";
 import { addRenderable, removeRenderable, RenderableType } from "./rendering/render-loop";
-import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity, createRenderLayerChunkDataRecord, createModifiedChunkIndicesArray } from "./rendering/webgl/chunked-entity-rendering";
-import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
+import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity, createRenderLayerChunkDataRecord, createModifiedChunkIndicesArray, createVisibleEntityChunkDatas } from "./rendering/webgl/chunked-entity-rendering";
+import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, lowMonocolourParticles, lowTexturedParticles, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
 import { recalculateWallSubtileRenderData, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
 import { recalculateTileShadows, TileShadowType } from "./rendering/webgl/tile-shadow-rendering";
 import { recalculateWallBorders } from "./rendering/webgl/wall-border-rendering";
@@ -79,6 +78,7 @@ export default class Layer {
 
    // For chunked entity rendering
    public readonly renderLayerChunkDataRecord = createRenderLayerChunkDataRecord();
+   public readonly visibleEntityChunkDatas = createVisibleEntityChunkDatas();
    /** Each render layer contains a set of which chunks have been modified */
    public modifiedChunkIndicesArray = createModifiedChunkIndicesArray();
 
@@ -198,7 +198,7 @@ export default class Layer {
                Math.abs(angularVelocity) / lifetime / 1.5,
                colour, colour, colour
             );
-            Board.lowMonocolourParticles.push(particle);
+            lowMonocolourParticles.push(particle);
          }
          
          // Larger debris pieces
@@ -248,7 +248,7 @@ export default class Layer {
                textureIndex,
                tint, tint, tint
             );
-            Board.lowTexturedParticles.push(particle);
+            lowTexturedParticles.push(particle);
          }
       }
       

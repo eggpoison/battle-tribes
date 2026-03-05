@@ -9,10 +9,35 @@
       <link rel="apple-touch-icon" href="/logo192.png" />
       <link rel="manifest" href="/manifest.json" />
       <title>React App</title>
+      <style>
+         #main-menu {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+         }
+
+         #main-menu button {
+            display: block;
+            padding: 0 10px;
+         }
+         
+         .invis {
+            opacity: 0 !important;
+            pointer-events: none !important;
+         }
+         .hidden {
+            display: none !important;
+         }
+      </style>
    </head>
    <body>
       <noscript>You need to enable JavaScript to run this app.</noscript>
-      <script type="module" src="/src/index.ts"></script>
+      <script type="module" src="/src/index.ts" defer></script>
 
       <div id="main-menu">
          <div class="content">
@@ -50,12 +75,30 @@
          </div>
       </div>
 
-      <div id="canvas-wrapper" class="hidden">
+      <div id="loading-screen" class="hidden">
+         <div class="ls-loading-view">
+            <h1 class="title">Loading</h1>
+            <div class="loading-message">
+               <p id="ls-text">Connecting to server...</p>
+            </div>
+         </div>
+
+         <div class="ls-error-view">
+            <h1 class="title">Connection closed</h1>
+            <div class="loading-message">
+               <p>Connection with server failed.</p>
+               <button id="ls-reconnect-button">Reconnect</button>
+               <button id="ls-main-menu-button">Back</button>
+            </div>
+         </div>
+      </div>
+
+      <div id="canvas-wrapper" class="invis">
          <canvas id="game-canvas"></canvas>
          <canvas id="text-canvas"></canvas>
          <!-- @SQUEAM -->
-         <!-- <canvas id="tech-tree-canvas" class:hidden={!menuSelectorState.menuIsOpen(Menu.techTree)}></canvas> -->
-         <canvas id="tech-tree-canvas" class="hidden"></canvas>
+         <!-- <canvas id="tech-tree-canvas" class:invis={!menuSelectorState.menuIsOpen(Menu.techTree)}></canvas> -->
+         <canvas id="tech-tree-canvas" class="invis"></canvas>
          <div id="frame-graph" class:hidden={!nerdVisionState.isVisible}>
             <p class="info"><span class="highlight">fps={frameGraphState.fps}</span> <span class="highlight">t_avg={frameGraphState.average.toFixed(2)}</span> <span class="highlight">t_min={frameGraphState.min.toFixed(2)}</span> <span class="highlight">t_max={frameGraphState.max.toFixed(2)}</span></p>
             <canvas id="frame-graph-canvas"></canvas>

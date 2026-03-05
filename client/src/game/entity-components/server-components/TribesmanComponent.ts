@@ -16,7 +16,7 @@ import { TribeComponentArray } from "./TribeComponent";
 import { playerInstance } from "../../player";
 import { getHitboxTile, getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { currentSnapshot } from "../../client";
+import { currentSnapshot } from "../../game";
 import { tabSelectorState } from "../../../ui-state/tab-selector-state";
 
 export interface TribesmanComponentData {

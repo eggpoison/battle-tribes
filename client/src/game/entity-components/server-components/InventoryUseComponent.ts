@@ -1,9 +1,8 @@
 import { createZeroedLimbState, LimbConfiguration, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, SPEAR_CHARGED_LIMB_STATE, interpolateLimbState, copyLimbState, PacketReader, InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool, Settings, BlockType, ServerComponentType, Point, lerp, randAngle, randFloat, randItem, Entity, EntityType, LimbAction, HitboxFlag } from "webgl-test-shared";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import Board, { getElapsedTimeInSeconds, getSecondsSinceTickTimestamp } from "../../Board";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import Particle from "../../Particle";
-import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../../rendering/webgl/particle-rendering";
+import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, lowMonocolourParticles } from "../../rendering/webgl/particle-rendering";
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../../limb-animations";
 import { createBlockParticle, createDeepFrostHeartBloodParticles, createEmberParticle, createSlurbParticle, createSmokeParticle } from "../../particles";
 import { VisualRenderPart, RenderPart } from "../../render-parts/render-parts";
@@ -17,7 +16,7 @@ import { getRenderPartRenderPosition } from "../../rendering/render-part-matrice
 import { getHumanoidRadius } from "./TribesmanComponent";
 import { playerInstance } from "../../player";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
-import { currentSnapshot, tickIntervalHasPassed } from "../../client";
+import { currentSnapshot, getElapsedTimeInSeconds, getSecondsSinceTickTimestamp, tickIntervalHasPassed } from "../../game";
 import { tickPlayerItems } from "../../player-action-handling";
 import { inventoryState } from "../../../ui-state/inventory-state";
 import { playSoundOnHitbox } from "../../sound";
@@ -751,7 +750,7 @@ function onTick(entity: Entity): void {
                0,
                colour[0], colour[1], colour[2]
             );
-            Board.lowMonocolourParticles.push(particle);
+            lowMonocolourParticles.push(particle);
          }
       }
    }

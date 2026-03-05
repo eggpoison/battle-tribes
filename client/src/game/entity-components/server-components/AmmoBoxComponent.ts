@@ -7,7 +7,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { currentSnapshot } from "../../client";
+import { currentSnapshot } from "../../game";
 
 export interface AmmoBoxComponentData {
    readonly ammoType: TurretAmmoType | null;

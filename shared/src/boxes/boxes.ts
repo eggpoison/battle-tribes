@@ -95,20 +95,10 @@ export function assertBoxIsRectangular(box: Box): asserts box is RectangularBox 
    }
 }
 
-export function updateVertexPositionsAndSideAxes(box: RectangularBox): void {
-   const x1 = -box.width * box.scale * 0.5;
-   const x2 = box.width * box.scale * 0.5;
-   const y2 = box.height * box.scale * 0.5;
-
+export function updateSideAxes(box: RectangularBox): void {
    const rotation = box.angle;
    const sinRotation = Math.sin(rotation);
    const cosRotation = Math.cos(rotation);
-
-   // Rotate vertices
-   box.topLeftVertexOffset.x = cosRotation * x1 + sinRotation * y2;
-   box.topLeftVertexOffset.y = cosRotation * y2 - sinRotation * x1;
-   box.topRightVertexOffset.x = cosRotation * x2 + sinRotation * y2;
-   box.topRightVertexOffset.y = cosRotation * y2 - sinRotation * x2;
 
    // Angle between vertex 0 (top left) and vertex 1 (top right)
    // @Speed: If we do a different axis, can we get rid of the minus?
@@ -191,7 +181,7 @@ export function updateBox(box: Box, parent: Box): void {
    // box.position.y = rotateYAroundPoint(preX, preY, pivotPointX, pivotPointY, box.relativeAngle * box.totalFlipXMultiplier);
 
    if (!boxIsCircular(box)) {
-      updateVertexPositionsAndSideAxes(box);
+      updateSideAxes(box);
    }
 }
 

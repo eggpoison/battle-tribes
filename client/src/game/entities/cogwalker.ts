@@ -9,6 +9,7 @@ import { createTribesmanAIComponentData } from "../entity-components/server-comp
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
+import { EntityServerComponentData } from "../networking/packet-snapshots";
 
 export function createCogwalkerConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -19,15 +20,15 @@ export function createCogwalkerConfig(position: Point, rotation: number, tribe: 
 
    return {
       entityType: EntityType.cogwalker,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.tribeMember]: createTribeMemberComponentData(),
-         [ServerComponentType.tribesmanAI]: createTribesmanAIComponentData(),
-         [ServerComponentType.aiHelper]: createAIHelperComponentData(),
-      },
-      clientComponentData: {}
+      serverComponentData: new Map([
+         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
+         [ServerComponentType.health, createHealthComponentData()],
+         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
+         [ServerComponentType.tribe, createTribeComponentData(tribe)],
+         [ServerComponentType.tribeMember, createTribeMemberComponentData()],
+         [ServerComponentType.tribesmanAI, createTribesmanAIComponentData()],
+         [ServerComponentType.aiHelper, createAIHelperComponentData()]
+      ]) as EntityServerComponentData,
+      clientComponentData: new Map()
    };
 }

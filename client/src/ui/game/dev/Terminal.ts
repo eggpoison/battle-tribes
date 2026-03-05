@@ -1,7 +1,7 @@
 import { CommandPermissions, assert, commandIsValid } from "webgl-test-shared";
 import { isDev } from "../../../game/utils";
 import { sendTerminalCommandPacket } from "../../../game/networking/packet-sending/packet-sending";
-import { setTerminalIsVisible } from "./NerdVision";
+import { nerdVision } from "./nerd-vision-funcs";
 
 /** All lines output by the terminal */
 const terminalLines = new Array<string>();
@@ -75,7 +75,7 @@ const enterCommand = (): void => {
 const enterKey = (e: KeyboardEvent): void => {
    switch (e.key) {
       case "Escape": {
-         setTerminalIsVisible(false);
+         nerdVision.setTerminalIsVisible(false);
          break;
       }
       case "Enter": {

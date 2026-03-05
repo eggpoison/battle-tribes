@@ -1,17 +1,9 @@
-import { Settings } from "webgl-test-shared";
-import { PacketSnapshot } from "../game/networking/packet-snapshots";
-
 // @Location
 let uiZoom = 1;
 // @Hack @Copynpaste
 document.documentElement.style.setProperty("--zoom", uiZoom.toString());
 
 export const debugDisplayState = {
-   // @Hack: cast
-   currentSnapshot: null as unknown as PacketSnapshot,
-   snapshotBufferSize: 0,
-   measuredServerTPS: Settings.SERVER_PACKET_SEND_RATE,
-   numActiveSounds: 0,
    cameraZoom: 1,
    nightVisionIsEnabled: false,
    showHitboxes: false,

@@ -8,6 +8,7 @@ import { createTribeComponentData } from "../entity-components/server-components
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
+import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createWallConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -19,14 +20,15 @@ export function createWallConfig(position: Point, rotation: number, tribe: Tribe
 
    return {
       entityType: EntityType.wall,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.buildingMaterial]: createBuildingMaterialComponentData(material)
-      },
-      clientComponentData: {}
+      serverComponentData: new Map([
+         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
+         [ServerComponentType.health, createHealthComponentData()],
+         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
+         [ServerComponentType.structure, createStructureComponentData()],
+         [ServerComponentType.tribe, createTribeComponentData(tribe)],
+         [ServerComponentType.buildingMaterial, createBuildingMaterialComponentData(material)]
+      // @HACK
+      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
+      clientComponentData: new Map()
    };
 }

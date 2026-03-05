@@ -9,6 +9,7 @@ import { createTribeComponentData } from "../entity-components/server-components
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 import { createHitboxQuick, Hitbox } from "../hitboxes";
+import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createBracingsConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -22,15 +23,16 @@ export function createBracingsConfig(position: Point, rotation: number, tribe: T
    
    return {
       entityType: EntityType.bracings,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.buildingMaterial]: createBuildingMaterialComponentData(material),
-         [ServerComponentType.bracings]: createBracingsComponentData()
-      },
-      clientComponentData: {}
+      serverComponentData: new Map([
+         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
+         [ServerComponentType.health, createHealthComponentData()],
+         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
+         [ServerComponentType.structure, createStructureComponentData()],
+         [ServerComponentType.tribe, createTribeComponentData(tribe)],
+         [ServerComponentType.buildingMaterial, createBuildingMaterialComponentData(material)],
+         [ServerComponentType.bracings, createBracingsComponentData()]
+         // @HACK
+      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
+      clientComponentData: new Map()
    };
 }

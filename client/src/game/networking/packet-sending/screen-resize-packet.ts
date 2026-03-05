@@ -1,5 +1,5 @@
 import { Packet, PacketType } from "../../../../../shared/src";
-import { sendData } from "../../client";
+import { sendData } from "../networking";
 
 /*///////////////
 
@@ -13,7 +13,7 @@ TOTAL = 12 BYTES (aligned)
 *////////////////
 
 export function sendScreenResizePacket() {
-   const packet = new Packet(PacketType.playerData, 12);
+   const packet = new Packet(PacketType.screenResize, 12);
    packet.writeNumber(window.innerWidth);
    packet.writeNumber(window.innerHeight);
    sendData(packet.buffer);

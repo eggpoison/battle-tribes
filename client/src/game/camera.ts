@@ -51,6 +51,10 @@ export const cursorWorldPos = new Point(0, 0);
 //    // removeEntityRenderedChunkData(chunk.x, chunk.y);
 // }
 
+function registerVisibleRenderChunk(renderChunkX: number, renderChunkY: number): void {
+
+}
+
 // @Incomplete: unused
 const getChunksFromRange = (layer: Layer, minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number): ReadonlyArray<Chunk> => {
    const chunks = new Array<Chunk>();

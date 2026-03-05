@@ -10,7 +10,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { RenderPart } from "../../render-parts/render-parts";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { tickIntervalHasPassed } from "../../client";
+import { tickIntervalHasPassed } from "../../game";
 
 export interface CowComponentData {
    readonly species: CowSpecies;

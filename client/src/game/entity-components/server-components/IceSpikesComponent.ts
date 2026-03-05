@@ -2,8 +2,7 @@ import { randAngle, randFloat, randInt, Entity, ServerComponentType } from "webg
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { addMonocolourParticleToBufferContainer, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
-import Board from "../../Board";
+import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import Particle from "../../Particle";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
@@ -86,7 +85,7 @@ const createIceSpeckProjectile = (hitbox: Hitbox): void => {
       0,
       ICE_SPECK_COLOUR[0], ICE_SPECK_COLOUR[1], ICE_SPECK_COLOUR[2]
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 function onHit(entity: Entity, hitbox: Hitbox): void {

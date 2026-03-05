@@ -8,6 +8,7 @@ import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { Box } from "../../shared/src/boxes/boxes";
 import { CollisionResult } from "../../shared/src/collision";
+import { _bounds } from "../../shared/src/boxes/BaseBox";
 
 export const enum CollisionVars {
    NO_COLLISION = 0xFFFF
@@ -189,7 +190,7 @@ export function resolveEntityCollisions(layer: Layer): void {
             for (let k = 0; k < pushedChunk.entities.length; k++) {
                const collidingEntity = pushedChunk.entities[k];
 
-               // @Speed: This check is only needed if the pushingGroup is the pushedGroup.
+               // @Speed: This check is only needed if the pushingGroup is the pushedGroup. And in that case we can actually just start k at j + 1 instead of 0, and this check won't be needed at all.
                if (affectedEntity === collidingEntity) {
                   continue;
                }
@@ -276,10 +277,11 @@ export function getBoxesCollidingEntities(layer: Layer, boxes: ReadonlyArray<Box
    for (let i = 0; i < boxes.length; i++) {
       const box = boxes[i];
 
-      let minX = box.calculateBoundsMinX();
-      let maxX = box.calculateBoundsMaxX();
-      let minY = box.calculateBoundsMinY();
-      let maxY = box.calculateBoundsMaxY();
+      box.calculateBounds();
+      let minX = _bounds.minX;
+      let maxX = _bounds.maxX;
+      let minY = _bounds.minY;
+      let maxY = _bounds.maxY;
       if (minX < 0) {
          minX = 0;
       }
@@ -330,10 +332,11 @@ export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArr
       const hitbox = hitboxes[i];
       const box = hitbox.box;
 
-      let minX = box.calculateBoundsMinX();
-      let maxX = box.calculateBoundsMaxX();
-      let minY = box.calculateBoundsMinY();
-      let maxY = box.calculateBoundsMaxY();
+      box.calculateBounds();
+      let minX = _bounds.minX;
+      let maxX = _bounds.maxX;
+      let minY = _bounds.minY;
+      let maxY = _bounds.maxY;
       if (minX < 0) {
          minX = 0;
       }

@@ -7,6 +7,7 @@ import { createTribeComponentData } from "../entity-components/server-components
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
+import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createFloorSignConfig(position: Point, angle: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -18,14 +19,15 @@ export function createFloorSignConfig(position: Point, angle: number, tribe: Tri
    
    return {
       entityType: EntityType.floorSign,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.floorSign]: { message: "" },
-      },
-      clientComponentData: {}
+      serverComponentData: new Map([
+         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
+         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
+         [ServerComponentType.health, createHealthComponentData()],
+         [ServerComponentType.tribe, createTribeComponentData(tribe)],
+         [ServerComponentType.structure, createStructureComponentData()],
+         [ServerComponentType.floorSign, { message: "" }]
+      // @HACK
+      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
+      clientComponentData: new Map()
    };
 }

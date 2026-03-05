@@ -8,6 +8,7 @@ import { createTribeComponentData } from "../entity-components/server-components
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
+import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createFenceConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -19,14 +20,15 @@ export function createFenceConfig(position: Point, rotation: number, tribe: Trib
 
    return {
       entityType: EntityType.fence,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.fence]: createFenceComponentData()
-      },
-      clientComponentData: {}
+      serverComponentData: new Map([
+         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
+         [ServerComponentType.health, createHealthComponentData()],
+         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
+         [ServerComponentType.structure, createStructureComponentData()],
+         [ServerComponentType.tribe, createTribeComponentData(tribe)],
+         [ServerComponentType.fence, createFenceComponentData()]
+      // @HACK
+      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
+      clientComponentData: new Map()
    };
 }

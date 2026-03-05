@@ -12,6 +12,7 @@ import { WARRIOR_HUT_SIZE } from "./HutComponent";
 import { TribeComponentArray } from "./TribeComponent";
 import { playerTribe } from "../../tribes";
 import { Hitbox } from "../../hitboxes";
+import { registerTextureSource } from "../../texture-atlases/texture-sources";
 
 export interface BlueprintComponentData {
    readonly blueprintType: BlueprintType;
@@ -365,6 +366,15 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       }
    ]
 };
+
+// Add partial blueprint textures
+for (const progressTextureInfoArray of Object.values(BLUEPRINT_PROGRESS_TEXTURE_SOURCES)) {
+   for (const progressTextureInfo of progressTextureInfoArray) {
+      for (const textureSource of progressTextureInfo.progressTextureSources) {
+         registerTextureSource(textureSource);
+      }
+   }
+}
 
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);

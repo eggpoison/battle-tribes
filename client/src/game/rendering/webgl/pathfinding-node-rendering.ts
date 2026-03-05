@@ -5,7 +5,7 @@ import { entityExists } from "../../world";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
 import { hoverDebugState } from "../../../ui-state/hover-debug-state";
-import { nerdVisionIsVisible } from "../../../ui/game/dev/NerdVision";
+import { nerdVision } from "../../../ui/game/dev/nerd-vision-funcs";
 
 enum NodeType {
    occupied,
@@ -196,7 +196,7 @@ const renderNodes = (vertexData: Float32Array): void => {
 }
 
 const getDebuggedPath = (entityDebugData: EntityDebugData | null): PathData | undefined => {
-   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
       return entityDebugData.pathData;
    }
 }
@@ -259,12 +259,12 @@ const addNodeData = (vertexData: Float32Array, segmentIdx: number, node: Pathfin
 export function renderPathfindingNodes(): void {
    const entityDebugData = hoverDebugState.entityDebugData;
 
-   const showEntityPathfindingNodes = nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID);
+   const showEntityPathfindingNodes = nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID);
    if (!debugDisplayState.showPathfindingNodes && !showEntityPathfindingNodes) {
       return;
    }
    
-   if (nerdVisionIsVisible() && entityDebugData !== null && typeof entityDebugData.pathData !== "undefined") {
+   if (nerdVision.isVisible() && entityDebugData !== null && typeof entityDebugData.pathData !== "undefined") {
       renderConnectors(entityDebugData.pathData);
    }
 

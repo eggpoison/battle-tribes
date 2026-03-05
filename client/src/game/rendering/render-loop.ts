@@ -105,7 +105,6 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
    
    switch (renderableType) {
       case RenderableType.entity: {
-         
          if (renderLayerIsChunkRendered(renderLayer)) {
             // @Bug: this always renders the whole render layer...
             renderChunkedEntities(layer, renderLayer);

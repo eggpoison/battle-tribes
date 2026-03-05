@@ -598,6 +598,13 @@ export function processSpectateEntityPacket(playerClient: PlayerClient, reader: 
    const entity: Entity = reader.readNumber();
    if (entityExists(entity)) {
       playerClient.cameraSubject = entity;
+   } else if (entity === 0) {
+      // A value of 0 means to stop spectating whatever was being spectated.
+      if (entityExists(playerClient.instance)) {
+         playerClient.cameraSubject = playerClient.instance;
+      } else {
+         playerClient.cameraSubject = 0;
+      }
    }
 }
 

@@ -1,8 +1,7 @@
 import { Settings, SubtileType, customTickIntervalHasPassed, lerp, Point, randAngle, randFloat, randInt } from "webgl-test-shared";
-import Board from "./Board";
 import { getSubtileX, getSubtileY } from "./Layer";
 import Particle from "./Particle";
-import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
+import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, highMonocolourParticles, lowMonocolourParticles, lowTexturedParticles, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
 import { playSound } from "./sound";
 import { undergroundLayer } from "./world";
 
@@ -135,9 +134,9 @@ const createSpeckDebris = (x: number, y: number, subtileType: SubtileType): void
       colour, colour, colour
    );
    if (particleRenderLayer === ParticleRenderLayer.low) {
-      Board.lowMonocolourParticles.push(particle);
+      lowMonocolourParticles.push(particle);
    } else {
-      Board.highMonocolourParticles.push(particle);
+      highMonocolourParticles.push(particle);
    }
 }
 
@@ -189,7 +188,7 @@ const createLargeDebrisParticle = (x: number, y: number, subtileType: SubtileTyp
       textureIndex,
       tint, tint, tint
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export function createCollapseParticles(): void {

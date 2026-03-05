@@ -1,7 +1,10 @@
-import { PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
+import { PacketReader, Entity, ServerComponentType, assert } from "webgl-test-shared";
 import { EntityRenderInfo } from "../EntityRenderInfo";
 import { EntityComponentData } from "../world";
-import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
+
+const serverComponentArrays = new Array<ServerComponentArray>();
+const serverComponentArrayRecord: Record<ServerComponentType, ServerComponentArray> = {} as unknown as Record<ServerComponentType, ServerComponentArray>;
 
 export default class ServerComponentArray<
    /** The actual component's type */
@@ -9,7 +12,10 @@ export default class ServerComponentArray<
    ComponentData extends object = object,
    ComponentIntermediateInfo extends object | never = object | never,
    ComponentType extends ServerComponentType = ServerComponentType
-> extends ComponentArray<T, ComponentIntermediateInfo, ComponentArrayType.server, ComponentType> {
+> extends ComponentArray<T, ComponentIntermediateInfo> {
+   // @HACK here for hack
+   public readonly componentType: ComponentType;
+   
    public decodeData: (reader: PacketReader) => ComponentData;
    // Note: data is before entity as every function will need the reader, but not all are guaranteed to need the entity
    public updateFromData?(data: ComponentData, entity: Entity): void;
@@ -17,8 +23,23 @@ export default class ServerComponentArray<
    public updatePlayerFromData?(data: ComponentData, isInitialData: boolean): void;
 
    constructor(componentType: ComponentType, isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderInfo: EntityRenderInfo) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number, decodeData: (reader: PacketReader) => ComponentData) {
-      super(ComponentArrayType.server, componentType, isActiveByDefault, createComponent, getMaxRenderParts);
+      super(isActiveByDefault, createComponent, getMaxRenderParts);
 
+      this.componentType = componentType;
       this.decodeData = decodeData;
+
+      assert(typeof serverComponentArrayRecord[componentType as ServerComponentType] === "undefined");
+      // @Cleanup: casts
+      serverComponentArrays.push(this as unknown as ServerComponentArray);
+      serverComponentArrayRecord[componentType as ServerComponentType] = this as unknown as ServerComponentArray;
    }
+}
+
+export function getServerComponentArrays(): ReadonlyArray<ServerComponentArray> {
+   return serverComponentArrays;
+}
+
+export function getServerComponentArray(componentType: ServerComponentType): ServerComponentArray {
+   // @Speed: can be array
+   return serverComponentArrayRecord[componentType];
 }

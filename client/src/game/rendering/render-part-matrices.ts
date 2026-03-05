@@ -9,7 +9,7 @@ import { getHitboxVelocity, Hitbox } from "../hitboxes";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { playerInstance } from "../player";
 import { EntitySnapshot } from "../networking/packet-snapshots";
-import { currentSnapshot, nextSnapshot } from "../client";
+import { currentSnapshot, nextSnapshot } from "../game";
 
 // @Cleanup: file name
 
@@ -198,6 +198,7 @@ const calculateHitboxMatrix = (hitbox: Hitbox, tickInterp: number): Matrix3x2 =>
    let tx: number;
    let ty: number;
    if (usesClientInterp) {
+      // @Garbage
       const velocity = getHitboxVelocity(hitbox);
       tx = hitbox.box.position.x + velocity.x * tickInterp * Settings.DT_S;
       ty = hitbox.box.position.y + velocity.y * tickInterp * Settings.DT_S;
@@ -248,6 +249,13 @@ const cleanRenderPartModelMatrix = (renderPart: RenderPart, tickInterp: number):
 
    for (const child of renderPart.children) {
       cleanRenderPartModelMatrix(child, tickInterp);
+   }
+}
+
+export function cleanEntityRenderParts(renderInfo: EntityRenderInfo, tickInterp: number): void {
+   // @copynpaste?
+   for (const renderPart of renderInfo.rootRenderParts) {
+      cleanRenderPartModelMatrix(renderPart, tickInterp);
    }
 }
 

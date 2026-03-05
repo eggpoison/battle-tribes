@@ -1,6 +1,6 @@
 export function openGameScreen() {
    // Unhide all the canvases!
-   document.getElementById("canvas-wrapper")?.classList.remove("hidden");
+   document.getElementById("canvas-wrapper")?.classList.remove("invis");
    
    // const gameScreenElem = document.createElement("div");
    // gameScreenElem.id = "game-screen";
@@ -9,7 +9,7 @@ export function openGameScreen() {
 }
 
 export function closeGameScreen() {
-   document.getElementById("canvas-wrapper")?.classList.add("hidden");
+   document.getElementById("canvas-wrapper")?.classList.add("invis");
    // document.getElementById("game-screen")?.remove();
 }
 

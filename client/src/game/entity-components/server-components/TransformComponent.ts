@@ -1,17 +1,16 @@
-import { Entity, EntityType, boxIsCircular, updateBox, Box, ServerComponentType, PacketReader, randFloat, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, randSign, rotateXAroundOrigin, rotateYAroundOrigin, getTileIndexIncludingEdges } from "webgl-test-shared";
+import { Entity, EntityType, boxIsCircular, updateBox, Box, ServerComponentType, PacketReader, randFloat, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, randSign, rotateXAroundOrigin, rotateYAroundOrigin, getTileIndexIncludingEdges, _bounds } from "webgl-test-shared";
 import Chunk from "../../Chunk";
 import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityType, surfaceLayer, undergroundLayer } from "../../world";
-import Board from "../../Board";
 import ServerComponentArray from "../ServerComponentArray";
 import { playerInstance } from "../../player";
-import { applyAccelerationFromGround, getHitboxAngularVelocity, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, readHitboxFromData, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox, updateHitboxFromData, updatePlayerHitboxFromData } from "../../hitboxes";
+import { applyAccelerationFromGround, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, readHitboxFromData, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox, updateHitboxFromData, updatePlayerHitboxFromData } from "../../hitboxes";
 import Particle from "../../Particle";
 import { createWaterSplashParticle } from "../../particles";
-import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
+import { addTexturedParticleToBufferContainer, lowTexturedParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { playSoundOnHitbox } from "../../sound";
 import { entitiesAreColliding, resolveWallCollisions } from "../../collision";
 import { keyIsPressed } from "../../keyboard-input";
-import { currentSnapshot } from "../../client";
+import { currentSnapshot } from "../../game";
 import { gameUIState } from "../../../ui-state/game-ui-state";
 import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 import { worldToScreenPos } from "../../camera";
@@ -105,18 +104,13 @@ export function hitboxIsInWater(hitbox: Hitbox): boolean {
    
    // If the hitbox is standing on a stepping stone they aren't in a river
 
-   const box = hitbox.box;
    const layer = getEntityLayer(hitbox.entity);
 
-   const minX = box.calculateBoundsMinX();
-   const maxX = box.calculateBoundsMaxX();
-   const minY = box.calculateBoundsMinY();
-   const maxY = box.calculateBoundsMaxY();
-
-   const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   hitbox.box.calculateBounds();
+   const minChunkX = Math.max(Math.min(Math.floor(_bounds.minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const maxChunkX = Math.max(Math.min(Math.floor(_bounds.maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const minChunkY = Math.max(Math.min(Math.floor(_bounds.minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const maxChunkY = Math.max(Math.min(Math.floor(_bounds.maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -141,17 +135,11 @@ const updateContainingChunks = (transformComponent: TransformComponent, entity: 
    
    // Find containing chunks
    for (const hitbox of transformComponent.hitboxes) {
-      const box = hitbox.box;
-
-      const minX = box.calculateBoundsMinX();
-      const maxX = box.calculateBoundsMaxX();
-      const minY = box.calculateBoundsMinY();
-      const maxY = box.calculateBoundsMaxY();
-
-      const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-      const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-      const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-      const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+      hitbox.box.calculateBounds();
+      const minChunkX = Math.max(Math.min(Math.floor(_bounds.minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+      const maxChunkX = Math.max(Math.min(Math.floor(_bounds.maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+      const minChunkY = Math.max(Math.min(Math.floor(_bounds.minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+      const maxChunkY = Math.max(Math.min(Math.floor(_bounds.maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
       
       for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -207,25 +195,24 @@ export function cleanEntityTransform(entity: Entity): void {
    transformComponent.boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
 
    for (const hitbox of transformComponent.hitboxes) {
-      const box = hitbox.box;
-
-      const boundsMinX = box.calculateBoundsMinX();
-      const boundsMaxX = box.calculateBoundsMaxX();
-      const boundsMinY = box.calculateBoundsMinY();
-      const boundsMaxY = box.calculateBoundsMaxY();
+      hitbox.box.calculateBounds();
+      const minX = _bounds.minX;
+      const maxX = _bounds.maxX;
+      const minY = _bounds.minY;
+      const maxY = _bounds.maxY;
 
       // Update bounding area
-      if (boundsMinX < transformComponent.boundingAreaMinX) {
-         transformComponent.boundingAreaMinX = boundsMinX;
+      if (minX < transformComponent.boundingAreaMinX) {
+         transformComponent.boundingAreaMinX = minX;
       }
-      if (boundsMaxX > transformComponent.boundingAreaMaxX) {
-         transformComponent.boundingAreaMaxX = boundsMaxX;
+      if (maxX > transformComponent.boundingAreaMaxX) {
+         transformComponent.boundingAreaMaxX = maxX;
       }
-      if (boundsMinY < transformComponent.boundingAreaMinY) {
-         transformComponent.boundingAreaMinY = boundsMinY;
+      if (minY < transformComponent.boundingAreaMinY) {
+         transformComponent.boundingAreaMinY = minY;
       }
-      if (boundsMaxY > transformComponent.boundingAreaMaxY) {
-         transformComponent.boundingAreaMaxY = boundsMaxY;
+      if (maxY > transformComponent.boundingAreaMaxY) {
+         transformComponent.boundingAreaMaxY = maxY;
       }
    }
 
@@ -324,30 +311,31 @@ const resolveAndCleanBorderCollisions = (entity: Entity, transformComponent: Tra
    
    let hasCorrected = false;
    for (const hitbox of transformComponent.hitboxes) {
+      hitbox.box.calculateBounds();
       
       // Left border
-      const minX = hitbox.box.calculateBoundsMinX();
+      const minX = _bounds.minX;
       if (minX < 0) {
          collideWithVerticalWorldBorder(hitbox, -minX + EPSILON);
          hasCorrected = true;
       }
 
       // Right border
-      const maxX = hitbox.box.calculateBoundsMaxX();
+      const maxX = _bounds.maxX;
       if (maxX > Settings.WORLD_UNITS) {
          collideWithVerticalWorldBorder(hitbox, Settings.WORLD_UNITS - maxX - EPSILON);
          hasCorrected = true;
       }
 
       // Bottom border
-      const minY = hitbox.box.calculateBoundsMinY();
+      const minY = _bounds.minY;
       if (minY < 0) {
          hasCorrected = true;
          collideWithHorizontalWorldBorder(hitbox, -minY + EPSILON);
       }
 
       // Top border
-      const maxY = hitbox.box.calculateBoundsMaxY();
+      const maxY = _bounds.maxY;
       if (maxY > Settings.WORLD_UNITS) {
          hasCorrected = true;
          collideWithHorizontalWorldBorder(hitbox, Settings.WORLD_UNITS - maxY - EPSILON);
@@ -364,7 +352,8 @@ const resolveAndCleanBorderCollisions = (entity: Entity, transformComponent: Tra
    // @Robustness this should be impossible to trigger, so i can remove it and sleep peacefully
    // @CRASH if i hyperspeed into the top right
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitbox.box.calculateBoundsMinX() < 0 || hitbox.box.calculateBoundsMaxX() >= Settings.WORLD_UNITS || hitbox.box.calculateBoundsMinY() < 0 || hitbox.box.calculateBoundsMaxY() >= Settings.WORLD_UNITS) {
+      hitbox.box.calculateBounds();
+      if (_bounds.minX < 0 || _bounds.maxX >= Settings.WORLD_UNITS || _bounds.minY < 0 || _bounds.maxY >= Settings.WORLD_UNITS) {
          throw new Error();
       }
    }
@@ -507,7 +496,7 @@ function onTick(entity: Entity): void {
             8 * 1 + 5,
             0, 0, 0
          );
-         Board.lowTexturedParticles.push(particle);
+         lowTexturedParticles.push(particle);
 
          playSoundOnHitbox("water-splash-" + randInt(1, 3) + ".mp3", 0.25, 1, entity, hitbox, false);
       }

@@ -1,14 +1,15 @@
 import { TribeType } from "../../shared/src";
 import "./css/index.css";
-import { establishNetworkConnection } from "./game/client";
-import { AppState, setAppState } from "./ui-state/app-state";
-import "./game/entity-components/components"; // @HACK i have to manually import this so that the component arrays are all detected
+import "./game/entity-components/components"; // So that the component arrays are all detected
+import "./ui/game/dev/NerdVision"; // The whole nerdVision tree would otherwise never be imported
 import { onKeyDown, onKeyUp } from "./game/keyboard-input";
 import { createPlayerInputListeners } from "./game/player-action-handling";
 import { gameUIState } from "./ui-state/game-ui-state";
 import { updateCursorScreenPos } from "./game/camera";
 import { resizeCanvas } from "./game/webgl";
-import { sendScreenResizePacket } from "./game/networking/packet-sending/screen-resize-packet-sending";
+import { sendScreenResizePacket } from "./game/networking/packet-sending/screen-resize-packet";
+import { openLoadingScreenFromMainMenu } from "./ui/LoadingScreen";
+import { closeMainMenu } from "./ui/MainMenu";
 
 const onMouseMove = (e: MouseEvent): void => {
    gameUIState.setCursorX(e.clientX);
@@ -23,6 +24,7 @@ const onWindowResize = (): void => {
 
 document.addEventListener("keydown", onKeyDown);
 document.addEventListener("keyup", onKeyUp);
+// @SPEED: This listener shouldn't be added in the main menu. Will minorly affect loading perf.
 document.addEventListener("mousemove", onMouseMove);
 document.addEventListener("load", createPlayerInputListeners);
 window.addEventListener("resize", onWindowResize);
@@ -63,8 +65,8 @@ function playGame(): void {
    if (selectedTribeTypeRadio !== null && isSpectatingCheckbox !== null) {
       const tribeType: TribeType = Number(selectedTribeTypeRadio.value);
       const isSpectating = isSpectatingCheckbox.checked;
-      establishNetworkConnection(username, tribeType, isSpectating);
-      setAppState(AppState.loading);
+      closeMainMenu();
+      openLoadingScreenFromMainMenu(username, tribeType, isSpectating);
    }
 }
 
@@ -76,3 +78,7 @@ function pressEnter(e: KeyboardEvent): void {
 
 document.getElementById("username-input")?.addEventListener("keydown", pressEnter);
 document.getElementById("play-button")?.addEventListener("click", playGame);
+
+if (import.meta.hot) {
+   import.meta.hot.accept();
+}

@@ -1,5 +1,5 @@
 import { Entity, EntityType, PlantedEntityType, assert, distance, Point, rotateXAroundOrigin, rotateYAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID } from "webgl-test-shared";
-import { currentSnapshot } from "./client";
+import { currentSnapshot } from "./game";
 import { entityExists, getCurrentLayer, getEntityRenderInfo, getEntityType } from "./world";
 import { TombstoneComponentArray } from "./entity-components/server-components/TombstoneComponent";
 import { TunnelComponentArray } from "./entity-components/server-components/TunnelComponent";

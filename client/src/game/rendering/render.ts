@@ -57,7 +57,8 @@ import { playerIsHoldingPlaceableItem } from "../player-action-handling";
 import { entitySelectionState } from "../../ui-state/entity-selection-state";
 import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { debugDisplayState } from "../../ui-state/debug-display-state";
-import { nerdVisionIsVisible } from "../../ui/game/dev/NerdVision";
+import { nerdVision } from "../../ui/game/dev/nerd-vision-funcs";
+import { Menu, menuSelectorState } from "../../ui-state/menu-selector-state";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -192,14 +193,14 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    renderTurretRange();
 
    const entityDebugData = hoverDebugState.entityDebugData;
-   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
       renderTriangleDebugData(entityDebugData);
    }
    renderRestrictedBuildingAreas();
-   if (nerdVisionIsVisible() && debugDisplayState.showChunkBorders) {
+   if (nerdVision.isVisible() && debugDisplayState.showChunkBorders) {
       renderChunkBorders(minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY, Settings.CHUNK_SIZE, 1);
    }
-   if (nerdVisionIsVisible() && debugDisplayState.showRenderChunkBorders) {
+   if (nerdVision.isVisible() && debugDisplayState.showRenderChunkBorders) {
       renderChunkBorders(minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY, RENDER_CHUNK_SIZE, 2);
    }
 
@@ -262,7 +263,7 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    if (debugDisplayState.showHitboxes) {
       renderHitboxes(layer);
    }
-   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
       renderLineDebugData(entityDebugData);
    }
 
@@ -335,6 +336,8 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number, d
    // @INCOMPLETE @SQUEAM
    // updateInspectHealthBar();
    
-   renderTechTree();
-   renderTechTreeItems();
+   if (menuSelectorState.menuIsOpen(Menu.techTree)) {
+      renderTechTree();
+      renderTechTreeItems();
+   }
 }

@@ -5,7 +5,7 @@ import { sendSetDebugEntityPacket } from "./networking/packet-sending/packet-sen
 import { playerInstance } from "./player";
 import { isDev } from "./utils";
 import { entityExists } from "./world";
-import { nerdVisionIsVisible } from "../ui/game/dev/NerdVision";
+import { nerdVision } from "../ui/game/dev/nerd-vision-funcs";
 
 let previousDebugEntity = 0;
 
@@ -19,7 +19,7 @@ export function updateDebugEntity(): void {
    let debugEntity: Entity;
    if (cameraSubject !== null && entityExists(cameraSubject) && cameraSubject !== playerInstance) {
       debugEntity = cameraSubject;
-   } else if (nerdVisionIsVisible()) {
+   } else if (nerdVision.isVisible()) {
       const hoveredEntity = entitySelectionState.hoveredEntity;
       debugEntity = hoveredEntity !== null ? hoveredEntity : 0;
    } else {

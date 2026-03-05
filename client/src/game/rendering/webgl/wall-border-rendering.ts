@@ -1,7 +1,7 @@
 import { Settings } from "webgl-test-shared";
 import { maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY } from "../../camera";
 import { createWebGLProgram, gl } from "../../webgl";
-import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo } from "../render-chunks";
+import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo, setRenderChunkWallBorderInfo } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import Layer, { subtileIsInWorld } from "../../Layer";
 
@@ -12,6 +12,9 @@ const enum Vars {
 const BORDER_THICKNESS = 4;
 
 let program: WebGLProgram;
+
+// @INCOMPLETE!
+const visibleWallBorderInfos = new Array<RenderChunkWallBorderInfo>();
 
 export function createWallBorderShaders(): void {
    const vertexShaderText = `#version 300 es
@@ -327,8 +330,11 @@ const calculateVertexData = (layer: Layer, renderChunkX: number, renderChunkY: n
    return new Float32Array(vertices);
 }
 
-export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo {
+export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo | null {
    const vertexData = calculateVertexData(layer, renderChunkX, renderChunkY);
+   if (vertexData.length === 0) {
+      return null;
+   }
 
    const vao = gl.createVertexArray()!;
    gl.bindVertexArray(vao);
@@ -353,19 +359,41 @@ export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, rend
 
 export function recalculateWallBorders(layer: Layer, renderChunkX: number, renderChunkY: number): void {
    const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY);
-
-   wallBorderInfo.vertexData = calculateVertexData(layer, renderChunkX, renderChunkY);
-
-   gl.bindVertexArray(wallBorderInfo.vao);
-
-   gl.bindBuffer(gl.ARRAY_BUFFER, wallBorderInfo.buffer);
-   // @Speed
-   gl.bufferData(gl.ARRAY_BUFFER, wallBorderInfo.vertexData, gl.STATIC_DRAW);
-   
-   gl.bindVertexArray(null);
+   if (wallBorderInfo !== null) {
+      wallBorderInfo.vertexData = calculateVertexData(layer, renderChunkX, renderChunkY);
+      
+      gl.bindVertexArray(wallBorderInfo.vao);
+      
+      gl.bindBuffer(gl.ARRAY_BUFFER, wallBorderInfo.buffer);
+      // @Speed
+      gl.bufferData(gl.ARRAY_BUFFER, wallBorderInfo.vertexData, gl.STATIC_DRAW);
+      
+      gl.bindVertexArray(null);
+   } else {
+      const data = calculateWallBorderInfo(layer, renderChunkX, renderChunkY);
+      if (data !== null) {
+         setRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY, data);
+      }
+   }
 }
 
 export function renderWallBorders(layer: Layer): void {
+   // @Hack @Speed
+   let hasVisibleWallBorder = false;
+   
+   for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
+      for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
+         const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY);
+         if (wallBorderInfo !== null) {
+            hasVisibleWallBorder = true;
+            break;
+         }
+      }
+   }
+   if (!hasVisibleWallBorder) {
+      return;
+   }
+
    gl.useProgram(program);
 
    gl.enable(gl.BLEND);

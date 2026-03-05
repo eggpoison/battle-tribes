@@ -3,8 +3,8 @@ import { windowHeight, windowWidth } from "../../webgl";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { playerInstance } from "../../player";
 import { cameraPosition } from "../../camera";
-import { sendData } from "../../client";
 import { getHotbarSelectedItemSlot } from "../../player-action-handling";
+import { sendData } from "../networking";
 
 export function sendInitialPlayerDataPacket(username: string, tribeType: TribeType, isSpectating: boolean): void {
    // Send player data to the server

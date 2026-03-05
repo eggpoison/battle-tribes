@@ -1,11 +1,11 @@
-import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, updateVertexPositionsAndSideAxes, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, TILE_PHYSICS_INFO_RECORD, TileType, Settings, PacketReader, Entity, CollisionBit, CircularBox, RectangularBox, distance, distBetweenPointAndRectangle, assert, getAngleDiff } from "webgl-test-shared";
+import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, TILE_PHYSICS_INFO_RECORD, TileType, Settings, PacketReader, Entity, CollisionBit, CircularBox, RectangularBox, distance, distBetweenPointAndRectangle, assert, getAngleDiff, updateSideAxes } from "webgl-test-shared";
 import { hitboxIsInWater, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityRenderInfo } from "./world";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
 import { getTileIndexIncludingEdges } from "./Layer";
 import { Tile } from "./Tile";
 import { readBoxFromData } from "./networking/packet-hitboxes";
-import { currentSnapshot } from "./client";
+import { currentSnapshot } from "./game";
 
 export interface HitboxTether {
    readonly originBox: Box;
@@ -82,8 +82,7 @@ const updateRectangularBoxFromData = (box: RectangularBox, data: RectangularBox)
    box.flipX = data.flipX;
    box.width = data.width;
    box.height = data.height;
-   
-   updateVertexPositionsAndSideAxes(box);
+   updateSideAxes(box);
 }
 
 export function updateBoxFromData(box: Box, data: Box): void {
@@ -237,6 +236,7 @@ export function updateHitboxFromData(hitbox: Hitbox, data: Hitbox): void {
    hitbox.acceleration.set(data.acceleration);
 
    // Remove all previous tethers and add new ones
+   // @Speed
    hitbox.tethers.splice(0, hitbox.tethers.length);
    for (const tether of data.tethers) {
       hitbox.tethers.push(tether);
@@ -319,7 +319,7 @@ export function updatePlayerHitboxFromData(hitbox: Hitbox, data: Hitbox): void {
 export function getHitboxVelocity(hitbox: Hitbox): Point {
    const vx = (hitbox.box.position.x - hitbox.previousPosition.x) * Settings.TICK_RATE;
    const vy = (hitbox.box.position.y - hitbox.previousPosition.y) * Settings.TICK_RATE;
-   return new Point(vx, vy);``
+   return new Point(vx, vy);
 }
 
 export function setHitboxVelocityX(hitbox: Hitbox, vx: number): void {

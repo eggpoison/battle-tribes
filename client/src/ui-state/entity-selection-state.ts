@@ -2,7 +2,6 @@ import { Entity } from "webgl-test-shared";
 import { entityExists, getEntityComponentArrays } from "../game/world";
 import { sendStructureUninteractPacket } from "../game/networking/packet-sending/packet-sending";
 import { updateHighlightedEntityRenderInfo } from "../game/entity-selection";
-import { getServerComponentArray } from "../game/entity-components/ComponentArray";
 import { menuSelectorState } from "./menu-selector-state";
 
 let hoveredEntity: Entity = 0;
@@ -71,6 +70,7 @@ export const entitySelectionState = {
       selectedEntityScreenPosY = newSelectedEntityScreenPosY;
    },
 
+   // @SQUEAM should be called when game screen is closed!
    reset() {
       // @Cleanup: is awkward to have to do this. Would like for these to be reset implicitally (somehow have the state be tied to a component? idk)
       this.setHoveredEntity(null);

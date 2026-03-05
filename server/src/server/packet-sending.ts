@@ -141,7 +141,7 @@ const getVisibleMinedSubtiles = (playerClient: PlayerClient): ReadonlyArray<numb
    return minedSubtiles;
 }
 
-export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<Entity>, removedEntities: Array<Entity>): ArrayBuffer {
+export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<Entity>, removedEntities: Array<Entity>): ArrayBufferLike {
    // @Cleanup: The mined subtile system here exists really only to send particles. Can be entirely encompassed in a server particles system!
 
    const player = entityExists(playerClient.instance) ? playerClient.instance : null;
@@ -437,7 +437,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    return packet.buffer;
 }
 
-export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Point): ArrayBuffer {
+export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Point): ArrayBufferLike {
    const tamingSpecsMap = getTamingSpecsMap();
 
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 4;
@@ -518,7 +518,7 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
    return packet.buffer;
 }
 
-export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBuffer {
+export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBufferLike {
    const player = playerClient.instance;
 
    const packet = new Packet(PacketType.syncGameData, 8 * Float32Array.BYTES_PER_ELEMENT);

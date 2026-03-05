@@ -15,10 +15,6 @@ export let halfWindowHeight = windowHeight / 2;
 
 export let MAX_ACTIVE_TEXTURE_UNITS = 8;
 
-export const tempFloat32ArrayLength1 = new Float32Array(1);
-export const tempFloat32ArrayLength2 = new Float32Array(2);
-export const tempFloat32ArrayLength3 = new Float32Array(3);
-
 export function resizeCanvas(): void {
    windowWidth = window.innerWidth;
    windowHeight = window.innerHeight;

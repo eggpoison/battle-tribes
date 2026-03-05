@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite'
 import path from 'path';
+import InlineConstEnumPlugin from "unplugin-inline-const-enum/vite";
 
-// https://vitejs.dev/config/
 export default defineConfig({
-   plugins: [],
+   plugins: [
+      // @INCOMPLETE don't think this is working for the Settings object in the shared project. check if its correctly const-enum'ing when its gone
+      InlineConstEnumPlugin({
+         sourceDir: "./src",
+         tsConfig: "./tsconfig.json",
+      }),
+   ],
    build: {
       commonjsOptions: { transformMixedEsModules: true }
    },
@@ -18,6 +24,7 @@ export default defineConfig({
 
    server: {
       fs: {
+         // @SQUEAM: remove when no longer have shared project
          // Allow serving files from one level up from the project root.
          // This is necessary if your linked library is in a sibling directory.
          // e.g., ../my-shared-library

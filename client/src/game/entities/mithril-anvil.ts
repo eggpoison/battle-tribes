@@ -9,6 +9,7 @@ import { createTransformComponentData } from "../entity-components/server-compon
 import { createTribeComponentData } from "../entity-components/server-components/TribeComponent";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
+import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createMithrilAnvilConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -37,15 +38,16 @@ export function createMithrilAnvilConfig(position: Point, rotation: number, trib
    
    return {
       entityType: EntityType.mithrilAnvil,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.craftingStation]: createCraftingStationComponentData(),
-         [ServerComponentType.mithrilAnvil]: createMithrilAnvilComponentData()
-      },
-      clientComponentData: {}
+      serverComponentData: new Map([
+         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
+         [ServerComponentType.health, createHealthComponentData()],
+         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
+         [ServerComponentType.structure, createStructureComponentData()],
+         [ServerComponentType.tribe, createTribeComponentData(tribe)],
+         [ServerComponentType.craftingStation, createCraftingStationComponentData()],
+         [ServerComponentType.mithrilAnvil, createMithrilAnvilComponentData()]
+      // @HACK
+      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
+      clientComponentData: new Map()
    };
 }

@@ -209,6 +209,10 @@ const createData = (visibleBeams: ReadonlyArray<HealingBeam>): ReadonlyArray<num
 
 export function renderHealingBeams(): void {
    const visibleBeams = getVisibleHealingBeams();
+   if (visibleBeams.length === 0) {
+      return;
+   }
+   
    const vertices = createData(visibleBeams);
    
    gl.useProgram(program);

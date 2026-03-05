@@ -12,7 +12,7 @@ import { addChatMessage } from "../chat";
 import { gameUIState } from "../../ui-state/game-ui-state";
 import { getSelectedItemInfo } from "../player-action-handling";
 import { playerActionState } from "../../ui-state/player-action-state";
-import { gameIsRunning, receiveInitialPacket, resyncGame } from "../client";
+import { gameIsRunning, resyncGame } from "../game";
 
 const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {
    // Initially find all tiles below a dropdown tile
@@ -74,7 +74,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
    
          const tileX = getTileX(tileIndex);
          const tileY = getTileY(tileIndex);
-   
+
          const tile = new Tile(tileX, tileY, tileType, tileBiome, mithrilRichness);
          tiles.push(tile);
    

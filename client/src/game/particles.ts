@@ -1,10 +1,9 @@
 import { BlockType, CactusFlowerSize, Entity, Point, angle, lerp, polarVec2, randAngle, randFloat, randInt, randItem, randSign } from "webgl-test-shared";
 import Particle from "./Particle";
-import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer } from "./rendering/webgl/particle-rendering";
-import Board from "./Board";
+import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, highMonocolourParticles, highTexturedParticles, lowMonocolourParticles, lowTexturedParticles } from "./rendering/webgl/particle-rendering";
 import { TransformComponent, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getHitboxVelocity, Hitbox } from "./hitboxes";
-import { tickIntervalHasPassed } from "./client";
+import { addTickCallback, tickIntervalHasPassed } from "./game";
 import { playerInstance } from "./player";
 import { InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
 import { createTranslationMatrix, matrixMultiplyInPlace } from "./rendering/matrices";
@@ -64,7 +63,7 @@ export function createBloodParticle(size: BloodParticleSize, spawnPositionX: num
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 const BLOOD_FOUNTAIN_RAY_COUNT = 5;
@@ -75,7 +74,7 @@ export function createBloodParticleFountain(entity: Entity, interval: number, sp
    const hitbox = transformComponent.hitboxes[0];
 
    for (let i = 0; i < 4; i++) {
-      Board.addTickCallback(interval * (i + 1), () => {
+      addTickCallback(interval * (i + 1), () => {
          for (let j = 0; j < BLOOD_FOUNTAIN_RAY_COUNT; j++) {
             let moveDirection = 2 * Math.PI / BLOOD_FOUNTAIN_RAY_COUNT * j + offset;
             moveDirection += randFloat(-0.3, 0.3);
@@ -125,7 +124,7 @@ export function createLeafParticle(spawnPositionX: number, spawnPositionY: numbe
       textureIndex,
       0, 0, 0
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export function createFootprintParticle(entity: Entity, isLeftFootprint: boolean, footstepOffset: number, size: number, lifetime: number): void {
@@ -162,7 +161,7 @@ export function createFootprintParticle(entity: Entity, isLeftFootprint: boolean
       4,
       0, 0, 0
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export enum BloodPoolSize {
@@ -202,7 +201,7 @@ export function createBloodPoolParticle(originX: number, originY: number, spawnR
       textureIndex,
       tint, tint, tint
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
    
 export function createRockParticle(spawnPositionX: number, spawnPositionY: number, moveDirection: number, moveSpeed: number, renderLayer: ParticleRenderLayer): void {
@@ -248,9 +247,9 @@ export function createRockParticle(spawnPositionX: number, spawnPositionY: numbe
       0, 0, 0
    );
    if (renderLayer === ParticleRenderLayer.high) {
-      Board.highTexturedParticles.push(particle);
+      highTexturedParticles.push(particle);
    } else {
-      Board.lowTexturedParticles.push(particle);
+      lowTexturedParticles.push(particle);
    }
 }
 
@@ -287,9 +286,9 @@ export function createDirtParticle(spawnPositionX: number, spawnPositionY: numbe
    );
 
    if (renderLayer === ParticleRenderLayer.low) {
-      Board.lowTexturedParticles.push(particle);
+      lowTexturedParticles.push(particle);
    } else {
-      Board.highTexturedParticles.push(particle);
+      highTexturedParticles.push(particle);
    }
 }
 
@@ -329,7 +328,7 @@ export function createSnowParticle(spawnPositionX: number, spawnPositionY: numbe
       0,
       r, g, b
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 // @Copynpaste, basically just so the snobe particles are above snobes
@@ -367,7 +366,7 @@ export function createHighSnowParticle(spawnPositionX: number, spawnPositionY: n
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createWhiteSmokeParticle(spawnPositionX: number, spawnPositionY: number, strength: number): void {
@@ -400,7 +399,7 @@ export function createWhiteSmokeParticle(spawnPositionX: number, spawnPositionY:
       7,
       0, 0, 0
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export function createLeafSpeckParticle(originX: number, originY: number, offset: number, lowColour: Readonly<ParticleColour>, highColour: Readonly<ParticleColour>): void {
@@ -443,7 +442,7 @@ export function createLeafSpeckParticle(originX: number, originY: number, offset
       Math.abs(angularVelocity) / lifetime / 1.5,
       r, g, b
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createWoodSpeckParticle(originX: number, originY: number, offset: number): void {
@@ -486,7 +485,7 @@ export function createWoodSpeckParticle(originX: number, originY: number, offset
       Math.abs(angularVelocity) / lifetime / 1.5,
       r, g, b
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createRockSpeckParticle(originX: number, originY: number, offset: number, velocityAddX: number, velocityAddY: number, renderLayer: ParticleRenderLayer): void {
@@ -528,9 +527,9 @@ export function createRockSpeckParticle(originX: number, originY: number, offset
       colour, colour, colour
    );
    if (renderLayer === ParticleRenderLayer.high) {
-      Board.highMonocolourParticles.push(particle);
+      highMonocolourParticles.push(particle);
    } else {
-      Board.lowMonocolourParticles.push(particle);
+      lowMonocolourParticles.push(particle);
    }
 }
 
@@ -571,7 +570,7 @@ export function createSlimeSpeckParticle(originX: number, originY: number, spawn
       8 * 4 + size,
       tint, tint, tint
    );
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
 
 export function createSlimePoolParticle(originX: number, originY: number, spawnOffsetRange: number): void {
@@ -604,7 +603,7 @@ export function createSlimePoolParticle(originX: number, originY: number, spawnO
       8 * 1 + 4,
       tint, tint, tint
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 const WATER_DROPLET_COLOUR_LOW = [8/255, 197/255, 255/255] as const;
@@ -642,7 +641,7 @@ export function createWaterSplashParticle(spawnPositionX: number, spawnPositionY
       0,
       r, g, b
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createSmokeParticle(spawnPositionX: number, spawnPositionY: number, size: number): void {
@@ -674,7 +673,7 @@ export function createSmokeParticle(spawnPositionX: number, spawnPositionY: numb
       5,
       0, 0, 0
    );
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
 
 export function createEmberParticle(spawnPositionX: number, spawnPositionY: number, initialMoveDirection: number, moveSpeed: number, vAddX: number, vAddY: number): void {
@@ -710,7 +709,7 @@ export function createEmberParticle(spawnPositionX: number, spawnPositionY: numb
       0,
       colour[0], colour[1], colour[2]
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createPoisonBubble(spawnPositionX: number, spawnPositionY: number, opacity: number) {
@@ -746,7 +745,7 @@ export function createPoisonBubble(spawnPositionX: number, spawnPositionY: numbe
       // 0, randFloat(-0.2, 0.3), 0
       lerp(0, 1, purp), lerp(randFloat(-0.2, 0.3), -1, purp), lerp(0, 1, purp)
    );
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
 
 export function createFlyParticle(x: number, y: number): void {
@@ -789,7 +788,7 @@ export function createFlyParticle(x: number, y: number): void {
       1 * 8 + 6,
       0, 0, 0
    );
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
 
 export function createStarParticle(x: number, y: number): void {
@@ -825,7 +824,7 @@ export function createStarParticle(x: number, y: number): void {
       7 * 8 + randInt(0, 2),
       0, 0, 0
    );
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
 
 export function createMagicParticle(x: number, y: number): void {
@@ -867,7 +866,7 @@ export function createMagicParticle(x: number, y: number): void {
       Math.abs(angularVelocity) / lifetime / 1.5,
       r / 255, g / 255, b / 255
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 const HEALING_PARTICLE_TEXTURE_INDEXES = [3 * 8 + 1, 3 * 8 + 2, 3 * 8 + 3];
@@ -900,7 +899,7 @@ export function createHealingParticle(position: Point, size: number): void {
       HEALING_PARTICLE_TEXTURE_INDEXES[size],
       0, 0, 0
    );
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
 
 export function createSnowflakeParticle(x: number, y: number): void {
@@ -931,7 +930,7 @@ export function createSnowflakeParticle(x: number, y: number): void {
       6 * 8 + randInt(1, 6),
       0, 0, 0
    );
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
 
 export function createPaperParticle(x: number, y: number): void {
@@ -964,7 +963,7 @@ export function createPaperParticle(x: number, y: number): void {
       3 * 8 + randInt(5, 6),
       0, 0, 0
    );
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
 
 const getFlowerTextureIndex = (flowerType: number, size: CactusFlowerSize): number => {
@@ -1035,7 +1034,7 @@ export function createFlowerParticle(spawnPositionX: number, spawnPositionY: num
       textureIndex,
       0, 0, 0
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export function createCactusSpineParticle(transformComponent: TransformComponent, offset: number, flyDir: number): void {
@@ -1068,7 +1067,7 @@ export function createCactusSpineParticle(transformComponent: TransformComponent
       0,
       0, 0, 0
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createSawdustCloud(x: number, y: number): void {
@@ -1100,7 +1099,7 @@ export function createSawdustCloud(x: number, y: number): void {
       6 * 8,
       0, 0, 0
    );
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
 
 export function createDustCloud(x: number, y: number): void {
@@ -1132,7 +1131,7 @@ export function createDustCloud(x: number, y: number): void {
       4 * 8 + 3,
       0, 0, 0
    );
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
       
 const ARROW_DESTROY_PARTICLE_GRAY_COLOUR = [0.6, 0.6, 0.6];
@@ -1197,7 +1196,7 @@ export function createArrowDestroyParticle(originX: number, originY: number, vel
       Math.abs(angularVelocity) / lifetime / 1.5,
       r, g, b
    )
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createBiteParticle(spawnPositionX: number, spawnPositionY: number): void {
@@ -1224,7 +1223,7 @@ export function createBiteParticle(spawnPositionX: number, spawnPositionY: numbe
       0, 0, 0
    );
 
-   Board.highTexturedParticles.push(particle);
+   highTexturedParticles.push(particle);
 }
 
 export function createBlueBloodPoolParticle(originX: number, originY: number, spawnRange: number): void {
@@ -1256,7 +1255,7 @@ export function createBlueBloodPoolParticle(originX: number, originY: number, sp
       textureIndex,
       randFloat(-1, -0.7), randFloat(0.3, 0.5), 1
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export function createBlueBloodParticle(size: BloodParticleSize, spawnPositionX: number, spawnPositionY: number, moveDirection: number, moveSpeed: number, hasDrag: boolean): void {
@@ -1292,7 +1291,7 @@ export function createBlueBloodParticle(size: BloodParticleSize, spawnPositionX:
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 const BLUE_BLOOD_FOUNTAIN_RAY_COUNT = 7;
@@ -1302,7 +1301,7 @@ export function createBlueBloodParticleFountain(transformComponent: TransformCom
    const offset = randAngle();
 
    for (let i = 0; i < 6; i++) {
-      Board.addTickCallback(interval * (i + 1), () => {
+      addTickCallback(interval * (i + 1), () => {
          for (let j = 0; j < BLUE_BLOOD_FOUNTAIN_RAY_COUNT; j++) {
             let moveDirection = 2 * Math.PI / BLOOD_FOUNTAIN_RAY_COUNT * j + offset;
             moveDirection += randFloat(-0.3, 0.3);
@@ -1354,7 +1353,7 @@ export function createWoodShardParticle(originX: number, originY: number, offset
       Math.abs(angularVelocity),
       r, g, b
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createLightWoodSpeckParticle(originX: number, originY: number, offset: number): void {
@@ -1397,7 +1396,7 @@ export function createLightWoodSpeckParticle(originX: number, originY: number, o
       Math.abs(angularVelocity) / lifetime / 1.5,
       r, g, b
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createColouredParticle(x: number, y: number, moveSpeed: number, r: number, g: number, b: number): void {
@@ -1430,7 +1429,7 @@ export function createColouredParticle(x: number, y: number, moveSpeed: number, 
       0,
       r, g, b
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createTitleObtainParticle(x: number, y: number, vx: number, vy: number, rotation: number): void {
@@ -1464,7 +1463,7 @@ export function createTitleObtainParticle(x: number, y: number, vx: number, vy: 
       8 * 3 + 7,
       r, g, b
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export function createSprintParticle(x: number, y: number, vx: number, vy: number): void {
@@ -1493,7 +1492,7 @@ export function createSprintParticle(x: number, y: number, vx: number, vy: numbe
       0,
       1, 1, 1
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createConversionParticle(x: number, y: number, vx: number, vy: number): void {
@@ -1520,7 +1519,7 @@ export function createConversionParticle(x: number, y: number, vx: number, vy: n
       8 * 4 + 4,
       0, 0, 0
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export function createSparkParticle(x: number, y: number): void {
@@ -1554,7 +1553,7 @@ export function createSparkParticle(x: number, y: number): void {
       0,
       1, 1, 1
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createGrowthParticle(x: number, y: number): void {
@@ -1595,7 +1594,7 @@ export function createGrowthParticle(x: number, y: number): void {
       lerp(minCol[0], maxCol[0], colourLerp), lerp(minCol[1], maxCol[1], colourLerp), lerp(minCol[2], maxCol[2], colourLerp)
       // minCol[0], minCol[1], minCol[2]
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 const createFrozenYetiBloodParticle = (size: BloodParticleSize, spawnPositionX: number, spawnPositionY: number, moveDirection: number, moveSpeed: number, hasDrag: boolean, extraVelocityX: number, extraVelocityY: number): void => {
@@ -1635,7 +1634,7 @@ const createFrozenYetiBloodParticle = (size: BloodParticleSize, spawnPositionX: 
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createDeepFrostHeartBloodParticles(originX: number, originY: number, extraVelocityX: number, extraVelocityY: number): void {
@@ -1676,7 +1675,7 @@ export function createAcidParticle(spawnPositionX: number, spawnPositionY: numbe
       // 0, randFloat(-0.2, 0.2), 0
       lerp(0, 1, purp), lerp(randFloat(-0.2, 0.2), -1, purp), lerp(0, 1, purp)
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 const POISON_COLOUR_LOW = [34/255, 12/255, 0];
@@ -1724,7 +1723,7 @@ export function createPoisonParticle(entity: Entity): void {
       0,
       r, g, b
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createIceSpeckProjectile(transformComponent: TransformComponent): void {
@@ -1763,7 +1762,7 @@ export function createIceSpeckProjectile(transformComponent: TransformComponent)
       0,
       140/255, 143/255, 207/255
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createBlockParticle(x: number, y: number, blockType: BlockType): void {
@@ -1799,7 +1798,7 @@ export function createBlockParticle(x: number, y: number, blockType: BlockType):
       blockType === BlockType.toolBlock ? 249/255 : 210/255,
       blockType === BlockType.toolBlock ? 201/255 : 210/255
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createGemQuakeProjectile(transformComponent: TransformComponent): void {
@@ -1838,7 +1837,7 @@ export function createGemQuakeProjectile(transformComponent: TransformComponent)
       0,
       230/255, 45/255, 51/255
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createGenericGemParticle(hitbox: Hitbox, spawnOffsetRange: number, r: number, g: number, b: number): void {
@@ -1880,7 +1879,7 @@ export function createGenericGemParticle(hitbox: Hitbox, spawnOffsetRange: numbe
       0,
       r, g, b
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 export function createSlurbParticle(spawnPositionX: number, spawnPositionY: number, initialMoveDirection: number, moveSpeed: number, vAddX: number, vAddY: number): void {
@@ -1925,7 +1924,7 @@ export function createSlurbParticle(spawnPositionX: number, spawnPositionY: numb
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createHotSparkParticle(x: number, y: number): void {
@@ -1969,7 +1968,7 @@ export function createHotSparkParticle(x: number, y: number): void {
       0,
       lerp(rLow, rHigh, u), lerp(gLow, gHigh, u), lerp(bLow, bHigh, u)
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createKrumblidChitinParticle(spawnPositionX: number, spawnPositionY: number): void {
@@ -2000,7 +1999,7 @@ export function createKrumblidChitinParticle(spawnPositionX: number, spawnPositi
       7 * 8 + randInt(3, 6),
       0, 0, 0
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export function createAnimalStaffCommandParticle(x: number, y: number, moveDirection: number, r: number, g: number, b: number): void {
@@ -2031,7 +2030,7 @@ export function createAnimalStaffCommandParticle(x: number, y: number, moveDirec
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createHeatParticle(spawnPositionX: number, spawnPositionY: number, moveDirection: number, vx: number, vy: number): void {
@@ -2067,7 +2066,7 @@ export function createHeatParticle(spawnPositionX: number, spawnPositionY: numbe
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createPricklyPearParticle(spawnPositionX: number, spawnPositionY: number, moveDirection: number): void {
@@ -2103,7 +2102,7 @@ export function createPricklyPearParticle(spawnPositionX: number, spawnPositionY
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createCocoonAmbientParticle(spawnPositionX: number, spawnPositionY: number, moveDirection: number): void {
@@ -2144,7 +2143,7 @@ export function createCocoonAmbientParticle(spawnPositionX: number, spawnPositio
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createCocoonFragmentParticle(spawnPositionX: number, spawnPositionY: number, moveDirection: number): void {
@@ -2174,7 +2173,7 @@ export function createCocoonFragmentParticle(spawnPositionX: number, spawnPositi
       5 * 8 + randInt(3, 7),
       0, 0, 0
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export function createSandParticle(spawnPositionX: number, spawnPositionY: number, vx: number, vy: number, moveDirection: number): void {
@@ -2215,7 +2214,7 @@ export function createSandParticle(spawnPositionX: number, spawnPositionY: numbe
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export function createOkrenEyeParticle(spawnPositionX: number, spawnPositionY: number, vx: number, vy: number, moveDirection: number): void {
@@ -2256,7 +2255,7 @@ export function createOkrenEyeParticle(spawnPositionX: number, spawnPositionY: n
       0,
       r, g, b
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 export const enum AnimalStaffCommandType {

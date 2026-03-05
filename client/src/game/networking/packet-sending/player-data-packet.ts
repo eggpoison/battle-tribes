@@ -1,11 +1,10 @@
-import { Packet, PacketType, Point, InventoryName, EntityType, GameDataPacketOptions } from "../../../../../shared/src";
+import { Packet, PacketType, Point, InventoryName, GameDataPacketOptions } from "../../../../../shared/src";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
-import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 import { cameraPosition } from "../../camera";
-import { sendData } from "../../client";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { playerInstance, isSpectating } from "../../player";
 import { getPlayerMoveIntention, getHotbarSelectedItemSlot, getInstancePlayerAction } from "../../player-action-handling";
+import { sendData } from "../networking";
 
 /*///////////////
 

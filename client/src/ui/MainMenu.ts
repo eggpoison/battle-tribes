@@ -1,3 +1,9 @@
+const mainMenuElem = document.getElementById("main-menu")!;
+
+export function openMainMenu(): void {
+   mainMenuElem.classList.remove("hidden");
+}
+
 export function closeMainMenu(): void {
-   document.getElementById("main-menu")?.remove();
+   mainMenuElem.classList.add("hidden");
 }

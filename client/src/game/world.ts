@@ -1,13 +1,15 @@
 import { Settings, Entity, EntityType, assert } from "webgl-test-shared";
 import { EntityRenderInfo } from "./EntityRenderInfo";
-import { ComponentArray, getClientComponentArray, getComponentArrays, getServerComponentArray } from "./entity-components/ComponentArray";
+import { ComponentArray, getComponentArrays } from "./entity-components/ComponentArray";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Layer from "./Layer";
-import { registerDirtyRenderInfo, undirtyRenderInfo } from "./rendering/render-part-matrices";
+import { cleanEntityRenderParts, undirtyRenderInfo } from "./rendering/render-part-matrices";
 import { calculateRenderDepthFromLayer, getEntityRenderLayer } from "./render-layers";
 import { removeEntitySounds } from "./sound";
-import { currentSnapshot } from "./client";
+import { currentSnapshot } from "./game";
 import { EntityClientComponentData, EntityServerComponentData } from "./networking/packet-snapshots";
+import { getServerComponentArray } from "./entity-components/ServerComponentArray";
+import { getClientComponentArray } from "./entity-components/ClientComponentArray";
 
 export const layers = new Array<Layer>();
 
@@ -136,7 +138,9 @@ export function createEntityCreationInfo(entity: Entity, entityComponentData: En
       }
    }
 
-   registerDirtyRenderInfo(renderInfo);
+   // Immediately fill the correct render info, because that is required for adding chunk-rendered entities to the world in addEntityToWorld
+   // @HACK: tickInterp!
+   cleanEntityRenderParts(renderInfo, 0);
 
    return {
       entity: entity,

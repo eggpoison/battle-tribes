@@ -5,7 +5,7 @@ import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { VisualRenderPart, renderPartIsTextured, thingIsVisualRenderPart } from "../../render-parts/render-parts";
 
 const enum Vars {
-   ATTRIBUTES_PER_VERTEX = 19
+   ATTRIBUTES_PER_VERTEX = 16
 }
 
 export const enum EntityRenderingVars {
@@ -16,8 +16,17 @@ export interface EntityRenderingOptions {
    readonly overrideAlphaWithOne?: boolean;
 }
 
+export interface EntityRenderData {
+   readonly vao: WebGLVertexArrayObject;
+   readonly vertexBuffer: WebGLBuffer;
+   readonly vertexData: Float32Array;
+   readonly indexBuffer: WebGLBuffer;
+}
+
 let program: WebGLProgram;
 let overrideAlphaWithOneUniformLocation: WebGLUniformLocation;
+
+let previousOverrideAlphaWithOne = false;
 
 export function getEntityRenderingProgram(): WebGLProgram {
    return program;
@@ -41,7 +50,9 @@ export function createEntityShaders(): void {
    layout(location = 3) in vec2 a_textureSize;
    layout(location = 4) in vec3 a_tint;
    layout(location = 5) in float a_opacity;
-   layout(location = 6) in mat3 a_modelMatrix;
+   layout(location = 6) in vec2 a_modelMatrix_col0;
+   layout(location = 7) in vec2 a_modelMatrix_col1;
+   layout(location = 8) in vec2 a_modelMatrix_col2;
    
    out vec2 v_texCoord;
    out float v_textureIndex;
@@ -70,7 +81,13 @@ export function createEntityShaders(): void {
          textureSize = a_textureSize;
       }
 
-      vec2 worldPos = (a_modelMatrix * vec3(a_position * textureSize * 4.0, 1.0)).xy;
+      mat3 modelMatrix = mat3(
+         a_modelMatrix_col0.x, a_modelMatrix_col0.y, 0.0,
+         a_modelMatrix_col1.x, a_modelMatrix_col1.y, 0.0,
+         a_modelMatrix_col2.x, a_modelMatrix_col2.y, 1.0
+      );
+
+      vec2 worldPos = (modelMatrix * vec3(a_position * textureSize * 4.0, 1.0)).xy;
 
       vec2 screenPos = (worldPos - u_playerPos) * u_zoom + u_halfWindowSize;
       vec2 clipSpacePos = screenPos / u_halfWindowSize - 1.0;
@@ -111,12 +128,8 @@ export function createEntityShaders(): void {
          float textureXOffset = mod(v_textureIndex, u_atlasSize) * ATLAS_SLOT_SIZE;
          float textureYOffset = floor(v_textureIndex / u_atlasSize) * ATLAS_SLOT_SIZE;
 
-         float textureX = floor(v_texCoord.x * v_textureSize.x);
-         textureX = min(textureX, v_textureSize.x - 1.0);
-         textureX = max(textureX, 0.0);
-         float textureY = floor(v_texCoord.y * v_textureSize.y);
-         textureY = min(textureY, v_textureSize.y - 1.0);
-         textureY = max(textureY, 0.0);
+         float textureX = clamp(floor(v_texCoord.x * v_textureSize.x), 0.0, v_textureSize.x - 1.0);
+         float textureY = clamp(floor(v_texCoord.y * v_textureSize.y), 0.0, v_textureSize.y - 1.0);
          
          float x = textureXOffset + textureX;
          float y = textureYOffset + textureY;
@@ -125,21 +138,7 @@ export function createEntityShaders(): void {
 
          outputColour = texture(u_textureAtlas, vec2(u, v));
       
-         if (v_tint.r > 0.0) {
-            outputColour.r = mix(outputColour.r, 1.0, v_tint.r);
-         } else {
-            outputColour.r = mix(outputColour.r, 0.0, -v_tint.r);
-         }
-         if (v_tint.g > 0.0) {
-            outputColour.g = mix(outputColour.g, 1.0, v_tint.g);
-         } else {
-            outputColour.g = mix(outputColour.g, 0.0, -v_tint.g);
-         }
-         if (v_tint.b > 0.0) {
-            outputColour.b = mix(outputColour.b, 1.0, v_tint.b);
-         } else {
-            outputColour.b = mix(outputColour.b, 0.0, -v_tint.b);
-         }
+         outputColour.rgb = mix(outputColour.rgb, step(vec3(0.0), v_tint), abs(v_tint));
       }
    
       if (u_overrideAlphaWithOne > 0.5 && outputColour.a > 0.0) {
@@ -163,54 +162,37 @@ export function createEntityShaders(): void {
    gl.uniform1i(textureUniformLocation, 0);
 
    overrideAlphaWithOneUniformLocation = gl.getUniformLocation(program, "u_overrideAlphaWithOne")!;
+   gl.uniform1f(overrideAlphaWithOneUniformLocation, previousOverrideAlphaWithOne ? 1 : 0);
 
    gl.bindVertexArray(null);
 }
 
-export interface EntityRenderData {
-   readonly vao: WebGLVertexArrayObject;
-   readonly indexBuffer: WebGLBuffer;
-   readonly indicesData: Uint16Array;
-   readonly vertexBuffer: WebGLBuffer;
-   readonly vertexData: Float32Array;
-}
-
 export function createEntityRenderData(maxRenderParts: number): EntityRenderData {
+   // The Uint16 index buffer puts a cap on maxRenderParts before the indices wrap around silently, a limit of 65535 / 4
+   if (maxRenderParts >= 16383) {
+      throw new Error();
+   }
+   
    const vao = gl.createVertexArray()!;
    gl.bindVertexArray(vao);
    
    const vertexData = new Float32Array(maxRenderParts * 4 * EntityRenderingVars.ATTRIBUTES_PER_VERTEX);
 
-   const indicesData = new Uint16Array(maxRenderParts * 6);
-   for (let i = 0; i < maxRenderParts; i++) {
-      const dataOffset = i * 6;
-      
-      indicesData[dataOffset] = i * 4;
-      indicesData[dataOffset + 1] = i * 4 + 1;
-      indicesData[dataOffset + 2] = i * 4 + 2;
-      indicesData[dataOffset + 3] = i * 4 + 2;
-      indicesData[dataOffset + 4] = i * 4 + 1;
-      indicesData[dataOffset + 5] = i * 4 + 3;
-   }
-
    const vertexBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.DYNAMIC_DRAW);
 
-   const indexBuffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
+   const TOTAL_BYTES = EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, TOTAL_BYTES, 0); // floatOffset=0
+   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, TOTAL_BYTES, 8); // floatOffset=2
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, TOTAL_BYTES, 12); // floatOffset=3
+   gl.vertexAttribPointer(3, 2, gl.FLOAT, false, TOTAL_BYTES, 16); // floatOffset=4
+   gl.vertexAttribPointer(4, 3, gl.FLOAT, false, TOTAL_BYTES, 24); // floatOffset=6
+   gl.vertexAttribPointer(5, 1, gl.FLOAT, false, TOTAL_BYTES, 36); // floatOffset=9
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 2, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(4, 3, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(5, 1, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 9 * Float32Array.BYTES_PER_ELEMENT);
-
-   gl.vertexAttribPointer(6, 3, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 10 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(7, 3, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 13 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(8, 3, gl.FLOAT, false, EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 16 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(6, 2, gl.FLOAT, false, TOTAL_BYTES, 40); // floatOffset=10
+   gl.vertexAttribPointer(7, 2, gl.FLOAT, false, TOTAL_BYTES, 48); // floatOffset=12
+   gl.vertexAttribPointer(8, 2, gl.FLOAT, false, TOTAL_BYTES, 56); // floatOffset=14
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -218,18 +200,35 @@ export function createEntityRenderData(maxRenderParts: number): EntityRenderData
    gl.enableVertexAttribArray(3);
    gl.enableVertexAttribArray(4);
    gl.enableVertexAttribArray(5);
+
    gl.enableVertexAttribArray(6);
    gl.enableVertexAttribArray(7);
    gl.enableVertexAttribArray(8);
+
+   const indicesData = new Uint16Array(maxRenderParts * 6);
+   for (let i = 0; i < maxRenderParts; i++) {
+      const dataOffset = i * 6;
+      const indexOffset = i * 4;
+      
+      indicesData[dataOffset] = indexOffset;
+      indicesData[dataOffset + 1] = indexOffset + 1;
+      indicesData[dataOffset + 2] = indexOffset + 2;
+      indicesData[dataOffset + 3] = indexOffset + 2;
+      indicesData[dataOffset + 4] = indexOffset + 1;
+      indicesData[dataOffset + 5] = indexOffset + 3;
+   }
+
+   const indexBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
 
    gl.bindVertexArray(null);
 
    return {
       vao: vao,
-      indexBuffer: indexBuffer,
-      indicesData: indicesData,
       vertexBuffer: vertexBuffer,
-      vertexData: vertexData
+      vertexData: vertexData,
+      indexBuffer: indexBuffer
    };
 }
 
@@ -237,7 +236,7 @@ export function calculateRenderPartDepth(renderPart: VisualRenderPart, renderInf
    return renderInfo.renderHeight + renderPart.zIndex * 0.0001;
 }
 
-export function setRenderInfoInVertexData(renderInfo: EntityRenderInfo, vertexData: Float32Array, indicesData: Uint16Array | null, renderPartIdx: number): number {
+export function setRenderInfoInVertexData(renderInfo: EntityRenderInfo, vertexData: Float32Array, renderPartIdx: number): number {
    const textureAtlas = getEntityTextureAtlas();
 
    const baseTintR = renderInfo.tintR;
@@ -254,28 +253,34 @@ export function setRenderInfoInVertexData(renderInfo: EntityRenderInfo, vertexDa
       let textureIndex: number;
       let textureWidth: number;
       let textureHeight: number;
+      let tintR: number;
+      let tintG: number;
+      let tintB: number;
       if (renderPartIsTextured(renderPart)) {
          const textureArrayIndex = renderPart.textureArrayIndex;
          textureIndex = textureAtlas.textureSlotIndexes[textureArrayIndex];
          textureWidth = textureAtlas.textureWidths[textureArrayIndex];
          textureHeight = textureAtlas.textureHeights[textureArrayIndex];
+         tintR = baseTintR + renderPart.tintR;
+         tintG = baseTintG + renderPart.tintG;
+         tintB = baseTintB + renderPart.tintB;
       } else {
          textureIndex = -1;
          textureWidth = -1;
          textureHeight = -1;
-      }
-
-      let tintR = baseTintR + renderPart.tintR;
-      let tintG = baseTintG + renderPart.tintG;
-      let tintB = baseTintB + renderPart.tintB;
-
-      if (!renderPartIsTextured(renderPart)) {
          tintR = renderPart.colour.r;
          tintG = renderPart.colour.g;
          tintB = renderPart.colour.b;
       }
-      
+
       const vertexDataOffset = renderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
+
+      const mm0 = renderPart.modelMatrix[0];
+      const mm1 = renderPart.modelMatrix[1];
+      const mm2 = renderPart.modelMatrix[2];
+      const mm3 = renderPart.modelMatrix[3];
+      const mm4 = renderPart.modelMatrix[4];
+      const mm5 = renderPart.modelMatrix[5];
 
       vertexData[vertexDataOffset] = -0.5;
       vertexData[vertexDataOffset + 1] = -0.5;
@@ -287,86 +292,63 @@ export function setRenderInfoInVertexData(renderInfo: EntityRenderInfo, vertexDa
       vertexData[vertexDataOffset + 7] = tintG;
       vertexData[vertexDataOffset + 8] = tintB;
       vertexData[vertexDataOffset + 9] = renderPart.opacity;
-      vertexData[vertexDataOffset + 10] = renderPart.modelMatrix[0];
-      vertexData[vertexDataOffset + 11] = renderPart.modelMatrix[1];
-      vertexData[vertexDataOffset + 12] = 0;
-      vertexData[vertexDataOffset + 13] = renderPart.modelMatrix[2];
-      vertexData[vertexDataOffset + 14] = renderPart.modelMatrix[3];
-      vertexData[vertexDataOffset + 15] = 0;
-      vertexData[vertexDataOffset + 16] = renderPart.modelMatrix[4];
-      vertexData[vertexDataOffset + 17] = renderPart.modelMatrix[5];
-      vertexData[vertexDataOffset + 18] = 1;
+      vertexData[vertexDataOffset + 10] = mm0;
+      vertexData[vertexDataOffset + 11] = mm1;
+      vertexData[vertexDataOffset + 12] = mm2;
+      vertexData[vertexDataOffset + 13] = mm3;
+      vertexData[vertexDataOffset + 14] = mm4;
+      vertexData[vertexDataOffset + 15] = mm5;
 
-      vertexData[vertexDataOffset + 19] = 0.5;
-      vertexData[vertexDataOffset + 20] = -0.5;
-      vertexData[vertexDataOffset + 21] = depth;
-      vertexData[vertexDataOffset + 22] = textureIndex;
-      vertexData[vertexDataOffset + 23] = textureWidth;
-      vertexData[vertexDataOffset + 24] = textureHeight;
-      vertexData[vertexDataOffset + 25] = tintR;
-      vertexData[vertexDataOffset + 26] = tintG;
-      vertexData[vertexDataOffset + 27] = tintB;
-      vertexData[vertexDataOffset + 28] = renderPart.opacity;
-      vertexData[vertexDataOffset + 29] = renderPart.modelMatrix[0];
-      vertexData[vertexDataOffset + 30] = renderPart.modelMatrix[1];
-      vertexData[vertexDataOffset + 31] = 0;
-      vertexData[vertexDataOffset + 32] = renderPart.modelMatrix[2];
-      vertexData[vertexDataOffset + 33] = renderPart.modelMatrix[3];
-      vertexData[vertexDataOffset + 34] = 0;
-      vertexData[vertexDataOffset + 35] = renderPart.modelMatrix[4];
-      vertexData[vertexDataOffset + 36] = renderPart.modelMatrix[5];
-      vertexData[vertexDataOffset + 37] = 1;
+      vertexData[vertexDataOffset + 16] = 0.5;
+      vertexData[vertexDataOffset + 17] = -0.5;
+      vertexData[vertexDataOffset + 18] = depth;
+      vertexData[vertexDataOffset + 19] = textureIndex;
+      vertexData[vertexDataOffset + 20] = textureWidth;
+      vertexData[vertexDataOffset + 21] = textureHeight;
+      vertexData[vertexDataOffset + 22] = tintR;
+      vertexData[vertexDataOffset + 23] = tintG;
+      vertexData[vertexDataOffset + 24] = tintB;
+      vertexData[vertexDataOffset + 25] = renderPart.opacity;
+      vertexData[vertexDataOffset + 26] = mm0;
+      vertexData[vertexDataOffset + 27] = mm1;
+      vertexData[vertexDataOffset + 28] = mm2;
+      vertexData[vertexDataOffset + 29] = mm3;
+      vertexData[vertexDataOffset + 30] = mm4;
+      vertexData[vertexDataOffset + 31] = mm5;
 
-      vertexData[vertexDataOffset + 38] = -0.5;
-      vertexData[vertexDataOffset + 39] = 0.5;
-      vertexData[vertexDataOffset + 40] = depth;
-      vertexData[vertexDataOffset + 41] = textureIndex;
-      vertexData[vertexDataOffset + 42] = textureWidth;
-      vertexData[vertexDataOffset + 43] = textureHeight;
-      vertexData[vertexDataOffset + 44] = tintR;
-      vertexData[vertexDataOffset + 45] = tintG;
-      vertexData[vertexDataOffset + 46] = tintB;
-      vertexData[vertexDataOffset + 47] = renderPart.opacity;
-      vertexData[vertexDataOffset + 48] = renderPart.modelMatrix[0];
-      vertexData[vertexDataOffset + 49] = renderPart.modelMatrix[1];
-      vertexData[vertexDataOffset + 50] = 0;
-      vertexData[vertexDataOffset + 51] = renderPart.modelMatrix[2];
-      vertexData[vertexDataOffset + 52] = renderPart.modelMatrix[3];
-      vertexData[vertexDataOffset + 53] = 0;
-      vertexData[vertexDataOffset + 54] = renderPart.modelMatrix[4];
-      vertexData[vertexDataOffset + 55] = renderPart.modelMatrix[5];
-      vertexData[vertexDataOffset + 56] = 1;
+      vertexData[vertexDataOffset + 32] = -0.5;
+      vertexData[vertexDataOffset + 33] = 0.5;
+      vertexData[vertexDataOffset + 34] = depth;
+      vertexData[vertexDataOffset + 35] = textureIndex;
+      vertexData[vertexDataOffset + 36] = textureWidth;
+      vertexData[vertexDataOffset + 37] = textureHeight;
+      vertexData[vertexDataOffset + 38] = tintR;
+      vertexData[vertexDataOffset + 39] = tintG;
+      vertexData[vertexDataOffset + 40] = tintB;
+      vertexData[vertexDataOffset + 41] = renderPart.opacity;
+      vertexData[vertexDataOffset + 42] = mm0;
+      vertexData[vertexDataOffset + 43] = mm1;
+      vertexData[vertexDataOffset + 44] = mm2;
+      vertexData[vertexDataOffset + 45] = mm3;
+      vertexData[vertexDataOffset + 46] = mm4;
+      vertexData[vertexDataOffset + 47] = mm5;
 
-      vertexData[vertexDataOffset + 57] = 0.5;
-      vertexData[vertexDataOffset + 58] = 0.5;
-      vertexData[vertexDataOffset + 59] = depth;
-      vertexData[vertexDataOffset + 60] = textureIndex;
-      vertexData[vertexDataOffset + 61] = textureWidth;
-      vertexData[vertexDataOffset + 62] = textureHeight;
-      vertexData[vertexDataOffset + 63] = tintR;
-      vertexData[vertexDataOffset + 64] = tintG;
-      vertexData[vertexDataOffset + 65] = tintB;
-      vertexData[vertexDataOffset + 66] = renderPart.opacity;
-      vertexData[vertexDataOffset + 67] = renderPart.modelMatrix[0];
-      vertexData[vertexDataOffset + 68] = renderPart.modelMatrix[1];
-      vertexData[vertexDataOffset + 69] = 0;
-      vertexData[vertexDataOffset + 70] = renderPart.modelMatrix[2];
-      vertexData[vertexDataOffset + 71] = renderPart.modelMatrix[3];
-      vertexData[vertexDataOffset + 72] = 0;
-      vertexData[vertexDataOffset + 73] = renderPart.modelMatrix[4];
-      vertexData[vertexDataOffset + 74] = renderPart.modelMatrix[5];
-      vertexData[vertexDataOffset + 75] = 1;
-
-      if (indicesData !== null) {
-         const indicesDataOffset = renderPartIdx * 6;
-   
-         indicesData[indicesDataOffset] = renderPartIdx * 4;
-         indicesData[indicesDataOffset + 1] = renderPartIdx * 4 + 1;
-         indicesData[indicesDataOffset + 2] = renderPartIdx * 4 + 2;
-         indicesData[indicesDataOffset + 3] = renderPartIdx * 4 + 2;
-         indicesData[indicesDataOffset + 4] = renderPartIdx * 4 + 1;
-         indicesData[indicesDataOffset + 5] = renderPartIdx * 4 + 3;
-      }
+      vertexData[vertexDataOffset + 48] = 0.5;
+      vertexData[vertexDataOffset + 49] = 0.5;
+      vertexData[vertexDataOffset + 50] = depth;
+      vertexData[vertexDataOffset + 51] = textureIndex;
+      vertexData[vertexDataOffset + 52] = textureWidth;
+      vertexData[vertexDataOffset + 53] = textureHeight;
+      vertexData[vertexDataOffset + 54] = tintR;
+      vertexData[vertexDataOffset + 55] = tintG;
+      vertexData[vertexDataOffset + 56] = tintB;
+      vertexData[vertexDataOffset + 57] = renderPart.opacity;
+      vertexData[vertexDataOffset + 58] = mm0;
+      vertexData[vertexDataOffset + 59] = mm1;
+      vertexData[vertexDataOffset + 60] = mm2;
+      vertexData[vertexDataOffset + 61] = mm3;
+      vertexData[vertexDataOffset + 62] = mm4;
+      vertexData[vertexDataOffset + 63] = mm5;
 
       renderPartIdx++;
    }
@@ -376,86 +358,9 @@ export function setRenderInfoInVertexData(renderInfo: EntityRenderInfo, vertexDa
 
 function clearRenderPartInVertexData(vertexData: Float32Array, renderPartIdx: number): void {
    const vertexDataOffset = renderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
-
-   vertexData[vertexDataOffset] = 0;
-   vertexData[vertexDataOffset + 1] = 0;
-   vertexData[vertexDataOffset + 2] = 0;
-   vertexData[vertexDataOffset + 3] = 0;
-   vertexData[vertexDataOffset + 4] = 0;
-   vertexData[vertexDataOffset + 5] = 0;
-   vertexData[vertexDataOffset + 6] = 0;
-   vertexData[vertexDataOffset + 7] = 0;
-   vertexData[vertexDataOffset + 8] = 0;
-   vertexData[vertexDataOffset + 9] = 0;
-   vertexData[vertexDataOffset + 10] = 0;
-   vertexData[vertexDataOffset + 11] = 0;
-   vertexData[vertexDataOffset + 12] = 0;
-   vertexData[vertexDataOffset + 13] = 0;
-   vertexData[vertexDataOffset + 14] = 0;
-   vertexData[vertexDataOffset + 15] = 0;
-   vertexData[vertexDataOffset + 16] = 0;
-   vertexData[vertexDataOffset + 17] = 0;
-   vertexData[vertexDataOffset + 18] = 0;
-
-   vertexData[vertexDataOffset + 19] = 0;
-   vertexData[vertexDataOffset + 20] = 0;
-   vertexData[vertexDataOffset + 21] = 0;
-   vertexData[vertexDataOffset + 22] = 0;
-   vertexData[vertexDataOffset + 23] = 0;
-   vertexData[vertexDataOffset + 24] = 0;
-   vertexData[vertexDataOffset + 25] = 0;
-   vertexData[vertexDataOffset + 26] = 0;
-   vertexData[vertexDataOffset + 27] = 0;
-   vertexData[vertexDataOffset + 28] = 0;
-   vertexData[vertexDataOffset + 29] = 0;
-   vertexData[vertexDataOffset + 30] = 0;
-   vertexData[vertexDataOffset + 31] = 0;
-   vertexData[vertexDataOffset + 32] = 0;
-   vertexData[vertexDataOffset + 33] = 0;
-   vertexData[vertexDataOffset + 34] = 0;
-   vertexData[vertexDataOffset + 35] = 0;
-   vertexData[vertexDataOffset + 36] = 0;
-   vertexData[vertexDataOffset + 37] = 0;
-
-   vertexData[vertexDataOffset + 38] = 0;
-   vertexData[vertexDataOffset + 39] = 0;
-   vertexData[vertexDataOffset + 40] = 0;
-   vertexData[vertexDataOffset + 41] = 0;
-   vertexData[vertexDataOffset + 42] = 0;
-   vertexData[vertexDataOffset + 43] = 0;
-   vertexData[vertexDataOffset + 44] = 0;
-   vertexData[vertexDataOffset + 45] = 0;
-   vertexData[vertexDataOffset + 46] = 0;
-   vertexData[vertexDataOffset + 47] = 0;
-   vertexData[vertexDataOffset + 48] = 0;
-   vertexData[vertexDataOffset + 49] = 0;
-   vertexData[vertexDataOffset + 50] = 0;
-   vertexData[vertexDataOffset + 51] = 0;
-   vertexData[vertexDataOffset + 52] = 0;
-   vertexData[vertexDataOffset + 53] = 0;
-   vertexData[vertexDataOffset + 54] = 0;
-   vertexData[vertexDataOffset + 55] = 0;
-   vertexData[vertexDataOffset + 56] = 0;
-
-   vertexData[vertexDataOffset + 57] = 0;
-   vertexData[vertexDataOffset + 58] = 0;
-   vertexData[vertexDataOffset + 59] = 0;
-   vertexData[vertexDataOffset + 60] = 0;
-   vertexData[vertexDataOffset + 61] = 0;
-   vertexData[vertexDataOffset + 62] = 0;
-   vertexData[vertexDataOffset + 63] = 0;
-   vertexData[vertexDataOffset + 64] = 0;
-   vertexData[vertexDataOffset + 65] = 0;
-   vertexData[vertexDataOffset + 66] = 0;
-   vertexData[vertexDataOffset + 67] = 0;
-   vertexData[vertexDataOffset + 68] = 0;
-   vertexData[vertexDataOffset + 69] = 0;
-   vertexData[vertexDataOffset + 70] = 0;
-   vertexData[vertexDataOffset + 71] = 0;
-   vertexData[vertexDataOffset + 72] = 0;
-   vertexData[vertexDataOffset + 73] = 0;
-   vertexData[vertexDataOffset + 74] = 0;
-   vertexData[vertexDataOffset + 75] = 0;
+   for (let i = vertexDataOffset; i < vertexDataOffset + 4 * Vars.ATTRIBUTES_PER_VERTEX; i++) {
+      vertexData[i] = 0;
+   }
 }
 
 export function clearEntityInVertexData(renderInfo: EntityRenderInfo, vertexData: Float32Array, renderPartIdx: number): void {
@@ -480,7 +385,11 @@ export function setupEntityRendering(): void {
 
 /** NOTE: Callers must control the blending. */
 export function renderEntity(renderInfo: Readonly<EntityRenderInfo>, options?: EntityRenderingOptions): void {
-   gl.uniform1f(overrideAlphaWithOneUniformLocation, options?.overrideAlphaWithOne ? 1 : 0);
+   const overrideAlphaWithOne = options?.overrideAlphaWithOne || false;
+   if (overrideAlphaWithOne !== previousOverrideAlphaWithOne) {
+      previousOverrideAlphaWithOne = overrideAlphaWithOne;
+      gl.uniform1f(overrideAlphaWithOneUniformLocation, overrideAlphaWithOne ? 1 : 0);
+   }
 
    const numRenderParts = renderInfo.renderPartsByZIndex.length;
    

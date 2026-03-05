@@ -546,19 +546,27 @@ const getAngleToVertexOffset = (x: number, y: number, hitboxX: number, hitboxY: 
 }
 
 export function getMinAngleToRectangularBox(x: number, y: number, box: RectangularBox): number {
-   const tl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, box.topLeftVertexOffset.x, box.topLeftVertexOffset.y);
-   const tr = getAngleToVertexOffset(x, y, box.position.x, box.position.y, box.topRightVertexOffset.x, box.topRightVertexOffset.y);
-   const bl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -box.topLeftVertexOffset.x, -box.topLeftVertexOffset.y);
-   const br = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -box.topRightVertexOffset.x, -box.topRightVertexOffset.y);
+   // @Speed!
+   const topLeftVertexOffset = box.getTopLeftVertexOffset();
+   const topRightVertexOffset = box.getTopLeftVertexOffset();
+   
+   const tl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, topLeftVertexOffset.x, topLeftVertexOffset.y);
+   const tr = getAngleToVertexOffset(x, y, box.position.x, box.position.y, topRightVertexOffset.x, topRightVertexOffset.y);
+   const bl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -topLeftVertexOffset.x, -topLeftVertexOffset.y);
+   const br = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -topRightVertexOffset.x, -topRightVertexOffset.y);
    
    return Math.min(tl, tr, bl, br);
 }
 
 export function getMaxAngleToRectangularBox(x: number, y: number, box: RectangularBox): number {
-   const tl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, box.topLeftVertexOffset.x, box.topLeftVertexOffset.y);
-   const tr = getAngleToVertexOffset(x, y, box.position.x, box.position.y, box.topRightVertexOffset.x, box.topRightVertexOffset.y);
-   const bl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -box.topLeftVertexOffset.x, -box.topLeftVertexOffset.y);
-   const br = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -box.topRightVertexOffset.x, -box.topRightVertexOffset.y);
+   // @Speed!
+   const topLeftVertexOffset = box.getTopLeftVertexOffset();
+   const topRightVertexOffset = box.getTopLeftVertexOffset();
+   
+   const tl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, topLeftVertexOffset.x, topLeftVertexOffset.y);
+   const tr = getAngleToVertexOffset(x, y, box.position.x, box.position.y, topRightVertexOffset.x, topRightVertexOffset.y);
+   const bl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -topLeftVertexOffset.x, -topLeftVertexOffset.y);
+   const br = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -topRightVertexOffset.x, -topRightVertexOffset.y);
    
    return Math.max(tl, tr, bl, br);
 }

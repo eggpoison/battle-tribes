@@ -1,7 +1,7 @@
-import { BuildingMaterial, ServerComponentType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, SubtileType, getSubtileIndex, subtileIsInWorld, getSubtileX, getSubtileY, STRUCTURE_TYPES, StructureType, Settings, Entity, EntityType, getEntityCollisionGroup, CollisionGroup, boxIsCollidingWithSubtile, RectangularBox, boxIsCircular } from "webgl-test-shared";
+import { BuildingMaterial, ServerComponentType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, SubtileType, getSubtileIndex, subtileIsInWorld, getSubtileX, getSubtileY, STRUCTURE_TYPES, StructureType, Settings, Entity, EntityType, getEntityCollisionGroup, CollisionGroup, boxIsCollidingWithSubtile, RectangularBox, boxIsCircular, _bounds } from "webgl-test-shared";
 import { Hitbox } from "./hitboxes";
 import { ItemComponentArray } from "./entity-components/server-components/ItemComponent";
-import { TransformComponentArray, TransformComponentData } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Layer from "./Layer";
 import { EntityComponentData, getEntityType } from "./world";
 import { playerTribe } from "./tribes";
@@ -145,10 +145,11 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
    for (const hitbox of hitboxes) {
       const box = hitbox.box;
 
-      const minTileX = Math.floor(box.calculateBoundsMinX() / Settings.TILE_SIZE);
-      const maxTileX = Math.floor(box.calculateBoundsMaxX() / Settings.TILE_SIZE);
-      const minTileY = Math.floor(box.calculateBoundsMinY() / Settings.TILE_SIZE);
-      const maxTileY = Math.floor(box.calculateBoundsMaxY() / Settings.TILE_SIZE);
+      box.calculateBounds();
+      const minTileX = Math.floor(_bounds.minX / Settings.TILE_SIZE);
+      const maxTileX = Math.floor(_bounds.maxX / Settings.TILE_SIZE);
+      const minTileY = Math.floor(_bounds.minY / Settings.TILE_SIZE);
+      const maxTileY = Math.floor(_bounds.maxY / Settings.TILE_SIZE);
 
       for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
@@ -226,10 +227,11 @@ const structurePlaceIsValid = (hitboxes: ReadonlyArray<Hitbox>, layer: Layer): b
    for (const hitbox of hitboxes) {
       const box = hitbox.box;
 
-      const minSubtileX = Math.floor(box.calculateBoundsMinX() / Settings.SUBTILE_SIZE);
-      const maxSubtileX = Math.floor(box.calculateBoundsMaxX() / Settings.SUBTILE_SIZE);
-      const minSubtileY = Math.floor(box.calculateBoundsMinY() / Settings.SUBTILE_SIZE);
-      const maxSubtileY = Math.floor(box.calculateBoundsMaxY() / Settings.SUBTILE_SIZE);
+      box.calculateBounds();
+      const minSubtileX = Math.floor(_bounds.minX / Settings.SUBTILE_SIZE);
+      const maxSubtileX = Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE);
+      const minSubtileY = Math.floor(_bounds.minY / Settings.SUBTILE_SIZE);
+      const maxSubtileY = Math.floor(_bounds.maxY / Settings.SUBTILE_SIZE);
 
       for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
          for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
@@ -285,10 +287,11 @@ const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityRotation
       const hitbox = transformComponentData.hitboxes[i];
       const box = hitbox.box;
 
-      const minX = box.calculateBoundsMinX();
-      const maxX = box.calculateBoundsMaxX();
-      const minY = box.calculateBoundsMinY();
-      const maxY = box.calculateBoundsMaxY();
+      box.calculateBounds();
+      const minX = _bounds.minX;
+      const maxX = _bounds.maxX;
+      const minY = _bounds.minY;
+      const maxY = _bounds.maxY;
       
       if (minX < entityMinX) {
          entityMinX = minX;

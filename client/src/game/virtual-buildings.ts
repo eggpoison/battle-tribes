@@ -15,7 +15,7 @@ import { createStructureComponentData } from "./entity-components/server-compone
 import { createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
 import { EntityRenderInfo, updateEntityRenderInfoRenderData } from "./EntityRenderInfo";
-import { currentSnapshot } from "./client";
+import { currentSnapshot } from "./game";
 import Layer from "./Layer";
 import { thingIsVisualRenderPart } from "./render-parts/render-parts";
 import { removeGhostRenderInfo } from "./rendering/webgl/entity-ghost-rendering";
@@ -77,7 +77,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
 
    // @Copynpaste @Hack
 
-   const components: EntityServerComponentData = {};
+   const components: EntityServerComponentData = new Map();
 
    // @Hack @Cleanup: make the client and server use the some component data system
    const componentTypes = EntityComponents[entityType];
@@ -93,84 +93,84 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
                }),
             );
 
-            components[componentType] = transformComponentData;
+            components.set(componentType, transformComponentData);
             break;
          }
          case ServerComponentType.health: {
             const data = createHealthComponentData();
-            components[componentType] = data;
+            components.set(componentType, data);
             break;
          }
          case ServerComponentType.statusEffect: {
             const data = createStatusEffectComponentData();
-            components[componentType] = data;
+            components.set(componentType, data);
             break;
          }
          case ServerComponentType.structure: {
-            components[componentType] = createStructureComponentData();
+            components.set(componentType, createStructureComponentData());
             break;
          }
          case ServerComponentType.tribe: {
-            components[componentType] = createTribeComponentData(playerTribe);
+            components.set(componentType, createTribeComponentData(playerTribe));
             break;
          }
          case ServerComponentType.buildingMaterial: {
-            components[componentType] = createBuildingMaterialComponentData(BuildingMaterial.wood);
+            components.set(componentType, createBuildingMaterialComponentData(BuildingMaterial.wood));
             break;
          }
          case ServerComponentType.bracings: {
-            components[componentType] = createBracingsComponentData();
+            components.set(componentType, createBracingsComponentData());
             break;
          }
          case ServerComponentType.inventory: {
-            components[componentType] = createInventoryComponentData({});
+            components.set(componentType, createInventoryComponentData({}));
             break;
          }
          case ServerComponentType.cooking: {
-            components[componentType] = createCookingComponentData();
+            components.set(componentType, createCookingComponentData());
             break;
          }
          case ServerComponentType.campfire: {
-            components[componentType] = createCampfireComponentData();
+            components.set(componentType, createCampfireComponentData());
             break;
          }
          case ServerComponentType.furnace: {
-            components[componentType] = createFurnaceComponentData();
+            components.set(componentType, createFurnaceComponentData());
             break;
          }
          case ServerComponentType.spikes: {
-            components[componentType] = createSpikesComponentData();
+            components.set(componentType, createSpikesComponentData());
             break;
          }
          case ServerComponentType.fireTorch: {
-            components[componentType] = createFireTorchComponentData();
+            components.set(componentType, createFireTorchComponentData());
             break;
          }
          case ServerComponentType.slurbTorch: {
-            components[componentType] = createSlurbTorchComponentData();
+            components.set(componentType, createSlurbTorchComponentData());
             break;
          }
          case ServerComponentType.barrel: {
-            components[componentType] = createBarrelComponentData();
+            components.set(componentType, createBarrelComponentData());
             break;
          }
          case ServerComponentType.researchBench: {
-            components[componentType] = {
+            components.set(componentType, {
                isOccupied: false
-            };
+            });
             break;
          }
          case ServerComponentType.totemBanner: {
-            components[componentType] = {
+            components.set(componentType, {
                banners: []
-            };
+            });
             break;
          }
          case ServerComponentType.hut: {
-            components[componentType] = {
+            components.set(componentType, {
                doorSwingAmount: 0,
                isRecalling: false
-            };
+            });
             break;
          }
          default: {
@@ -183,7 +183,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
       entityType: entityType,
       serverComponentData: components,
       // @Incomplete
-      clientComponentData: {}
+      clientComponentData: new Map()
    };
 
    // Create the entity

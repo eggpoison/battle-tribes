@@ -6,7 +6,7 @@ import { hitboxIsInWater, TransformComponentArray } from "../server-components/T
 import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { getHitboxTile, getHitboxVelocity } from "../../hitboxes";
-import { tickIntervalHasPassed } from "../../client";
+import { tickIntervalHasPassed } from "../../game";
 
 export interface FootprintComponentData {
    readonly footstepParticleIntervalSeconds: number;

@@ -1,4 +1,3 @@
-@import "./main-menu.css";
 @import "./loading-screen.css";
 @import "./game/menus/settings.css";
 @import "./game/inventories/inventory.css";
@@ -85,11 +84,6 @@ body {
 .game-message button {
    margin-left: 50%;
    transform: translateX(-50%);
-}
-
-.hidden {
-   opacity: 0 !important;
-   pointer-events: none !important;
 }
 
 /* NOTE: The held item count style is defined in inventory.css file. */

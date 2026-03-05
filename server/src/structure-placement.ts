@@ -1,3 +1,4 @@
+import { _bounds } from "../../shared/src/boxes/BaseBox";
 import { boxIsCircular } from "../../shared/src/boxes/boxes";
 import { RectangularBox } from "../../shared/src/boxes/RectangularBox";
 import { boxIsCollidingWithSubtile } from "../../shared/src/collision";
@@ -149,10 +150,11 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
    for (const hitbox of hitboxes) {
       const box = hitbox.box;
 
-      const minTileX = Math.floor(box.calculateBoundsMinX() / Settings.TILE_SIZE);
-      const maxTileX = Math.floor(box.calculateBoundsMaxX() / Settings.TILE_SIZE);
-      const minTileY = Math.floor(box.calculateBoundsMinY() / Settings.TILE_SIZE);
-      const maxTileY = Math.floor(box.calculateBoundsMaxY() / Settings.TILE_SIZE);
+      box.calculateBounds();
+      const minTileX = Math.floor(_bounds.minX / Settings.TILE_SIZE);
+      const maxTileX = Math.floor(_bounds.maxX / Settings.TILE_SIZE);
+      const minTileY = Math.floor(_bounds.minY / Settings.TILE_SIZE);
+      const maxTileY = Math.floor(_bounds.maxY / Settings.TILE_SIZE);
 
       for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
@@ -186,10 +188,11 @@ const structurePlaceIsValid = (hitboxes: ReadonlyArray<Hitbox>, layer: Layer): b
    for (const hitbox of hitboxes) {
       const box = hitbox.box;
 
-      const minSubtileX = Math.floor(box.calculateBoundsMinX() / Settings.SUBTILE_SIZE);
-      const maxSubtileX = Math.floor(box.calculateBoundsMaxX() / Settings.SUBTILE_SIZE);
-      const minSubtileY = Math.floor(box.calculateBoundsMinY() / Settings.SUBTILE_SIZE);
-      const maxSubtileY = Math.floor(box.calculateBoundsMaxY() / Settings.SUBTILE_SIZE);
+      box.calculateBounds();
+      const minSubtileX = Math.floor(_bounds.minX / Settings.SUBTILE_SIZE);
+      const maxSubtileX = Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE);
+      const minSubtileY = Math.floor(_bounds.minY / Settings.SUBTILE_SIZE);
+      const maxSubtileY = Math.floor(_bounds.maxY / Settings.SUBTILE_SIZE);
 
       for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
          for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
@@ -242,14 +245,12 @@ const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityAngle: n
    let entityMinY = Number.MAX_SAFE_INTEGER;
    let entityMaxY = Number.MIN_SAFE_INTEGER;
    
-   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-      const hitbox = transformComponent.hitboxes[i];
-      const box = hitbox.box;
-
-      const minX = box.calculateBoundsMinX();
-      const maxX = box.calculateBoundsMaxX();
-      const minY = box.calculateBoundsMinY();
-      const maxY = box.calculateBoundsMaxY();
+   for (const hitbox of transformComponent.hitboxes) {
+      hitbox.box.calculateBounds();
+      const minX = _bounds.minX;
+      const maxX = _bounds.maxX;
+      const minY = _bounds.minY;
+      const maxY = _bounds.maxY;
       
       if (minX < entityMinX) {
          entityMinX = minX;

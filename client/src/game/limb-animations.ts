@@ -9,7 +9,7 @@ import { VisualRenderPart } from "./render-parts/render-parts";
 import { TribesmanAIComponentArray } from "./entity-components/server-components/TribesmanAIComponent";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityAgeTicks, getEntityRenderInfo } from "./world";
-import { currentSnapshot } from "./client";
+import { currentSnapshot } from "./game";
 
 enum CustomItemState {
    usingMedicine,

@@ -1,10 +1,9 @@
 import { randAngle, randFloat, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
-import Board from "../../Board";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { Hitbox } from "../../hitboxes";
 import Particle from "../../Particle";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { addMonocolourParticleToBufferContainer, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
+import { addMonocolourParticleToBufferContainer, highMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
@@ -60,7 +59,7 @@ const createIceSpeckProjectile = (hitbox: Hitbox): void => {
       0,
       ICE_SPECK_COLOUR[0], ICE_SPECK_COLOUR[1], ICE_SPECK_COLOUR[2]
    );
-   Board.highMonocolourParticles.push(particle);
+   highMonocolourParticles.push(particle);
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {

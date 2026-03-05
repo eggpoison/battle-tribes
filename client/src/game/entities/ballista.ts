@@ -12,6 +12,7 @@ import { createTurretComponentData } from "../entity-components/server-component
 import { Hitbox, createHitboxQuick } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
+import { EntityServerComponentData } from "../networking/packet-snapshots";
 
 export function createBallistaConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -23,18 +24,18 @@ export function createBallistaConfig(position: Point, rotation: number, tribe: T
 
    return {
       entityType: EntityType.ballista,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.turret]: createTurretComponentData(),
-         [ServerComponentType.aiHelper]: createAIHelperComponentData(),
-         [ServerComponentType.ammoBox]: createAmmoBoxComponentData(),
-         [ServerComponentType.inventory]: createInventoryComponentData({}),
-         [ServerComponentType.ballista]: createBallistaComponentData()
-      },
-      clientComponentData: {}
+      serverComponentData: new Map([
+         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
+         [ServerComponentType.health, createHealthComponentData()],
+         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
+         [ServerComponentType.structure, createStructureComponentData()],
+         [ServerComponentType.tribe, createTribeComponentData(tribe)],
+         [ServerComponentType.turret, createTurretComponentData()],
+         [ServerComponentType.aiHelper, createAIHelperComponentData()],
+         [ServerComponentType.ammoBox, createAmmoBoxComponentData()],
+         [ServerComponentType.inventory, createInventoryComponentData({})],
+         [ServerComponentType.ballista, createBallistaComponentData()]
+      ]) as EntityServerComponentData,
+      clientComponentData: new Map()
    };
 }

@@ -10,6 +10,7 @@ import { createTurretComponentData } from "../entity-components/server-component
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
+import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createSlingTurretConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -21,16 +22,17 @@ export function createSlingTurretConfig(position: Point, rotation: number, tribe
 
    return {
       entityType: EntityType.slingTurret,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.turret]: createTurretComponentData(),
-         [ServerComponentType.aiHelper]: createAIHelperComponentData(),
-         [ServerComponentType.slingTurret]: createSlingTurretComponentData(),
-      },
-      clientComponentData: {}
+      serverComponentData: new Map([
+         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
+         [ServerComponentType.health, createHealthComponentData()],
+         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
+         [ServerComponentType.structure, createStructureComponentData()],
+         [ServerComponentType.tribe, createTribeComponentData(tribe)],
+         [ServerComponentType.turret, createTurretComponentData()],
+         [ServerComponentType.aiHelper, createAIHelperComponentData()],
+         [ServerComponentType.slingTurret, createSlingTurretComponentData()]
+      // @HACK
+      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
+      clientComponentData: new Map()
    };
 }

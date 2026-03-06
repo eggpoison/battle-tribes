@@ -9,6 +9,8 @@ import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { WALL_SPIKE_TEXTURE_SOURCES, FLOOR_SPIKE_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface RegularSpikesComponentData {}
 
@@ -26,10 +28,11 @@ export function createRegularSpikesComponentData(): RegularSpikesComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const materialComponentData = entityComponentData.serverComponentData.get(ServerComponentType.buildingMaterial)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const materialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
 
    const isAttachedToWall = entityComponentData.entityType === EntityType.wallSpikes;
    let textureArrayIndex: number;

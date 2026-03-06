@@ -6,6 +6,8 @@ import { playerInstance } from "../../player";
 import { Hitbox } from "../../hitboxes";
 import { healthBarState } from "../../../ui-state/health-bar-state";
 import { discombobulate } from "../../player-action-handling";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface HealthComponentData {
    readonly health: number;
@@ -48,7 +50,8 @@ function decodeData(reader: PacketReader): HealthComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): HealthComponent {
-   const healthComponentData = entityComponentData.serverComponentData.get(ServerComponentType.health)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const healthComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.health);
    
    return {
       health: healthComponentData.health,

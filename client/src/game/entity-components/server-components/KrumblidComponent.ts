@@ -9,6 +9,7 @@ import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getTransformComponentData } from "../../networking/packet-snapshots";
 
 export interface KrumblidComponentData {}
 
@@ -26,7 +27,7 @@ function decodeData(): KrumblidComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    for (const hitbox of transformComponentData.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.KRUMBLID_BODY)) {
          renderInfo.attachRenderPart(

@@ -3,6 +3,8 @@ import { Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { tickIntervalHasPassed } from "../../game";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface CookingComponentData {
    readonly heatingProgress: number;
@@ -39,7 +41,8 @@ function decodeData(reader: PacketReader): CookingComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): CookingComponent {
-   const cookingComponentData = entityComponentData.serverComponentData.get(ServerComponentType.cooking)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cookingComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cooking);
    
    return {
       heatingProgress: cookingComponentData.heatingProgress,

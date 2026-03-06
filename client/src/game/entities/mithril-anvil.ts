@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { createCraftingStationComponentData } from "../entity-components/server-components/CraftingStationComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
@@ -9,7 +9,6 @@ import { createTransformComponentData } from "../entity-components/server-compon
 import { createTribeComponentData } from "../entity-components/server-components/TribeComponent";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
-import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createMithrilAnvilConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -38,16 +37,15 @@ export function createMithrilAnvilConfig(position: Point, rotation: number, trib
    
    return {
       entityType: EntityType.mithrilAnvil,
-      serverComponentData: new Map([
-         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
-         [ServerComponentType.health, createHealthComponentData()],
-         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
-         [ServerComponentType.structure, createStructureComponentData()],
-         [ServerComponentType.tribe, createTribeComponentData(tribe)],
-         [ServerComponentType.craftingStation, createCraftingStationComponentData()],
-         [ServerComponentType.mithrilAnvil, createMithrilAnvilComponentData()]
-      // @HACK
-      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
-      clientComponentData: new Map()
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createCraftingStationComponentData(),
+         createMithrilAnvilComponentData()
+      ],
+      clientComponentData: []
    };
 }

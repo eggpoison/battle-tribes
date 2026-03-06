@@ -4,6 +4,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getTransformComponentData } from "../../networking/packet-snapshots";
 
 export interface IceShardComponentData {}
 
@@ -19,7 +20,7 @@ function decodeData(): IceShardComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IceShardComponent {
-   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponent.hitboxes[0];
    
    renderInfo.attachRenderPart(

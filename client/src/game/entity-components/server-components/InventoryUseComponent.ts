@@ -20,6 +20,8 @@ import { currentSnapshot, getElapsedTimeInSeconds, getSecondsSinceTickTimestamp,
 import { tickPlayerItems } from "../../player-action-handling";
 import { inventoryState } from "../../../ui-state/inventory-state";
 import { playSoundOnHitbox } from "../../sound";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -579,8 +581,11 @@ function decodeData(reader: PacketReader): InventoryUseComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): InventoryUseComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const inventoryUseComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventoryUse);
+
    return {
-      limbInfos: entityComponentData.serverComponentData.get(ServerComponentType.inventoryUse)!.limbInfos,
+      limbInfos: inventoryUseComponentData.limbInfos,
       limbAttachPoints: [],
       limbRenderParts: [],
       activeItemRenderParts: [],
@@ -593,7 +598,8 @@ function createComponent(entityComponentData: EntityComponentData): InventoryUse
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
    // Each limb can hold an active item render part
-   const inventoryUseComponentData = entityComponentData.serverComponentData.get(ServerComponentType.inventoryUse)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const inventoryUseComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventoryUse);
    // (@Hack: plus one arrow render part)
    return inventoryUseComponentData.limbInfos.length + 1;
 }

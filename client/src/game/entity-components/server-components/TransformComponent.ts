@@ -14,6 +14,7 @@ import { currentSnapshot } from "../../game";
 import { gameUIState } from "../../../ui-state/game-ui-state";
 import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 import { worldToScreenPos } from "../../camera";
+import { getTransformComponentData } from "../../networking/packet-snapshots";
 
 export interface TransformComponentData {
    readonly traction: number;
@@ -420,7 +421,7 @@ TransformComponentArray.updatePlayerFromData = updatePlayerFromData;
 TransformComponentArray.updateSelectedEntityState = updateSelectedEntityState;
 
 function createComponent(entityComponentData: EntityComponentData): TransformComponent {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    
    const hitboxes = new Array<Hitbox>();
    const rootHitboxes = new Array<Hitbox>();

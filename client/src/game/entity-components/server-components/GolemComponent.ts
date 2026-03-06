@@ -11,6 +11,8 @@ import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 enum GolemRockSize {
    massive,
@@ -118,7 +120,7 @@ function decodeData(reader: PacketReader): GolemComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    
    const rockRenderParts = new Array<VisualRenderPart>();
    const eyeRenderParts = new Array<VisualRenderPart>();
@@ -166,8 +168,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GolemComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const golemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.golem);
    return {
-      wakeProgress: entityComponentData.serverComponentData.get(ServerComponentType.golem)!.wakeProgress,
+      wakeProgress: golemComponentData.wakeProgress,
       rockRenderParts: intermediateInfo.rockRenderParts,
       eyeRenderParts: intermediateInfo.eyeRenderParts,
       eyeLights: intermediateInfo.eyeLights
@@ -175,7 +179,7 @@ function createComponent(entityComponentData: EntityComponentData, intermediateI
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    
    let maxRenderParts = 0;
    for (const hitbox of transformComponentData.hitboxes) {

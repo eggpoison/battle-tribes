@@ -8,8 +8,9 @@ import { gl } from "../webgl";
 import { getHitboxVelocity, Hitbox } from "../hitboxes";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { playerInstance } from "../player";
-import { EntitySnapshot } from "../networking/packet-snapshots";
+import { EntitySnapshot, getServerComponentData } from "../networking/packet-snapshots";
 import { currentSnapshot, nextSnapshot } from "../game";
+import { getEntityServerComponentTypes } from "../entity-component-types";
 
 // @Cleanup: file name
 
@@ -139,7 +140,9 @@ const calculateAndOverrideRenderThingMatrix = (thing: RenderPart): void => {
 }
 
 const getHitboxDataFromEntityData = (hitbox: Hitbox, entityData: EntitySnapshot): Hitbox => {
-   for (const data of entityData.serverComponentData.get(ServerComponentType.transform)!.hitboxes) {
+   const serverComponentTypes = getEntityServerComponentTypes(entityData.entityType);
+   const transformComponentData = getServerComponentData(entityData.serverComponentData, serverComponentTypes, ServerComponentType.transform);
+   for (const data of transformComponentData.hitboxes) {
       if (data.localID === hitbox.localID) {
          return data;
       }

@@ -9,6 +9,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface GuardianComponentData {
    readonly rubyGemActivation: number;
@@ -96,7 +98,7 @@ function decodeData(reader: PacketReader): GuardianComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponent.hitboxes[0];
    
    const rubyRenderParts = new Array<VisualRenderPart>();
@@ -160,7 +162,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const limbCrackLights = new Array<Light>();
    
    // Attach limb render parts
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
       const hitbox = transformComponentData.hitboxes[i];
       
@@ -215,7 +217,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GuardianComponent {
-   const guardianComponentData = entityComponentData.serverComponentData.get(ServerComponentType.guardian)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const guardianComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.guardian);
 
    return {
       rubyRenderParts: intermediateInfo.rubyRenderParts,
@@ -241,7 +244,7 @@ function createComponent(entityComponentData: EntityComponentData, intermediateI
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
    let maxRenderParts = 5;
    
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    maxRenderParts += 2 * transformComponentData.hitboxes.length;
 
    return maxRenderParts;

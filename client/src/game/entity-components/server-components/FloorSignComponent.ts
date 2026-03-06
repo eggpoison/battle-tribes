@@ -4,6 +4,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface FloorSignComponentData {
    readonly message: string;
@@ -27,7 +29,7 @@ function decodeData(reader: PacketReader): FloorSignComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    const renderPart = new TexturedRenderPart(
@@ -42,8 +44,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): FloorSignComponentData {
-   const floorSignComponent = entityComponentData.serverComponentData.get(ServerComponentType.floorSign)!;
-   
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const floorSignComponent = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.floorSign);
    return {
       message: floorSignComponent.message
    };

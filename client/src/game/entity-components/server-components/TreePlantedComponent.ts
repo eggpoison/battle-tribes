@@ -9,6 +9,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TreePlantedComponentData {
    readonly growthProgress: number;
@@ -44,10 +46,11 @@ function decodeData(reader: PacketReader): TreePlantedComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponent.hitboxes[0];
 
-   const growthProgress = entityComponentData.serverComponentData.get(ServerComponentType.treePlanted)!.growthProgress;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const growthProgress = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treePlanted).growthProgress;
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -63,7 +66,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TreePlantedComponent {
-   const growthProgress = entityComponentData.serverComponentData.get(ServerComponentType.treePlanted)!.growthProgress;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const growthProgress = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treePlanted).growthProgress;
    return {
       growthProgress: growthProgress,
       renderPart: intermediateInfo.renderPart

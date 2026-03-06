@@ -4,6 +4,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface SandstoneRockComponentData {
    readonly size: number;
@@ -24,10 +26,11 @@ function decodeData(reader: PacketReader): SandstoneRockComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const sandstoneRockComponentData = entityComponentData.serverComponentData.get(ServerComponentType.sandstoneRock)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const sandstoneRockComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.sandstoneRock);
 
    let typeString: string;
    switch (sandstoneRockComponentData.size) {

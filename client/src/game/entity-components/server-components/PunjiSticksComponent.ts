@@ -7,6 +7,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getTransformComponentData } from "../../networking/packet-snapshots";
 
 export interface PunjiSticksComponentData {}
 
@@ -40,7 +41,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       textureArrayIndex = getTextureArrayIndex("entities/floor-punji-sticks/floor-punji-sticks.png");
    }
 
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
    const renderPart = new TexturedRenderPart(

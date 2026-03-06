@@ -9,6 +9,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { getEntityRenderInfo, getEntityAgeTicks, EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponent, TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface PlanterBoxComponentData {
    readonly plantedEntityType: PlantedEntityType | -1;
@@ -58,7 +60,7 @@ function decodeData(reader: PacketReader): PlanterBoxComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    renderInfo.attachRenderPart(
@@ -70,7 +72,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       )
    );
    
-   const planterBoxComponentData = entityComponentData.serverComponentData.get(ServerComponentType.planterBox)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const planterBoxComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.planterBox);
 
    let renderPart: TexturedRenderPart | null;
    if (planterBoxComponentData.plantedEntityType !== -1) {
@@ -86,7 +89,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): PlanterBoxComponent {
-   const planterBoxComponentData = entityComponentData.serverComponentData.get(ServerComponentType.planterBox)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const planterBoxComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.planterBox);
    
    return {
       hasPlant: planterBoxComponentData.plantedEntityType !== -1,

@@ -13,6 +13,8 @@ import { TribeComponentArray } from "./TribeComponent";
 import { playerTribe } from "../../tribes";
 import { Hitbox } from "../../hitboxes";
 import { registerTextureSource } from "../../texture-atlases/texture-sources";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface BlueprintComponentData {
    readonly blueprintType: BlueprintType;
@@ -437,7 +439,8 @@ function decodeData(reader: PacketReader): BlueprintComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): BlueprintComponent {
-   const blueprintComponentData = entityComponentData.serverComponentData.get(ServerComponentType.blueprint)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const blueprintComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.blueprint);
    
    return {
       partialRenderParts: [],
@@ -448,7 +451,8 @@ function createComponent(entityComponentData: EntityComponentData): BlueprintCom
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const blueprintComponentData = entityComponentData.serverComponentData.get(ServerComponentType.blueprint)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const blueprintComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.blueprint);
    return 2 * BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponentData.blueprintType].length;
 }
 

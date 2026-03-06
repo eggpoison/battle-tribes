@@ -4,6 +4,7 @@ import { EntityRenderInfo } from "../../EntityRenderInfo";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
+import { getTransformComponentData } from "../../networking/packet-snapshots";
 
 export interface InguYetuksnoglurblidokowfleaSeekerHeadComponentData {}
 
@@ -23,7 +24,7 @@ function decodeData(): InguYetuksnoglurblidokowfleaSeekerHeadComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
       const hitbox = transformComponentData.hitboxes[i];

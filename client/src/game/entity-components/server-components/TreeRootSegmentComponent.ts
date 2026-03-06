@@ -8,6 +8,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TreeRootSegmentComponentData {
    readonly variant: number;
@@ -32,10 +34,11 @@ function decodeData(reader: PacketReader): TreeRootSegmentComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const treeRootSegmentComponentData = entityComponentData.serverComponentData.get(ServerComponentType.treeRootSegment)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const treeRootSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treeRootSegment);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -52,8 +55,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): TreeRootSegmentComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const treeRootSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treeRootSegment);
    return {
-      variant: entityComponentData.serverComponentData.get(ServerComponentType.treeRootSegment)!.variant
+      variant: treeRootSegmentComponentData.variant
    };
 }
 

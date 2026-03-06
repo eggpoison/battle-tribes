@@ -8,6 +8,8 @@ import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface SlimeComponentData {
    readonly size: SlimeSize;
@@ -96,11 +98,12 @@ function decodeData(reader: PacketReader): SlimeComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const size = entityComponentData.serverComponentData.get(ServerComponentType.slime)!.size;
-   const sizeString = SIZE_STRINGS[size];
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const slimeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.slime);
+   const sizeString = SIZE_STRINGS[slimeComponentData.size];
 
    // Body
    const bodyRenderPart = new TexturedRenderPart(
@@ -136,11 +139,13 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): SlimeComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const slimeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.slime);
    return {
       bodyRenderPart: intermediateInfo.bodyRenderPart,
       eyeRenderPart: intermediateInfo.eyeRenderPart,
       orbRenderParts: [],
-      size: entityComponentData.serverComponentData.get(ServerComponentType.slime)!.size,
+      size: slimeComponentData.size,
       orbs: new Array<SlimeOrbInfo>,
       internalTickCounter: 0
    };

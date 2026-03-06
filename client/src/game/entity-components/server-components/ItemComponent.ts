@@ -7,6 +7,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface ItemComponentData {
    readonly itemType: ItemType;
@@ -30,10 +32,11 @@ function decodeData(reader: PacketReader): ItemComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
-   
-   const itemComponentData = entityComponentData.serverComponentData.get(ServerComponentType.item)!;
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const itemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.item);
       
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -47,8 +50,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): ItemComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const itemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.item);
+
    return {
-      itemType: entityComponentData.serverComponentData.get(ServerComponentType.item)!.itemType
+      itemType: itemComponentData.itemType
    };
 }
 

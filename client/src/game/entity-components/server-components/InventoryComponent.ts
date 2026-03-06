@@ -7,6 +7,8 @@ import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";
 import { selectedEntityInventoryState } from "../../../ui-state/selected-entity-inventory-state";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface InventoryComponentData {
    readonly inventories: Partial<Record<InventoryName, Inventory>>;
@@ -196,7 +198,8 @@ function decodeData(reader: PacketReader): InventoryComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): InventoryComponent {
-   const inventoryComponentData = entityComponentData.serverComponentData.get(ServerComponentType.inventory)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const inventoryComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventory);
    
    return {
       inventoryRecord: inventoryComponentData.inventories,

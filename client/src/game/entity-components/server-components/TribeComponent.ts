@@ -7,6 +7,8 @@ import ServerComponentArray from "../ServerComponentArray";
 import { Tribe, tribeExists } from "../../tribes";
 import { playerInstance } from "../../player";
 import { EntityComponentData } from "../../world";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface TribeComponentData {
    readonly tribeID: number;
@@ -40,7 +42,8 @@ function decodeData(reader: PacketReader): TribeComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): TribeComponent {
-   const tribeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribe)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribe);
 
    if (!tribeExists(tribeComponentData.tribeID)) {
       console.warn("In creating tribe component from data, no tribe with id '" + tribeComponentData.tribeID + "' exists!");

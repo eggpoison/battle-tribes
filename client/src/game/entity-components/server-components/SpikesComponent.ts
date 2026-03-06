@@ -9,6 +9,8 @@ import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface SpikesComponentData {
    readonly isCovered: boolean;
@@ -73,7 +75,7 @@ const createLeafRenderPart = (isSmall: boolean, parentHitbox: Hitbox): VisualRen
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    const leafRenderParts = new Array<VisualRenderPart>();
@@ -98,8 +100,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): SpikesComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const spikesComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.spikes);
    return {
-      isCovered: entityComponentData.serverComponentData.get(ServerComponentType.spikes)!.isCovered,
+      isCovered: spikesComponentData.isCovered,
       leafRenderParts: intermediateInfo.leafRenderParts
    };
 }

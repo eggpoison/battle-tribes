@@ -8,6 +8,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface GuardianGemFragmentProjectileComponentData {
    readonly fragmentShape: number;
@@ -46,10 +48,11 @@ function decodeData(reader: PacketReader): GuardianGemFragmentProjectileComponen
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
-   
-   const guardianGemFragmentProjectileComponentData = entityComponentData.serverComponentData.get(ServerComponentType.guardianGemFragmentProjectile)!;
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const guardianGemFragmentProjectileComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.guardianGemFragmentProjectile);
    
    const renderPart = new TexturedRenderPart(
       hitbox,

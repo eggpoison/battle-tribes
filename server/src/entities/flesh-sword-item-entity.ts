@@ -34,10 +34,6 @@ export function createFleshSwordItemEntityConfig(position: Point, rotation: numb
    return {
       entityType: EntityType.fleshSwordItemEntity,
       components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.item]: itemComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.fleshSwordItem]: fleshSwordItemComponent
       },
       lights: []
    };

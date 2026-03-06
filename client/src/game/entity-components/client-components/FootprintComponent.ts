@@ -7,6 +7,8 @@ import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { getHitboxTile, getHitboxVelocity } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../game";
+import { getEntityClientComponentTypes } from "../../entity-component-types";
+import { getClientComponentData } from "../../networking/packet-snapshots";
 
 export interface FootprintComponentData {
    readonly footstepParticleIntervalSeconds: number;
@@ -44,7 +46,8 @@ export function createFootprintComponentData(footstepParticleIntervalSeconds: nu
 }
 
 function createComponent(entityComponentData: EntityComponentData): FootprintComponent {
-   const footprintComponentData = entityComponentData.clientComponentData.get(ClientComponentType.footprint)!;
+   const clientComponentTypes = getEntityClientComponentTypes(entityComponentData.entityType);
+   const footprintComponentData = getClientComponentData(entityComponentData.clientComponentData, clientComponentTypes, ClientComponentType.footprint);
    
    return {
       footstepParticleIntervalSeconds: footprintComponentData.footstepParticleIntervalSeconds,

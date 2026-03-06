@@ -1,8 +1,7 @@
 import { assert, BlueprintType, DecorationType, ServerComponentType, EntityType } from "webgl-test-shared";
 import { EntityComponentData } from "./world";
-import { DecorationComponentData } from "./entity-components/server-components/DecorationComponent";
-import { BlueprintComponentData } from "./entity-components/server-components/BlueprintComponent";
-import { MithrilOreNodeComponentData } from "./entity-components/server-components/MithrilOreNodeComponent";
+import { getEntityServerComponentTypes } from "./entity-component-types";
+import { getServerComponentData } from "./networking/packet-snapshots";
 
 export enum RenderLayer {
    lowDecorations,
@@ -98,7 +97,8 @@ export function getEntityRenderLayer(entityType: EntityType, entityComponentData
       }
       // Decorations
       case EntityType.decoration: {
-         const decorationComponentData = entityComponentData.serverComponentData.get(ServerComponentType.decoration)!;
+         const serverComponentTypes = getEntityServerComponentTypes(entityType);
+         const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
          assert(typeof decorationComponentData !== "undefined");
          return decorationIsHigh(decorationComponentData.decorationType) ? RenderLayer.highDecorations : RenderLayer.lowDecorations;
       }
@@ -124,7 +124,8 @@ export function getEntityRenderLayer(entityType: EntityType, entityComponentData
       // @Incomplete: Only blueprints which go on existing buildings should be here, all others should be low entities
       // Blueprints
       case EntityType.blueprintEntity: {
-         const blueprintComponentData = entityComponentData.serverComponentData.get(ServerComponentType.blueprint)!;
+         const serverComponentTypes = getEntityServerComponentTypes(entityType);
+         const blueprintComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.blueprint);
          switch (blueprintComponentData.blueprintType) {
             case BlueprintType.stoneWall:
             case BlueprintType.stoneDoorUpgrade: {
@@ -223,11 +224,12 @@ export function getEntityRenderLayer(entityType: EntityType, entityComponentData
    }
 }
 
-export function calculateRenderDepthFromLayer(renderLayer: RenderLayer, entityComponentData: EntityComponentData): number {
+export function calculateRenderDepthFromLayer(renderLayer: RenderLayer, entityComponentData: EntityComponentData, entityType: EntityType): number {
    /** Variation between 0 and 1 */
    let variation: number;
    if (renderLayer === RenderLayer.mithril) {
-      const mithrilOreNodeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.mithrilOreNode)!;
+      const serverComponentTypes = getEntityServerComponentTypes(entityType);
+      const mithrilOreNodeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.mithrilOreNode);
       variation = mithrilOreNodeComponentData.renderHeight;
    } else {
       variation = Math.random();

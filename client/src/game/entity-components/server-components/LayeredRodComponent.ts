@@ -5,6 +5,8 @@ import ServerComponentArray from "../ServerComponentArray";
 import { registerDirtyRenderInfo } from "../../rendering/render-part-matrices";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 const enum Vars {
    NATURAL_DRIFT = 20 * Settings.DT_S
@@ -76,7 +78,7 @@ const getLayerColour = (entityComponentData: EntityComponentData, r: number, g: 
       case EntityType.grassStrand: {
          // @Speed: a lot of this is shared for all strands
          
-         const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+         const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
          const hitbox = transformComponentData.hitboxes[0];
    
          const tileX = Math.floor(hitbox.box.position.x / Settings.TILE_SIZE);
@@ -156,10 +158,11 @@ function decodeData(reader: PacketReader): LayeredRodComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const layeredRodComponentData = entityComponentData.serverComponentData.get(ServerComponentType.layeredRod)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const layeredRodComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.layeredRod);
 
    const naturalBendX = layeredRodComponentData.naturalBendX;
    const naturalBendY = layeredRodComponentData.naturalBendY;
@@ -186,7 +189,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): LayeredRodComponent {
-   const layeredRodComponentData = entityComponentData.serverComponentData.get(ServerComponentType.layeredRod)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const layeredRodComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.layeredRod);
 
    const naturalBendX = layeredRodComponentData.naturalBendX;
    const naturalBendY = layeredRodComponentData.naturalBendY;
@@ -201,7 +205,8 @@ function createComponent(entityComponentData: EntityComponentData): LayeredRodCo
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const layeredRodComponentData = entityComponentData.serverComponentData.get(ServerComponentType.layeredRod)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const layeredRodComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.layeredRod);
    return layeredRodComponentData.numLayers;
 }
 

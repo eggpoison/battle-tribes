@@ -8,6 +8,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TreeComponentData {
    readonly treeSize: TreeSize;
@@ -44,10 +46,11 @@ function decodeData(reader: PacketReader): TreeComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const treeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tree)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const treeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tree);
    
    renderInfo.attachRenderPart(
       new TexturedRenderPart(
@@ -62,8 +65,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): TreeComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const treeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tree);
    return {
-      treeSize: entityComponentData.serverComponentData.get(ServerComponentType.tree)!.treeSize
+      treeSize: treeComponentData.treeSize
    };
 }
 

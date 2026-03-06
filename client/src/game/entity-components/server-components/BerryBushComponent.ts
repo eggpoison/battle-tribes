@@ -8,6 +8,8 @@ import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle } from ".
 import { playSoundOnHitbox } from "../../sound";
 import { registerDirtyRenderInfo } from "../../rendering/render-part-matrices";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface BerryBushComponentData {
    readonly numBerries: number;
@@ -48,14 +50,17 @@ function decodeData(reader: PacketReader): BerryBushComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const berryBushComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.berryBush);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
-      getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[entityComponentData.serverComponentData.get(ServerComponentType.berryBush)!.numBerries])
+      getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponentData.numBerries])
    );
    renderPart.addTag("berryBushComponent:renderPart");
    renderInfo.attachRenderPart(renderPart)
@@ -66,8 +71,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): BerryBushComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const berryBushComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.berryBush);
+
    return {
-      numBerries: entityComponentData.serverComponentData.get(ServerComponentType.berryBush)!.numBerries,
+      numBerries: berryBushComponentData.numBerries,
       renderPart: intermediateInfo.renderPart
    };
 }

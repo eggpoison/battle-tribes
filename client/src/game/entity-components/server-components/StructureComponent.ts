@@ -5,6 +5,8 @@ import { EntityComponentData, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { addFenceConnection, FenceComponentArray, removeFenceConnection } from "./FenceComponent";
 import { TransformComponentArray } from "./TransformComponent";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface StructureComponentData {
    readonly hasActiveBlueprint: boolean;
@@ -47,7 +49,8 @@ function decodeData(reader: PacketReader): StructureComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): StructureComponent {
-   const structureComponentData = entityComponentData.serverComponentData.get(ServerComponentType.structure)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const structureComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.structure);
    
    return {
       hasActiveBlueprint: structureComponentData.hasActiveBlueprint,

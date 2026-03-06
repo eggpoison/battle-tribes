@@ -5,6 +5,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
+import { getTransformComponentData } from "../../networking/packet-snapshots";
 
 export interface StonecarvingTableComponentData {}
 
@@ -20,7 +21,7 @@ export function createStonecarvingTableComponentData(): StonecarvingTableCompone
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponent.hitboxes[0];
    
    renderInfo.attachRenderPart(

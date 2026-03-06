@@ -8,6 +8,8 @@ import { StructureConnection } from "../../structure-placement";
 import { Hitbox } from "../../hitboxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface FenceComponentData {}
 
@@ -77,7 +79,7 @@ const createConnectingRenderPart = (connection: StructureConnection, parentHitbo
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponent.hitboxes[0];
    
    renderInfo.attachRenderPart(
@@ -92,7 +94,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const connectingRenderParts: Record<Entity, RenderPart> = {};
 
    // Create initial connecting render parts
-   const structureComponentData = entityComponentData.serverComponentData.get(ServerComponentType.structure)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const structureComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.structure);
    for (const connection of structureComponentData.connections) {
       const renderPart = createConnectingRenderPart(connection, hitbox);
       renderInfo.attachRenderPart(renderPart);

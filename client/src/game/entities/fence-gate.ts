@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
 import { createFenceGateComponentData } from "../entity-components/server-components/FenceGateComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createStatusEffectComponentData } from "../entity-components/server-components/StatusEffectComponent";
@@ -8,7 +8,6 @@ import { createTribeComponentData } from "../entity-components/server-components
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
-import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createFenceGateConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -20,15 +19,14 @@ export function createFenceGateConfig(position: Point, rotation: number, tribe: 
 
    return {
       entityType: EntityType.fenceGate,
-      serverComponentData: new Map([
-         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
-         [ServerComponentType.health, createHealthComponentData()],
-         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
-         [ServerComponentType.structure, createStructureComponentData()],
-         [ServerComponentType.tribe, createTribeComponentData(tribe)],
-         [ServerComponentType.fenceGate, createFenceGateComponentData()]
-      // @HACK
-      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
-      clientComponentData: new Map()
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createFenceGateComponentData()
+      ],
+      clientComponentData: []
    };
 }

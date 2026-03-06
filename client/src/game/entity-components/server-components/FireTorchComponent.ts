@@ -7,6 +7,7 @@ import { createEmberParticle, createSmokeParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { tickIntervalHasPassed } from "../../game";
+import { getTransformComponentData } from "../../networking/packet-snapshots";
 
 export interface FireTorchComponentData {}
 
@@ -27,7 +28,7 @@ function decodeData(): FireTorchComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    const renderPart = new TexturedRenderPart(

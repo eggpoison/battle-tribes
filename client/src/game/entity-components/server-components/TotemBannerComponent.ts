@@ -9,6 +9,8 @@ import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { TribeComponentArray } from "./TribeComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TotemBannerComponentData {
    readonly banners: Record<number, TribeTotemBanner>;
@@ -99,7 +101,7 @@ const createBannerRenderPart = (tribeType: TribeType, renderInfo: EntityRenderIn
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
    // Main render part
@@ -112,8 +114,9 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       )
    );
    
-   const bannerComponentData = entityComponentData.serverComponentData.get(ServerComponentType.totemBanner)!;
-   const tribeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribe)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const bannerComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.totemBanner);
+   const tribeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribe);
    
    const renderParts = new Array<TexturedRenderPart>();
    
@@ -128,8 +131,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TotemBannerComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   
    return {
-      banners: entityComponentData.serverComponentData.get(ServerComponentType.totemBanner)!.banners,
+      banners: getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.totemBanner).banners,
       bannerRenderParts: intermediateInfo.bannerRenderParts
    };
 }

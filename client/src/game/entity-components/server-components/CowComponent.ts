@@ -11,6 +11,8 @@ import { RenderPart } from "../../render-parts/render-parts";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { tickIntervalHasPassed } from "../../game";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface CowComponentData {
    readonly species: CowSpecies;
@@ -55,9 +57,10 @@ function decodeData(reader: PacketReader): CowComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    
-   const cowComponentData = entityComponentData.serverComponentData.get(ServerComponentType.cow)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cowComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cow);
    const cowNum = cowComponentData.species === CowSpecies.brown ? 1 : 2;
 
    let headRenderPart!: RenderPart;
@@ -89,7 +92,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): CowComponent {
-   const cowComponentData = entityComponentData.serverComponentData.get(ServerComponentType.cow)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cowComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cow);
    
    return {
       species: cowComponentData.species,

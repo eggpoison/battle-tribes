@@ -9,6 +9,8 @@ import { playSoundOnHitbox } from "../../sound";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { tickIntervalHasPassed } from "../../game";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface FishComponentData {
    readonly colour: FishColour;
@@ -42,10 +44,11 @@ function decodeData(reader: PacketReader): FishComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const fishComponentData = entityComponentData.serverComponentData.get(ServerComponentType.fish)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const fishComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.fish);
    
    renderInfo.attachRenderPart(
       new TexturedRenderPart(
@@ -60,8 +63,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): FishComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const fishComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.fish);
+
    return {
-      colour: entityComponentData.serverComponentData.get(ServerComponentType.fish)!.colour,
+      colour: fishComponentData.colour,
       waterOpacityMultiplier: randFloat(0.6, 1)
    };
 }

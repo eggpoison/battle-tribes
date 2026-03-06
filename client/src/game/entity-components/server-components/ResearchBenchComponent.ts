@@ -6,6 +6,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getEntityAgeTicks } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface ResearchBenchComponentData {
    readonly isOccupied: boolean;
@@ -36,7 +38,7 @@ function decodeData(reader: PacketReader): ResearchBenchComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    renderInfo.attachRenderPart(
@@ -52,8 +54,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): ResearchBenchComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const researchBenchComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.researchBench);
    return {
-      isOccupied: entityComponentData.serverComponentData.get(ServerComponentType.researchBench)!.isOccupied
+      isOccupied: researchBenchComponentData.isOccupied
    };
 }
 

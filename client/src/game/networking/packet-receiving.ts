@@ -13,6 +13,7 @@ import { gameUIState } from "../../ui-state/game-ui-state";
 import { getSelectedItemInfo } from "../player-action-handling";
 import { playerActionState } from "../../ui-state/player-action-state";
 import { gameIsRunning, resyncGame } from "../game";
+import { registerEntityComponentTypesFromData } from "../entity-component-types";
 
 const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {
    // Initially find all tiles below a dropdown tile
@@ -168,6 +169,8 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
    }
 
    registerTamingSpecsFromData(reader);
+
+   registerEntityComponentTypesFromData(reader);
 }
 
 

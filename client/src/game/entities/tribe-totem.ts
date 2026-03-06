@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, CircularBox, HitboxCollisionType } from "webgl-test-shared";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, CircularBox, HitboxCollisionType } from "webgl-test-shared";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createStatusEffectComponentData } from "../entity-components/server-components/StatusEffectComponent";
 import { createStructureComponentData } from "../entity-components/server-components/StructureComponent";
@@ -8,7 +8,6 @@ import { createTribeComponentData } from "../entity-components/server-components
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
-import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createTribeTotemConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -20,15 +19,14 @@ export function createTribeTotemConfig(position: Point, rotation: number, tribe:
 
    return {
       entityType: EntityType.tribeTotem,
-      serverComponentData: new Map([
-         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
-         [ServerComponentType.health, createHealthComponentData()],
-         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
-         [ServerComponentType.structure, createStructureComponentData()],
-         [ServerComponentType.tribe, createTribeComponentData(tribe)],
-         [ServerComponentType.totemBanner, createTotemBannerComponentData()]
-      // @HACK
-      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
-      clientComponentData: new Map()
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createTotemBannerComponentData()
+      ],
+      clientComponentData: []
    };
 }

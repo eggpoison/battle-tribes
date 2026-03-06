@@ -5,6 +5,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { OkrenAgeStage } from "./OkrenComponent";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface OkrenClawComponentData {
    readonly size: OkrenAgeStage;
@@ -66,7 +68,8 @@ const getSlashingArmSegmentTextureSource = (sizeString: string, growthStageStrin
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const okrenClawComponentData = entityComponentData.serverComponentData.get(ServerComponentType.okrenClaw)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const okrenClawComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.okrenClaw);
 
    const sizeString = getSizeString(okrenClawComponentData.size);
    const growthStageString = getGrowthStageString(okrenClawComponentData.growthStage);
@@ -75,7 +78,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    let mediumArmSegment!: TexturedRenderPart;
    let slashingArmSegment!: TexturedRenderPart;
    
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    for (const hitbox of transformComponentData.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.OKREN_BIG_ARM_SEGMENT)) {
          bigArmSegment = new TexturedRenderPart(
@@ -112,7 +115,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): OkrenClawComponent {
-   const okrenClawComponentData = entityComponentData.serverComponentData.get(ServerComponentType.okrenClaw)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const okrenClawComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.okrenClaw);
 
    return {
       growthStage: okrenClawComponentData.growthStage,

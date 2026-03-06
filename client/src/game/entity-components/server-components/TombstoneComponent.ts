@@ -9,6 +9,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TombstoneComponentData {
    readonly tombstoneType: number;
@@ -68,10 +70,11 @@ function decodeData(reader: PacketReader): TombstoneComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const tombstoneComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tombstone)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tombstoneComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tombstone);
    
    renderInfo.attachRenderPart(
       new TexturedRenderPart(
@@ -86,7 +89,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): TombstoneComponent {
-   const tombstoneComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tombstone)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tombstoneComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tombstone);
    return {
       tombstoneType: tombstoneComponentData. tombstoneType,
       zombieSpawnProgress: tombstoneComponentData. zombieSpawnProgress,

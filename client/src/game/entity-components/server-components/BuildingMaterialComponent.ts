@@ -2,6 +2,8 @@ import { PacketReader, Entity, EntityType, BuildingMaterial, ServerComponentType
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface BuildingMaterialComponentData {
    readonly material: BuildingMaterial;
@@ -50,8 +52,11 @@ function decodeData(reader: PacketReader): BuildingMaterialComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): BuildingMaterialComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
+
    return {
-      material: entityComponentData.serverComponentData.get(ServerComponentType.buildingMaterial)!.material
+      material: buildingMaterialComponentData.material
    };
 }
 

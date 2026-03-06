@@ -10,6 +10,8 @@ import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../w
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { tamingMenuState } from "../../../ui-state/taming-menu-state";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TamingSkillLearning {
    readonly skill: TamingSkill;
@@ -153,10 +155,11 @@ const createTamingTierRenderPart = (tamingTier: number, parentHitbox: Hitbox): T
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const tamingComponentData = entityComponentData.serverComponentData.get(ServerComponentType.taming)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tamingComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.taming);
    const tamingTier = tamingComponentData.tamingTier;
 
    // @HACK @TEMPORARY: the entity intermediate info's render info is the wrong one to use for glurbs, sooo... we don't set it and let the updateFromData figure it out.
@@ -200,7 +203,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TamingComponent {
-   const tamingComponentData = entityComponentData.serverComponentData.get(ServerComponentType.taming)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tamingComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.taming);
    return {
       tamingTier: tamingComponentData.tamingTier,
       foodEatenInTier: tamingComponentData.foodEatenInTier,

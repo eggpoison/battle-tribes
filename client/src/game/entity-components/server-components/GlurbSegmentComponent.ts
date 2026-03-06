@@ -9,6 +9,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getEntityLayer, getEntityRenderInfo } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformComponent";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
 
 export interface GlurbSegmentComponentData {
    readonly mossBallCompleteness: number;
@@ -59,11 +61,12 @@ const createMossBallRenderPart = (mossBallCompleteness: number, parentHitbox: Hi
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const glurbSegmentComponentData = entityComponentData.serverComponentData.get(ServerComponentType.glurbSegment)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const glurbSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.glurbSegment);
 
    let renderPart: TexturedRenderPart | null;
    if (glurbSegmentComponentData.mossBallCompleteness > 0) {
-      const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
    
       renderPart = createMossBallRenderPart(glurbSegmentComponentData.mossBallCompleteness, hitbox);

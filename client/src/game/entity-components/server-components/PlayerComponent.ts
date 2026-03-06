@@ -1,6 +1,8 @@
 import { ServerComponentType, PacketReader } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface PlayerComponentData {
    readonly username: string;
@@ -20,8 +22,10 @@ function decodeData(reader: PacketReader): PlayerComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): PlayerComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const playerComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.player);
    return {
-      username: entityComponentData.serverComponentData.get(ServerComponentType.player)!.username
+      username: playerComponentData.username
    };
 }
 

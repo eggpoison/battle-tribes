@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createPlanterBoxComponentData } from "../entity-components/server-components/PlanterBoxComponent";
@@ -8,7 +8,6 @@ import { createTransformComponentData } from "../entity-components/server-compon
 import { createTribeComponentData } from "../entity-components/server-components/TribeComponent";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
-import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createPlanterBoxConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -20,15 +19,14 @@ export function createPlanterBoxConfig(position: Point, rotation: number, tribe:
 
    return {
       entityType: EntityType.planterBox,
-      serverComponentData: new Map([
-         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
-         [ServerComponentType.health, createHealthComponentData()],
-         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
-         [ServerComponentType.structure, createStructureComponentData()],
-         [ServerComponentType.tribe, createTribeComponentData(tribe)],
-         [ServerComponentType.planterBox, createPlanterBoxComponentData()]
-      // @HACK
-      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
-      clientComponentData: new Map()
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createPlanterBoxComponentData()
+      ],
+      clientComponentData: []
    };
 }

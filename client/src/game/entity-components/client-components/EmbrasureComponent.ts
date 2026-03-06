@@ -8,8 +8,10 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
-import { BuildingMaterialComponentData, EMBRASURE_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
-import { TransformComponentArray, TransformComponentData } from "../server-components/TransformComponent";
+import { EMBRASURE_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface EmbrasureComponentData {}
 
@@ -27,10 +29,11 @@ export function createEmbrasureComponentData(): EmbrasureComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const buildingMaterialComponentData = entityComponentData.serverComponentData.get(ServerComponentType.buildingMaterial)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
 
    const renderPart = new TexturedRenderPart(
       hitbox,

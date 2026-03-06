@@ -8,6 +8,8 @@ import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { getHitboxByLocalID } from "../../hitboxes";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface CactusFlower {
    readonly parentHitboxLocalID: number;
@@ -72,7 +74,7 @@ function decodeData(reader: PacketReader): CactusComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
       const hitbox = transformComponentData.hitboxes[i];
 
@@ -86,8 +88,9 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    }
 
    // Flowers
-   const cactusComponentConfig = entityComponentData.serverComponentData.get(ServerComponentType.cactus)!;
-   for (const flower of cactusComponentConfig.flowers) {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cactusComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cactus);
+   for (const flower of cactusComponentData.flowers) {
       const hitbox = getHitboxByLocalID(transformComponentData.hitboxes, flower.parentHitboxLocalID);
       assert(hitbox !== null);
       
@@ -106,16 +109,20 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): CactusComponent {
-   const cactusComponentConfig = entityComponentData.serverComponentData.get(ServerComponentType.cactus)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cactusComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cactus);
    return {
-      flowers: cactusComponentConfig.flowers
+      flowers: cactusComponentData.flowers
    };
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
-   const cactusComponentConfig = entityComponentData.serverComponentData.get(ServerComponentType.cactus)!;
-   return transformComponentData.hitboxes.length + cactusComponentConfig.flowers.length;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cactusComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cactus);
+
+   return transformComponentData.hitboxes.length + cactusComponentData.flowers.length;
 }
 
 function onHit(entity: Entity): void {

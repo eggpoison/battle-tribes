@@ -7,6 +7,8 @@ import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface IceSpikesPlantedComponentData {
    readonly growthProgress: number;
@@ -41,10 +43,11 @@ function decodeData(reader: PacketReader): IceSpikesPlantedComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const iceSpikesPlantedComponentData = entityComponentData.serverComponentData.get(ServerComponentType.iceSpikesPlanted)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const iceSpikesPlantedComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.iceSpikesPlanted);
    
    const renderPart = new TexturedRenderPart(
       hitbox,

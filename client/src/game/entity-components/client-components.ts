@@ -47,112 +47,113 @@ export type ClientComponentData<T extends ClientComponentType> = ReturnType<type
 
 // @Cleanup: if this gets too large/unwieldy i should rework this
 export function getEntityClientComponentConfigs(entityType: EntityType): EntityClientComponentData {
-   const clientComponentData: EntityClientComponentData = new Map();
+   const clientComponentData = new Array<ClientComponentData<ClientComponentType>>();
    
    switch (entityType) {
       case EntityType.cow: {
-         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.3, 20, 64, 5, 40, false));
+         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
          break;
       }
       case EntityType.player: {
-         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.2, 20, 64, 4, 64, false));
-         clientComponentData.set(ClientComponentType.equipment, createEquipmentComponentData());
+         clientComponentData.push(createFootprintComponentData(0.2, 20, 64, 4, 64, false));
+         clientComponentData.push(createEquipmentComponentData());
          break;
       }
       case EntityType.tribeWorker: {
-         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.15, 20, 64, 4, 50, false));
-         clientComponentData.set(ClientComponentType.equipment, createEquipmentComponentData());
+         clientComponentData.push(createFootprintComponentData(0.15, 20, 64, 4, 50, false));
+         clientComponentData.push(createEquipmentComponentData());
          break;
       }
       case EntityType.tribeWarrior: {
-         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.15, 20, 64, 4, 64, false));
-         clientComponentData.set(ClientComponentType.equipment, createEquipmentComponentData());
+         clientComponentData.push(createFootprintComponentData(0.15, 20, 64, 4, 64, false));
+         clientComponentData.push(createEquipmentComponentData());
          break;
       }
       case EntityType.krumblid: {
-         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.3, 20, 64, 5, 50, false));
+         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 50, false));
          break;
       }
       case EntityType.lilypad: {
-         clientComponentData.set(ClientComponentType.lilypad, createLilypadComponentData());
+         clientComponentData.push(createLilypadComponentData());
          break;
       }
       case EntityType.frostshaper: {
-         clientComponentData.set(ClientComponentType.frostshaper, createFrostshaperComponentData());
+         clientComponentData.push(createFrostshaperComponentData());
          break;
       }
       case EntityType.embrasure: {
-         clientComponentData.set(ClientComponentType.embrasure, createEmbrasureComponentData());
+         clientComponentData.push(createEmbrasureComponentData());
          break;
       }
       case EntityType.pebblum: {
-         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.3, 20, 64, 5, 40, false));
+         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
          break;
       }
       case EntityType.wallSpikes:
       case EntityType.floorSpikes: {
-         clientComponentData.set(ClientComponentType.regularSpikes, createRegularSpikesComponentData());
+         clientComponentData.push(createRegularSpikesComponentData());
          break;
       }
       case EntityType.stonecarvingTable: {
-         clientComponentData.set(ClientComponentType.stonecarvingTable, createStonecarvingTableComponentData());
+         clientComponentData.push(createStonecarvingTableComponentData());
          break;
       }
       case EntityType.wall: {
-         clientComponentData.set(ClientComponentType.wall, createWallComponentData());
+         clientComponentData.push(createWallComponentData());
          break;
       }
       case EntityType.warriorHut: {
-         clientComponentData.set(ClientComponentType.warriorHut, createWarriorHutComponentData());
+         clientComponentData.push(createWarriorHutComponentData());
          break;
       }
       case EntityType.workbench: {
-         clientComponentData.set(ClientComponentType.workbench, createWorkbenchComponentData());
+         clientComponentData.push(createWorkbenchComponentData());
          break;
       }
       case EntityType.workerHut: {
-         clientComponentData.set(ClientComponentType.workerHut, createWorkerHutComponentData());
+         clientComponentData.push(createWorkerHutComponentData());
          break;
       }
       case EntityType.yeti: {
-         clientComponentData.set(ClientComponentType.randomSound, createRandomSoundComponentData());
+         clientComponentData.push(createRandomSoundComponentData());
          break;
       }
       case EntityType.ballistaFrostcicle: {
-         clientComponentData.set(ClientComponentType.ballistaFrostcicle, createBallistaFrostcicleComponentData());
+         clientComponentData.push(createBallistaFrostcicleComponentData());
          break;
       }
       case EntityType.ballistaRock: {
-         clientComponentData.set(ClientComponentType.ballistaRock, createBallistaRockComponentData());
+         clientComponentData.push(createBallistaRockComponentData());
          break;
       }
       case EntityType.ballistaSlimeball: {
-         clientComponentData.set(ClientComponentType.ballistaSlimeball, createBallistaSlimeballComponentData());
+         clientComponentData.push(createBallistaSlimeballComponentData());
          break;
       }
       case EntityType.ballistaWoodenBolt: {
-         clientComponentData.set(ClientComponentType.ballistaWoodenBolt, createBallistaWoodenBoltComponentData());
+         clientComponentData.push(createBallistaWoodenBoltComponentData());
          break;
       }
       case EntityType.battleaxeProjectile: {
-         clientComponentData.set(ClientComponentType.thrownBattleaxe, createThrownBattleaxeComponentData());
+         clientComponentData.push(createThrownBattleaxeComponentData());
          break;
       }
       case EntityType.woodenArrow: {
-         clientComponentData.set(ClientComponentType.woodenArrow, createWoodenArrowComponentData());
+         clientComponentData.push(createWoodenArrowComponentData());
          break;
       }
       case EntityType.glurbTailSegment: {
-         clientComponentData.set(ClientComponentType.glurbTailSegment, {});
+         clientComponentData.push({});
          break;
       }
       case EntityType.snobe: {
-         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.3, 20, 48, 5, 40, true));
-         clientComponentData.set(ClientComponentType.randomSound, createRandomSoundComponentData());
+         clientComponentData.push(createFootprintComponentData(0.3, 20, 48, 5, 40, true));
+         clientComponentData.push(createRandomSoundComponentData());
          break;
       }
+      // @Cleanup: doubled. i think this is supposed to be a different entity??
       case EntityType.snobe: {
-         clientComponentData.set(ClientComponentType.footprint, createFootprintComponentData(0.3, 20, 64, 5, 40, false));
+         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
          break;
       }
    }

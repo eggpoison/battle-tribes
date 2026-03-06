@@ -9,6 +9,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface BoulderComponentData {
    readonly boulderType: number;
@@ -38,10 +40,11 @@ function decodeData(reader: PacketReader): BoulderComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const boulderComponentData = entityComponentData.serverComponentData.get(ServerComponentType.boulder)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const boulderComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.boulder);
    
    renderInfo.attachRenderPart(
       new TexturedRenderPart(
@@ -56,8 +59,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): BoulderComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const boulderComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.boulder);
+
    return {
-      boulderType: entityComponentData.serverComponentData.get(ServerComponentType.boulder)!.boulderType
+      boulderType: boulderComponentData.boulderType
    };
 }
 

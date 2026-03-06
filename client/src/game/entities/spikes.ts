@@ -1,4 +1,4 @@
-import { Point, EntityType, BuildingMaterial, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
+import { Point, EntityType, BuildingMaterial, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
 import { createBuildingMaterialComponentData } from "../entity-components/server-components/BuildingMaterialComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createSpikesComponentData } from "../entity-components/server-components/SpikesComponent";
@@ -9,7 +9,6 @@ import { createTribeComponentData } from "../entity-components/server-components
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
-import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createFloorSpikesConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -21,17 +20,16 @@ export function createFloorSpikesConfig(position: Point, rotation: number, tribe
 
    return {
       entityType: EntityType.floorSpikes,
-      serverComponentData: new Map([
-         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
-         [ServerComponentType.health, createHealthComponentData()],
-         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
-         [ServerComponentType.structure, createStructureComponentData()],
-         [ServerComponentType.tribe, createTribeComponentData(tribe)],
-         [ServerComponentType.buildingMaterial, createBuildingMaterialComponentData(material)],
-         [ServerComponentType.spikes, createSpikesComponentData()]
-      // @HACK
-      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
-      clientComponentData: new Map()
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createBuildingMaterialComponentData(material),
+         createSpikesComponentData()
+      ],
+      clientComponentData: []
    };
 }
 
@@ -45,16 +43,15 @@ export function createWallSpikesConfig(position: Point, rotation: number, tribe:
 
    return {
       entityType: EntityType.wallSpikes,
-      serverComponentData: new Map([
-         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
-         [ServerComponentType.health, createHealthComponentData()],
-         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
-         [ServerComponentType.structure, createStructureComponentData()],
-         [ServerComponentType.tribe, createTribeComponentData(tribe)],
-         [ServerComponentType.buildingMaterial, createBuildingMaterialComponentData(material)],
-         [ServerComponentType.spikes, createSpikesComponentData()]
-      // @HACK
-      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
-      clientComponentData: new Map()
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createBuildingMaterialComponentData(material),
+         createSpikesComponentData()
+      ],
+      clientComponentData: []
    };
 }

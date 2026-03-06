@@ -10,6 +10,8 @@ import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { tickIntervalHasPassed } from "../../game";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface SnowballComponentData {
    readonly size: number;
@@ -33,10 +35,11 @@ function decodeData(reader: PacketReader): SnowballComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const snowballComponentData = entityComponentData.serverComponentData.get(ServerComponentType.snowball)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const snowballComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.snowball);
 
    renderInfo.attachRenderPart(
       new TexturedRenderPart(

@@ -60,7 +60,7 @@ function decodeData(reader: PacketReader): YetiComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
    const pawRenderParts = new Array<VisualRenderPart>();
    for (const hitbox of transformComponentData.hitboxes) {

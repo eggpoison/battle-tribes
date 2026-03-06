@@ -9,6 +9,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { currentSnapshot } from "../../game";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 type HutType = EntityType.workerHut | EntityType.warriorHut;
 
@@ -107,17 +109,21 @@ const createRecallMarker = (parentHitbox: Hitbox): TexturedRenderPart => {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const hutComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.hut);
    
    return {
       doorRenderParts: renderInfo.getRenderThings("hutComponent:door") as Array<VisualRenderPart>,
-      recallMarker: entityComponentData.serverComponentData.get(ServerComponentType.hut)!.isRecalling ? createRecallMarker(hitbox) : null
+      recallMarker: hutComponentData.isRecalling ? createRecallMarker(hitbox) : null
    };
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): HutComponent {
-   const hutComponentData = entityComponentData.serverComponentData.get(ServerComponentType.hut)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const hutComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.hut);
    
    return {
       doorRenderParts: intermediateInfo.doorRenderParts,

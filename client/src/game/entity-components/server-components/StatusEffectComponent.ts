@@ -11,6 +11,8 @@ import { ComponentTint, createComponentTint } from "../../EntityRenderInfo";
 import { playerInstance } from "../../player";
 import { getHitboxVelocity } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../game";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface StatusEffectComponentData {
    readonly statusEffects: Array<StatusEffectData>;
@@ -80,8 +82,10 @@ function decodeData(reader: PacketReader): StatusEffectComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): StatusEffectComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const statusEffectComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.statusEffect);
    return {
-      statusEffects: entityComponentData.serverComponentData.get(ServerComponentType.statusEffect)!.statusEffects,
+      statusEffects: statusEffectComponentData.statusEffects,
       burningLight: null
    };
 }

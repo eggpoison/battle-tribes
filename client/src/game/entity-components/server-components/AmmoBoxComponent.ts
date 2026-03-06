@@ -8,6 +8,8 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { currentSnapshot } from "../../game";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface AmmoBoxComponentData {
    readonly ammoType: TurretAmmoType | null;
@@ -62,9 +64,12 @@ function decodeData(reader: PacketReader): AmmoBoxComponentData {
 }
 
 function createIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const ammoBoxComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.ammoBox);
+
    let ammoWarningRenderPart: VisualRenderPart | null;
-   if (entityComponentData.serverComponentData.get(ServerComponentType.ammoBox)!.ammoType === null) {
-      const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   if (ammoBoxComponentData.ammoType === null) {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
       
       ammoWarningRenderPart = createAmmoWarningRenderPart(hitbox);
@@ -79,7 +84,8 @@ function createIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentDat
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): AmmoBoxComponent {
-   const ammoBoxComponentData = entityComponentData.serverComponentData.get(ServerComponentType.ammoBox)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const ammoBoxComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.ammoBox);
    
    return {
       ammoType: ammoBoxComponentData.ammoType,

@@ -8,6 +8,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface SpruceTreeComponentData {
    readonly treeSize: TreeSize;
@@ -47,10 +49,11 @@ function decodeData(reader: PacketReader): SpruceTreeComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const spruceTreeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.spruceTree)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const spruceTreeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.spruceTree);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -81,8 +84,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): SpruceTreeComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const spruceTreeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.spruceTree);
    return {
-      treeSize: entityComponentData.serverComponentData.get(ServerComponentType.spruceTree)!.treeSize
+      treeSize: spruceTreeComponentData.treeSize
    };
 }
 

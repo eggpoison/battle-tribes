@@ -9,6 +9,8 @@ import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../par
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface DoorComponentData {
    readonly toggleType: DoorToggleType;
@@ -45,10 +47,11 @@ function decodeData(reader: PacketReader): DoorComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const buildingMaterialComponentData = entityComponentData.serverComponentData.get(ServerComponentType.buildingMaterial)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
 
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -64,7 +67,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): DoorComponent {
-   const doorComponentData = entityComponentData.serverComponentData.get(ServerComponentType.door)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const doorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.door);
    
    return {
       toggleType: doorComponentData.toggleType,

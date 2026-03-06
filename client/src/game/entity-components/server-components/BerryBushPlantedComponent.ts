@@ -8,6 +8,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH } from "../../particles";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface BerryBushPlantedComponentData {
    readonly growthProgress: number;
@@ -62,10 +64,11 @@ function decodeData(reader: PacketReader): BerryBushPlantedComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const berryBushPlantedComponentData = entityComponentData.serverComponentData.get(ServerComponentType.berryBushPlanted)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const berryBushPlantedComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.berryBushPlanted);
    
    const renderPart = new TexturedRenderPart(
       hitbox,

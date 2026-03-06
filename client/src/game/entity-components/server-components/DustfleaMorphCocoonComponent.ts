@@ -7,6 +7,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface DustfleaMorphCocoonComponentData {
    readonly stage: number;
@@ -45,10 +47,11 @@ function decodeData(reader: PacketReader): DustfleaMorphCocoonComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const dustfleaMorphCocoonComponentData = entityComponentData.serverComponentData.get(ServerComponentType.dustfleaMorphCocoon)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const dustfleaMorphCocoonComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.dustfleaMorphCocoon);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -64,7 +67,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): DustfleaMorphCocoonComponent {
-   const dustfleaMorphCocoonComponentData = entityComponentData.serverComponentData.get(ServerComponentType.dustfleaMorphCocoon)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const dustfleaMorphCocoonComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.dustfleaMorphCocoon);
 
    return {
       stage: dustfleaMorphCocoonComponentData.stage,

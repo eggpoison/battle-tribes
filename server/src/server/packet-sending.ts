@@ -19,6 +19,7 @@ import { addTamingSpecToData, getTamingSpecDataLength, getTamingSpecsMap } from 
 import { Point } from "../../../shared/src/utils";
 import { addLightData, getEntityHitboxLights, getLightDataLength } from "../lights";
 import { getPlayerClients } from "./player-clients";
+import { ENTITY_COMPONENT_TYPES } from "../entity-component-types";
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -50,13 +51,11 @@ export function addInventoryDataToPacket(packet: Packet, inventory: Inventory): 
 }
 
 export function getEntityDataLength(entity: Entity, player: Entity | null): number {
-   let lengthBytes = 5 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
 
    for (let i = 0; i < ComponentArrays.length; i++) {
       const componentArray = ComponentArrays[i];
-
       if (componentArray.hasComponent(entity)) {
-         lengthBytes += Float32Array.BYTES_PER_ELEMENT; // Component type
          lengthBytes += componentArray.getDataLength(entity, player);
       }
    }
@@ -65,18 +64,19 @@ export function getEntityDataLength(entity: Entity, player: Entity | null): numb
 }
 
 export function addEntityDataToPacket(packet: Packet, entity: Entity, player: Entity | null): void {
+   const entityType = getEntityType(entity);
+   
    // Entity ID, type, spawn time, and layer
    packet.writeNumber(entity);
-   packet.writeNumber(getEntityType(entity));
+   packet.writeNumber(entityType);
    // @Bandwidth: Only include when client doesn't know about this information
    packet.writeNumber(getEntitySpawnTicks(entity));
    packet.writeNumber(layers.indexOf(getEntityLayer(entity)));
 
-   const componentTypes = getEntityComponentTypes(entity);
+   const componentTypes = ENTITY_COMPONENT_TYPES[entityType];
    const componentArrayRecord = getComponentArrayRecord();
 
    // Components
-   packet.writeNumber(componentTypes.length);
    for (let i = 0; i < componentTypes.length; i++) {
       const componentType = componentTypes[i];
       const componentArray = componentArrayRecord[componentType];
@@ -85,7 +85,6 @@ export function addEntityDataToPacket(packet: Packet, entity: Entity, player: En
       if (componentArray.hasComponent(entity)) {
          const start = packet.currentByteOffset;
          
-         packet.writeNumber(componentType);
          componentArray.addDataToPacket(packet, entity, player);
 
          // @Speed
@@ -459,6 +458,11 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
       lengthBytes += Float32Array.BYTES_PER_ELEMENT;
       lengthBytes += getTamingSpecDataLength(pair[1]);
    }
+   // Entity component types
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   for (const componentTypes of ENTITY_COMPONENT_TYPES) {
+      lengthBytes += Float32Array.BYTES_PER_ELEMENT + componentTypes.length * Float32Array.BYTES_PER_ELEMENT;
+   }
    lengthBytes = alignLengthBytes(lengthBytes);
    const packet = new Packet(PacketType.initialGameData, lengthBytes);
    
@@ -513,6 +517,15 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
    for (const pair of tamingSpecsMap) {
       packet.writeNumber(pair[0])
       addTamingSpecToData(packet, pair[1]);
+   }
+
+   // Entity component types
+   packet.writeNumber(ENTITY_COMPONENT_TYPES.length);
+   for (const componentTypes of ENTITY_COMPONENT_TYPES) {
+      packet.writeNumber(componentTypes.length);
+      for (const componentType of componentTypes) {
+         packet.writeNumber(componentType);
+      }
    }
 
    return packet.buffer;

@@ -8,6 +8,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface MithrilOreNodeComponentData {
    readonly size: number;
@@ -36,10 +38,11 @@ function decodeData(reader: PacketReader): MithrilOreNodeComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const mithrilOreNodeComponentData = entityComponentData.serverComponentData.get(ServerComponentType.mithrilOreNode)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const mithrilOreNodeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.mithrilOreNode);
    const size = mithrilOreNodeComponentData.size;
    const variant = mithrilOreNodeComponentData.variant;
 

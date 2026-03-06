@@ -26,7 +26,7 @@ function decodeData(reader: PacketReader): TundraRockComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
    const tundraRockComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tundraRock)!;

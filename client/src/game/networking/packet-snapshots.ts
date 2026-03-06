@@ -25,26 +25,12 @@ import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
 import { entitySelectionState } from "../../ui-state/entity-selection-state";
 import ServerComponentArray, { getServerComponentArray } from "../entity-components/ServerComponentArray";
 import { updateParticles } from "../rendering/webgl/particle-rendering";
+import { getEntityServerComponentTypes } from "../entity-component-types";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
-// @HACK! Shouldn't be necessary
-export type EntityServerComponentDataEntries<T extends ServerComponentType> = ReadonlyArray<[T, ServerComponentData<T>]>;
-
-export interface EntityServerComponentData extends Map<ServerComponentType, any> {
-   get<K extends ServerComponentType>(key: K): ServerComponentData<K> | undefined;
-   set<K extends ServerComponentType>(key: K, value: ServerComponentData<K>): this;
-
-   // @Incomplete?
-   // [Symbol.iterator](): IterableIterator<[ServerComponentType, ComponentTypeMap[ServerComponentType]]>;
-}
-export interface EntityClientComponentData extends Map<ClientComponentType, any> {
-   get<K extends ClientComponentType>(key: K): ClientComponentData<K> | undefined;
-   set<K extends ClientComponentType>(key: K, value: ClientComponentData<K>): this;
-
-   // @Incomplete?
-   // [Symbol.iterator](): IterableIterator<[ServerComponentType, ComponentTypeMap[ServerComponentType]]>;
-}
+export type EntityServerComponentData<T extends ServerComponentType = ServerComponentType> = ReadonlyArray<ServerComponentData<T>>;
+export type EntityClientComponentData<T extends ClientComponentType = ClientComponentType> = ReadonlyArray<ClientComponentData<T>>;
 
 export interface EntitySnapshot {
    readonly entityType: EntityType;
@@ -161,6 +147,35 @@ const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
 //    }
 // }
 
+export function getServerComponentData<T extends ServerComponentType>(entityServerComponentData: EntityServerComponentData, entityComponentTypes: ReadonlyArray<ServerComponentType>, componentType: T): ServerComponentData<T> {
+   for (let i = 0; i < entityComponentTypes.length; i++) {
+      const currentComponentType = entityComponentTypes[i];
+      if (currentComponentType === componentType) {
+         const data = entityServerComponentData[i];
+         return data as ServerComponentData<T>;
+      }
+   }
+
+   throw new Error();
+}
+
+// Transform component is a special case which can be done faster
+export function getTransformComponentData(entityServerComponentData: EntityServerComponentData): TransformComponentData {
+   return entityServerComponentData[0] as TransformComponentData;
+}
+
+export function getClientComponentData<T extends ClientComponentType>(entityClientComponentData: EntityClientComponentData, entityComponentTypes: ReadonlyArray<ClientComponentType>, componentType: T): ClientComponentData<T> {
+   for (let i = 0; i < entityComponentTypes.length; i++) {
+      const currentComponentType = entityComponentTypes[i];
+      if (currentComponentType === componentType) {
+         const data = entityClientComponentData[i];
+         return data as ClientComponentData<T>;
+      }
+   }
+
+   throw new Error();
+}
+
 const entityShouldInterpolate = (newTransformData: TransformComponentData, previousTransformData: TransformComponentData): boolean => {
    // If any hitboxes' positions or angles have changed
    for (const newHitbox of newTransformData.hitboxes) {
@@ -190,31 +205,27 @@ const decodeEntitySnapshot = (reader: PacketReader, interpolatingEntities: Array
    const spawnTicks = reader.readNumber();
    
    const layerIdx = reader.readNumber();
-   console.assert(Number.isInteger(layerIdx) && layerIdx < layers.length);
    const layer = layers[layerIdx];
 
-   const entityServerComponentTypes = new Array<ServerComponentType>();
-   const entityServerComponentData: EntityServerComponentData = new Map();
+   const componentTypes = getEntityServerComponentTypes(entityType);
+   
+   const entityServerComponentData = new Array<ServerComponentData<ServerComponentType>>();
    
    // Component data
-   const numComponents = reader.readNumber();
-   for (let i = 0; i < numComponents; i++) {
-      const componentType: ServerComponentType = reader.readNumber();
-      assert(!entityServerComponentTypes.includes(componentType));
-      entityServerComponentTypes.push(componentType);
-
+   for (let i = 0; i < componentTypes.length; i++) {
+      const componentType = componentTypes[i];
       const componentArray = getServerComponentArray(componentType);
 
-      // @Cleanup: cast
       const componentData = componentArray.decodeData(reader);
-      entityServerComponentData.set(componentType, componentData);
+      entityServerComponentData.push(componentData);
 
       // @Speed: lot can be done to improve the way this is done
       if (previousSnapshot !== null && componentType === ServerComponentType.transform) {
          const previousEntityData = previousSnapshot.entities.get(entity);
          if (typeof previousEntityData !== "undefined") {
-            const previousTransformComponentData = previousEntityData.serverComponentData.get(ServerComponentType.transform)!;
-            if (entityShouldInterpolate(entityServerComponentData.get(componentType)!, previousTransformComponentData)) {
+            const previousTransformComponentData = getServerComponentData(previousEntityData.serverComponentData, componentTypes, componentType);
+            const currentTransformComponentData = getServerComponentData(entityServerComponentData, componentTypes, componentType);
+            if (entityShouldInterpolate(currentTransformComponentData, previousTransformComponentData)) {
                interpolatingEntities.push(entity);
             }
          }
@@ -474,13 +485,17 @@ const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {
       // Change layers
       changeEntityLayer(entity, data.layer);
    }
+
+   const entityType = getEntityType(entity);
+   const componentTypes = getEntityServerComponentTypes(entityType);
    
    // Update server components from data
    const componentArrays = getEntityComponentArrays(entity);
+   // @SPEED: iterates ALL. when only needs to iterate the server component arrays
    for (const componentArray of componentArrays) {
       // @SPEED: instanceof!!
       if (componentArray instanceof ServerComponentArray && typeof componentArray.updateFromData !== "undefined") {
-         const componentData = data.serverComponentData.get(componentArray.componentType)!;
+         const componentData = getServerComponentData(data.serverComponentData, componentTypes, componentArray.componentType);
          componentArray.updateFromData(componentData, entity);
       }
    }
@@ -500,12 +515,14 @@ const updatePlayerFromData = (playerInstance: number, data: EntitySnapshot): voi
       // Change layers
       changeEntityLayer(playerInstance, data.layer);
    }
+
+   const componentTypes = getEntityServerComponentTypes(EntityType.player);
    
    const componentArrays = getEntityComponentArrays(playerInstance);
    for (const componentArray of componentArrays) {
       // @Speed!! instanceof!!
       if (componentArray instanceof ServerComponentArray && typeof componentArray.updatePlayerFromData !== "undefined") {
-         const componentData = data.serverComponentData.get(componentArray.componentType)!;
+         const componentData = getServerComponentData(data.serverComponentData, componentTypes, componentArray.componentType);
          // @INCOMPLETE: is never true??
          componentArray.updatePlayerFromData(componentData, false);
       }
@@ -556,6 +573,7 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
          }
       }
    }
+   // @Cleanup!!
    const selectedEntity = entitySelectionState.selectedEntity;
    if (selectedEntity !== null) {
       const snapshotData = snapshot.entities.get(selectedEntity);
@@ -563,7 +581,7 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
          const componentArrays = getEntityComponentArrays(selectedEntity);
          for (const componentArray of componentArrays) {
             // @Speed!! instanceof!!
-            if (componentArray instanceof ServerComponentArray && typeof snapshotData.serverComponentData.get(componentArray.componentType) !== "undefined") {
+            if (componentArray instanceof ServerComponentArray) {
                if (typeof componentArray.updateSelectedEntityState !== "undefined") {
                   // @Speed: until I make component data only send on change this will run every tick for selected entities!! which is bad not only for performance but for proofchecking - what if a component isn't having its data registered as changed when it's changed, but it's masked up cuz all the data is sent anyway???
                   componentArray.updateSelectedEntityState(selectedEntity);

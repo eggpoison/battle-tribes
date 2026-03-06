@@ -4,6 +4,8 @@ import { playSoundOnHitbox } from "../../sound";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 export interface TribesmanAIComponentData {
    readonly aiType: TribesmanAIType;
@@ -52,7 +54,8 @@ function decodeData(reader: PacketReader): TribesmanAIComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): TribesmanAIComponent {
-   const tribesmanAIComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribesmanAI)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribesmanAIComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribesmanAI);
 
    return {
       aiType: tribesmanAIComponentData.aiType,

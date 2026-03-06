@@ -7,6 +7,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface SandBallComponentData {
    readonly size: number;
@@ -43,10 +45,11 @@ const getTextureSource = (size: number): string => {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const sandBallComponentData = entityComponentData.serverComponentData.get(ServerComponentType.sandBall)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const sandBallComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.sandBall);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -62,7 +65,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): SandBallComponent {
-   const sandBallComponentData = entityComponentData.serverComponentData.get(ServerComponentType.sandBall)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const sandBallComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.sandBall);
 
    return {
       size: sandBallComponentData.size,

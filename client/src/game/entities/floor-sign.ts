@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, CollisionBit, DEFAULT_COLLISION_MASK, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
+import { Point, EntityType, CollisionBit, DEFAULT_COLLISION_MASK, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createStatusEffectComponentData } from "../entity-components/server-components/StatusEffectComponent";
 import { createStructureComponentData } from "../entity-components/server-components/StructureComponent";
@@ -7,7 +7,6 @@ import { createTribeComponentData } from "../entity-components/server-components
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
-import { EntityServerComponentData, EntityServerComponentDataEntries } from "../networking/packet-snapshots";
 
 export function createFloorSignConfig(position: Point, angle: number, tribe: Tribe): EntityComponentData {
    const hitboxes = new Array<Hitbox>();
@@ -19,15 +18,14 @@ export function createFloorSignConfig(position: Point, angle: number, tribe: Tri
    
    return {
       entityType: EntityType.floorSign,
-      serverComponentData: new Map([
-         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
-         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
-         [ServerComponentType.health, createHealthComponentData()],
-         [ServerComponentType.tribe, createTribeComponentData(tribe)],
-         [ServerComponentType.structure, createStructureComponentData()],
-         [ServerComponentType.floorSign, { message: "" }]
-      // @HACK
-      ] as EntityServerComponentDataEntries<ServerComponentType>) as EntityServerComponentData,
-      clientComponentData: new Map()
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createStatusEffectComponentData(),
+         createHealthComponentData(),
+         createTribeComponentData(tribe),
+         createStructureComponentData(),
+         { message: "" }
+      ],
+      clientComponentData: []
    };
 }

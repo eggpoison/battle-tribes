@@ -4,6 +4,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface DecorationComponentData {
    readonly decorationType: DecorationType;
@@ -42,10 +44,11 @@ function decodeData(reader: PacketReader): DecorationComponentData {
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const decorationComponentData = entityComponentData.serverComponentData.get(ServerComponentType.decoration)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
    
    renderInfo.attachRenderPart(
       new TexturedRenderPart(
@@ -60,8 +63,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): DecorationComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
+
    return {
-      decorationType: entityComponentData.serverComponentData.get(ServerComponentType.decoration)!.decorationType
+      decorationType: decorationComponentData.decorationType
    };
 }
 

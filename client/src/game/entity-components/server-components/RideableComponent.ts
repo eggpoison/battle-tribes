@@ -5,6 +5,8 @@ import { playSound } from "../../sound";
 import { entityExists, EntityComponentData, getEntityLayer, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../networking/packet-snapshots";
 
 interface CarrySlot {
    occupiedEntity: Entity;
@@ -62,7 +64,8 @@ function decodeData(reader: PacketReader): RideableComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): RideableComponent {
-   const rideableComponentData = entityComponentData.serverComponentData.get(ServerComponentType.rideable)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const rideableComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.rideable);
    return {
       carrySlots: rideableComponentData.carrySlots
    };

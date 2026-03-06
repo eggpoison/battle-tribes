@@ -7,6 +7,8 @@ import { Hitbox } from "../../hitboxes";
 import { createOkrenEyeParticle } from "../../particles";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { renderParentIsHitbox } from "../../render-parts/render-parts";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
 
 // @Copynpaste from server
 export const enum OkrenAgeStage {
@@ -66,7 +68,8 @@ const getEyeTextureSource = (okrenSize: number, eyeHardenTimer: number): string 
 }
 
 function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const okrenComponentData = entityComponentData.serverComponentData.get(ServerComponentType.okren)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const okrenComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.okren);
    
    let sizeString: string;
    switch (okrenComponentData.size) {
@@ -78,7 +81,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       default: throw new Error();
    }
    
-   const transformComponentData = entityComponentData.serverComponentData.get(ServerComponentType.transform)!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    for (const hitbox of transformComponentData.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.OKREN_BODY)) {
          const bodyRenderPart = new TexturedRenderPart(
@@ -115,8 +118,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): OkrenComponent {
-   const okrenComponentData = entityComponentData.serverComponentData.get(ServerComponentType.okren)!;
-   
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const okrenComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.okren);
    return {
       size: okrenComponentData.size
    };

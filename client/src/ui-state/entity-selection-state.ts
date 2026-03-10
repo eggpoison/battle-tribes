@@ -1,8 +1,9 @@
 import { Entity } from "webgl-test-shared";
-import { entityExists, getEntityComponentArrays } from "../game/world";
+import { entityExists, getEntityType } from "../game/world";
 import { sendStructureUninteractPacket } from "../game/networking/packet-sending/packet-sending";
 import { updateHighlightedEntityRenderInfo } from "../game/entity-selection";
 import { menuSelectorState } from "./menu-selector-state";
+import { getEntityComponentArrays } from "../game/entity-component-types";
 
 let hoveredEntity: Entity = 0;
 let highlightedEntity: Entity = 0;
@@ -46,8 +47,8 @@ export const entitySelectionState = {
          selectedEntity = newSelectedEntity;
 
          // Update UI state
-         const entityComponentArrays = getEntityComponentArrays(selectedEntity);
-         for (const componentArray of entityComponentArrays) {
+         const componentArrays = getEntityComponentArrays(getEntityType(selectedEntity));
+         for (const componentArray of componentArrays) {
             if (typeof componentArray.updateSelectedEntityState !== "undefined") {
                componentArray.updateSelectedEntityState(selectedEntity);
             }

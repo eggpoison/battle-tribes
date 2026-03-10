@@ -2,7 +2,7 @@ import { PacketReader, Entity, ServerComponentType, ItemType } from "webgl-test-
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface HeldItemComponentData {
    readonly itemType: ItemType;

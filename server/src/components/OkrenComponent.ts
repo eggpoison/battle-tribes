@@ -12,7 +12,7 @@ import { assert, clampToSubtileBoardDimensions, distance, getAbsAngleDiff, Point
 import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared";
 import { getOkrenPreyTarget, getOkrenThreatTarget, runOkrenCombatAI } from "../ai/OkrenCombatAI";
 import { runSandBallingAI, updateSandBallingAI } from "../ai/SandBallingAI";
-import { createEntityConfigAttachInfo } from "../components";
+import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components";
 import { createDustfleaEggConfig } from "../entities/desert/dustflea-egg";
 import { createOkrenClawConfig } from "../entities/desert/okren-claw";
 import { addHitboxAngularVelocity, getHitboxAngularVelocity, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "../hitboxes";
@@ -308,7 +308,7 @@ function onTick(okren: Entity): void {
          if (okrenComponent.limbRegrowTimes[side] === 0) {
             const sideIsFlipped = side === OkrenSide.left ? true : false;
             const clawConfig = createOkrenClawConfig(okrenBodyHitbox.box.position.copy(), 0, okrenComponent.size, OkrenClawGrowthStage.ONE, sideIsFlipped);
-            const clawRootHitbox = clawConfig.components[ServerComponentType.transform]!.hitboxes[0];
+            const clawRootHitbox = getConfigTransformComponent(clawConfig.components).hitboxes[0];
             clawConfig.attachInfo = createEntityConfigAttachInfo(clawRootHitbox, okrenBodyHitbox, true);
             createEntity(clawConfig, getEntityLayer(okren), 0);
             okrenComponent.limbRegrowTimes[side] = LIMB_REGROW_TIME;

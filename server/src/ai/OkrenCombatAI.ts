@@ -4,7 +4,7 @@ import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity
 import { Settings } from "../../../shared/src/settings";
 import { Point, polarVec2, randFloat, randInt } from "../../../shared/src/utils";
 import { getDistanceFromPointToEntity } from "../ai-shared";
-import { createEntityConfigAttachInfo } from "../components";
+import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components";
 import { AIHelperComponent, AIType } from "../components/AIHelperComponent";
 import { getOkrenMandibleHitbox, OKREN_SIDES, OkrenComponentArray, okrenHitboxesHaveReachedIdealAngles, OkrenSide, OkrenSwingState, restingIdealAngles } from "../components/OkrenComponent";
 import { OkrenTongueComponentArray } from "../components/OkrenTongueComponent";
@@ -115,7 +115,7 @@ const deployTongue = (okren: Entity, okrenHitbox: Hitbox, target: Entity): void 
    const position = getTonguePosition(okrenHitbox, TONGUE_INITIAL_OFFSET);
    
    const tongueConfig = createOkrenTongueConfig(position, okrenHitbox.box.angle, okrenHitbox, target);
-   const tongueTipHitbox = tongueConfig.components[ServerComponentType.transform]!.hitboxes[0];
+   const tongueTipHitbox = getConfigTransformComponent(tongueConfig.components).hitboxes[0];
    tongueConfig.attachInfo = createEntityConfigAttachInfo(tongueTipHitbox, okrenHitbox, true);
    createEntity(tongueConfig, getEntityLayer(okren), 0);
 

@@ -1,4 +1,4 @@
-import { Entity, ServerComponentType } from "webgl-test-shared";
+import { Entity } from "webgl-test-shared";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle } from "../../particles";
@@ -8,8 +8,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
-import { TransformComponentArray, TransformComponentData } from "../server-components/TransformComponent";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { TransformComponentArray } from "../server-components/TransformComponent";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface BallistaFrostcicleComponentData {}
 

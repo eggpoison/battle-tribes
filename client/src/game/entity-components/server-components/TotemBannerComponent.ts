@@ -9,7 +9,7 @@ import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { TribeComponentArray } from "./TribeComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TotemBannerComponentData {

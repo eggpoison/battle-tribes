@@ -8,7 +8,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH } from "../../particles";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface BerryBushPlantedComponentData {

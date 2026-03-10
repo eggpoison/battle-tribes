@@ -8,6 +8,8 @@ import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TUNNEL_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TunnelComponentData {
    readonly doorBitset: number;
@@ -79,7 +81,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const buildingMaterialComponentData = entityComponentData.serverComponentData.get(ServerComponentType.buildingMaterial)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
 
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -94,7 +97,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): TunnelComponent {
-   const tunnelComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tunnel)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tunnelComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tunnel);
    
    return {
       doorBitset: tunnelComponentData.doorBitset,

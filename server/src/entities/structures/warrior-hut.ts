@@ -37,14 +37,14 @@ export function createWarriorHutConfig(position: Point, rotation: number, tribe:
    
    return {
       entityType: EntityType.warriorHut,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structrureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.hut]: hutComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structrureComponent,
+         tribeComponent,
+         hutComponent
+      ],
       lights: []
    };
 }

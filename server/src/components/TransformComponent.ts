@@ -18,7 +18,7 @@ import { registerDirtyEntity } from "../server/player-clients";
 import { surfaceLayer, undergroundLayer } from "../layers";
 import { addHitboxDataToPacket, getHitboxDataLength } from "../server/packet-hitboxes";
 import { addHitboxAngularAcceleration, applyAcceleration, applyForce, getHitboxAngularVelocity, getHitboxTile, getHitboxTotalMassIncludingChildren, getHitboxVelocity, getRootHitbox, Hitbox, hitboxIsInRiver, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../hitboxes";
-import { EntityConfig } from "../components";
+import { EntityConfig, getConfigTransformComponent } from "../components";
 import { addEntityTethersToWorld, destroyTether as destroyTether } from "../tethers";
 import { TILE_PHYSICS_INFO_RECORD, TileType } from "../../../shared/src/tiles";
 import { getSubtileIndex } from "../../../shared/src/subtiles";
@@ -718,7 +718,7 @@ const tickEntityPhysics = (entity: Entity): void => {
 function onInitialise(config: EntityConfig, entity: Entity): void {
    // This used to be done in the onJoin function, but since entities can now be attached just before the onJoin functions
    // are called, we have to initialise the root entity before that.
-   const transformComponent = config.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(config.components);
    for (const hitbox of transformComponent.hitboxes) {
       hitbox.entity = entity;
       if (hitbox.rootEntity === 0) {

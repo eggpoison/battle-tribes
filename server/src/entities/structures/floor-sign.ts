@@ -36,14 +36,14 @@ export function createFloorSignConfig(position: Point, angle: number, tribe: Tri
    
    return {
       entityType: EntityType.floorSign,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.floorSign]: floorSignComponent,
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         tribeComponent,
+         structureComponent,
+         floorSignComponent,
+      ],
       lights: []
    };
 }

@@ -45,14 +45,14 @@ export function createGlurbBodySegmentConfig(position: Point, angle: number): En
 
    return {
       entityType: EntityType.glurbBodySegment,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.glurbSegment]: glurbSegmentComponent,
-         [ServerComponentType.glurbBodySegment]: glurbBodySegmentComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         glurbSegmentComponent,
+         glurbBodySegmentComponent
+      ],
       lights: lights
    };
 }

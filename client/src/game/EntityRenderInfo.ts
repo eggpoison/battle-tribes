@@ -3,11 +3,12 @@ import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
 import { removeRenderable } from "./rendering/render-loop";
 import { renderParentIsHitbox, RenderPart } from "./render-parts/render-parts";
 import { RenderLayer } from "./render-layers";
-import { getEntityComponentArrays, getEntityLayer, getEntityType } from "./world";
+import { getEntityLayer, getEntityType } from "./world";
 import { gl } from "./webgl";
 import { createEntityRenderData, setRenderInfoInVertexData } from "./rendering/webgl/entity-rendering";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
 import { renderLayerIsChunkRendered } from "./rendering/webgl/chunked-entity-rendering";
+import { getEntityComponentArrays } from "./entity-component-types";
 
 export interface ComponentTint {
    readonly tintR: number;
@@ -156,9 +157,9 @@ export class EntityRenderInfo {
       this.tintG = 0;
       this.tintB = 0;
 
-      const componentArrays = getEntityComponentArrays(this.entity);
+      const componentArrays = getEntityComponentArrays(getEntityType(this.entity));
       for (const componentArray of componentArrays) {
-         if (componentArray.hasComponent(this.entity) && typeof componentArray.calculateTint !== "undefined") {
+         if (typeof componentArray.calculateTint !== "undefined") {
             const tint = componentArray.calculateTint(this.entity);
 
             this.tintR += tint.tintR;

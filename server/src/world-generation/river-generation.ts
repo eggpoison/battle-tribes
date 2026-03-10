@@ -9,6 +9,7 @@ import { createEntityImmediate } from "../world";
 import Layer from "../Layer";
 import { getDistanceFromPointToHitbox } from "../ai-shared";
 import { CircularBox } from "../../../shared/src/boxes/CircularBox";
+import { getConfigTransformComponent } from "../components";
 
 // Kinda hacky, used to be just set to 20, but that meant the density of rivers changed with the world size, no good.
 const NUM_RIVERS = 20 * ((Settings.WORLD_SIZE_CHUNKS / 64) ** 2);
@@ -372,7 +373,7 @@ export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: ReadonlyA
 
          const stoneSize: RiverSteppingStoneSize = randInt(0, 2);
          const stoneConfig = createRiverSteppingStoneConfig(new Point(x, y), randAngle(), stoneSize);
-         const stoneHitbox = stoneConfig.components[ServerComponentType.transform]!.hitboxes[0];
+         const stoneHitbox = getConfigTransformComponent(stoneConfig.components).hitboxes[0];
 
          // Don't overlap with existing stones in the crossing
          for (const otherHitbox of localStoneHitboxes) {

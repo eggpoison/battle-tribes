@@ -23,11 +23,11 @@ export function createSnobeMoundConfig(position: Point, angle: number): EntityCo
    
    return {
       entityType: EntityType.snobeMound,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.snobeMound]: snobeMoundComponent,
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         snobeMoundComponent,
+      ],
       lights: []
    }
 }

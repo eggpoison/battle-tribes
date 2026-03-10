@@ -1,6 +1,6 @@
-import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
+import { BlueprintType } from "battletribes-shared/components";
 import { Entity, EntityType } from "battletribes-shared/entities";
-import { EntityConfig } from "../components";
+import { EntityConfig, getConfigTransformComponent } from "../components";
 import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../components/TransformComponent";
 import { HealthComponent } from "../components/HealthComponent";
 import { BlueprintComponent } from "../components/BlueprintComponent";
@@ -59,7 +59,7 @@ export function createBlueprintEntityConfig(position: Point, rotation: number, t
       const entityType = getBlueprintEntityType(blueprintType);
       const entityConfig = createStructureConfig(tribe, entityType, position, rotation, []);
 
-      transformComponent = entityConfig.components[ServerComponentType.transform]!;
+      transformComponent = getConfigTransformComponent(entityConfig.components);
 
       for (const hitbox of transformComponent.hitboxes) {
          hitbox.mass = 0;
@@ -77,13 +77,13 @@ export function createBlueprintEntityConfig(position: Point, rotation: number, t
    
    return {
       entityType: EntityType.blueprintEntity,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.blueprint]: blueprintComponent,
-         [ServerComponentType.tribe]: tribeComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         structureComponent,
+         blueprintComponent,
+         tribeComponent
+      ],
       lights: []
    };
 }

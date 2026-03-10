@@ -16,7 +16,7 @@ import { getEntityType } from "../world";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { entityIsTribesman } from "../entities/tribes/tribe-member";
 import { entityIsStructure } from "../structure-placement";
-import { EntityConfig } from "../components";
+import { EntityConfig, getConfigComponent } from "../components";
 import { ServerComponentType } from "../../../shared/src/components";
 import { createBerryBushConfig } from "../entities/resources/berry-bush";
 import { createTreeConfig } from "../entities/resources/tree";
@@ -51,6 +51,7 @@ import { createDustfleaConfig } from "../entities/desert/dustflea";
 import { createKrumblidConfig } from "../entities/mobs/krumblid";
 import { createOkrenConfig } from "../entities/desert/okren";
 import { createCowConfig } from "../entities/mobs/cow";
+import { getEntityComponentTypes } from "../entity-component-types";
 
 const enum Vars {
    TRIBESMAN_SPAWN_EXCLUSION_RANGE = 1200
@@ -494,7 +495,7 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: false,
       createEntity: (pos: Point, angle: number, firstEntityConfig: ReadonlyArray<EntityConfig> | null): ReadonlyArray<EntityConfig> | null => {
-         const species = firstEntityConfig === null ? randInt(0, 1) : firstEntityConfig[0].components[ServerComponentType.cow]!.species;
+         const species = firstEntityConfig === null ? randInt(0, 1) : getConfigComponent(firstEntityConfig[0].components, getEntityComponentTypes(EntityType.cow), ServerComponentType.cow).species;
          return [createCowConfig(pos, angle, species)];
       }
    });
@@ -881,7 +882,7 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
       createEntity: (pos: Point, angle: number, firstEntityConfigs: ReadonlyArray<EntityConfig> | null): ReadonlyArray<EntityConfig> | null => {
-         const colour = firstEntityConfigs === null ? randInt(0, 3) : firstEntityConfigs[0].components[ServerComponentType.fish]!.colour;
+         const colour = firstEntityConfigs === null ? randInt(0, 3) : getConfigComponent(firstEntityConfigs[0].components, getEntityComponentTypes(EntityType.fish), ServerComponentType.fish).colour;
          return [createFishConfig(pos, angle, colour)];
       }
    });

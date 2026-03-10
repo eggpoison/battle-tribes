@@ -46,13 +46,13 @@ export function createSnowberryBushConfig(position: Point, angle: number): Entit
    
    return {
       entityType: EntityType.snowberryBush,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.snowberryBush]: snowberryBushComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         snowberryBushComponent
+      ],
       lights: []
    };
 }

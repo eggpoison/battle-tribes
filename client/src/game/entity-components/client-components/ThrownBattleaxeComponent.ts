@@ -5,7 +5,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface ThrownBattleaxeComponentData {}
 

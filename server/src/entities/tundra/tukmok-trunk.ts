@@ -70,12 +70,12 @@ export function createTukmokTrunkConfig(position: Point, angle: number, trunkBas
    
    return {
       entityType: EntityType.tukmokTrunk,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.tukmokTrunk]: tukmokTrunkComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         tukmokTrunkComponent
+      ],
       lights: []
    };
 }

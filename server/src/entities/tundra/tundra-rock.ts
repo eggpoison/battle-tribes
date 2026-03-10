@@ -47,12 +47,12 @@ export function createTundraRockConfig(position: Point, angle: number): EntityCo
    
    return {
       entityType: EntityType.tundraRock,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.tundraRock]: tundraRockComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         tundraRockComponent
+      ],
       lights: []
    };
 }

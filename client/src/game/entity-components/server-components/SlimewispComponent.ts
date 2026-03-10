@@ -7,7 +7,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface SlimewispComponentData {}
 

@@ -15,11 +15,12 @@ import { getLightLevelNode } from "../lights";
 import { LightLevelVars } from "../../../shared/src/light-levels";
 import { generateMithrilOre } from "./mithril-ore-generation";
 import { createRawSpawnDistribution, registerNewSpawnInfo, SpawnDistribution } from "../entity-spawn-info";
-import { EntityConfig } from "../components";
+import { EntityConfig, getConfigComponent } from "../components";
 import { createBoulderConfig } from "../entities/resources/boulder";
 import { createMossConfig } from "../entities/moss";
 import { ServerComponentType } from "../../../shared/src/components";
 import { createGlurbConfig } from "../entities/mobs/glurb";
+import { getEntityComponentTypes } from "../entity-component-types";
 
 const enum Vars {
    DROPDOWN_TILE_WEIGHT_REDUCTION_RANGE = 9,
@@ -341,7 +342,7 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
             size = 2;
          }
          
-         const colour = firstEntityConfigs === null ? getMossColour(pos.x, pos.y): firstEntityConfigs[0].components[ServerComponentType.moss]!.colour;
+         const colour = firstEntityConfigs === null ? getMossColour(pos.x, pos.y): getConfigComponent(firstEntityConfigs[0].components, getEntityComponentTypes(EntityType.moss), ServerComponentType.moss).colour;
          return [createMossConfig(pos, angle, size, colour)];
       }
    });

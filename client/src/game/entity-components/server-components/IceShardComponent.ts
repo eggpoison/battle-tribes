@@ -4,7 +4,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface IceShardComponentData {}
 

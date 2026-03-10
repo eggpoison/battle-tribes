@@ -8,7 +8,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { createPricklyPearParticle } from "../../particles";
 import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface PricklyPearComponentData {}
 

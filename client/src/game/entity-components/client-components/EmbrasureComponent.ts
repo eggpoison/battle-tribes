@@ -10,7 +10,7 @@ import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { EMBRASURE_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface EmbrasureComponentData {}

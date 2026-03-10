@@ -8,7 +8,7 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface WorkerHutComponentData {}
 

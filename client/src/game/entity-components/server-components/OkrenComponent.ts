@@ -8,7 +8,7 @@ import { createOkrenEyeParticle } from "../../particles";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { renderParentIsHitbox } from "../../render-parts/render-parts";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 
 // @Copynpaste from server
 export const enum OkrenAgeStage {

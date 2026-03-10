@@ -88,7 +88,6 @@ const updateLocalBiomeFromData = (reader: PacketReader, localBiome: LocalBiome):
 
 export function updateLocalBiomesFromData(reader: PacketReader): void {
    const numLocalBiomes = reader.readNumber();
-   assert(Number.isInteger(numLocalBiomes));
    for (let i = 0; i < numLocalBiomes; i++) {
       const localBiomeID = reader.readNumber();
 

@@ -8,7 +8,7 @@ import { ClientComponentType } from "../client-component-types";
 import { getHitboxTile, getHitboxVelocity } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../game";
 import { getEntityClientComponentTypes } from "../../entity-component-types";
-import { getClientComponentData } from "../../networking/packet-snapshots";
+import { getClientComponentData } from "../../entity-component-types";
 
 export interface FootprintComponentData {
    readonly footstepParticleIntervalSeconds: number;

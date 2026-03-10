@@ -4,6 +4,7 @@ import { DamageSource, Entity, EntityType } from "../../../shared/src/entities";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { Settings } from "../../../shared/src/settings";
 import { Point, polarVec2, randFloat } from "../../../shared/src/utils";
+import { getConfigTransformComponent } from "../components";
 import { createInguYetukLaserConfig } from "../entities/wtf/ingu-yetuk-laser";
 import { addHitboxVelocity, applyAbsoluteKnockback, applyAcceleration, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "../hitboxes";
 import { createEntity, getEntityLayer, getEntityType } from "../world";
@@ -69,7 +70,7 @@ export function moveSeekerHeadToTarget(seekerHead: Entity, target: Entity): void
                laserPosition.add(polarVec2(12, angle + (i === 0 ? -Math.PI * 0.5 : Math.PI * 0.5)));
                
                const config = createInguYetukLaserConfig(laserPosition, angle);
-               const laserHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+               const laserHitbox = getConfigTransformComponent(config.components).hitboxes[0];
                addHitboxVelocity(laserHitbox, polarVec2(800, angle));
                addHitboxVelocity(laserHitbox, getHitboxVelocity(hitbox));
                createEntity(config, getEntityLayer(seekerHead), 0);

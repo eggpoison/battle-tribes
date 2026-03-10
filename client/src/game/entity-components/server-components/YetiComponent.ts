@@ -3,13 +3,15 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createSnowParticle, createWhiteSmokeParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { RandomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
-import { TransformComponentArray, TransformComponentData } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 const enum Vars {
    SNOW_THROW_OFFSET = 64
@@ -101,7 +103,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): YetiComponent {
-   const yetiComponentData = entityComponentData.serverComponentData.get(ServerComponentType.yeti)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const yetiComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.yeti);
    
    return {
       lastAttackProgress: yetiComponentData.attackProgress,

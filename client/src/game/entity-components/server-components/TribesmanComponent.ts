@@ -18,7 +18,7 @@ import { getHitboxTile, getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { currentSnapshot } from "../../game";
 import { tabSelectorState } from "../../../ui-state/tab-selector-state";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TribesmanComponentData {

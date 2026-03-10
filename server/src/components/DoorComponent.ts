@@ -3,11 +3,12 @@ import { DoorToggleType, Entity } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { angle, lerp, Point } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
-import { EntityConfig } from "../components";
+import { EntityConfig, getConfigComponent, getConfigTransformComponent } from "../components";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import { setHitboxAngle, teleportHitbox } from "../hitboxes";
+import { getEntityComponentTypes } from "../entity-component-types";
 
 const DOOR_SWING_SPEED = 5 * Settings.DT_S;
 
@@ -95,12 +96,14 @@ export function toggleDoor(door: Entity): void {
 
 // @Hack
 function onInitialise(config: EntityConfig): void {
-   const transformComponent = config.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(config.components);
    const doorHitbox = transformComponent.hitboxes[0];
    
-   config.components[ServerComponentType.door]!.originX = doorHitbox.box.position.x;
-   config.components[ServerComponentType.door]!.originY = doorHitbox.box.position.y;
-   config.components[ServerComponentType.door]!.closedAngle = doorHitbox.box.relativeAngle;
+   const componentTypes = getEntityComponentTypes(config.entityType);
+   const doorComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.door);
+   doorComponent.originX = doorHitbox.box.position.x;
+   doorComponent.originY = doorHitbox.box.position.y;
+   doorComponent.closedAngle = doorHitbox.box.relativeAngle;
 }
 
 function getDataLength(): number {

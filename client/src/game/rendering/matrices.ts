@@ -10,17 +10,6 @@ export function createIdentityMatrix(): Matrix3x2 {
    ];
 }
 
-export function copyMatrix(matrix: Matrix3x2): Matrix3x2 {
-   return [
-      matrix[0],
-      matrix[1],
-      matrix[2],
-      matrix[3],
-      matrix[4],
-      matrix[5]
-   ];
-}
-
 export function createRotationMatrix(rotation: number): Matrix3x2 {
    const sin = Math.sin(rotation);
    const cos = Math.cos(rotation);

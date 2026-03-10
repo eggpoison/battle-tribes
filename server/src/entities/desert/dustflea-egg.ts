@@ -25,12 +25,12 @@ export function createDustfleaEggConfig(position: Point, angle: number, parentOk
    
    return {
       entityType: EntityType.dustfleaEgg,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.dustfleaEgg]: dustfleaEggComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         dustfleaEggComponent
+      ],
       lights: []
    };
 }

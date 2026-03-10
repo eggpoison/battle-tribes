@@ -157,18 +157,18 @@ export function createKrumblidConfig(position: Point, angle: number): EntityConf
    
    return {
       entityType: EntityType.krumblid,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.attackingEntities]: attackingEntitiesComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.energyStore]: energyStoreComponent,
-         [ServerComponentType.energyStomach]: energyStomachComponent,
-         [ServerComponentType.taming]: tamingComponent,
-         [ServerComponentType.krumblid]: krumblidComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         aiHelperComponent,
+         attackingEntitiesComponent,
+         lootComponent,
+         energyStoreComponent,
+         energyStomachComponent,
+         tamingComponent,
+         krumblidComponent
+      ],
       lights: []
    };
 }

@@ -33,8 +33,12 @@ export function createFleshSwordItemEntityConfig(position: Point, rotation: numb
    
    return {
       entityType: EntityType.fleshSwordItemEntity,
-      components: {
-      },
+      components: [
+         transformComponent,
+         itemComponent,
+         aiHelperComponent,
+         fleshSwordItemComponent
+      ],
       lights: []
    };
 }

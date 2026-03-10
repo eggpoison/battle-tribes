@@ -2,7 +2,7 @@ import { ServerComponentType, PacketReader } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface PlayerComponentData {
    readonly username: string;

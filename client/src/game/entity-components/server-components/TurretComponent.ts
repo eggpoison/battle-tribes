@@ -8,6 +8,8 @@ import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../entity-component-types";
 
 // @Cleanup: can make this a whole lot better by having the projectile not be a render part, but the actual projectile pre-created, and then just un-carried from the turret once fired.
 
@@ -157,8 +159,10 @@ function decodeData(reader: PacketReader): TurretComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData, _: never, renderInfo: EntityRenderInfo): TurretComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const turretComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.turret);
    return {
-      chargeProgress: entityComponentData.serverComponentData.get(ServerComponentType.turret)!.chargeProgress,
+      chargeProgress: turretComponentData.chargeProgress,
       aimingRenderPart: renderInfo.getRenderThing("turretComponent:aiming") as TexturedRenderPart,
       pivotingRenderPart: renderInfo.getRenderThing("turretComponent:pivoting") as VisualRenderPart,
       gearRenderParts: renderInfo.getRenderThings("turretComponent:gear") as Array<VisualRenderPart>,

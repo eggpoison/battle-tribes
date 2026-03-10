@@ -8,7 +8,7 @@ import { StructureConnection } from "../../structure-placement";
 import { Hitbox } from "../../hitboxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface FenceComponentData {}

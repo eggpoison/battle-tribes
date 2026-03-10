@@ -8,7 +8,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { getHitboxByLocalID } from "../../hitboxes";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface CactusFlower {

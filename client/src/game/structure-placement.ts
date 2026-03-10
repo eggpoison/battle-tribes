@@ -36,6 +36,7 @@ import { createWorkerHutConfig } from "./entities/worker-hut";
 import { createFrostshaperConfig } from "./entities/frostshaper";
 import { getEntitiesInRange, getHitboxesCollidingEntities } from "./collision";
 import { createFloorSignConfig } from "./entities/floor-sign";
+import { getTransformComponentData } from "./entity-component-types";
 
 const enum Vars {
    STRUCTURE_PLACE_DISTANCE = 60,

@@ -7,7 +7,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface DustfleaMorphCocoonComponentData {

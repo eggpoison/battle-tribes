@@ -1,6 +1,9 @@
 import { ServerComponentType } from "../../shared/src/components";
+import { EntityType, NUM_ENTITY_TYPES } from "../../shared/src/entities";
+import { assert } from "../../shared/src/utils";
 
 // @ROBUSTNESS! doesn't show any compiler warnings when a new entity type is added. generally very unwieldy
+// @Speed: just assume that all entities have the transform component and handle that separately
 export const ENTITY_COMPONENT_TYPES: ReadonlyArray<ReadonlyArray<ServerComponentType>> = [
    // cow
    [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.aiHelper, ServerComponentType.attackingEntities, ServerComponentType.rideable, ServerComponentType.loot, ServerComponentType.taming, ServerComponentType.cow],
@@ -76,6 +79,8 @@ export const ENTITY_COMPONENT_TYPES: ReadonlyArray<ReadonlyArray<ServerComponent
    [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.buildingMaterial],
    // slimeSpit
    [ServerComponentType.transform, ServerComponentType.slimeSpit],
+   // spitPoisonArea
+   [ServerComponentType.transform, ServerComponentType.spitPoisonArea],
    // door
    [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.buildingMaterial, ServerComponentType.door],
    // battleaxeProjectile
@@ -132,7 +137,7 @@ export const ENTITY_COMPONENT_TYPES: ReadonlyArray<ReadonlyArray<ServerComponent
    [ServerComponentType.transform, ServerComponentType.layeredRod],
    // lilypad
    [ServerComponentType.transform],
-   // fibrePlant,
+   // fibrePlant
    [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect],
    // guardian
    [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.aiHelper, ServerComponentType.guardian],
@@ -241,3 +246,8 @@ export const ENTITY_COMPONENT_TYPES: ReadonlyArray<ReadonlyArray<ServerComponent
    // inguYetukLaser
    [ServerComponentType.transform, ServerComponentType.statusEffect, ServerComponentType.inguYetukLaser],
 ];
+assert(ENTITY_COMPONENT_TYPES.length === NUM_ENTITY_TYPES);
+
+export function getEntityComponentTypes(entityType: EntityType): ReadonlyArray<ServerComponentType> {
+   return ENTITY_COMPONENT_TYPES[entityType];
+}

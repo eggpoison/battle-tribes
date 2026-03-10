@@ -12,7 +12,7 @@ import { playerInstance } from "../../player";
 import { getHitboxVelocity } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../game";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface StatusEffectComponentData {
    readonly statusEffects: Array<StatusEffectData>;

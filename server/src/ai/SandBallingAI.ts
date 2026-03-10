@@ -4,7 +4,7 @@ import { ServerComponentType } from "../../../shared/src/components";
 import { Entity, EntityType } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
 import { Point, polarVec2, randInt } from "../../../shared/src/utils";
-import { createEntityConfigAttachInfoWithTether } from "../components";
+import { createEntityConfigAttachInfoWithTether, getConfigTransformComponent } from "../components";
 import { AIHelperComponent, AIType } from "../components/AIHelperComponent";
 import { HealthComponentArray } from "../components/HealthComponent";
 import { getOkrenMandibleHitbox, OKREN_SIDES } from "../components/OkrenComponent";
@@ -154,7 +154,7 @@ export function runSandBallingAI(entity: Entity, aiHelperComponent: AIHelperComp
       
       const ballConfig = createSandBallConfig(new Point(x, y), entityHitbox.box.angle);
 
-      const ballHitbox = ballConfig.components[ServerComponentType.transform]!.hitboxes[0];
+      const ballHitbox = getConfigTransformComponent(ballConfig.components).hitboxes[0];
       const angularTether: HitboxAngularTether = {
          originHitbox: entityHitbox,
          idealAngle: 0,

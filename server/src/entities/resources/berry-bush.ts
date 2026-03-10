@@ -48,13 +48,13 @@ export function createBerryBushConfig(position: Point, rotation: number): Entity
    
    return {
       entityType: EntityType.berryBush,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.berryBush]: berryBushComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         berryBushComponent
+      ],
       lights: []
    };
 }

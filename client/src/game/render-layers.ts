@@ -1,7 +1,6 @@
 import { assert, BlueprintType, DecorationType, ServerComponentType, EntityType } from "webgl-test-shared";
 import { EntityComponentData } from "./world";
-import { getEntityServerComponentTypes } from "./entity-component-types";
-import { getServerComponentData } from "./networking/packet-snapshots";
+import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
 
 export enum RenderLayer {
    lowDecorations,
@@ -224,11 +223,11 @@ export function getEntityRenderLayer(entityType: EntityType, entityComponentData
    }
 }
 
-export function calculateRenderDepthFromLayer(renderLayer: RenderLayer, entityComponentData: EntityComponentData, entityType: EntityType): number {
+export function calculateRenderDepthFromLayer(renderLayer: RenderLayer, entityComponentData: EntityComponentData): number {
    /** Variation between 0 and 1 */
    let variation: number;
    if (renderLayer === RenderLayer.mithril) {
-      const serverComponentTypes = getEntityServerComponentTypes(entityType);
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
       const mithrilOreNodeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.mithrilOreNode);
       variation = mithrilOreNodeComponentData.renderHeight;
    } else {

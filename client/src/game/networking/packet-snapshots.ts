@@ -1,18 +1,16 @@
 import { EntityTickEventType, TribesmanTitle, SubtileType, TileType, STRUCTURE_TYPES, HitFlags, AttackEffectiveness, assert, Point, randAngle, randFloat, PacketReader, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
 import { setCameraSubject } from "../camera";
-import { getComponentArrays } from "../entity-components/ComponentArray";
 import { currentSnapshot, setCurrentSnapshot, setNextSnapshot } from "../game";
 import Layer from "../Layer";
 import { playerInstance, setPlayerInstance } from "../player";
 import { playHeadSound, playSound } from "../sound";
 import { ExtendedTribe, readExtendedTribeData, readShortTribeData, Tribe, tribes, updatePlayerTribe } from "../tribes";
-import { addEntityToWorld, changeEntityLayer, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityComponentArrays, getEntityLayer, getEntityRenderInfo, getEntityType, layers, removeEntity, setCurrentLayer } from "../world";
-import { ClientComponentData, getEntityClientComponentConfigs } from "../entity-components/client-components";
+import { addEntityToWorld, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityLayer, getEntityRenderInfo, getEntityType, layers, removeEntity, setCurrentLayer } from "../world";
+import { getEntityClientComponentConfigs } from "../entity-components/client-components";
 import { ServerComponentData } from "../entity-components/components";
-import { ClientComponentType } from "../entity-components/client-component-types";
 import { registerDirtyRenderInfo } from "../rendering/render-part-matrices";
 import { LightData, readLightsFromData, updateLightsFromData } from "../lights";
-import { getRandomPositionInEntity, TransformComponentArray, TransformComponentData } from "../entity-components/server-components/TransformComponent";
+import { changeEntityLayer, getRandomPositionInEntity, TransformComponentArray, TransformComponentData } from "../entity-components/server-components/TransformComponent";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle } from "../particles";
 import { addHitboxVelocity, getHitboxByLocalID, getHitboxVelocity, Hitbox, setHitboxVelocity } from "../hitboxes";
 import { createDamageNumber, createHealNumber, createResearchNumber } from "../text-canvas";
@@ -25,12 +23,9 @@ import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
 import { entitySelectionState } from "../../ui-state/entity-selection-state";
 import ServerComponentArray, { getServerComponentArray } from "../entity-components/ServerComponentArray";
 import { updateParticles } from "../rendering/webgl/particle-rendering";
-import { getEntityServerComponentTypes } from "../entity-component-types";
+import { EntityClientComponentData, EntityServerComponentData, getEntityComponentArrays, getEntityServerComponentTypes, getServerComponentData } from "../entity-component-types";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
-
-export type EntityServerComponentData<T extends ServerComponentType = ServerComponentType> = ReadonlyArray<ServerComponentData<T>>;
-export type EntityClientComponentData<T extends ClientComponentType = ClientComponentType> = ReadonlyArray<ClientComponentData<T>>;
 
 export interface EntitySnapshot {
    readonly entityType: EntityType;
@@ -147,35 +142,6 @@ const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
 //    }
 // }
 
-export function getServerComponentData<T extends ServerComponentType>(entityServerComponentData: EntityServerComponentData, entityComponentTypes: ReadonlyArray<ServerComponentType>, componentType: T): ServerComponentData<T> {
-   for (let i = 0; i < entityComponentTypes.length; i++) {
-      const currentComponentType = entityComponentTypes[i];
-      if (currentComponentType === componentType) {
-         const data = entityServerComponentData[i];
-         return data as ServerComponentData<T>;
-      }
-   }
-
-   throw new Error();
-}
-
-// Transform component is a special case which can be done faster
-export function getTransformComponentData(entityServerComponentData: EntityServerComponentData): TransformComponentData {
-   return entityServerComponentData[0] as TransformComponentData;
-}
-
-export function getClientComponentData<T extends ClientComponentType>(entityClientComponentData: EntityClientComponentData, entityComponentTypes: ReadonlyArray<ClientComponentType>, componentType: T): ClientComponentData<T> {
-   for (let i = 0; i < entityComponentTypes.length; i++) {
-      const currentComponentType = entityComponentTypes[i];
-      if (currentComponentType === componentType) {
-         const data = entityClientComponentData[i];
-         return data as ClientComponentData<T>;
-      }
-   }
-
-   throw new Error();
-}
-
 const entityShouldInterpolate = (newTransformData: TransformComponentData, previousTransformData: TransformComponentData): boolean => {
    // If any hitboxes' positions or angles have changed
    for (const newHitbox of newTransformData.hitboxes) {
@@ -203,9 +169,7 @@ const entityShouldInterpolate = (newTransformData: TransformComponentData, previ
 const decodeEntitySnapshot = (reader: PacketReader, interpolatingEntities: Array<Entity>, previousSnapshot: PacketSnapshot | null, entity: Entity): EntitySnapshot => {
    const entityType: EntityType = reader.readNumber();
    const spawnTicks = reader.readNumber();
-   
    const layerIdx = reader.readNumber();
-   const layer = layers[layerIdx];
 
    const componentTypes = getEntityServerComponentTypes(entityType);
    
@@ -235,7 +199,7 @@ const decodeEntitySnapshot = (reader: PacketReader, interpolatingEntities: Array
    return {
       entityType: entityType,
       spawnTicks: spawnTicks,
-      layer: layer,
+      layer: layers[layerIdx],
       serverComponentData: entityServerComponentData,
       // @HACK
       clientComponentData: getEntityClientComponentConfigs(entityType)
@@ -352,7 +316,6 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
 
    const tileUpdates = new Array<TileUpdateData>();
    const numTileUpdates = reader.readNumber();
-   console.assert(Number.isInteger(numTileUpdates));
    for (let i = 0; i < numTileUpdates; i++) {
       const layerIdx = reader.readNumber();
       const layer = layers[layerIdx];
@@ -490,7 +453,7 @@ const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {
    const componentTypes = getEntityServerComponentTypes(entityType);
    
    // Update server components from data
-   const componentArrays = getEntityComponentArrays(entity);
+   const componentArrays = getEntityComponentArrays(entityType);
    // @SPEED: iterates ALL. when only needs to iterate the server component arrays
    for (const componentArray of componentArrays) {
       // @SPEED: instanceof!!
@@ -517,8 +480,7 @@ const updatePlayerFromData = (playerInstance: number, data: EntitySnapshot): voi
    }
 
    const componentTypes = getEntityServerComponentTypes(EntityType.player);
-   
-   const componentArrays = getEntityComponentArrays(playerInstance);
+   const componentArrays = getEntityComponentArrays(EntityType.player);
    for (const componentArray of componentArrays) {
       // @Speed!! instanceof!!
       if (componentArray instanceof ServerComponentArray && typeof componentArray.updatePlayerFromData !== "undefined") {
@@ -636,11 +598,9 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
 
             const hitHitbox = getHitboxByLocalID(transformComponent.hitboxes, hit.hitboxLocalID);
             if (hitHitbox !== null) {
-               // @Speed
-               const componentArrays = getComponentArrays();
-               for (let i = 0; i < componentArrays.length; i++) {
-                  const componentArray = componentArrays[i];
-                  if (typeof componentArray.onHit !== "undefined" && componentArray.hasComponent(hit.entity)) {
+               const componentArrays = getEntityComponentArrays(getEntityType(hit.entity));
+               for (const componentArray of componentArrays) {
+                  if (typeof componentArray.onHit !== "undefined") {
                      componentArray.onHit(hit.entity, hitHitbox, hit.position, hit.flags);
                   }
                }

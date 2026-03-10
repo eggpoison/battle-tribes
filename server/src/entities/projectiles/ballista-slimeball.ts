@@ -31,11 +31,11 @@ export function createBallistaSlimeballConfig(position: Point, rotation: number,
    
    return {
       entityType: EntityType.ballistaSlimeball,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.projectile]: projectileComponent
-      },
+      components: [
+         transformComponent,
+         tribeComponent,
+         projectileComponent
+      ],
       lights: []
    };
 }

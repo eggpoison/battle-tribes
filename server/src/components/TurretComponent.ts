@@ -6,7 +6,7 @@ import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 import { Packet } from "battletribes-shared/packets";
 import { ItemType } from "battletribes-shared/items/items";
 import { getMinAngleToCircularBox, getMaxAngleToCircularBox, getMinAngleToRectangularBox, getMaxAngleToRectangularBox, angleIsInRange, getClockwiseAngleDistance, entityIsInLineOfSight } from "../ai-shared";
-import { EntityConfig } from "../components";
+import { EntityConfig, getConfigTransformComponent } from "../components";
 import { createBallistaFrostcicleConfig } from "../entities/projectiles/ballista-frostcicle";
 import { createBallistaRockConfig } from "../entities/projectiles/ballista-rock";
 import { createBallistaSlimeballConfig } from "../entities/projectiles/ballista-slimeball";
@@ -163,7 +163,7 @@ const createProjectile = (turret: Entity, transformComponent: TransformComponent
       }
    }
 
-   const projectileHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+   const projectileHitbox = getConfigTransformComponent(config.components).hitboxes[0];
    addHitboxVelocity(projectileHitbox, polarVec2(ammoInfo.projectileSpeed, fireDirection));
 
    createEntity(config, getEntityLayer(turret), 0)

@@ -111,13 +111,13 @@ export function createCactusConfig(position: Point, rotation: number): EntityCon
 
    return {
       entityType: EntityType.cactus,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.cactus]: cactusComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         cactusComponent
+      ],
       lights: [],
       childConfigs: childConfigs
    };

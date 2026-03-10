@@ -5,10 +5,11 @@ import { TransformComponent, TransformComponentArray } from "./components/Transf
 import { getComponentArrayRecord } from "./components/ComponentArray";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { getEntityComponentTypes, getEntityType } from "./world";
+import { getEntityType } from "./world";
 import { HitboxCollisionPair } from "./collision-detection";
 import { getHitboxVelocity, Hitbox, addHitboxVelocity, setHitboxVelocity, translateHitbox, applyForce } from "./hitboxes";
 import { CollisionResult } from "../../shared/src/collision";
+import { getEntityComponentTypes } from "./entity-component-types";
 
 const hitboxesAreTethered = (transformComponent: TransformComponent, hitbox1: Hitbox, hitbox2: Hitbox): boolean => {
    // @INCOMPLETE!
@@ -95,7 +96,7 @@ const resolveSoftCollision = (affectedHitbox: Hitbox, pushingHitbox: Hitbox, col
 export function collide(affectedEntity: Entity, collidingEntity: Entity, collidingHitboxPairs: ReadonlyArray<HitboxCollisionPair>): void {
    const affectedEntityTransformComponent = TransformComponentArray.getComponent(affectedEntity);
    
-   const componentTypes = getEntityComponentTypes(affectedEntity);
+   const componentTypes = getEntityComponentTypes(getEntityType(affectedEntity));
    const componentArrayRecord = getComponentArrayRecord();
    
    // @Speed
@@ -185,7 +186,7 @@ export function resolveWallCollision(hitbox: Hitbox, subtileX: number, subtileY:
       resolveHardCollision(hitbox, collisionResult);
    }
 
-   const componentTypes = getEntityComponentTypes(entity);
+   const componentTypes = getEntityComponentTypes(getEntityType(entity));
    const componentArrayRecord = getComponentArrayRecord();
 
    // Call wall collision events
@@ -197,5 +198,4 @@ export function resolveWallCollision(hitbox: Hitbox, subtileX: number, subtileY:
          componentArray.onWallCollision(entity);
       }
    }
-   
 }

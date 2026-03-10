@@ -37,14 +37,14 @@ export function createFrostshaperConfig(position: Point, rotation: number, tribe
    
    return {
       entityType: EntityType.frostshaper,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.craftingStation]: craftingStationComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         craftingStationComponent
+      ],
       lights: []
    };
 }

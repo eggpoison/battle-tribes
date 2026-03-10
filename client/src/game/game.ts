@@ -189,6 +189,7 @@ export function updateTickCallbacks(): void {
    }
 }
 function tickEntities(): void {
+   // @Cleanup: This is the only place where this function is used. The only place where componentArrays is used. Seems like an awful waste of memory.
    const componentArrays = getComponentArrays();
    for (const componentArray of componentArrays) {
       if (typeof componentArray.onTick !== "undefined") {
@@ -268,6 +269,7 @@ function runFrame(frameStartTime: number): void {
       clientTickInterp--;
 
       // Tick all entities (cuz the client interp loop is based on the network update rate not the tick rate)
+      // @Incomplete @Bug THAT"S ACTUALLY BAD, the fact that the client interp loop is based on the network update rate. Cuz it means when the server is lagging the player is still moving at the same speeds when they should be being slowed.
       tickEntities();
       
       updateSpamFilter(deltaTimeMS);

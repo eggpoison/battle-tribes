@@ -7,9 +7,10 @@ import { TileType } from "../../../shared/src/tiles";
 import { TitleGenerationInfo, TRIBESMAN_TITLE_RECORD, TribesmanTitle } from "../../../shared/src/titles";
 import { TribeType } from "../../../shared/src/tribes";
 import { Point, randInt } from "../../../shared/src/utils";
-import { EntityConfig } from "../components";
+import { EntityConfig, getConfigComponent } from "../components";
 import { onFishLeaderHurt } from "../entities/mobs/fish";
 import { useItem } from "../entities/tribes/tribe-member";
+import { getEntityComponentTypes } from "../entity-component-types";
 import { getHitboxTile, getHitboxVelocity, Hitbox } from "../hitboxes";
 import { addHumanoidInventories } from "../inventories";
 import { generateTitle, TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
@@ -51,9 +52,13 @@ TribesmanComponentArray.onTakeDamage = onTakeDamage;
 TribesmanComponentArray.onDealDamage = onDealDamage;
 
 function onInitialise(config: EntityConfig): void {
+   const componentTypes = getEntityComponentTypes(config.entityType);
+   const tribesmanComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.tribesman);
+   const tribeComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.tribe);
+   const inventoryComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.inventory);
+   const inventoryUseComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.inventoryUse);
+   
    // War paint type
-   const tribesmanComponent = config.components[ServerComponentType.tribesman]!;
-   const tribeComponent = config.components[ServerComponentType.tribe]!;
    if (tribeComponent.tribe.tribeType === TribeType.goblins) {
       if (config.entityType === EntityType.tribeWarrior) {
          tribesmanComponent.warPaintType = randInt(1, 1);
@@ -68,8 +73,6 @@ function onInitialise(config: EntityConfig): void {
    // Create inventories
    // 
 
-   const inventoryComponent = config.components[ServerComponentType.inventory]!;
-   const inventoryUseComponent = config.components[ServerComponentType.inventoryUse]!;
    addHumanoidInventories(inventoryComponent, inventoryUseComponent, config.entityType);
 }
 

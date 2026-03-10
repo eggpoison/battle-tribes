@@ -21,7 +21,7 @@ import { tickPlayerItems } from "../../player-action-handling";
 import { inventoryState } from "../../../ui-state/inventory-state";
 import { playSoundOnHitbox } from "../../sound";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface LimbInfo {
    selectedItemSlot: number;

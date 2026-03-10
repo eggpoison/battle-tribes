@@ -8,7 +8,7 @@ import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface SlimeComponentData {

@@ -57,16 +57,16 @@ export function createCampfireConfig(position: Point, rotation: number, tribe: T
    
    return {
       entityType: EntityType.campfire,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.inventory]: inventoryComponent,
-         [ServerComponentType.cooking]: cookingComponent,
-         [ServerComponentType.campfire]: campfireComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         inventoryComponent,
+         cookingComponent,
+         campfireComponent
+      ],
       lights: []
    };
 }

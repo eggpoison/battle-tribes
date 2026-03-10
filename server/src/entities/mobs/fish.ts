@@ -147,15 +147,15 @@ export function createFishConfig(position: Point, rotation: number, colour: Fish
 
    return {
       entityType: EntityType.fish,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.attackingEntities]: attackingEntitiesComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.fish]: fishComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         aiHelperComponent,
+         attackingEntitiesComponent,
+         lootComponent,
+         fishComponent
+      ],
       lights: []
    };
 }

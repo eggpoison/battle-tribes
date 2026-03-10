@@ -4,7 +4,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { tickIntervalHasPassed } from "../../game";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface CookingComponentData {
    readonly heatingProgress: number;

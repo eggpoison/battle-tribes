@@ -8,7 +8,7 @@ import { Tribe, tribeExists } from "../../tribes";
 import { playerInstance } from "../../player";
 import { EntityComponentData } from "../../world";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface TribeComponentData {
    readonly tribeID: number;

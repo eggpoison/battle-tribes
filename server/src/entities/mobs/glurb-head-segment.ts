@@ -1,7 +1,6 @@
 import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
 import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
 import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
 import { Entity, EntityType } from "../../../../shared/src/entities";
 import { ItemType } from "../../../../shared/src/items/items";
 import { Settings } from "../../../../shared/src/settings";
@@ -142,17 +141,17 @@ export function createGlurbHeadSegmentConfig(position: Point, rotation: number, 
 
    return {
       entityType: EntityType.glurbHeadSegment,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.attackingEntities]: attackingEntitiesComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.taming]: tamingComponent,
-         [ServerComponentType.glurbSegment]: glurbSegmentComponent,
-         [ServerComponentType.glurbHeadSegment]: glurbHeadSegmentComponent,
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         aiHelperComponent,
+         attackingEntitiesComponent,
+         lootComponent,
+         tamingComponent,
+         glurbSegmentComponent,
+         glurbHeadSegmentComponent,
+      ],
       lights: lights
    };
 }

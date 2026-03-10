@@ -79,16 +79,16 @@ export function createZombieConfig(position: Point, rotation: number, isGolden: 
    
    return {
       entityType: EntityType.zombie,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.zombie]: zombieComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.inventory]: inventoryComponent,
-         [ServerComponentType.inventoryUse]: inventoryUseComponent,
-         [ServerComponentType.loot]: lootComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         zombieComponent,
+         aiHelperComponent,
+         inventoryComponent,
+         inventoryUseComponent,
+         lootComponent
+      ],
       lights: []
    };
 }

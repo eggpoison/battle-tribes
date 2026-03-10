@@ -16,6 +16,8 @@ import { generateUndergroundTerrain } from "./world-generation/underground-layer
 import { EntityConfig, entityConfigAttachInfoIsTethered } from "./components";
 import { attachLightToHitbox } from "./lights";
 import { attachEntityWithTether, attachHitboxRaw } from "./components/TransformComponent";
+import { getEntityComponentTypes } from "./entity-component-types";
+import { removeEntityFromSpawnDistributions, SPAWN_INFOS } from "./entity-spawn-info";
 
 const enum Vars {
    START_TIME = 8
@@ -37,7 +39,6 @@ let time = Vars.START_TIME;
 const entityTypes: Partial<Record<Entity, EntityType>> = {};
 const entityLayers: Partial<Record<Entity, Layer>> = {};
 const entitySpawnTicks: Partial<Record<Entity, number>> = {};
-const entityComponentTypes: Partial<Record<Entity, ReadonlyArray<ServerComponentType>>> = {};
 
 const tribes = new Array<Tribe>();
 
@@ -49,11 +50,6 @@ const entityRemoveBuffer = new Array<Entity>();
 // We skip 1 also as that is reserved client-side for its ghost spectator entity.
 // - @Cleanup: Would be nice if this didn't have to be the case, and we only had to reserve 0 and not 1.
 let entityIDCounter: Entity = 2;
-
-// @Hack @Cleanup ?@Speed
-const getComponentTypes = (componentConfig: EntityConfig): ReadonlyArray<ServerComponentType> => {
-   return Object.keys(componentConfig.components).map(Number) as Array<ServerComponentType>;
-}
 
 // @Cleanup: this should probs be in the layers file
 export function generateLayers(): void {
@@ -181,10 +177,6 @@ export function getEntitySpawnTicks(entity: Entity): number {
    return spawnTicks;
 }
 
-export function getEntityComponentTypes(entity: Entity): ReadonlyArray<ServerComponentType> {
-   return entityComponentTypes[entity]!;
-}
-
 export function setEntityLayer(entity: Entity, layer: Layer): void {
    entityLayers[entity] = layer;
 }
@@ -199,7 +191,6 @@ export function pushEntityJoinBuffer(shouldTickJoinInfos: boolean): void {
       if (joinInfo.ticksRemaining === 0) {
          entityTypes[joinInfo.entity] = joinInfo.entityConfig.entityType;
          entityLayers[joinInfo.entity] = joinInfo.layer;
-         entityComponentTypes[joinInfo.entity] = joinInfo.entityComponentTypes;
          entitySpawnTicks[joinInfo.entity] = ticks;
 
          // Add lights
@@ -295,8 +286,12 @@ export function pushEntityJoinBuffer(shouldTickJoinInfos: boolean): void {
 export function createEntity<ComponentTypes extends ServerComponentType>(entityConfig: EntityConfig, layer: Layer, joinDelayTicks: number): Entity {
    const entity = entityIDCounter++;
    
-   // @Hack
-   const componentTypes = getComponentTypes(entityConfig);
+   const componentTypes = getEntityComponentTypes(entityConfig.entityType);
+
+   // Make sure the entity has the right components
+   // @INCOMPLETE: Unable to check if the actual components are right!! This check needs to be deeper - or enforced automatically in entity config creation.
+   assert(entityConfig.components.length === componentTypes.length);
+   
    const componentArrayRecord = getComponentArrayRecord();
 
    // Run initialise functions
@@ -305,7 +300,6 @@ export function createEntity<ComponentTypes extends ServerComponentType>(entityC
       const componentArray = componentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
 
       if (typeof componentArray.onInitialise !== "undefined") {
-         // @Cleanup: remove need for cast
          // @Cleanup: first 2 parameters can be combined
          componentArray.onInitialise(entityConfig, entity, layer);
       }
@@ -313,8 +307,7 @@ export function createEntity<ComponentTypes extends ServerComponentType>(entityC
    
    for (let i = 0; i < componentTypes.length; i++) {
       const componentType = componentTypes[i];
-      
-      const component = entityConfig.components[componentType]!;
+      const component = entityConfig.components[i]!;
 
       const componentArray = componentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
       componentArray.addComponentToBuffer(entity, component, joinDelayTicks);
@@ -347,17 +340,15 @@ export function createEntityImmediate<ComponentTypes extends ServerComponentType
 
    const entity = entityIDCounter++;
 
-   // @Hack
-   const componentTypes = getComponentTypes(entityConfig);
+   const componentTypes = getEntityComponentTypes(entityConfig.entityType);
    const componentArrayRecord = getComponentArrayRecord();
 
    // Run initialise functions
    for (let i = 0; i < componentTypes.length; i++) {
       const componentType = componentTypes[i];
-      const componentArray = componentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
+      const componentArray = componentArrayRecord[componentType];
 
       if (typeof componentArray.onInitialise !== "undefined") {
-         // @Cleanup: remove need for cast
          // @Cleanup: first 2 parameters can be combined
          componentArray.onInitialise(entityConfig, entity, layer);
       }
@@ -365,7 +356,6 @@ export function createEntityImmediate<ComponentTypes extends ServerComponentType
 
    entityTypes[entity] = entityConfig.entityType;
    entityLayers[entity] = layer;
-   entityComponentTypes[entity] = componentTypes;
    entitySpawnTicks[entity] = ticks;
 
    // Add lights
@@ -373,8 +363,9 @@ export function createEntityImmediate<ComponentTypes extends ServerComponentType
       attachLightToHitbox(lightCreationInfo.light, lightCreationInfo.attachedHitbox, entity);
    }
 
-   for (const componentType of componentTypes) {
-      const component = entityConfig.components[componentType]!;
+   for (let i = 0; i < componentTypes.length; i++) {
+      const componentType = componentTypes[i];
+      const component = entityConfig.components[i]!;
 
       const componentArray = componentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
       componentArray.addComponent(entity, component);
@@ -440,10 +431,18 @@ export function destroyFlaggedEntities(): void {
 
       removeEntityFromCensus(entity);
 
+      // @SPEED!
+      for (const spawnInfo of SPAWN_INFOS) {
+         const spawnDistribution = spawnInfo.spawnDistribution;
+         if (spawnDistribution.entityDensityMap.has(entity)) {
+            removeEntityFromSpawnDistributions(entity, spawnDistribution);
+            break;
+         }
+      }
+
       delete entityTypes[entity];
       delete entityLayers[entity];
       delete entitySpawnTicks[entity];
-      delete entityComponentTypes[entity];
    }
 
    entityRemoveBuffer.length = 0;
@@ -476,7 +475,7 @@ export function destroyEntity(entity: Entity): void {
    }
 
    // Call any preRemove functions
-   const componentTypes = getEntityComponentTypes(entity);
+   const componentTypes = getEntityComponentTypes(getEntityType(entity));
    const componentArrayRecord = getComponentArrayRecord();
    for (const componentType of componentTypes) {
       const componentArray = componentArrayRecord[componentType];

@@ -2,10 +2,12 @@ import { CircularBox } from "../../../shared/src/boxes/CircularBox";
 import { ServerComponentType } from "../../../shared/src/components";
 import { Entity } from "../../../shared/src/entities";
 import { Packet } from "../../../shared/src/packets";
+import { getConfigComponent } from "../components";
 import { createOkrenConfig } from "../entities/desert/okren";
+import { getEntityComponentTypes } from "../entity-component-types";
 import { Hitbox } from "../hitboxes";
 import Tribe from "../Tribe";
-import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, ticksToGameHours } from "../world";
+import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, getEntityType, ticksToGameHours } from "../world";
 import { ComponentArray } from "./ComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 
@@ -53,7 +55,8 @@ function onTick(cocoon: Entity): void {
 
       const tribe = krumblidMorphCocoonComponent.tameTribe;
       if (tribe !== null) {
-         const tamingComponent = okrenConfig.components[ServerComponentType.taming]!;
+         const componentTypes = getEntityComponentTypes(getEntityType(cocoon));
+         const tamingComponent = getConfigComponent(okrenConfig.components, componentTypes, ServerComponentType.taming);
          tamingComponent.tamingTier = 1;
          tamingComponent.tameTribe = tribe;
       }

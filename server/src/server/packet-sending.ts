@@ -9,7 +9,7 @@ import { PlayerComponentArray } from "../components/PlayerComponent";
 import { Inventory, InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { alignLengthBytes, getStringLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
-import { entityExists, getEntityComponentTypes, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes } from "../world";
+import { entityExists, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes } from "../world";
 import { getPlayerNearbyCollapses, getSubtileSupport, subtileIsCollapsing } from "../collapses";
 import { getSubtileIndex } from "../../../shared/src/subtiles";
 import { layers } from "../layers";
@@ -19,7 +19,7 @@ import { addTamingSpecToData, getTamingSpecDataLength, getTamingSpecsMap } from 
 import { Point } from "../../../shared/src/utils";
 import { addLightData, getEntityHitboxLights, getLightDataLength } from "../lights";
 import { getPlayerClients } from "./player-clients";
-import { ENTITY_COMPONENT_TYPES } from "../entity-component-types";
+import { ENTITY_COMPONENT_TYPES, getEntityComponentTypes } from "../entity-component-types";
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -53,11 +53,12 @@ export function addInventoryDataToPacket(packet: Packet, inventory: Inventory): 
 export function getEntityDataLength(entity: Entity, player: Entity | null): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
 
-   for (let i = 0; i < ComponentArrays.length; i++) {
-      const componentArray = ComponentArrays[i];
-      if (componentArray.hasComponent(entity)) {
-         lengthBytes += componentArray.getDataLength(entity, player);
-      }
+   const componentTypes = getEntityComponentTypes(getEntityType(entity));
+   const componentArrayRecord = getComponentArrayRecord();
+
+   for (const componentType of componentTypes) {
+      const componentArray = componentArrayRecord[componentType];
+      lengthBytes += componentArray.getDataLength(entity, player);
    }
 
    return lengthBytes;
@@ -73,7 +74,7 @@ export function addEntityDataToPacket(packet: Packet, entity: Entity, player: En
    packet.writeNumber(getEntitySpawnTicks(entity));
    packet.writeNumber(layers.indexOf(getEntityLayer(entity)));
 
-   const componentTypes = ENTITY_COMPONENT_TYPES[entityType];
+   const componentTypes = getEntityComponentTypes(entityType);
    const componentArrayRecord = getComponentArrayRecord();
 
    // Components
@@ -81,16 +82,13 @@ export function addEntityDataToPacket(packet: Packet, entity: Entity, player: En
       const componentType = componentTypes[i];
       const componentArray = componentArrayRecord[componentType];
 
-      // @Speed
-      if (componentArray.hasComponent(entity)) {
-         const start = packet.currentByteOffset;
-         
-         componentArray.addDataToPacket(packet, entity, player);
+      const start = packet.currentByteOffset;
+      
+      componentArray.addDataToPacket(packet, entity, player);
 
-         // @Speed
-         if (packet.currentByteOffset - start !== (Float32Array.BYTES_PER_ELEMENT + componentArray.getDataLength(entity, player))) {
-            throw new Error(`Component type '${ServerComponentTypeString[componentType]}' has wrong data length for entity type '${EntityTypeString[getEntityType(entity)]}'. (getDataLength returned ${Float32Array.BYTES_PER_ELEMENT + componentArray.getDataLength(entity, player)}, while the length of the added data was ${packet.currentByteOffset - start})`)
-         }
+      // @Speed
+      if (packet.currentByteOffset - start !== componentArray.getDataLength(entity, player)) {
+         throw new Error(`Component type '${ServerComponentTypeString[componentType]}' has wrong data length for entity type '${EntityTypeString[getEntityType(entity)]}'. (getDataLength returned ${Float32Array.BYTES_PER_ELEMENT + componentArray.getDataLength(entity, player)}, while the length of the added data was ${packet.currentByteOffset - start})`)
       }
    }
 }
@@ -249,7 +247,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    packet.writeNumber(layers.indexOf(layer));
 
-   // Add entities
+   // Add entities 
    packet.writeNumber(entitiesToSend.size);
    for (const entity of entitiesToSend) {
       addEntityDataToPacket(packet, entity, player);

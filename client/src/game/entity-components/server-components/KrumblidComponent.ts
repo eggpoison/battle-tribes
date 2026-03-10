@@ -9,7 +9,7 @@ import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface KrumblidComponentData {}
 

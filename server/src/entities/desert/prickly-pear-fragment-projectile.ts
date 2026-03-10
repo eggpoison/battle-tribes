@@ -23,11 +23,11 @@ export function createPricklyPearFragmentProjectileConfig(position: Point, angle
    
    return {
       entityType: EntityType.pricklyPearFragmentProjectile,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.pricklyPearFragmentProjectile]: pricklyPearFragmentProjectileComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         pricklyPearFragmentProjectileComponent
+      ],
       lights: []
    };
 }

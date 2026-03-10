@@ -30,12 +30,12 @@ export function createBattleaxeProjectileConfig(position: Point, rotation: numbe
    
    return {
       entityType: EntityType.battleaxeProjectile,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.throwingProjectile]: throwingProjectileComponent,
-         [ServerComponentType.battleaxeProjectile]: battleaxeProjectileComponent
-      },
+      components: [
+         transformComponent,
+         tribeComponent,
+         throwingProjectileComponent,
+         battleaxeProjectileComponent
+      ],
       lights: []
    };
 }

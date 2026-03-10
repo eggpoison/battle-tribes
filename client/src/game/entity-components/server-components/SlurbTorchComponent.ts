@@ -6,7 +6,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { createSlurbParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 const enum Vars {
    MIN_PARTICLE_CREATION_INTERVAL_SECONDS = 0.45,

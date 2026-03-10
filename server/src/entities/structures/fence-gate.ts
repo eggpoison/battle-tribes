@@ -53,14 +53,14 @@ export function createFenceGateConfig(position: Point, angle: number, tribe: Tri
    
    return {
       entityType: EntityType.fenceGate,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.fenceGate]: fenceGateComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         fenceGateComponent
+      ],
       lights: []
    };
 }

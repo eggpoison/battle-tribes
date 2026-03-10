@@ -24,10 +24,10 @@ export function createSpitPoisonAreaConfig(position: Point, rotation: number): E
    
    return {
       entityType: EntityType.spitPoisonArea,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.spitPoisonArea]: spitPoisonAreaComponent
-      },
+      components: [
+         transformComponent,
+         spitPoisonAreaComponent
+      ],
       lights: []
    };
 }

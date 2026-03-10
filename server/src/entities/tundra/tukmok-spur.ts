@@ -28,12 +28,12 @@ export function createTukmokSpurConfig(position: Point, angle: number, offset: P
    
    return {
       entityType: EntityType.tukmokSpur,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.tukmokSpur]: tukmokSpurComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         tukmokSpurComponent
+      ],
       lights: []
    };
 }

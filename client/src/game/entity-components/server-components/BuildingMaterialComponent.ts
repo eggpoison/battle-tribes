@@ -3,7 +3,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface BuildingMaterialComponentData {
    readonly material: BuildingMaterial;

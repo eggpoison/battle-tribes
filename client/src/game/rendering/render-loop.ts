@@ -120,7 +120,6 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
                   continue;
                }
                
-               // @Cleanup: cast
                const renderInfo = getEntityRenderInfo(entity);
                renderEntity(renderInfo);
             }

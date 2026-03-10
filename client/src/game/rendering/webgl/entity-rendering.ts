@@ -358,9 +358,8 @@ export function setRenderInfoInVertexData(renderInfo: EntityRenderInfo, vertexDa
 
 function clearRenderPartInVertexData(vertexData: Float32Array, renderPartIdx: number): void {
    const vertexDataOffset = renderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
-   for (let i = vertexDataOffset; i < vertexDataOffset + 4 * Vars.ATTRIBUTES_PER_VERTEX; i++) {
-      vertexData[i] = 0;
-   }
+   // From profiling, .fill is about twice as fast as a for loop
+   vertexData.fill(0, vertexDataOffset, vertexDataOffset + 4 * Vars.ATTRIBUTES_PER_VERTEX);
 }
 
 export function clearEntityInVertexData(renderInfo: EntityRenderInfo, vertexData: Float32Array, renderPartIdx: number): void {
@@ -385,6 +384,7 @@ export function setupEntityRendering(): void {
 
 /** NOTE: Callers must control the blending. */
 export function renderEntity(renderInfo: Readonly<EntityRenderInfo>, options?: EntityRenderingOptions): void {
+   // @Speed: could make a separate function so this isn't forced to run every time.
    const overrideAlphaWithOne = options?.overrideAlphaWithOne || false;
    if (overrideAlphaWithOne !== previousOverrideAlphaWithOne) {
       previousOverrideAlphaWithOne = overrideAlphaWithOne;

@@ -5,7 +5,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import { registerDirtyRenderInfo } from "../../rendering/render-part-matrices";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 const enum Vars {

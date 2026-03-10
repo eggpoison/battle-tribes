@@ -6,7 +6,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getEntityAgeTicks } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface ResearchBenchComponentData {

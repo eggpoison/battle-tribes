@@ -137,9 +137,9 @@ const getWallVertices = (layer: Layer): Array<number> => {
    return vertices;
 }
 
-// @Speed: SO BAD. like 1/33rd of CPU time... but it's about 1/1000th of the gameplay
+// @Speed: SO BAD. like 1/33rd of CPU time... but it's about 1/10000th of the gameplay
 export function renderMithrilRichTileOverlays(layer: Layer, isWallTiles: boolean): void {
-   // @Temporary
+   // @HACK
    if (getCurrentLayer()===surfaceLayer)return;
    
    const vertices = isWallTiles ? getWallVertices(layer) : getFloorVertices(layer);

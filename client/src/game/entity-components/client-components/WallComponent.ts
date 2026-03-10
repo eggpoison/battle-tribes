@@ -11,7 +11,7 @@ import ClientComponentArray from "../ClientComponentArray";
 import { WALL_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
 import { HealthComponentArray } from "../server-components/HealthComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 // @Speed: Could make damage render part an overlay instead of a whole render part

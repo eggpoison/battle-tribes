@@ -5,7 +5,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface TribesmanAIComponentData {
    readonly aiType: TribesmanAIType;

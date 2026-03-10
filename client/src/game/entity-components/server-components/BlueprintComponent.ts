@@ -14,7 +14,7 @@ import { playerTribe } from "../../tribes";
 import { Hitbox } from "../../hitboxes";
 import { registerTextureSource } from "../../texture-atlases/texture-sources";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface BlueprintComponentData {
    readonly blueprintType: BlueprintType;

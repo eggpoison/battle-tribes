@@ -8,7 +8,7 @@ import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { tickIntervalHasPassed } from "../../game";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface SlimeSpitComponentData {}
 

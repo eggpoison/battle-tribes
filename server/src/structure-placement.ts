@@ -12,7 +12,7 @@ import { SubtileType } from "../../shared/src/tiles";
 import { Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2 } from "../../shared/src/utils";
 import { getEntitiesInRange } from "./ai-shared";
 import { getHitboxesCollidingEntities } from "./collision-detection";
-import { EntityConfig } from "./components";
+import { EntityConfig, getConfigTransformComponent } from "./components";
 import { ItemComponentArray } from "./components/ItemComponent";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { createBallistaConfig } from "./entities/structures/ballista";
@@ -238,7 +238,7 @@ const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityAngle: n
    // @HACK
    const tribe = getTribes()[0];
    const entityConfig = createStructureConfig(tribe, entityType, new Point(0, 0), 0, []);
-   const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(entityConfig.components);
 
    let entityMinX = Number.MAX_SAFE_INTEGER;
    let entityMaxX = Number.MIN_SAFE_INTEGER;
@@ -291,10 +291,10 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
    const connectingEntityTransformComponent = TransformComponentArray.getComponent(connectingEntity);
    const connectingEntityType = getEntityType(connectingEntity);
    
-   // @HACK
+   // @HACK @HACK @HACK @SQUEAM
    const tribe = getTribes()[0];
    const entityConfig = createStructureConfig(tribe, entityType, new Point(0, 0), 0, []);
-   const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(entityConfig.components);
    
    const snapOrigin = getStructureSnapOrigin(connectingEntity);
    
@@ -386,7 +386,7 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
             // @SUPAHACK
             const tribe = getTribes()[0];
             const entityConfig = createStructureConfig(tribe, entityType, position.copy(), placingEntityAngle, []);
-            const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+            const transformComponent = getConfigTransformComponent(entityConfig.components);
             
             // Don't add the position if it would be colliding with the connecting entity
             let isValid = true;
@@ -681,7 +681,7 @@ const getBracingsPlaceInfo = (regularPlacePosition: Point, layer: Layer): Struct
    // @SUPAHACK
    const tribe = getTribes()[0];
    const entityConfig = createStructureConfig(tribe, EntityType.bracings, position, angle, []);
-   const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(entityConfig.components);
    
    if (structureIntersectsWithBuildingBlockingTiles(layer, transformComponent.hitboxes)) {
       isValid = false;
@@ -712,7 +712,7 @@ const calculatePlaceInfo = (desiredPlacePosition: Point, desiredPlaceAngle: numb
       // @HACK
       const tribe = getTribes()[0];
       const entityConfig = createStructureConfig(tribe, entityType, desiredPlacePosition.copy(), desiredPlaceAngle, []);
-      const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+      const transformComponent = getConfigTransformComponent(entityConfig.components);
       const hitboxes = transformComponent.hitboxes;
 
       // If no connections are found, use the regular place position

@@ -7,6 +7,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface TumbleweedLiveComponentData {}
 

@@ -1,4 +1,4 @@
-import { GuardianSpikyBallSummonStage, ServerComponentType } from "battletribes-shared/components";
+import { GuardianSpikyBallSummonStage } from "battletribes-shared/components";
 import { Entity } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point, UtilVars, randAngle, randFloat, randInt } from "battletribes-shared/utils";
@@ -6,7 +6,8 @@ import { turnToPosition } from "../ai-shared";
 import { GuardianComponentArray } from "../components/GuardianComponent";
 import { createGuardianSpikyBallConfig } from "../entities/projectiles/guardian-spiky-ball";
 import { createEntity, getEntityLayer, getGameTicks } from "../world";
-import { addHitboxAngularVelocity, Hitbox, setHitboxVelocity } from "../hitboxes";
+import { addHitboxAngularVelocity, setHitboxVelocity } from "../hitboxes";
+import { getConfigTransformComponent } from "../components";
 
 const enum Vars {
    WINDUP_TIME_TICKS = (1.5 * Settings.TICK_RATE) | 0,
@@ -44,7 +45,7 @@ const createSpikyBall = (guardian: Entity, targetX: number, targetY: number): vo
       
       const config = createGuardianSpikyBallConfig(new Point(x!, y!), randAngle(), guardian);
 
-      const spikyBallHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+      const spikyBallHitbox = getConfigTransformComponent(config.components).hitboxes[0];
       setHitboxVelocity(spikyBallHitbox, vx, vy);
       addHitboxAngularVelocity(spikyBallHitbox, Math.PI);
       

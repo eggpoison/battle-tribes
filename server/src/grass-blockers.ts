@@ -78,7 +78,6 @@ const getBlockedGrasses = (box: Box, layer: Layer): ReadonlyArray<Entity> => {
    const grasses = new Array<Entity>();
 
    box.calculateBounds();
-   
    const minChunkX = unitsToChunksClamped(_bounds.minX);
    const maxChunkX = unitsToChunksClamped(_bounds.maxX);
    const minChunkY = unitsToChunksClamped(_bounds.minY);

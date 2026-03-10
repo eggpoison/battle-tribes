@@ -1,11 +1,11 @@
 import { Settings, collisionBitsAreCompatible, Point, rotateXAroundOrigin, rotateYAroundOrigin, Box, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, Entity, CollisionResult, _bounds } from "webgl-test-shared";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Chunk from "./Chunk";
-import { getEntityLayer } from "./world";
+import { getEntityLayer, getEntityType } from "./world";
 import Layer from "./Layer";
-import { getComponentArrays } from "./entity-components/ComponentArray";
 import { playerInstance } from "./player";
 import { applyForce, getHitboxVelocity, Hitbox, setHitboxVelocity, translateHitbox } from "./hitboxes";
+import { getEntityComponentArrays } from "./entity-component-types";
 
 export interface HitboxCollisionPair {
    readonly affectedHitbox: Hitbox;
@@ -24,7 +24,7 @@ type CollisionPairs = Map<number, Array<EntityPairCollisionInfo>>;
 const resolveHardCollision = (affectedHitbox: Hitbox, collisionResult: CollisionResult): void => {
    // @Temporary: once it's guaranteed that overlap !== 0 this won't be needed.
    if (collisionResult.overlap.magnitude() === 0) {
-      console.warn("garbo");
+      console.warn("my code is perilous " + Math.random());
       return;
    }
 
@@ -59,11 +59,9 @@ export function collide(entity: Entity, collidingEntity: Entity, hitbox: Hitbox,
       }
    }
 
-   // @Speed
-   const componentArrays = getComponentArrays();
-   for (let i = 0; i < componentArrays.length; i++) {
-      const componentArray = componentArrays[i];
-      if (typeof componentArray.onCollision !== "undefined" && componentArray.hasComponent(entity)) {
+   const componentArrays = getEntityComponentArrays(getEntityType(entity));
+   for (const componentArray of componentArrays) {
+      if (typeof componentArray.onCollision !== "undefined") {
          componentArray.onCollision(entity, collidingEntity, hitbox, pushingHitbox);
       }
    }

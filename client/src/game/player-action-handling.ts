@@ -1,4 +1,4 @@
-import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, EntityComponents, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp } from "webgl-test-shared";
+import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp } from "webgl-test-shared";
 import { entitySelectionState } from "../ui-state/entity-selection-state";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
 import { inventoryState } from "../ui-state/inventory-state";
@@ -30,7 +30,6 @@ import { getHitboxVelocity, applyAccelerationFromGround, Hitbox, setHitboxRelati
 import { countItemTypesInInventory } from "./inventory-manipulation";
 import { addKeyListener, keyIsPressed } from "./keyboard-input";
 import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket, sendSpectateEntityPacket } from "./networking/packet-sending/packet-sending";
-import { EntityServerComponentData, getServerComponentData } from "./networking/packet-snapshots";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
 import { playerInstance, isSpectating } from "./player";
 import { thingIsVisualRenderPart } from "./render-parts/render-parts";
@@ -43,7 +42,7 @@ import { entityExists, getEntityLayer, getCurrentLayer, EntityComponentData, cre
 import { cursorWorldPos, setCameraVelocity } from "./camera";
 import { HeldItemComponentArray } from "./entity-components/server-components/HeldItemComponent";
 import { ServerComponentData } from "./entity-components/components";
-import { getEntityServerComponentTypes } from "./entity-component-types";
+import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;

@@ -4,7 +4,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TribeWarriorComponentData {
@@ -68,13 +68,16 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): TribeWarriorComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
    return {
-      scars: entityComponentData.serverComponentData.get(ServerComponentType.tribeWarrior)!.scars
+      scars: tribeWarriorComponentData.scars
    };
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const tribeWarriorComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tribeWarrior)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
    return tribeWarriorComponentData.scars.length;
 }
 

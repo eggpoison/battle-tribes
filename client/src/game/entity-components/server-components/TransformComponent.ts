@@ -1,6 +1,6 @@
 import { Entity, EntityType, boxIsCircular, updateBox, Box, ServerComponentType, PacketReader, randFloat, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, randSign, rotateXAroundOrigin, rotateYAroundOrigin, getTileIndexIncludingEdges, _bounds } from "webgl-test-shared";
 import Chunk from "../../Chunk";
-import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityType, surfaceLayer, undergroundLayer } from "../../world";
+import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityRenderInfo, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { playerInstance } from "../../player";
 import { applyAccelerationFromGround, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, readHitboxFromData, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox, updateHitboxFromData, updatePlayerHitboxFromData } from "../../hitboxes";
@@ -14,7 +14,8 @@ import { currentSnapshot } from "../../game";
 import { gameUIState } from "../../../ui-state/game-ui-state";
 import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 import { worldToScreenPos } from "../../camera";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
+import Layer from "../../Layer";
 
 export interface TransformComponentData {
    readonly traction: number;
@@ -775,4 +776,36 @@ export function entityIsVisibleToCamera(entity: Entity): boolean {
    }
 
    return false;
+}
+
+export function changeEntityLayer(entity: Entity, newLayer: Layer): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const previousLayer = getEntityLayer(entity);
+
+   const renderInfo = getEntityRenderInfo(entity);
+
+   previousLayer.removeEntityFromRendering(entity, renderInfo.renderLayer);
+   newLayer.addEntityToRendering(entity, renderInfo.renderLayer, renderInfo.renderHeight);
+
+   // Remove from all previous chunks
+   for (const chunk of transformComponent.chunks) {
+      chunk.removeEntity(entity);
+      transformComponent.chunks.delete(chunk);
+   }
+
+   // Add to new ones
+   // @Cleanup: this logic should be in transformcomponent, perhaps there is a function which already does this...
+   const minChunkX = Math.max(Math.floor(transformComponent.boundingAreaMinX / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor(transformComponent.boundingAreaMaxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkY = Math.max(Math.floor(transformComponent.boundingAreaMinY / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor(transformComponent.boundingAreaMaxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+         const newChunk = newLayer.getChunk(chunkX, chunkY);
+         newChunk.addEntity(entity);
+         transformComponent.chunks.add(newChunk);
+      }
+   }
+
+   setEntityLayer(entity, newLayer);
 }

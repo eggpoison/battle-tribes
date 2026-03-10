@@ -44,10 +44,10 @@ export function createGrassStrandConfig(position: Point, angle: number, tileType
    
    return {
       entityType: EntityType.grassStrand,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.layeredRod]: layeredRodComponent
-      },
+      components: [
+         transformComponent,
+         layeredRodComponent
+      ],
       lights: []
    };
 }

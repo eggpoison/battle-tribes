@@ -98,17 +98,17 @@ export function createPlayerConfig(position: Point, angle: number, tribe: Tribe,
 
    return {
       entityType: EntityType.player,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.tribeMember]: tribeMemberComponent,
-         [ServerComponentType.tribesman]: tribesmanComponent,
-         [ServerComponentType.player]: playerComponent,
-         [ServerComponentType.inventory]: inventoryComponent,
-         [ServerComponentType.inventoryUse]: inventoryUseComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         tribeComponent,
+         tribeMemberComponent,
+         tribesmanComponent,
+         playerComponent,
+         inventoryComponent,
+         inventoryUseComponent
+      ],
       lights: []
    };
 }

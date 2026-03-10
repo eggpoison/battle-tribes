@@ -40,14 +40,14 @@ export function createIceSpikesPlantedConfig(position: Point, rotation: number, 
    
    return {
       entityType: EntityType.iceSpikesPlanted,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.planted]: plantedComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.iceSpikesPlanted]: iceSpikesPlantedComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         plantedComponent,
+         lootComponent,
+         iceSpikesPlantedComponent
+      ],
       lights: []
    };
 }

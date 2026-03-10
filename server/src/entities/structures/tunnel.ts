@@ -57,15 +57,15 @@ export function createTunnelConfig(position: Point, rotation: number, tribe: Tri
    
    return {
       entityType: EntityType.tunnel,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.buildingMaterial]: materialComponent,
-         [ServerComponentType.tunnel]: tunnelComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         materialComponent,
+         tunnelComponent
+      ],
       lights: []
    };
 }

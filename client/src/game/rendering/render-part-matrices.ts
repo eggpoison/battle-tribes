@@ -8,9 +8,9 @@ import { gl } from "../webgl";
 import { getHitboxVelocity, Hitbox } from "../hitboxes";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { playerInstance } from "../player";
-import { EntitySnapshot, getServerComponentData } from "../networking/packet-snapshots";
+import { EntitySnapshot } from "../networking/packet-snapshots";
 import { currentSnapshot, nextSnapshot } from "../game";
-import { getEntityServerComponentTypes } from "../entity-component-types";
+import { getEntityServerComponentTypes, getServerComponentData } from "../entity-component-types";
 
 // @Cleanup: file name
 
@@ -139,6 +139,7 @@ const calculateAndOverrideRenderThingMatrix = (thing: RenderPart): void => {
    translateMatrix(matrix, tx, ty);
 }
 
+// @SPEED @GARBAGE
 const getHitboxDataFromEntityData = (hitbox: Hitbox, entityData: EntitySnapshot): Hitbox => {
    const serverComponentTypes = getEntityServerComponentTypes(entityData.entityType);
    const transformComponentData = getServerComponentData(entityData.serverComponentData, serverComponentTypes, ServerComponentType.transform);
@@ -150,6 +151,7 @@ const getHitboxDataFromEntityData = (hitbox: Hitbox, entityData: EntitySnapshot)
    throw new Error();
 }
 
+// @SPEED @GARBAGE
 const getHitboxSnapshotDatas = (hitbox: Hitbox): [Hitbox, Hitbox] => {
    const currentEntityData = currentSnapshot.entities.get(hitbox.entity);
    assert(typeof currentEntityData !== "undefined");
@@ -297,6 +299,7 @@ export function updateRenderPartMatrices(clientTickInterp: number, serverTickInt
    // Do this before so that binding buffers during the loop doesn't mess up any previously bound vertex array.
    gl.bindVertexArray(null);
 
+   // @Speed: Can't this overlap with dirtyEntityRenderInfos?
    for (const entity of nextSnapshot.interpolatingEntities) {
       // @Hack? I send entity data even if the entity is removed that tick, so while we have to interpolate to that deleted data, also if currentSnapshot = nextSnapshot then it sometimes tries to interpolate a deleted entity.
       if (entityExists(entity)) {

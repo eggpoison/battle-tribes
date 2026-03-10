@@ -37,14 +37,14 @@ export function createPlanterBoxConfig(position: Point, rotation: number, tribe:
    
    return {
       entityType: EntityType.planterBox,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.planterBox]: planterBoxComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         planterBoxComponent
+      ],
       lights: []
    };
 }

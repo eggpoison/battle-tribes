@@ -9,7 +9,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface PalmTreeComponentData {}
 

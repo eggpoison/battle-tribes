@@ -29,12 +29,12 @@ export function createSlingTurretRockConfig(position: Point, rotation: number, o
    
    return {
       entityType: EntityType.slingTurretRock,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.projectile]: projectileComponent,
-         [ServerComponentType.slingTurretRock]: slingTurretRockComponent
-      },
+      components: [
+         transformComponent,
+         tribeComponent,
+         projectileComponent,
+         slingTurretRockComponent
+      ],
       lights: []
    };
 }

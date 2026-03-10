@@ -10,7 +10,7 @@ import { EntityComponentData, getEntityLayer, getEntityRenderInfo } from "../../
 import ServerComponentArray from "../ServerComponentArray";
 import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 
 export interface GlurbSegmentComponentData {
    readonly mossBallCompleteness: number;

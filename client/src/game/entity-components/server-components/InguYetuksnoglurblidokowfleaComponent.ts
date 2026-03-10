@@ -6,7 +6,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getCurrentLayer } from "../../world";
 import { playSound } from "../../sound";
 import { cameraPosition } from "../../camera";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface InguYetuksnoglurblidokowfleaComponentData {}
 

@@ -22,11 +22,11 @@ export function createInguYetukLaserConfig(position: Point, angle: number): Enti
 
    return {
       entityType: EntityType.inguYetukLaser,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.inguYetukLaser]: inguYetukLaserComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         inguYetukLaserComponent
+      ],
       lights: []
    };
 }

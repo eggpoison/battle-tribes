@@ -44,15 +44,15 @@ export function createBarrelConfig(position: Point, rotation: number, tribe: Tri
    
    return {
       entityType: EntityType.barrel,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.inventory]: inventoryComponent,
-         [ServerComponentType.barrel]: barrelComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         inventoryComponent,
+         barrelComponent
+      ],
       lights: []
    };
 }

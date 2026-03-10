@@ -15,7 +15,7 @@ import { ItemComponentArray } from "./ItemComponent";
 import { TamingComponentArray } from "./TamingComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity-events";
-import { EntityConfig } from "../components";
+import { EntityConfig, getConfigTransformComponent } from "../components";
 import { createGlurbBodySegmentConfig } from "../entities/mobs/glurb-body-segment";
 import { createGlurbTailSegmentConfig } from "../entities/mobs/glurb-tail-segment";
 import { registerEntityTickEvent } from "../server/player-clients";
@@ -250,7 +250,7 @@ function onTick(glurbHead: Entity): void {
                      config = createGlurbBodySegmentConfig(new Point(x, y), randAngle());
                   }
 
-                  const newSegmentHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+                  const newSegmentHitbox = getConfigTransformComponent(config.components).hitboxes[0];
                   tetherGlurbSegments(newSegmentHitbox, finalSegmentHitbox);
                }
             }

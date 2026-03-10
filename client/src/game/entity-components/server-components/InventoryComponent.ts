@@ -8,7 +8,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";
 import { selectedEntityInventoryState } from "../../../ui-state/selected-entity-inventory-state";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface InventoryComponentData {
    readonly inventories: Partial<Record<InventoryName, Inventory>>;

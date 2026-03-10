@@ -15,6 +15,8 @@ import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestructio
 import { Biome } from "../../../shared/src/biomes";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { applyAccelerationFromGround, getHitboxTile, Hitbox, turnHitboxToAngle, setHitboxVelocity } from "../hitboxes";
+import { getConfigComponent, getConfigTransformComponent } from "../components";
+import { getEntityComponentTypes } from "../entity-component-types";
 
 const enum Vars {
    TURN_SPEED = 2 * UtilVars.PI,
@@ -115,7 +117,7 @@ const createSpit = (slime: Entity, slimeComponent: SlimeComponent): void => {
 
    const config = createSlimeSpitConfig(new Point(x, y), randAngle(), slimeComponent.size === SlimeSize.large ? 1 : 0);
 
-   const spitHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+   const spitHitbox = getConfigTransformComponent(config.components).hitboxes[0];
    setHitboxVelocity(spitHitbox, 500 * Math.sin(slimeHitbox.box.angle), 500 * Math.cos(slimeHitbox.box.angle));
 
    createEntity(config, getEntityLayer(slime), 0);
@@ -386,7 +388,11 @@ const merge = (slime1: Entity, slime2: Entity): void => {
       const y = (slime1Hitbox.box.position.y + slime2Hitbox.box.position.y) / 2;
 
       const config = createSlimeConfig(new Point(x, y), randAngle(), slimeComponent1.size + 1);
-      config.components[ServerComponentType.slime]!.orbSizes = orbSizes;
+
+      const componentTypes = getEntityComponentTypes(config.entityType);
+      const slimeComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.slime);
+      slimeComponent.orbSizes = orbSizes;
+      
       createEntity(config, getEntityLayer(slime1), 0);
       
       destroyEntity(slime1);

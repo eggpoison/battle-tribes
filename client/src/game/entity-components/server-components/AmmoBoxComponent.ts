@@ -8,7 +8,7 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { currentSnapshot } from "../../game";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface AmmoBoxComponentData {

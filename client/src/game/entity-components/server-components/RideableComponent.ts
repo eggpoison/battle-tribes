@@ -6,7 +6,7 @@ import { entityExists, EntityComponentData, getEntityLayer, getEntityType } from
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 interface CarrySlot {
    occupiedEntity: Entity;

@@ -6,7 +6,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import { addFenceConnection, FenceComponentArray, removeFenceConnection } from "./FenceComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface StructureComponentData {
    readonly hasActiveBlueprint: boolean;

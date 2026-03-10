@@ -1,7 +1,7 @@
 import { PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TribeMemberComponentData {

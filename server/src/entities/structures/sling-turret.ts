@@ -55,16 +55,16 @@ export function createSlingTurretConfig(position: Point, rotation: number, tribe
    
    return {
       entityType: EntityType.slingTurret,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.turret]: turretComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.slingTurret]: slingTurretComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         turretComponent,
+         aiHelperComponent,
+         slingTurretComponent
+      ],
       lights: []
    };
 }

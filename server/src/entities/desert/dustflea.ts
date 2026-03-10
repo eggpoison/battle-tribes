@@ -85,16 +85,16 @@ export function createDustfleaConfig(position: Point, angle: number): EntityConf
    
    return {
       entityType: EntityType.dustflea,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.attackingEntities]: attackingEntitiesComponent,
-         [ServerComponentType.energyStore]: energyStoreComponent,
-         [ServerComponentType.energyStomach]: energyStomachComponent,
-         [ServerComponentType.dustflea]: dustfleaComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         aiHelperComponent,
+         attackingEntitiesComponent,
+         energyStoreComponent,
+         energyStomachComponent,
+         dustfleaComponent
+      ],
       lights: []
    };
 }

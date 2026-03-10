@@ -30,13 +30,13 @@ export function createDesertBushLivelyConfig(position: Point, angle: number): En
    
    return {
       entityType: EntityType.desertBushLively,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.energyStore]: energyStoreComponent,
-         [ServerComponentType.desertBushLively]: desertBushLivelyComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         energyStoreComponent,
+         desertBushLivelyComponent
+      ],
       lights: []
    };
 }

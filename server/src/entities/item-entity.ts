@@ -37,10 +37,10 @@ export function createItemEntityConfig(position: Point, rotation: number, item: 
    
    return {
       entityType: EntityType.itemEntity,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.item]: itemComponent
-      },
+      components: [
+         transformComponent,
+         itemComponent
+      ],
       lights: lights
    };
 }

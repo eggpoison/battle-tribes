@@ -48,15 +48,15 @@ export function createHealingTotemConfig(position: Point, rotation: number, trib
    
    return {
       entityType: EntityType.healingTotem,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.healingTotem]: healingTotemComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         aiHelperComponent,
+         healingTotemComponent
+      ],
       lights: []
    };
 }

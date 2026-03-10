@@ -47,13 +47,13 @@ export function createSpruceTreeConfig(position: Point, angle: number): EntityCo
    
    return {
       entityType: EntityType.spruceTree,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.spruceTree]: spruceTreeComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         spruceTreeComponent
+      ],
       lights: []
    };
 }

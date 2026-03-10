@@ -66,20 +66,20 @@ export function createScrappyConfig(position: Point, rotation: number, tribe: Tr
 
    return {
       entityType: EntityType.scrappy,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.tribeMember]: tribeMemberComponent,
-         [ServerComponentType.tribesmanAI]: tribesmanAIComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.aiPathfinding]: aiPathfindingComponent,
-         [ServerComponentType.aiAssignment]: aiAssignmentComponent,
-         [ServerComponentType.inventory]: inventoryComponent,
-         [ServerComponentType.inventoryUse]: inventoryUseComponent,
-         [ServerComponentType.scrappy]: scrappyComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         tribeComponent,
+         tribeMemberComponent,
+         tribesmanAIComponent,
+         aiHelperComponent,
+         aiPathfindingComponent,
+         aiAssignmentComponent,
+         inventoryComponent,
+         inventoryUseComponent,
+         scrappyComponent
+      ],
       lights: []
    };
 }

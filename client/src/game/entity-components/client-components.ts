@@ -1,5 +1,4 @@
 import { EntityType } from "webgl-test-shared";
-import { EntityClientComponentData } from "../networking/packet-snapshots";
 import { ClientComponentType } from "./client-component-types";
 import { BallistaFrostcicleComponentData, createBallistaFrostcicleComponentData } from "./client-components/BallistaFrostcicleComponent";
 import { BallistaRockComponentData, createBallistaRockComponentData } from "./client-components/BallistaRockComponent";
@@ -20,6 +19,7 @@ import { createWarriorHutComponentData, WarriorHutComponentData } from "./client
 import { createWoodenArrowComponentData, WoodenArrowComponentData } from "./client-components/WoodenArrowComponent";
 import { createWorkbenchComponentData, WorkbenchComponentData } from "./client-components/WorkbenchComponent";
 import { createWorkerHutComponentData, WorkerHutComponentData } from "./client-components/WorkerHutComponent";
+import { EntityClientComponentData } from "../entity-component-types";
 
 const ClientComponentDataRecord = {
    [ClientComponentType.equipment]: (): EquipmentComponentData => 0 as any,

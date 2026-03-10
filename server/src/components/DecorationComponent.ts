@@ -19,6 +19,5 @@ function getDataLength(): number {
 
 function addDataToPacket(packet: Packet, entity: Entity): void {
    const decorationComponent = DecorationComponentArray.getComponent(entity);
-
    packet.writeNumber(decorationComponent.decorationType);
 }

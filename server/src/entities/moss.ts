@@ -1,7 +1,6 @@
 import { HitboxCollisionType } from "../../../shared/src/boxes/boxes";
 import { RectangularBox } from "../../../shared/src/boxes/RectangularBox";
 import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../shared/src/collision";
-import { ServerComponentType } from "../../../shared/src/components";
 import { EntityType } from "../../../shared/src/entities";
 import { Point } from "../../../shared/src/utils";
 import { EntityConfig } from "../components";
@@ -19,10 +18,10 @@ export function createMossConfig(position: Point, angle: number, size: number, c
    
    return {
       entityType: EntityType.moss,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.moss]: mossComponent
-      },
+      components: [
+         transformComponent,
+         mossComponent
+      ],
       lights: []
    };
 }

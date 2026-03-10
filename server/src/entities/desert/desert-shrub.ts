@@ -30,13 +30,13 @@ export function createDesertShrubConfig(position: Point, angle: number): EntityC
    
    return {
       entityType: EntityType.desertShrub,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.energyStore]: energyStoreComponent,
-         [ServerComponentType.desertShrub]: desertShrubComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         energyStoreComponent,
+         desertShrubComponent
+      ],
       lights: []
    };
 }

@@ -37,14 +37,14 @@ export function createResearchBenchConfig(position: Point, rotation: number, tri
    
    return {
       entityType: EntityType.researchBench,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.researchBench]: researchBenchComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         researchBenchComponent
+      ],
       lights: []
    };
 }

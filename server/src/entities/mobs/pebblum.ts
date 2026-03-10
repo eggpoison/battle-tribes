@@ -31,12 +31,12 @@ export function createPebblumConfig(position: Point, rotation: number): EntityCo
    
    return {
       entityType: EntityType.pebblum,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.pebblum]: pebblumComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         pebblumComponent
+      ],
       lights: []
    };
 }

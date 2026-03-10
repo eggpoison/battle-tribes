@@ -19,10 +19,10 @@ export function createGuardianGemQuakeConfig(position: Point, rotation: number):
    
    return {
       entityType: EntityType.guardianGemQuake,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.guardianGemQuake]: guardianGemQuakeComponent
-      },
+      components: [
+         transformComponent,
+         guardianGemQuakeComponent
+      ],
       lights: []
    };
 }

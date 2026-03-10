@@ -114,7 +114,6 @@ import { WorkerHutComponentArray } from "./client-components/WorkerHutComponent"
 import { FloorSignComponent, FloorSignComponentArray, FloorSignComponentData } from "./server-components/FloorSignComponent";
 import { DesertBushLivelyComponent, DesertBushLivelyComponentArray, DesertBushLivelyComponentData } from "./server-components/DesertBushLivelyComponent";
 import { DesertBushSandyComponent, DesertBushSandyComponentArray, DesertBushSandyComponentData } from "./server-components/DesertBushSandyComponent";
-import { AutoSpawnedComponent, AutoSpawnedComponentArray, AutoSpawnedComponentData } from "./server-components/AutoSpawnedComponent";
 import { DesertSmallWeedComponent, DesertSmallWeedComponentArray, DesertSmallWeedComponentData } from "./server-components/DesertSmallWeedComponent";
 import { DesertShrubComponent, DesertShrubComponentArray, DesertShrubComponentData } from "./server-components/DesertShrubComponent";
 import { TumbleweedLiveComponent, TumbleweedLiveComponentArray, TumbleweedLiveComponentData } from "./server-components/TumbleweedLiveComponent";
@@ -274,7 +273,6 @@ const ServerComponentArrayRecord: Record<ServerComponentType, object> = {
    [ServerComponentType.floorSign]: FloorSignComponentArray,
    [ServerComponentType.desertBushLively]: DesertBushLivelyComponentArray,
    [ServerComponentType.desertBushSandy]: DesertBushSandyComponentArray,
-   [ServerComponentType.autoSpawned]: AutoSpawnedComponentArray,
    [ServerComponentType.desertSmallWeed]: DesertSmallWeedComponentArray,
    [ServerComponentType.desertShrub]: DesertShrubComponentArray,
    [ServerComponentType.tumbleweedLive]: TumbleweedLiveComponentArray,
@@ -408,7 +406,6 @@ const ServerComponentRecord = {
    [ServerComponentType.floorSign]: (): FloorSignComponent => 0 as any,
    [ServerComponentType.desertBushLively]: (): DesertBushLivelyComponent => 0 as any,
    [ServerComponentType.desertBushSandy]: (): DesertBushSandyComponent => 0 as any,
-   [ServerComponentType.autoSpawned]: (): AutoSpawnedComponent => 0 as any,
    [ServerComponentType.desertSmallWeed]: (): DesertSmallWeedComponent => 0 as any,
    [ServerComponentType.desertShrub]: (): DesertShrubComponent => 0 as any,
    [ServerComponentType.tumbleweedLive]: (): TumbleweedLiveComponent => 0 as any,
@@ -544,7 +541,6 @@ const ServerComponentDataRecord = {
    [ServerComponentType.floorSign]: (): FloorSignComponentData => 0 as any,
    [ServerComponentType.desertBushLively]: (): DesertBushLivelyComponentData => 0 as any,
    [ServerComponentType.desertBushSandy]: (): DesertBushSandyComponentData => 0 as any,
-   [ServerComponentType.autoSpawned]: (): AutoSpawnedComponentData => 0 as any,
    [ServerComponentType.desertSmallWeed]: (): DesertSmallWeedComponentData => 0 as any,
    [ServerComponentType.desertShrub]: (): DesertShrubComponentData => 0 as any,
    [ServerComponentType.tumbleweedLive]: (): TumbleweedLiveComponentData => 0 as any,

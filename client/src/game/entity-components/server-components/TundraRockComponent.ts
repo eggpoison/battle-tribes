@@ -4,6 +4,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TundraRockComponentData {
    readonly variant: number;
@@ -29,7 +31,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const tundraRockComponentData = entityComponentData.serverComponentData.get(ServerComponentType.tundraRock)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tundraRockComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tundraRock);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
@@ -50,8 +53,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): TundraRockComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tundraRockComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tundraRock);
    return {
-      variant: entityComponentData.serverComponentData.get(ServerComponentType.tundraRock)!.variant
+      variant: tundraRockComponentData.variant
    };
 }
 

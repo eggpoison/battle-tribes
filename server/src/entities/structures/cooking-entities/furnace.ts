@@ -55,16 +55,16 @@ export function createFurnaceConfig(position: Point, rotation: number, tribe: Tr
    
    return {
       entityType: EntityType.furnace,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.inventory]: inventoryComponent,
-         [ServerComponentType.cooking]: cookingComponent,
-         [ServerComponentType.furnace]: furnaceComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         inventoryComponent,
+         cookingComponent,
+         furnaceComponent
+      ],
       lights: []
    };
 }

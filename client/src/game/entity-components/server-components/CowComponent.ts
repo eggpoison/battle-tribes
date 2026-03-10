@@ -11,7 +11,7 @@ import { RenderPart } from "../../render-parts/render-parts";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
 import { tickIntervalHasPassed } from "../../game";
-import { getServerComponentData, getTransformComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface CowComponentData {

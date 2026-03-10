@@ -140,16 +140,16 @@ export function createSnobeConfig(position: Point, angle: number): EntityConfig 
    
    return {
       entityType: EntityType.snobe,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.attackingEntities]: attackingEntitiesComponent,
-         [ServerComponentType.taming]: tamingComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.snobe]: snobeComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         aiHelperComponent,
+         attackingEntitiesComponent,
+         tamingComponent,
+         lootComponent,
+         snobeComponent
+      ],
       lights: []
    };
 }

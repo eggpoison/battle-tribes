@@ -8,6 +8,7 @@ import { StructureType } from "../../../../shared/src/structures";
 import { getSubtileIndex } from "../../../../shared/src/subtiles";
 import { getTileIndexIncludingEdges, Point, randAngle, randFloat } from "../../../../shared/src/utils";
 import { boxArraysAreColliding, boxHasCollisionWithBoxes } from "../../collision-detection";
+import { getConfigTransformComponent } from "../../components";
 import { createStructureConfig } from "../../structure-placement";
 import { getTribes } from "../../world";
 import { SafetyNode, addBoxesOccupiedNodes } from "../ai-building";
@@ -28,7 +29,7 @@ export function createBuildingCandidate(entityType: StructureType, buildingLayer
    // @SUPAHACK
    const tribe = getTribes()[0];
    const entityConfig = createStructureConfig(tribe, entityType, new Point(x, y), rotation, []);
-   const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(entityConfig.components);
 
    const candidate: BuildingCandidate = {
       buildingLayer: buildingLayer,

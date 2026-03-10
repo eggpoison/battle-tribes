@@ -225,15 +225,15 @@ export function createInguSerpentConfig(position: Point, angle: number): EntityC
    
    return {
       entityType: EntityType.inguSerpent,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.taming]: tamingComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.inguSerpent]: inguSerpentComponent,
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         aiHelperComponent,
+         tamingComponent,
+         lootComponent,
+         inguSerpentComponent,
+      ],
       lights: lights
    }
 }

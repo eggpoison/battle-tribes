@@ -331,13 +331,13 @@ export function createGuardianConfig(position: Point, rotation: number, homeTile
    
    return {
       entityType: EntityType.guardian,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.guardian]: guardianComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         aiHelperComponent,
+         guardianComponent
+      ],
       lights: []
    };
 }

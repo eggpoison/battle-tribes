@@ -1,12 +1,10 @@
-import { ServerComponentType, Entity } from "../../../../shared/src";
-import { getEntityComponentArrays } from "../world";
-import { ClientComponentType } from "./client-component-types";
-import ClientComponentArray from "./ClientComponentArray";
-import ServerComponentArray from "./ServerComponentArray";
+import { Entity } from "../../../../shared/src";
+import { getEntityComponentArrays } from "../entity-component-types";
+import { getEntityType } from "../world";
 
 
 export function callEntityOnUpdateFunctions(entity: Entity): void {
-   const componentArrays = getEntityComponentArrays(entity);
+   const componentArrays = getEntityComponentArrays(getEntityType(entity));
    for (const componentArray of componentArrays) {
       if (typeof componentArray.onUpdate !== "undefined") {
          componentArray.onUpdate(entity);

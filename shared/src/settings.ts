@@ -2,8 +2,6 @@
 
 import { assert } from "./utils";
 
-
-
 export const enum Settings {
    SERVER_PORT = 8000,
    // @Incomplete was gunna bring these out of the settings enum but cuz this is typescript this messes up some other shit, wait until i can mark them as constexpr

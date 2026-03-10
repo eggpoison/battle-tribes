@@ -42,13 +42,13 @@ export function createGlurbTailSegmentConfig(position: Point, angle: number): En
 
    return {
       entityType: EntityType.glurbTailSegment,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.glurbSegment]: glurbSegmentComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         glurbSegmentComponent
+      ],
       lights: lights
    };
 }

@@ -6,7 +6,7 @@ import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { updateLimb_TEMP } from "./InventoryUseComponent";
 import { EntityComponentData } from "../../world";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { getTransformComponentData } from "../../networking/packet-snapshots";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface CogwalkerComponentData {}
 

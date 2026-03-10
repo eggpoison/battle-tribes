@@ -102,21 +102,21 @@ export function createTribeWarriorConfig(position: Point, rotation: number, trib
 
    return {
       entityType: EntityType.tribeWarrior,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.tribeMember]: tribeMemberComponent,
-         [ServerComponentType.tribesman]: tribesmanComponent,
-         [ServerComponentType.tribesmanAI]: tribesmanAIComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.aiPathfinding]: aiPathfindingComponent,
-         [ServerComponentType.aiAssignment]: aiAssignmentComponent,
-         [ServerComponentType.inventory]: inventoryComponent,
-         [ServerComponentType.inventoryUse]: inventoryUseComponent,
-         [ServerComponentType.tribeWarrior]: tribeWarriorComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         tribeComponent,
+         tribeMemberComponent,
+         tribesmanComponent,
+         tribesmanAIComponent,
+         aiHelperComponent,
+         aiPathfindingComponent,
+         aiAssignmentComponent,
+         inventoryComponent,
+         inventoryUseComponent,
+         tribeWarriorComponent
+      ],
       lights: []
    };
 }

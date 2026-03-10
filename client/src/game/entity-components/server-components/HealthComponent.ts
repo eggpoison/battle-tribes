@@ -7,7 +7,7 @@ import { Hitbox } from "../../hitboxes";
 import { healthBarState } from "../../../ui-state/health-bar-state";
 import { discombobulate } from "../../player-action-handling";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../networking/packet-snapshots";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface HealthComponentData {
    readonly health: number;

@@ -1,14 +1,13 @@
 import { EntityTypeString } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { randFloat, getTileIndexIncludingEdges, distance, assert, randAngle, Point } from "battletribes-shared/utils";
+import { randFloat, getTileIndexIncludingEdges, distance, randAngle, Point } from "battletribes-shared/utils";
 import Layer from "./Layer";
 import { addEntityToCensus, getEntityCount } from "./census";
 import OPTIONS from "./options";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityImmediate, getEntityType, isNight } from "./world";
-import { EntityConfig } from "./components";
-import { EntitySpawnEvent, SPAWN_INFOS } from "./entity-spawn-info";
+import { EntityConfig, getConfigTransformComponent } from "./components";
+import { addEntityToSpawnDistribution, EntitySpawnEvent, SPAWN_INFOS } from "./entity-spawn-info";
 import { HitboxFlag } from "../../shared/src/boxes/boxes";
 import { getSubtileIndex } from "../../shared/src/subtiles";
 import { undergroundLayer } from "./layers";
@@ -16,7 +15,6 @@ import { generateMithrilOre } from "./world-generation/mithril-ore-generation";
 import { boxIsCollidingWithSubtile, boxIsCollidingWithTile } from "../../shared/src/collision";
 import { CollisionGroup, getEntityCollisionGroup } from "../../shared/src/collision-groups";
 import { Hitbox } from "./hitboxes";
-import { AutoSpawnedComponent } from "./components/AutoSpawnedComponent";
 import { getHitboxesCollidingEntities } from "./collision-detection";
 import { _bounds } from "../../shared/src/boxes/BaseBox";
 
@@ -125,7 +123,7 @@ const hitboxIncludingChildrenTileTypesAreValid = (hitbox: Hitbox, spawnInfo: Ent
 }
 
 const entityTileTypesAreValid = (entityConfig: EntityConfig, spawnInfo: EntitySpawnEvent): boolean => {
-   const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(entityConfig.components);
    for (const rootHitbox of transformComponent.rootHitboxes) {
       if (!hitboxIncludingChildrenTileTypesAreValid(rootHitbox, spawnInfo)) {
          return false;
@@ -142,14 +140,10 @@ const attemptToSpawnEntity = (spawnInfo: EntitySpawnEvent, pos: Point, firstEnti
       return null;
    }
 
-   // First make sure the entity wouldn't violate any rules
+   // Make sure the entity wouldn't violate any spawning rules
    for (const config of configs) {
-      assert(typeof config.components[ServerComponentType.autoSpawned] === "undefined");
-      const autoSpawnedComponent = new AutoSpawnedComponent(spawnInfo);
-      config.components[ServerComponentType.autoSpawned] = autoSpawnedComponent;
-
-      const transformComponent = config.components[ServerComponentType.transform];
-      if (typeof transformComponent === "undefined" || entityWouldSpawnInWall(spawnInfo.layer, transformComponent)) {
+      const transformComponent = getConfigTransformComponent(config.components);
+      if (entityWouldSpawnInWall(spawnInfo.layer, transformComponent)) {
          return null;
       }
 
@@ -179,6 +173,10 @@ const attemptToSpawnEntity = (spawnInfo: EntitySpawnEvent, pos: Point, firstEnti
    for (const config of configs) {
       const entity = createEntityImmediate(config, spawnInfo.layer);
       addEntityToCensus(entity, config.entityType);
+
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      addEntityToSpawnDistribution(spawnInfo.spawnDistribution, entity, hitbox.box.position.x, hitbox.box.position.y);
    }
 
    return configs;

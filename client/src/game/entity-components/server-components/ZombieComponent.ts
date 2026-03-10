@@ -10,6 +10,8 @@ import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface ZombieComponentData {
    readonly zombieType: number;
@@ -43,8 +45,9 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const zombieComponentData = entityComponentData.serverComponentData.get(ServerComponentType.zombie)!;
-   const inventoryUseComponentData = entityComponentData.serverComponentData.get(ServerComponentType.inventoryUse)!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const zombieComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.zombie);
+   const inventoryUseComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventoryUse);
 
    const bodyRenderPart = new TexturedRenderPart(
       hitbox,
@@ -86,8 +89,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): ZombieComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const zombieComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.zombie);
    return {
-      zombieType: entityComponentData.serverComponentData.get(ServerComponentType.zombie)!.zombieType
+      zombieType: zombieComponentData.zombieType
    };
 }
 

@@ -219,6 +219,9 @@ export function removeEntity(entity: Entity, isDeath: boolean): void {
       if (typeof componentArray.onRemove !== "undefined") {
          componentArray.onRemove(entity);
       }
+   }
+
+   for (const componentArray of componentArrays) {
       componentArray.removeComponent(entity);
    }
 

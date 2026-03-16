@@ -19,7 +19,7 @@
    import TribesTab from "../dev/tabs/TribesTab.svelte";
    import TribePlanVisualiser from "../tribe-plan-visualiser/TribePlanVisualiser.svelte";
    import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state";
-   import TechTree from "../tech-tree/TechTree.svelte";
+   import TechTree from "../tech-tree/TechTree";
    import { TamingComponentArray } from "../../../game/entity-components/server-components/TamingComponent";
 
    const selectedEntity = $derived(entitySelectionState.selectedEntity);

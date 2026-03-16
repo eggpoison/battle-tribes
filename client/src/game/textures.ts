@@ -75,7 +75,7 @@ export async function loadTextures(textureImages: Array<HTMLImageElement>): Prom
       
       const textureSource = miscTextureSources[i];
       
-      const texture = gl.createTexture()!;
+      const texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
 
       // Set parameters

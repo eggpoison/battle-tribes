@@ -5,9 +5,7 @@ import { cleanEntityRenderParts, undirtyRenderInfo } from "./rendering/render-pa
 import { calculateRenderDepthFromLayer, getEntityRenderLayer } from "./render-layers";
 import { removeEntitySounds } from "./sound";
 import { currentSnapshot } from "./game";
-import { getServerComponentArray } from "./entity-components/ServerComponentArray";
-import { getClientComponentArray } from "./entity-components/ClientComponentArray";
-import { EntityClientComponentData, EntityServerComponentData, getEntityClientComponentTypes, getEntityComponentArrays, getEntityServerComponentTypes } from "./entity-component-types";
+import { EntityClientComponentData, EntityServerComponentData, getEntityComponentArrays } from "./entity-component-types";
 
 // @Cleanup: location
 /** Basically just all the component data used to create an entity. */
@@ -107,18 +105,11 @@ export function createEntityCreationInfo(entity: Entity, entityComponentData: En
    
    let maxNumRenderParts = 0;
 
-   const serverComponentTypes = getEntityServerComponentTypes(entityType);
-   for (const componentType of serverComponentTypes) {
-      const componentArray = getServerComponentArray(componentType);
+   const componentArrays = getEntityComponentArrays(entityType);
+   for (const componentArray of componentArrays) {
       maxNumRenderParts += componentArray.getMaxRenderParts(entityComponentData);
    }
 
-   const clientComponentTypes = getEntityClientComponentTypes(entityType);
-   for (const componentType of clientComponentTypes) {
-      const componentArray = getClientComponentArray(componentType);
-      maxNumRenderParts += componentArray.getMaxRenderParts(entityComponentData);
-   }
-   
    const renderLayer = getEntityRenderLayer(entityType, entityComponentData);
    const renderHeight = calculateRenderDepthFromLayer(renderLayer, entityComponentData);
 
@@ -127,7 +118,6 @@ export function createEntityCreationInfo(entity: Entity, entityComponentData: En
    // Populate render info
    const componentIntermediateInfoRecord: Partial<Record<number, object>> = {};
 
-   const componentArrays = getEntityComponentArrays(entityType);
    for (const componentArray of componentArrays) {
       if (typeof componentArray.populateIntermediateInfo !== "undefined") {
          const componentIntermediateInfo = componentArray.populateIntermediateInfo(renderInfo, entityComponentData);
@@ -151,8 +141,8 @@ export function createEntityCreationInfo(entity: Entity, entityComponentData: En
 export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo: EntityCreationInfo, addToRendering: boolean): void {
    const entity = creationInfo.entity;
    const entityType = creationInfo.entityComponentData.entityType;
-   
    const componentArrays = getEntityComponentArrays(entityType);
+   
    for (const componentArray of componentArrays) {
       const componentIntermediateInfo = creationInfo.componentIntermediateInfoRecord[componentArray.id];
       // @Hack: the cast

@@ -1,6 +1,6 @@
 <script lang="ts">
    import { InventoryName, ItemType, COOKING_INGREDIENT_ITEM_TYPES, FUEL_SOURCE_ITEM_TYPES, EntityType } from "webgl-test-shared";
-   import ItemSlot from "./ItemSlot.svelte";
+   import ItemSlot from "./ItemSlot";
    import { getEntityType } from "../../../game/world";
    import { CookingComponentArray } from "../../../game/entity-components/server-components/CookingComponent";
    import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";

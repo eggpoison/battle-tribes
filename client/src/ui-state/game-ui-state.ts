@@ -10,8 +10,6 @@ export const enum GameInteractState {
 
 let gameInteractState = GameInteractState.none;
 
-let settingsIsOpen = false;
-
 let isDead = false;
 
 let cinematicModeIsEnabled = false;
@@ -31,13 +29,6 @@ export const gameUIState = {
    },
    setGameInteractState(newState: GameInteractState): void {
       gameInteractState = newState;
-   },
-
-   get settingsIsOpen() {
-      return settingsIsOpen;
-   },
-   setSettingsIsOpen(newSettingsIsOpen: boolean): void {
-      settingsIsOpen = newSettingsIsOpen;
    },
 
    get isDead() {

@@ -173,7 +173,7 @@ export function updateLightLevelRenderingChunks(bgUpdateInfos: Map<number, Light
 
       const renderingChunk = renderingChunks.get(renderingChunkIndex);
       if (typeof renderingChunk === "undefined") {
-         const vao = gl.createVertexArray()!;
+         const vao = gl.createVertexArray();
          gl.bindVertexArray(vao);
          didBindVertexArray = true;
       
@@ -184,7 +184,7 @@ export function updateLightLevelRenderingChunks(bgUpdateInfos: Map<number, Light
             setNodeRenderingChunkData(vertexData, nodeInfo);
          }
          
-         const vertexBuffer = gl.createBuffer()!;
+         const vertexBuffer = gl.createBuffer();
          gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
          gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.DYNAMIC_DRAW);
    

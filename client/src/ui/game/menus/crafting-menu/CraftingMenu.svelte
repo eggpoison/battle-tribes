@@ -5,14 +5,14 @@
    import { sendCraftItemPacket } from "../../../../game/networking/packet-sending/packet-sending";
    import { playerTribe } from "../../../../game/tribes";
    import { playerInstance } from "../../../../game/player";
-   import ItemSlot from "../../inventories/ItemSlot.svelte";
+   import ItemSlot from "../../inventories/ItemSlot";
    import CraftingIngredients from "./CraftingIngredients.svelte";
    import { entitySelectionState } from "../../../../ui-state/entity-selection-state";
    import { getEntityType } from "../../../../game/world";
    import RecipeViewer from "./RecipeViewer.svelte";
    import { inventoryState } from "../../../../ui-state/inventory-state";
-   import EntityInteractableItemSlot from "../../inventories/EntityInteractableItemSlot.svelte";
-   import ItemSlotsContainer from "../../inventories/ItemSlotsContainer.svelte";
+   import EntityInteractableItemSlot from "../../inventories/EntityInteractableItemSlot";
+   import ItemSlotsContainer from "../../inventories/Inventory";
    import MenuElem from "../MenuElem.svelte";
 
    interface RecipeInfo {

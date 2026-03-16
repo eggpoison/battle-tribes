@@ -104,7 +104,7 @@ export function renderDebugImages(): void {
    gl.bindTexture(gl.TEXTURE_2D, getTexture("debug/spring.png"));
    
    // @Speed
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 

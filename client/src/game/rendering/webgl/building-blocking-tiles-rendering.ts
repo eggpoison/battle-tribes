@@ -1,6 +1,5 @@
-import { Settings } from "webgl-test-shared";
+import { getTileIndexIncludingEdges, Settings } from "webgl-test-shared";
 import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY } from "../../camera";
-import { getTileIndexIncludingEdges } from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getCurrentLayer } from "../../world";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";

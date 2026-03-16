@@ -7,6 +7,8 @@ import { calculateHitboxRenderPosition, getEntityTickInterp, registerDirtyRender
 import { getEntityRenderInfo } from "./world";
 import { gameUIState } from "../ui-state/game-ui-state";
 import { menuSelectorState } from "../ui-state/menu-selector-state";
+import { destroyHealthBar } from "../ui/game/HealthBar";
+import { deathScreen } from "../ui-state/death-screen-funcs";
 
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
 // but this is in the client so these optimisations are less important. The ease-of-use is worth it
@@ -25,6 +27,9 @@ const onPlayerRespawn = (): void => {
 
 const onPlayerDeath = (): void => {
    gameUIState.setIsDead(true);
+
+   destroyHealthBar();
+   deathScreen.open();
    
    // Close any open menus
    while (menuSelectorState.closeCurrentMenu());
@@ -85,3 +90,16 @@ export function updatePlayerDirection(clientTickInterp: number, serverTickInterp
    const renderInfo = getEntityRenderInfo(playerInstance);
    registerDirtyRenderInfo(renderInfo);
 }
+
+// @INCOMPLETE
+// if (import.meta.hot) {
+//    if (playerInstance !== null) {
+//       createHotbar();
+//    }
+
+//    import.meta.hot.dispose(() => {
+//       hotbarElem?.remove();
+//    });
+   
+//    import.meta.hot.accept();
+// }

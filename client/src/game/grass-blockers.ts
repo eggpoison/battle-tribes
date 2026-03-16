@@ -36,7 +36,7 @@ export function getGrassBlockers(): ReadonlyMap<number, Readonly<GrassBlocker>> 
 
 const createGrassBlockerFromData = (data: GrassBlockerData): GrassBlocker => {
    const vao = gl.createVertexArray();
-   const vertexBuffer = gl.createBuffer()!;
+   const vertexBuffer = gl.createBuffer();
 
    const blocker: GrassBlocker = {
       box: data.box,

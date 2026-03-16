@@ -182,8 +182,8 @@ export function openDebugInfoDisplay(parent: HTMLElement): void {
       <ul class="area">
          <li>
             <label>
-               <input type="range" name="zoom-input" defaultValue={debugDisplayState.cameraZoom} min={0.7} max={2.5} step={0.1} onchange={e => changeZoom(e)} />
-               <br />Zoom ({debugDisplayState.cameraZoom})
+               <input type="range" name="zoom-input" defaultValue=${debugDisplayState.cameraZoom} min={0.7} max={2.5} step={0.1} onchange={e => changeZoom(e)} />
+               <br />Zoom (${debugDisplayState.cameraZoom})
             </label>
          </li>
       </ul>

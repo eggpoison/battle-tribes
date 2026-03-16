@@ -1,13 +1,6 @@
-import { gameIsRunning } from "./game";
-import { chatboxState } from "../ui-state/chatbox-state";
-import { gameUIState } from "../ui-state/game-ui-state";
-import { sendAscendPacket } from "./networking/packet-sending/packet-sending";
-import { Menu, menuSelectorState } from "../ui-state/menu-selector-state";
-import { nerdVision } from "../ui/game/dev/nerd-vision-funcs";
-
 const keyListeners: { [key: string]: Array<(e: KeyboardEvent) => void> } = {};
 
-type IDKeyListener = {
+interface IDKeyListener {
    readonly key: string;
    readonly callback: (e: KeyboardEvent) => void;
 }
@@ -68,41 +61,8 @@ export function onKeyDown(e: KeyboardEvent): void {
    }
 
    const key = getKey(e); 
-
-   callKeyListeners(key, e);
-
-   if (gameIsRunning) {
-      // Start a chat message
-      if (key === "t") {
-         chatboxState.isFocused = true;
-         e.preventDefault();
-         clearPressedKeys();
-         return;
-      // Toggle cinematic mode
-      } else if (key === "o") {
-         gameUIState.setCinematicModeIsEnabled(!gameUIState.cinematicModeIsEnabled);
-      // Close the settings
-      } else if (key === "Escape") {
-         gameUIState.setSettingsIsOpen(false);
-      // Open/close nerd vision
-      } else if (key === "`") {
-         nerdVision.setIsVisible(!nerdVision.isVisible());
-      // Open terminal on tilda press
-      } else if (key === "~") {
-         nerdVision.setIsVisible(true);
-         nerdVision.setTerminalIsVisible(true);
-      // Open/close tech tree
-      } else if (key === "p") {
-         menuSelectorState.toggleMenu(Menu.techTree);
-      // Ascend layers
-      } else if (key === " ") {
-         if (gameUIState.canAscendLayer) {
-            sendAscendPacket();
-         }
-      }
-   }
-
    pressedKeys[key] = true;
+   callKeyListeners(key, e);
 }
 
 export function onKeyUp(e: KeyboardEvent): void {

@@ -157,7 +157,7 @@ export function renderTileBreakProgress(layer: Layer): void {
 
    const vertexData = new Float32Array(vertices);
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
    

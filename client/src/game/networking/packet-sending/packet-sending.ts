@@ -1,12 +1,7 @@
 import { TribesmanTitle, TribeType, Point, TamingSkillID, TechID, BlueprintType, InventoryName, ItemType, Entity, EntityType, getStringLengthBytes, Packet, PacketType } from "webgl-test-shared";
-import { windowHeight, windowWidth } from "../../webgl";
-import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
-import { playerInstance } from "../../player";
-import { cameraPosition } from "../../camera";
-import { getHotbarSelectedItemSlot } from "../../player-action-handling";
 import { sendData } from "../networking";
 
-export function sendInitialPlayerDataPacket(username: string, tribeType: TribeType, isSpectating: boolean): void {
+export function sendInitialPlayerDataPacket(username: string, tribeType: TribeType, isSpectating: boolean, windowWidth: number, windowHeight: number): void {
    // Send player data to the server
    const packet = new Packet(PacketType.initialPlayerData, Float32Array.BYTES_PER_ELEMENT * 4 + getStringLengthBytes(username));
 
@@ -34,14 +29,11 @@ export function sendSyncRequestPacket(): void {
    sendData(packet.buffer);
 }
 
-export function sendAttackPacket(): void {
-   const transformComponent = TransformComponentArray.getComponent(playerInstance!);
-   const playerHitbox = transformComponent.hitboxes[0];
-   
+export function sendAttackPacket(hotbarSelectedItemSlot: number, playerAngle: number): void {
    const packet = new Packet(PacketType.attack, 2 * Float32Array.BYTES_PER_ELEMENT);
 
-   packet.writeNumber(getHotbarSelectedItemSlot());
-   packet.writeNumber(playerHitbox.box.angle);
+   packet.writeNumber(hotbarSelectedItemSlot);
+   packet.writeNumber(playerAngle);
    
    sendData(packet.buffer);
 }
@@ -60,15 +52,15 @@ export function sendRespawnPacket(): void {
    sendData(packet.buffer);
 }
 
-export function sendStartItemUsePacket(): void {
+export function sendStartItemUsePacket(hotbarSelectedItemSlot: number): void {
    const packet = new Packet(PacketType.startItemUse, Float32Array.BYTES_PER_ELEMENT);
-   packet.writeNumber(getHotbarSelectedItemSlot());
+   packet.writeNumber(hotbarSelectedItemSlot);
    sendData(packet.buffer);
 }
 
-export function sendItemUsePacket(): void {
+export function sendItemUsePacket(hotbarSelectedItemSlot: number): void {
    const packet = new Packet(PacketType.useItem, Float32Array.BYTES_PER_ELEMENT);
-   packet.writeNumber(getHotbarSelectedItemSlot());
+   packet.writeNumber(hotbarSelectedItemSlot);
    sendData(packet.buffer);
 }
 
@@ -294,10 +286,11 @@ export function sendForceAcquireTamingSkillPacket(entity: Entity, skillID: Tamin
    sendData(packet.buffer);
 }
 
-export function sendSetSpectatingPositionPacket(): void {
+// @Cleanup: unused??
+export function sendSetSpectatingPositionPacket(cameraPositionX: number, cameraPositionY: number): void {
    const packet = new Packet(PacketType.setSpectatingPosition, 2 * Float32Array.BYTES_PER_ELEMENT);
-   packet.writeNumber(cameraPosition.x);
-   packet.writeNumber(cameraPosition.y);
+   packet.writeNumber(cameraPositionX);
+   packet.writeNumber(cameraPositionY);
    sendData(packet.buffer);
 }
 

@@ -233,7 +233,7 @@ export function renderSlimeTrails(layer: Layer): void {
    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
    
    // @Speed
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 

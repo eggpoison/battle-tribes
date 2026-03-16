@@ -29,12 +29,15 @@ export default defineConfig([
          "semi": ["error", "always"],
          "@typescript-eslint/explicit-function-return-type": "warn",
          "@typescript-eslint/no-unused-vars": "warn", // Downgrade unused variables to warnings instead of errors
-         "@typescript-eslint/restrict-plus-operands": "off", // Turn this off because [number + string] is often useful and optimal
+         "@typescript-eslint/restrict-plus-operands": "off", // Turn this off because ( number + string ) is often useful and optimal
          "@typescript-eslint/prefer-literal-enum-member": "off", // Let me do my const enum shenanigans!!!
          "@typescript-eslint/prefer-includes": "off", // indexOf is faster than includes!
          "@typescript-eslint/array-type": ["error", {default: "generic", readonly: "generic"}], // Use ReadonlyArray<T> instead of readonly T[], and Array<T> instead of T[]
-         "@typescript-eslint/no-non-null-assertion": "off", // This is often extrememly useful, e.g. gl.createBuffer()!
-         "@typescript-eslint/restrict-template-expressions": "off" // Let me use numbers inside templates!!
+         "@typescript-eslint/no-non-null-assertion": "off", // This is extrememly useful everywhere, e.g. "ComponentArray.getComponent(entity)!"
+         "@typescript-eslint/restrict-template-expressions": "off", // Let me use numbers inside string templates!!
+         "semi": "off", // Semicolons don't belong on the end of arrow functions.
+         "@typescript-eslint/prefer-nullish-coalescing": "off", // i use || not ??
+         "@typescript-eslint/no-unsafe-enum-comparison": "off" // lets me do math with enums n const enums
       },
    },
 ]);

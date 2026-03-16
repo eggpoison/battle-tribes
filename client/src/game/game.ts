@@ -23,8 +23,6 @@ import { updateParticles } from "./rendering/webgl/particle-rendering";
 import { callEntityOnUpdateFunctions } from "./entity-components/component-arrays";
 import { debugInfoDisplay } from "../ui/game/dev/debug-info-display-funcs";
 import { getComponentArrays } from "./entity-components/ComponentArray";
-import { closeLoadingScreen } from "../ui/LoadingScreen";
-import { openGameScreen } from "../ui/GameScreen";
 
 interface TickCallback {
    time: number;
@@ -84,11 +82,8 @@ function unsyncGame(): void {
    resetFrameGraph();
 }
 
-function startGame(): void {
+export function startGame(): void {
    gameIsRunning = true;
-   // @Cleanup weird to touch UI here. Also, this is redundant work if the game is resyncing instead of just starting.
-   closeLoadingScreen();
-   openGameScreen();
 
    resizeCanvas();
 
@@ -104,7 +99,7 @@ export function stopGame(): void {
    gameIsRunning = false;
 }
 
-function receivePacket(reader: PacketReader): void {
+export function receivePacket(reader: PacketReader): void {
    const previousSnapshot = snapshotBuffer.length > 0 ? snapshotBuffer[snapshotBuffer.length - 1] : null;
    const snapshot = decodeSnapshotFromGameDataPacket(reader, previousSnapshot);
    
@@ -131,13 +126,8 @@ function receivePacket(reader: PacketReader): void {
    }
 }
 
-export function onGameDataPacket(reader: PacketReader): void {
-   receivePacket(reader);
-      
-   // Once enough packets are received to show the gameplay, start the game
-   if (!gameIsRunning && snapshotBuffer.length >= SNAPSHOT_BUFFER_LENGTH) {
-      startGame();
-   }
+export function canStartGame(): boolean {
+   return snapshotBuffer.length >= SNAPSHOT_BUFFER_LENGTH;
 }
 
 export function setCurrentSnapshot(snapshot: PacketSnapshot): void {
@@ -162,8 +152,7 @@ export function tickIntervalHasPassed(intervalSeconds: number): boolean {
 
 export function getSecondsSinceTickTimestamp(ticks: number): number {
    const ticksSince = currentSnapshot.tick - ticks;
-   let secondsSince = ticksSince * Settings.DT_S;
-
+   const secondsSince = ticksSince * Settings.DT_S;
    return secondsSince;
 }
 
@@ -181,7 +170,7 @@ export function addTickCallback(time: number, callback: () => void): void {
 export function updateTickCallbacks(): void {
    for (let i = tickCallbacks.length - 1; i >= 0; i--) {
       const tickCallbackInfo = tickCallbacks[i];
-      tickCallbackInfo.time -= 1 * Settings.DT_S;
+      tickCallbackInfo.time -= Settings.DT_S;
       if (tickCallbackInfo.time <= 0) {
          tickCallbackInfo.callback();
          tickCallbacks.splice(i, 1);

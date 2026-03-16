@@ -140,10 +140,10 @@ export function createTechTreeItemShaders(): void {
    // Create VAO
    // 
 
-   vao = gl.createVertexArray()!;
+   vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
-   buffer = gl.createBuffer()!;
+   buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
@@ -156,7 +156,7 @@ export function createTechTreeItemShaders(): void {
    gl.enableVertexAttribArray(2);
    gl.enableVertexAttribArray(3);
 
-   indexBuffer = gl.createBuffer()!;
+   indexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
    gl.bindVertexArray(null);

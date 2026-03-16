@@ -173,12 +173,12 @@ export function createEntityRenderData(maxRenderParts: number): EntityRenderData
       throw new Error();
    }
    
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
    
    const vertexData = new Float32Array(maxRenderParts * 4 * EntityRenderingVars.ATTRIBUTES_PER_VERTEX);
 
-   const vertexBuffer = gl.createBuffer()!;
+   const vertexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.DYNAMIC_DRAW);
 
@@ -218,7 +218,7 @@ export function createEntityRenderData(maxRenderParts: number): EntityRenderData
       indicesData[dataOffset + 5] = indexOffset + 3;
    }
 
-   const indexBuffer = gl.createBuffer()!;
+   const indexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
 

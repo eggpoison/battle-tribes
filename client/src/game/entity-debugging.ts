@@ -5,7 +5,7 @@ import { sendSetDebugEntityPacket } from "./networking/packet-sending/packet-sen
 import { playerInstance } from "./player";
 import { isDev } from "./utils";
 import { entityExists } from "./world";
-import { nerdVision } from "../ui/game/dev/nerd-vision-funcs";
+import { nerdVision } from "../ui-state/nerd-vision-funcs";
 
 let previousDebugEntity = 0;
 

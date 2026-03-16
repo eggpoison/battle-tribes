@@ -1,8 +1,8 @@
 <script lang="ts">
    import CLIENT_ITEM_INFO_RECORD from "../../../../game/client-item-info";
    import { ItemType, ITEM_INFO_RECORD, Item } from "webgl-test-shared";
-   import ItemSlotsContainer from "../../inventories/ItemSlotsContainer.svelte";
-   import ItemSlot from "../../inventories/ItemSlot.svelte";
+   import ItemSlotsContainer from "../../inventories/Inventory";
+   import ItemSlot from "../../inventories/ItemSlot";
     import { menuSelectorState } from "../../../../ui-state/menu-selector-state";
 
    interface Props {

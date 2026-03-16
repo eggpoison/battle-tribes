@@ -25,7 +25,7 @@ export function createDarkeningShaders(): void {
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
 
-   vao = gl.createVertexArray()!;
+   vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
    const vertexData = new Float32Array(12);
@@ -42,7 +42,7 @@ export function createDarkeningShaders(): void {
    vertexData[10] = 1;
    vertexData[11] = 1;
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 

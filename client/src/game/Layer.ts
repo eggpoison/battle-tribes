@@ -1,4 +1,4 @@
-import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings } from "webgl-test-shared";
+import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings, getTileIndexIncludingEdges, getSubtileIndex, getSubtileX, getSubtileY } from "webgl-test-shared";
 import Chunk from "./Chunk";
 import { Light } from "./lights";
 import Particle from "./Particle";
@@ -12,48 +12,6 @@ import { recalculateTileShadows, TileShadowType } from "./rendering/webgl/tile-s
 import { recalculateWallBorders } from "./rendering/webgl/wall-border-rendering";
 import { playSound } from "./sound";
 import { Tile } from "./Tile";
-
-// @Cleanup: location, @Copynpaste from server
-
-export function getTileX(tileIndex: number): number {
-   return tileIndex % Settings.FULL_WORLD_SIZE_TILES - Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function getTileY(tileIndex: number): number {
-   return Math.floor(tileIndex / Settings.FULL_WORLD_SIZE_TILES) - Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
-   if (tileX < -Settings.EDGE_GENERATION_DISTANCE || tileX >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE || tileY < -Settings.EDGE_GENERATION_DISTANCE || tileY >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
-      throw new Error("Outside of world bounds!");
-   }
-   
-   return (tileY + Settings.EDGE_GENERATION_DISTANCE) * (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE * 2) + tileX + Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function tileIsWithinEdge(tileX: number, tileY: number): boolean {
-   return tileX >= -Settings.EDGE_GENERATION_DISTANCE && tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE && tileY >= -Settings.EDGE_GENERATION_DISTANCE && tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function tileIsInWorld(tileX: number, tileY: number): boolean {
-   return tileX >= 0 && tileX < Settings.WORLD_SIZE_TILES && tileY >= 0 && tileY < Settings.WORLD_SIZE_TILES;
-}
-
-export function getSubtileIndex(subtileX: number, subtileY: number): number {
-   return (subtileY + Settings.EDGE_GENERATION_DISTANCE * 4) * Settings.FULL_WORLD_SIZE_TILES * 4 + subtileX + Settings.EDGE_GENERATION_DISTANCE * 4;
-}
-
-export function getSubtileX(subtileIndex: number): number {
-   return subtileIndex % (Settings.FULL_WORLD_SIZE_TILES * 4) - Settings.EDGE_GENERATION_DISTANCE * 4;
-}
-
-export function getSubtileY(subtileIndex: number): number {
-   return Math.floor(subtileIndex / (Settings.FULL_WORLD_SIZE_TILES * 4)) - Settings.EDGE_GENERATION_DISTANCE * 4;
-}
-
-export function subtileIsInWorld(subtileX: number, subtileY: number): boolean {
-   return subtileX >= -Settings.EDGE_GENERATION_DISTANCE * 4 && subtileX < (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 && subtileY >= -Settings.EDGE_GENERATION_DISTANCE * 4 && subtileY < (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4;
-}
 
 export default class Layer {
    public readonly idx: number;

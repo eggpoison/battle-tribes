@@ -1,9 +1,9 @@
-import { Point, TileIndex, Biome, TileType, Settings, PacketReader, WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, InventoryName, AttackVars } from "webgl-test-shared";
+import { TileIndex, Biome, TileType, Settings, PacketReader, WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, InventoryName, AttackVars, getTileX, getTileY, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges, tileIsInWorld } from "webgl-test-shared";
 import { refreshCameraView, setCameraPosition } from "../camera";
 import { Tile } from "../Tile";
 import { addLayer, layers, setCurrentLayer, surfaceLayer } from "../world";
 import { NEIGHBOUR_OFFSETS } from "../utils";
-import Layer, { getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld, tileIsWithinEdge } from "../Layer";
+import Layer from "../Layer";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { initialiseRenderables } from "../rendering/render-loop";
 import { playerInstance } from "../player";
@@ -124,7 +124,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
                const neighbourTileX = tileX + NEIGHBOUR_OFFSETS[j][0];
                const neighbourTileY = tileY + NEIGHBOUR_OFFSETS[j][1];
 
-               if (tileIsWithinEdge(neighbourTileX, neighbourTileY)) {
+               if (tileIsInWorldIncludingEdges(neighbourTileX, neighbourTileY)) {
                   const tileIndex = getTileIndexIncludingEdges(neighbourTileX, neighbourTileY);
                   const neighbourTile = tiles[tileIndex];
                   neighbourTile.bordersWater = true;

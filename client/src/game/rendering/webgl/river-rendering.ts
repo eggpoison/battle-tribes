@@ -1,10 +1,10 @@
-import { Settings, WaterRockData, WaterRockSize, lerp, randFloat, rotateXAroundPoint, rotateYAroundPoint, TileType } from "webgl-test-shared";
+import { Settings, WaterRockData, WaterRockSize, lerp, randFloat, rotateXAroundPoint, rotateYAroundPoint, TileType, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getTexture } from "../../textures";
 import { RenderChunkRiverInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "../render-chunks";
 import { Tile } from "../../Tile";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import Layer, { getTileIndexIncludingEdges, tileIsWithinEdge } from "../../Layer";
+import Layer from "../../Layer";
 import { undergroundLayer } from "../../world";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
 
@@ -64,7 +64,7 @@ let baseProgramIsUndergroundUniformLocation: WebGLUniformLocation;
 //       // 
 
 //       const foamVertexData = calculateFoamVertexData(steppingStones);
-//       const foamBuffer = gl.createBuffer()!;
+//       const foamBuffer = gl.createBuffer();
 //       gl.bindBuffer(gl.ARRAY_BUFFER, foamBuffer);
 //       gl.bufferData(gl.ARRAY_BUFFER, foamVertexData, gl.STATIC_DRAW);
 
@@ -76,7 +76,7 @@ let baseProgramIsUndergroundUniformLocation: WebGLUniformLocation;
 //       // 
 
 //       const steppingStoneVertexData = calculateSteppingStoneVertexData(steppingStones);
-//       const steppingStoneBuffer = gl.createBuffer()!;
+//       const steppingStoneBuffer = gl.createBuffer();
 //       gl.bindBuffer(gl.ARRAY_BUFFER, steppingStoneBuffer);
 //       gl.bufferData(gl.ARRAY_BUFFER, steppingStoneVertexData, gl.STATIC_DRAW);
 
@@ -726,7 +726,7 @@ export function createRiverShaders(): void {
 }
 
 const tileIsWaterInt = (layer: Layer, tileX: number, tileY: number): number => {
-   if (!tileIsWithinEdge(tileX, tileY)) {
+   if (!tileIsInWorldIncludingEdges(tileX, tileY)) {
       return 0;
    }
    
@@ -756,10 +756,10 @@ const calculateTransitionVertexData = (layer: Layer, renderChunkX: number, rende
    for (let i = 0; i < edgeTiles.length; i++) {
       const tile = edgeTiles[i];
 
-      let x1 = tile.x;
-      let x2 = tile.x + 1;
-      let y1 = tile.y;
-      let y2 = tile.y + 1;
+      const x1 = tile.x;
+      const x2 = tile.x + 1;
+      const y1 = tile.y;
+      const y2 = tile.y + 1;
 
       const topLeftWaterDistance = 1 - tileIsWaterInt(layer, tile.x - 1, tile.y + 1);
       const topRightWaterDistance = 1 - tileIsWaterInt(layer, tile.x + 1, tile.y + 1);
@@ -864,10 +864,10 @@ const calculateRockVertexData = (waterRocks: ReadonlyArray<WaterRockData>): Floa
    for (const waterRock of waterRocks) {
       const size = WATER_ROCK_SIZES[waterRock.size];
       
-      let x1 = (waterRock.position[0] - size/2);
-      let x2 = (waterRock.position[0] + size/2);
-      let y1 = (waterRock.position[1] - size/2);
-      let y2 = (waterRock.position[1] + size/2);
+      const x1 = (waterRock.position[0] - size/2);
+      const x2 = (waterRock.position[0] + size/2);
+      const y1 = (waterRock.position[1] - size/2);
+      const y2 = (waterRock.position[1] + size/2);
 
       const topLeftX = rotateXAroundPoint(x1, y2, waterRock.position[0], waterRock.position[1], waterRock.rotation);
       const topLeftY = rotateYAroundPoint(x1, y2, waterRock.position[0], waterRock.position[1], waterRock.rotation);
@@ -935,10 +935,10 @@ const calculateBaseVertexData = (layer: Layer, waterTiles: ReadonlyArray<Tile>):
 
    for (let i = 0; i < waterTiles.length; i++) {
       const tile = waterTiles[i];
-      let x1 = tile.x * Settings.TILE_SIZE;
-      let x2 = (tile.x + 1) * Settings.TILE_SIZE;
-      let y1 = tile.y * Settings.TILE_SIZE;
-      let y2 = (tile.y + 1) * Settings.TILE_SIZE;
+      const x1 = tile.x * Settings.TILE_SIZE;
+      const x2 = (tile.x + 1) * Settings.TILE_SIZE;
+      const y1 = tile.y * Settings.TILE_SIZE;
+      const y2 = (tile.y + 1) * Settings.TILE_SIZE;
 
       const topIsWater = 1 - tileIsWaterInt(layer, tile.x, tile.y + 1);
       const topRightIsWater = 1 - tileIsWaterInt(layer, tile.x + 1, tile.y + 1);
@@ -1119,7 +1119,7 @@ const calculateBaseVertexData = (layer: Layer, waterTiles: ReadonlyArray<Tile>):
 // }
 
 const createBaseVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -1144,7 +1144,7 @@ const createBaseVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 }
 
 const createRockVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -1165,7 +1165,7 @@ const createRockVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 }
 
 const createHighlightsVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -1184,7 +1184,7 @@ const createHighlightsVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 }
 
 const createNoiseVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -1207,7 +1207,7 @@ const createNoiseVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 }
 
 const createTransitionVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -1240,7 +1240,7 @@ const createTransitionVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 }
 
 const createFoamVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -1261,7 +1261,7 @@ const createFoamVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 }
 
 const createSteppingStoneVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -1306,7 +1306,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
 
    // Left border tiles
    for (let tileY = bottomTileY - 1; tileY <= topTileY + 1; tileY++) {
-      if (tileIsWithinEdge(leftTileX - 1, tileY)) {
+      if (tileIsInWorldIncludingEdges(leftTileX - 1, tileY)) {
          const tile = layer.getTileFromCoords(leftTileX - 1, tileY);
          if (tile.type === TileType.water) {
             return true;
@@ -1316,7 +1316,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
    
    // Right border tiles
    for (let tileY = bottomTileY - 1; tileY <= topTileY + 1; tileY++) {
-      if (tileIsWithinEdge(rightTileX + 1, tileY)) {
+      if (tileIsInWorldIncludingEdges(rightTileX + 1, tileY)) {
          const tile = layer.getTileFromCoords(rightTileX + 1, tileY);
          if (tile.type === TileType.water) {
             return true;
@@ -1326,7 +1326,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
 
    // Top border tiles
    for (let tileX = leftTileX; tileX <= rightTileX; tileX++) {
-      if (tileIsWithinEdge(tileX, topTileY + 1)) {
+      if (tileIsInWorldIncludingEdges(tileX, topTileY + 1)) {
          const tile = layer.getTileFromCoords(tileX, topTileY + 1);
          if (tile.type === TileType.water) {
             return true;
@@ -1336,7 +1336,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
 
    // Bottom border tiles
    for (let tileX = leftTileX; tileX <= rightTileX; tileX++) {
-      if (tileIsWithinEdge(tileX, bottomTileY - 1)) {
+      if (tileIsInWorldIncludingEdges(tileX, bottomTileY - 1)) {
          const tile = layer.getTileFromCoords(tileX, bottomTileY - 1);
          if (tile.type === TileType.water) {
             return true;
@@ -1358,27 +1358,27 @@ export function calculateRiverRenderChunkData(layer: Layer, renderChunkX: number
    }
    
    const baseVertexData = calculateBaseVertexData(layer, waterTiles);
-   const baseBuffer = gl.createBuffer()!;
+   const baseBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, baseBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, baseVertexData, gl.STATIC_DRAW);
 
    const rockVertexData = calculateRockVertexData(waterRocks);
-   const rockBuffer = gl.createBuffer()!;
+   const rockBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, rockBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, rockVertexData, gl.STATIC_DRAW);
 
    const highlightsVertexData = calculateHighlightsVertexData(waterTiles);
-   const highlightsBuffer = gl.createBuffer()!;
+   const highlightsBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, highlightsBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, highlightsVertexData, gl.STATIC_DRAW);
 
    const noiseVertexData = calculateNoiseVertexData(layer, waterTiles);
-   const noiseBuffer = gl.createBuffer()!;
+   const noiseBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, noiseBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, noiseVertexData, gl.STATIC_DRAW);
 
    const transitionVertexData = calculateTransitionVertexData(layer, renderChunkX, renderChunkY);
-   const transitionBuffer = gl.createBuffer()!;
+   const transitionBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, transitionBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, transitionVertexData, gl.STATIC_DRAW);
 

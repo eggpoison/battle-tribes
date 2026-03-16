@@ -198,7 +198,7 @@ export async function generateTextureAtlas(textureSources: ReadonlyArray<string>
 
 export function stitchTextureAtlas(generationInfo: TextureAtlasGenerationInfo, gl: WebGL2RenderingContext): TextureAtlasInfo {
    // Make atlas image into texture
-   const texture = gl.createTexture()!;
+   const texture = gl.createTexture();
    gl.bindTexture(gl.TEXTURE_2D, texture);
    // Set parameters
    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);

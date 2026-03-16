@@ -7,10 +7,10 @@
    import { playerInstance } from "../../../game/player";
    import TribesmanInfocard from "./TribesmanInfocard.svelte";
    import { entitySelectionState } from "../../../ui-state/entity-selection-state";
-   import InventoryContainer from "./ItemSlotsContainer.svelte";
+   import InventoryContainer from "./Inventory";
    import BackpackWireframeImage from "../../../images/miscellaneous/backpack-wireframe.png";
    import ArmourWireframeImage from "../../../images/miscellaneous/armour-wireframe.png";
-   import ItemSlot from "./ItemSlot.svelte";
+   import ItemSlot from "./ItemSlot";
 
    // @Hack: "!"
    const tribesman = entitySelectionState.selectedEntity!;

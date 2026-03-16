@@ -1,10 +1,9 @@
 import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp } from "webgl-test-shared";
 import { entitySelectionState } from "../ui-state/entity-selection-state";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
-import { inventoryState } from "../ui-state/inventory-state";
 import { Menu, menuSelectorState } from "../ui-state/menu-selector-state";
 import { playerActionState } from "../ui-state/player-action-state";
-import { currentSnapshot, getElapsedTimeInSeconds } from "./game";
+import { currentSnapshot, gameIsRunning, getElapsedTimeInSeconds } from "./game";
 import { getEntityClientComponentConfigs } from "./entity-components/client-components";
 import { createBarrelComponentData } from "./entity-components/server-components/BarrelComponent";
 import { createBracingsComponentData } from "./entity-components/server-components/BracingsComponent";
@@ -29,7 +28,7 @@ import { EntityRenderInfo } from "./EntityRenderInfo";
 import { getHitboxVelocity, applyAccelerationFromGround, Hitbox, setHitboxRelativeAngle } from "./hitboxes";
 import { countItemTypesInInventory } from "./inventory-manipulation";
 import { addKeyListener, keyIsPressed } from "./keyboard-input";
-import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket, sendSpectateEntityPacket } from "./networking/packet-sending/packet-sending";
+import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket, sendSpectateEntityPacket, sendAscendPacket } from "./networking/packet-sending/packet-sending";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
 import { playerInstance, isSpectating } from "./player";
 import { thingIsVisualRenderPart } from "./render-parts/render-parts";
@@ -43,6 +42,7 @@ import { cursorWorldPos, setCameraVelocity } from "./camera";
 import { HeldItemComponentArray } from "./entity-components/server-components/HeldItemComponent";
 import { ServerComponentData } from "./entity-components/components";
 import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
+import { hotbarFuncs } from "../ui-state/hotbar-funcs";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -137,6 +137,13 @@ const BOW_DRAWING_CHARGE_END_LIMB_STATE: LimbState = {
    extraOffsetX: 0,
    extraOffsetY: 8
 };
+
+addKeyListener(" ", () => {
+   // Ascend layers
+   if (gameIsRunning && gameUIState.canAscendLayer) {
+      sendAscendPacket();
+   }
+});
 
 export function getHotbarSelectedItemSlot(): number {
    return hotbarSelectedItemSlot;
@@ -553,7 +560,9 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
          // @Speed: Garbage collection
          limb.currentActionEndLimbState = copyLimbState(SHIELD_BASH_WIND_UP_LIMB_STATE);
 
-         sendAttackPacket();
+         const transformComponent = TransformComponentArray.getComponent(playerInstance);
+         const playerHitbox = transformComponent.hitboxes[0];
+         sendAttackPacket(hotbarSelectedItemSlot, playerHitbox.box.angle);
       }
       return false;
    }
@@ -575,7 +584,7 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
    // @Speed: Garbage collection
    limb.currentActionEndLimbState = copyLimbState(attackPattern.windedBack);
 
-   sendAttackPacket();
+   sendAttackPacket(hotbarSelectedItemSlot);
 
    return true;
 }
@@ -591,7 +600,7 @@ const getAttackTimeMultiplier = (itemType: ItemType | null): number => {
 
    // Builders swing hammers 30% faster
    const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!);
-   if (tribesmanComponent !== null && tribesmanHasTitle(tribesmanComponent, TribesmanTitle.builder) && itemType !== null && ITEM_TYPE_RECORD[itemType] === "hammer") {
+   if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.builder) && itemType !== null && ITEM_TYPE_RECORD[itemType] === "hammer") {
       swingTimeMultiplier /= 1.3;
    }
 
@@ -701,15 +710,15 @@ export function getSelectedItemInfo(): SelectedItemInfo | null {
 
 const createHotbarKeyListeners = (): void => {
    for (let itemSlot = 1; itemSlot <= Settings.INITIAL_PLAYER_HOTBAR_SIZE; itemSlot++) {
-      addKeyListener(itemSlot.toString(), () => selectItemSlot(itemSlot));
+      addKeyListener(itemSlot.toString(), () => { selectItemSlot(itemSlot); });
    }
-   addKeyListener("!", () => selectItemSlot(1));
-   addKeyListener("@", () => selectItemSlot(2));
-   addKeyListener("#", () => selectItemSlot(3));
-   addKeyListener("$", () => selectItemSlot(4));
-   addKeyListener("%", () => selectItemSlot(5));
-   addKeyListener("^", () => selectItemSlot(6));
-   addKeyListener("&", () => selectItemSlot(7));
+   addKeyListener("!", () => { selectItemSlot(1); });
+   addKeyListener("@", () => { selectItemSlot(2); });
+   addKeyListener("#", () => { selectItemSlot(3); });
+   addKeyListener("$", () => { selectItemSlot(4); });
+   addKeyListener("%", () => { selectItemSlot(5); });
+   addKeyListener("^", () => { selectItemSlot(6); });
+   addKeyListener("&", () => { selectItemSlot(7); });
 }
 
 const hideInventory = (): void => {
@@ -758,8 +767,7 @@ export function createPlayerInputListeners(): void {
    document.body.addEventListener("wheel", e => {
       // Don't scroll hotbar if element is being scrolled instead
       const elemPath = e.composedPath() as Array<HTMLElement>;
-      for (let i = 0; i < elemPath.length; i++) {
-         const elem = elemPath[i];
+      for (const elem of elemPath) {
          // @Hack
          if (typeof elem.style !== "undefined") {
             const overflowY = getComputedStyle(elem).getPropertyValue("overflow-y");
@@ -1129,7 +1137,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
             limb.currentActionStartLimbState = copyLimbState(initialLimbState);
             limb.currentActionEndLimbState = limb.heldItemType !== null && ITEM_TYPE_RECORD[limb.heldItemType] === "shield" ? SHIELD_BLOCKING_LIMB_STATE : BLOCKING_LIMB_STATE;
             
-            sendStartItemUsePacket();
+            sendStartItemUsePacket(hotbarSelectedItemSlot);
          }
          return;
       // Feign attack
@@ -1181,7 +1189,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
             limb.action = action;
             limb.lastEatTicks = currentSnapshot.tick;
 
-            sendStartItemUsePacket();
+            sendStartItemUsePacket(hotbarSelectedItemSlot);
             // @Incomplete
             // if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
             //    // @Cleanup
@@ -1202,7 +1210,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
             playHeadSound("crossbow-load.mp3", 0.4, 1);
          } else {
             // Fire crossbow
-            sendItemUsePacket();
+            sendItemUsePacket(hotbarSelectedItemSlot);
             playHeadSound("crossbow-fire.mp3", 0.4, 1);
          }
          break;
@@ -1236,7 +1244,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
             drawingLimb.currentActionStartLimbState = startDrawingLimbState;
             drawingLimb.currentActionEndLimbState = QUIVER_PULL_LIMB_STATE;
             
-            sendStartItemUsePacket();
+            sendStartItemUsePacket(hotbarSelectedItemSlot);
          }
 
          break;
@@ -1264,13 +1272,13 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
       }
       case "glove":
       case "armour": {
-         sendItemUsePacket();
+         sendItemUsePacket(hotbarSelectedItemSlot);
          break;
       }
       case "placeable": {
          const playerHitbox = transformComponent.hitboxes[0];
 
-         const layer = getEntityLayer(playerInstance!);
+         const layer = getEntityLayer(playerInstance);
          const structureType = ITEM_INFO_RECORD[itemType as PlaceableItemType].entityType;
          const placeInfo = calculateEntityPlaceInfo(playerHitbox.box.position, playerHitbox.box.angle, structureType, layer);
          
@@ -1334,7 +1342,7 @@ const onItemEndUse = (item: Item, inventoryName: InventoryName): void => {
             limb.currentActionDurationTicks = 0;
             
             if (chargeTime >= 1) {
-               sendItemUsePacket();
+               sendItemUsePacket(hotbarSelectedItemSlot);
             } else {
                sendStopItemUsePacket();
                playHeadSound("error.mp3", 0.4, 1);
@@ -1352,15 +1360,16 @@ const onItemEndUse = (item: Item, inventoryName: InventoryName): void => {
             limb.thrownBattleaxeItemID = item.id;
 
             // @Hack?
-            if (inventoryName === InventoryName.offhand) {
-               inventoryState.setOffhandThrownBattleaxeItemID(item.id);
-            } else {
-               inventoryState.setHotbarThrownBattleaxeItemID(item.id);
-            }
+            // @INCOMPLETE since I removed inventoryState
+            // if (inventoryName === InventoryName.offhand) {
+            //    inventoryState.setOffhandThrownBattleaxeItemID(item.id);
+            // } else {
+            //    inventoryState.setHotbarThrownBattleaxeItemID(item.id);
+            // }
          }
          
          if (limb.action === LimbAction.chargeBow && limb.currentActionElapsedTicks >= limb.currentActionDurationTicks) {
-            sendItemUsePacket();
+            sendItemUsePacket(hotbarSelectedItemSlot);
             // @HACK: commented it out cuz it was doubling the sound due to the one also received by the server. But this is actually the correct thing to do, to eliminate ping delay, have this play immediately locally and then disregard the sound sent by the server. Same with all sounds caused by the player which we know will happen immediately.
             // playBowFireSound(playerInstance!, item.type);
          }
@@ -1413,7 +1422,7 @@ export function selectItemSlot(itemSlot: number): void {
    const previousItem = hotbarInventory.itemSlots[hotbarSelectedItemSlot];
 
    hotbarSelectedItemSlot = itemSlot;
-   inventoryState.setSelectedItemSlot(itemSlot);
+   hotbarFuncs.selectItemSlot(hotbarInventory, itemSlot);
 
    // Clear any buffered inputs
    attackBufferTime = 0;
@@ -1431,8 +1440,7 @@ export function selectItemSlot(itemSlot: number): void {
       // if (rightMouseButtonIsPressed) {
       //    onItemStartUse(newItem.type, InventoryName.hotbar, itemSlot);
       // }
-      // But I've decided that this isn't the right behaviour, as we don't want items to be
-      // able to be switched while they are being used.
+      // But I've decided that this isn't the right behaviour, as we don't want items to be able to be switched while they are being used.
    }
 
    const hotbarUseInfo = getLimbByInventoryName(inventoryUseComponent, InventoryName.hotbar);
@@ -1501,8 +1509,7 @@ const tickItem = (itemType: ItemType): void => {
                case ServerComponentType.transform: {
                   const hitboxes = new Array<Hitbox>();
                   const staticHitboxes = new Array<Hitbox>();
-                  for (let i = 0; i < placeInfo.hitboxes.length; i++) {
-                     const hitbox = placeInfo.hitboxes[i];
+                  for (const hitbox of placeInfo.hitboxes) {
                      hitboxes.push(hitbox);
                      // @Hack
                      staticHitboxes.push(hitbox);

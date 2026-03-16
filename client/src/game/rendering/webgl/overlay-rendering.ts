@@ -173,7 +173,7 @@ export async function createEntityOverlayShaders(): Promise<void> {
    // gl.activeTexture(gl.TEXTURE1);
    // gl.bindTexture(gl.TEXTURE_2D, null);
 
-   // overlayTextureArray = gl.createTexture()!;
+   // overlayTextureArray = gl.createTexture();
    // gl.bindTexture(gl.TEXTURE_2D_ARRAY, overlayTextureArray);
    // gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 5, gl.RGBA8, 16, 16, OVERLAY_TEXTURE_SOURCES.length);
 
@@ -194,10 +194,10 @@ export async function createEntityOverlayShaders(): Promise<void> {
    // Create VAO
    // 
 
-   vao = gl.createVertexArray()!;
+   vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
-   buffer = gl.createBuffer()!;
+   buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
@@ -212,7 +212,7 @@ export async function createEntityOverlayShaders(): Promise<void> {
    gl.enableVertexAttribArray(3);
    gl.enableVertexAttribArray(4);
 
-   indexBuffer = gl.createBuffer()!;
+   indexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
    gl.bindVertexArray(null);

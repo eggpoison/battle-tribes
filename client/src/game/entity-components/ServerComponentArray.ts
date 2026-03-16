@@ -3,7 +3,6 @@ import { EntityRenderInfo } from "../EntityRenderInfo";
 import { EntityComponentData } from "../world";
 import { ComponentArray } from "./ComponentArray";
 
-const serverComponentArrays = new Array<ServerComponentArray>();
 const serverComponentArrayRecord: Record<ServerComponentType, ServerComponentArray> = {} as unknown as Record<ServerComponentType, ServerComponentArray>;
 
 export default class ServerComponentArray<
@@ -30,13 +29,8 @@ export default class ServerComponentArray<
 
       assert(typeof serverComponentArrayRecord[componentType as ServerComponentType] === "undefined");
       // @Cleanup: casts
-      serverComponentArrays.push(this as unknown as ServerComponentArray);
       serverComponentArrayRecord[componentType as ServerComponentType] = this as unknown as ServerComponentArray;
    }
-}
-
-export function getServerComponentArrays(): ReadonlyArray<ServerComponentArray> {
-   return serverComponentArrays;
 }
 
 export function getServerComponentArray(componentType: ServerComponentType): ServerComponentArray {

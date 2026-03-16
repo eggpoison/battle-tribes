@@ -5,7 +5,7 @@ import { entityExists } from "../../world";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
 import { hoverDebugState } from "../../../ui-state/hover-debug-state";
-import { nerdVision } from "../../../ui/game/dev/nerd-vision-funcs";
+import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 
 enum NodeType {
    occupied,

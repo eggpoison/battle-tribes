@@ -176,8 +176,8 @@ const decodeEntitySnapshot = (reader: PacketReader, interpolatingEntities: Array
    const entityServerComponentData = new Array<ServerComponentData<ServerComponentType>>();
    
    // Component data
-   for (let i = 0; i < componentTypes.length; i++) {
-      const componentType = componentTypes[i];
+   for (const componentType of componentTypes) {
+      // @Speed: Once I move out that interpolating entities hack below, then I can directly get the entity server component arrays and won't have to call this shit at all..
       const componentArray = getServerComponentArray(componentType);
 
       const componentData = componentArray.decodeData(reader);
@@ -218,7 +218,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
    const entities = new Map<Entity, EntitySnapshot>();
    const interpolatingEntities = new Array<Entity>();
    for (let i = 0; i < numEntities; i++) {
-      const entity = reader.readNumber() as Entity;
+      const entity: Entity = reader.readNumber();
       const entitySnapshot = decodeEntitySnapshot(reader, interpolatingEntities, previousSnapshot, entity);
       entities.set(entity, entitySnapshot);
    }
@@ -434,7 +434,6 @@ export function createEntityFromData(entity: Entity, data: EntitySnapshot): void
    const entityComponentData: EntityComponentData = {
       entityType: data.entityType,
       serverComponentData: data.serverComponentData,
-      // @HACK
       clientComponentData: data.clientComponentData
    };
    
@@ -454,7 +453,7 @@ const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {
    
    // Update server components from data
    const componentArrays = getEntityComponentArrays(entityType);
-   // @SPEED: iterates ALL. when only needs to iterate the server component arrays
+   // @SPEED: iterates ALL, both client and server. when only needs to iterate the server component arrays
    for (const componentArray of componentArrays) {
       // @SPEED: instanceof!!
       if (componentArray instanceof ServerComponentArray && typeof componentArray.updateFromData !== "undefined") {
@@ -518,7 +517,7 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
 
    // Update entities
    for (const pair of snapshot.entities) {
-      const entity = pair[0] as Entity;
+      const entity: Entity = pair[0];
       const entitySnapshot = pair[1];
 
       if (entity === snapshot.playerInstance) {

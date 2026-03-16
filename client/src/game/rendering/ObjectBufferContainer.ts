@@ -39,7 +39,7 @@ class ObjectBufferContainer {
       const data = new Float32Array(this.objectsPerBuffer * dataLength);
       
       // Create buffer
-      const buffer = gl.createBuffer()!;
+      const buffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
 
@@ -150,7 +150,7 @@ class ObjectBufferContainer {
 //       const data = new Float32Array(this.objectsPerBuffer * dataLength);
       
 //       // Create buffer
-//       const buffer = gl.createBuffer()!;
+//       const buffer = gl.createBuffer();
 //       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 //       gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
 

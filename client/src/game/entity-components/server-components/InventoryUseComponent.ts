@@ -18,7 +18,6 @@ import { playerInstance } from "../../player";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { currentSnapshot, getElapsedTimeInSeconds, getSecondsSinceTickTimestamp, tickIntervalHasPassed } from "../../game";
 import { tickPlayerItems } from "../../player-action-handling";
-import { inventoryState } from "../../../ui-state/inventory-state";
 import { playSoundOnHitbox } from "../../sound";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
@@ -1605,7 +1604,8 @@ function updatePlayerFromData(data: InventoryUseComponentData): void {
 
       if (limbInfo.inventoryName === InventoryName.hotbar) {
          limbInfo.thrownBattleaxeItemID = limbInfoData.thrownBattleaxeItemID;
-         inventoryState.setHotbarThrownBattleaxeItemID(limbInfoData.thrownBattleaxeItemID);
+         // @INCOMPLETE since I removed inventoryState
+         // inventoryState.setHotbarThrownBattleaxeItemID(limbInfoData.thrownBattleaxeItemID);
       }
 
       updateLimbVisuals(inventoryUseComponent, playerInstance!, i, limbInfo);

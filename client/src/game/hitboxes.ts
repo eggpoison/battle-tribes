@@ -1,11 +1,11 @@
-import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, TILE_PHYSICS_INFO_RECORD, TileType, Settings, PacketReader, Entity, CollisionBit, CircularBox, RectangularBox, distance, distBetweenPointAndRectangle, assert, getAngleDiff, updateSideAxes } from "webgl-test-shared";
-import { hitboxIsInWater, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, cloneBox, HitboxCollisionType, HitboxFlag, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, TILE_PHYSICS_INFO_RECORD, TileType, Settings, PacketReader, Entity, CollisionBit, CircularBox, RectangularBox, distance, distBetweenPointAndRectangle, assert, getAngleDiff, updateSideAxes, getTileIndexIncludingEdges, randSign } from "webgl-test-shared";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityRenderInfo } from "./world";
 import { registerDirtyRenderInfo } from "./rendering/render-part-matrices";
-import { getTileIndexIncludingEdges } from "./Layer";
 import { Tile } from "./Tile";
 import { readBoxFromData } from "./networking/packet-hitboxes";
 import { currentSnapshot } from "./game";
+import { hitboxIsInWater } from "./collision";
 
 export interface HitboxTether {
    readonly originBox: Box;
@@ -459,6 +459,31 @@ export function getRandomPositionInBox(box: Box): Point {
    }
 }
 
+export function getRandomPositionOnBoxEdge(box: Box): Point {
+   if (boxIsCircular(box)) {
+      const offsetMagnitude = box.radius;
+      const offsetDirection = randAngle();
+      return new Point(box.position.x + offsetMagnitude * Math.sin(offsetDirection), box.position.y + offsetMagnitude * Math.cos(offsetDirection));
+   } else {
+      const halfWidth = box.width / 2;
+      const halfHeight = box.height / 2;
+      
+      let xOffset: number;
+      let yOffset: number;
+      if (Math.random() < 0.5) {
+         xOffset = randFloat(-halfWidth, halfWidth);
+         yOffset = halfHeight * randSign();
+      } else {
+         xOffset = halfWidth * randSign();
+         yOffset = randFloat(-halfHeight, halfHeight);
+      }
+
+      const x = box.position.x + rotateXAroundOrigin(xOffset, yOffset, box.angle);
+      const y = box.position.y + rotateYAroundOrigin(xOffset, yOffset, box.angle);
+      return new Point(x, y);
+   }
+}
+
 export function getHitboxTile(hitbox: Hitbox): Tile {
    const tileX = Math.floor(hitbox.box.position.x / Settings.TILE_SIZE);
    const tileY = Math.floor(hitbox.box.position.y / Settings.TILE_SIZE);
@@ -501,18 +526,5 @@ export function getDistanceFromPointToHitboxIncludingChildren(point: Readonly<Po
       }
    }
 
-   return minDist;
-}
-
-export function getDistanceFromPointToEntity(point: Readonly<Point>, entity: Entity): number {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   
-   let minDist = Number.MAX_SAFE_INTEGER;
-   for (const hitbox of transformComponent.hitboxes) {
-      const dist = getDistanceFromPointToHitboxIncludingChildren(point, hitbox);
-      if (dist < minDist) {
-         minDist = dist;
-      }
-   }
    return minDist;
 }

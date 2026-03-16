@@ -1,8 +1,8 @@
-import { Settings, TileType } from "webgl-test-shared";
+import { Settings, subtileIsInWorld, tileIsInWorldIncludingEdges, TileType } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { RenderChunkTileShadowInfo, getRenderChunkTileShadowInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import Layer, { subtileIsInWorld, tileIsWithinEdge } from "../../Layer";
+import Layer from "../../Layer";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
 
 export const enum TileShadowType {
@@ -146,7 +146,7 @@ const subtileIsWallInt = (layer: Layer, subtileX: number, subtileY: number): num
 }
 
 const tileIsNotDropdownInt = (layer: Layer, tileX: number, tileY: number): number => {
-   if (tileIsWithinEdge(tileX, tileY)) {
+   if (tileIsInWorldIncludingEdges(tileX, tileY)) {
       const tile = layer.getTileFromCoords(tileX, tileY);
       return tile.type !== TileType.dropdown ? 1 : 0;
    }
@@ -397,10 +397,10 @@ export function calculateShadowInfo(layer: Layer, renderChunkX: number, renderCh
    const tileShadows = tileShadowType === TileShadowType.wallShadow ? getChunkWallShadows(layer, renderChunkX, renderChunkY) : getChunkDropdownShadows(layer, renderChunkX, renderChunkY);
    const vertexData = calculateVertexData(tileShadows);
 
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 

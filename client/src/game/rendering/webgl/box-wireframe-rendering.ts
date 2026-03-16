@@ -50,7 +50,7 @@ export function createHitboxShaders(): void {
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
    bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 
-   buffer = gl.createBuffer()!;
+   buffer = gl.createBuffer();
 }
 
 const calculateBoxAdjustment = (entity: Entity): Point => {

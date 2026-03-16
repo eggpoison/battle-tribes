@@ -190,7 +190,7 @@ export function renderTurretRange(): void {
    // @Speed: should only be calculated once when the player first selects the item, with the result cached
    const vertices = calculateVertices(renderingInfo);
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 

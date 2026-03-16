@@ -270,7 +270,7 @@ export function createNightShaders(): void {
    gl.useProgram(darknessFramebufferProgram);
    gl.uniform1i(darknessFramebufferTextureUniformLocation, 0);
 
-   darknessFramebuffer = gl.createFramebuffer()!;
+   darknessFramebuffer = gl.createFramebuffer();
 
    darknessFramebufferVertexData = new Float32Array(12);
    darknessFramebufferVertexData[2] = 1;
@@ -280,7 +280,7 @@ export function createNightShaders(): void {
    darknessFramebufferVertexData[10] = 1;
    darknessFramebufferVertexData[11] = 1;
 
-   darknessVAO = gl.createVertexArray()!;
+   darknessVAO = gl.createVertexArray();
    gl.bindVertexArray(darknessVAO);
 
    // @Speed: Garbage collection
@@ -293,7 +293,7 @@ export function createNightShaders(): void {
       1, 1
    ];
    
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 

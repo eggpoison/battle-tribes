@@ -1,10 +1,10 @@
-import { Settings, collisionBitsAreCompatible, Point, rotateXAroundOrigin, rotateYAroundOrigin, Box, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, Entity, CollisionResult, _bounds } from "webgl-test-shared";
+import { Settings, collisionBitsAreCompatible, Point, rotateXAroundOrigin, rotateYAroundOrigin, Box, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, Entity, CollisionResult, _bounds, EntityType, TileType } from "webgl-test-shared";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Chunk from "./Chunk";
 import { getEntityLayer, getEntityType } from "./world";
 import Layer from "./Layer";
 import { playerInstance } from "./player";
-import { applyForce, getHitboxVelocity, Hitbox, setHitboxVelocity, translateHitbox } from "./hitboxes";
+import { applyForce, getHitboxTile, getHitboxVelocity, Hitbox, setHitboxVelocity, translateHitbox } from "./hitboxes";
 import { getEntityComponentArrays } from "./entity-component-types";
 
 export interface HitboxCollisionPair {
@@ -433,4 +433,37 @@ export function entitiesAreColliding(entity1: Entity, entity2: Entity): boolean 
    }
 
    return false;
+}
+
+// @Location: on one hand, this doesn't really make sense to be here. should be in hitboxes.ts or something. On the other hand, hitboxes.ts has no good reason to import from collision.ts
+export function hitboxIsInWater(hitbox: Hitbox): boolean {
+   const tile = getHitboxTile(hitbox);
+   if (tile.type !== TileType.water) {
+      return false;
+   }
+   
+   // If the hitbox is standing on a stepping stone they aren't in a river
+
+   const layer = getEntityLayer(hitbox.entity);
+
+   hitbox.box.calculateBounds();
+   const minChunkX = Math.max(Math.min(Math.floor(_bounds.minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const maxChunkX = Math.max(Math.min(Math.floor(_bounds.maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const minChunkY = Math.max(Math.min(Math.floor(_bounds.minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const maxChunkY = Math.max(Math.min(Math.floor(_bounds.maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   
+   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+         const chunk = layer.getChunk(chunkX, chunkY);
+         for (const currentEntity of chunk.nonGrassEntities) {
+            if (getEntityType(currentEntity) === EntityType.riverSteppingStone) {
+               if (entitiesAreColliding(hitbox.entity, currentEntity)) {
+                  return false;
+               }
+            }
+         }
+      }
+   }
+
+   return true;
 }

@@ -73,7 +73,9 @@ export function setSpawnDistributionBlocks(newSpawnDistributionBlocks: Array<Spa
 }
 
 export function createTextCanvasContext(): void {
-   const textCanvas = document.getElementById("text-canvas") as HTMLCanvasElement;
+   const textCanvas = document.createElement("canvas");
+   textCanvas.id = "text-canvas";
+   document.body.appendChild(textCanvas);
 
    ctx = textCanvas.getContext("2d")!;
 }
@@ -119,8 +121,7 @@ export function createResearchNumber(positionX: number, positionY: number, amoun
 
 export function createHealNumber(healedEntityID: number, positionX: number, positionY: number, healAmount: number): void {
    // If there is an existing heal number for that entity, update it
-   for (let i = 0; i < healNumbers.length; i++) {
-      const healNumber = healNumbers[i];
+   for (const healNumber of healNumbers) {
       if (healNumber.healedEntityID === healedEntityID) {
          healNumber.amount += healAmount;
          healNumber.positionX = positionX;
@@ -604,9 +605,7 @@ const renderBuildingSafetys = (): void => {
    const fontSize = 18;
 
    const buildingSafeties = getBuildingSafeties();
-   for (let i = 0; i < buildingSafeties.length; i++) {
-      const buildingSafetyData = buildingSafeties[i];
-
+   for (const buildingSafetyData of buildingSafeties) {
       ctx.font = "400 " + fontSize + "px Helvetica";
       ctx.lineJoin = "round";
       ctx.miterLimit = 2;
@@ -662,8 +661,8 @@ const renderChunkWeights = (): void => {
       const top = getYPosInTextCanvas(block.y);
       
       ctx.fillStyle = "#fff";
-      ctx.fillText(block.currentDensity.toFixed(2).toString(), left, top + fontSize);
-      ctx.fillText(block.targetDensity.toFixed(2).toString(), left, top + fontSize + fontSize + 4);
+      ctx.fillText(block.currentDensity.toFixed(2), left, top + fontSize);
+      ctx.fillText(block.targetDensity.toFixed(2), left, top + fontSize + fontSize + 4);
 
       const mult = block.currentDensity / block.targetDensity
       if (mult >= 1) {

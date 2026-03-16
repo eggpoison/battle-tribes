@@ -26,6 +26,7 @@ export function createComponentTint(tintR: number, tintG: number, tintB: number)
 
 /** Internally contains all the information required to render an entity to the screen. */
 export class EntityRenderInfo {
+   // @Cleanup @Hack: this is such a hacke
    public readonly entity: Entity;
    public readonly renderLayer: RenderLayer;
    public readonly renderHeight: number;

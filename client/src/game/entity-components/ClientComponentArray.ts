@@ -8,15 +8,14 @@ const clientComponentArrayRecord: Record<ClientComponentType, ClientComponentArr
 
 export default class ClientComponentArray<
    T extends object = object,
-   ComponentIntermediateInfo extends object | never = object | never,
-   ComponentType extends ClientComponentType = ClientComponentType
+   ComponentIntermediateInfo extends object | never = object | never
 > extends ComponentArray<T, ComponentIntermediateInfo> {
-   constructor(componentType: ComponentType, isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderInfo: EntityRenderInfo) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number) {
+   constructor(componentType: ClientComponentType, isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderInfo: EntityRenderInfo) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number) {
       super(isActiveByDefault, createComponent, getMaxRenderParts);
       
-      assert(typeof clientComponentArrayRecord[componentType as ClientComponentType] === "undefined");
+      assert(typeof clientComponentArrayRecord[componentType] === "undefined");
       // @Cleanup: casts
-      clientComponentArrayRecord[componentType as ClientComponentType] = this as unknown as ClientComponentArray;
+      clientComponentArrayRecord[componentType] = this as unknown as ClientComponentArray;
    }
 }
 

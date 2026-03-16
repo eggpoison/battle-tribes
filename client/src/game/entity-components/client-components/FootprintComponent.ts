@@ -2,13 +2,14 @@ import { Entity, TileType, randInt, Settings } from "webgl-test-shared";
 import { playSound } from "../../sound";
 import { createFootprintParticle } from "../../particles";
 import { EntityComponentData, getEntityLayer } from "../../world";
-import { hitboxIsInWater, TransformComponentArray } from "../server-components/TransformComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { getHitboxTile, getHitboxVelocity } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../game";
 import { getEntityClientComponentTypes } from "../../entity-component-types";
 import { getClientComponentData } from "../../entity-component-types";
+import { hitboxIsInWater } from "../../collision";
 
 export interface FootprintComponentData {
    readonly footstepParticleIntervalSeconds: number;

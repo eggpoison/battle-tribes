@@ -10,7 +10,7 @@
 @import "./game/charge-meter.css";
 @import "./game/menus/crafting-menu.css";
 @import "./game/nerd-vision/nerd-vision.css";
-@import "./game/nerd-vision/game-info-display.css";
+@import "./game/nerd-vision/debug-info-display.css";
 @import "./game/nerd-vision/terminal-button.css";
 @import "./game/nerd-vision/terminal.css";
 @import "./game/nerd-vision/debug-info.css";
@@ -26,6 +26,8 @@
 @import "./game/taming-menu.css";
 @import "./game/sign-inscribe-menu.css";
 @import "./game/cow-stamina-bar.css";
+@import "./game/health-bar.css";
+@import "./game/death-screen.css";
 @import "./game/dev/frame-graph.css";
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
@@ -43,6 +45,11 @@ body {
 :root {
    --item-slot-size: 5rem;
    --item-image-size: 3.75rem;
+}
+
+.invis {
+   opacity: 0 !important;
+   pointer-events: none;
 }
 
 #canvas-wrapper > canvas {

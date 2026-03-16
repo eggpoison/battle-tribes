@@ -1,7 +1,7 @@
 import { CommandPermissions, assert, commandIsValid } from "webgl-test-shared";
 import { isDev } from "../../../game/utils";
 import { sendTerminalCommandPacket } from "../../../game/networking/packet-sending/packet-sending";
-import { nerdVision } from "./nerd-vision-funcs";
+import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 
 /** All lines output by the terminal */
 const terminalLines = new Array<string>();

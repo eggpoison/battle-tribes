@@ -98,10 +98,10 @@ export function createHealingBeamShaders(): void {
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
    bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 
-   vao = gl.createVertexArray()!;
+   vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
    
-   vertexBuffer = gl.createBuffer()!;
+   vertexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 
    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 0);

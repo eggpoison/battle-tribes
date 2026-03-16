@@ -6,7 +6,7 @@ import { TunnelComponentArray } from "./entity-components/server-components/Tunn
 import { PlanterBoxComponentArray } from "./entity-components/server-components/PlanterBoxComponent";
 import { CraftingStationComponentArray } from "./entity-components/server-components/CraftingStationComponent";
 import { getLimbByInventoryName, InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
-import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { getDistanceFromPointToEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { sendMountCarrySlotPacket, sendPickUpEntityPacket, sendStructureInteractPacket, sendModifyBuildingPacket, sendSetCarryTargetPacket, sendSetAttackTargetPacket, sendOpenEntityInventoryPacket as sendStartEntityInteractionPacket } from "./networking/packet-sending/packet-sending";
 import { EntityRenderInfo } from "./EntityRenderInfo";
 import { RideableComponentArray } from "./entity-components/server-components/RideableComponent";
@@ -15,7 +15,7 @@ import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
 import { playerInstance } from "./player";
 import { HealthComponentArray } from "./entity-components/server-components/HealthComponent";
 import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "./entity-components/server-components/TamingComponent";
-import { createHitboxQuick, getDistanceFromPointToEntity, getHitboxVelocity } from "./hitboxes";
+import { createHitboxQuick, getHitboxVelocity } from "./hitboxes";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
 import { Menu, menuIsInventory, menuSelectorState } from "../ui-state/menu-selector-state";
 import { getPlayerSelectedItem, playerIsPlacingEntity } from "./player-action-handling";
@@ -313,10 +313,8 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       // If the entity requires taming before it is rideable, make sure it has the appropriate skill
       let isRideable = true;
       const tamingComponent = TamingComponentArray.getComponent(entity);
-      if (tamingComponent !== null) {
-         if (!hasTamingSkill(tamingComponent, TamingSkillID.riding)) {
-            isRideable = false;
-         }
+      if (!hasTamingSkill(tamingComponent, TamingSkillID.riding)) {
+         isRideable = false;
       }
       
       if (isRideable) {

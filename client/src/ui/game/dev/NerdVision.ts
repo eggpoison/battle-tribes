@@ -1,9 +1,26 @@
-// @SQUEAM
+import { gameIsRunning } from "../../../game/game";
+import { addKeyListener } from "../../../game/keyboard-input";
 import { openDebugInfoDisplay } from "./DebugInfoDisplay";
-import { nerdVision } from "./nerd-vision-funcs";
+import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
+import { hideFrameGraph, showFrameGraph } from "./FrameGraph";
 
 let isVisible = false;
 let _terminalIsVisible = false;
+
+addKeyListener("`", () => {
+   // Open/close nerd vision
+   if (gameIsRunning) {
+      nerdVision.setIsVisible(!nerdVision.isVisible());
+   }
+});
+
+addKeyListener("~", () => {
+   // Open terminal on tilda press
+   if (gameIsRunning) {
+      nerdVision.setIsVisible(true);
+      nerdVision.setTerminalIsVisible(true);
+   }
+});
 
 nerdVision.isVisible = (): boolean => {
    return isVisible;
@@ -26,18 +43,19 @@ nerdVision.setTerminalIsVisible = (newTerminalIsVisible: boolean): void => {
 }
 
 function openNerdVision(): void {
-   console.log("opened nerd vision!!");
-   console.log("2!!");
    const nerdVisionElem = document.createElement("div");
    nerdVisionElem.id = "nerd-vision-wrapper";
+   document.body.appendChild(nerdVisionElem);
 
    openDebugInfoDisplay(nerdVisionElem);
    
-   document.body.appendChild(nerdVisionElem);
+   showFrameGraph();
 };
 
 function closeNerdVision(): void {
    document.getElementById("nerd-vision-wrapper")?.remove();
+
+   hideFrameGraph();
 };
 
 // @SQUEAM

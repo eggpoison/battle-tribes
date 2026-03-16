@@ -5,9 +5,9 @@
    import { AmmoBoxComponentArray } from "../../../game/entity-components/server-components/AmmoBoxComponent";
    import RemainingAmmoSlider from "./RemainingAmmoSlider.svelte";
    import { entitySelectionState } from "../../../ui-state/entity-selection-state";
-   import InventoryContainer from "./ItemSlotsContainer.svelte";
+   import InventoryContainer from "./Inventory";
    import { CLIENT_STATUS_EFFECT_INFO_RECORD } from "../../../game/status-effects";
-    import ItemSlotsContainer from "./ItemSlotsContainer.svelte";
+    import ItemSlotsContainer from "./Inventory";
     import InventoryItemSlots from "./InventoryItemSlots.svelte";
 
    const getAmmoSlot = (ammoBoxInventory: Inventory): number => {

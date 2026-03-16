@@ -9,8 +9,8 @@
    import CLIENT_ENTITY_INFO_RECORD from "../../../game/client-entity-info";
    import { getEntityType } from "../../../game/world";
    import { hoverDebugState } from "../../../ui-state/hover-debug-state";
-   import ItemSlotsContainer from "../inventories/ItemSlotsContainer.svelte";
-   import ItemSlot from "../inventories/ItemSlot.svelte";
+   import ItemSlotsContainer from "../inventories/Inventory";
+   import ItemSlot from "../inventories/ItemSlot";
 
    interface Props {
       entityDebugData: EntityDebugData;

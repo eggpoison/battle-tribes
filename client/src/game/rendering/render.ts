@@ -10,7 +10,7 @@ import { preloadTextureAtlasImages } from "../texture-atlases/texture-atlas-stit
 import { createTextureAtlases } from "../texture-atlases/texture-atlases";
 import { preloadTextureImages, loadTextures } from "../textures";
 import { isDev } from "../utils";
-import { gl, windowWidth, windowHeight, createTexture, createGameCanvasWebGLContext } from "../webgl";
+import { gl, windowWidth, windowHeight, createTexture, setupWebGL } from "../webgl";
 import { layers, getCurrentLayer, entityExists, getEntityRenderInfo } from "../world";
 import { renderLightLevelsText } from "./light-levels-text-rendering";
 import { createRenderChunks, RENDER_CHUNK_SIZE } from "./render-chunks";
@@ -57,7 +57,7 @@ import { playerIsHoldingPlaceableItem } from "../player-action-handling";
 import { entitySelectionState } from "../../ui-state/entity-selection-state";
 import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { debugDisplayState } from "../../ui-state/debug-display-state";
-import { nerdVision } from "../../ui/game/dev/nerd-vision-funcs";
+import { nerdVision } from "../../ui-state/nerd-vision-funcs";
 import { Menu, menuSelectorState } from "../../ui-state/menu-selector-state";
 
 export let gameFramebuffer: WebGLFramebuffer;
@@ -74,7 +74,7 @@ export async function setupRendering(): Promise<void> {
       return new Promise(async resolve => {
          const start = performance.now();
          let l = performance.now();
-         createGameCanvasWebGLContext();
+         setupWebGL();
          createTechTreeGLContext();
          createTextCanvasContext();
 
@@ -116,7 +116,7 @@ export async function setupRendering(): Promise<void> {
          createUBOs();
 
          // @Cleanup: Move to separate function
-         gameFramebuffer = gl.createFramebuffer()!;
+         gameFramebuffer = gl.createFramebuffer();
 
          // Create shaders
          createSolidTileShaders();

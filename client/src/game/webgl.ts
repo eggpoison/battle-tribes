@@ -5,7 +5,6 @@ import { TEXTURE_IMAGE_RECORD } from "./textures";
 
 export const CIRCLE_VERTEX_COUNT = 50;
 
-let canvas: HTMLCanvasElement;
 export let gl: WebGL2RenderingContext;
 
 export let windowWidth = window.innerWidth;
@@ -22,7 +21,8 @@ export function resizeCanvas(): void {
    halfWindowWidth = windowWidth / 2;
    halfWindowHeight = windowHeight / 2;
 
-   if (typeof canvas === "undefined") return;
+   const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
+   if (canvas === null) return;
 
    // Update the size of the canvas
    canvas.width = window.innerWidth;
@@ -30,33 +30,49 @@ export function resizeCanvas(): void {
 
    gl.viewport(0, 0, windowWidth, windowHeight);
 
-   const textCanvas = document.getElementById("text-canvas") as HTMLCanvasElement;
-   textCanvas.width = windowWidth;
-   textCanvas.height = windowHeight;
+   const textCanvas = document.getElementById("text-canvas") as HTMLCanvasElement | null;
+   if (textCanvas !== null) {
+      textCanvas.width = windowWidth;
+      textCanvas.height = windowHeight;
+   }
 
-   const techTreeCanvas = document.getElementById("tech-tree-canvas") as HTMLCanvasElement;
-   techTreeCanvas.width = windowWidth;
-   techTreeCanvas.height = windowHeight;
+   const techTreeCanvas = document.getElementById("tech-tree-canvas") as HTMLCanvasElement | null;
+   if (techTreeCanvas !== null) {
+      techTreeCanvas.width = windowWidth;
+      techTreeCanvas.height = windowHeight;
+   }
    updateTechTreeCanvasSize();
 }
 
-export function createGameCanvasWebGLContext(): void {
-   const canvasCheck = document.getElementById("game-canvas");
-   if (canvasCheck instanceof HTMLCanvasElement) {
-      canvas = canvasCheck;
-   }
-   
-   const glAttempt = canvas.getContext("webgl2", { alpha: false });
+function createWebGLCanvas(canvasID: string): HTMLCanvasElement {
+   const canvas = document.createElement("canvas");
+   canvas.id = canvasID;
+   canvas.classList.add("hidden");
+   document.body.appendChild(canvas);
+   return canvas;
+}
 
-   if (glAttempt === null) {
+export function createWebGLRenderingContext(canvas: HTMLCanvasElement): WebGL2RenderingContext {
+   const gl = canvas.getContext("webgl2", { alpha: false });
+   if (gl === null) {
       alert("Your browser does not support WebGL.");
       throw new Error("Your browser does not support WebGL.");
    }
-   gl = glAttempt;
 
    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
+   // @SPEED @HACK @CLEANUP: Set multiple times!!
    MAX_ACTIVE_TEXTURE_UNITS = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) as number;
+
+   return gl;
+}
+
+export function setupWebGL(): void {
+   const gameCanvas = createWebGLCanvas("game-canvas");
+   gl = createWebGLRenderingContext(gameCanvas);
+   const techTreeCanvas = createWebGLCanvas("tech-tree-canvas");
+   createWebGLRenderingContext(techTreeCanvas);
+   
 }
 
 export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText: string, fragmentShaderText: string): WebGLProgram {

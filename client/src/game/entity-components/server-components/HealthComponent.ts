@@ -4,10 +4,10 @@ import { ComponentTint, createComponentTint } from "../../EntityRenderInfo";
 import { EntityComponentData, getEntityRenderInfo } from "../../world";
 import { playerInstance } from "../../player";
 import { Hitbox } from "../../hitboxes";
-import { healthBarState } from "../../../ui-state/health-bar-state";
 import { discombobulate } from "../../player-action-handling";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
+import { HealthBar_setHealth } from "../../../ui/game/HealthBar";
 
 export interface HealthComponentData {
    readonly health: number;
@@ -67,7 +67,7 @@ function getMaxRenderParts(): number {
 
 const calculateRedness = (healthComponent: HealthComponent): number => {
    let redness: number;
-   if (healthComponent.secondsSinceLastHit === null || healthComponent.secondsSinceLastHit > ATTACK_HIT_FLASH_DURATION) {
+   if (healthComponent.secondsSinceLastHit > ATTACK_HIT_FLASH_DURATION) {
       redness = 0;
    } else {
       redness = MAX_REDNESS * (1 - healthComponent.secondsSinceLastHit / ATTACK_HIT_FLASH_DURATION);
@@ -113,7 +113,7 @@ function updatePlayerFromData(data: HealthComponentData): void {
    updateFromData(data, playerInstance!);
 
    const healthComponent = HealthComponentArray.getComponent(playerInstance!);
-   healthBarState.setHealth(healthComponent.health);
+   HealthBar_setHealth(healthComponent.health);
 }
 
 function calculateTint(entity: Entity): ComponentTint {

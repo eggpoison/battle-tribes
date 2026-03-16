@@ -1,6 +1,6 @@
 import { lerp } from "webgl-test-shared";
 import { createWebGLProgram } from "../../webgl";
-import { frameGraphState } from "../../../ui-state/frame-graph-state";
+import { frameGraph } from "../../../ui-state/frame-graph-funcs";
 
 export interface FrameInfo {
    readonly startTime: number;
@@ -54,12 +54,12 @@ export function registerFrame(frameStartTime: number, frameEndTime: number): voi
       frames.splice(0, lastOldIdx + 1);
    }
    
-   frameGraphState.setFPS(frames.length / FRAME_GRAPH_RECORD_TIME);
+   frameGraph.setFPS(frames.length / FRAME_GRAPH_RECORD_TIME);
 
    if (frames.length > 0) {
-      frameGraphState.setAverage(0);
-      frameGraphState.setMin(0);
-      frameGraphState.setMax(0);
+      frameGraph.setAverage(0);
+      frameGraph.setMin(0);
+      frameGraph.setMax(0);
    } else {
       let totalDuration = 0;
       let min = Infinity;
@@ -79,14 +79,17 @@ export function registerFrame(frameStartTime: number, frameEndTime: number): voi
 
       const average = totalDuration / frames.length;
 
-      frameGraphState.setAverage(average);
-      frameGraphState.setMin(min);
-      frameGraphState.setMax(max);
+      frameGraph.setAverage(average);
+      frameGraph.setMin(min);
+      frameGraph.setMax(max);
    }
 }
 
 const createGLContext = (): void => {
-   const canvas = document.getElementById("frame-graph-canvas") as HTMLCanvasElement;
+   const canvas = document.createElement("canvas");
+   canvas.id = "frame-graph-canvas";
+   document.body.appendChild(canvas);
+   
    const glAttempt = canvas.getContext("webgl2");
 
    if (glAttempt === null) {
@@ -132,7 +135,7 @@ const createShaders = (): void => {
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
 
-   buffer = gl.createBuffer()!;
+   buffer = gl.createBuffer();
 }
 
 export function setupFrameGraph(): void {

@@ -1,9 +1,9 @@
 <script lang="ts">
    import { EntityType, InventoryName, INVENTORY_NAME_RECORD, Item } from "webgl-test-shared";
    import { ENTITY_INVENTORY_NAME_RECORD, tabSelectorState } from "../../../../ui-state/tab-selector-state";
-   import ItemSlotsContainer from "../../inventories/ItemSlotsContainer.svelte";
+   import ItemSlotsContainer from "../../inventories/Inventory";
    import { menuSelectorState } from "../../../../ui-state/menu-selector-state";
-   import { type ItemSlotCallbackInfo } from "../../inventories/EntityInteractableItemSlot.svelte";
+   import { type ItemSlotCallbackInfo } from "../../inventories/EntityInteractableItemSlot";
     import InventoryItemSlots from "../../inventories/InventoryItemSlots.svelte";
 
    interface Props {

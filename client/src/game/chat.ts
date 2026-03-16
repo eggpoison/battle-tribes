@@ -1,4 +1,6 @@
 import { chatboxState } from "../ui-state/chatbox-state";
+import { gameIsRunning } from "./game";
+import { addKeyListener, clearPressedKeys } from "./keyboard-input";
 import { sendChatMessagePacket } from "./networking/packet-sending/packet-sending";
 
 export interface ChatMessage {
@@ -16,6 +18,15 @@ const MAX_CHAT_MESSAGES = 50;
 const MAX_CHAR_COUNT = 128;
 
 const spamFilterHistory = new Array<[string, number]>();
+
+addKeyListener("t", e => {
+   // Start a chat message
+   if (gameIsRunning) {
+      chatboxState.isFocused = true;
+      e.preventDefault();
+      clearPressedKeys();
+   }
+});
 
 const SPAM_FILTER: SpamFilter = {
    testDuration: 5,

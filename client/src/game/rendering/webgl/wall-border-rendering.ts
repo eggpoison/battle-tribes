@@ -1,9 +1,9 @@
-import { Settings } from "webgl-test-shared";
+import { Settings, subtileIsInWorld } from "webgl-test-shared";
 import { maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY } from "../../camera";
 import { createWebGLProgram, gl } from "../../webgl";
 import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo, setRenderChunkWallBorderInfo } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import Layer, { subtileIsInWorld } from "../../Layer";
+import Layer from "../../Layer";
 
 const enum Vars {
    ATTRIBUTES_PER_VERTEX = 3
@@ -336,10 +336,10 @@ export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, rend
       return null;
    }
 
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 

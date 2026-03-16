@@ -227,7 +227,7 @@ export function createGrassBlockerShaders(): void {
    gl.uniform1i(blockerTextureUniformLocation, 0);
    gl.uniform1i(dirtTextureUniformLocation, 1);
 
-   frameBuffer = gl.createFramebuffer()!;
+   frameBuffer = gl.createFramebuffer();
 
    const framebufferVertices = [
       0, 0,
@@ -354,7 +354,7 @@ export function renderGrassBlockers(): void {
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-   const buffer2 = gl.createBuffer()!;
+   const buffer2 = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer2);
    gl.bufferData(gl.ARRAY_BUFFER, framebufferVertexData, gl.STATIC_DRAW);
 

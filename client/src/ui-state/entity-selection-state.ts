@@ -49,9 +49,7 @@ export const entitySelectionState = {
          // Update UI state
          const componentArrays = getEntityComponentArrays(getEntityType(selectedEntity));
          for (const componentArray of componentArrays) {
-            if (typeof componentArray.updateSelectedEntityState !== "undefined") {
-               componentArray.updateSelectedEntityState(selectedEntity);
-            }
+            componentArray.updateSelectedEntityState?.(selectedEntity);
          }
       } else {
          selectedEntity = 0;

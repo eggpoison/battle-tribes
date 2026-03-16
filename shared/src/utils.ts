@@ -469,6 +469,10 @@ export function angleToPoint(angle: number): Point {
 }
 
 export function getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
+   if (tileX < -Settings.EDGE_GENERATION_DISTANCE || tileX >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE || tileY < -Settings.EDGE_GENERATION_DISTANCE || tileY >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
+      throw new Error("Outside of world bounds!");
+   }
+   
    return (tileY + Settings.EDGE_GENERATION_DISTANCE) * Settings.FULL_WORLD_SIZE_TILES + tileX + Settings.EDGE_GENERATION_DISTANCE;
 }
 

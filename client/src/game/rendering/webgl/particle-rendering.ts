@@ -365,7 +365,7 @@ export function createParticleShaders(): void {
    vertPositionData[10] = 1;
    vertPositionData[11] = 1;
 
-   vertPositionBuffer = gl.createBuffer()!;
+   vertPositionBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, vertPositionBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertPositionData, gl.STATIC_DRAW);
    

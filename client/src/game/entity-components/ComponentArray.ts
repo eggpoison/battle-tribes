@@ -105,9 +105,8 @@ export abstract class ComponentArray<
       }
    }
 
-   public getComponent(entity: Entity) {
-      const idx = this.entityToIndexMap[entity];
-      assert(typeof idx !== "undefined");
+   public getComponent(entity: Entity): T {
+      const idx = this.entityToIndexMap[entity]!;
       return this.components[idx];
    }
 

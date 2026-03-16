@@ -1,7 +1,7 @@
 <script lang="ts">
    import { type Entity, Inventory, InventoryName } from "webgl-test-shared";
    import MenuElem from "../menus/MenuElem.svelte";
-   import ItemSlotsContainer from "./ItemSlotsContainer.svelte";
+   import ItemSlotsContainer from "./Inventory";
    import InventoryItemSlots from "./InventoryItemSlots.svelte";
    import { selectedEntityInventoryState } from "../../../ui-state/selected-entity-inventory-state";
 

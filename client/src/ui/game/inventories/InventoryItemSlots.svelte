@@ -1,6 +1,6 @@
 <script lang="ts">
    import { assert, type Entity, type Inventory } from "webgl-test-shared";
-   import EntityInteractableItemSlot, { type ItemSlotCallbackInfo } from "./EntityInteractableItemSlot.svelte";
+   import EntityInteractableItemSlot, { type ItemSlotCallbackInfo } from "./EntityInteractableItemSlot";
    import ItemSlotsRow from "./ItemSlotsRow.svelte";
     import { entityExists } from "../../../game/world";
 

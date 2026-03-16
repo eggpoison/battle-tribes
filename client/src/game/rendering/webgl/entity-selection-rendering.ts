@@ -115,7 +115,7 @@ export function createStructureHighlightShaders(): void {
 
    // Framebuffer shit
    
-   framebuffer = gl.createFramebuffer()!;
+   framebuffer = gl.createFramebuffer();
 
    framebufferVertexData = new Float32Array(12);
    framebufferVertexData[2] = 1;
@@ -222,7 +222,7 @@ export function renderEntitySelection(renderInfo: EntityRenderInfo, tickInterp: 
    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
    // @Speed
-   const buffer2 = gl.createBuffer()!;
+   const buffer2 = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer2);
    gl.bufferData(gl.ARRAY_BUFFER, framebufferVertexData, gl.STATIC_DRAW);
 

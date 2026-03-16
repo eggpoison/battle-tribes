@@ -6,26 +6,26 @@ import { playerInstance, isSpectating } from "../../player";
 import { getPlayerMoveIntention, getHotbarSelectedItemSlot, getInstancePlayerAction } from "../../player-action-handling";
 import { sendData } from "../networking";
 
-/*///////////////
-
-Packet type
- - 1 float || 4 bytes
-Position, rotation
- - 3 floats || 12 bytes + 4 = 16
-Previous position and acceleration
- - 4 floats || 16 bytes + 16 = 32
-Move intention
- - 1 float || 4 bytes + 32 = 36
-Previous relative angle, and angular acceleration
- - 2 floats || 8 bytes + 36 = 44
-Inventory shit
- - 3 floats || 12 bytes + 44 = 56
-Other random shit
- - 2 floats || 8 bytes + 56 = 64
-
-TOTAL = 64 BYTES (aligned)
-
-*////////////////
+// ====================================
+// PLAYER DATA PACKET
+// 
+// Packet type
+//  - 1 float || 4 bytes
+// Position, rotation
+//  - 3 floats || 12 bytes + 4 = 16
+// Previous position and acceleration
+//  - 4 floats || 16 bytes + 16 = 32
+// Move intention
+//  - 1 float || 4 bytes + 32 = 36
+// Previous relative angle, and angular acceleration
+//  - 2 floats || 8 bytes + 36 = 44
+// Inventory shit
+//  - 3 floats || 12 bytes + 44 = 56
+// Other random shit
+//  - 2 floats || 8 bytes + 56 = 64
+// 
+// TOTAL = 64 BYTES (aligned)
+// 
 
 const playerDataPacketBuffer = new ArrayBuffer(64);
 const playerDataPacket = new Packet(PacketType.playerData, 64, playerDataPacketBuffer);

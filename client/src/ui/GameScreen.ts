@@ -1,6 +1,27 @@
-export function openGameScreen() {
-   // Unhide all the canvases!
-   document.getElementById("canvas-wrapper")?.classList.remove("invis");
+import { gameIsRunning } from "../game/game";
+import { addKeyListener } from "../game/keyboard-input";
+import { gameUIState } from "../ui-state/game-ui-state";
+import { createFrameGraph, destroyFrameGraph } from "./game/dev/FrameGraph";
+import { closeGameInteractableLayer, openGameInteractableLayer } from "./game/GameInteractableLayer";
+import { createHealthBar, destroyHealthBar } from "./game/HealthBar";
+import { createHotbar, destroyHotbar } from "./game/inventories/Hotbar";
+
+addKeyListener("o", () => {
+   // Toggle cinematic mode
+   if (gameIsRunning) {
+      gameUIState.setCinematicModeIsEnabled(!gameUIState.cinematicModeIsEnabled);
+   }
+});
+
+export function openGameScreen(): void {
+   // Unhide the previous-created game canvas
+   document.getElementById("game-canvas")?.classList.remove("hidden");
+
+   createHotbar();
+   createHealthBar();
+   openGameInteractableLayer();
+   // @Speed: only if dev!
+   createFrameGraph();
    
    // const gameScreenElem = document.createElement("div");
    // gameScreenElem.id = "game-screen";
@@ -8,9 +29,14 @@ export function openGameScreen() {
    // `;
 }
 
-export function closeGameScreen() {
-   document.getElementById("canvas-wrapper")?.classList.add("invis");
+export function closeGameScreen(): void {
+   // document.getElementById("game-canvas")?.classList.add("invis");
    // document.getElementById("game-screen")?.remove();
+
+   destroyHotbar();
+   destroyHealthBar();
+   closeGameInteractableLayer();
+   destroyFrameGraph();
 }
 
 /*

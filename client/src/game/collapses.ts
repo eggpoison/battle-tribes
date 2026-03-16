@@ -1,5 +1,4 @@
-import { Settings, SubtileType, customTickIntervalHasPassed, lerp, Point, randAngle, randFloat, randInt } from "webgl-test-shared";
-import { getSubtileX, getSubtileY } from "./Layer";
+import { Settings, SubtileType, customTickIntervalHasPassed, lerp, Point, randAngle, randFloat, randInt, getSubtileX, getSubtileY } from "webgl-test-shared";
 import Particle from "./Particle";
 import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, highMonocolourParticles, lowMonocolourParticles, lowTexturedParticles, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
 import { playSound } from "./sound";
@@ -192,8 +191,7 @@ const createLargeDebrisParticle = (x: number, y: number, subtileType: SubtileTyp
 }
 
 export function createCollapseParticles(): void {
-   for (let i = 0; i < minedSubtiles.length; i++) {
-      const minedSubtile = minedSubtiles[i];
+   for (const minedSubtile of minedSubtiles) {
       const subtileIndex = minedSubtile.subtileIndex;
       const support = minedSubtile.support;
 

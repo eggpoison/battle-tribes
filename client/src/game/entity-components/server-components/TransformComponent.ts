@@ -1,19 +1,17 @@
-import { Entity, EntityType, boxIsCircular, updateBox, Box, ServerComponentType, PacketReader, randFloat, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, randSign, rotateXAroundOrigin, rotateYAroundOrigin, getTileIndexIncludingEdges, _bounds } from "webgl-test-shared";
+import { Entity, EntityType, updateBox, ServerComponentType, PacketReader, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, getTileIndexIncludingEdges, _bounds } from "webgl-test-shared";
 import Chunk from "../../Chunk";
 import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityRenderInfo, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { playerInstance } from "../../player";
-import { applyAccelerationFromGround, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, readHitboxFromData, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox, updateHitboxFromData, updatePlayerHitboxFromData } from "../../hitboxes";
+import { applyAccelerationFromGround, getDistanceFromPointToHitboxIncludingChildren, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, readHitboxFromData, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox, updateHitboxFromData, updatePlayerHitboxFromData } from "../../hitboxes";
 import Particle from "../../Particle";
 import { createWaterSplashParticle } from "../../particles";
 import { addTexturedParticleToBufferContainer, lowTexturedParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { playSoundOnHitbox } from "../../sound";
-import { entitiesAreColliding, resolveWallCollisions } from "../../collision";
+import { hitboxIsInWater, resolveWallCollisions } from "../../collision";
 import { keyIsPressed } from "../../keyboard-input";
 import { currentSnapshot } from "../../game";
 import { gameUIState } from "../../../ui-state/game-ui-state";
-import { entitySelectionState } from "../../../ui-state/entity-selection-state";
-import { worldToScreenPos } from "../../camera";
 import { getTransformComponentData } from "../../entity-component-types";
 import Layer from "../../Layer";
 
@@ -96,38 +94,6 @@ export function removeHitboxFromEntity(transformComponent: TransformComponent, h
       assert(idx !== -1);
       transformComponent.rootHitboxes.splice(idx, 1);
    }
-}
-
-export function hitboxIsInWater(hitbox: Hitbox): boolean {
-   const tile = getHitboxTile(hitbox);
-   if (tile.type !== TileType.water) {
-      return false;
-   }
-   
-   // If the hitbox is standing on a stepping stone they aren't in a river
-
-   const layer = getEntityLayer(hitbox.entity);
-
-   hitbox.box.calculateBounds();
-   const minChunkX = Math.max(Math.min(Math.floor(_bounds.minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor(_bounds.maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor(_bounds.minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor(_bounds.maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = layer.getChunk(chunkX, chunkY);
-         for (const currentEntity of chunk.nonGrassEntities) {
-            if (getEntityType(currentEntity) === EntityType.riverSteppingStone) {
-               if (entitiesAreColliding(hitbox.entity, currentEntity)) {
-                  return false;
-               }
-            }
-         }
-      }
-   }
-
-   return true;
 }
 
 /** Recalculates which chunks the game object is contained in */
@@ -554,18 +520,6 @@ function updateFromData(data: TransformComponentData, entity: Entity): void {
    
    const transformComponent = TransformComponentArray.getComponent(entity);
    
-   // @Speed: would be faster if we split the hitboxes array
-   let existingNumCircular = 0;
-   let existingNumRectangular = 0;
-   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-      const hitbox = transformComponent.hitboxes[i];
-      if (boxIsCircular(hitbox.box)) {
-         existingNumCircular++;
-      } else {
-         existingNumRectangular++;
-      }
-   }
-
    let anyHitboxHasVelocity = false;
    
    // Update hitboxes
@@ -658,9 +612,12 @@ function updatePlayerFromData(data: TransformComponentData, isInitialData: boole
 function updateSelectedEntityState(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
-   const screenPos = worldToScreenPos(hitbox.box.position);
-   entitySelectionState.setSelectedEntityScreenPosX(screenPos.x);
-   entitySelectionState.setSelectedEntityScreenPosY(screenPos.y);
+
+   // @Incomplete @SQUEAM: do this camera logic with the entity-selection-funcs
+
+   // const screenPos = worldToScreenPos(hitbox.box.position);
+   // entitySelectionState.setSelectedEntityScreenPosX(screenPos.x);
+   // entitySelectionState.setSelectedEntityScreenPosY(screenPos.y);
 }
 
 const countHitboxesIncludingChildren = (hitbox: Hitbox): number => {
@@ -728,29 +685,17 @@ export function getRandomPositionInEntity(transformComponent: TransformComponent
    return getRandomPositionInBox(hitbox.box);
 }
 
-export function getRandomPositionOnBoxEdge(box: Box): Point {
-   if (boxIsCircular(box)) {
-      const offsetMagnitude = box.radius;
-      const offsetDirection = randAngle();
-      return new Point(box.position.x + offsetMagnitude * Math.sin(offsetDirection), box.position.y + offsetMagnitude * Math.cos(offsetDirection));
-   } else {
-      const halfWidth = box.width / 2;
-      const halfHeight = box.height / 2;
-      
-      let xOffset: number;
-      let yOffset: number;
-      if (Math.random() < 0.5) {
-         xOffset = randFloat(-halfWidth, halfWidth);
-         yOffset = halfHeight * randSign();
-      } else {
-         xOffset = halfWidth * randSign();
-         yOffset = randFloat(-halfHeight, halfHeight);
+export function getDistanceFromPointToEntity(point: Readonly<Point>, entity: Entity): number {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   
+   let minDist = Number.MAX_SAFE_INTEGER;
+   for (const hitbox of transformComponent.hitboxes) {
+      const dist = getDistanceFromPointToHitboxIncludingChildren(point, hitbox);
+      if (dist < minDist) {
+         minDist = dist;
       }
-
-      const x = box.position.x + rotateXAroundOrigin(xOffset, yOffset, box.angle);
-      const y = box.position.y + rotateYAroundOrigin(xOffset, yOffset, box.angle);
-      return new Point(x, y);
    }
+   return minDist;
 }
 
 export function entityIsVisibleToCamera(entity: Entity): boolean {

@@ -41,7 +41,7 @@
 
 <p>x: <span class="highlight">{displayX}</span>, y: <span class="highlight">{displayY}</span></p>
 
-{#if typeof displayVelocityMagnitude !== "undefined"}
+{#if displayVelocityMagnitude !== undefined}
    <p>Velocity: <span class="highlight">{displayVelocityMagnitude}</span></p>
 {/if}
 

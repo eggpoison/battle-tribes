@@ -54,7 +54,7 @@ function createDeathScreen(): void {
    
    deathScreenElem = document.createElement("div");
    deathScreenElem.id = "death-screen";
-   deathScreenElem.classList.add("content");
+   deathScreenElem.className = "content";
    deathScreenElem.innerHTML = `
       <div class="content">
          <h1 class="title">YOU DIED</h1>

@@ -15,7 +15,7 @@ addKeyListener("o", () => {
 
 export function openGameScreen(): void {
    // Unhide the previous-created game canvas
-   document.getElementById("game-canvas")?.classList.remove("hidden");
+   document.getElementById("game-canvas")!.hidden = false;
 
    createHotbar();
    createHealthBar();

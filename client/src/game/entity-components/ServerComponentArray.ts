@@ -1,5 +1,5 @@
 import { PacketReader, Entity, ServerComponentType, assert } from "webgl-test-shared";
-import { EntityRenderInfo } from "../EntityRenderInfo";
+import { EntityRenderObject } from "../EntityRenderObject";
 import { EntityComponentData } from "../world";
 import { ComponentArray } from "./ComponentArray";
 
@@ -21,13 +21,13 @@ export default class ServerComponentArray<
    /** Updates the player instance from server data */
    public updatePlayerFromData?(data: ComponentData, isInitialData: boolean): void;
 
-   constructor(componentType: ComponentType, isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderInfo: EntityRenderInfo) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number, decodeData: (reader: PacketReader) => ComponentData) {
+   constructor(componentType: ComponentType, isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number, decodeData: (reader: PacketReader) => ComponentData) {
       super(isActiveByDefault, createComponent, getMaxRenderParts);
 
       this.componentType = componentType;
       this.decodeData = decodeData;
 
-      assert(typeof serverComponentArrayRecord[componentType as ServerComponentType] === "undefined");
+      assert(serverComponentArrayRecord[componentType as ServerComponentType] === undefined);
       // @Cleanup: casts
       serverComponentArrayRecord[componentType as ServerComponentType] = this as unknown as ServerComponentArray;
    }

@@ -8,7 +8,7 @@
    let { value = $bindable(), ...props}: Props = $props();
    
    $effect((): void => {
-      if (typeof props.onChange !== "undefined") {
+      if (props.onChange !== undefined) {
          props.onChange(value);
       }
    });

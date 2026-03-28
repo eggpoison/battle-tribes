@@ -6,7 +6,7 @@ import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
@@ -31,7 +31,7 @@ function decodeData(reader: PacketReader): ItemComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -42,9 +42,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[itemComponentData.itemType].entityTextureSource)
    )
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }

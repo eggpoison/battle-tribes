@@ -71,8 +71,8 @@ const updateLight = (cookingComponent: CookingComponent, entity: Entity): void =
          // );
 
          // // @Hack
-         // const renderInfo = getEntityRenderInfo(entity);
-         // attachLightToRenderPart(cookingComponent.light, renderInfo.renderPartsByZIndex[0], entity);
+         // const renderObject = getEntityRenderObject(entity);
+         // attachLightToRenderPart(cookingComponent.light, renderObject.renderPartsByZIndex[0], entity);
       }
 
       if (tickIntervalHasPassed(0.15)) {

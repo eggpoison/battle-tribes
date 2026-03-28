@@ -107,7 +107,7 @@ export function preloadTextureAtlasImages(): void {
    for (let i = 0; i < TEXTURE_SOURCES.length; i++) {
       const textureSource = TEXTURE_SOURCES[i];
       const imageSrc = itemImages["../../images/" + textureSource] as string;
-      assert(typeof imageSrc !== "undefined");
+      assert(imageSrc !== undefined);
 
       const image = new Image();
       image.src = imageSrc;

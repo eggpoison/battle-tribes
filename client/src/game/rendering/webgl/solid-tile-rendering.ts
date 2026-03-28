@@ -30,7 +30,7 @@ const FLOOR_TILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<TileType, number 
    let i = 0;
    for (let tileType: TileType = 0; tileType < NUM_TILE_TYPES; tileType++) {
       const textureSource = FLOOR_TILE_TEXTURE_SOURCE_RECORD[tileType];
-      if (typeof textureSource !== "undefined") {
+      if (textureSource !== undefined) {
          if (textureSource !== null) {
             FLOOR_TILE_TO_TEXTURE_ARRAY_INDEX_RECORD[tileType] = i;
             i++;
@@ -52,8 +52,8 @@ const WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<SubtileType, Ar
    let i = 0;
    for (let subtileType: SubtileType = 0; subtileType < SubtileType._LENGTH_; subtileType++) {
       const textureSources = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
-      if (typeof textureSources !== "undefined") {
-         if (typeof WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType] === "undefined") {
+      if (textureSources !== undefined) {
+         if (WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType] === undefined) {
             WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType] = [];
          }
          
@@ -194,7 +194,7 @@ export function createSolidTileShaders(): void {
    const floorTextureSources = new Array<string>();
    for (let tileType: TileType = 0; tileType < NUM_TILE_TYPES; tileType++) {
       const textureSource = FLOOR_TILE_TEXTURE_SOURCE_RECORD[tileType];
-      if (typeof textureSource !== "undefined" && textureSource !== null) {
+      if (textureSource !== undefined && textureSource !== null) {
          floorTextureSources.push(textureSource);
       }
    }
@@ -204,7 +204,7 @@ export function createSolidTileShaders(): void {
    const wallTextureSources = new Array<string>();
    for (let subtileType: SubtileType = 0; subtileType < SubtileType._LENGTH_; subtileType++) {
       const textureSources = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
-      if (typeof textureSources !== "undefined") {
+      if (textureSources !== undefined) {
          for (const textureSource of textureSources) {
             wallTextureSources.push(textureSource);
          }
@@ -276,7 +276,7 @@ const updateFloorVertexData = (data: Float32Array, layer: Layer, renderChunkX: n
          const tile = layer.getTile(tileIndex);
 
          const textureIndex = FLOOR_TILE_TO_TEXTURE_ARRAY_INDEX_RECORD[tile.type];
-         if (typeof textureIndex === "undefined") {
+         if (textureIndex === undefined) {
             throw new Error(TileTypeString[tile.type]);
          }
          if (textureIndex === null) {
@@ -330,7 +330,7 @@ const updateWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: nu
          }
 
          const textureIndexes = WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType];
-         if (typeof textureIndexes === "undefined") {
+         if (textureIndexes === undefined) {
             throw new Error(subtileType.toString());
          }
 
@@ -339,7 +339,7 @@ const updateWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: nu
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
 
          const variant = layer.wallSubtileVariants[tileIndex];
-         if (typeof variant === "undefined") {
+         if (variant === undefined) {
             throw new Error();
          }
          const textureIndex = textureIndexes[variant];

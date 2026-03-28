@@ -4,12 +4,13 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 
 export interface SlimeComponentData {
    readonly size: SlimeSize;
@@ -97,7 +98,7 @@ function decodeData(reader: PacketReader): SlimeComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -110,15 +111,17 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       2,
       0,
+      0, 0,
       getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
    );
-   renderInfo.attachRenderPart(bodyRenderPart);
+   renderObject.attachRenderPart(bodyRenderPart);
 
    // Shading
-   renderInfo.attachRenderPart(new TexturedRenderPart(
+   renderObject.attachRenderPart(new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`)
    ));
 
@@ -127,10 +130,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       3,
       0,
+      0, 0,
       getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
    );
    eyeRenderPart.inheritParentRotation = false;
-   renderInfo.attachRenderPart(eyeRenderPart);
+   renderObject.attachRenderPart(eyeRenderPart);
 
    return {
       bodyRenderPart: bodyRenderPart,
@@ -180,8 +184,8 @@ function onTick(entity: Entity): void {
       if (orb.angularVelocity !== 0) {
          const spriteSize = SLIME_SIZES[slimeComponent.size];
          const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orb.offset);
-         slimeComponent.orbRenderParts[i].offset.x = offsetMagnitude * Math.sin(orb.rotation);
-         slimeComponent.orbRenderParts[i].offset.y = offsetMagnitude * Math.cos(orb.rotation);
+         slimeComponent.orbRenderParts[i].offsetX = offsetMagnitude * Math.sin(orb.rotation);
+         slimeComponent.orbRenderParts[i].offsetY = offsetMagnitude * Math.cos(orb.rotation);
       }
 
       orb.angularVelocity -= 3 * Settings.DT_S;
@@ -213,14 +217,13 @@ const createOrb = (slimeComponent: SlimeComponent, entity: Entity, size: SlimeSi
       hitbox,
       1,
       orbInfo.rotation,
+      offsetMagnitude * Math.sin(orbInfo.rotation), offsetMagnitude * Math.cos(orbInfo.rotation),
       getTextureArrayIndex(`entities/slime/slime-orb-${sizeString}.png`)
    );
-   renderPart.offset.x = offsetMagnitude * Math.sin(orbInfo.rotation);
-   renderPart.offset.y = offsetMagnitude * Math.cos(orbInfo.rotation);
    slimeComponent.orbRenderParts.push(renderPart);
 
-   const renderInfo = getEntityRenderInfo(entity);
-   renderInfo.attachRenderPart(renderPart);
+   const renderObject = getEntityRenderObject(entity);
+   renderObject.attachRenderPart(renderPart);
 }
 
 function updateFromData(data: SlimeComponentData, entity: Entity): void {
@@ -248,13 +251,13 @@ function updateFromData(data: SlimeComponentData, entity: Entity): void {
       slimeComponent.internalTickCounter = 0;
    }
 
-   slimeComponent.eyeRenderPart.offset.x = EYE_OFFSETS[slimeComponent.size] * Math.sin(slimeComponent.eyeRenderPart.angle);
-   slimeComponent.eyeRenderPart.offset.y = EYE_OFFSETS[slimeComponent.size] * Math.cos(slimeComponent.eyeRenderPart.angle);
+   slimeComponent.eyeRenderPart.offsetX = EYE_OFFSETS[slimeComponent.size] * Math.sin(slimeComponent.eyeRenderPart.angle);
+   slimeComponent.eyeRenderPart.offsetY = EYE_OFFSETS[slimeComponent.size] * Math.cos(slimeComponent.eyeRenderPart.angle);
 
    if (anger === -1) {
-      slimeComponent.bodyRenderPart.shakeAmount = 0;
+      setRenderPartShakeAmount(slimeComponent.bodyRenderPart, 0);
    } else {
-      slimeComponent.bodyRenderPart.shakeAmount = getBodyShakeAmount(spitChargeProgress);
+      setRenderPartShakeAmount(slimeComponent.bodyRenderPart, getBodyShakeAmount(spitChargeProgress));
    }
 
    // Add any new orbs

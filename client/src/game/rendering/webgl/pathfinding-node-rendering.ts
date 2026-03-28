@@ -264,14 +264,14 @@ export function renderPathfindingNodes(): void {
       return;
    }
    
-   if (nerdVision.isVisible() && entityDebugData !== null && typeof entityDebugData.pathData !== "undefined") {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityDebugData.pathData !== undefined) {
       renderConnectors(entityDebugData.pathData);
    }
 
    const debuggedPath = getDebuggedPath(entityDebugData);
 
    let numNodes = visiblePathfindingNodeOccupances.length;
-   if (typeof debuggedPath !== "undefined") {
+   if (debuggedPath !== undefined) {
       numNodes += debuggedPath.pathNodes.length + debuggedPath.rawPathNodes.length + debuggedPath.visitedNodes.length;
    }
    
@@ -289,7 +289,7 @@ export function renderPathfindingNodes(): void {
    
       if (showEntityPathfindingNodes) {
          const pathData = entityDebugData.pathData;
-         if (typeof pathData !== "undefined") {
+         if (pathData !== undefined) {
             for (const node of pathData.visitedNodes) {
                segmentIdx = addNodeData(vertexData, segmentIdx, node, NodeType.visited);
             }

@@ -1,5 +1,5 @@
 import { PacketReader, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
@@ -67,7 +67,7 @@ const getSlashingArmSegmentTextureSource = (sizeString: string, growthStageStrin
    return "entities/okren/" + sizeString + "/arm-segment-of-slashing-and-destruction-" + growthStageString + ".png";
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
    const okrenClawComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.okrenClaw);
 
@@ -85,25 +85,28 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
             hitbox,
             2,
             0,
+            0, 0,
             getTextureArrayIndex(getBigArmSegmentTextureSource(sizeString, growthStageString))
          );
-         renderInfo.attachRenderPart(bigArmSegment);
+         renderObject.attachRenderPart(bigArmSegment);
       } else if (hitbox.flags.includes(HitboxFlag.OKREN_MEDIUM_ARM_SEGMENT)) {
          mediumArmSegment = new TexturedRenderPart(
             hitbox,
             1,
             0,
+            0, 0,
             getTextureArrayIndex(getMediumArmSegmentTextureSource(sizeString, growthStageString))
          )
-         renderInfo.attachRenderPart(mediumArmSegment);
+         renderObject.attachRenderPart(mediumArmSegment);
       } else if (hitbox.flags.includes(HitboxFlag.OKREN_ARM_SEGMENT_OF_SLASHING_AND_DESTRUCTION)) {
          slashingArmSegment = new TexturedRenderPart(
             hitbox,
             0,
             0,
+            0, 0,
             getTextureArrayIndex(getSlashingArmSegmentTextureSource(sizeString, growthStageString))
          )
-         renderInfo.attachRenderPart(slashingArmSegment);
+         renderObject.attachRenderPart(slashingArmSegment);
       }
    }
 

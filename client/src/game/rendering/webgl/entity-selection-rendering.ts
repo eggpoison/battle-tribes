@@ -1,8 +1,8 @@
 import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { cleanupEntityRendering, renderEntity, setupEntityRendering } from "./entity-rendering";
-import { cleanEntityRenderInfo, getRenderPartRenderPosition, translateEntityRenderParts } from "../render-part-matrices";
-import { EntityRenderInfo, updateEntityRenderInfoRenderData } from "../../EntityRenderInfo";
+import { cleanEntityRenderObject, getRenderPartRenderPosition, translateEntityRenderParts } from "../render-part-matrices";
+import { EntityRenderObject, recalculateEntityRenderObjectData } from "../../EntityRenderObject";
 import { gameFramebuffer } from "../render";
 
 let renderProgram: WebGLProgram;
@@ -126,7 +126,7 @@ export function createStructureHighlightShaders(): void {
    framebufferVertexData[11] = 1;
 }
 
-export function renderEntitySelection(renderInfo: EntityRenderInfo, tickInterp: number, isSelected: boolean): void {
+export function renderEntitySelection(renderObject: EntityRenderObject, tickInterp: number, isSelected: boolean): void {
    // 
    // Framebuffer Program
    // 
@@ -155,59 +155,59 @@ export function renderEntitySelection(renderInfo: EntityRenderInfo, tickInterp: 
    setupEntityRendering();
 
    // Right
-   translateEntityRenderParts(renderInfo, 4, 0);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, 4, 0);
+   recalculateEntityRenderObjectData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, tickInterp);
 
    // Left
-   translateEntityRenderParts(renderInfo, -4, 0);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, -4, 0);
+   recalculateEntityRenderObjectData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, tickInterp);
 
    // Top
-   translateEntityRenderParts(renderInfo, 0, 4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, 0, 4);
+   recalculateEntityRenderObjectData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, tickInterp);
 
    // Bottom
-   translateEntityRenderParts(renderInfo, 0, -4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, 0, -4);
+   recalculateEntityRenderObjectData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, tickInterp);
 
    // Top right
-   translateEntityRenderParts(renderInfo, 4, 4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, 4, 4);
+   recalculateEntityRenderObjectData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, tickInterp);
 
    // Bottom right
-   translateEntityRenderParts(renderInfo, 4, -4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, 4, -4);
+   recalculateEntityRenderObjectData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, tickInterp);
 
    // Bottom left
-   translateEntityRenderParts(renderInfo, -4, -4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, -4, -4);
+   recalculateEntityRenderObjectData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, tickInterp);
 
    // Top left
-   translateEntityRenderParts(renderInfo, -4, 4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, -4, 4);
+   recalculateEntityRenderObjectData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, tickInterp);
 
    // Then, we want to subtract the middle area. To do this we multiply the existing drawn pixels
    // (dfactor) by 1 minus the middle alpha.
    gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
 
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo, { overrideAlphaWithOne: true });
+   recalculateEntityRenderObjectData(renderObject);
+   renderEntity(renderObject, { overrideAlphaWithOne: true });
 
    cleanupEntityRendering();
    
@@ -231,7 +231,7 @@ export function renderEntitySelection(renderInfo: EntityRenderInfo, tickInterp: 
    gl.enableVertexAttribArray(0);
 
    // @HACK
-   const renderPosition = getRenderPartRenderPosition(renderInfo.renderPartsByZIndex[0]);
+   const renderPosition = getRenderPartRenderPosition(renderObject.renderPartsByZIndex[0]);
    
    gl.uniform1f(isSelectedUniformLocation, isSelected ? 1 : 0);
    gl.uniform2f(originPositionUniformLocation, renderPosition.x, renderPosition.y);

@@ -894,7 +894,7 @@ for (const clientItemInfo of Object.values(CLIENT_ITEM_INFO_RECORD)) {
 
 export function getItemTypeImage(itemType: ItemType): string {
    const img = itemImages["/src/images/" + CLIENT_ITEM_INFO_RECORD[itemType].textureSource] as string;
-   assert(typeof img !== "undefined");
+   assert(img !== undefined);
    return img;
 }
 

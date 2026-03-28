@@ -1,4 +1,4 @@
-import { EntityType, PacketReader, ServerComponentType } from "../../../shared/src";
+import { EntityType, PacketReader, RequiredProperty, ServerComponentType } from "../../../shared/src";
 import { ClientComponentType } from "./entity-components/client-component-types";
 import { ClientComponentData } from "./entity-components/client-components";
 import { getClientComponentArray } from "./entity-components/ClientComponentArray";
@@ -255,33 +255,53 @@ const ENTITY_CLIENT_COMPONENT_TYPES: ReadonlyArray<ReadonlyArray<ClientComponent
    [],
 ];
 
-const ENTITY_COMPONENT_ARRAYS = new Array<Array<ComponentArray>>();
+const COMPONENT_ARRAYS = new Array<Array<ComponentArray>>();
+const COMPONENT_ARRAYS_HAVE_INTERMEDIATE_INFO = new Array<boolean>();
+
+// @Cleanup: the export!!
+export const ENTITY_INTERMEDIATE_INFOS = new Array<Array<object>>();
 
 export function registerEntityComponentTypesFromData(reader: PacketReader): void {
    const numEntityTypes = reader.readNumber();
-   for (let i = 0; i < numEntityTypes; i++) {
+   for (let entityType = 0; entityType < numEntityTypes; entityType++) {
       const componentTypes = new Array<ServerComponentType>();
       const componentArrays = new Array<ComponentArray>();
       
+      let hasIntermediateInfo = false;
+      const intermediateInfos = new Array<object>();
+      
       const numComponents = reader.readNumber();
-      for (let i = 0; i < numComponents; i++) {
+      for (let j = 0; j < numComponents; j++) {
          const componentType: ServerComponentType = reader.readNumber();
          componentTypes.push(componentType);
 
          const componentArray = getServerComponentArray(componentType);
+         
+         // @Copynpaste
          componentArrays.push(componentArray);
+         if (componentArray.populateIntermediateInfo !== undefined) {
+            hasIntermediateInfo = true;
+         }
+         intermediateInfos.push(null as unknown as object)
       }
 
       ENTITY_SERVER_COMPONENT_TYPES.push(componentTypes);
 
-      // Don't forget the client component arrays!!
-      const clientComponentTypes = ENTITY_CLIENT_COMPONENT_TYPES[i];
-      for (const clientComponentType of clientComponentTypes) {
-         const clientComponentArray = getClientComponentArray(clientComponentType);
-         componentArrays.push(clientComponentArray);
+      // Client component arrays
+      for (const clientComponentType of ENTITY_CLIENT_COMPONENT_TYPES[entityType]) {
+         const componentArray = getClientComponentArray(clientComponentType);
+         
+         // @Copynpaste
+         componentArrays.push(componentArray);
+         if (componentArray.populateIntermediateInfo !== undefined) {
+            hasIntermediateInfo = true;
+         }
+         intermediateInfos.push(null as unknown as object)
       }
 
-      ENTITY_COMPONENT_ARRAYS.push(componentArrays);
+      COMPONENT_ARRAYS.push(componentArrays);
+      COMPONENT_ARRAYS_HAVE_INTERMEDIATE_INFO.push(hasIntermediateInfo);
+      ENTITY_INTERMEDIATE_INFOS.push(intermediateInfos);
    }
 }
 
@@ -294,7 +314,11 @@ export function getEntityClientComponentTypes(entityType: EntityType): ReadonlyA
 }
 
 export function getEntityComponentArrays(entityType: EntityType): ReadonlyArray<ComponentArray> {
-   return ENTITY_COMPONENT_ARRAYS[entityType];
+   return COMPONENT_ARRAYS[entityType];
+}
+
+export function hasIntermediateInfo(entityType: EntityType): boolean {
+   return COMPONENT_ARRAYS_HAVE_INTERMEDIATE_INFO[entityType];
 }
 
 export function getServerComponentData<T extends ServerComponentType>(entityServerComponentData: EntityServerComponentData, entityComponentTypes: ReadonlyArray<ServerComponentType>, componentType: T): ServerComponentData<T> {

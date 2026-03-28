@@ -8,7 +8,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
@@ -58,23 +58,21 @@ const createLeafRenderPart = (isSmall: boolean, parentHitbox: Hitbox): VisualRen
    } else {
       textureSource = "entities/miscellaneous/cover-leaf-large.png";
    }
+
+   const spawnRange = isSmall ? 24 : 18;
    
    const renderPart = new TexturedRenderPart(
       parentHitbox,
       1 + Math.random() * 0.5,
       randAngle(),
+      randFloat(-spawnRange, spawnRange), randFloat(-spawnRange, spawnRange),
       getTextureArrayIndex(textureSource)
    );
-
-   const spawnRange = isSmall ? 24 : 18;
-
-   renderPart.offset.x = randFloat(-spawnRange, spawnRange);
-   renderPart.offset.y = randFloat(-spawnRange, spawnRange);
 
    return renderPart;
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
@@ -83,14 +81,14 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       const renderPart = createLeafRenderPart(true, hitbox);
       // @TEMPORARY
       renderPart.opacity = 0;
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
       leafRenderParts.push(renderPart);
    }
    for (let i = 0; i < NUM_LARGE_COVER_LEAVES; i++) {
       const renderPart = createLeafRenderPart(false, hitbox);
       // @TEMPORARY
       renderPart.opacity = 0;
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
       leafRenderParts.push(renderPart);
    }
 

@@ -8,9 +8,10 @@ import { DOOR_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface DoorComponentData {
    readonly toggleType: DoorToggleType;
@@ -46,7 +47,7 @@ function decodeData(reader: PacketReader): DoorComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
@@ -57,11 +58,12 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(DOOR_TEXTURE_SOURCES[buildingMaterialComponentData.material])
    );
-   renderPart.addTag("buildingMaterialComponent:material");
+   addRenderPartTag(renderPart, "buildingMaterialComponent:material");
 
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }

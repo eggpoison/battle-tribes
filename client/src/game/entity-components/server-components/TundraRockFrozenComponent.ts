@@ -3,7 +3,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
@@ -27,7 +27,7 @@ function decodeData(reader: PacketReader): TundraRockFrozenComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -38,6 +38,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex("entities/tundra-rock-frozen/rock-" + (tundraRockFrozenComponentData.variant + 1) + ".png")
    )
    if (tundraRockFrozenComponentData.variant === 0) {
@@ -47,7 +48,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    } else if (tundraRockFrozenComponentData.variant === 2) {
       renderPart.angle = -Math.PI * 0.08;
    }
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }

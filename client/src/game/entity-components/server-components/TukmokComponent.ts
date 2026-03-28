@@ -1,5 +1,5 @@
 import { Point, randAngle, randFloat, randInt, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -9,6 +9,7 @@ import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface TukmokComponentData {}
 
@@ -25,18 +26,19 @@ function decodeData(): TukmokComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
       const hitbox = transformComponentData.hitboxes[i];
       
       if (hitbox.flags.includes(HitboxFlag.TUKMOK_BODY)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                1,
                0,
+               0, 0,
                getTextureArrayIndex("entities/tukmok/body.png")
             )
          );
@@ -45,34 +47,38 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
             hitbox,
             2,
             0,
+            0, 0,
             getTextureArrayIndex("entities/tukmok/head.png")
          );
-         renderPart.addTag("tamingComponent:head");
-         renderInfo.attachRenderPart(renderPart);
+         addRenderPartTag(renderPart, "tamingComponent:head");
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_SMALL)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                i * 0.02,
                0,
+               0, 0,
                getTextureArrayIndex("entities/tukmok/tail-segment-small.png")
             )
          );
       } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_MEDIUM)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                i * 0.02,
                0,
+               0, 0,
                getTextureArrayIndex("entities/tukmok/tail-segment-medium.png")
             )
          );
       } else {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                i * 0.02,
                0,
+               0, 0,
                getTextureArrayIndex("entities/tukmok/tail-segment-big.png")
             )
          );

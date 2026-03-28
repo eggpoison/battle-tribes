@@ -55,7 +55,7 @@ export function preloadTextureImages(): Array<HTMLImageElement> {
    for (let i = 0; i < miscTextureSources.length; i++) {
       const textureSource = miscTextureSources[i];
       const texture = itemImages["/src/images/" + textureSource] as string;
-      assert(typeof texture !== "undefined");
+      assert(texture !== undefined);
       
       const image = new Image();
       image.src = texture;

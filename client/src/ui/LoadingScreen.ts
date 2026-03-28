@@ -18,29 +18,35 @@ export const enum LoadingScreenStage {
    connectionError
 }
 
-const TXT_CONNECT = "Connecting to server...";
-const TXT_SEND = "Sending player data...";
-const TXT_INIT = "Initialising game...";
+const TXT_STAGE_1 = "Connecting to server...";
+const TXT_STAGE_2 = "Sending player data...";
+const TXT_STAGE_3 = "Initialising game...";
 
 const loadingScreenElem = document.getElementById("loading-screen")!;
 const textNode = document.getElementById("ls-text")!.firstChild as Text;
 
-document.getElementById("ls-reconnect-button")!.addEventListener("click", () => {
-   establishNewNetworkConnection(playerUsername, playerTribe.tribeType, isSpectating, onSuccessfulConnection, onFailedConnection, onPacket);
+{
+   const reconnectBtn = document.getElementById("ls-reconnect-button")!;
 
-   loadingScreenElem.classList.remove("is-error");
-   textNode.data = TXT_CONNECT;
-});
-document.getElementById("ls-main-menu-button")!.addEventListener("click", () => {
-   closeLoadingScreen();
-   openMainMenu();
+   // Reconnect button
+   reconnectBtn.onclick = () => {
+      establishNewNetworkConnection(playerUsername, playerTribe.tribeType, isSpectating, onSuccessfulConnection, onFailedConnection, onPacket);
 
-   // Reset the text state back to the initial text
-   textNode.data = TXT_CONNECT;
-});
+      loadingScreenElem.className = "";
+      textNode.data = TXT_STAGE_1;
+   };
+   // Main menu button
+   (reconnectBtn.nextSibling as HTMLElement).onclick = () => {
+      closeLoadingScreen();
+      openMainMenu();
+
+      textNode.data = TXT_STAGE_1;
+   };
+}
 
 function onSuccessfulConnection(username: string, tribeType: TribeType, isSpectating: boolean): void {
-   setLoadingScreenStage(LoadingScreenStage.sendingPlayerData);
+   textNode.data = TXT_STAGE_2;
+
    sendInitialPlayerDataPacket(username, tribeType, isSpectating, windowWidth, windowHeight);
 
    setPlayerUsername(username);
@@ -58,7 +64,7 @@ async function onInitialGameDataPacket(reader: PacketReader): Promise<void> {
    
    // Initialise game
 
-   setLoadingScreenStage(LoadingScreenStage.initialisingGame);
+   textNode.data = TXT_STAGE_3;
    
    await setupRendering();
    
@@ -96,17 +102,22 @@ async function onPacket(msg: MessageEvent): Promise<void> {
 
 export function openLoadingScreenFromMainMenu(username: string, tribeType: TribeType, isSpectating: boolean): void {
    establishNewNetworkConnection(username, tribeType, isSpectating, onSuccessfulConnection, onFailedConnection, onPacket);
+   // @Cleanup: main menu close function is called from outside this function, but that isn't that obvious from here... it looks like the loading screen is just being toggled on with the main menu staying open too...
    // Assume that the loading screen is in a non-error state, and in the "connecting" text state.
-   loadingScreenElem.classList.remove("hidden");
+   loadingScreenElem.hidden = false;
 }
 
 export function openLoadingScreenFromNotMainMenu(): void {
-   loadingScreenElem.classList.add("is-error");
+   loadingScreenElem.className = "is-error";
    
-   if (loadingScreenElem.classList.contains("hidden")) {
-      loadingScreenElem.classList.remove("hidden");
+   if (loadingScreenElem.hidden) {
+      loadingScreenElem.hidden = false;
       closeGameScreen();
    }
+}
+
+export function closeLoadingScreen(): void {
+   loadingScreenElem.hidden = true;
 }
 
 export function quitGame(): void {
@@ -114,26 +125,4 @@ export function quitGame(): void {
 
    closeGameScreen();
    openMainMenu();
-}
-
-// @Speed: can ensure difference
-export function setLoadingScreenStage(stage: LoadingScreenStage): void {
-   loadingScreenElem.classList.remove("hidden");
-
-   if (stage === LoadingScreenStage.connectionError) {
-      loadingScreenElem.classList.add("is-error");
-      return;
-   }
-
-   loadingScreenElem.classList.remove("is-error");
-   
-   switch (stage) {
-      case LoadingScreenStage.establishingConnection: textNode.data = "Connecting to server..."; break;
-      case LoadingScreenStage.sendingPlayerData:      textNode.data = "Sending player data..."; break;
-      case LoadingScreenStage.initialisingGame:       textNode.data = "Initialising game..."; break;
-   }
-}
-
-export function closeLoadingScreen(): void {
-   loadingScreenElem.classList.add("hidden");
 }

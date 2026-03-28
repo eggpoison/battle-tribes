@@ -22,7 +22,7 @@ export function updateLightLevelsFromData(reader: PacketReader): void {
       const lightLevel = reader.readNumber();
 
       const existingNodeInfo = nodeInfos.get(node);
-      if (typeof existingNodeInfo === "undefined") {
+      if (existingNodeInfo === undefined) {
          const nodeInfo: LightLevelNodeInfo = {
             lightLevel: lightLevel,
             lastUpdateTicks: currentSnapshot.tick
@@ -34,7 +34,7 @@ export function updateLightLevelsFromData(reader: PacketReader): void {
       }
 
       const renderingChunkIdx = getLightLevelRenderingChunkIndex(node);
-      if (typeof bgUpdateInfos.get(renderingChunkIdx) === "undefined") {
+      if (bgUpdateInfos.get(renderingChunkIdx) === undefined) {
          bgUpdateInfos.set(renderingChunkIdx, {
             addedNodeInfos: [],
             removedNodeInfos: []
@@ -59,7 +59,7 @@ export function updateLightLevelsFromData(reader: PacketReader): void {
       nodeInfos.delete(node);
 
       const renderingChunkIdx = getLightLevelRenderingChunkIndex(node);
-      if (typeof bgUpdateInfos.get(renderingChunkIdx) === "undefined") {
+      if (bgUpdateInfos.get(renderingChunkIdx) === undefined) {
          bgUpdateInfos.set(renderingChunkIdx, {
             addedNodeInfos: [],
             removedNodeInfos: []

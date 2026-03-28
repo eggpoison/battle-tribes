@@ -27,7 +27,7 @@ const frames = new Array<FrameInfo>();
 let rectIdx = 0;
 
 export function resetFrameGraph(): void {
-   frames.splice(0, frames.length);
+   frames.length = 0;
 }
 
 /** Registers that a frame has occured for use in showing the fps counter */

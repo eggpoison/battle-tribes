@@ -61,7 +61,7 @@ export function collide(entity: Entity, collidingEntity: Entity, hitbox: Hitbox,
 
    const componentArrays = getEntityComponentArrays(getEntityType(entity));
    for (const componentArray of componentArrays) {
-      if (typeof componentArray.onCollision !== "undefined") {
+      if (componentArray.onCollision !== undefined) {
          componentArray.onCollision(entity, collidingEntity, hitbox, pushingHitbox);
       }
    }
@@ -115,7 +115,7 @@ const calculateEntityPairCollisionInfo = (affectedEntity: Entity, collidingEntit
 
 const entityCollisionPairHasAlreadyBeenChecked = (collisionPairs: CollisionPairs, affectedEntity: Entity, collidingEntity: Entity): boolean => {
    const collisionInfos = collisionPairs.get(affectedEntity);
-   if (typeof collisionInfos === "undefined") {
+   if (collisionInfos === undefined) {
       return false;
    }
 
@@ -155,7 +155,7 @@ const collectEntityCollisionsWithChunk = (collisionPairs: CollisionPairs, affect
       }
       
       const existingCollisionPairs = collisionPairs.get(affectedEntity);
-      if (typeof existingCollisionPairs === "undefined") {
+      if (existingCollisionPairs === undefined) {
          collisionPairs.set(affectedEntity, [collisionInfo]);
       } else {
          existingCollisionPairs.push(collisionInfo);
@@ -192,7 +192,7 @@ const collectNonGrassEntityCollisionsWithChunk = (collisionPairs: CollisionPairs
       }
       
       const existingCollisionPairs = collisionPairs.get(affectedEntity);
-      if (typeof existingCollisionPairs === "undefined") {
+      if (existingCollisionPairs === undefined) {
          collisionPairs.set(affectedEntity, [collisionInfo]);
       } else {
          existingCollisionPairs.push(collisionInfo);

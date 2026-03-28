@@ -36,7 +36,7 @@
       <p>Damage: 1</p>
     {/if}
 
-   {#if typeof clientItemInfo.flavourText !== "undefined"}
+   {#if clientItemInfo.flavourText !== undefined}
       <p class="flavour-text">{clientItemInfo.flavourText}</p>
    {/if}
 

@@ -7,6 +7,7 @@ import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo,
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
 import { hotbarFuncs } from "../../../ui-state/hotbar-funcs";
+import { updateCraftableRecipes } from "../../../ui/game/menus/CraftingMenu";
 
 export interface InventoryComponentData {
    readonly inventories: ReadonlyArray<Inventory>;
@@ -77,7 +78,9 @@ const readInventory = (reader: PacketReader): Inventory => {
    return inventory;
 }
 
-const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory, isPlayer: boolean): void => {
+const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory, isPlayer: boolean): boolean => {
+   let itemsHaveChanged = false;
+   
    if (inventory.width !== inventoryData.width || inventory.height !== inventoryData.height) {
       inventory.width = inventoryData.width;
       inventory.height = inventoryData.height;
@@ -87,7 +90,7 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
    // Remove any items which have been removed from the inventory
    for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
       const item = inventory.itemSlots[itemSlot];
-      if (typeof item === "undefined") {
+      if (item === undefined) {
          continue;
       }
       
@@ -98,6 +101,7 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
 
          if (isPlayer) {
             hotbarFuncs.removeItem(inventory, itemSlot);
+            itemsHaveChanged = true;
 
             if (itemSlot === getPlayerSelectedItemSlot(inventory.name)) {
                updatePlayerHeldItem(inventory.name, itemSlot);
@@ -112,7 +116,7 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
    // Add all new items from the server data
    for (let itemSlot = 1; itemSlot <= inventoryData.width * inventoryData.height; itemSlot++) {
       const itemData = inventoryData.itemSlots[itemSlot];
-      if (typeof itemData === "undefined") {
+      if (itemData === undefined) {
          continue;
       }
       
@@ -124,6 +128,7 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
 
          if (isPlayer) {
             hotbarFuncs.addItem(inventory, itemSlot, item);
+            itemsHaveChanged = true;
 
             if (itemSlot === getPlayerSelectedItemSlot(inventory.name)) {
                onItemSelect(item.type);
@@ -140,9 +145,12 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
 
          if (isPlayer) {
             hotbarFuncs.updateItem(inventory, itemSlot, item);
+            itemsHaveChanged = true;
          }
       }
    }
+
+   return itemsHaveChanged;
 }
 
 export function updatePlayerHeldItem(inventoryName: InventoryName, heldItemSlot: number): void {
@@ -205,12 +213,19 @@ function getMaxRenderParts(): number {
    return 0;
 }
 
-function updateInventories(inventoryComponent: InventoryComponent, data: InventoryComponentData, isPlayer: boolean): void {
+function updateInventories(inventoryComponent: InventoryComponent, data: InventoryComponentData, isPlayer: boolean): boolean {
    assert(inventoryComponent.inventories.length === data.inventories.length);
 
+   let itemsHaveChanged = false;
+   
    for (let i = 0; i < inventoryComponent.inventories.length; i++) {
-      updateInventoryFromData(inventoryComponent.inventories[i], data.inventories[i], isPlayer);
+      const changed = updateInventoryFromData(inventoryComponent.inventories[i], data.inventories[i], isPlayer);
+      if (changed) {
+         itemsHaveChanged = true;
+      }
    }
+
+   return itemsHaveChanged;
 }
 
 function updateFromData(data: InventoryComponentData, entity: Entity): void {
@@ -220,14 +235,15 @@ function updateFromData(data: InventoryComponentData, entity: Entity): void {
 
 function updatePlayerFromData(data: InventoryComponentData): void {
    const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
-   updateInventories(inventoryComponent, data, true);
+   const itemsHaveChanged = updateInventories(inventoryComponent, data, true);
+   if (itemsHaveChanged) {
+      updateCraftableRecipes(inventoryComponent.inventories);
+   }
 }
 
 function updateSelectedEntityState(entity: Entity): void {
    // @Speed: this is happening every tick for some reason, causing refreshes every tick. baad!!
    
-
-
    // @INCOMPLETE
    // const inventoryComponent = InventoryComponentArray.getComponent(entity);
    // // @Garbage: extra bad cuz it has to be a semi-deep copy of the inventories to actually register!!

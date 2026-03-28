@@ -1,7 +1,7 @@
 import { Point, HitFlags, Entity, ServerComponentType, PacketReader, Settings } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
-import { ComponentTint, createComponentTint } from "../../EntityRenderInfo";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { playerInstance } from "../../player";
 import { Hitbox } from "../../hitboxes";
 import { discombobulate } from "../../player-action-handling";
@@ -84,8 +84,8 @@ function onTick(entity: Entity): void {
    const newRedness = calculateRedness(healthComponent);
 
    if (newRedness !== previousRedness) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.recalculateTint();
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.recalculateTint();
    }
 }
 

@@ -7,7 +7,7 @@
    let chatboxElem: HTMLInputElement | undefined;
 
    $effect(() => {
-      if (typeof chatboxElem === "undefined") {
+      if (chatboxElem === undefined) {
          return;
       }
 

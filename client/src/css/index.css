@@ -52,7 +52,7 @@ body {
    pointer-events: none;
 }
 
-#canvas-wrapper > canvas {
+canvas {
    position: absolute;
    pointer-events: none;
 }
@@ -149,9 +149,5 @@ body {
    white-space: pre;
    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.75);
    letter-spacing: 0.05rem;
-   pointer-events: none;
-}
-
-#text-canvas {
    pointer-events: none;
 }

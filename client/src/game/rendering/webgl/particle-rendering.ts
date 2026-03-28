@@ -54,13 +54,13 @@ function updateParticleArray(particles: Array<Particle>, bufferContainer: Object
          removedParticleIndexes.push(i);
       } else {
          // Update opacity
-         if (typeof particle.getOpacity !== "undefined") {
+         if (particle.getOpacity !== undefined) {
             const opacity = particle.getOpacity();
             tempFloat32ArrayLength1[0] = opacity;
             bufferContainer.setData(particle.id, 10, tempFloat32ArrayLength1);
          }
          // Update scale
-         if (typeof particle.getScale !== "undefined") {
+         if (particle.getScale !== undefined) {
             const scale = particle.getScale();
             tempFloat32ArrayLength1[0] = scale;
             bufferContainer.setData(particle.id, 11, tempFloat32ArrayLength1);
@@ -446,7 +446,7 @@ export function addMonocolourParticleToBufferContainer(particle: Particle, rende
    
    bufferContainer.registerNewObject(particle.id);
    
-   const opacity = typeof particle.getOpacity !== "undefined" ? particle.getOpacity() : 1;
+   const opacity = particle.getOpacity !== undefined ? particle.getOpacity() : 1;
 
    // Half size
    tempFloat32ArrayLength2[0] = width / 2;
@@ -512,7 +512,7 @@ export function addTexturedParticleToBufferContainer(particle: Particle, renderL
    
    bufferContainer.registerNewObject(particle.id);
    
-   const opacity = typeof particle.getOpacity !== "undefined" ? particle.getOpacity() : 1;
+   const opacity = particle.getOpacity !== undefined ? particle.getOpacity() : 1;
 
    // Half size
    tempFloat32ArrayLength2[0] = width / 2;

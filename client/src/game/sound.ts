@@ -373,11 +373,11 @@ const removeSound = (sound: Sound): void => {
    }
 
    const hitbox = soundToHitboxMap.get(sound);
-   if (typeof hitbox !== "undefined" && hitbox !== null) {
+   if (hitbox !== undefined && hitbox !== null) {
       const attachedSounds = soundsAttachedToHitboxes.get(hitbox);
 
       // @Hack: shouldn't be necessary
-      if (typeof attachedSounds !== "undefined") {
+      if (attachedSounds !== undefined) {
          for (let i = 0; i < attachedSounds.length; i++) {
             const attachInfo = attachedSounds[i];
             if (attachInfo.sound === sound) {
@@ -410,7 +410,7 @@ export function playSound(filePath: string, volume: number, pitchMultiplier: num
    assert(Number.isFinite(volume));
    
    const audioBuffer = audioBuffers[filePath];
-   assert(typeof audioBuffer !== "undefined");
+   assert(audioBuffer !== undefined);
 
    const gainNode = audioContext.createGain();
    gainNode.gain.value = calculateSoundVolume(volume, source);
@@ -476,8 +476,8 @@ export function playSoundOnHitbox(filePath: string, volume: number, pitchMultipl
 export function removeEntitySounds(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    for (const hitbox of transformComponent.hitboxes) {
-      const entityAttachedSounds = soundsAttachedToHitboxes.get(hitbox)!;
-      if (typeof entityAttachedSounds === "undefined") {
+      const entityAttachedSounds = soundsAttachedToHitboxes.get(hitbox);
+      if (entityAttachedSounds === undefined) {
          return;
       }
    

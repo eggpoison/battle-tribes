@@ -1,7 +1,7 @@
 import { AIPlanType, getTechByID, TechID, Tech,StructureType, PacketReader, ItemType, CRAFTING_RECIPES, CraftingRecipe, Entity, EntityType, BlueprintType } from "webgl-test-shared";
 import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state";
 import { ExtendedTribe, getTribeByID } from "../../tribes";
-import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state";
+import { Menu, openMenu } from "../../../ui/menus";
 
 const enum Vars {
    NODE_DISPLAY_SIZE = 100
@@ -287,6 +287,6 @@ export function setRenderedTribePlanID(renderedTribeID: number | null): void {
       tribePlanVisualiserState.setTribeAssignmentInfo(tribeAssignmentInfo);
       tribePlanVisualiserState.setTribe(getTribeByID(renderedTribeID) as ExtendedTribe);
       
-      menuSelectorState.openMenu(Menu.tribePlanVisualiser);
+      openMenu(Menu.tribePlanVisualiser);
    }
 }

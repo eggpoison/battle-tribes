@@ -1,6 +1,6 @@
 import { HitboxFlag, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
@@ -23,7 +23,7 @@ function decodeData(): OkrenTongueComponentData {
    return createOkrenTongueComponentData();
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
    for (const hitbox of transformComponentData.hitboxes) {
@@ -32,17 +32,19 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
             hitbox,
             0,
             0,
+            0, 0,
             getTextureArrayIndex("entities/okren/tongue-segment.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.OKREN_TONGUE_SEGMENT_TIP)) {
          const renderPart = new TexturedRenderPart(
             hitbox,
             0,
             0,
+            0, 0,
             getTextureArrayIndex("entities/okren/tongue-tip.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       }
    }
 

@@ -9,9 +9,10 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 const enum Vars {
    SNOW_THROW_OFFSET = 64
@@ -61,7 +62,7 @@ function decodeData(reader: PacketReader): YetiComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
    const pawRenderParts = new Array<VisualRenderPart>();
@@ -71,29 +72,32 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
             hitbox,
             1,
             0,
+            0, 0,
             getTextureArrayIndex("entities/yeti/yeti.png")
          );
-         renderInfo.attachRenderPart(bodyRenderPart);
+         renderObject.attachRenderPart(bodyRenderPart);
 
          for (let i = 0; i < 2; i++) {
             const paw = new TexturedRenderPart(
                bodyRenderPart,
                0,
                0,
+               0, 0,
                getTextureArrayIndex("entities/yeti/yeti-paw.png")
             );
             pawRenderParts.push(paw);
-            renderInfo.attachRenderPart(paw);
+            renderObject.attachRenderPart(paw);
          }
       } else if (hitbox.flags.includes(HitboxFlag.YETI_HEAD)) {
          const headRenderPart = new TexturedRenderPart(
             hitbox,
             1,
             0,
+            0, 0,
             getTextureArrayIndex("entities/yeti/yeti-head.png")
          );
-         headRenderPart.addTag("tamingComponent:head");
-         renderInfo.attachRenderPart(headRenderPart);
+         addRenderPartTag(headRenderPart, "tamingComponent:head");
+         renderObject.attachRenderPart(headRenderPart);
       }
    }
 
@@ -184,8 +188,8 @@ const updatePaws = (yetiComponent: YetiComponent): void => {
       const paw = yetiComponent.pawRenderParts[i];
 
       const angle = lerp(YETI_PAW_END_ANGLE, YETI_PAW_START_ANGLE, attackProgress) * (i === 0 ? 1 : -1);
-      paw.offset.x = YETI_SIZE/2 * Math.sin(angle);
-      paw.offset.y = YETI_SIZE/2 * Math.cos(angle);
+      paw.offsetX = YETI_SIZE/2 * Math.sin(angle);
+      paw.offsetY = YETI_SIZE/2 * Math.cos(angle);
    }
 }
 

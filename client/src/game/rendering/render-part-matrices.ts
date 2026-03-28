@@ -1,9 +1,9 @@
-import { EntityRenderInfo, updateEntityRenderInfoRenderData } from "../EntityRenderInfo";
+import { EntityRenderObject, recalculateEntityRenderObjectData } from "../EntityRenderObject";
 import { createIdentityMatrix, createTranslationMatrix, Matrix3x2, matrixMultiplyInPlace } from "./matrices";
 import { ServerComponentType, Entity, assert, getAngleDiff, lerp, Point, randAngle, slerp, Settings } from "webgl-test-shared";
 import { RenderPart, renderParentIsHitbox } from "../render-parts/render-parts";
 import { renderLayerIsChunkRendered, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
-import { entityExists, getEntityRenderInfo } from "../world";
+import { entityExists, getEntityRenderObject } from "../world";
 import { gl } from "../webgl";
 import { getHitboxVelocity, Hitbox } from "../hitboxes";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
@@ -11,11 +11,12 @@ import { playerInstance } from "../player";
 import { EntitySnapshot } from "../networking/packet-snapshots";
 import { currentSnapshot, nextSnapshot } from "../game";
 import { getEntityServerComponentTypes, getServerComponentData } from "../entity-component-types";
+import { getRenderPartShakeAmount } from "../render-parts/render-part-shake-amounts";
 
 // @Cleanup: file name
 
 // @HACK i've only kept this dirty array around for hacky reasons. when i make the rework where the client works off sent render parts this should go away.
-let dirtyEntityRenderInfos = new Set<EntityRenderInfo>();
+const dirtyEntityRenderObjects = new Set<EntityRenderObject>();
 
 /* ------------------------ */
 /* Matrix Utility Functions */
@@ -51,7 +52,6 @@ const rotateMatrix = (matrix: Matrix3x2, rotation: number): void => {
    matrix[5] = b20 * negSin + b21 * cos;
 }
 
-// @Cleanup: This should probably be a function stored on the render part
 export function getRenderPartRenderPosition(renderPart: RenderPart): Point {
    const matrix = renderPart.modelMatrix;
    
@@ -105,13 +105,13 @@ const overrideWithRotationMatrix = (matrix: Matrix3x2, rotation: number): void =
    matrix[5] = 0;
 }
 
-export function registerDirtyRenderInfo(renderInfo: EntityRenderInfo): void {
-   renderInfo.renderPartsAreDirty = true;
-   dirtyEntityRenderInfos.add(renderInfo);
+export function registerDirtyRenderObject(renderObject: EntityRenderObject): void {
+   renderObject.renderPartsAreDirty = true;
+   dirtyEntityRenderObjects.add(renderObject);
 }
 
-export function undirtyRenderInfo(renderInfo: EntityRenderInfo): void {
-   dirtyEntityRenderInfos.delete(renderInfo);
+export function undirtyRenderObject(renderObject: EntityRenderObject): void {
+   dirtyEntityRenderObjects.delete(renderObject);
 }
 
 const calculateAndOverrideRenderThingMatrix = (thing: RenderPart): void => {
@@ -122,17 +122,20 @@ const calculateAndOverrideRenderThingMatrix = (thing: RenderPart): void => {
    
    // Scale
    const scale = thing.scale;
-   scaleMatrix(matrix, scale * thing.flipXMultiplier, scale);
+   if (thing.scale !== 1) {
+      scaleMatrix(matrix, scale * thing.flipXMultiplier, scale);
+   }
    
    // @Speed: Can probably get rid of this flip multiplication by doing the translation before scaling
-   let tx = thing.offset.x * thing.flipXMultiplier;
-   let ty = thing.offset.y;
+   let tx = thing.offsetX * thing.flipXMultiplier;
+   let ty = thing.offsetY;
 
    // Shake
-   if (thing.shakeAmount > 0) {
+   const shakeAmount = getRenderPartShakeAmount(thing);
+   if (shakeAmount > 0) {
       const direction = randAngle();
-      tx += thing.shakeAmount * Math.sin(direction);
-      ty += thing.shakeAmount * Math.cos(direction);
+      tx += shakeAmount * Math.sin(direction);
+      ty += shakeAmount * Math.cos(direction);
    }
    
    // Translation
@@ -154,11 +157,11 @@ const getHitboxDataFromEntityData = (hitbox: Hitbox, entityData: EntitySnapshot)
 // @SPEED @GARBAGE
 const getHitboxSnapshotDatas = (hitbox: Hitbox): [Hitbox, Hitbox] => {
    const currentEntityData = currentSnapshot.entities.get(hitbox.entity);
-   assert(typeof currentEntityData !== "undefined");
+   assert(currentEntityData !== undefined);
    const currentHitboxData = getHitboxDataFromEntityData(hitbox, currentEntityData);
 
    const nextEntityData = nextSnapshot.entities.get(hitbox.entity);
-   const nextHitboxData = typeof nextEntityData !== "undefined" ? getHitboxDataFromEntityData(hitbox, nextEntityData) : currentHitboxData;
+   const nextHitboxData = nextEntityData !== undefined ? getHitboxDataFromEntityData(hitbox, nextEntityData) : currentHitboxData;
 
    return [currentHitboxData, nextHitboxData];
 }
@@ -221,8 +224,8 @@ export function calculateHitboxRenderPosition(hitbox: Hitbox, tickInterp: number
    return getMatrixPosition(matrix);
 }
 
-export function translateEntityRenderParts(renderInfo: EntityRenderInfo, tx: number, ty: number): void {
-   for (const thing of renderInfo.renderPartsByZIndex) {
+export function translateEntityRenderParts(renderObject: EntityRenderObject, tx: number, ty: number): void {
+   for (const thing of renderObject.renderPartsByZIndex) {
       const matrix = createTranslationMatrix(tx, ty);
       matrixMultiplyInPlace(thing.modelMatrix, matrix);
       overrideMatrix(matrix, thing.modelMatrix);
@@ -246,6 +249,7 @@ const cleanRenderPartModelMatrix = (renderPart: RenderPart, tickInterp: number):
 
    // @Speed: If the thing doesn't inherit its' parents rotation, undo the rotation before the matrix is applied.
    // But would be faster to branch the whole logic based on the inheritParentRotation flag, instead of cancelling out the rotation step
+   // @CLEANUP: is extremely weird for this to be done here.
    if (!renderPart.inheritParentRotation) {
       rotateMatrix(renderPart.modelMatrix, -parentRotation);
    }
@@ -257,25 +261,25 @@ const cleanRenderPartModelMatrix = (renderPart: RenderPart, tickInterp: number):
    }
 }
 
-export function cleanEntityRenderParts(renderInfo: EntityRenderInfo, tickInterp: number): void {
+export function cleanEntityRenderParts(renderObject: EntityRenderObject, tickInterp: number): void {
    // @copynpaste?
-   for (const renderPart of renderInfo.rootRenderParts) {
+   for (const renderPart of renderObject.rootRenderParts) {
       cleanRenderPartModelMatrix(renderPart, tickInterp);
    }
 }
 
-export function cleanEntityRenderInfo(renderInfo: EntityRenderInfo, tickInterp: number): void {
-   for (const renderPart of renderInfo.rootRenderParts) {
+export function cleanEntityRenderObject(renderObject: EntityRenderObject, tickInterp: number): void {
+   for (const renderPart of renderObject.rootRenderParts) {
       cleanRenderPartModelMatrix(renderPart, tickInterp);
    }
 
-   if (renderLayerIsChunkRendered(renderInfo.renderLayer)) {
-      updateChunkRenderedEntity(renderInfo, renderInfo.renderLayer);
+   if (renderLayerIsChunkRendered(renderObject.renderLayer)) {
+      updateChunkRenderedEntity(renderObject, renderObject.renderLayer);
    } else {
-      updateEntityRenderInfoRenderData(renderInfo);
+      recalculateEntityRenderObjectData(renderObject);
    }
 
-   renderInfo.renderPartsAreDirty = false;
+   renderObject.renderPartsAreDirty = false;
 }
 
 export function entityUsesClientInterp(entity: Entity): boolean {
@@ -299,23 +303,23 @@ export function updateRenderPartMatrices(clientTickInterp: number, serverTickInt
    // Do this before so that binding buffers during the loop doesn't mess up any previously bound vertex array.
    gl.bindVertexArray(null);
 
-   // @Speed: Can't this overlap with dirtyEntityRenderInfos?
+   // @Speed: Can't this overlap with dirtyEntityRenderObjects?
    for (const entity of nextSnapshot.interpolatingEntities) {
       // @Hack? I send entity data even if the entity is removed that tick, so while we have to interpolate to that deleted data, also if currentSnapshot = nextSnapshot then it sometimes tries to interpolate a deleted entity.
       if (entityExists(entity)) {
-         const renderInfo = getEntityRenderInfo(entity);
-         const tickInterp = getEntityTickInterp(renderInfo.entity, clientTickInterp, serverTickInterp);
-         cleanEntityRenderInfo(renderInfo, tickInterp);
+         const renderObject = getEntityRenderObject(entity);
+         const tickInterp = getEntityTickInterp(renderObject.entity, clientTickInterp, serverTickInterp);
+         cleanEntityRenderObject(renderObject, tickInterp);
       }
    }
 
    // @HACK
-   // @CRASH potential crash, cuz cleanEntityRenderInfo is now intertwined with the interpolating entities and if an entity is dirtied which doesn't appear in that array then it will probs crash
-   for (const renderInfo of dirtyEntityRenderInfos) {
-      const tickInterp = getEntityTickInterp(renderInfo.entity, clientTickInterp, serverTickInterp);
-      cleanEntityRenderInfo(renderInfo, tickInterp);
+   // @CRASH potential crash, cuz cleanEntityRenderObject is now intertwined with the interpolating entities and if an entity is dirtied which doesn't appear in that array then it will probs crash
+   for (const renderObject of dirtyEntityRenderObjects) {
+      const tickInterp = getEntityTickInterp(renderObject.entity, clientTickInterp, serverTickInterp);
+      cleanEntityRenderObject(renderObject, tickInterp);
    }
 
    // Reset dirty entities
-   dirtyEntityRenderInfos.clear();
+   dirtyEntityRenderObjects.clear();
 }

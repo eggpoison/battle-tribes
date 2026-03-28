@@ -14,7 +14,7 @@
    import TierSeparator from "./TierSeparator.svelte";
    import NametagUnused from "../../../images/menus/taming-almanac/nametag-unused.png";
    import NametagUsed from "../../../images/menus/taming-almanac/nametag-used.png";
-   import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state";
+   import { Menu, menuSelectorState } from "../../menus";
    import { SKILL_TRANSFORM_SCALE_FACTOR, TAMING_TIER_ICONS, tamingMenuState } from "../../../ui-state/taming-menu-state";
    import TamingSkillTooltip from "./TamingSkillTooltip.svelte";
    import { tamingSkillTooltipState } from "../../../ui-state/taming-skill-tooltip-state";
@@ -35,7 +35,7 @@
    const tamingSpec = $derived(getEntityTamingSpec(entity));
    const nextTamingTierFoodCost: number | undefined = $derived(tamingSpec.tierFoodRequirements[(tamingMenuState.tamingTier + 1) as TamingTier]);
 
-   const foodProgress = $derived(typeof nextTamingTierFoodCost !== "undefined" ? Math.min(tamingMenuState.foodEatenInTier / nextTamingTierFoodCost, 1) : 1);
+   const foodProgress = $derived(nextTamingTierFoodCost !== undefined ? Math.min(tamingMenuState.foodEatenInTier / nextTamingTierFoodCost, 1) : 1);
 
    // @Hack? so that the tooltip doesn't retain its previous state when its closed, when its next opened.
    onDestroy(() => {
@@ -47,7 +47,7 @@
          sendForceCompleteTamingTierPacket(entity);
          // @Copynpaste
          playHeadSound("taming-tier-complete.mp3", 1, 1);
-      } else if (typeof nextTamingTierFoodCost !== "undefined" && tamingMenuState.foodEatenInTier >= nextTamingTierFoodCost) {
+      } else if (nextTamingTierFoodCost !== undefined && tamingMenuState.foodEatenInTier >= nextTamingTierFoodCost) {
          sendCompleteTamingTierPacket(entity);
          // @Copynpaste
          playHeadSound("taming-tier-complete.mp3", 1, 1);
@@ -120,7 +120,7 @@
             <div class="berry-progress-bar-bg"></div>
             <div class={"berry-progress-bar-fill " + getProgressBarClassName()} style:--width-percentage="{foodProgress * 100}%"></div>
             <div class="progress-counter">
-               {#if typeof nextTamingTierFoodCost !== "undefined"}
+               {#if nextTamingTierFoodCost !== undefined}
                   <span>{tamingMenuState.foodEatenInTier}/{nextTamingTierFoodCost} {CLIENT_ITEM_INFO_RECORD[tamingSpec.foodItemType].namePlural}</span>
                   <img src={getItemTypeImage(tamingSpec.foodItemType)} alt="" />
                {:else}
@@ -130,7 +130,7 @@
                {/if}
             </div>
          </div>
-         {#if typeof nextTamingTierFoodCost !== "undefined"}
+         {#if nextTamingTierFoodCost !== undefined}
             <button class:clickable={tamingMenuState.foodEatenInTier >= nextTamingTierFoodCost} onmousedown={onCompleteButtonClick}>Complete</button>
          {/if}
       </div>

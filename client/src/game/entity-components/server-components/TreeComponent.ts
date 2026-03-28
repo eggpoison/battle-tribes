@@ -7,7 +7,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
@@ -45,18 +45,19 @@ function decodeData(reader: PacketReader): TreeComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
    const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
    const treeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tree);
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex(treeTextures[treeComponentData.treeSize])
       )
    );

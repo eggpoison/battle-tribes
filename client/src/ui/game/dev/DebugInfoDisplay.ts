@@ -11,15 +11,15 @@ import { debugInfoDisplay } from "./debug-info-display-funcs";
 import { sendToggleSimulationPacket, sendDevSetViewedSpawnDistributionPacket, sendSpectateEntityPacket } from "../../../game/networking/packet-sending/packet-sending";
 import { getNetworkBufferedBytes } from "../../../game/networking/networking";
 
-let timeElem: HTMLDivElement | null = null;
-let ticksElem: HTMLDivElement | null = null;
-let serverTPSElem: HTMLDivElement | null = null;
-let bufferSizeElem: HTMLDivElement | null = null;
-let networkBufferedBytesElem: HTMLDivElement | null = null;
-let numActiveSoundsElem: HTMLDivElement | null = null;
-let numEntitiesElem: HTMLDivElement | null = null;
-let numParticlesElem: HTMLDivElement | null = null;
-let numLightsElem: HTMLDivElement | null = null;
+let timeNode: Text | null = null;
+let ticksNode: Text | null = null;
+let serverTPSNode: Text | null = null;
+let bufferSizeNode: Text | null = null;
+let networkBufferedBytesNode: Text | null = null;
+let numActiveSoundsNode: Text | null = null;
+let numEntitiesNode: Text | null = null;
+let numParticlesNode: Text | null = null;
+let numLightsNode: Text | null = null;
 
 let time = "0";
 let ticks = "0";
@@ -31,35 +31,38 @@ let numEntities = "0";
 let numParticles = "0";
 let numLights = "0";
 
+// @Incomplete
+let maxGreenSafety = "100";
+
 debugInfoDisplay.updateCurrentSnapshot = (snapshot: PacketSnapshot): void => {
-   time = snapshot.time.toFixed(2);
-   if (timeElem) timeElem.textContent = time;
+   time = roundNum(snapshot.time, 2).toString();
+   if (timeNode) timeNode.data = time;
    ticks = roundNum(snapshot.tick, 2).toString();
-   if (ticksElem) ticksElem.textContent = serverTPS;
+   if (ticksNode) ticksNode.data = ticks;
 }
 
 debugInfoDisplay.updateServerTPS = (tps: number): void => {
-   serverTPS = tps.toString();
-   if (serverTPSElem) serverTPSElem.textContent = serverTPS;
+   serverTPS = roundNum(tps, 2).toString();
+   if (serverTPSNode) serverTPSNode.data = serverTPS;
 }
 
 debugInfoDisplay.updateSnapshotBufferSize = (snapshotBufferSize: number): void => {
    bufferSize = snapshotBufferSize.toString();
-   if (bufferSizeElem) bufferSizeElem.textContent = bufferSize;
+   if (bufferSizeNode) bufferSizeNode.data = bufferSize;
 }
 
 debugInfoDisplay.refreshTickDebugData = (): void => {
    networkBufferedBytes = getNetworkBufferedBytes().toString();
-   if (networkBufferedBytesElem) networkBufferedBytesElem.textContent = networkBufferedBytes;
+   if (networkBufferedBytesNode) networkBufferedBytesNode.data = networkBufferedBytes;
    
    numActiveSounds = getNumSounds().toString();
-   if (numActiveSoundsElem) numActiveSoundsElem.textContent = numActiveSounds;
+   if (numActiveSoundsNode) numActiveSoundsNode.data = numActiveSounds;
    numEntities = TransformComponentArray.entities.length.toString();
-   if (numEntitiesElem) numEntitiesElem.textContent = numEntities;
+   if (numEntitiesNode) numEntitiesNode.data = numEntities;
    numParticles = (lowMonocolourParticles.length + lowTexturedParticles.length + highMonocolourParticles.length + highTexturedParticles.length).toString();
-   if (numParticlesElem) numParticlesElem.textContent = numParticles;
+   if (numParticlesNode) numParticlesNode.data = numParticles;
    numLights = getCurrentLayer().lights.length.toString();
-   if (numLightsElem) numLightsElem.textContent = numLights;
+   if (numLightsNode) numLightsNode.data = numLights;
 }
 
 function toggleAIBuilding(): void {
@@ -248,26 +251,26 @@ export function openDebugInfoDisplay(parent: HTMLElement): void {
          <div>
             <label>
                <input type="range" name="zoom-input" bind:value={debugDisplayState.maxGreenSafety} min={25} max={250} step={5} />
-               <br />Max green safety ({debugDisplayState.maxGreenSafety})
+               <br />Max green safety (${maxGreenSafety})
             </label>
          </div>
          <p>potato9</p>
       </div>
    `;
 
-   timeElem = debugInfoElem.querySelector(".time");
-   ticksElem = debugInfoElem.querySelector(".ticks");
-   serverTPSElem = debugInfoElem.querySelector(".tps");
-   bufferSizeElem = debugInfoElem.querySelector(".buffer-size");
-   networkBufferedBytesElem = debugInfoElem.querySelector(".network-buffered-bytes");
-   numActiveSoundsElem = debugInfoElem.querySelector(".active-sounds");
-   numEntitiesElem = debugInfoElem.querySelector(".num-entities");
-   numParticlesElem = debugInfoElem.querySelector(".num-particles");
-   numLightsElem = debugInfoElem.querySelector(".num-lights");
+   timeNode = debugInfoElem.querySelector(".time")!.firstChild as Text;
+   ticksNode = debugInfoElem.querySelector(".ticks")!.firstChild as Text;
+   serverTPSNode = debugInfoElem.querySelector(".tps")!.firstChild as Text;
+   bufferSizeNode = debugInfoElem.querySelector(".buffer-size")!.firstChild as Text;
+   networkBufferedBytesNode = debugInfoElem.querySelector(".network-buffered-bytes")!.firstChild as Text;
+   numActiveSoundsNode = debugInfoElem.querySelector(".active-sounds")!.firstChild as Text;
+   numEntitiesNode = debugInfoElem.querySelector(".num-entities")!.firstChild as Text;
+   numParticlesNode = debugInfoElem.querySelector(".num-particles")!.firstChild as Text;
+   numLightsNode = debugInfoElem.querySelector(".num-lights")!.firstChild as Text;
 
-   (debugInfoElem.querySelector(".toggle-simulation-btn") as HTMLButtonElement).addEventListener("click", toggleSimulation);
-   (debugInfoElem.querySelector(".spectate-btn") as HTMLButtonElement).addEventListener("click", enterSpectatingState);
-   (debugInfoElem.querySelector(".clear-spectate-btn") as HTMLButtonElement).addEventListener("click", () => sendSpectateEntityPacket(0));
+   debugInfoElem.querySelector(".toggle-simulation-btn")!.addEventListener("click", toggleSimulation);
+   debugInfoElem.querySelector(".spectate-btn")!.addEventListener("click", enterSpectatingState);
+   debugInfoElem.querySelector(".clear-spectate-btn")!.addEventListener("click", () => { sendSpectateEntityPacket(0); });
 
    parent.appendChild(debugInfoElem);
 }

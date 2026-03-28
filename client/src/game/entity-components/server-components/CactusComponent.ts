@@ -6,7 +6,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxByLocalID } from "../../hitboxes";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
@@ -73,7 +73,7 @@ function decodeData(reader: PacketReader): CactusComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
       const hitbox = transformComponentData.hitboxes[i];
@@ -82,9 +82,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
          hitbox,
          i === 0 ? 2 : Math.random(),
          0,
+         0, 0,
          getTextureArrayIndex(i === 0 ? "entities/cactus/cactus.png" : "entities/cactus/cactus-limb.png")
       );
-      renderInfo.attachRenderPart(baseRenderPart);
+      renderObject.attachRenderPart(baseRenderPart);
    }
 
    // Flowers
@@ -98,11 +99,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
          hitbox,
          3 + Math.random(),
          flower.rotation,
+         flower.offsetX, flower.offsetY,
          getTextureArrayIndex(getFlowerTextureSource(flower.flowerType, flower.size))
       );
-      renderPart.offset.x = flower.offsetX;
-      renderPart.offset.y = flower.offsetY;
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
    }
 
    return {};

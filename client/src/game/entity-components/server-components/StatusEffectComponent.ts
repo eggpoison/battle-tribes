@@ -6,8 +6,8 @@ import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolou
 import { Light, removeLight } from "../../lights";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
-import { ComponentTint, createComponentTint } from "../../EntityRenderInfo";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
+import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
 import { playerInstance } from "../../player";
 import { getHitboxVelocity } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../game";
@@ -161,8 +161,8 @@ function onTick(entity: Entity): void {
          // );
 
          // // @Hack
-         // const renderInfo = getEntityRenderInfo(entity);
-         // attachLightToRenderPart(statusEffectComponent.burningLight, renderInfo.renderPartsByZIndex[0], entity);
+         // const renderObject = getEntityRenderObject(entity);
+         // attachLightToRenderPart(statusEffectComponent.burningLight, renderObject.renderPartsByZIndex[0], entity);
       }
       
       // Ember particles
@@ -305,8 +305,8 @@ function updateFromData(data: StatusEffectComponentData, entity: Entity): void {
 
    const newHasFreezing = hasStatusEffect(statusEffectComponent, StatusEffect.freezing);
    if (newHasFreezing !== previousHasFreezing) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.recalculateTint();
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.recalculateTint();
    }
 }
 

@@ -1,5 +1,5 @@
 import { ServerComponentType, HitboxFlag } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
@@ -19,7 +19,7 @@ function decodeData(): TukmokTrunkComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
@@ -27,11 +27,12 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 
       const textureSource = hitbox.flags.includes(HitboxFlag.TUKMOK_TRUNK_HEAD) ? "entities/tukmok-trunk/head-segment.png" : "entities/tukmok-trunk/middle-segment.png";
       
-      renderInfo.attachRenderPart(
+      renderObject.attachRenderPart(
          new TexturedRenderPart(
             hitbox,
             i * 0.02,
             0,
+            0, 0,
             getTextureArrayIndex(textureSource)
          )
       );

@@ -2,10 +2,10 @@ import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType,
 import Chunk from "./Chunk";
 import { Light } from "./lights";
 import Particle from "./Particle";
-import { RenderLayer } from "./render-layers";
+import { NUM_RENDER_LAYERS, RenderLayer } from "./render-layers";
 import { RENDER_CHUNK_SIZE, RenderChunkRiverInfo } from "./rendering/render-chunks";
 import { addRenderable, removeRenderable, RenderableType } from "./rendering/render-loop";
-import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity, createRenderLayerChunkDataRecord, createModifiedChunkIndicesArray, createVisibleEntityChunkDatas } from "./rendering/webgl/chunked-entity-rendering";
+import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity, RenderLayerModifyInfo, EntityChunkData, ChunkedRenderLayer, CHUNKED_RENDER_LAYERS, RenderLayerChunkDataRecord } from "./rendering/webgl/chunked-entity-rendering";
 import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, lowMonocolourParticles, lowTexturedParticles, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
 import { recalculateWallSubtileRenderData, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
 import { recalculateTileShadows, TileShadowType } from "./rendering/webgl/tile-shadow-rendering";
@@ -35,10 +35,10 @@ export default class Layer {
    public readonly lights = new Array<Light>();
 
    // For chunked entity rendering
-   public readonly renderLayerChunkDataRecord = createRenderLayerChunkDataRecord();
-   public readonly visibleEntityChunkDatas = createVisibleEntityChunkDatas();
+   public readonly renderLayerChunkDataRecord: RenderLayerChunkDataRecord;
+   public readonly visibleEntityChunkDatas: Record<ChunkedRenderLayer, Array<EntityChunkData>>;
    /** Each render layer contains a set of which chunks have been modified */
-   public modifiedChunkIndicesArray = createModifiedChunkIndicesArray();
+   public readonly modifiedChunkIndicesArray: Array<RenderLayerModifyInfo>;
 
    // @Speed: Polymorphism
    public riverInfoArray = new Array<RenderChunkRiverInfo | null>();
@@ -84,7 +84,7 @@ export default class Layer {
             const subtileType = wallSubtileTypes[subtileIndex] as SubtileType;
             if (subtileType !== SubtileType.none) {
                const textureSources = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
-               if (typeof textureSources === "undefined") {
+               if (textureSources === undefined) {
                   throw new Error();
                }
    
@@ -94,6 +94,24 @@ export default class Layer {
                this.wallSubtileVariants[tileIndex] = Math.floor(Math.random() * textureSources.length);
             }
          }
+      }
+
+      this.renderLayerChunkDataRecord = {} as RenderLayerChunkDataRecord;
+      for (const renderLayer of CHUNKED_RENDER_LAYERS) {
+         this.renderLayerChunkDataRecord[renderLayer] = {};
+      }
+
+      this.modifiedChunkIndicesArray = [];
+      for (let i = 0; i < NUM_RENDER_LAYERS; i++) {
+         this.modifiedChunkIndicesArray.push({
+            modifiedChunkIndices: new Set(),
+            modifyInfoRecord: {}
+         });
+      }
+
+      this.visibleEntityChunkDatas = {} as Record<ChunkedRenderLayer, Array<EntityChunkData>>;
+      for (const renderLayer of CHUNKED_RENDER_LAYERS) {
+         this.visibleEntityChunkDatas[renderLayer] = [];
       }
    }
 
@@ -261,12 +279,12 @@ export default class Layer {
 
    public getRiverFlowDirection(tileX: number, tileY: number): number {
       const rowDirections = this.riverFlowDirections[tileX];
-      if (typeof rowDirections === "undefined") {
+      if (rowDirections === undefined) {
          throw new Error("Tried to get the river flow direction of a non-water tile.");
       }
 
       const direction = rowDirections[tileY];
-      if (typeof direction === "undefined") {
+      if (direction === undefined) {
          throw new Error("Tried to get the river flow direction of a non-water tile.");
       }
       

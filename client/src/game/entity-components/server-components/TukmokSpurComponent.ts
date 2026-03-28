@@ -1,5 +1,5 @@
 import { randFloat, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
@@ -22,7 +22,7 @@ function decodeData(): TukmokSpurComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -39,11 +39,12 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       textureSource = "entities/tukmok-spur/spur-shoulder-right-back.png";
    }
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex(textureSource)
       )
    );

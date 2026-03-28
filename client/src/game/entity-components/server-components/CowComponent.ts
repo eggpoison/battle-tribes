@@ -9,10 +9,11 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { RenderPart } from "../../render-parts/render-parts";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../game";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface CowComponentData {
    readonly species: CowSpecies;
@@ -56,7 +57,7 @@ function decodeData(reader: PacketReader): CowComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    
    const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
@@ -70,19 +71,21 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
             hitbox,
             0,
             0,
+            0, 0,
             getTextureArrayIndex(`entities/cow/cow-body-${cowNum}.png`)
          );
-         renderInfo.attachRenderPart(bodyRenderPart);
+         renderObject.attachRenderPart(bodyRenderPart);
       } else if (hitbox.flags.includes(HitboxFlag.COW_HEAD)) {
          // Head
          headRenderPart = new TexturedRenderPart(
             hitbox,
             1,
             0,
+            0, 0,
             getTextureArrayIndex(`entities/cow/cow-head-${cowNum}.png`)
          );
-         headRenderPart.addTag("tamingComponent:head");
-         renderInfo.attachRenderPart(headRenderPart);
+         addRenderPartTag(headRenderPart, "tamingComponent:head");
+         renderObject.attachRenderPart(headRenderPart);
       }
    }
 

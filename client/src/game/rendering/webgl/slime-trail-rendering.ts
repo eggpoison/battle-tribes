@@ -12,7 +12,7 @@ const enum Vars {
 let program: WebGLProgram;
 
 const convertToGamePixel = (x: number): number => {
-   return x >> 2;
+   return Math.floor(x / 4);
 }
 
 const getGamePixelIndex = (gamePixelX: number, gamePixelY: number): number => {

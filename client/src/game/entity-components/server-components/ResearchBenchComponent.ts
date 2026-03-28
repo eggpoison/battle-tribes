@@ -1,5 +1,5 @@
 import { PacketReader, customTickIntervalHasPassed, ServerComponentType, Entity } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { createPaperParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
@@ -37,15 +37,16 @@ function decodeData(reader: PacketReader): ResearchBenchComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("entities/research-bench/research-bench.png")
       )
    );

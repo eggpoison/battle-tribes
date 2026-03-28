@@ -2,11 +2,11 @@ import { PacketReader, Entity, ServerComponentType, TurretAmmoType } from "webgl
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { currentSnapshot } from "../../game";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
@@ -32,6 +32,7 @@ const createAmmoWarningRenderPart = (parentHitbox: Hitbox): VisualRenderPart => 
       parentHitbox,
       999,
       0,
+      0, 0,
       getTextureArrayIndex("entities/ballista/ammo-warning.png")
    );
    // @Incomplete? What is this supposed to be doing and does it achieve it?
@@ -63,7 +64,7 @@ function decodeData(reader: PacketReader): AmmoBoxComponentData {
    };
 }
 
-function createIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function createIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
    const ammoBoxComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.ammoBox);
 
@@ -73,7 +74,7 @@ function createIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentDat
       const hitbox = transformComponentData.hitboxes[0];
       
       ammoWarningRenderPart = createAmmoWarningRenderPart(hitbox);
-      renderInfo.attachRenderPart(ammoWarningRenderPart);
+      renderObject.attachRenderPart(ammoWarningRenderPart);
    } else {
       ammoWarningRenderPart = null;
    }
@@ -110,6 +111,7 @@ const updateAmmoType = (ammoBoxComponent: AmmoBoxComponent, entity: Entity, ammo
             hitbox,
             999,
             0,
+            0, 0,
             getTextureArrayIndex("entities/ballista/ammo-warning.png")
          );
          // @Temporary @Incomplete
@@ -117,8 +119,8 @@ const updateAmmoType = (ammoBoxComponent: AmmoBoxComponent, entity: Entity, ammo
          // ammoBoxComponent.ammoWarningRenderPart.offset.y = rotateYAroundOrigin(BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, transformComponent.rotation);
          ammoBoxComponent.ammoWarningRenderPart.inheritParentRotation = false;
 
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.attachRenderPart(ammoBoxComponent.ammoWarningRenderPart);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.attachRenderPart(ammoBoxComponent.ammoWarningRenderPart);
       }
 
       ammoBoxComponent.ammoWarningRenderPart.opacity = (Math.sin(currentSnapshot.tick / 15) * 0.5 + 0.5) * 0.4 + 0.4;
@@ -127,8 +129,8 @@ const updateAmmoType = (ammoBoxComponent: AmmoBoxComponent, entity: Entity, ammo
    }
 
    if (ammoBoxComponent.ammoWarningRenderPart !== null) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.removeRenderPart(ammoBoxComponent.ammoWarningRenderPart);
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.removeRenderPart(ammoBoxComponent.ammoWarningRenderPart);
       ammoBoxComponent.ammoWarningRenderPart = null;
    }
    

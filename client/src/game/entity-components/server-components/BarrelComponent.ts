@@ -6,7 +6,7 @@ import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
@@ -32,7 +32,7 @@ const getTextureSource = (isOpened: boolean): string => {
    return isOpened ? "entities/barrel/barrel-open.png" : "entities/barrel/barrel.png";
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -43,9 +43,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(getTextureSource(barrelComponentData.isOpened))
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {
       renderPart: renderPart

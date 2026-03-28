@@ -1,11 +1,11 @@
-import { assert, Entity, Inventory, InventoryName, Item } from "../../../../../shared/src";
+import { assert, Entity, Inventory, InventoryName, Item, ItemType } from "../../../../../shared/src";
 import { getItemTypeImage } from "../../../game/client-item-info";
 import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
 import { keyIsPressed } from "../../../game/keyboard-input";
 import { sendItemTransferPacket, sendItemPickupPacket, sendItemReleasePacket } from "../../../game/networking/packet-sending/packet-sending";
 import { playerInstance } from "../../../game/player";
 import { entitySelectionState } from "../../../ui-state/entity-selection-state";
-import { menuSelectorState, Menu } from "../../../ui-state/menu-selector-state";
+import { hasOpenMenu } from "../../menus";
 
 // interface Props extends HTMLAttributes<HTMLDivElement> {
 //    item: Item | null;
@@ -52,57 +52,57 @@ import { menuSelectorState, Menu } from "../../../ui-state/menu-selector-state";
 // });
 
 const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: number): void => {
-   let openMenuInventory: Inventory | null;
-   let openMenuEntity: Entity | null;
-
-   if (menuSelectorState.menuStack.length === 1) {
-      const menuInfo = menuSelectorState.menuStack[0];
-      // @HACK
-      switch (menuInfo.menu) {
-         case Menu.buildMenu: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.animalStaffOptions: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.craftingMenu: openMenuInventory = getInventory(InventoryComponentArray.getComponent(playerInstance!), InventoryName.craftingOutputSlot); openMenuEntity = playerInstance!; break;
-         case Menu.tamingMenu: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.tamingRenamePrompt: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.signInscribeMenu: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.barrelInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
-         case Menu.tribesmanInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.hotbar); openMenuEntity = entitySelectionState.selectedEntity!; break;
-         case Menu.campfireInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
-         case Menu.furnaceInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
-         case Menu.ammoBoxInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
-         case Menu.tombstoneEpitaph: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.itemsDevTab: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.summonDevTab: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.titlesDevTab: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.tribesDevTab: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.tribePlanVisualiser: openMenuInventory = null; openMenuEntity = null; break;
-         case Menu.techTree: openMenuInventory = null; openMenuEntity = null; break;
-      }
-   } else {
-      openMenuInventory = null;
-      openMenuEntity = null;
-   }
-
-   let otherOpenMenuInventory: Inventory | null;
-   let otherOpenMenuEntity: Entity | null;
-   if (openMenuEntity === entity) {
-      const playerInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
-      otherOpenMenuInventory = getInventory(playerInventoryComponent, InventoryName.hotbar);
-      otherOpenMenuEntity = playerInstance!;
-   } else {
-      otherOpenMenuInventory = openMenuInventory;
-      otherOpenMenuEntity = openMenuEntity;
-   }
-
    const clickedItem = inventory.itemSlots[itemSlot];
-   if (typeof clickedItem !== "undefined") {
+   if (clickedItem !== undefined) {
       // Attempt to pick up the item if there isn't a held item
       const playerInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
       const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot)!;
       const heldItem = heldItemInventory.itemSlots[1];
-      if (typeof heldItem === "undefined") {
+      if (heldItem === undefined) {
          // If shift is held, insta-send the item between the player's inventory and the opened inventory
          if (keyIsPressed("shift")) {
+            let openMenuInventory: Inventory | null;
+            let openMenuEntity: Entity | null;
+
+            if (menuSelectorState.menuStack.length === 1) {
+               const menuInfo = menuSelectorState.menuStack[0];
+               // @HACK
+               switch (menuInfo.menu) {
+                  case Menu.buildMenu: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.animalStaffOptions: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.craftingMenu: openMenuInventory = getInventory(InventoryComponentArray.getComponent(playerInstance!), InventoryName.craftingOutputSlot); openMenuEntity = playerInstance!; break;
+                  case Menu.tamingMenu: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.tamingRenamePrompt: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.signInscribeMenu: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.barrelInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
+                  case Menu.tribesmanInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.hotbar); openMenuEntity = entitySelectionState.selectedEntity!; break;
+                  case Menu.campfireInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
+                  case Menu.furnaceInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
+                  case Menu.ammoBoxInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
+                  case Menu.tombstoneEpitaph: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.itemsDevTab: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.summonDevTab: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.titlesDevTab: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.tribesDevTab: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.tribePlanVisualiser: openMenuInventory = null; openMenuEntity = null; break;
+                  case Menu.techTree: openMenuInventory = null; openMenuEntity = null; break;
+               }
+            } else {
+               openMenuInventory = null;
+               openMenuEntity = null;
+            }
+
+            let otherOpenMenuInventory: Inventory | null;
+            let otherOpenMenuEntity: Entity | null;
+            if (openMenuEntity === entity) {
+               const playerInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
+               otherOpenMenuInventory = getInventory(playerInventoryComponent, InventoryName.hotbar);
+               otherOpenMenuEntity = playerInstance!;
+            } else {
+               otherOpenMenuInventory = openMenuInventory;
+               otherOpenMenuEntity = openMenuEntity;
+            }
+
             if (otherOpenMenuInventory !== null && otherOpenMenuEntity !== null) {
                if (entity === playerInstance) {
                   // Clicked hte player inventory, so transfer to the open menu
@@ -128,7 +128,7 @@ const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: numbe
       const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
       const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot)!;
       const heldItem = heldItemInventory.itemSlots[1];
-      if (typeof heldItem !== "undefined") {
+      if (heldItem !== undefined) {
          sendItemReleasePacket(entity, inventory.name, itemSlot, heldItem.count);
       }
    }
@@ -136,11 +136,11 @@ const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: numbe
 
 const rightClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: number): void => {
    const clickedItem = inventory.itemSlots[itemSlot];
-   if (typeof clickedItem !== "undefined") {
+   if (clickedItem !== undefined) {
       const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
       const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot)!;
       const heldItem = heldItemInventory.itemSlots[1];
-      if (typeof heldItem === "undefined") {
+      if (heldItem === undefined) {
          const numItemsInSlot = clickedItem.count;
          const pickupCount = Math.ceil(numItemsInSlot / 2);
 
@@ -164,7 +164,7 @@ const rightClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: numb
 }
 
 const inventoryIsFocused = (): boolean => {
-   return menuSelectorState.hasOpenMenu();
+   return hasOpenMenu();
 }
 
 const onMouseDown = (e: MouseEvent, entity: Entity, inventory: Inventory, itemSlot: number): void => {
@@ -181,7 +181,7 @@ const onMouseDown = (e: MouseEvent, entity: Entity, inventory: Inventory, itemSl
 
 export function createItemSlot(): HTMLDivElement {
    const itemSlotElem = document.createElement("div");
-   itemSlotElem.classList.add("item-slot");
+   itemSlotElem.className = "item-slot";
    return itemSlotElem;
 }
 
@@ -189,31 +189,30 @@ export function makeItemSlotInteractable(itemSlotElem: HTMLElement, entity: Enti
    itemSlotElem.addEventListener("mousedown", e => { onMouseDown(e, entity, inventory, itemSlot); });
 }
 
-export function addItemToItemSlot(itemSlotElem: HTMLElement, item: Item): void {
-   const img = getItemTypeImage(item.type);
+export function addItemToItemSlot(itemSlotElem: HTMLElement, itemType: ItemType, itemAmount: number): void {
+   const img = getItemTypeImage(itemType);
 
    const imgElem = document.createElement("img");
    imgElem.src = img;
-   imgElem.draggable = false;
    itemSlotElem.appendChild(imgElem);
 
    const itemCountElem = document.createElement("div");
-   itemCountElem.classList.add("item-count");
-   // I'm thinking it will create less garbage to always create text for items, even if they are only stacked to one.
-   itemCountElem.textContent = item.count.toString();
-   if (item.count === 1) {
-      itemCountElem.classList.add("hidden");
+   itemCountElem.className = "item-count";
+   // I'm thinking it will create less garbage to always create item count text for items, even if they are only stacked to one.
+   itemCountElem.textContent = itemAmount.toString();
+   if (itemAmount === 1) {
+      itemCountElem.hidden = true;
    }
    itemSlotElem.appendChild(itemCountElem);
 }
 
 export function updateItemSlot(itemSlotElem: HTMLElement, item: Item): void {
-   const itemCountElem = itemSlotElem.children[1];
+   const itemCountElem = itemSlotElem.children[1] as HTMLElement;
    if (item.count !== -1) {
-      itemCountElem.classList.remove("hidden");
+      itemCountElem.hidden = false;
       (itemCountElem.firstChild as Text).data = item.count.toString();
    } else {
-      itemCountElem.classList.add("hidden");
+      itemCountElem.hidden = true;
    }
 }
 
@@ -223,23 +222,34 @@ export function removeItemFromItemSlot(itemSlotElem: HTMLElement): void {
    itemSlotElem.children[0].remove();
 }
 
+export function addItemSlotSelection(itemSlotElem: HTMLElement): void {
+   itemSlotElem.classList.add("selected");
+}
+
+export function removeItemSlotSelection(itemSlotElem: HTMLElement): void {
+   itemSlotElem.classList.remove("selected");
+}
+
+export function addItemSlotPlaceholderImage(itemSlotElem: HTMLElement, imgSrc: string): void {
+   const placeholderImg = document.createElement("img");
+   placeholderImg.src = imgSrc;
+   itemSlotElem.appendChild(placeholderImg);
+}
+
 // <div
 //    oncontextmenu={oncontextmenu}
 //    onmouseover={onMouseOver}
 //    onmouseout={onMouseOut}
 //    onmousemove={onMouseMove}
 //    onmousedown={onmousedown}
-//    class="item-slot{typeof rest.class !== "undefined" ? " " + rest.class : ""}"
-//    class:selected={isSelected}
-//    class:empty={typeof item === "undefined"}
-// >
-//    {#if typeof img !== "undefined"}
-//       <img src={img} draggable={false} alt="" />
-//    {/if}
-//    {#if item !== null}
-//       <div class="item-count">{item.count !== 1 ? item.count : ""}</div>
-//    {/if}
-//    {#if (typeof restTime !== "undefined" && restTime.durationTicks > 0)}
+
+
+// @Incomplete
+//    class:empty={item === undefined}
+
+
+// @Incomplete
+//    {#if (restTime !== undefined && restTime.durationTicks > 0)}
 //       <div class="cooldown-bg" style:--cooldown="{restTime.remainingTimeTicks / restTime.durationTicks}"></div>
 //    {/if}
 // </div>

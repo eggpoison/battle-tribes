@@ -10,9 +10,10 @@ import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 
 enum GolemRockSize {
    massive,
@@ -119,7 +120,7 @@ function decodeData(reader: PacketReader): GolemComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    
    const rockRenderParts = new Array<VisualRenderPart>();
@@ -137,9 +138,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
          hitbox,
          getZIndex(size),
          randAngle(),
+         0, 0,
          getTextureArrayIndex(getTextureSource(size))
       );
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
       rockRenderParts.push(renderPart);
 
       if (size === GolemRockSize.large) {
@@ -148,13 +150,12 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
                renderPart,
                6,
                0,
+               20 * (i === 0 ? -1 : 1), 17,
                getTextureArrayIndex("entities/golem/eye.png")
             );
             eyeRenderPart.opacity = 0;
-            eyeRenderPart.offset.x = 20 * (i === 0 ? -1 : 1);
-            eyeRenderPart.offset.y = 17;
             eyeRenderPart.inheritParentRotation = false;
-            renderInfo.attachRenderPart(eyeRenderPart);
+            renderObject.attachRenderPart(eyeRenderPart);
             eyeRenderParts.push(eyeRenderPart);
          }
       }
@@ -255,7 +256,7 @@ function updateFromData(data: GolemComponentData, entity: Entity): void {
 
       // renderPart.offset.x = box.offset.x;
       // renderPart.offset.y = box.offset.y;
-      renderPart.shakeAmount = shakeAmount;
+      setRenderPartShakeAmount(renderPart, shakeAmount);
    }
 
    for (let i = 0; i < 2; i++) {

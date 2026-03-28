@@ -1,5 +1,5 @@
 import { randFloat, ServerComponentType, HitboxFlag } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
@@ -19,7 +19,7 @@ function decodeData(): RiverSteppingStoneComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
@@ -36,12 +36,13 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(textureSource)
    );
    renderPart.tintR = randFloat(-0.03, 0.03);
    renderPart.tintG = randFloat(-0.03, 0.03);
    renderPart.tintB = randFloat(-0.03, 0.03);
-   renderInfo.attachRenderPart(renderPart)
+   renderObject.attachRenderPart(renderPart)
 
    return {
       renderPart: renderPart

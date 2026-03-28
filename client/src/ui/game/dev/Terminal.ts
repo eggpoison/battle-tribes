@@ -9,8 +9,8 @@ const terminalLines = new Array<string>();
 const enteredCommands = new Array<string>();
 let selectedCommandIndex = 0;
 
-let terminalElem: HTMLDivElement | undefined;
-let lineInputElem: HTMLInputElement | undefined;
+let terminalElem: HTMLDivElement | null = null;
+let lineInputElem: HTMLInputElement | null = null;
 let lineInputValue = "";
 
 let isFocused = true;
@@ -18,12 +18,12 @@ let isFocused = true;
 const focusTerminal = (e?: MouseEvent): void => {
    isFocused = true;
 
-   assert(terminalElem);
+   assert(terminalElem !== null);
    terminalElem.className = "focused";
 
    // Focus the line input
-   if (typeof lineInputElem !== "undefined") {
-      if (typeof e !== "undefined") {
+   if (lineInputElem !== null) {
+      if (e !== undefined) {
          // Stop the click from registering so the focus is given to the line input
          e.preventDefault();
       }
@@ -37,7 +37,7 @@ const unfocusTerminal = (): void => {
 };
 
 function updateLineInputWidth(): void {
-   if (typeof lineInputElem !== "undefined") {
+   if (lineInputElem !== null) {
       lineInputElem.style.width = Math.max(lineInputValue.length, 1) + "ch"; // Keep the input at least one character long
    }
 }
@@ -58,7 +58,7 @@ const enterCommand = (): void => {
    if (isValidResult.isValid) {
       // @Hack @Cleanup
       if (command.split(" ")[0] === "clear") {
-         terminalLines.splice(0, terminalLines.length);
+         terminalLines.length = 0;
       } else {
          sendTerminalCommandPacket(command);
       }
@@ -136,6 +136,9 @@ const checkForTerminalUnfocus = (e: MouseEvent): void => {
 }
 
 export function openTerminal(): void {
+   assert(terminalElem === null);
+   assert(lineInputElem === null);
+   
    terminalElem = document.createElement("div");
    terminalElem.id = "terminal";
    terminalElem.addEventListener("mousedown", focusTerminal);
@@ -159,7 +162,7 @@ export function openTerminal(): void {
    </div>
    `;
 
-   const lineInputElem = terminalElem.querySelector(`input[name="line-input"]`) as HTMLInputElement;
+   lineInputElem = terminalElem.querySelector(`input[name="line-input"]`) as HTMLInputElement;
    lineInputElem.addEventListener("change", updateLineInputWidth);
    lineInputElem.addEventListener("keydown", enterKey);
 
@@ -169,7 +172,7 @@ export function openTerminal(): void {
 export function closeTerminal(): void {
    assert(terminalElem);
    terminalElem.remove();
-   terminalElem = undefined;
+   terminalElem = null;
    
    window.removeEventListener("mousedown", checkForTerminalUnfocus);
 }

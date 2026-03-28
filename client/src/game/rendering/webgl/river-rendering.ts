@@ -51,7 +51,7 @@ let baseProgramIsUndergroundUniformLocation: WebGLUniformLocation;
 //    // Group the stepping stones
 //    const groups = new Array<Array<RiverSteppingStoneData>>();
 //    for (const steppingStone of riverSteppingStones) {
-//       if (typeof groups[steppingStone.groupID] === "undefined") {
+//       if (groups[steppingStone.groupID] === undefined) {
 //          groups[steppingStone.groupID] = [];
 //       }
 //       groups[steppingStone.groupID].push(steppingStone);

@@ -1,5 +1,5 @@
 import { randFloat, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
@@ -30,7 +30,7 @@ function decodeData(reader: PacketReader): DesertBushSandyComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -48,12 +48,13 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(textureSource)
    );
    renderPart.tintR = randFloat(-0.02, 0.02);
    renderPart.tintG = randFloat(-0.02, 0.02);
    renderPart.tintB = randFloat(-0.02, 0.02);
-   renderInfo.attachRenderPart(renderPart)
+   renderObject.attachRenderPart(renderPart)
 
    return {
       renderPart: renderPart

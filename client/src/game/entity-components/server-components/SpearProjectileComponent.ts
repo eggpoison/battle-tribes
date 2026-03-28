@@ -1,5 +1,5 @@
 import { Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
@@ -23,15 +23,16 @@ function decodeData(): SpearProjectileComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponent.hitboxes[0];
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          // @HACK
          getTextureArrayIndex("items/misc/ivory-spear.png")
       )

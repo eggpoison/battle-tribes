@@ -10,7 +10,6 @@ import { TransformComponentArray } from "./entity-components/server-components/T
 import { debugDisplayState } from "../ui-state/debug-display-state";
 import { hoverDebugState } from "../ui-state/hover-debug-state";
 import { Tile } from "./Tile";
-import { isSpectating } from "./player";
 
 let cameraSubjectHitbox: Hitbox | null = null;
 
@@ -107,7 +106,7 @@ const updateCursorWorldPos = (): void => {
 
    const layer = getCurrentLayer();
    // @Hack? @Cleanup If the player moves their mouse before the layers are initialised, this function is called with currentLayer as undefined.
-   if (typeof layer !== "undefined") {
+   if (layer !== undefined) {
       const tileX = Math.floor(cursorWorldPos.x / Settings.TILE_SIZE);
       const tileY = Math.floor(cursorWorldPos.y / Settings.TILE_SIZE);
 
@@ -139,14 +138,8 @@ export function updateCursorScreenPos(e: MouseEvent): void {
    updateCursorWorldPos();
 }
 
-export function refreshCameraPosition(clientTickInterp: number, serverTickInterp: number, deltaTimeMS: number): void {
+export function refreshCameraPosition(clientTickInterp: number, serverTickInterp: number): void {
    if (cameraSubjectHitbox === null) {
-      if (isSpectating) {
-         const dt = deltaTimeMS / 1000;
-         cameraPosition.x += cameraVelocity.x * dt;
-         cameraPosition.y += cameraVelocity.y * dt;
-      }
-      
       return;
    }
 

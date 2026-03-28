@@ -1,7 +1,6 @@
 import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp } from "webgl-test-shared";
-import { entitySelectionState } from "../ui-state/entity-selection-state";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
-import { Menu, menuSelectorState } from "../ui-state/menu-selector-state";
+import { closeCurrentMenu, hasOpenNonEmbodiedMenu, Menu, openMenu } from "../ui/menus";
 import { playerActionState } from "../ui-state/player-action-state";
 import { currentSnapshot, gameIsRunning, getElapsedTimeInSeconds } from "./game";
 import { getEntityClientComponentConfigs } from "./entity-components/client-components";
@@ -20,19 +19,19 @@ import { createSlurbTorchComponentData } from "./entity-components/server-compon
 import { createSpikesComponentData } from "./entity-components/server-components/SpikesComponent";
 import { StatusEffectComponentArray, createStatusEffectComponentData } from "./entity-components/server-components/StatusEffectComponent";
 import { createStructureComponentData } from "./entity-components/server-components/StructureComponent";
-import { TransformComponentArray, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray, applyAccelerationFromGround, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
 import { getHumanoidRadius, TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
-import { attemptEntitySelection } from "./entity-selection";
-import { EntityRenderInfo } from "./EntityRenderInfo";
-import { getHitboxVelocity, applyAccelerationFromGround, Hitbox, setHitboxRelativeAngle } from "./hitboxes";
+import { attemptEntitySelection, getHoveredEntity, getSelectedEntity, setSelectedEntity } from "./entity-selection";
+import { EntityRenderObject } from "./EntityRenderObject";
+import { getHitboxVelocity, Hitbox, setHitboxRelativeAngle } from "./hitboxes";
 import { countItemTypesInInventory } from "./inventory-manipulation";
 import { addKeyListener, keyIsPressed } from "./keyboard-input";
 import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket, sendSpectateEntityPacket, sendAscendPacket } from "./networking/packet-sending/packet-sending";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
 import { playerInstance, isSpectating } from "./player";
 import { thingIsVisualRenderPart } from "./render-parts/render-parts";
-import { removeGhostRenderInfo, addGhostRenderInfo } from "./rendering/webgl/entity-ghost-rendering";
+import { removeGhostRenderObject, addGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";
 import { attemptToCompleteNode } from "./research";
 import { playHeadSound, playSoundOnHitbox } from "./sound";
 import { calculateEntityPlaceInfo } from "./structure-placement";
@@ -43,6 +42,7 @@ import { HeldItemComponentArray } from "./entity-components/server-components/He
 import { ServerComponentData } from "./entity-components/components";
 import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
 import { hotbarFuncs } from "../ui-state/hotbar-funcs";
+import { closeCraftingMenu, openCraftingMenu } from "../ui/game/menus/CraftingMenu";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -92,7 +92,7 @@ let attackBufferTime = 0;
 let bufferedInputType = BufferedInputType.attack;
 let bufferedInputInventory = InventoryName.hotbar;
 
-let placeableEntityGhostRenderInfo: EntityRenderInfo | null = null;
+let placeableEntityGhostRenderObject: EntityRenderObject | null = null;
 
 const hotbarCrossbowLoadProgressRecord: Partial<Record<number, number>> = {};
 
@@ -541,7 +541,7 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
    if (playerInstance === null) {
       return false;
    }
-   
+
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance);
 
    const limb = getLimbByInventoryName(inventoryUseComponent, inventoryName);
@@ -584,7 +584,9 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
    // @Speed: Garbage collection
    limb.currentActionEndLimbState = copyLimbState(attackPattern.windedBack);
 
-   sendAttackPacket(hotbarSelectedItemSlot);
+   const transformComponent = TransformComponentArray.getComponent(playerInstance);
+   const playerHitbox = transformComponent.hitboxes[0];
+   sendAttackPacket(hotbarSelectedItemSlot, playerHitbox.box.angle);
 
    return true;
 }
@@ -614,7 +616,7 @@ const getAttackTimeMultiplier = (itemType: ItemType | null): number => {
 //       const glovesInventory = inventoryComponent.getInventory(InventoryName.gloveSlot);
 
 //       const gloves = glovesInventory.itemSlots[1];
-//       if (typeof gloves !== "undefined" && gloves.type === ItemType.gardening_gloves) {
+//       if (gloves !== undefined && gloves.type === ItemType.gardening_gloves) {
 //          return Settings.DEFAULT_ATTACK_COOLDOWN * 1.5;
 //       }
 //    }
@@ -724,7 +726,7 @@ const createHotbarKeyListeners = (): void => {
 const hideInventory = (): void => {
    _inventoryIsOpen = false;
    
-   menuSelectorState.closeCurrentMenu();
+   closeCurrentMenu();
 
    // If the player is holding an item when their inventory is closed, throw the item out
    if (playerInstance !== null) {
@@ -741,10 +743,10 @@ const hideInventory = (): void => {
 /** Creates the key listener to toggle the inventory on and off. */
 const createInventoryToggleListeners = (): void => {
    addKeyListener("e", () => {
-      const didCloseMenu = menuSelectorState.closeCurrentMenu();
+      const didCloseMenu = closeCurrentMenu();
       if (!didCloseMenu) {
          // Open the crafting menu
-         menuSelectorState.openMenu(Menu.craftingMenu);
+         openMenu(Menu.craftingMenu, openCraftingMenu, closeCraftingMenu);
       }
    });
 
@@ -755,7 +757,7 @@ const createInventoryToggleListeners = (): void => {
       }
    });
    addKeyListener("escape", () => {
-      menuSelectorState.closeCurrentMenu();
+      closeCurrentMenu();
    });
 }
 
@@ -769,7 +771,7 @@ export function createPlayerInputListeners(): void {
       const elemPath = e.composedPath() as Array<HTMLElement>;
       for (const elem of elemPath) {
          // @Hack
-         if (typeof elem.style !== "undefined") {
+         if (elem.style !== undefined) {
             const overflowY = getComputedStyle(elem).getPropertyValue("overflow-y");
             if (overflowY === "scroll") {
                return;
@@ -804,7 +806,7 @@ export function createPlayerInputListeners(): void {
 
    addKeyListener("shift", () => {
       // Don't want to dismount the player's mount when they're shift clicking an item in an inventory!
-      if (menuSelectorState.hasOpenNonEmbodiedMenu()) {
+      if (hasOpenNonEmbodiedMenu()) {
          return;
       }
       
@@ -821,7 +823,7 @@ export function createPlayerInputListeners(): void {
 export function onGameMouseDown(e: MouseEvent): void {
    if (e.button === 0) { // Left click
       if (gameUIState.gameInteractState === GameInteractState.spectateEntity) {
-         const hoveredEntity = entitySelectionState.hoveredEntity;
+         const hoveredEntity = getHoveredEntity();
          if (hoveredEntity !== null) {
             sendSpectateEntityPacket(hoveredEntity);
             gameUIState.setGameInteractState(GameInteractState.none);
@@ -832,10 +834,10 @@ export function onGameMouseDown(e: MouseEvent): void {
             e.preventDefault();
          }
       } else if (gameUIState.gameInteractState === GameInteractState.selectRiderDepositLocation) {
-         const selectedEntity = entitySelectionState.selectedEntity;
+         const selectedEntity = getSelectedEntity();
          if (selectedEntity !== null) {
             sendSelectRiderDepositLocationPacket(selectedEntity, cursorWorldPos);
-            entitySelectionState.setSelectedEntity(null);
+            setSelectedEntity(null);
             gameUIState.setGameInteractState(GameInteractState.none);
          }
       } else {
@@ -850,7 +852,7 @@ export function onGameMouseDown(e: MouseEvent): void {
       }
 
       if (gameUIState.gameInteractState === GameInteractState.selectMoveTargetPosition) {
-         const selectedEntity = entitySelectionState.selectedEntity;
+         const selectedEntity = getSelectedEntity();
          if (selectedEntity !== null) {
             sendSetMoveTargetPositionPacket(selectedEntity, cursorWorldPos.x, cursorWorldPos.y);
             gameUIState.setGameInteractState(GameInteractState.none);
@@ -1075,9 +1077,9 @@ export function onItemDeselect(itemType: ItemType, isOffhand: boolean): void {
       }
       case "placeable": {
          // Clear entity ghost
-         if (placeableEntityGhostRenderInfo !== null) {
-            removeGhostRenderInfo(placeableEntityGhostRenderInfo);
-            placeableEntityGhostRenderInfo = null;
+         if (placeableEntityGhostRenderObject !== null) {
+            removeGhostRenderObject(placeableEntityGhostRenderObject);
+            placeableEntityGhostRenderObject = null;
          }
          break;
       }
@@ -1286,7 +1288,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
             const limb = getLimbByInventoryName(inventoryUseComponent, itemInventoryName);
             limb.lastAttackTicks = currentSnapshot.tick;
 
-            sendItemUsePacket();
+            sendItemUsePacket(hotbarSelectedItemSlot);
          }
 
          break;
@@ -1428,11 +1430,11 @@ export function selectItemSlot(itemSlot: number): void {
    attackBufferTime = 0;
 
    // Deselect the previous item and select the new item
-   if (typeof previousItem !== "undefined") {
+   if (previousItem !== undefined) {
       onItemDeselect(previousItem.type, false);
    }
    const newItem = hotbarInventory.itemSlots[itemSlot];
-   if (typeof newItem !== "undefined") {
+   if (newItem !== undefined) {
       onItemSelect(newItem.type);
 
       // @Temporary
@@ -1549,7 +1551,7 @@ const tickItem = (itemType: ItemType): void => {
                   break;
                }
                case ServerComponentType.inventory: {
-                  components.push(createInventoryComponentData({}));
+                  components.push(createInventoryComponentData([]));
                   break;
                }
                case ServerComponentType.cooking: {
@@ -1667,6 +1669,21 @@ const tickItem = (itemType: ItemType): void => {
                   });
                   break;
                }
+               case ServerComponentType.tribeMember: {
+                  components.push({
+                     name: ""
+                  });
+                  break;
+               }
+               case ServerComponentType.tribesmanAI: {
+                  components.push({
+                     aiType: 0,
+                     relationsWithPlayer: 0,
+                     craftingItemType: 0,
+                     craftingProgress: 0
+                  });
+                  break;
+               }
                default: {
                   throw new Error(ServerComponentType[componentType]);
                }
@@ -1685,35 +1702,35 @@ const tickItem = (itemType: ItemType): void => {
          assert(getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.transform).hitboxes.length > 0);
          const creationInfo = createEntityCreationInfo(0, entityComponentData);
 
-         const renderInfo = creationInfo.renderInfo;
+         const renderObject = creationInfo.renderObject;
 
          // @Hack: Could potentially get overridden in the future
-         renderInfo.tintR = placeInfo.isValid ? 0 : 0.5;
-         renderInfo.tintG = placeInfo.isValid ? 0 : -0.5;
-         renderInfo.tintB = placeInfo.isValid ? 0 : -0.5;
+         renderObject.tintR = placeInfo.isValid ? 0 : 0.5;
+         renderObject.tintG = placeInfo.isValid ? 0 : -0.5;
+         renderObject.tintB = placeInfo.isValid ? 0 : -0.5;
 
          // Modify all the render part's opacity
-         for (let i = 0; i < renderInfo.renderPartsByZIndex.length; i++) {
-            const renderThing = renderInfo.renderPartsByZIndex[i];
+         for (let i = 0; i < renderObject.renderPartsByZIndex.length; i++) {
+            const renderThing = renderObject.renderPartsByZIndex[i];
             if (thingIsVisualRenderPart(renderThing)) {
                renderThing.opacity *= 0.5;
             }
          }
 
-         // Remove any previous render info
-         if (placeableEntityGhostRenderInfo !== null) {
-            removeGhostRenderInfo(placeableEntityGhostRenderInfo);
+         // Remove any previous render object
+         if (placeableEntityGhostRenderObject !== null) {
+            removeGhostRenderObject(placeableEntityGhostRenderObject);
          }
          
-         placeableEntityGhostRenderInfo = renderInfo;
-         addGhostRenderInfo(renderInfo);
+         placeableEntityGhostRenderObject = renderObject;
+         addGhostRenderObject(renderObject);
 
-         // @Hack: Manually set the render info's position and rotation
+         // @Hack: Manually set the render object's position and rotation
          // @INCOMPLETE
          // const transformComponentData = components[ServerComponentType.transform]!;
-         // renderInfo.renderPosition.x = transformComponentData.position.x;
-         // renderInfo.renderPosition.y = transformComponentData.position.y;
-         // renderInfo.rotation = transformComponentData.rotation;
+         // renderObject.renderPosition.x = transformComponentData.position.x;
+         // renderObject.renderPosition.y = transformComponentData.position.y;
+         // renderObject.rotation = transformComponentData.rotation;
 
          break;
       }

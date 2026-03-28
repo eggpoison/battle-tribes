@@ -33,7 +33,7 @@
       }
 
       const assignment = tribeAssignmentInfo.entityAssignments[selectedEntity];
-      assert(typeof assignment !== "undefined");
+      assert(assignment !== undefined);
       return assignment;
    }
 

@@ -79,7 +79,7 @@ const decorationIsHigh = (decorationType: DecorationType): boolean => {
 export function getEntityRenderLayer(entityType: EntityType, entityComponentData: EntityComponentData): RenderLayer {
    // Crafting stations render below tribesmen so they can see the limbs
    // @SQUEAM disabled so that workbenches can render on top of cows
-   // if (typeof entityComponentData.serverComponentData.get(ServerComponentType.craftingStation) !== "undefined") {
+   // if (entityComponentData.serverComponentData.get(ServerComponentType.craftingStation) !== undefined) {
    //    return RenderLayer.lowEntities;
    // }
    
@@ -98,7 +98,7 @@ export function getEntityRenderLayer(entityType: EntityType, entityComponentData
       case EntityType.decoration: {
          const serverComponentTypes = getEntityServerComponentTypes(entityType);
          const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
-         assert(typeof decorationComponentData !== "undefined");
+         assert(decorationComponentData !== undefined);
          return decorationIsHigh(decorationComponentData.decorationType) ? RenderLayer.highDecorations : RenderLayer.lowDecorations;
       }
       case EntityType.moss: {

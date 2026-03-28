@@ -11,7 +11,7 @@
    let selectedOption = $state(props.defaultOption || props.options[0]);
 
    $effect(() => {
-      if (typeof props.onChange !== "undefined") {
+      if (props.onChange !== undefined) {
          const optionIdx = props.options.indexOf(selectedOption);
          props.onChange(optionIdx);
       }

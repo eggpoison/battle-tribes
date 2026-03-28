@@ -1,9 +1,9 @@
 import { Entity, EntityType, updateBox, ServerComponentType, PacketReader, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, getTileIndexIncludingEdges, _bounds } from "webgl-test-shared";
 import Chunk from "../../Chunk";
-import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityRenderInfo, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../../world";
+import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityRenderObject, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { playerInstance } from "../../player";
-import { applyAccelerationFromGround, getDistanceFromPointToHitboxIncludingChildren, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, readHitboxFromData, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox, updateHitboxFromData, updatePlayerHitboxFromData } from "../../hitboxes";
+import { getDistanceFromPointToHitboxIncludingChildren, getHitboxByLocalID, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../../hitboxes";
 import Particle from "../../Particle";
 import { createWaterSplashParticle } from "../../particles";
 import { addTexturedParticleToBufferContainer, lowTexturedParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -14,6 +14,7 @@ import { currentSnapshot } from "../../game";
 import { gameUIState } from "../../../ui-state/game-ui-state";
 import { getTransformComponentData } from "../../entity-component-types";
 import Layer from "../../Layer";
+import { readHitboxFromData, updateHitboxFromData, updatePlayerHitboxFromData } from "../../networking/packet-hitboxes";
 
 export interface TransformComponentData {
    readonly traction: number;
@@ -35,6 +36,7 @@ export interface TransformComponent {
 
    traction: number;
 
+   // @Garbage: used by extremely few entities.
    ignoredTileSpeedMultipliers: ReadonlyArray<TileType>;
 }
 
@@ -83,6 +85,15 @@ const addHitbox = (transformComponent: TransformComponent, hitbox: Hitbox): void
       const parent = hitbox.parent;
       updateBox(hitbox.box, parent.box);
    }
+}
+
+// @Hack this is a lil bit of a hack
+export function findEntityHitbox(entity: Entity, localID: number): Hitbox | null {
+   const transformComponent = TransformComponentArray.tryGetComponent(entity);
+   if (transformComponent === null) {
+      return null;
+   }
+   return getHitboxByLocalID(transformComponent.hitboxes, localID);
 }
    
 export function removeHitboxFromEntity(transformComponent: TransformComponent, hitbox: Hitbox, idx: number): void {
@@ -204,6 +215,30 @@ const tickHitboxAngularPhysics = (hitbox: Hitbox): void => {
    hitbox.box.relativeAngle = newRelativeAngle;
 }
 
+// @Cleanup: Passing in hitbox really isn't the best, ideally hitbox should self-contain all the necessary info... but is that really good? + memory efficient?
+export function applyAccelerationFromGround(hitbox: Hitbox, accelerationX: number, accelerationY: number): void {
+   const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
+
+   const tile = getHitboxTile(hitbox);
+   const tilePhysicsInfo = TILE_PHYSICS_INFO_RECORD[tile.type];
+      
+   let tileMoveSpeedMultiplier = tilePhysicsInfo.moveSpeedMultiplier;
+   if (transformComponent.ignoredTileSpeedMultipliers.includes(tile.type) || (tile.type === TileType.water && !hitboxIsInWater(hitbox))) {
+      tileMoveSpeedMultiplier = 1;
+   }
+   
+   // Calculate the desired velocity based on acceleration
+   const friction = tilePhysicsInfo.friction;
+   const desiredVelocityX = accelerationX * friction * tileMoveSpeedMultiplier;
+   const desiredVelocityY = accelerationY * friction * tileMoveSpeedMultiplier;
+
+   const currentVelocity = getHitboxVelocity(hitbox);
+   
+   // Apply velocity with traction (blend towards desired velocity)
+   hitbox.acceleration.x += (desiredVelocityX - currentVelocity.x) * transformComponent.traction;
+   hitbox.acceleration.y += (desiredVelocityY - currentVelocity.y) * transformComponent.traction;
+}
+
 const applyHitboxKinematics = (hitbox: Hitbox): void => {
    if (isNaN(hitbox.box.position.x) || isNaN(hitbox.box.position.y)) {
       throw new Error("Position was NaN.");
@@ -237,8 +272,9 @@ const applyHitboxKinematics = (hitbox: Hitbox): void => {
    velY *= 1 - tileFriction * Settings.DT_S * 2;
 
    // Ground friction
-   const velocityMagnitude = Math.hypot(velX, velY);
-   if (velocityMagnitude > 0) {
+   const velocityMagnitudeSq = velX * velX + velY * velY;
+   if (velocityMagnitudeSq > 0) {
+      const velocityMagnitude = Math.sqrt(velocityMagnitudeSq);
       const groundFriction = Math.min(tileFriction, velocityMagnitude);
       velX -= groundFriction * velX / velocityMagnitude * Settings.DT_S;
       velY -= groundFriction * velY / velocityMagnitude * Settings.DT_S;
@@ -525,7 +561,7 @@ function updateFromData(data: TransformComponentData, entity: Entity): void {
    // Update hitboxes
    for (const hitboxData of data.hitboxes) {
       let hitbox = transformComponent.hitboxMap.get(hitboxData.localID);
-      if (typeof hitbox === "undefined") {
+      if (hitbox === undefined) {
          addHitbox(transformComponent, hitboxData);
          hitbox = hitboxData;
       } else {
@@ -580,7 +616,7 @@ function updatePlayerFromData(data: TransformComponentData, isInitialData: boole
    const transformComponent = TransformComponentArray.getComponent(playerInstance!);
    for (const hitboxData of data.hitboxes) {
       const hitbox = transformComponent.hitboxMap.get(hitboxData.localID);
-      assert(typeof hitbox !== "undefined");
+      assert(hitbox !== undefined);
       updatePlayerHitboxFromData(hitbox, hitboxData);
 
       // @Copynpaste
@@ -727,10 +763,10 @@ export function changeEntityLayer(entity: Entity, newLayer: Layer): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const previousLayer = getEntityLayer(entity);
 
-   const renderInfo = getEntityRenderInfo(entity);
+   const renderObject = getEntityRenderObject(entity);
 
-   previousLayer.removeEntityFromRendering(entity, renderInfo.renderLayer);
-   newLayer.addEntityToRendering(entity, renderInfo.renderLayer, renderInfo.renderHeight);
+   previousLayer.removeEntityFromRendering(entity, renderObject.renderLayer);
+   newLayer.addEntityToRendering(entity, renderObject.renderLayer, renderObject.renderHeight);
 
    // Remove from all previous chunks
    for (const chunk of transformComponent.chunks) {

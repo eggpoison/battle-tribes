@@ -87,7 +87,7 @@ function updateFromData(data: RideableComponentData, entity: Entity): void {
       if (occupiedEntity !== carrySlot.occupiedEntity) {
          const transformComponent = TransformComponentArray.getComponent(entity);
          const mountHitbox = transformComponent.hitboxMap.get(carrySlot.hitboxLocalID);
-         assert(typeof mountHitbox !== "undefined");
+         assert(mountHitbox !== undefined);
          const layer = getEntityLayer(entity);
          
          if (entityExists(occupiedEntity)) {

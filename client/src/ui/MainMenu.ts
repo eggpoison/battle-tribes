@@ -1,13 +1,13 @@
 const mainMenuElem = document.getElementById("main-menu")!;
 
 export function openMainMenu(): void {
-   mainMenuElem.classList.remove("hidden");
+   mainMenuElem.hidden = false;
 }
 
 export function mainMenuIsHidden(): boolean {
-   return mainMenuElem.classList.contains("hidden");
+   return mainMenuElem.hidden;
 }
 
 export function closeMainMenu(): void {
-   mainMenuElem.classList.add("hidden");
+   mainMenuElem.hidden = true;
 }

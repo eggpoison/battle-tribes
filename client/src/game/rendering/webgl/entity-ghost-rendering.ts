@@ -1,5 +1,5 @@
 import { assert, Point } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { cleanupEntityRendering, renderEntity, setupEntityRendering } from "./entity-rendering";
 import { gl } from "../../webgl";
 
@@ -59,19 +59,19 @@ export interface GhostInfo {
 
 export const PARTIAL_OPACITY = 0.5;
 
-const renderInfos = new Array<EntityRenderInfo>();
+const renderObjects = new Array<EntityRenderObject>();
 
-export function addGhostRenderInfo(renderInfo: EntityRenderInfo): void {
-   const idx = renderInfos.indexOf(renderInfo);
+export function addGhostRenderObject(renderObject: EntityRenderObject): void {
+   const idx = renderObjects.indexOf(renderObject);
    if (idx === -1) {
-      renderInfos.push(renderInfo);
+      renderObjects.push(renderObject);
    }
 }
 
-export function removeGhostRenderInfo(renderInfo: EntityRenderInfo): void {
-   const idx = renderInfos.indexOf(renderInfo);
+export function removeGhostRenderObject(renderObject: EntityRenderObject): void {
+   const idx = renderObjects.indexOf(renderObject);
    assert(idx !== -1);
-   renderInfos.splice(idx, 1);
+   renderObjects.splice(idx, 1);
 }
 
 export function renderGhostEntities(): void {
@@ -126,7 +126,7 @@ export function renderGhostEntities(): void {
    //    }
    // }
 
-   if (renderInfos.length === 0) {
+   if (renderObjects.length === 0) {
       return;
    }
 
@@ -135,8 +135,8 @@ export function renderGhostEntities(): void {
    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
    setupEntityRendering();
-   for (const renderInfo of renderInfos) {
-      renderEntity(renderInfo);
+   for (const renderObject of renderObjects) {
+      renderEntity(renderObject);
    }
    cleanupEntityRendering();
 

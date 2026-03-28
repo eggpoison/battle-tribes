@@ -9,7 +9,7 @@ export function createHealthBar(): void {
    
    healthBarElem = document.createElement("div");
    healthBarElem.id = "health-bar";
-   healthBarElem.classList.add("animated");
+   healthBarElem.className = "animated";
    // @Cleanup: 20 default is strange
    healthBarElem.style.setProperty("--current-health", "20");
    healthBarElem.style.setProperty("--previous-health", "20");
@@ -50,7 +50,7 @@ export function HealthBar_setHealth(health: number): void {
       // @Hacky
       healthBarElem.classList.remove("animated");
       void healthBarElem.offsetWidth;
-      healthBarElem.classList.add("animated");
+      healthBarElem.className = "animated";
 
       // @Cleanup @Copynpaste: use a utils function for this
       healthCounterNode.data = (Math.round((health + Number.EPSILON) * 100) / 100).toString();

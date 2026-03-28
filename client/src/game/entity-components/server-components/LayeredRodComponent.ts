@@ -1,12 +1,13 @@
-import { TileType, Entity, EntityType, PacketReader, Colour, getTileIndexIncludingEdges, hueShift, lerp, multiColourLerp, Settings, ServerComponentType } from "webgl-test-shared";
-import ColouredRenderPart, { RenderPartColour } from "../../render-parts/ColouredRenderPart";
-import { EntityComponentData, getEntityRenderInfo, getEntityType, surfaceLayer } from "../../world";
+import { TileType, Entity, EntityType, PacketReader, Colour, getTileIndexIncludingEdges, lerp, Settings, ServerComponentType } from "webgl-test-shared";
+import ColouredRenderPart from "../../render-parts/ColouredRenderPart";
+import { EntityComponentData, getEntityRenderObject, getEntityType, surfaceLayer } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
-import { registerDirtyRenderInfo } from "../../rendering/render-part-matrices";
+import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { hueShift, multiColourLerp } from "../../render-parts/VisualRenderPart";
 
 const enum Vars {
    NATURAL_DRIFT = 20 * Settings.DT_S
@@ -73,7 +74,7 @@ const pushAmountToBend = (pushAmount: number): number => {
    return bend;
 }
 
-const getLayerColour = (entityComponentData: EntityComponentData, r: number, g: number, b: number, layer: number, numLayers: number): RenderPartColour => {
+const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: EntityComponentData, r: number, g: number, b: number, layer: number, numLayers: number): void => {
    switch (entityComponentData.entityType as EntityType.grassStrand | EntityType.reed) {
       case EntityType.grassStrand: {
          // @Speed: a lot of this is shared for all strands
@@ -99,12 +100,9 @@ const getLayerColour = (entityComponentData: EntityComponentData, r: number, g: 
             brightnessMultiplier = lerp(brightnessMultiplier, 1, 0.5);
          }
 
-         const colour: RenderPartColour = {
-            r: r * brightnessMultiplier,
-            g: g * brightnessMultiplier,
-            b: b * brightnessMultiplier,
-            a: 1
-         };
+         renderPart.tintR = r * brightnessMultiplier;
+         renderPart.tintG = g * brightnessMultiplier;
+         renderPart.tintB = b * brightnessMultiplier;
          // @Hack: the temperature check seems pointless
          if (grassInfo.temperature > 0 && tileType === TileType.grass) {
             let humidity = grassInfo.humidity;
@@ -114,21 +112,23 @@ const getLayerColour = (entityComponentData: EntityComponentData, r: number, g: 
 
             const humidityMultiplier = (humidity - 0.5) * -0.7;
             if (humidityMultiplier > 0) {
-               colour.r = lerp(colour.r, 1, humidityMultiplier * 0.7);
-               colour.b = lerp(colour.b, 1, humidityMultiplier * 0.7);
+               renderPart.tintR = lerp(renderPart.tintR, 1, humidityMultiplier * 0.7);
+               renderPart.tintB = lerp(renderPart.tintB, 1, humidityMultiplier * 0.7);
             } else {
-               colour.r = lerp(colour.r, 0, -humidityMultiplier);
-               colour.b = lerp(colour.b, 0, -humidityMultiplier);
+               renderPart.tintR = lerp(renderPart.tintR, 0, -humidityMultiplier);
+               renderPart.tintB = lerp(renderPart.tintB, 0, -humidityMultiplier);
             }
    
             const hueAdjust = (grassInfo.temperature - 0.5) * 0.8;
-            hueShift(colour, hueAdjust);
+            hueShift(renderPart, hueAdjust);
          }
-         return colour;
+
+         break;
       }
       case EntityType.reed: {
          const height = (layer - 1) / Math.max((numLayers - 1), 1);
-         return multiColourLerp(REED_COLOURS, height);
+         multiColourLerp(renderPart, REED_COLOURS, height);
+         break;
       }
    }
 }
@@ -157,7 +157,7 @@ function decodeData(reader: PacketReader): LayeredRodComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -169,20 +169,17 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    
    // Create layers
    for (let layer = 1; layer <= layeredRodComponentData.numLayers; layer++) {
-      const colour = getLayerColour(entityComponentData, layeredRodComponentData.r, layeredRodComponentData.g, layeredRodComponentData.b, layer, layeredRodComponentData.numLayers);
-
       const zIndex = layer / 10;
       const renderPart = new ColouredRenderPart(
          hitbox,
          zIndex,
          0,
-         colour
+         naturalBendX * layer, naturalBendY * layer
       );
 
-      renderPart.offset.x = naturalBendX * layer;
-      renderPart.offset.y = naturalBendY * layer;
+      setLayerColour(renderPart, entityComponentData, layeredRodComponentData.r, layeredRodComponentData.g, layeredRodComponentData.b, layer, layeredRodComponentData.numLayers);
 
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
    }
 
    return {};
@@ -218,12 +215,11 @@ const updateOffsets = (layeredRodComponent: LayeredRodComponent, entity: Entity)
    const bendX = layeredRodComponent.naturalBendX * naturalBendMultiplier + layeredRodComponent.bendX;
    const bendY = layeredRodComponent.naturalBendY * naturalBendMultiplier + layeredRodComponent.bendY;
    
-   const renderInfo = getEntityRenderInfo(entity);
+   const renderObject = getEntityRenderObject(entity);
    for (let layer = 1; layer <= layeredRodComponent.numLayers; layer++) {
-      const renderPart = renderInfo.renderPartsByZIndex[layer - 1];
-
-      renderPart.offset.x = bendX * layer;
-      renderPart.offset.y = bendY * layer;
+      const renderPart = renderObject.renderPartsByZIndex[layer - 1];
+      renderPart.offsetX = bendX * layer;
+      renderPart.offsetY = bendY * layer;
    }
 }
 
@@ -248,8 +244,8 @@ function onTick(entity: Entity): void {
 
    updateOffsets(layeredRodComponent, entity);
 
-   const renderInfo = getEntityRenderInfo(entity);
-   registerDirtyRenderInfo(renderInfo);
+   const renderObject = getEntityRenderObject(entity);
+   registerDirtyRenderObject(renderObject);
 }
 
 function onCollision(entity: Entity, collidingEntity: Entity, affectedHitbox: Hitbox, collidingHitbox: Hitbox): void {
@@ -287,6 +283,6 @@ function onCollision(entity: Entity, collidingEntity: Entity, affectedHitbox: Hi
    
    updateOffsets(layeredRodComponent, entity);
 
-   const renderInfo = getEntityRenderInfo(entity);
-   registerDirtyRenderInfo(renderInfo);
+   const renderObject = getEntityRenderObject(entity);
+   registerDirtyRenderObject(renderObject);
 }

@@ -107,7 +107,7 @@ export function readGrassBlockers(reader: PacketReader): ReadonlyArray<GrassBloc
 export function updateGrassBlockersFromData(grassBlockerData: ReadonlyArray<GrassBlockerData>): void {
    for (const data of grassBlockerData) {
       const existingGrassBlocker = grassBlockers.get(data.id);
-      if (typeof existingGrassBlocker !== "undefined") {
+      if (existingGrassBlocker !== undefined) {
          // Update grass blocker
          existingGrassBlocker.blockAmount = data.blockAmount;
          updateGrassBlockerVertices(existingGrassBlocker);

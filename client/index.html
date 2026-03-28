@@ -12,20 +12,13 @@
       <style>
          #main-menu {
             position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
          }
          #main-menu button {
             display: block;
             padding: 0 10px;
-         }
-         .hidden {
-            display: none !important;
          }
       </style>
    </head>
@@ -69,7 +62,7 @@
          </div>
       </div>
 
-      <div id="loading-screen" class="hidden">
+      <div id="loading-screen" hidden>
          <div class="ls-loading-view">
             <h1 class="title">Loading</h1>
             <div class="loading-message">
@@ -82,7 +75,7 @@
             <div class="loading-message">
                <p>Connection with server failed.</p>
                <button id="ls-reconnect-button">Reconnect</button>
-               <button id="ls-main-menu-button">Back</button>
+               <button>Back</button>
             </div>
          </div>
       </div>

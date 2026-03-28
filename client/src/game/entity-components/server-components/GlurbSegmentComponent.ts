@@ -1,12 +1,12 @@
 import { randFloat, Point, randAngle, Settings, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getRandomPositionInBox, Hitbox } from "../../hitboxes";
 import { createSlurbParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { coatSlimeTrails } from "../../rendering/webgl/slime-trail-rendering";
 import { playSound, playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { EntityComponentData, getEntityLayer, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityLayer, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
@@ -55,12 +55,13 @@ const createMossBallRenderPart = (mossBallCompleteness: number, parentHitbox: Hi
       parentHitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(getMossBallTextureSource(mossBallCompleteness))
    );
    return renderPart;
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
    const glurbSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.glurbSegment);
 
@@ -70,7 +71,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       const hitbox = transformComponentData.hitboxes[0];
    
       renderPart = createMossBallRenderPart(glurbSegmentComponentData.mossBallCompleteness, hitbox);
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
    } else {
       renderPart = null;
    }
@@ -97,8 +98,8 @@ function updateFromData(data: GlurbSegmentComponentData, glurbSegment: Entity): 
 
    if (mossBallCompleteness === 0) {
       if (glurbSegmentComponent.mossBallRenderPart !== null) {
-         const renderInfo = getEntityRenderInfo(glurbSegment);
-         renderInfo.removeRenderPart(glurbSegmentComponent.mossBallRenderPart);
+         const renderObject = getEntityRenderObject(glurbSegment);
+         renderObject.removeRenderPart(glurbSegmentComponent.mossBallRenderPart);
          glurbSegmentComponent.mossBallRenderPart = null;
       }
    } else {
@@ -107,8 +108,8 @@ function updateFromData(data: GlurbSegmentComponentData, glurbSegment: Entity): 
          const hitbox = transformComponent.hitboxes[0];
          
          glurbSegmentComponent.mossBallRenderPart = createMossBallRenderPart(mossBallCompleteness, hitbox);
-         const renderInfo = getEntityRenderInfo(glurbSegment);
-         renderInfo.attachRenderPart(glurbSegmentComponent.mossBallRenderPart);
+         const renderObject = getEntityRenderObject(glurbSegment);
+         renderObject.attachRenderPart(glurbSegmentComponent.mossBallRenderPart);
       } else {
          glurbSegmentComponent.mossBallRenderPart.switchTextureSource(getMossBallTextureSource(mossBallCompleteness));
       }

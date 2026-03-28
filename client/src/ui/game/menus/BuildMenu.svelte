@@ -199,7 +199,7 @@
       }
 
       const option = options[hoveredOptionIdx];
-      const isClickable = typeof option.isClickable === "undefined" || option.isClickable(building);
+      const isClickable = option.isClickable === undefined || option.isClickable(building);
       if (isClickable) {
          selectOption(option);
       }
@@ -210,7 +210,7 @@
    // for (let i = 0; i < numOptions; i++) {
    //    const optionIdx = availableOptionIndexes[i];
    //    const option = options[optionIdx];
-   //    if (typeof option.requirement !== "undefined" && !option.requirement(building)) {
+   //    if (option.requirement !== undefined && !option.requirement(building)) {
    //       continue;
    //    }
 
@@ -225,7 +225,7 @@
    // }
 
    const getOptionIdx = (e: MouseEvent): number | null => {
-      if (typeof menuElement === "undefined") {
+      if (menuElement === undefined) {
          return null;
       }
 
@@ -272,7 +272,7 @@
    
    {#each options as option, i}
       {@const direction = 2 * Math.PI * i / options.length}
-      {@const isHighlighted = typeof option.isHighlighted !== "undefined" && option.isHighlighted(entity)}
+      {@const isHighlighted = option.isHighlighted !== undefined && option.isHighlighted(entity)}
       {@const segmentCoverage = 2 * Math.PI / options.length * (180 / Math.PI)}
 
       <div
@@ -285,7 +285,7 @@
    {/each}
 
    {#each options as option, i}
-      {@const isUnclickable = typeof option.isClickable !== "undefined" && !option.isClickable(entity)}
+      {@const isUnclickable = option.isClickable !== undefined && !option.isClickable(entity)}
 
       {@const _direction = 2 * Math.PI * i / options.length}
       {@const direction = -_direction + Math.PI/2}

@@ -8,7 +8,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { CookingComponentArray } from "./CookingComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../game";
 import { getTransformComponentData } from "../../entity-component-types";
 
@@ -34,15 +34,16 @@ function decodeData(): FurnaceComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("entities/furnace/furnace.png")
       )
    );

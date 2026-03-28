@@ -1,12 +1,12 @@
 import { randInt, customTickIntervalHasPassed, PacketReader, Entity, EntityType, PlantedEntityType, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createGrowthParticle } from "../../particles";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { getEntityRenderInfo, getEntityAgeTicks, EntityComponentData } from "../../world";
+import { getEntityRenderObject, getEntityAgeTicks, EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponent, TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
@@ -34,6 +34,7 @@ const createMoundRenderPart = (plantedEntityType: PlantedEntityType, parentHitbo
       parentHitbox,
       1,
       Math.PI / 2 * randInt(0, 3),
+      0, 0,
       getTextureArrayIndex(textureSource)
    );
 }
@@ -59,15 +60,16 @@ function decodeData(reader: PacketReader): PlanterBoxComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("entities/planter-box/planter-box.png")
       )
    );
@@ -78,7 +80,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    let renderPart: TexturedRenderPart | null;
    if (planterBoxComponentData.plantedEntityType !== -1) {
       renderPart = createMoundRenderPart(planterBoxComponentData.plantedEntityType, hitbox);
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
    } else {
       renderPart = null;
    }
@@ -150,12 +152,12 @@ function updateFromData(data: PlanterBoxComponentData, entity: Entity): void {
 
          planterBoxComponent.moundRenderPart = createMoundRenderPart(plantType, hitbox);
          
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.attachRenderPart(planterBoxComponent.moundRenderPart);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.attachRenderPart(planterBoxComponent.moundRenderPart);
       }
    } else if (planterBoxComponent.moundRenderPart !== null) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.removeRenderPart(planterBoxComponent.moundRenderPart);
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.removeRenderPart(planterBoxComponent.moundRenderPart);
       planterBoxComponent.moundRenderPart = null;
    }
 }

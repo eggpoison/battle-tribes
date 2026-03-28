@@ -64,7 +64,7 @@ export function createUBOs(): void {
 
    // Entity texture atlas uniform buffer
 
-   if (typeof entityTextureAtlasData === "undefined") {
+   if (entityTextureAtlasData === undefined) {
       entityTextureAtlasData = new Float32Array(4 + TEXTURE_SOURCES.length * 8);
    }
 

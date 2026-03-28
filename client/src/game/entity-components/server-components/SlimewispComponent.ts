@@ -6,7 +6,7 @@ import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particl
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
 
 export interface SlimewispComponentData {}
@@ -25,7 +25,7 @@ function decodeData(): SlimewispComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
@@ -33,10 +33,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(`entities/slimewisp/slimewisp.png`)
    );
    renderPart.opacity = 0.8;
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }

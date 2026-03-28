@@ -61,7 +61,7 @@
    const ending = SKILL_ICON_NAMES[skill.id];
    const entityInternalName = CLIENT_ENTITY_INFO_RECORD[getEntityType(props.entity)].internalName;
    const img = skillIconImages["/src/images/menus/taming-almanac/" + entityInternalName + "-skills/" + ending] as string;
-   assert(typeof img !== "undefined");
+   assert(img !== undefined);
 </script>
 
 <div

@@ -5,8 +5,9 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { updateLimb_TEMP } from "./InventoryUseComponent";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface CogwalkerComponentData {}
 
@@ -21,16 +22,17 @@ function decodeData(): CogwalkerComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          // @Copynpaste @Hack
          2,
          0,
+         0, 0,
          getTextureArrayIndex("entities/cogwalker/body.png")
       )
    );
@@ -41,22 +43,24 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       const attachPoint = new RenderAttachPoint(
          hitbox,
          1,
-         0
+         0,
+         0, 0
       );
       if (i === 1) {
          attachPoint.setFlipX(true);
       }
-      attachPoint.addTag("inventoryUseComponent:attachPoint");
-      renderInfo.attachRenderPart(attachPoint);
+      addRenderPartTag(attachPoint, "inventoryUseComponent:attachPoint");
+      renderObject.attachRenderPart(attachPoint);
       
       const handRenderPart = new TexturedRenderPart(
          attachPoint,
          1.2,
          0,
+         0, 0,
          getTextureArrayIndex("entities/cogwalker/hand.png")
       );
-      handRenderPart.addTag("inventoryUseComponent:hand");
-      renderInfo.attachRenderPart(handRenderPart);
+      addRenderPartTag(handRenderPart, "inventoryUseComponent:hand");
+      renderObject.attachRenderPart(handRenderPart);
 
       // @Temporary: so that the hand shows correctly when the player is placing a cogwalker
       updateLimb_TEMP(handRenderPart, attachPoint, 28, LimbConfiguration.twoHanded);

@@ -3,13 +3,14 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../world";
+import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
+import { getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
 
 // @Cleanup: can make this a whole lot better by having the projectile not be a render part, but the actual projectile pre-created, and then just un-carried from the turret once fired.
 
@@ -36,12 +37,12 @@ export interface TurretComponent {
 const NUM_SLING_TURRET_CHARGE_TEXTURES = 5;
 const NUM_BALLISTA_CHARGE_TEXTURES = 11;
 
-interface AmmoRenderInfo {
+interface AmmoRenderObject {
    readonly projectileTextureSource: string;
    readonly drawOffset: number;
 }
 
-const AMMO_RENDER_INFO_RECORD: Record<TurretAmmoType, AmmoRenderInfo> = {
+const AMMO_RENDER_INFO_RECORD: Record<TurretAmmoType, AmmoRenderObject> = {
    [ItemType.wood]: {
       projectileTextureSource: "projectiles/wooden-bolt.png",
       drawOffset: 0
@@ -94,8 +95,8 @@ const getProjectilePullbackAmount = (entity: Entity, chargeProgress: number): nu
       }
       case EntityType.ballista: {
          const ammoBoxComponent = AmmoBoxComponentArray.getComponent(entity);
-         const ammoRenderInfo = AMMO_RENDER_INFO_RECORD[ammoBoxComponent.ammoType!];
-         return lerp(48, 0, chargeProgress) + ammoRenderInfo.drawOffset;
+         const ammoRenderObject = AMMO_RENDER_INFO_RECORD[ammoBoxComponent.ammoType!];
+         return lerp(48, 0, chargeProgress) + ammoRenderObject.drawOffset;
       }
    }
 }
@@ -123,8 +124,8 @@ const getProjectileTextureSource = (entity: Entity): string => {
       }
       case EntityType.ballista: {
          const ammoBoxComponent = AmmoBoxComponentArray.getComponent(entity);
-         const ammoRenderInfo = AMMO_RENDER_INFO_RECORD[ammoBoxComponent.ammoType!];
-         return ammoRenderInfo.projectileTextureSource;
+         const ammoRenderObject = AMMO_RENDER_INFO_RECORD[ammoBoxComponent.ammoType!];
+         return ammoRenderObject.projectileTextureSource;
       }
    }
 }
@@ -158,14 +159,14 @@ function decodeData(reader: PacketReader): TurretComponentData {
    };
 }
 
-function createComponent(entityComponentData: EntityComponentData, _: never, renderInfo: EntityRenderInfo): TurretComponent {
+function createComponent(entityComponentData: EntityComponentData, _: never, renderObject: EntityRenderObject): TurretComponent {
    const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
    const turretComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.turret);
    return {
       chargeProgress: turretComponentData.chargeProgress,
-      aimingRenderPart: renderInfo.getRenderThing("turretComponent:aiming") as TexturedRenderPart,
-      pivotingRenderPart: renderInfo.getRenderThing("turretComponent:pivoting") as VisualRenderPart,
-      gearRenderParts: renderInfo.getRenderThings("turretComponent:gear") as Array<VisualRenderPart>,
+      aimingRenderPart: getRenderThingByTag(renderObject, "turretComponent:aiming") as TexturedRenderPart,
+      pivotingRenderPart: getRenderThingByTag(renderObject, "turretComponent:pivoting") as VisualRenderPart,
+      gearRenderParts: getRenderThingsByTag(renderObject, "turretComponent:gear") as Array<VisualRenderPart>,
       projectileRenderPart:  null
    };
 }
@@ -218,6 +219,7 @@ const updateProjectileRenderPart = (turretComponent: TurretComponent, entity: En
             turretComponent.pivotingRenderPart,
             getProjectileZIndex(getEntityType(entity) as TurretType),
             0,
+            0, 0,
             getTextureArrayIndex(textureSource)
          );
 
@@ -225,13 +227,13 @@ const updateProjectileRenderPart = (turretComponent: TurretComponent, entity: En
             turretComponent.projectileRenderPart.angle = randAngle();
          }
 
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.attachRenderPart(turretComponent.projectileRenderPart);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.attachRenderPart(turretComponent.projectileRenderPart);
       } else {
          turretComponent.projectileRenderPart.switchTextureSource(textureSource);
       }
    
-      turretComponent.projectileRenderPart.offset.y = getProjectilePullbackAmount(entity, chargeProgress);
+      turretComponent.projectileRenderPart.offsetY = getProjectilePullbackAmount(entity, chargeProgress);
 
       if (reloadProgress > 0) {
          turretComponent.projectileRenderPart.opacity = reloadProgress;
@@ -239,8 +241,8 @@ const updateProjectileRenderPart = (turretComponent: TurretComponent, entity: En
          turretComponent.projectileRenderPart.opacity = 1;
       }
    } else if (turretComponent.projectileRenderPart !== null) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.removeRenderPart(turretComponent.projectileRenderPart);
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.removeRenderPart(turretComponent.projectileRenderPart);
       turretComponent.projectileRenderPart = null;
    }
 }

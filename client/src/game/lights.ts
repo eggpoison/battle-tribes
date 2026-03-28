@@ -71,7 +71,7 @@ export function attachLightToHitbox(light: Light, entity: Entity, hitbox: Hitbox
    };
 
    const lightIDs = hitboxToLightsMap.get(hitbox);
-   if (typeof lightIDs === "undefined") {
+   if (lightIDs === undefined) {
       hitboxToLightsMap.set(hitbox, [light.id]);
    } else {
       lightIDs.push(light.id);
@@ -93,7 +93,7 @@ export function removeLight(light: Light): void {
       delete lightToHitboxRecord[light.id];
 
       // If the light was attached to a hitbox, register the light's removal from that hitbox
-      if (typeof renderPartInfo !== "undefined") {
+      if (renderPartInfo !== undefined) {
          const hitbox = renderPartInfo.hitbox;
          
          const lightIDs = hitboxToLightsMap.get(hitbox)!;
@@ -108,14 +108,14 @@ export function removeLight(light: Light): void {
 
 export function removeLightsAttachedToHitbox(hitbox: Hitbox): void {
    const lightIDs = hitboxToLightsMap.get(hitbox);
-   if (typeof lightIDs === "undefined") {
+   if (lightIDs === undefined) {
       return;
    }
 
    for (let i = lightIDs.length - 1; i >= 0; i--) {
       const lightID = lightIDs[i];
       const light = lightMap.get(lightID);
-      if (typeof light !== "undefined") {
+      if (light !== undefined) {
          removeLight(light);
       }
    }
@@ -123,7 +123,7 @@ export function removeLightsAttachedToHitbox(hitbox: Hitbox): void {
 
 export function getLightPositionMatrix(light: Light): Matrix3x2 {
    const attachedHitboxInfo = lightToHitboxRecord[light.id];
-   if (typeof attachedHitboxInfo !== "undefined") {
+   if (attachedHitboxInfo !== undefined) {
       const hitbox = attachedHitboxInfo.hitbox;
 
       const x = hitbox.box.position.x + rotateXAroundOrigin(light.offset.x, light.offset.y, hitbox.box.angle);
@@ -197,7 +197,7 @@ export function updateLightsFromData(lightData: ReadonlyArray<LightData>): void 
       const lightID = data.id;
 
       const existingLight = lightMap.get(lightID);
-      if (typeof existingLight !== "undefined") {
+      if (existingLight !== undefined) {
          existingLight.intensity = data.intensity;
          existingLight.strength = data.strength;
          existingLight.radius = data.radius

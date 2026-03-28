@@ -3,12 +3,12 @@ import { cursorWorldPos } from "./camera";
 import { selectItemSlot } from "./player-action-handling";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
-import { calculateHitboxRenderPosition, getEntityTickInterp, registerDirtyRenderInfo } from "./rendering/render-part-matrices";
-import { getEntityRenderInfo } from "./world";
+import { calculateHitboxRenderPosition, getEntityTickInterp, registerDirtyRenderObject } from "./rendering/render-part-matrices";
+import { getEntityRenderObject } from "./world";
 import { gameUIState } from "../ui-state/game-ui-state";
-import { menuSelectorState } from "../ui-state/menu-selector-state";
 import { destroyHealthBar } from "../ui/game/HealthBar";
 import { deathScreen } from "../ui-state/death-screen-funcs";
+import { closeCurrentMenu, hasOpenNonEmbodiedMenu } from "../ui/menus";
 
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
 // but this is in the client so these optimisations are less important. The ease-of-use is worth it
@@ -32,7 +32,7 @@ const onPlayerDeath = (): void => {
    deathScreen.open();
    
    // Close any open menus
-   while (menuSelectorState.closeCurrentMenu());
+   while (closeCurrentMenu());
 }
 
 export function setPlayerInstance(newPlayerInstance: Entity | null): void {
@@ -58,7 +58,7 @@ export function updatePlayerDirection(clientTickInterp: number, serverTickInterp
    if (playerInstance === null) return;
 
    // Don't turn the player if they're meddling about in an inventory, cuz they're not actually looking at stuff while they're doing that
-   if (menuSelectorState.hasOpenNonEmbodiedMenu()) {
+   if (hasOpenNonEmbodiedMenu()) {
       return;
    }
 
@@ -87,8 +87,8 @@ export function updatePlayerDirection(clientTickInterp: number, serverTickInterp
    // setHitboxObservedAngularVelocity(playerHitbox, (playerHitbox.box.angle - previousAngle) * Settings.TICK_RATE);
    setHitboxObservedAngularVelocity(playerHitbox, 0);
 
-   const renderInfo = getEntityRenderInfo(playerInstance);
-   registerDirtyRenderInfo(renderInfo);
+   const renderObject = getEntityRenderObject(playerInstance);
+   registerDirtyRenderObject(renderObject);
 }
 
 // @INCOMPLETE

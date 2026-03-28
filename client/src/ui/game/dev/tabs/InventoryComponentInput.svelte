@@ -2,7 +2,7 @@
    import { EntityType, InventoryName, INVENTORY_NAME_RECORD, Item } from "webgl-test-shared";
    import { ENTITY_INVENTORY_NAME_RECORD, tabSelectorState } from "../../../../ui-state/tab-selector-state";
    import ItemSlotsContainer from "../../inventories/Inventory";
-   import { menuSelectorState } from "../../../../ui-state/menu-selector-state";
+   import { menuSelectorState } from "../../../menus";
    import { type ItemSlotCallbackInfo } from "../../inventories/EntityInteractableItemSlot";
     import InventoryItemSlots from "../../inventories/InventoryItemSlots.svelte";
 

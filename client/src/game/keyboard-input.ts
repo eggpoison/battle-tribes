@@ -22,7 +22,7 @@ export function clearPressedKeys(): void {
 }
 
 export function addKeyListener(key: string, callback: (e: KeyboardEvent) => void, id?: string): void {
-   if (typeof id !== "undefined") {
+   if (id !== undefined) {
       idKeyListeners[id] = { key: key, callback: callback };
       return;
    }
@@ -68,7 +68,7 @@ export function onKeyDown(e: KeyboardEvent): void {
 export function onKeyUp(e: KeyboardEvent): void {
    // If the event's key is undefined, don't continue.
    // This can occur when using autocomplete in a text input.
-   if (typeof e.key === "undefined") {
+   if (e.key === undefined) {
       return;
    }
    

@@ -45,7 +45,7 @@ const readLocalBiome = (reader: PacketReader): LocalBiome => {
 }
 
 const updateLocalBiomeFromData = (reader: PacketReader, localBiome: LocalBiome): void => {
-   localBiome.tiles.splice(0, localBiome.tiles.length);
+   localBiome.tiles.length = 0;
 
    // @Hack
    const numTiles = reader.readNumber();
@@ -92,7 +92,7 @@ export function updateLocalBiomesFromData(reader: PacketReader): void {
       const localBiomeID = reader.readNumber();
 
       const existingLocalBiome = visibleLocalBiomes.get(localBiomeID);
-      if (typeof existingLocalBiome !== "undefined") {
+      if (existingLocalBiome !== undefined) {
          updateLocalBiomeFromData(reader, existingLocalBiome);
       } else {
          const localBiome = readLocalBiome(reader);

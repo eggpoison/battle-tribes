@@ -1,5 +1,5 @@
 import { Entity, EntityType, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
@@ -11,6 +11,7 @@ import { WALL_SPIKE_TEXTURE_SOURCES, FLOOR_SPIKE_TEXTURE_SOURCES } from "../serv
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface RegularSpikesComponentData {}
 
@@ -27,7 +28,7 @@ export function createRegularSpikesComponentData(): RegularSpikesComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -46,11 +47,12 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       textureArrayIndex
    )
-   mainRenderPart.addTag("buildingMaterialComponent:material");
+   addRenderPartTag(mainRenderPart, "buildingMaterialComponent:material");
 
-   renderInfo.attachRenderPart(mainRenderPart);
+   renderObject.attachRenderPart(mainRenderPart);
 
    return {};
 }

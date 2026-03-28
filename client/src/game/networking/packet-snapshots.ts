@@ -5,10 +5,10 @@ import Layer from "../Layer";
 import { playerInstance, setPlayerInstance } from "../player";
 import { playHeadSound, playSound } from "../sound";
 import { ExtendedTribe, readExtendedTribeData, readShortTribeData, Tribe, tribes, updatePlayerTribe } from "../tribes";
-import { addEntityToWorld, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityLayer, getEntityRenderInfo, getEntityType, layers, removeEntity, setCurrentLayer } from "../world";
+import { addEntityToWorld, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityLayer, getEntityRenderObject, getEntityType, layers, removeEntity, setCurrentLayer } from "../world";
 import { getEntityClientComponentConfigs } from "../entity-components/client-components";
 import { ServerComponentData } from "../entity-components/components";
-import { registerDirtyRenderInfo } from "../rendering/render-part-matrices";
+import { registerDirtyRenderObject } from "../rendering/render-part-matrices";
 import { LightData, readLightsFromData, updateLightsFromData } from "../lights";
 import { changeEntityLayer, getRandomPositionInEntity, TransformComponentArray, TransformComponentData } from "../entity-components/server-components/TransformComponent";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle } from "../particles";
@@ -24,6 +24,8 @@ import { entitySelectionState } from "../../ui-state/entity-selection-state";
 import ServerComponentArray, { getServerComponentArray } from "../entity-components/ServerComponentArray";
 import { updateParticles } from "../rendering/webgl/particle-rendering";
 import { EntityClientComponentData, EntityServerComponentData, getEntityComponentArrays, getEntityServerComponentTypes, getServerComponentData } from "../entity-component-types";
+import { getSelectedEntity } from "../entity-selection";
+import { getComponentArrays } from "../entity-components/ComponentArray";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
@@ -154,7 +156,7 @@ const entityShouldInterpolate = (newTransformData: TransformComponentData, previ
          }
       }
       
-      if (typeof previousHitbox !== "undefined") {
+      if (previousHitbox !== undefined) {
          if (newHitbox.box.position.x !== previousHitbox.box.position.x
             || newHitbox.box.position.y !== previousHitbox.box.position.y
             || newHitbox.box.angle !== previousHitbox.box.angle) {
@@ -186,7 +188,7 @@ const decodeEntitySnapshot = (reader: PacketReader, interpolatingEntities: Array
       // @Speed: lot can be done to improve the way this is done
       if (previousSnapshot !== null && componentType === ServerComponentType.transform) {
          const previousEntityData = previousSnapshot.entities.get(entity);
-         if (typeof previousEntityData !== "undefined") {
+         if (previousEntityData !== undefined) {
             const previousTransformComponentData = getServerComponentData(previousEntityData.serverComponentData, componentTypes, componentType);
             const currentTransformComponentData = getServerComponentData(entityServerComponentData, componentTypes, componentType);
             if (entityShouldInterpolate(currentTransformComponentData, previousTransformComponentData)) {
@@ -456,7 +458,7 @@ const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {
    // @SPEED: iterates ALL, both client and server. when only needs to iterate the server component arrays
    for (const componentArray of componentArrays) {
       // @SPEED: instanceof!!
-      if (componentArray instanceof ServerComponentArray && typeof componentArray.updateFromData !== "undefined") {
+      if (componentArray instanceof ServerComponentArray && componentArray.updateFromData !== undefined) {
          const componentData = getServerComponentData(data.serverComponentData, componentTypes, componentArray.componentType);
          componentArray.updateFromData(componentData, entity);
       }
@@ -465,8 +467,8 @@ const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {
    // @Speed: Does this mean we can just collect all updated entities each tick and not have to do the dirty array bullshit?
    // If you're updating the entity, then the server must have had some reason to send the data, so we should always consider the entity dirty.
    // @Incomplete: Are there some situations where this isn't the case?
-   const renderInfo = getEntityRenderInfo(entity);
-   registerDirtyRenderInfo(renderInfo);
+   const renderObject = getEntityRenderObject(entity);
+   registerDirtyRenderObject(renderObject);
 }
 
 // @CLEANUP see comment in txt
@@ -482,7 +484,7 @@ const updatePlayerFromData = (playerInstance: number, data: EntitySnapshot): voi
    const componentArrays = getEntityComponentArrays(EntityType.player);
    for (const componentArray of componentArrays) {
       // @Speed!! instanceof!!
-      if (componentArray instanceof ServerComponentArray && typeof componentArray.updatePlayerFromData !== "undefined") {
+      if (componentArray instanceof ServerComponentArray && componentArray.updatePlayerFromData !== undefined) {
          const componentData = getServerComponentData(data.serverComponentData, componentTypes, componentArray.componentType);
          // @INCOMPLETE: is never true??
          componentArray.updatePlayerFromData(componentData, false);
@@ -494,8 +496,8 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
    // @HACK @CLEANUP impure. Done before so that server data can override particles
    updateParticles();
 
-   // @HACKY! So that initial chunk-rendered-entities can fill their render info without crashing, because that requires currentSnapshot and nextSnapshot when interpolating
-   if (typeof currentSnapshot === "undefined") {
+   // @HACKY! So that initial chunk-rendered-entities can fill their render object without crashing, because that requires currentSnapshot and nextSnapshot when interpolating
+   if (currentSnapshot === undefined) {
       setNextSnapshot(snapshot);
    }
    setCurrentSnapshot(snapshot);
@@ -508,7 +510,7 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
    // Tribes are done before entities because entity creation functions might require playerTribe to be defined.
    updatePlayerTribe(snapshot.playerTribeData);
    // @GARBAGE
-   tribes.splice(0, tribes.length);
+   tribes.length = 0;
    tribes.push(snapshot.playerTribeData);
    for (const tribe of snapshot.enemyTribeData) {
       tribes.push(tribe);
@@ -534,16 +536,17 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
          }
       }
    }
+
    // @Cleanup!!
-   const selectedEntity = entitySelectionState.selectedEntity;
+   const selectedEntity = getSelectedEntity();
    if (selectedEntity !== null) {
       const snapshotData = snapshot.entities.get(selectedEntity);
-      if (typeof snapshotData !== "undefined") {
-         const componentArrays = getEntityComponentArrays(selectedEntity);
+      if (snapshotData !== undefined) {
+         const componentArrays = getEntityComponentArrays(getEntityType(selectedEntity));
          for (const componentArray of componentArrays) {
             // @Speed!! instanceof!!
             if (componentArray instanceof ServerComponentArray) {
-               if (typeof componentArray.updateSelectedEntityState !== "undefined") {
+               if (componentArray.updateSelectedEntityState !== undefined) {
                   // @Speed: until I make component data only send on change this will run every tick for selected entities!! which is bad not only for performance but for proofchecking - what if a component isn't having its data registered as changed when it's changed, but it's masked up cuz all the data is sent anyway???
                   componentArray.updateSelectedEntityState(selectedEntity);
                }
@@ -557,6 +560,12 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
       if (entityExists(entityRemoveInfo.entity)) {
          removeEntity(entityRemoveInfo.entity, entityRemoveInfo.isDestroyed);
       }
+   }
+   // Destroy removed components
+   const componentArrays = getComponentArrays();
+   for (let i = 0, len = componentArrays.length; i < len; i++) {
+      const componentArray = componentArrays[i];
+      componentArray.removeFlaggedComponents();
    }
    
    setPlayerInstance(snapshot.playerInstance);
@@ -599,7 +608,7 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
             if (hitHitbox !== null) {
                const componentArrays = getEntityComponentArrays(getEntityType(hit.entity));
                for (const componentArray of componentArrays) {
-                  if (typeof componentArray.onHit !== "undefined") {
+                  if (componentArray.onHit !== undefined) {
                      componentArray.onHit(hit.entity, hitHitbox, hit.position, hit.flags);
                   }
                }

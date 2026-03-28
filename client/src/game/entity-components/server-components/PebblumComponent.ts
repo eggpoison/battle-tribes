@@ -3,7 +3,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
 
 export interface PebblumComponentData {}
@@ -19,7 +19,7 @@ function decodeData(): PebblumComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -28,20 +28,20 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       randAngle(),
+      0, 12,
       getTextureArrayIndex("entities/pebblum/pebblum-nose.png")
    )
-   nose.offset.y = 12;
-   renderInfo.attachRenderPart(nose);
+   renderObject.attachRenderPart(nose);
 
    // Body
    const body = new TexturedRenderPart(
       hitbox,
       1,
       randAngle(),
+      0, -8,
       getTextureArrayIndex("entities/pebblum/pebblum-body.png")
    )
-   body.offset.y = -8;
-   renderInfo.attachRenderPart(body);
+   renderObject.attachRenderPart(body);
 
    return {};
 }

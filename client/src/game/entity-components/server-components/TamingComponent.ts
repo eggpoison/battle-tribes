@@ -1,17 +1,18 @@
 import { UtilVars, TribeType, getTamingSkill, TamingSkill, TamingSkillID, Settings, PacketReader, ItemType, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { getPlayerSelectedItem } from "../../player-action-handling";
 import { RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { playerTribe } from "../../tribes";
-import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../world";
+import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { tamingMenuState } from "../../../ui-state/taming-menu-state";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getRenderThingByTag } from "../../render-parts/render-part-tags";
 
 export interface TamingSkillLearning {
    readonly skill: TamingSkill;
@@ -117,6 +118,7 @@ const createFollowHalo = (headRenderPart: RenderPart): RenderPart => {
       headRenderPart,
       HALO_RENDER_PART_Z_INDEX,
       0,
+      0, 0,
       getTextureArrayIndex("entities/miscellaneous/follow-halo.png")
    );
    followHalo.inheritParentRotation = false;
@@ -128,6 +130,7 @@ const createAttackHalo = (headRenderPart: RenderPart): RenderPart => {
       headRenderPart,
       HALO_RENDER_PART_Z_INDEX,
       0,
+      0, 0,
       getTextureArrayIndex("entities/miscellaneous/attack-halo.png")
    );
    attackHalo.inheritParentRotation = false;
@@ -147,6 +150,7 @@ const createTamingTierRenderPart = (tamingTier: number, parentHitbox: Hitbox): T
       parentHitbox,
       TAMING_TIER_RENDER_PART_Z_INDEX,
       0,
+      0, 0,
       getTextureArrayIndex(TAMING_TIER_TEXTURE_SOURCES[tamingTier])
    );
    renderPart.inheritParentRotation = false;
@@ -154,7 +158,7 @@ const createTamingTierRenderPart = (tamingTier: number, parentHitbox: Hitbox): T
    return renderPart;
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -162,13 +166,13 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const tamingComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.taming);
    const tamingTier = tamingComponentData.tamingTier;
 
-   // @HACK @TEMPORARY: the entity intermediate info's render info is the wrong one to use for glurbs, sooo... we don't set it and let the updateFromData figure it out.
+   // @HACK @TEMPORARY: the entity intermediate info's render object is the wrong one to use for glurbs, sooo... we don't set it and let the updateFromData figure it out.
    const tamingTierRenderPart = null;
    if (1+1===3) {
       const tamingTierRenderPart = tamingTier > 0 ? createTamingTierRenderPart(tamingTier, hitbox) : null;
       // @Speed: 2nd comparison
       if (tamingTierRenderPart !== null) {
-         renderInfo.attachRenderPart(tamingTierRenderPart);
+         renderObject.attachRenderPart(tamingTierRenderPart);
       }
    }
    
@@ -176,9 +180,9 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    let attackHalo: RenderPart | null;
    // if (tamingComponentData.isAttacking) {
    //    // @Copynpaste
-   //    const headRenderPart = renderInfo.getRenderThing("tamingComponent:head");
+   //    const headRenderPart = renderObject.getRenderThing("tamingComponent:head");
    //    attackHalo = createAttackHalo(headRenderPart);
-   //    renderInfo.attachRenderPart(attackHalo);
+   //    renderObject.attachRenderPart(attackHalo);
    // } else {
    //    attackHalo = null;
    // }
@@ -187,9 +191,9 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    // Follow halo
    let followHalo: RenderPart | null;
    // if (tamingComponentData.isFollowing) {
-   //    const headRenderPart = renderInfo.getRenderThing("tamingComponent:head");
+   //    const headRenderPart = renderObject.getRenderThing("tamingComponent:head");
    //    followHalo = createFollowHalo(headRenderPart);
-   //    renderInfo.attachRenderPart(followHalo);
+   //    renderObject.attachRenderPart(followHalo);
    // } else {
    //    followHalo = null;
    // }
@@ -304,8 +308,8 @@ const getHeadHitbox = (entity: Entity): Hitbox => {
 }
 
 // @Hack
-const getHeadRenderInfo = (entity: Entity): EntityRenderInfo => {
-   return getEntityRenderInfo(entity);
+const getHeadRenderObject = (entity: Entity): EntityRenderObject => {
+   return getEntityRenderObject(entity);
 }
 
 function updateFromData(data: TamingComponentData, entity: Entity): void {
@@ -317,15 +321,15 @@ function updateFromData(data: TamingComponentData, entity: Entity): void {
           const hitbox = getHeadHitbox(entity);
          
          tamingComponent.tamingTierRenderPart = createTamingTierRenderPart(tamingTier, hitbox);
-         const renderInfo = getHeadRenderInfo(entity);
-         renderInfo.attachRenderPart(tamingComponent.tamingTierRenderPart);
+         const renderObject = getHeadRenderObject(entity);
+         renderObject.attachRenderPart(tamingComponent.tamingTierRenderPart);
       } else {
          tamingComponent.tamingTierRenderPart.textureArrayIndex = getTextureArrayIndex(TAMING_TIER_TEXTURE_SOURCES[tamingTier]);
       }
    }
    tamingComponent.tamingTier = tamingTier;
    
-   tamingComponent.foodEatenInTier = data.foodEatenInTier
+   tamingComponent.foodEatenInTier = data.foodEatenInTier;
    tamingComponent.name = data.name;
 
    for (let i = 0; i < data.acquiredSkills.length; i++) {
@@ -336,7 +340,7 @@ function updateFromData(data: TamingComponentData, entity: Entity): void {
    }
 
    // @SPEED @GARBAGE
-   tamingComponent.skillLearningArray.splice(0, tamingComponent.skillLearningArray.length)
+   tamingComponent.skillLearningArray.length = 0;
    for (const skillLearning of data.skillLearningArray) {
       tamingComponent.skillLearningArray.push(skillLearning);
    }
@@ -347,27 +351,27 @@ function updateFromData(data: TamingComponentData, entity: Entity): void {
    // @Copynpaste
    if (tamingComponent.isAttacking) {
       if (tamingComponent.attackHalo === null) {
-         const renderInfo = getEntityRenderInfo(entity);
-         const headRenderPart = renderInfo.getRenderThing("tamingComponent:head")
+         const renderObject = getEntityRenderObject(entity);
+         const headRenderPart = getRenderThingByTag(renderObject, "tamingComponent:head");
          tamingComponent.attackHalo = createAttackHalo(headRenderPart);
-         renderInfo.attachRenderPart(tamingComponent.attackHalo);
+         renderObject.attachRenderPart(tamingComponent.attackHalo);
       }
    } else if (tamingComponent.attackHalo !== null) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.removeRenderPart(tamingComponent.attackHalo);
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.removeRenderPart(tamingComponent.attackHalo);
       tamingComponent.attackHalo = null;
    }
 
    if (tamingComponent.isFollowing) {
       if (tamingComponent.followHalo === null) {
-         const renderInfo = getHeadRenderInfo(entity);
-         const headRenderPart = renderInfo.getRenderThing("tamingComponent:head")
+         const renderObject = getHeadRenderObject(entity);
+         const headRenderPart = getRenderThingByTag(renderObject, "tamingComponent:head");
          tamingComponent.followHalo = createFollowHalo(headRenderPart);
-         renderInfo.attachRenderPart(tamingComponent.followHalo);
+         renderObject.attachRenderPart(tamingComponent.followHalo);
       }
    } else if (tamingComponent.followHalo !== null) {
-      const renderInfo = getHeadRenderInfo(entity);
-      renderInfo.removeRenderPart(tamingComponent.followHalo);
+      const renderObject = getHeadRenderObject(entity);
+      renderObject.removeRenderPart(tamingComponent.followHalo);
       tamingComponent.followHalo = null;
    }
 }

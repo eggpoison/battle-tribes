@@ -1,15 +1,14 @@
-import { TribesmanTitle, Settings, Entity, EntityType, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize, distance, randAngle } from "webgl-test-shared";
+import { TribesmanTitle, Settings, Entity, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize, distance, randAngle } from "webgl-test-shared";
 import { currentSnapshot } from "./game";
 import { playHeadSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
 import { getRandomPositionInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { getEntityType } from "./world";
 import { InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
 import { TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { sendStudyTechPacket } from "./networking/packet-sending/packet-sending";
 import { playerInstance } from "./player";
-import { entitySelectionState } from "../ui-state/entity-selection-state";
 import { cursorWorldPos } from "./camera";
+import { getSelectedEntity } from "./entity-selection";
 
 export interface ResearchOrb {
    /* X position of the node in the world */
@@ -56,6 +55,7 @@ export function getResearchOrbCompleteProgress(): number {
    return orbCompleteProgress / RESEARCH_ORB_COMPLETE_TIME;
 }
 
+// @Incomplete??
 // export function updateActiveResearchBench(): void {
 //    const selectedStructure = entitySelectionState.selectedEntity;
 //    if (selectedStructure === null) {
@@ -83,7 +83,7 @@ export function setActiveResearchBench(bench: Entity): void {
 
 export function updateResearchOrb(): void {
    // Make sure the bench is still selected
-   if (entitySelectionState.selectedEntity !== currentBench) {
+   if (getSelectedEntity() !== currentBench) {
       currentResearchOrb = null;
       return;
    }
@@ -121,7 +121,7 @@ const completeOrb = (): void => {
    useInfo.lastAttackTicks = currentSnapshot.tick;
    
    // @Hack: "!"
-   const selectedStructure = entitySelectionState.selectedEntity!;
+   const selectedStructure = getSelectedEntity()!;
    currentResearchOrb = generateResearchOrb(selectedStructure);
    orbCompleteProgress = 0;
 }

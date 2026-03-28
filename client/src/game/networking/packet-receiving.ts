@@ -79,7 +79,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
          const tile = new Tile(tileX, tileY, tileType, tileBiome, mithrilRichness);
          tiles.push(tile);
    
-         if (typeof flowDirections[tileX] === "undefined") {
+         if (flowDirections[tileX] === undefined) {
             flowDirections[tileX] = {};
          }
          flowDirections[tileX]![tileY] = flowDirection;
@@ -90,7 +90,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
             temperature: temperature,
             humidity: humidity
          };
-         if (typeof grassInfoRecord[tileX] === "undefined") {
+         if (grassInfoRecord[tileX] === undefined) {
             grassInfoRecord[tileX] = {};
          }
          grassInfoRecord[tileX]![tileY] = grassInfo;

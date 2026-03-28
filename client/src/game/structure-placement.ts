@@ -687,7 +687,7 @@ const getBracingsPlaceInfo = (regularPlacePosition: Point, layer: Layer): Struct
       }
    }
 
-   if (typeof closestTileCorner === "undefined" || typeof secondClosestTileCorner === "undefined") {
+   if (closestTileCorner === undefined || secondClosestTileCorner === undefined) {
       throw new Error();
    }
 

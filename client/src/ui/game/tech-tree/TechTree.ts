@@ -7,7 +7,7 @@
 
 import { gameIsRunning } from "../../../game/game";
 import { addKeyListener } from "../../../game/keyboard-input";
-import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state";
+import { Menu, menuSelectorState } from "../../menus";
 
 // const boundsScale = 16;
 

@@ -1,6 +1,6 @@
 import { Settings } from "webgl-test-shared";
 import { maxVisibleChunkX, maxVisibleChunkY, maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleChunkX, minVisibleChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY, refreshCameraPosition, refreshCameraView } from "../camera";
-import { getHighlightedRenderInfo } from "../entity-selection";
+import { getHighlightedEntity, getHighlightedRenderObject, getSelectedEntity } from "../entity-selection";
 import Layer from "../Layer";
 import { updatePlayerDirection } from "../player";
 import { RenderLayer, MAX_RENDER_LAYER } from "../render-layers";
@@ -11,7 +11,7 @@ import { createTextureAtlases } from "../texture-atlases/texture-atlases";
 import { preloadTextureImages, loadTextures } from "../textures";
 import { isDev } from "../utils";
 import { gl, windowWidth, windowHeight, createTexture, setupWebGL } from "../webgl";
-import { layers, getCurrentLayer, entityExists, getEntityRenderInfo } from "../world";
+import { layers, getCurrentLayer, entityExists, getEntityRenderObject } from "../world";
 import { renderLightLevelsText } from "./light-levels-text-rendering";
 import { createRenderChunks, RENDER_CHUNK_SIZE } from "./render-chunks";
 import { resetRenderOrder, renderNextRenderables } from "./render-loop";
@@ -58,7 +58,7 @@ import { entitySelectionState } from "../../ui-state/entity-selection-state";
 import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { debugDisplayState } from "../../ui-state/debug-display-state";
 import { nerdVision } from "../../ui-state/nerd-vision-funcs";
-import { Menu, menuSelectorState } from "../../ui-state/menu-selector-state";
+import { Menu, menuIsOpen } from "../../ui/menus";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -237,13 +237,15 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    if (layer === getCurrentLayer()) {
       // @Cleanup: should this only be for the current layer?
       // @Cleanup this is so messy
-      if (entitySelectionState.selectedEntity !== null) {
-         const renderInfo = getEntityRenderInfo(entitySelectionState.selectedEntity);
-         renderEntitySelection(renderInfo, frameProgress, true);
+      const selectedEntity = getSelectedEntity();
+      if (selectedEntity !== null) {
+         const renderObject = getEntityRenderObject(selectedEntity);
+         renderEntitySelection(renderObject, frameProgress, true);
       }
-      const renderInfo = getHighlightedRenderInfo();
-      if (renderInfo !== null && entitySelectionState.highlightedEntity !== entitySelectionState.selectedEntity) {
-         renderEntitySelection(renderInfo, frameProgress, false);
+      const renderObject = getHighlightedRenderObject();
+      const highlightedEntity = getHighlightedEntity();
+      if (renderObject !== null && highlightedEntity !== selectedEntity) {
+         renderEntitySelection(renderObject, frameProgress, false);
       }
    }
    
@@ -307,7 +309,7 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number, d
 
    updateUBOs();
 
-   refreshCameraPosition(clientTickInterp, serverTickInterp, deltaTimeMS);
+   refreshCameraPosition(clientTickInterp, serverTickInterp);
    refreshCameraView();
    // Done immediately following the camera position update as the player direction is reliant on it.
    updatePlayerDirection(clientTickInterp, serverTickInterp);
@@ -336,7 +338,7 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number, d
    // @INCOMPLETE @SQUEAM
    // updateInspectHealthBar();
    
-   if (menuSelectorState.menuIsOpen(Menu.techTree)) {
+   if (menuIsOpen(Menu.techTree)) {
       renderTechTree();
       renderTechTreeItems();
    }

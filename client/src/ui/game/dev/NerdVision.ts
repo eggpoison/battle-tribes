@@ -3,6 +3,7 @@ import { addKeyListener } from "../../../game/keyboard-input";
 import { openDebugInfoDisplay } from "./DebugInfoDisplay";
 import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 import { hideFrameGraph, showFrameGraph } from "./FrameGraph";
+import { createTabSelector, destroyTabSelector } from "./TabSelector";
 
 let isVisible = false;
 let _terminalIsVisible = false;
@@ -48,6 +49,7 @@ function openNerdVision(): void {
    document.body.appendChild(nerdVisionElem);
 
    openDebugInfoDisplay(nerdVisionElem);
+   createTabSelector(nerdVisionElem);
    
    showFrameGraph();
 };
@@ -55,6 +57,8 @@ function openNerdVision(): void {
 function closeNerdVision(): void {
    document.getElementById("nerd-vision-wrapper")?.remove();
 
+   destroyTabSelector();
+   
    hideFrameGraph();
 };
 

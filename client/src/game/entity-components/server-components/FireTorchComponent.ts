@@ -5,7 +5,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { TransformComponentArray } from "./TransformComponent";
 import { createEmberParticle, createSmokeParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../game";
 import { getTransformComponentData } from "../../entity-component-types";
 
@@ -27,7 +27,7 @@ function decodeData(): FireTorchComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
@@ -35,9 +35,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex("entities/fire-torch/fire-torch.png")
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }

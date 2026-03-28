@@ -57,9 +57,9 @@ const calculateBoxAdjustment = (entity: Entity): Point => {
    return new Point(0, 0);
    // @INCOMPLETE
    // const transformComponent = TransformComponentArray.getComponent(entity);
-   // const renderInfo = getEntityRenderInfo(entity);
+   // const renderObject = getEntityRenderObject(entity);
 
-   // const adjustment = renderInfo.renderPosition.copy();
+   // const adjustment = renderObject.renderPosition.copy();
    // adjustment.x -= transformComponent.position.x;
    // adjustment.y -= transformComponent.position.y;
    // return adjustment;

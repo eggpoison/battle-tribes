@@ -14,11 +14,11 @@ import { createStatusEffectComponentData } from "./entity-components/server-comp
 import { createStructureComponentData } from "./entity-components/server-components/StructureComponent";
 import { createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
-import { EntityRenderInfo, updateEntityRenderInfoRenderData } from "./EntityRenderInfo";
+import { EntityRenderObject, recalculateEntityRenderObjectData } from "./EntityRenderObject";
 import { currentSnapshot } from "./game";
 import Layer from "./Layer";
 import { thingIsVisualRenderPart } from "./render-parts/render-parts";
-import { removeGhostRenderInfo } from "./rendering/webgl/entity-ghost-rendering";
+import { removeGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";
 import { playerTribe } from "./tribes";
 import { createEntityCreationInfo, EntityComponentData, layers } from "./world";
 import { padBoxData, readBoxFromData } from "./networking/packet-hitboxes";
@@ -34,7 +34,7 @@ export interface VirtualBuilding {
    readonly position: Readonly<Point>;
    readonly rotation: number;
    readonly boxes: ReadonlyArray<Box>;
-   readonly renderInfo: EntityRenderInfo;
+   readonly renderObject: EntityRenderObject;
 }
 
 export interface VirtualBuildingSafetySimulation {
@@ -189,23 +189,23 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
    // Create the entity
    const creationInfo = createEntityCreationInfo(0, entityComponentData);
 
-   const renderInfo = creationInfo.renderInfo;
+   const renderObject = creationInfo.renderObject;
 
    // Modify all the render part's opacity
-   for (let i = 0; i < renderInfo.renderPartsByZIndex.length; i++) {
-      const renderThing = renderInfo.renderPartsByZIndex[i];
+   for (let i = 0; i < renderObject.renderPartsByZIndex.length; i++) {
+      const renderThing = renderObject.renderPartsByZIndex[i];
       if (thingIsVisualRenderPart(renderThing)) {
          renderThing.opacity *= 0.5;
       }
    }
 
-   // @Hack: Manually set the render info's position and rotation
+   // @Hack: Manually set the render object's position and rotation
    // @INCOMPLETE
    // const transformComponentData = components[ServerComponentType.transform]!;
-   // renderInfo.renderPosition.x = transformComponentData.position.x;
-   // renderInfo.renderPosition.y = transformComponentData.position.y;
-   // renderInfo.rotation = transformComponentData.rotation;
-   updateEntityRenderInfoRenderData(renderInfo);
+   // renderObject.renderPosition.x = transformComponentData.position.x;
+   // renderObject.renderPosition.y = transformComponentData.position.y;
+   // renderObject.rotation = transformComponentData.rotation;
+   recalculateEntityRenderObjectData(renderObject);
 
    return {
       entityType: entityType,
@@ -214,7 +214,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
       position: new Point(x, y),
       rotation: rotation,
       boxes: boxes,
-      renderInfo: renderInfo
+      renderObject: renderObject
    };
 }
 
@@ -223,7 +223,7 @@ export function readGhostVirtualBuildings(reader: PacketReader): void {
       const virtualBuildingID = reader.readNumber();
 
       const existingGhostBuildingPlan = ghostBuildingPlans.get(virtualBuildingID);
-      if (typeof existingGhostBuildingPlan !== "undefined") {
+      if (existingGhostBuildingPlan !== undefined) {
          padVirtualBuildingData(reader);
 
          const numPotentialPlans = reader.readNumber();
@@ -276,7 +276,7 @@ export function getVisibleBuildingPlan(): GhostBuildingPlan | null {
       }
    }
 
-   if (typeof closestGhostBuildingPlan !== "undefined") {
+   if (closestGhostBuildingPlan !== undefined) {
       return closestGhostBuildingPlan;
    }
    return null;
@@ -286,7 +286,7 @@ export function pruneGhostBuildingPlans(): void {
    for (const pair of ghostBuildingPlans) {
       const ghostBuildingInfo = pair[1];
       if (ghostBuildingInfo.lastUpdateTicks !== currentSnapshot.tick) {
-         removeGhostRenderInfo(ghostBuildingInfo.virtualBuilding.renderInfo);
+         removeGhostRenderObject(ghostBuildingInfo.virtualBuilding.renderObject);
          ghostBuildingPlans.delete(pair[0]);
       }
    }

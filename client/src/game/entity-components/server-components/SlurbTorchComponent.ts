@@ -5,7 +5,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { TransformComponentArray } from "./TransformComponent";
 import { createSlurbParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
 
 const enum Vars {
@@ -33,7 +33,7 @@ function decodeData(): SlurbTorchComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
@@ -41,9 +41,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex("entities/slurb-torch/slurb-torch.png")
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }

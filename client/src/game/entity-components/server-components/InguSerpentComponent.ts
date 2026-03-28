@@ -1,5 +1,5 @@
 import { randAngle, randFloat, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import Particle from "../../Particle";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -10,6 +10,7 @@ import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 const ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];
 const SIZE = 80;
@@ -63,7 +64,7 @@ const createIceSpeckProjectile = (hitbox: Hitbox): void => {
    highMonocolourParticles.push(particle);
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
    for (const hitbox of transformComponentData.hitboxes) {
@@ -72,34 +73,38 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
             hitbox,
             3,
             0,
+            0, 0,
             getTextureArrayIndex("entities/ingu-serpent/head.png")
          );
-         renderPart.addTag("tamingComponent:head");
-         renderInfo.attachRenderPart(renderPart);
+         addRenderPartTag(renderPart, "tamingComponent:head");
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.INGU_SERPENT_BODY_1)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                2,
                0,
+               0, 0,
                getTextureArrayIndex("entities/ingu-serpent/body-1.png")
             )
          );
       } else if (hitbox.flags.includes(HitboxFlag.INGU_SERPENT_BODY_2)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                1,
                0,
+               0, 0,
                getTextureArrayIndex("entities/ingu-serpent/body-2.png")
             )
          );
       } else if (hitbox.flags.includes(HitboxFlag.INGU_SERPENT_TAIL)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                0,
                0,
+               0, 0,
                getTextureArrayIndex("entities/ingu-serpent/tail.png")
             )
          );

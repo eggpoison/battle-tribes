@@ -8,7 +8,7 @@ import { createBlockParticle, createDeepFrostHeartBloodParticles, createEmberPar
 import { VisualRenderPart, RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { Light, removeLight } from "../../lights";
@@ -21,6 +21,8 @@ import { tickPlayerItems } from "../../player-action-handling";
 import { playSoundOnHitbox } from "../../sound";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
+import { getRenderThingsByTag } from "../../render-parts/render-part-tags";
+import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -353,8 +355,8 @@ const updateLimbStateFromPacket = (reader: PacketReader, limbState: LimbState): 
 }
 
 const resetThing = (thing: RenderPart): void => {
-   thing.offset.x = 0;
-   thing.offset.y = 0;
+   thing.offsetX = 0;
+   thing.offsetY = 0;
    thing.angle = 0;
 }
 
@@ -362,8 +364,8 @@ const setThingToState = (humanoidRadius: number, thing: RenderPart, state: LimbS
    const direction = state.direction;
    const offset = humanoidRadius + state.extraOffset;
 
-   thing.offset.x = offset * Math.sin(direction) + state.extraOffsetX;
-   thing.offset.y = offset * Math.cos(direction) + state.extraOffsetY;
+   thing.offsetX = offset * Math.sin(direction) + state.extraOffsetX;
+   thing.offsetY = offset * Math.cos(direction) + state.extraOffsetY;
    thing.angle = state.angle;
 }
 
@@ -376,8 +378,8 @@ const lerpThingBetweenStates = (entity: Entity, thing: RenderPart, startState: L
    const extraOffset = lerp(startState.extraOffset, endState.extraOffset, progress);
    const offset = getHumanoidRadius(entity) + extraOffset;
    
-   thing.offset.x = offset * Math.sin(direction) + lerp(startState.extraOffsetX, endState.extraOffsetX, progress);
-   thing.offset.y = offset * Math.cos(direction) + lerp(startState.extraOffsetY, endState.extraOffsetY, progress);
+   thing.offsetX = offset * Math.sin(direction) + lerp(startState.extraOffsetX, endState.extraOffsetX, progress);
+   thing.offsetY = offset * Math.cos(direction) + lerp(startState.extraOffsetY, endState.extraOffsetY, progress);
    // @Incomplete? Hand mult
    thing.angle = lerp(startState.angle, endState.angle, progress);
    // limb.rotation = attackHandRotation * handMult;
@@ -385,8 +387,8 @@ const lerpThingBetweenStates = (entity: Entity, thing: RenderPart, startState: L
 
 const removeHeldItemRenderPart = (inventoryUseComponent: InventoryUseComponent, entity: Entity, limbIdx: number): void => {
    if (inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
       delete inventoryUseComponent.activeItemRenderParts[limbIdx];
    }
 }
@@ -403,18 +405,19 @@ const updateHeldItemRenderPart = (inventoryUseComponent: InventoryUseComponent, 
          inventoryUseComponent.limbAttachPoints[limbIdx],
          limbIdx === 0 ? 1.15 : 1.1,
          0,
+         0, 0,
          getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[heldItemType].entityTextureSource)
       );
 
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.attachRenderPart(renderPart);
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.attachRenderPart(renderPart);
       inventoryUseComponent.activeItemRenderParts[limbIdx] = renderPart;
    }
 
    const heldItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
 
-   heldItemRenderPart.offset.x = offsetX;
-   heldItemRenderPart.offset.y = offsetY;
+   heldItemRenderPart.offsetX = offsetX;
+   heldItemRenderPart.offsetY = offsetY;
    heldItemRenderPart.angle = rotation;
    
    // Render part texture
@@ -502,8 +505,8 @@ const updateHeldItemRenderPartForAttack = (inventoryUseComponent: InventoryUseCo
 
 const removeArrowRenderPart = (inventoryUseComponent: InventoryUseComponent, entity: Entity, limbIdx: number): void => {
     if (inventoryUseComponent.arrowRenderParts.hasOwnProperty(limbIdx)) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.removeRenderPart(inventoryUseComponent.arrowRenderParts[limbIdx]);
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.removeRenderPart(inventoryUseComponent.arrowRenderParts[limbIdx]);
       delete inventoryUseComponent.arrowRenderParts[limbIdx];
    }
 }
@@ -606,15 +609,15 @@ function getMaxRenderParts(entityComponentData: EntityComponentData): number {
 function onLoad(entity: Entity): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
-   const renderInfo = getEntityRenderInfo(entity);
+   const renderObject = getEntityRenderObject(entity);
 
-   const attachPoints = renderInfo.getRenderThings("inventoryUseComponent:attachPoint") as Array<RenderAttachPoint>;
+   const attachPoints = getRenderThingsByTag(renderObject, "inventoryUseComponent:attachPoint") as Array<RenderAttachPoint>;
    for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
       inventoryUseComponent.limbAttachPoints.push(attachPoints[limbIdx]);
    }
    
    // @Cleanup
-   const handRenderParts = renderInfo.getRenderThings("inventoryUseComponent:hand") as Array<VisualRenderPart>;
+   const handRenderParts = getRenderThingsByTag(renderObject, "inventoryUseComponent:hand") as Array<VisualRenderPart>;
    for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
       inventoryUseComponent.limbRenderParts.push(handRenderParts[limbIdx]);
    }
@@ -652,13 +655,14 @@ function onTick(entity: Entity): void {
          case ItemType.deepfrost_heart: {
             // Make the deep frost heart item spew blue blood particles
             const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
-            createDeepFrostHeartBloodParticles(activeItemRenderPart.renderPosition.x, activeItemRenderPart.renderPosition.y, velocity.x, velocity.y);
+            const renderPosition = getRenderPartRenderPosition(activeItemRenderPart);
+            createDeepFrostHeartBloodParticles(renderPosition.x, renderPosition.y, velocity.x, velocity.y);
             break;
          }
          case ItemType.fireTorch: {
             const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
             // @Hack: shouldn't happen in the first place
-            if (typeof activeItemRenderPart === "undefined") {
+            if (activeItemRenderPart === undefined) {
                break;
             }
             
@@ -694,7 +698,7 @@ function onTick(entity: Entity): void {
          case ItemType.slurbTorch: {
             const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
             // @Hack: shouldn't happen in the first place
-            if (typeof activeItemRenderPart === "undefined") {
+            if (activeItemRenderPart === undefined) {
                break;
             }
 
@@ -804,7 +808,7 @@ function onTick(entity: Entity): void {
 //       if (itemInfoIsUtility(activeItem.type, itemInfo)) {
 //          // @Hack: only works for player
 //          // Change the bow charging texture based on the charge progress
-//          if ((limbInfo.action === LimbAction.chargeBow || limbInfo.action === LimbAction.loadCrossbow || typeof definiteGameState.hotbarCrossbowLoadProgressRecord[limbInfo.selectedItemSlot] !== "undefined") && itemInfoIsBow(activeItem.type, itemInfo)) {
+//          if ((limbInfo.action === LimbAction.chargeBow || limbInfo.action === LimbAction.loadCrossbow || definiteGameState.hotbarCrossbowLoadProgressRecord[limbInfo.selectedItemSlot] !== undefined) && itemInfoIsBow(activeItem.type, itemInfo)) {
 //             const lastActionTicks = limbInfo.action === LimbAction.chargeBow ? limbInfo.lastBowChargeTicks : limbInfo.lastCrossbowLoadTicks;
 //             const secondsSinceLastAction = getSecondsSinceTickTimestamp(lastActionTicks);
 //             // @Hack: why does itemInfoIsBow not narrow this fully??
@@ -900,7 +904,7 @@ const updateLimbTorch = (limb: LimbInfo, heldItemRenderPart: RenderPart, entity:
    
    // If selecting an item with a torch trait, create a light
    // @Hack: The check for undefined
-   if (heldItemType !== null && typeof heldItemRenderPart !== "undefined") {
+   if (heldItemType !== null && heldItemRenderPart !== undefined) {
       let hasLight: boolean;
       let lightIntensity!: number;
       let lightStrength!: number;
@@ -984,7 +988,7 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
    const limbRenderPart = inventoryUseComponent.limbRenderParts[limbIdx];
    const attachPoint = inventoryUseComponent.limbAttachPoints[limbIdx];
    
-   attachPoint.shakeAmount = 0;
+   setRenderPartShakeAmount(attachPoint, 0);
 
    const heldItemType = limb.heldItemType;
    const itemSize = heldItemType !== null && itemInfoIsTool(heldItemType, ITEM_INFO_RECORD[heldItemType]) ? 8 * 4 : 4 * 4;
@@ -1070,8 +1074,8 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
       //             getTextureArrayIndex(arrowTextureSource)
       //          );
 
-      //          const renderInfo = getEntityRenderInfo(entity);
-      //          renderInfo.attachRenderPart(inventoryUseComponent.arrowRenderParts[limbIdx]);
+      //          const renderObject = getEntityRenderObject(entity);
+      //          renderObject.attachRenderPart(inventoryUseComponent.arrowRenderParts[limbIdx]);
       //       }
 
       //       const pullbackOffset = lerp(10, -8, Math.min(chargeProgress, 1));
@@ -1183,7 +1187,7 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
          updateHeldItemRenderPartForAttack(inventoryUseComponent, entity, limbIdx, heldItemType);
          removeArrowRenderPart(inventoryUseComponent, entity, limbIdx);
 
-         attachPoint.shakeAmount = chargeProgress * 1.5;
+         setRenderPartShakeAmount(attachPoint, chargeProgress * 1.5);
          break;
       }
       case LimbAction.engageBlock:
@@ -1249,12 +1253,12 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
                   attachPoint,
                   attachPoint.zIndex + 0.15,
                   0,
+                  0, 6,
                   getTextureArrayIndex(arrowTextureSource)
                );
-               inventoryUseComponent.arrowRenderParts[limbIdx].offset.y = 6;
 
-               const renderInfo = getEntityRenderInfo(entity);
-               renderInfo.attachRenderPart(inventoryUseComponent.arrowRenderParts[limbIdx]);
+               const renderObject = getEntityRenderObject(entity);
+               renderObject.attachRenderPart(inventoryUseComponent.arrowRenderParts[limbIdx]);
             }
          } else if (limb.action === LimbAction.chargeBow) {
             // @Cleanup @Hack @Robustness
@@ -1267,7 +1271,7 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
                textureIdx = textureSourceArray.length - 1;
             }
             // @HACK
-            if (typeof inventoryUseComponent.activeItemRenderParts[limbIdx] !== "undefined") {
+            if (inventoryUseComponent.activeItemRenderParts[limbIdx] !== undefined) {
                inventoryUseComponent.activeItemRenderParts[limbIdx].switchTextureSource(textureSourceArray[textureIdx]);
             }
          } else if (limb.action === LimbAction.mainArrowReleased) {
@@ -1359,8 +1363,8 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
          
          const handRestingOffset = getHumanoidRadius(entity);
          const handOffsetAmount = handRestingOffset + 4 - insetAmount;
-         attachPoint.offset.x = handOffsetAmount * Math.sin(activeItemDirection);
-         attachPoint.offset.y = handOffsetAmount * Math.cos(activeItemDirection);
+         attachPoint.offsetX = handOffsetAmount * Math.sin(activeItemDirection);
+         attachPoint.offsetY = handOffsetAmount * Math.cos(activeItemDirection);
          attachPoint.angle = lerp(HAND_RESTING_ROTATION, HAND_RESTING_ROTATION - Math.PI/5, eatIntervalProgress);
 
          const activeItemOffsetAmount = itemSize/2 - insetAmount;
@@ -1557,7 +1561,7 @@ function updateFromData(data: InventoryUseComponentData, entity: Entity): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
    // @GARBAGE!!!
-   inventoryUseComponent.limbInfos.splice(0, inventoryUseComponent.limbInfos.length);
+   inventoryUseComponent.limbInfos.length = 0;
    for (let i = 0; i < data.limbInfos.length; i++) {
       const limbInfo = data.limbInfos[i];
 

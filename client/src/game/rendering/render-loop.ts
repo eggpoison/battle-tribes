@@ -3,7 +3,7 @@ import { cleanupEntityRendering, renderEntity, setupEntityRendering } from "./we
 import { RenderPartOverlayGroup, renderEntityOverlay } from "./webgl/overlay-rendering";
 import { NUM_RENDER_LAYERS, RenderLayer } from "../render-layers";
 import { renderChunkedEntities, renderLayerIsChunkRendered } from "./webgl/chunked-entity-rendering";
-import { getEntityRenderInfo, getEntityType, layers } from "../world";
+import { getEntityRenderObject, getEntityType, layers } from "../world";
 import Layer from "../Layer";
 import { Entity, EntityType } from "webgl-test-shared";
 import { gl } from "../webgl";
@@ -120,8 +120,8 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
                   continue;
                }
                
-               const renderInfo = getEntityRenderInfo(entity);
-               renderEntity(renderInfo);
+               const renderObject = getEntityRenderObject(entity);
+               renderEntity(renderObject);
             }
             cleanupEntityRendering();
 

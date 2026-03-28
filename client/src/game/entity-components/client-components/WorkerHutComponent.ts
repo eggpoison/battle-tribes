@@ -1,5 +1,5 @@
 import { Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
@@ -9,6 +9,7 @@ import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface WorkerHutComponentData {}
 
@@ -25,7 +26,7 @@ export function createWorkerHutComponentData(): WorkerHutComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
@@ -34,19 +35,21 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       2,
       0,
+      0, 0,
       getTextureArrayIndex("entities/worker-hut/worker-hut.png")
    );
-   renderInfo.attachRenderPart(hutRenderPart);
+   renderObject.attachRenderPart(hutRenderPart);
 
    // Door
    const doorRenderPart = new TexturedRenderPart(
       hutRenderPart,
       1,
       0,
+      0, 0,
       getTextureArrayIndex("entities/worker-hut/worker-hut-door.png")
    );
-   doorRenderPart.addTag("hutComponent:door");
-   renderInfo.attachRenderPart(doorRenderPart);
+   addRenderPartTag(doorRenderPart, "hutComponent:door");
+   renderObject.attachRenderPart(doorRenderPart);
 
    return {};
 }

@@ -5,7 +5,7 @@ import { getEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlas
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { BALLISTA_GEAR_X, BALLISTA_GEAR_Y, BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../../utils";
 import { WARRIOR_HUT_SIZE } from "./HutComponent";
@@ -496,13 +496,12 @@ const updatePartialTexture = (entity: Entity): void => {
             hitbox,
             progressTextureInfo.zIndex + 0.01,
             progressTextureInfo.rotation,
+            progressTextureInfo.offsetX, progressTextureInfo.offsetY,
             getTextureArrayIndex(textureSource)
          );
-         renderPart.offset.x = progressTextureInfo.offsetX
-         renderPart.offset.y = progressTextureInfo.offsetY;
 
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.attachRenderPart(renderPart);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.attachRenderPart(renderPart);
          blueprintComponent.partialRenderParts.push(renderPart);
       } else {
          // Existing render part
@@ -526,7 +525,7 @@ function onLoad(entity: Entity): void {
    
    // Create completed render parts
    const progressTextureInfoArray = BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponent.blueprintType];
-   const renderInfo = getEntityRenderInfo(entity);
+   const renderObject = getEntityRenderObject(entity);
    for (let i = 0; i < progressTextureInfoArray.length; i++) {
       const progressTextureInfo = progressTextureInfoArray[i];
 
@@ -537,14 +536,10 @@ function onLoad(entity: Entity): void {
          hitbox,
          progressTextureInfo.zIndex,
          progressTextureInfo.rotation,
+         // @HACK, this shittery is cuz the fence gate doesn't have its first hitbox at the 'core' position
+         progressTextureInfo.offsetX + (blueprintComponent.blueprintType === BlueprintType.fenceGate ? 32 : 0), progressTextureInfo.offsetY,
          getTextureArrayIndex(progressTextureInfo.completedTextureSource)
       );
-      renderPart.offset.x = progressTextureInfo.offsetX;
-      // @HACK, this shittery is cuz the fence gate doesn't have its first hitbox at the 'core' position
-      if (blueprintComponent.blueprintType === BlueprintType.fenceGate) {
-         renderPart.offset.x += 32;
-      }
-      renderPart.offset.y = progressTextureInfo.offsetY;
       renderPart.opacity = 0.5;
       if (tribeComponent.tribeID === playerTribe.id) {
          renderPart.tintR = 0.2;
@@ -555,7 +550,7 @@ function onLoad(entity: Entity): void {
          renderPart.tintG = 0.0;
          renderPart.tintB = 0.15;
       }
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
    }
 }
 

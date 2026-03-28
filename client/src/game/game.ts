@@ -1,4 +1,4 @@
-import { Settings } from "webgl-test-shared";
+import { Entity, Settings } from "webgl-test-shared";
 import { updateTextNumbers } from "./text-canvas";
 import { resizeCanvas } from "./webgl";
 import { playRiverSounds, updateSounds } from "./sound";
@@ -23,6 +23,8 @@ import { updateParticles } from "./rendering/webgl/particle-rendering";
 import { callEntityOnUpdateFunctions } from "./entity-components/component-arrays";
 import { debugInfoDisplay } from "../ui/game/dev/debug-info-display-funcs";
 import { getComponentArrays } from "./entity-components/ComponentArray";
+import { getEntityComponentArrays } from "./entity-component-types";
+import { getEntityType } from "./world";
 
 interface TickCallback {
    time: number;
@@ -118,7 +120,7 @@ export function receivePacket(reader: PacketReader): void {
    lastPacketTime = timeNow;
 
    // First game packet
-   if (typeof currentSnapshot === "undefined") {
+   if (currentSnapshot === undefined) {
       lastPacketTime = performance.now();
       // Set currentSnapshot, and the game state, to the first game packet received.
       updateGameStateToSnapshot(snapshot);
@@ -178,16 +180,25 @@ export function updateTickCallbacks(): void {
    }
 }
 function tickEntities(): void {
-   // @Cleanup: This is the only place where this function is used. The only place where componentArrays is used. Seems like an awful waste of memory.
+   // @Cleanup: This is the only place where this function is used. The only place where getComponentArrays() is used. Seems like an awful waste of memory.
    const componentArrays = getComponentArrays();
    for (const componentArray of componentArrays) {
-      if (typeof componentArray.onTick !== "undefined") {
+      if (componentArray.onTick !== undefined) {
          for (const entity of componentArray.activeEntities) {
             componentArray.onTick(entity);
          }
       }
       
       componentArray.deactivateQueue();
+   }
+}
+
+function callEntityOnUpdateFunctions(entity: Entity): void {
+   const componentArrays = getEntityComponentArrays(getEntityType(entity));
+   for (const componentArray of componentArrays) {
+      if (componentArray.onUpdate !== undefined) {
+         componentArray.onUpdate(entity);
+      }
    }
 }
 

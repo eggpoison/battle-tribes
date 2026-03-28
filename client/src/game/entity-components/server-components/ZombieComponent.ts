@@ -9,9 +9,10 @@ import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, create
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface ZombieComponentData {
    readonly zombieType: number;
@@ -41,7 +42,7 @@ function decodeData(reader: PacketReader): ZombieComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -53,9 +54,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       2,
       0,
+      0, 0,
       getTextureArrayIndex(ZOMBIE_TEXTURE_SOURCES[zombieComponentData.zombieType])
    );
-   renderInfo.attachRenderPart(bodyRenderPart);
+   renderObject.attachRenderPart(bodyRenderPart);
 
    // @Hack @Copynpaste
 
@@ -66,22 +68,24 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       const attachPoint = new RenderAttachPoint(
          bodyRenderPart,
          1,
-         0
+         0,
+         0, 0
       );
       if (i === 1) {
          attachPoint.setFlipX(true);
       }
-      attachPoint.addTag("inventoryUseComponent:attachPoint");
-      renderInfo.attachRenderPart(attachPoint);
+      addRenderPartTag(attachPoint, "inventoryUseComponent:attachPoint");
+      renderObject.attachRenderPart(attachPoint);
       
       const renderPart = new TexturedRenderPart(
          attachPoint,
          1.2,
          0,
+         0, 0,
          getTextureArrayIndex(handTextureSource)
       );
-      renderPart.addTag("inventoryUseComponent:hand");
-      renderInfo.attachRenderPart(renderPart);
+      addRenderPartTag(renderPart, "inventoryUseComponent:hand");
+      renderObject.attachRenderPart(renderPart);
       handRenderParts.push(renderPart);
    }
 

@@ -2,10 +2,10 @@ import { PacketReader, TribeType, Entity, TribeTotemBanner, ServerComponentType 
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { TribeComponentArray } from "./TribeComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
@@ -60,7 +60,7 @@ function decodeData(reader: PacketReader): TotemBannerComponentData {
    };
 }
 
-const createBannerRenderPart = (tribeType: TribeType, renderInfo: EntityRenderInfo, parentHitbox: Hitbox, banner: TribeTotemBanner): TexturedRenderPart => {
+const createBannerRenderPart = (tribeType: TribeType, renderObject: EntityRenderObject, parentHitbox: Hitbox, banner: TribeTotemBanner): TexturedRenderPart => {
    let totemTextureSourceID: string;
    switch (tribeType) {
       case TribeType.plainspeople: {
@@ -85,31 +85,32 @@ const createBannerRenderPart = (tribeType: TribeType, renderInfo: EntityRenderIn
       }
    }
 
+   const bannerOffsetAmount = BANNER_LAYER_DISTANCES[banner.layer];
+
    const renderPart = new TexturedRenderPart(
       parentHitbox,
       2,
       banner.direction,
+      bannerOffsetAmount * Math.sin(banner.direction), bannerOffsetAmount * Math.cos(banner.direction),
       getTextureArrayIndex(`entities/tribe-totem/${totemTextureSourceID}`)
    );
-   const bannerOffsetAmount = BANNER_LAYER_DISTANCES[banner.layer];
-   renderPart.offset.x = bannerOffsetAmount * Math.sin(banner.direction);
-   renderPart.offset.y = bannerOffsetAmount * Math.cos(banner.direction);
 
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return renderPart;
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
    // Main render part
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          1,
          0,
+         0, 0,
          getTextureArrayIndex(`entities/tribe-totem/tribe-totem.png`)
       )
    );
@@ -121,7 +122,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const renderParts = new Array<TexturedRenderPart>();
    
    for (const banner of Object.values(bannerComponentData.banners)) {
-      const renderPart = createBannerRenderPart(tribeComponentData.tribeType, renderInfo, hitbox, banner);
+      const renderPart = createBannerRenderPart(tribeComponentData.tribeType, renderObject, hitbox, banner);
       renderParts.push(renderPart);
    }
 
@@ -150,7 +151,7 @@ function updateFromData(data: TotemBannerComponentData, entity: Entity): void {
    // @Garbage
    const removedBannerNums = Object.keys(totemBannerComponent.banners).map(num => Number(num));
    
-   const renderInfo = getEntityRenderInfo(entity);
+   const renderObject = getEntityRenderObject(entity);
    
    // Add new banners
    for (const banner of Object.values(data.banners)) {
@@ -159,7 +160,7 @@ function updateFromData(data: TotemBannerComponentData, entity: Entity): void {
          const hitbox = transformComponent.hitboxes[0];
          
          const tribeComponent = TribeComponentArray.getComponent(entity);
-         const renderPart = createBannerRenderPart(tribeComponent.tribeType, renderInfo, hitbox, banner);
+         const renderPart = createBannerRenderPart(tribeComponent.tribeType, renderObject, hitbox, banner);
          totemBannerComponent.bannerRenderParts[banner.hutNum] = renderPart;
          totemBannerComponent.banners[banner.hutNum] = banner;
       }
@@ -172,7 +173,7 @@ function updateFromData(data: TotemBannerComponentData, entity: Entity): void {
    
    // Remove banners which are no longer there
    for (const hutNum of removedBannerNums) {
-      renderInfo.removeRenderPart(totemBannerComponent.bannerRenderParts[hutNum]);
+      renderObject.removeRenderPart(totemBannerComponent.bannerRenderParts[hutNum]);
       delete totemBannerComponent.bannerRenderParts[hutNum];
       delete totemBannerComponent.banners[hutNum];
    }

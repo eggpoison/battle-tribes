@@ -18,7 +18,7 @@ export function createFrameGraph(): void {
    
    frameGraphElem = document.createElement("div");
    frameGraphElem.id = "frame-graph";
-   frameGraphElem.classList.add("hidden"); // Start off as hidden!
+   frameGraphElem.hidden = true;
    frameGraphElem.innerHTML = `
       <p class="info"><span class="highlight">fps=${fps}</span> <span class="highlight">t_avg=${average.toFixed(2)}</span> <span class="highlight">t_min=${min.toFixed(2)}</span> <span class="highlight">t_max=${max.toFixed(2)}</span></p>
       <canvas id="frame-graph-canvas"></canvas>
@@ -34,12 +34,12 @@ export function destroyFrameGraph(): void {
 
 export function showFrameGraph(): void {
    assert(frameGraphElem !== null);
-   assert(frameGraphElem.classList.contains("hidden"));
-   frameGraphElem.classList.remove("hidden");
+   assert(frameGraphElem.hidden);
+   frameGraphElem.hidden = false;
 }
 
 export function hideFrameGraph(): void {
    assert(frameGraphElem !== null);
-   assert(!frameGraphElem.classList.contains("hidden"));
-   frameGraphElem.classList.add("hidden");
+   assert(!frameGraphElem.hidden);
+   frameGraphElem.hidden = true;
 }

@@ -8,7 +8,7 @@ import Particle from "../../Particle";
 import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../game";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
@@ -34,18 +34,19 @@ function decodeData(reader: PacketReader): SnowballComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
    const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
    const snowballComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.snowball);
 
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("entities/snowball/size-" + (snowballComponentData.size + 1) + ".png")
       )
    );

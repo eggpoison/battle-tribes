@@ -1,9 +1,10 @@
 import { PacketReader, Entity, EntityType, BuildingMaterial, ServerComponentType } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../world";
+import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
+import { getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
 
 export interface BuildingMaterialComponentData {
    readonly material: BuildingMaterial;
@@ -70,7 +71,7 @@ function updateFromData(data: BuildingMaterialComponentData, entity: Entity): vo
    const material = data.material;
    
    if (material !== buildingMaterialComponent.material) {
-      const renderInfo = getEntityRenderInfo(entity);
+      const renderObject = getEntityRenderObject(entity);
 
       // @Hack: this fucking sucks. Instead each entity which uses the building material component should define its own function to do this
       const entityType = getEntityType(entity);
@@ -79,15 +80,15 @@ function updateFromData(data: BuildingMaterialComponentData, entity: Entity): vo
    
          const textureSource = textureSources[material];
    
-         const materialRenderPart = renderInfo.getRenderThing("buildingMaterialComponent:material") as TexturedRenderPart;
+         const materialRenderPart = getRenderThingByTag(renderObject, "buildingMaterialComponent:material") as TexturedRenderPart;
          materialRenderPart.switchTextureSource(textureSource);
       } else {
-         const verticals = renderInfo.getRenderThings("bracingsComponent:vertical", 2) as Array<TexturedRenderPart>;
+         const verticals = getRenderThingsByTag(renderObject, "bracingsComponent:vertical", 2) as Array<TexturedRenderPart>;
          for (const renderPart of verticals) {
             renderPart.switchTextureSource("entities/bracings/stone-vertical-post.png");
          }
 
-         const horizontal = renderInfo.getRenderThing("bracingsComponent:horizontal") as TexturedRenderPart;
+         const horizontal = getRenderThingByTag(renderObject, "bracingsComponent:horizontal") as TexturedRenderPart;
          horizontal.switchTextureSource("entities/bracings/stone-horizontal-post.png");
       }
    }

@@ -1,5 +1,5 @@
 import { Point, Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -12,6 +12,7 @@ import { EMBRASURE_TEXTURE_SOURCES } from "../server-components/BuildingMaterial
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface EmbrasureComponentData {}
 
@@ -28,7 +29,7 @@ export function createEmbrasureComponentData(): EmbrasureComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
@@ -39,11 +40,12 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(EMBRASURE_TEXTURE_SOURCES[buildingMaterialComponentData.material])
    );
-   renderPart.addTag("buildingMaterialComponent:material");
+   addRenderPartTag(renderPart, "buildingMaterialComponent:material");
 
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }

@@ -61,7 +61,7 @@
                {@const itemType = entry.itemType}
                {@const itemAmount = entry.count}
                {@const itemProgress = (playerTribe.techTreeUnlockProgress[tech.id]?.itemProgress.hasOwnProperty(itemType)) ? playerTribe.techTreeUnlockProgress[tech.id]!.itemProgress[itemType] : 0}
-               {@const hasFinished = typeof itemProgress !== "undefined" ? itemProgress >= itemAmount : false}
+               {@const hasFinished = itemProgress !== undefined ? itemProgress >= itemAmount : false}
                {@const canContributeItems = countItemTypesInInventory(hotbar, itemType) > 0}
                
                <li class={hasFinished ? "completed" : undefined}>

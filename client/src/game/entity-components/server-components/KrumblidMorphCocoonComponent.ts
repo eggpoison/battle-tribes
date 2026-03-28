@@ -6,7 +6,7 @@ import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 
@@ -46,7 +46,7 @@ function decodeData(reader: PacketReader): KrumblidMorphCocoonComponentData {
    return createKrumblidMorphCocoonComponentData(stage);
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -57,9 +57,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(getTextureSource(krumblidMorphCocoonComponentData.stage))
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {
       renderPart: renderPart

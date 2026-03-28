@@ -3,7 +3,7 @@ import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, getEntityTextureAtlasUBO, UBOBindingIndex } from "../ubos";
 import { RenderableType, addRenderable } from "../render-loop";
 import { VisualRenderPart } from "../../render-parts/render-parts";
-import { getEntityLayer, getEntityRenderInfo } from "../../world";
+import { getEntityLayer, getEntityRenderObject } from "../../world";
 import { calculateRenderPartDepth } from "./entity-rendering";
 
 const enum Vars {
@@ -32,8 +32,8 @@ const getOverlayRenderHeight = (overlay: RenderPartOverlayGroup): number => {
    let minDepth = 999999;
    for (let i = 0; i < overlay.renderParts.length; i++) {
       const renderPart = overlay.renderParts[i];
-      const renderInfo = getEntityRenderInfo(overlay.entity);
-      const depth = calculateRenderPartDepth(renderPart, renderInfo);
+      const renderObject = getEntityRenderObject(overlay.entity);
+      const depth = calculateRenderPartDepth(renderPart, renderObject);
       if (depth < minDepth) {
          minDepth = depth;
       }
@@ -49,10 +49,10 @@ export function createRenderPartOverlayGroup(entity: Entity, textureSource: stri
       renderParts: renderParts
    };
 
-   const renderInfo = getEntityRenderInfo(entity);
+   const renderObject = getEntityRenderObject(entity);
    
    // @Cleanup: Side effect
-   addRenderable(getEntityLayer(entity), RenderableType.overlay, overlay, renderInfo.renderLayer, getOverlayRenderHeight(overlay));
+   addRenderable(getEntityLayer(entity), RenderableType.overlay, overlay, renderObject.renderLayer, getOverlayRenderHeight(overlay));
 
    return overlay;
 }

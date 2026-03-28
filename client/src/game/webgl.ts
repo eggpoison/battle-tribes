@@ -47,7 +47,7 @@ export function resizeCanvas(): void {
 function createWebGLCanvas(canvasID: string): HTMLCanvasElement {
    const canvas = document.createElement("canvas");
    canvas.id = canvasID;
-   canvas.classList.add("hidden");
+   canvas.hidden = true;
    document.body.appendChild(canvas);
    return canvas;
 }
@@ -72,7 +72,7 @@ export function setupWebGL(): void {
    gl = createWebGLRenderingContext(gameCanvas);
    const techTreeCanvas = createWebGLCanvas("tech-tree-canvas");
    createWebGLRenderingContext(techTreeCanvas);
-   
+
 }
 
 export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText: string, fragmentShaderText: string): WebGLProgram {

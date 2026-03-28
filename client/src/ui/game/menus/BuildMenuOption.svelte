@@ -30,7 +30,7 @@
 
    let props: Props = $props();
 
-   const isUnclickable = typeof props.isClickable !== "undefined" && !props.isClickable(props.entity);
+   const isUnclickable = props.isClickable !== undefined && !props.isClickable(props.entity);
    
    // + 0.5 so that the segments go between the options
    const direction = -(2 * Math.PI * (props.i + 0.5) / props.numOptions) + Math.PI/2;

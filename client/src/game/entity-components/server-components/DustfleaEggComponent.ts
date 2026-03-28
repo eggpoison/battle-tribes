@@ -3,7 +3,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
 
 export interface DustfleaEggComponentData {}
@@ -15,7 +15,7 @@ export interface DustfleaEggComponent {}
 export const DustfleaEggComponentArray = new ServerComponentArray<DustfleaEggComponent, DustfleaEggComponentData, IntermediateInfo>(ServerComponentType.dustfleaEgg, true, createComponent, getMaxRenderParts, decodeData);
 DustfleaEggComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -23,18 +23,20 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       1,
       0,
+      0, 0,
       getTextureArrayIndex("entities/dustflea-egg/dustflea-egg.png")
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    const dustfleaRenderPart = new TexturedRenderPart(
       hitbox,
       0,
       randAngle(), // @Sync
+      0, 0,
       getTextureArrayIndex("entities/dustflea/dustflea.png")
    );
    dustfleaRenderPart.inheritParentRotation = false;
-   renderInfo.attachRenderPart(dustfleaRenderPart);
+   renderObject.attachRenderPart(dustfleaRenderPart);
 
    return {};
 }

@@ -6,7 +6,7 @@ const TAMING_SPECS: Partial<Record<EntityType, EntityTamingSpec>> = {};
 export function getEntityTamingSpec(entity: Entity): EntityTamingSpec {
    const entityType = getEntityType(entity);
    const spec = TAMING_SPECS[entityType];
-   assert(typeof spec !== "undefined");
+   assert(spec !== undefined);
    return spec;
 }
 

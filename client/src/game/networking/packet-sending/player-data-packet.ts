@@ -79,12 +79,7 @@ export function sendPlayerDataPacket(): void {
        playerDataPacket.checkNumber(hotbarAction) &&
        playerDataPacket.checkNumber(offhandAction) &&
        playerDataPacket.checkNumber(gameDataOptions)) {
-      // @SQUEAM
-      // console.log(Math.random())
       return;
-   } else {
-      // @SQUEAM
-      // console.log("NORMAL!")
    }
    
    playerDataPacket.reset();

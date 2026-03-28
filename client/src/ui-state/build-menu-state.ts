@@ -54,7 +54,6 @@ export interface BuildMenuOption {
    readonly deselectsOnClick: boolean;
 }
 
-
 // @Cleanup: This whole system is fucked
 
 const EMBRASURE_IMAGE_SOURCES = [WoodenEmbrasureImage, ];

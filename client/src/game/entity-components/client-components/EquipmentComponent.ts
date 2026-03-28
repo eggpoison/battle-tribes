@@ -1,8 +1,8 @@
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { assert, TribeType, Entity, EntityType, ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName, ARMOUR_ITEM_TYPES, NUM_ITEM_TYPES, itemTypeIsGlove } from "webgl-test-shared";
+import { TribeType, Entity, EntityType, ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName, ARMOUR_ITEM_TYPES, NUM_ITEM_TYPES, itemTypeIsGlove } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getInventory, InventoryComponentArray } from "../server-components/InventoryComponent";
-import { getEntityRenderInfo, getEntityType } from "../../world";
+import { getEntityRenderObject, getEntityType } from "../../world";
 import { InventoryUseComponentArray } from "../server-components/InventoryUseComponent";
 import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
@@ -135,30 +135,31 @@ const updateArmourRenderPart = (equipmentComponent: EquipmentComponent, entity: 
    const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot)!;
    
    const armour = armourInventory.itemSlots[1];
-   if (typeof armour !== "undefined") {
+   if (armour !== undefined) {
       const entityType = getEntityType(entity);
       const tribeComponent = TribeComponentArray.getComponent(entity);
       const textureSource = getArmourTextureSource(entityType, tribeComponent.tribeType, armour.type as ArmourItemType);
       
       if (equipmentComponent.armourRenderPart === null) {
          const transformComponent = TransformComponentArray.getComponent(entity);
-         const hitbox = transformComponent.hitboxes[0] as Hitbox;
+         const hitbox = transformComponent.hitboxes[0];
          
          equipmentComponent.armourRenderPart = new TexturedRenderPart(
             hitbox,
             5,
             0,
+            0, 0,
             getTextureArrayIndex(textureSource)
          );
 
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.attachRenderPart(equipmentComponent.armourRenderPart);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.attachRenderPart(equipmentComponent.armourRenderPart);
       } else {
          equipmentComponent.armourRenderPart.switchTextureSource(textureSource);
       }
    } else if (equipmentComponent.armourRenderPart !== null) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.removeRenderPart(equipmentComponent.armourRenderPart);
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.removeRenderPart(equipmentComponent.armourRenderPart);
       equipmentComponent.armourRenderPart = null;
    }
 }
@@ -169,7 +170,7 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent, entity: 
    const gloveInventory = getInventory(inventoryComponent, InventoryName.gloveSlot)!;
    
    const glove = gloveInventory.itemSlots[1];
-   if (typeof glove !== "undefined") {
+   if (glove !== undefined) {
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
       if (equipmentComponent.gloveRenderParts.length === 0) {
@@ -178,12 +179,13 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent, entity: 
                inventoryUseComponent.limbRenderParts[limbIdx],
                1.3,
                0,
+               0, 0,
                getTextureArrayIndex(getGloveTextureSource(glove.type))
             );
             equipmentComponent.gloveRenderParts.push(gloveRenderPart);
 
-            const renderInfo = getEntityRenderInfo(entity);
-            renderInfo.attachRenderPart(gloveRenderPart);
+            const renderObject = getEntityRenderObject(entity);
+            renderObject.attachRenderPart(gloveRenderPart);
          }
       } else {
          for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
@@ -192,8 +194,8 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent, entity: 
       }
    } else {
       while (equipmentComponent.gloveRenderParts.length > 0) {
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.removeRenderPart(equipmentComponent.gloveRenderParts[0]);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.removeRenderPart(equipmentComponent.gloveRenderParts[0]);
          equipmentComponent.gloveRenderParts.splice(0, 1);
       }
    }

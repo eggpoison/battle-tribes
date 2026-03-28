@@ -31,12 +31,12 @@ export let playerTribe: ExtendedTribe;
 export const tribes = new Array<Tribe>();
 
 export function tribeHasExtendedInfo(tribe: Tribe): tribe is ExtendedTribe {
-   return typeof (tribe as ExtendedTribe).tribesmen !== "undefined";
+   return (tribe as ExtendedTribe).tribesmen !== undefined;
 }
 
 export function updatePlayerTribe(tribe: ExtendedTribe): void {
    // @Hack: the check for undefined
-   if (typeof playerTribe !== "undefined" && tribe.unlockedTechs.length > playerTribe.unlockedTechs.length) {
+   if (playerTribe !== undefined && tribe.unlockedTechs.length > playerTribe.unlockedTechs.length) {
       playHeadSound("research.mp3", 0.4, 1);
    }
 

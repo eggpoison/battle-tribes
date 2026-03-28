@@ -2,18 +2,17 @@ import { assert, Inventory, InventoryName, Item, TribeType } from "webgl-test-sh
 import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
 import { playerInstance } from "../../../game/player";
 import { playerTribe } from "../../../game/tribes";
-import { playerActionState } from "../../../ui-state/player-action-state";
 import BackpackWireframe from "../../../images/miscellaneous/backpack-wireframe.png";
 import ArmourWireframe from "../../../images/miscellaneous/armour-wireframe.png";
 import GloveWireframe from "../../../images/miscellaneous/glove-wireframe.png";
 import { createInventory, createInventoryContainer } from "./Inventory";
-import { addItemToItemSlot, createItemSlot, makeItemSlotInteractable, removeItemFromItemSlot, updateItemSlot } from "./ItemSlot";
+import { addItemSlotPlaceholderImage, addItemSlotSelection, addItemToItemSlot, createItemSlot, makeItemSlotInteractable, removeItemFromItemSlot, removeItemSlotSelection, updateItemSlot } from "./ItemSlot";
 import { hotbarFuncs } from "../../../ui-state/hotbar-funcs";
 
 let hotbarElem: HTMLElement | null = null;
 let hotbarInventoryElem: HTMLElement | null = null;
 
-const getInventoryElem = (inventory: Inventory): HTMLElement => {
+const getInventoryElem = (inventory: Inventory): HTMLElement | null => {
    assert(hotbarInventoryElem !== null);
    
    // @Robustness @Speed! can this be "templated" in a perfect performance scenario?
@@ -21,38 +20,59 @@ const getInventoryElem = (inventory: Inventory): HTMLElement => {
       case InventoryName.hotbar: return hotbarInventoryElem;
    }
 
-   throw new Error();
+   // @Hack: shouldn't try to add non-hotbar item to hotbar anyway
+   return null;
 }
 
-const getItemSlotElem = (inventory: Inventory, itemSlot: number): HTMLElement => {
+const getItemSlotElem = (inventory: Inventory, itemSlot: number): HTMLElement | null => {
    const inventoryElem = getInventoryElem(inventory);
+   // @Hack: shouldn't try to add non-hotbar item to hotbar anyway
+   if (inventoryElem === null) {
+      return null;
+   }
+
    return inventoryElem.children[itemSlot - 1] as HTMLElement;
 }
 
 hotbarFuncs.addItem = (inventory: Inventory, itemSlot: number, item: Item): void => {
    const itemSlotElem = getItemSlotElem(inventory, itemSlot);
-   addItemToItemSlot(itemSlotElem, item);
+   // @Hack: shouldn't try to add non-hotbar item to hotbar anyway
+   if (itemSlotElem !== null) {
+      addItemToItemSlot(itemSlotElem, item.type, item.count);
+   }
 }
 
 hotbarFuncs.updateItem = (inventory: Inventory, itemSlot: number, item: Item): void => {
    const itemSlotElem = getItemSlotElem(inventory, itemSlot);
-   updateItemSlot(itemSlotElem, item);
+   // @Hack: shouldn't try to add non-hotbar item to hotbar anyway
+   if (itemSlotElem !== null) {
+      updateItemSlot(itemSlotElem, item);
+   }
 }
 
 hotbarFuncs.removeItem = (inventory: Inventory, itemSlot: number): void => {
    const itemSlotElem = getItemSlotElem(inventory, itemSlot);
-   removeItemFromItemSlot(itemSlotElem);
+   // @Hack: shouldn't try to add non-hotbar item to hotbar anyway
+   if (itemSlotElem !== null) {
+      removeItemFromItemSlot(itemSlotElem);
+   }
 }
 
 hotbarFuncs.selectItemSlot = (inventory: Inventory, itemSlot: number): void => {
    assert(hotbarElem !== null);
 
    // Remove previous selection
-   hotbarElem.querySelector(".selected")?.classList.remove("selected");
+   const previousSelectedItemSlotElem = hotbarElem.querySelector(".selected");
+   if (previousSelectedItemSlotElem) {
+      removeItemSlotSelection(previousSelectedItemSlotElem as HTMLElement);
+   }
 
    // Select new
    const itemSlotElem = getItemSlotElem(inventory, itemSlot);
-   itemSlotElem.classList.add("selected");
+   // @Hack: shouldn't try to add non-hotbar item to hotbar anyway
+   if (itemSlotElem !== null) {
+      addItemSlotSelection(itemSlotElem);
+   }
 }
 
 export function createHotbar(): void {
@@ -77,7 +97,7 @@ export function createHotbar(): void {
 
    // Left container
    const leftContainer = document.createElement("div");
-   leftContainer.classList.add("flex-container");
+   leftContainer.className = "flex-container";
    hotbarElem.appendChild(leftContainer);
 
    for (let i = 0; i < 2; i++) {
@@ -99,41 +119,49 @@ export function createHotbar(): void {
 
    // Middle container
    const middleContainer = document.createElement("div");
-   middleContainer.classList.add("middle");
+   middleContainer.className = "middle";
    hotbarElem.appendChild(middleContainer);
 
    hotbarInventoryElem = createInventory(hotbarInventory, true, playerInstance);
-   // Always start with the first hotbar slot being selected
-   (hotbarInventoryElem.firstChild as HTMLElement).classList.add("selected");
    middleContainer.appendChild(hotbarInventoryElem);
+
+   // Always start with the first hotbar slot being selected
+   addItemSlotSelection(hotbarInventoryElem.firstChild as HTMLElement);
 
    // Right container
    const rightContainer = document.createElement("div");
-   rightContainer.classList.add("flex-container");
+   rightContainer.className = "flex-container";
    hotbarElem.appendChild(rightContainer);
    
-   const rightInventoryContainer = createInventoryContainer(true);
+   const NUM_EQUIPMENT_SLOTS = 3;
+   
+   const rightInventoryContainer = createInventoryContainer(true, NUM_EQUIPMENT_SLOTS);
    rightContainer.appendChild(rightInventoryContainer);
 
    const backpackSlotElem = createItemSlot();
    makeItemSlotInteractable(backpackSlotElem, playerInstance, backpackSlotInventory, 1);
+   addItemSlotPlaceholderImage(backpackSlotElem, BackpackWireframe);
    rightInventoryContainer.appendChild(backpackSlotElem);
+
    const armourSlotElem = createItemSlot();
    makeItemSlotInteractable(armourSlotElem, playerInstance, armourSlotInventory, 1);
+   addItemSlotPlaceholderImage(armourSlotElem, ArmourWireframe);
    rightInventoryContainer.appendChild(armourSlotElem);
+
    const gloveSlotElem = createItemSlot();
    makeItemSlotInteractable(gloveSlotElem, playerInstance, gloveSlotInventory, 1);
+   addItemSlotPlaceholderImage(gloveSlotElem, GloveWireframe);
    rightInventoryContainer.appendChild(gloveSlotElem);
 }
 
 export function hideHotbar(): void {
    assert(hotbarElem !== null);
-   hotbarElem.classList.add("hidden");
+   hotbarElem.hidden = true;
 }
 
 export function showHotbar(): void {
    assert(hotbarElem !== null);
-   hotbarElem.classList.remove("hidden");
+   hotbarElem.hidden = false;
 }
 
 export function destroyHotbar(): void {

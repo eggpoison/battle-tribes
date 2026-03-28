@@ -1,7 +1,7 @@
 <script lang="ts">
    import { sendRenameAnimalPacket } from "../../../game/networking/packet-sending/packet-sending";
    import { entitySelectionState } from "../../../ui-state/entity-selection-state";
-   import { menuSelectorState } from "../../../ui-state/menu-selector-state";
+   import { menuSelectorState } from "../../menus";
    import MenuElem from "../menus/MenuElem.svelte";
 
    // @Hack: "!"

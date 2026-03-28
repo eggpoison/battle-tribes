@@ -7,7 +7,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../game";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
@@ -43,18 +43,19 @@ function decodeData(reader: PacketReader): FishComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
    const fishComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.fish);
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex(TEXTURE_SOURCES[fishComponentData.colour])
       )
    );

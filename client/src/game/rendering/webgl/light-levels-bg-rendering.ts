@@ -172,7 +172,7 @@ export function updateLightLevelRenderingChunks(bgUpdateInfos: Map<number, Light
       const bgUpdateInfo = pair[1];
 
       const renderingChunk = renderingChunks.get(renderingChunkIndex);
-      if (typeof renderingChunk === "undefined") {
+      if (renderingChunk === undefined) {
          const vao = gl.createVertexArray();
          gl.bindVertexArray(vao);
          didBindVertexArray = true;
@@ -202,7 +202,7 @@ export function updateLightLevelRenderingChunks(bgUpdateInfos: Map<number, Light
          };
          renderingChunks.set(renderingChunkIndex, renderingChunk);
       } else {
-         assert(typeof renderingChunk !== "undefined");
+         assert(renderingChunk !== undefined);
          renderingChunk.numNodes += bgUpdateInfo.addedNodeInfos.length;
          renderingChunk.numNodes -= bgUpdateInfo.removedNodeInfos.length;
 

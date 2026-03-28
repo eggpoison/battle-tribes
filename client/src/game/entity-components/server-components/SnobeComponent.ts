@@ -2,16 +2,17 @@ import { PacketReader, Settings, Point, randAngle, randFloat, randInt, Entity, H
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain, createHighSnowParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { HealthComponentArray } from "./HealthComponent";
 import { RandomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 const AMBIENT_SOUNDS: ReadonlyArray<string> = ["snobe-ambient-1.mp3", "snobe-ambient-2.mp3", "snobe-ambient-3.mp3", "snobe-ambient-4.mp3"];
 
@@ -43,7 +44,7 @@ function decodeData(reader: PacketReader): SnobeComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    for (const hitbox of transformComponentData.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.SNOBE_BODY)) {
@@ -51,25 +52,28 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
             hitbox,
             2,
             0,
+            0, 0,
             getTextureArrayIndex("entities/snobe/body.png")
          );
-         renderPart.addTag("tamingComponent:head")
-         renderInfo.attachRenderPart(renderPart);
+         addRenderPartTag(renderPart, "tamingComponent:head")
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.SNOBE_BUTT)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                1,
                0,
+               0, 0,
                getTextureArrayIndex("entities/snobe/butt.png")
             )
          );
       } else if (hitbox.flags.includes(HitboxFlag.SNOBE_EAR)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                3,
                0,
+               0, 0,
                getTextureArrayIndex("entities/snobe/ear.png")
             )
          );
@@ -113,8 +117,8 @@ function updateFromData(data: SnobeComponentData, snobe: Entity): void {
 
    snobeComponent.diggingProgress = data.diggingProgress;
    const opacity = 1 - Math.pow(snobeComponent.diggingProgress, 2);
-   const renderInfo = getEntityRenderInfo(snobe);
-   for (const renderPart of renderInfo.renderPartsByZIndex) {
+   const renderObject = getEntityRenderObject(snobe);
+   for (const renderPart of renderObject.renderPartsByZIndex) {
       // @HACK
       if (renderPart instanceof TexturedRenderPart) {
          renderPart.opacity = opacity;

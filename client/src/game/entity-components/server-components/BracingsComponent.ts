@@ -1,10 +1,11 @@
 import { ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface BracingsComponentData {}
 
@@ -23,7 +24,7 @@ function decodeData(): BracingsComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
    // Vertical posts
@@ -32,10 +33,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("entities/bracings/wooden-vertical-post.png")
       );
-      renderPart.addTag("bracingsComponent:vertical");
-      renderInfo.attachRenderPart(renderPart);
+      addRenderPartTag(renderPart, "bracingsComponent:vertical");
+      renderObject.attachRenderPart(renderPart);
    }
 
    const hitbox = transformComponentData.hitboxes[0];
@@ -45,11 +47,12 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       1,
       0,
+      0, 0,
       getTextureArrayIndex("entities/bracings/wooden-horizontal-post.png")
    );
-   horizontalBar.addTag("bracingsComponent:horizontal");
+   addRenderPartTag(horizontalBar, "bracingsComponent:horizontal");
    horizontalBar.opacity = 0.5;
-   renderInfo.attachRenderPart(horizontalBar);
+   renderObject.attachRenderPart(horizontalBar);
 
    return {};
 }

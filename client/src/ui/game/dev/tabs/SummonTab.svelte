@@ -7,7 +7,7 @@
    import DevmodeRangeInput from "../DevmodeRangeInput.svelte";
    import InventoryComponentInput from "./InventoryComponentInput.svelte";
    import TribeComponentInput from "./TribeComponentInput.svelte";
-   import { menuSelectorState } from "../../../../ui-state/menu-selector-state";
+   import { menuSelectorState } from "../../../menus";
 
    type EntityTypeTuple = [EntityType, string];
 
@@ -74,7 +74,7 @@
       const summonData: EntitySummonData = {};
       for (const componentType of componentTypes) {
          const data = serialiseComponentSummonData(componentType, selectedEntityType);
-         if (typeof data !== "undefined") {
+         if (data !== undefined) {
             // @Hack
             summonData[componentType] = data as any;
          }

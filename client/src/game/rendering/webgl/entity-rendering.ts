@@ -1,15 +1,15 @@
 import { createWebGLProgram, gl } from "../../webgl";
 import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, getEntityTextureAtlasUBO, UBOBindingIndex } from "../ubos";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { VisualRenderPart, renderPartIsTextured, thingIsVisualRenderPart } from "../../render-parts/render-parts";
 
 const enum Vars {
    ATTRIBUTES_PER_VERTEX = 16
 }
 
-export const enum EntityRenderingVars {
-   ATTRIBUTES_PER_VERTEX = Vars.ATTRIBUTES_PER_VERTEX
+export const EntityRenderingVars = {
+   ATTRIBUTES_PER_VERTEX: Vars.ATTRIBUTES_PER_VERTEX
 }
 
 export interface EntityRenderingOptions {
@@ -222,6 +222,8 @@ export function createEntityRenderData(maxRenderParts: number): EntityRenderData
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
 
+   // @BUG: Never cleans up the index buffer??
+
    gl.bindVertexArray(null);
 
    return {
@@ -232,55 +234,58 @@ export function createEntityRenderData(maxRenderParts: number): EntityRenderData
    };
 }
 
-export function calculateRenderPartDepth(renderPart: VisualRenderPart, renderInfo: EntityRenderInfo): number {
-   return renderInfo.renderHeight + renderPart.zIndex * 0.0001;
+export function deleteEntityRenderData(renderObject: EntityRenderObject): void {
+   if (renderObject.vao !== null) {
+      gl.deleteBuffer(renderObject.vertexBuffer);
+      gl.deleteBuffer(renderObject.indexBuffer);
+      gl.deleteVertexArray(renderObject.vao);
+   }
 }
 
-export function setRenderInfoInVertexData(renderInfo: EntityRenderInfo, vertexData: Float32Array, renderPartIdx: number): number {
+export function calculateRenderPartDepth(renderPart: VisualRenderPart, renderObject: EntityRenderObject): number {
+   return renderObject.renderHeight + renderPart.zIndex * 0.0001;
+}
+
+export function setRenderObjectInVertexData(renderObject: EntityRenderObject, vertexData: Float32Array, renderPartIdx: number): void {
    const textureAtlas = getEntityTextureAtlas();
 
-   const baseTintR = renderInfo.tintR;
-   const baseTintG = renderInfo.tintG;
-   const baseTintB = renderInfo.tintB;
+   const baseTintR = renderObject.tintR;
+   const baseTintG = renderObject.tintG;
+   const baseTintB = renderObject.tintB;
 
-   for (const renderPart of renderInfo.renderPartsByZIndex) {
+   let vertexDataOffset = renderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
+   for (const renderPart of renderObject.renderPartsByZIndex) {
       if (!thingIsVisualRenderPart(renderPart)) {
          continue;
       }
       
-      const depth = calculateRenderPartDepth(renderPart, renderInfo);
+      const depth = calculateRenderPartDepth(renderPart, renderObject);
       
       let textureIndex: number;
       let textureWidth: number;
       let textureHeight: number;
-      let tintR: number;
-      let tintG: number;
-      let tintB: number;
       if (renderPartIsTextured(renderPart)) {
          const textureArrayIndex = renderPart.textureArrayIndex;
          textureIndex = textureAtlas.textureSlotIndexes[textureArrayIndex];
          textureWidth = textureAtlas.textureWidths[textureArrayIndex];
          textureHeight = textureAtlas.textureHeights[textureArrayIndex];
-         tintR = baseTintR + renderPart.tintR;
-         tintG = baseTintG + renderPart.tintG;
-         tintB = baseTintB + renderPart.tintB;
       } else {
          textureIndex = -1;
          textureWidth = -1;
          textureHeight = -1;
-         tintR = renderPart.colour.r;
-         tintG = renderPart.colour.g;
-         tintB = renderPart.colour.b;
       }
 
-      const vertexDataOffset = renderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
+      const tintR = baseTintR + renderPart.tintR;
+      const tintG = baseTintG + renderPart.tintG;
+      const tintB = baseTintB + renderPart.tintB;
 
-      const mm0 = renderPart.modelMatrix[0];
-      const mm1 = renderPart.modelMatrix[1];
-      const mm2 = renderPart.modelMatrix[2];
-      const mm3 = renderPart.modelMatrix[3];
-      const mm4 = renderPart.modelMatrix[4];
-      const mm5 = renderPart.modelMatrix[5];
+      const modelMatrix = renderPart.modelMatrix;
+      const mm0 = modelMatrix[0];
+      const mm1 = modelMatrix[1];
+      const mm2 = modelMatrix[2];
+      const mm3 = modelMatrix[3];
+      const mm4 = modelMatrix[4];
+      const mm5 = modelMatrix[5];
 
       vertexData[vertexDataOffset] = -0.5;
       vertexData[vertexDataOffset + 1] = -0.5;
@@ -350,27 +355,13 @@ export function setRenderInfoInVertexData(renderInfo: EntityRenderInfo, vertexDa
       vertexData[vertexDataOffset + 62] = mm4;
       vertexData[vertexDataOffset + 63] = mm5;
 
-      renderPartIdx++;
+      vertexDataOffset += 4 * Vars.ATTRIBUTES_PER_VERTEX;
    }
-
-   return renderPartIdx;
 }
 
-function clearRenderPartInVertexData(vertexData: Float32Array, renderPartIdx: number): void {
-   const vertexDataOffset = renderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
-   // From profiling, .fill is about twice as fast as a for loop
-   vertexData.fill(0, vertexDataOffset, vertexDataOffset + 4 * Vars.ATTRIBUTES_PER_VERTEX);
-}
-
-export function clearEntityInVertexData(renderInfo: EntityRenderInfo, vertexData: Float32Array, renderPartIdx: number): void {
-   for (const renderPart of renderInfo.renderPartsByZIndex) {
-      if (!thingIsVisualRenderPart(renderPart)) {
-         continue;
-      }
-
-      clearRenderPartInVertexData(vertexData, renderPartIdx);
-      renderPartIdx++;
-   }
+export function clearEntityInVertexData(vertexData: Float32Array, firstRenderPartIdx: number, numRenderParts: number): void {
+   const vertexDataOffset = firstRenderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
+   vertexData.fill(0, vertexDataOffset, vertexDataOffset + numRenderParts * 4 * Vars.ATTRIBUTES_PER_VERTEX - 1);
 }
 
 export function setupEntityRendering(): void {
@@ -383,7 +374,7 @@ export function setupEntityRendering(): void {
 }
 
 /** NOTE: Callers must control the blending. */
-export function renderEntity(renderInfo: Readonly<EntityRenderInfo>, options?: EntityRenderingOptions): void {
+export function renderEntity(renderObject: Readonly<EntityRenderObject>, options?: EntityRenderingOptions): void {
    // @Speed: could make a separate function so this isn't forced to run every time.
    const overrideAlphaWithOne = options?.overrideAlphaWithOne || false;
    if (overrideAlphaWithOne !== previousOverrideAlphaWithOne) {
@@ -391,9 +382,9 @@ export function renderEntity(renderInfo: Readonly<EntityRenderInfo>, options?: E
       gl.uniform1f(overrideAlphaWithOneUniformLocation, overrideAlphaWithOne ? 1 : 0);
    }
 
-   const numRenderParts = renderInfo.renderPartsByZIndex.length;
+   const numRenderParts = renderObject.renderPartsByZIndex.length;
    
-   gl.bindVertexArray(renderInfo.vao);
+   gl.bindVertexArray(renderObject.vao);
    gl.drawElements(gl.TRIANGLES, numRenderParts * 6, gl.UNSIGNED_SHORT, 0);
 }
 

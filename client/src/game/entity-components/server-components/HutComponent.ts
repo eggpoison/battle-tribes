@@ -3,14 +3,15 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { EntityComponentData, getEntityAgeTicks, getEntityRenderInfo, getEntityType } from "../../world";
+import { EntityComponentData, getEntityAgeTicks, getEntityRenderObject, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { currentSnapshot } from "../../game";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getRenderThingsByTag } from "../../render-parts/render-part-tags";
 
 type HutType = EntityType.workerHut | EntityType.warriorHut;
 
@@ -101,6 +102,7 @@ const createRecallMarker = (parentHitbox: Hitbox): TexturedRenderPart => {
       parentHitbox,
       9,
       0,
+      0, 0,
       getTextureArrayIndex("entities/recall-marker.png")
    );
    recallMarker.inheritParentRotation = false;
@@ -108,7 +110,7 @@ const createRecallMarker = (parentHitbox: Hitbox): TexturedRenderPart => {
    return recallMarker;
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
@@ -116,7 +118,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const hutComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.hut);
    
    return {
-      doorRenderParts: renderInfo.getRenderThings("hutComponent:door") as Array<VisualRenderPart>,
+      doorRenderParts: getRenderThingsByTag(renderObject, "hutComponent:door") as Array<VisualRenderPart>,
       recallMarker: hutComponentData.isRecalling ? createRecallMarker(hitbox) : null
    };
 }
@@ -155,8 +157,8 @@ function updateDoors(hutComponent: HutComponent, entity: Entity): void {
       rotationOffset.direction = doorRotation;
       offset.add(rotationOffset.convertToPoint());
 
-      renderPart.offset.x = offset.x;
-      renderPart.offset.y = offset.y;
+      renderPart.offsetX = offset.x;
+      renderPart.offsetY = offset.y;
 
       renderPart.angle = lerp(Math.PI/2, 0, hutComponent.doorSwingAmount) * (i === 0 ? 1 : -1);
    }
@@ -185,8 +187,8 @@ function updateFromData(data: HutComponentData, entity: Entity): void {
          const hitbox = transformComponent.hitboxes[0];
          
          hutComponent.recallMarker = createRecallMarker(hitbox);
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.attachRenderPart(hutComponent.recallMarker);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.attachRenderPart(hutComponent.recallMarker);
       }
 
       let opacity = Math.sin(getEntityAgeTicks(entity) * Settings.DT_S * 5) * 0.5 + 0.5;
@@ -194,8 +196,8 @@ function updateFromData(data: HutComponentData, entity: Entity): void {
       hutComponent.recallMarker.opacity = lerp(0.3, 0.8, opacity);
    } else {
       if (hutComponent.recallMarker !== null) {
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.removeRenderPart(hutComponent.recallMarker);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.removeRenderPart(hutComponent.recallMarker);
          hutComponent.recallMarker = null;
       }
    }

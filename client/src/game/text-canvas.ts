@@ -6,7 +6,7 @@ import { getVisibleBuildingPlan, GhostBuildingPlan, VirtualBuildingSafetySimulat
 import { TribeMemberComponentArray } from "./entity-components/server-components/TribeMemberComponent";
 import { getHumanoidRadius } from "./entity-components/server-components/TribesmanComponent";
 import { playerInstance } from "./player";
-import { addGhostRenderInfo, removeGhostRenderInfo } from "./rendering/webgl/entity-ghost-rendering";
+import { addGhostRenderObject, removeGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
@@ -204,7 +204,7 @@ const renderDamageNumbers = (): void => {
    const cameraX = getXPosInTextCanvas(damageNumberX);
    const cameraY = getYPosInTextCanvas(damageNumberY);
 
-   ctx.font = "bold 35px sans-serif";
+   ctx.font = "bold 28px sans-serif";
    ctx.lineJoin = "round";
    ctx.miterLimit = 2;
 
@@ -438,10 +438,10 @@ const renderPotentialBuildingPlans = (): void => {
 
    // @Speed
    if (lastGhostBuildingPlan !== null) {
-      removeGhostRenderInfo(lastGhostBuildingPlan.virtualBuilding.renderInfo);
+      removeGhostRenderObject(lastGhostBuildingPlan.virtualBuilding.renderObject);
    }
    if (ghostBuildingPlan !== null) {
-      addGhostRenderInfo(ghostBuildingPlan.virtualBuilding.renderInfo);
+      addGhostRenderObject(ghostBuildingPlan.virtualBuilding.renderObject);
    }
    lastGhostBuildingPlan = ghostBuildingPlan;
    if (ghostBuildingPlan === null) {
@@ -689,5 +689,6 @@ export function renderText(tickInterp: number): void {
       // renderHoveredPotentialPlanInfo();
    // }
 
+   // @SPEED: shouldn't be done when the option isn't selected.
    renderChunkWeights();
 }

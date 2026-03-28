@@ -1,5 +1,5 @@
 import { Entity } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -25,15 +25,16 @@ export function createBallistaFrostcicleComponentData(): BallistaFrostcicleCompo
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("projectiles/ballista-frostcicle.png")
       )
    );

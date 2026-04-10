@@ -16,7 +16,7 @@
             "-r", "tsconfig-paths/register"
          ],
          // tell it to use node v24 cuz it was using v10 for some reason which don't worky!
-         "runtimeExecutable": "/home/eggp/.nvm/versions/node/v24.11.0/bin/node",
+         "runtimeExecutable": "/home/eggp/.nvm/versions/node/v24.14.1/bin/node",
          "cwd": "${workspaceRoot}",
          "internalConsoleOptions": "openOnSessionStart"
       }

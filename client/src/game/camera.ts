@@ -20,8 +20,8 @@ const cameraVelocity = new Point(0, 0);
 
 /** Larger = zoomed in, smaller = zoomed out */
 // @INCOMPLETE @HACK rn i have to fiddle around with this manually, make it be calcualted automatically before public testing
-// export let cameraZoom = 1.4;
-export let cameraZoom = 1;
+export let cameraZoom = 1.4;
+// export let cameraZoom = 1;
 
 export let minVisibleX = 0;
 export let maxVisibleX = 0;
@@ -178,10 +178,10 @@ export function refreshCameraView(): void {
 
    // Update visible render chunk bounds
    const RENDER_CHUNK_UNITS = Settings.TILE_SIZE * RENDER_CHUNK_SIZE;
-   minVisibleRenderChunkX = Math.max(Math.floor((cameraPosition.x - halfWindowWidth / cameraZoom) / RENDER_CHUNK_UNITS), -RENDER_CHUNK_EDGE_GENERATION);
-   maxVisibleRenderChunkX = Math.min(Math.floor((cameraPosition.x + halfWindowWidth / cameraZoom) / RENDER_CHUNK_UNITS), WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION - 1);
-   minVisibleRenderChunkY = Math.max(Math.floor((cameraPosition.y - halfWindowHeight / cameraZoom) / RENDER_CHUNK_UNITS), -RENDER_CHUNK_EDGE_GENERATION);
-   maxVisibleRenderChunkY = Math.min(Math.floor((cameraPosition.y + halfWindowHeight / cameraZoom) / RENDER_CHUNK_UNITS), WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION - 1);
+   minVisibleRenderChunkX = Math.max(Math.floor(minVisibleX / RENDER_CHUNK_UNITS), -RENDER_CHUNK_EDGE_GENERATION);
+   maxVisibleRenderChunkX = Math.min(Math.floor(maxVisibleX / RENDER_CHUNK_UNITS), WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION - 1);
+   minVisibleRenderChunkY = Math.max(Math.floor(minVisibleY / RENDER_CHUNK_UNITS), -RENDER_CHUNK_EDGE_GENERATION);
+   maxVisibleRenderChunkY = Math.min(Math.floor(maxVisibleY / RENDER_CHUNK_UNITS), WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION - 1);
 }
 
 /** X position in the screen (0, 0) = bottom left, (windowWidth, windowHeight) = top right) */

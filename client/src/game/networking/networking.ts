@@ -15,9 +15,9 @@ export function establishNewNetworkConnection(username: string, tribeType: Tribe
    assert(socket === null);
    
    // @SQUEAM
-   // socket = new WebSocket(`ws://10.0.0.10:${Settings.SERVER_PORT}`);
+   socket = new WebSocket(`ws://10.0.0.23:${Settings.SERVER_PORT}`);
    // Use 127.0.0.1 instea of localhost cuz localhost sometimes breaks it for reasons
-   socket = new WebSocket(`ws://127.0.0.1:${Settings.SERVER_PORT}`);
+   // socket = new WebSocket(`ws://127.0.0.1:${Settings.SERVER_PORT}`);
    socket.binaryType = "arraybuffer";
 
    socket.onopen = (): void => { onSuccessfulConnection(username, tribeType, isSpectating); };

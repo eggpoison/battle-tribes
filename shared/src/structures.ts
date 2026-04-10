@@ -5,4 +5,4 @@ export type StructureType = typeof STRUCTURE_TYPES[number];
 
 export function entityIsStructure(entityType: EntityType): entityType is StructureType {
    return STRUCTURE_TYPES.indexOf(entityType as StructureType) !== -1;
-} 
+}

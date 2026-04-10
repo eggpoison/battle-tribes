@@ -14,13 +14,13 @@ import PlayerClient, { PlayerClientVars } from "./PlayerClient";
 import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, processCommandPacket, resetDirtyEntities } from "./player-clients";
 import { BOW_HOLDING_LIMB_STATE, createPlayerConfig } from "../entities/tribes/player";
 import { processAcquireTamingSkillPacket, processActivatePacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processCloseEntityInventoryPacket, processCompleteTamingTierPacket, processDeactivatePacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processItemTransferPacket, processModifyBuildingPacket, processMountCarrySlotPacket, processOpenEntityInventoryPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetDebugEntityPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processSyncRequestPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving";
-import { CowSpecies, Entity, LimbAction } from "battletribes-shared/entities";
+import { CowSpecies, Entity, EntityType, LimbAction } from "battletribes-shared/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
-import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, destroyEntity } from "../world";
+import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, destroyEntity, getEntityType } from "../world";
 import { resolveEntityCollisions } from "../collision-detection";
 import { runCollapses } from "../collapses";
 import { updateTribes } from "../tribes";
@@ -33,13 +33,16 @@ import { generateGrassStrands } from "../world-generation/grass-generation";
 import { Hitbox } from "../hitboxes";
 import { createCowConfig } from "../entities/mobs/cow";
 import { generateDecorations } from "../world-generation/decoration-generation";
-import { ServerComponentType } from "../../../shared/src/components";
+import { DecorationType, ServerComponentType } from "../../../shared/src/components";
 import { createDevGameDataPacket } from "./dev-packets";
 import { createTribeWorkerConfig } from "../entities/tribes/tribe-worker";
 import { InventoryName, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS } from "../../../shared/src/items/items";
 import { getCurrentLimbState, InventoryUseComponentArray } from "../components/InventoryUseComponent";
 import { QUIVER_PULL_LIMB_STATE } from "../../../shared/src/attack-patterns";
 import OPTIONS from "../options";
+import { createDecorationConfig } from "../entities/decoration";
+import { getEntitiesAtPosition } from "../layer-utils";
+import { createTreeConfig } from "../entities/resources/tree";
 
 /*
 
@@ -144,6 +147,8 @@ class GameServer {
       //    SRandom.seed(randInt(0, 9999999999));
       // }
 
+      SRandom.seed(2845700342);
+
       // Desert:
       // SRandom.seed(2767843904);
 
@@ -157,7 +162,7 @@ class GameServer {
       // SRandom.seed(9028422602);
 
       // slime goop
-      SRandom.seed(2965725785);
+      // SRandom.seed(2965725785);
 
       const builtinRandomFunc = Math.random;
       Math.random = () => SRandom.next();
@@ -249,6 +254,37 @@ class GameServer {
                      const config = createCowConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, CowSpecies.brown);
                      createEntity(config, layer, 0);
                   }
+
+                  let ox = 1731.304931640625 + 10;
+                  let oy = 1931.582763671875;
+                  const fleur1 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.225, DecorationType.flower3);
+                  createEntity(fleur1, surfaceLayer, 0);
+                  ox += 40 * 1.5
+                  oy += 15
+                  const fleur2 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.355, DecorationType.flower3);
+                  createEntity(fleur2, surfaceLayer, 0);
+                  ox += 28 * 1.5
+                  oy += 12
+                  const fleur3 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.255, DecorationType.flower3);
+                  createEntity(fleur3, surfaceLayer, 0);
+                  ox += 28 * 1.5
+                  oy += 4
+                  const fleur4 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.425, DecorationType.flower3);
+                  createEntity(fleur4, surfaceLayer, 0);
+                  
+                  
+                  ox += 72;
+                  oy -= 5;
+                  const pebble1 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.225, DecorationType.rock);
+                  createEntity(pebble1, surfaceLayer, 0);
+                  ox += 96;
+                  oy -= 3;
+                  const pebble2 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.105, DecorationType.rock);
+                  createEntity(pebble2, surfaceLayer, 0);
+                  ox += 64;
+                  oy -= 76;
+                  const pebble3 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.055, DecorationType.rock);
+                  createEntity(pebble3, surfaceLayer, 0);
                }, 1000);
 
                // if (!isSpectating) {

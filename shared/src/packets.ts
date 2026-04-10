@@ -113,6 +113,14 @@ abstract class BasePacketObject {
 
       return number;
    }
+
+   public readNumberOrNull(): number | null {
+      const number = this.readNumber();
+      if (number !== 0) {
+         return number;
+      }
+      return null;
+   }
    
    public padOffset(paddingBytes: number): void {
       this.currentByteOffset += paddingBytes;

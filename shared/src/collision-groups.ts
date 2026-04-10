@@ -1,12 +1,12 @@
+import { EntityType } from "./entities";
+
 // When to add a collision group:
 // - Adding collision groups can be expensive, the number of hash-matrix-pair checks
 //   which have to be done grows quickly with each new one.
 // - Collision groups should only be added when they would significantly reduce the amount
 //   of collision checks which have to be done. Otherwise, for special two-entity relationships,
-
-import { EntityType } from "./entities";
-
 //   just manually check the entity type in the onCollision or getSoftCollisionPushFactor event.
+
 export enum CollisionGroup {
    default,
    none,
@@ -174,4 +174,9 @@ const ENTITY_COLLISION_GROUP_RECORD: Record<EntityType, CollisionGroup> = {
 
 export function getEntityCollisionGroup(entityType: EntityType): CollisionGroup {
    return ENTITY_COLLISION_GROUP_RECORD[entityType];
+}
+
+// @HACK!!!!!!!
+export function overrideCollisionGroup(entityType: EntityType, collisionGroup: CollisionGroup): void {
+   ENTITY_COLLISION_GROUP_RECORD[entityType] = collisionGroup;
 }

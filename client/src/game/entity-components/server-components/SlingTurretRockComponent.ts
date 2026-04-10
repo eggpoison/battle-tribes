@@ -1,4 +1,4 @@
-import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-shared";
+import { randAngle, randFloat, Entity, ServerComponentType, _point } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle } from "../../particles";
@@ -56,7 +56,8 @@ function getMaxRenderParts(): number {
 function onDie(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
-   const velocity = getHitboxVelocity(hitbox);
+   getHitboxVelocity(hitbox);
+   const velocity = _point;
 
    // Create arrow break particles
    for (let i = 0; i < 6; i++) {

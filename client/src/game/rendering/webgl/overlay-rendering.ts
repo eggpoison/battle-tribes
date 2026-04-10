@@ -44,9 +44,9 @@ const getOverlayRenderHeight = (overlay: RenderPartOverlayGroup): number => {
 
 export function createRenderPartOverlayGroup(entity: Entity, textureSource: string, renderParts: Array<VisualRenderPart>): RenderPartOverlayGroup {
    const overlay: RenderPartOverlayGroup = {
-      entity: entity,
-      textureSource: textureSource,
-      renderParts: renderParts
+      entity,
+      textureSource,
+      renderParts
    };
 
    const renderObject = getEntityRenderObject(entity);

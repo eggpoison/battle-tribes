@@ -1,5 +1,5 @@
-import { assert, rotateXAroundOrigin, rotateYAroundOrigin, PacketReader, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
-import { getHitboxVelocity, translateHitbox } from "../../hitboxes";
+import { assert, rotatePointAroundOrigin, PacketReader, Entity, EntityType, ServerComponentType, _point } from "webgl-test-shared";
+import { translateHitbox } from "../../hitboxes";
 import { playerInstance } from "../../player";
 import { playSound } from "../../sound";
 import { entityExists, EntityComponentData, getEntityLayer, getEntityType } from "../../world";
@@ -112,9 +112,8 @@ function updateFromData(data: RideableComponentData, entity: Entity): void {
                const transformComponent = TransformComponentArray.getComponent(playerInstance);
                const playerHitbox = transformComponent.hitboxes[0];
 
-               const tx = rotateXAroundOrigin(carrySlot.offsetX + carrySlot.dismountOffsetX, carrySlot.offsetY + carrySlot.dismountOffsetY, mountHitbox.box.angle);
-               const ty = rotateYAroundOrigin(carrySlot.offsetX + carrySlot.dismountOffsetX, carrySlot.offsetY + carrySlot.dismountOffsetY, mountHitbox.box.angle);
-               translateHitbox(playerHitbox, tx, ty);
+               rotatePointAroundOrigin(carrySlot.offsetX + carrySlot.dismountOffsetX, carrySlot.offsetY + carrySlot.dismountOffsetY, mountHitbox.box.angle);
+               translateHitbox(playerHitbox, _point.x, _point.y);
 
                // @HACK reset acceleration because it's accumulated a bunch for some reason
                playerHitbox.acceleration.x = 0;

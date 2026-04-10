@@ -1,4 +1,4 @@
-import { rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared";
+import { _point, rotatePointAroundPoint } from "webgl-test-shared";
 import { RESEARCH_ORB_SIZES, ResearchOrb, getResearchOrb, getResearchOrbCompleteProgress } from "../../research";
 import { createWebGLProgram, gl } from "../../webgl";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
@@ -86,14 +86,18 @@ const calculateOrbVertices = (orb: ResearchOrb): ReadonlyArray<number> => {
    const y1 = orb.positionY - halfSize;
    const y2 = orb.positionY + halfSize;
 
-   const tlX = rotateXAroundPoint(x1, y2, orb.positionX, orb.positionY, orb.rotation);
-   const tlY = rotateYAroundPoint(x1, y2, orb.positionX, orb.positionY, orb.rotation);
-   const trX = rotateXAroundPoint(x2, y2, orb.positionX, orb.positionY, orb.rotation);
-   const trY = rotateYAroundPoint(x2, y2, orb.positionX, orb.positionY, orb.rotation);
-   const blX = rotateXAroundPoint(x1, y1, orb.positionX, orb.positionY, orb.rotation);
-   const blY = rotateYAroundPoint(x1, y1, orb.positionX, orb.positionY, orb.rotation);
-   const brX = rotateXAroundPoint(x2, y1, orb.positionX, orb.positionY, orb.rotation);
-   const brY = rotateYAroundPoint(x2, y1, orb.positionX, orb.positionY, orb.rotation);
+   rotatePointAroundPoint(x1, y2, orb.positionX, orb.positionY, orb.rotation);
+   const tlX = _point.x;
+   const tlY = _point.y;
+   rotatePointAroundPoint(x2, y2, orb.positionX, orb.positionY, orb.rotation);
+   const trX = _point.x;
+   const trY = _point.y;
+   rotatePointAroundPoint(x1, y1, orb.positionX, orb.positionY, orb.rotation);
+   const blX = _point.x;
+   const blY = _point.y;
+   rotatePointAroundPoint(x2, y1, orb.positionX, orb.positionY, orb.rotation);
+   const brX = _point.x;
+   const brY = _point.y;
    
    return [
       blX, blY,

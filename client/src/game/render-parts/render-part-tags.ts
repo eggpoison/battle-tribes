@@ -1,6 +1,5 @@
-import { assert, EntityTypeString } from "../../../../shared/src";
+import { assert } from "../../../../shared/src";
 import { EntityRenderObject } from "../EntityRenderObject";
-import { getEntityType } from "../world";
 import { RenderPart } from "./render-parts";
 
 const tagMap = new WeakMap<RenderPart, Array<string>>();
@@ -27,7 +26,7 @@ export function getRenderThingByTag(renderObject: EntityRenderObject, tag: strin
       }
    }
 
-   throw new Error("No render part with tag '" + tag + "' could be found on entity type " + EntityTypeString[getEntityType(renderObject.entity)]);
+   throw new Error("No render part with tag '" + tag + "' could be found.");
 }
 
 export function getRenderThingsByTag(renderObject: EntityRenderObject, tag: string, expectedAmount?: number): Array<RenderPart> {
@@ -47,7 +46,7 @@ export function getRenderThingsByTag(renderObject: EntityRenderObject, tag: stri
    }
 
    if (expectedAmount !== undefined && renderThings.length !== expectedAmount) {
-      throw new Error("Expected " + expectedAmount + " render parts with tag '" + tag + "' on " + EntityTypeString[getEntityType(renderObject.entity)] + " but got " + renderThings.length);
+      throw new Error("Expected " + expectedAmount + " render parts with tag '" + tag + "' but got " + renderThings.length);
    }
    
    return renderThings;

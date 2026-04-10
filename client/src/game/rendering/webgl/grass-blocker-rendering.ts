@@ -1,5 +1,5 @@
 import { createTexture, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../../webgl";
-import { boxIsCircular, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
+import { _point, boxIsCircular, rotatePointAroundOrigin } from "webgl-test-shared";
 import { getTexture } from "../../textures";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { getGrassBlockers, GrassBlocker } from "../../grass-blockers";
@@ -250,10 +250,12 @@ export function calculateGrassBlockerVertexData(grassBlocker: GrassBlocker): Flo
       const halfWidth = box.width * 0.5;
       const halfHeight = box.height * 0.5;
       
-      const topLeftOffsetX = rotateXAroundOrigin(-halfWidth, halfHeight, box.angle);
-      const topLeftOffsetY = rotateYAroundOrigin(-halfWidth, halfHeight, box.angle);
-      const topRightOffsetX = rotateXAroundOrigin(halfWidth, halfHeight, box.angle);
-      const topRightOffsetY = rotateYAroundOrigin(halfWidth, halfHeight, box.angle);
+      rotatePointAroundOrigin(-halfWidth, halfHeight, box.angle);
+      const topLeftOffsetX = _point.x;
+      const topLeftOffsetY = _point.y;
+      rotatePointAroundOrigin(halfWidth, halfHeight, box.angle);
+      const topRightOffsetX = _point.x;
+      const topRightOffsetY = _point.y;
       const bottomLeftOffsetX = -topRightOffsetX;
       const bottomLeftOffsetY = -topRightOffsetY;
       const bottomRightOffsetX = -topLeftOffsetX;

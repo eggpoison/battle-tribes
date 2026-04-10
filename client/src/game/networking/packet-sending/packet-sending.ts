@@ -81,10 +81,10 @@ export function sendItemDropPacket(inventoryName: InventoryName, itemSlot: numbe
 }
 
 
-export function sendItemPickupPacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
+export function sendItemPickupPacket(entity: Entity, inventoryName: InventoryName, itemSlot: number, amount: number): void {
    const packet = new Packet(PacketType.itemPickup, 4 * Float32Array.BYTES_PER_ELEMENT);
 
-   packet.writeNumber(entityID);
+   packet.writeNumber(entity);
    packet.writeNumber(inventoryName);
    packet.writeNumber(itemSlot);
    packet.writeNumber(amount);
@@ -104,10 +104,10 @@ export function sendItemTransferPacket(entity: Entity, inventoryName: InventoryN
    sendData(packet.buffer);
 }
 
-export function sendItemReleasePacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
+export function sendItemReleasePacket(entity: Entity, inventoryName: InventoryName, itemSlot: number, amount: number): void {
    const packet = new Packet(PacketType.itemRelease, 4 * Float32Array.BYTES_PER_ELEMENT);
 
-   packet.writeNumber(entityID);
+   packet.writeNumber(entity);
    packet.writeNumber(inventoryName);
    packet.writeNumber(itemSlot);
    packet.writeNumber(amount);

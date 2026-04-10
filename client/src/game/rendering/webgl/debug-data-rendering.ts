@@ -105,11 +105,11 @@ const addLineVertices = (vertices: Array<number>, debugData: EntityDebugData, po
 export function renderLineDebugData(debugData: EntityDebugData): void {
    gl.useProgram(lineProgram);
 
-   if (!entityExists(debugData.entityID)) {
-      throw new Error("Couldn't find game object.");
+   if (!entityExists(debugData.entity)) {
+      throw new Error("Couldn't find entity.");
    }
 
-   const transformComponent = TransformComponentArray.getComponent(debugData.entityID);
+   const transformComponent = TransformComponentArray.getComponent(debugData.entity);
    const hitbox = transformComponent.hitboxes[0];
    
    const vertices = new Array<number>();

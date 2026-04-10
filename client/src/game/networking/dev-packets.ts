@@ -11,7 +11,7 @@ import { setSpawnDistributionBlocks, SpawnDistributionBlock } from "../text-canv
 import { readGhostVirtualBuildings, pruneGhostBuildingPlans } from "../virtual-buildings";
 
 const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData => {
-   const entityID = reader.readNumber();
+   const entity = reader.readNumber();
 
    const lines = new Array<LineDebugData>();
    const numLines = reader.readNumber();
@@ -61,11 +61,11 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
       });
    }
    
-   const entries = new Array<string>();
+   const debugEntries = new Array<string>();
    const numDebugEntries = reader.readNumber();
    for (let i = 0; i < numDebugEntries; i++) {
       const entry = reader.readString();
-      entries.push(entry);
+      debugEntries.push(entry);
    }
 
    let pathData: PathData | undefined;
@@ -108,12 +108,12 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
    }
    
    return {
-      entityID: entityID,
-      lines: lines,
-      circles: circles,
-      tileHighlights: tileHighlights,
-      debugEntries: entries,
-      pathData: pathData
+      entity,
+      lines,
+      circles,
+      tileHighlights,
+      debugEntries,
+      pathData
    };
 }
 

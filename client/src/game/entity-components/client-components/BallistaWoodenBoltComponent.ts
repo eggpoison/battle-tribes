@@ -1,4 +1,4 @@
-import { Entity, ServerComponentType } from "webgl-test-shared";
+import { _point, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle } from "../../particles";
@@ -53,7 +53,8 @@ function onDie(entity: Entity): void {
    // Create arrow break particles
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
-   const velocity = getHitboxVelocity(hitbox);
+   getHitboxVelocity(hitbox);
+   const velocity = _point;
    for (let i = 0; i < 6; i++) {
       createArrowDestroyParticle(hitbox.box.position.x, hitbox.box.position.y, velocity.x, velocity.y);
    }

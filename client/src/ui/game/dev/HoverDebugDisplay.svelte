@@ -16,7 +16,7 @@
    {#if hoverDebugState.tile !== null}
       <HoverDebugTile {layer} tile={hoverDebugState.tile} />
    {/if}
-   {#if entityDebugData !== null && entityExists(entityDebugData.entityID)}
+   {#if entityDebugData !== null && entityExists(entityDebugData.entity)}
       <HoverDebugEntity {entityDebugData} />
    {/if}
 </div>

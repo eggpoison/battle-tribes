@@ -478,8 +478,8 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
             //    let isValid = true;
             //    const collidingEntities = estimateCollidingEntities(worldInfo, structureType, position.x, position.y, placingEntityRotation, Vars.COLLISION_EPSILON);
             //    for (let l = 0; l < collidingEntities.length; l++) {
-            //       const collidingEntityID = collidingEntities[l];
-            //       if (collidingEntityID === connectingEntity.id) {
+            //       const collidingEntity = collidingEntities[l];
+            //       if (collidingEntity === connectingEntity.id) {
             //          isValid = false;
             //          break;
             //       }
@@ -489,7 +489,7 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
             //       snapPositions.push({
             //          position: position,
             //          rotation: placingEntityRotation,
-            //          connectedEntityID: connectingEntity.id
+            //          connectedEntity: connectingEntity.id
             //       });
             //    }
             // }

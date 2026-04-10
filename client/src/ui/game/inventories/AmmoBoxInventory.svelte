@@ -45,7 +45,7 @@
          </label>
       </div>
    </div>
-   <InventoryContainer entityID={ballista} inventory={inventory} selectedItemSlot={nextAmmoSlot !== -1 ? nextAmmoSlot : undefined} />
+   <InventoryContainer entity={ballista} inventory={inventory} selectedItemSlot={nextAmmoSlot !== -1 ? nextAmmoSlot : undefined} />
 </div>
 <div id="ammo-guide" class="menu">
    <h2 class="menu-title">Ammo Guide</h2>

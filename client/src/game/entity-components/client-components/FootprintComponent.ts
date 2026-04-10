@@ -1,4 +1,4 @@
-import { Entity, TileType, randInt, Settings } from "webgl-test-shared";
+import { Entity, TileType, randInt, Settings, _point } from "webgl-test-shared";
 import { playSound } from "../../sound";
 import { createFootprintParticle } from "../../particles";
 import { EntityComponentData, getEntityLayer } from "../../world";
@@ -108,7 +108,8 @@ function onTick(entity: Entity): void {
    if (hitbox.parent === null) {
       const footprintComponent = FootprintComponentArray.getComponent(entity);
       
-      const velocity = getHitboxVelocity(hitbox);
+      getHitboxVelocity(hitbox);
+      const velocity = _point;
       
       // Footsteps
       if (velocity.magnitude() >= 50 && !hitboxIsInWater(hitbox) && tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds)) {

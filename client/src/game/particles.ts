@@ -1,4 +1,4 @@
-import { BlockType, CactusFlowerSize, Entity, Point, angle, lerp, polarVec2, randAngle, randFloat, randInt, randItem, randSign } from "webgl-test-shared";
+import { BlockType, CactusFlowerSize, Entity, Point, _point, lerp, polarVec2, randAngle, randFloat, randInt, randItem, randSign } from "webgl-test-shared";
 import Particle from "./Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, highMonocolourParticles, highTexturedParticles, lowMonocolourParticles, lowTexturedParticles } from "./rendering/webgl/particle-rendering";
 import { TransformComponent, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
@@ -133,8 +133,8 @@ export function createFootprintParticle(entity: Entity, isLeftFootprint: boolean
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
-   const velocity = getHitboxVelocity(hitbox);
-   const velocityDirection = angle(velocity.x, velocity.y);
+   getHitboxVelocity(hitbox);
+   const velocityDirection = _point.angle();
 
    const offsetMagnitude = footstepOffset / 2;
    const offsetDirection = velocityDirection + footstepAngleOffset + Math.PI/2;
@@ -2276,7 +2276,8 @@ export function createControlCommandParticles(commandType: AnimalStaffCommandTyp
 
    const originMatrix = createTranslationMatrix(14, 14);
    matrixMultiplyInPlace(activeItemRenderPart.modelMatrix, originMatrix);
-   const origin = getMatrixPosition(originMatrix);
+   getMatrixPosition(originMatrix);
+   const origin = _point;
 
    let r: number;
    let g: number;

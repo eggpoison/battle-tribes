@@ -144,6 +144,8 @@ export class Point {
    }
 }
 
+export const _point: Readonly<Point> = new Point(0, 0);
+
 export class Vector {
    public magnitude: number;
    public direction: number;
@@ -226,20 +228,20 @@ export function flipAngle(angle: number): number {
    return (angle + Math.PI) % Math.PI;
 }
 
-export function rotateXAroundPoint(x: number, y: number, pivotX: number, pivotY: number, rotation: number): number {
-   return Math.cos(rotation) * (x - pivotX) + Math.sin(rotation) * (y - pivotY) + pivotX;
+export function rotatePointAroundPoint(x: number, y: number, pivotX: number, pivotY: number, rotation: number): void {
+   const cosRotation = Math.cos(rotation);
+   const sinRotation = Math.sin(rotation);
+   
+   (_point as Mutable<Point>).x = cosRotation * (x - pivotX) + sinRotation * (y - pivotY) + pivotX;
+   (_point as Mutable<Point>).y = -sinRotation * (x - pivotX) + cosRotation * (y - pivotY) + pivotY;
 }
 
-export function rotateYAroundPoint(x: number, y: number, pivotX: number, pivotY: number, rotation: number): number {
-   return -Math.sin(rotation) * (x - pivotX) + Math.cos(rotation) * (y - pivotY) + pivotY;
-}
-
-export function rotateXAroundOrigin(x: number, y: number, rotation: number): number {
-   return Math.cos(rotation) * x + Math.sin(rotation) * y;
-}
-
-export function rotateYAroundOrigin(x: number, y: number, rotation: number): number {
-   return -Math.sin(rotation) * x + Math.cos(rotation) * y;
+export function rotatePointAroundOrigin(x: number, y: number, rotation: number): void {
+   const cosRotation = Math.cos(rotation);
+   const sinRotation = Math.sin(rotation);
+   
+   (_point as Mutable<Point>).x = cosRotation * x + sinRotation * y;
+   (_point as Mutable<Point>).y = -sinRotation * x + cosRotation * y;
 }
 
 export function rotatePointAroundPivot(point: Point, pivotPoint: Point, rotation: number): Point {
@@ -359,8 +361,9 @@ export function distToSegment(p: Point, v: Point, w: Point) { return Math.sqrt(d
 
 export function pointIsInRectangle(pointX: number, pointY: number, rectPosX: number, rectPosY: number, rectWidth: number, rectHeight: number, rectRotation: number): boolean {
    // Rotate point around rect to make the situation axis-aligned
-   const alignedPointX = rotateXAroundPoint(pointX, pointY, rectPosX, rectPosY, -rectRotation);
-   const alignedPointY = rotateYAroundPoint(pointX, pointY, rectPosX, rectPosY, -rectRotation);
+   rotatePointAroundPoint(pointX, pointY, rectPosX, rectPosY, -rectRotation);
+   const alignedPointX = _point.x;
+   const alignedPointY = _point.y;
 
    const x1 = rectPosX - rectWidth / 2;
    const x2 = rectPosX + rectWidth / 2;
@@ -377,16 +380,17 @@ export function smoothstep(value: number): number {
 
 export function distBetweenPointAndRectangle(pointX: number, pointY: number, rectPos: Point, rectWidth: number, rectHeight: number, rectRotation: number): number {
    // Rotate point around rect to make the situation axis-aligned
-   const alignedPointX = rotateXAroundPoint(pointX, pointY, rectPos.x, rectPos.y, -rectRotation);
-   const alignedPointY = rotateYAroundPoint(pointX, pointY, rectPos.x, rectPos.y, -rectRotation);
+   rotatePointAroundPoint(pointX, pointY, rectPos.x, rectPos.y, -rectRotation);
+   const alignedPointX = _point.x;
+   const alignedPointY = _point.y;
 
    const rectMinX = rectPos.x - rectWidth * 0.5;
    const rectMaxX = rectPos.x + rectWidth * 0.5;
    const rectMinY = rectPos.y - rectHeight * 0.5;
    const rectMaxY = rectPos.y + rectHeight * 0.5;
    
-   var dx = Math.max(rectMinX - alignedPointX, 0, alignedPointX - rectMaxX);
-   var dy = Math.max(rectMinY - alignedPointY, 0, alignedPointY - rectMaxY);
+   const dx = Math.max(rectMinX - alignedPointX, 0, alignedPointX - rectMaxX);
+   const dy = Math.max(rectMinY - alignedPointY, 0, alignedPointY - rectMaxY);
    return Math.sqrt(dx * dx + dy * dy);
 }
 
@@ -401,7 +405,7 @@ export function assertUnreachable(x: never): never {
 
 export function assert(condition: unknown): asserts condition {
    if (!condition) {
-      throw new Error();
+      throw new Error("Assertion failed");
    }
 }
 

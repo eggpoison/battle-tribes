@@ -93,7 +93,7 @@ function updateFromData(data: BerryBushComponentData, entity: Entity): void {
    berryBushComponent.renderPart.switchTextureSource(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponent.numBerries]);
 
    const renderObject = getEntityRenderObject(entity);
-   registerDirtyRenderObject(renderObject);
+   registerDirtyRenderObject(entity, renderObject);
 }
 
 function onHit(entity: Entity): void {

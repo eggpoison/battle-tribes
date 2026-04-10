@@ -28,7 +28,7 @@ export interface EntityPairCollisionInfo {
 }
 
 /** For each affected entity, stores info about colliding entities */
-export type GlobalCollisionInfo = Partial<Record<number, Array<EntityPairCollisionInfo>>>;
+export type GlobalCollisionInfo = Partial<Record<Entity, Array<EntityPairCollisionInfo>>>;
 
 // Pair the colliding collision groups
 const collisionGroupPairs = new Array<[pushingGroup: CollisionGroup, pushedGroup: CollisionGroup]>();
@@ -40,7 +40,7 @@ for (let pushingGroup: CollisionGroup = 0; pushingGroup < CollisionGroup._LENGTH
    }
 }
 
-const markEntityCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, collisionInfo: GlobalCollisionInfo, affectedEntity: Entity, collidingEntity: Entity): void => {
+const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, collisionInfo: GlobalCollisionInfo, affectedEntity: Entity, collidingEntity: Entity): void => {
    const affectedEntityTransformComponent = TransformComponentArray.getComponent(affectedEntity);
    const collidingEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
    
@@ -107,51 +107,6 @@ const markEntityCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, 
    }
 }
 
-/**
- * @returns A number where the first 8 bits hold the index of the entity's colliding hitbox, and the next 8 bits hold the index of the other entity's colliding hitbox
-*/
-export function entitiesAreColliding(entity1: Entity, entity2: Entity): number {
-   const transformComponent1 = TransformComponentArray.getComponent(entity1);
-   const transformComponent2 = TransformComponentArray.getComponent(entity2);
-   
-   // AABB bounding area check
-   if (transformComponent1.boundingAreaMinX > transformComponent2.boundingAreaMaxX || // minX(1) > maxX(2)
-       transformComponent1.boundingAreaMaxX < transformComponent2.boundingAreaMinX || // maxX(1) < minX(2)
-       transformComponent1.boundingAreaMinY > transformComponent2.boundingAreaMaxY || // minY(1) > maxY(2)
-       transformComponent1.boundingAreaMaxY < transformComponent2.boundingAreaMinY) { // maxY(1) < minY(2)
-      return CollisionVars.NO_COLLISION;
-   }
-   
-   // More expensive hitbox check
-   for (let i = 0; i < transformComponent1.hitboxes.length; i++) {
-      const hitbox = transformComponent1.hitboxes[i];
-      const box = hitbox.box;
-
-      for (let j = 0; j < transformComponent2.hitboxes.length; j++) {
-         const otherHitbox = transformComponent2.hitboxes[j];
-
-         // If the objects are colliding, add the colliding object and this object
-         if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, otherHitbox.collisionMask, otherHitbox.collisionBit) && box.getCollisionResult(otherHitbox.box).isColliding) {
-            return i + (j << 8);
-         }
-      }
-   }
-
-   return CollisionVars.NO_COLLISION;
-}
-
-export function hitboxIsCollidingWithEntity(hitbox: Hitbox, entity: Entity): boolean {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   
-   for (const currentHitbox of transformComponent.hitboxes) {
-      if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, currentHitbox.collisionMask, currentHitbox.collisionBit) && hitbox.box.getCollisionResult(currentHitbox.box).isColliding) {
-         return true;
-      }
-   }
-
-   return false;
-}
-
 export function resolveEntityCollisions(layer: Layer): void {
    // @Speed: For each collision group there are plenty of 'inactive chunks', where there are 0 entities of that collision
    // group. Skipping inactive chunks could provide a bit of a speedup.
@@ -207,7 +162,7 @@ export function resolveEntityCollisions(layer: Layer): void {
                   continue;
                }
 
-               markEntityCollisions(entityCollisionPairs, globalCollisionInfo, affectedEntity, collidingEntity);
+               markCollisions(entityCollisionPairs, globalCollisionInfo, affectedEntity, collidingEntity);
             }
          }
       }
@@ -235,6 +190,51 @@ export function resolveEntityCollisions(layer: Layer): void {
    }
 
    layer.globalCollisionInfo = globalCollisionInfo;
+}
+
+/**
+ * @returns A number where the first 8 bits hold the index of the entity's colliding hitbox, and the next 8 bits hold the index of the other entity's colliding hitbox
+*/
+export function entitiesAreColliding(entity1: Entity, entity2: Entity): number {
+   const transformComponent1 = TransformComponentArray.getComponent(entity1);
+   const transformComponent2 = TransformComponentArray.getComponent(entity2);
+   
+   // AABB bounding area check
+   if (transformComponent1.boundingAreaMinX > transformComponent2.boundingAreaMaxX || // minX(1) > maxX(2)
+       transformComponent1.boundingAreaMaxX < transformComponent2.boundingAreaMinX || // maxX(1) < minX(2)
+       transformComponent1.boundingAreaMinY > transformComponent2.boundingAreaMaxY || // minY(1) > maxY(2)
+       transformComponent1.boundingAreaMaxY < transformComponent2.boundingAreaMinY) { // maxY(1) < minY(2)
+      return CollisionVars.NO_COLLISION;
+   }
+   
+   // More expensive hitbox check
+   for (let i = 0; i < transformComponent1.hitboxes.length; i++) {
+      const hitbox = transformComponent1.hitboxes[i];
+      const box = hitbox.box;
+
+      for (let j = 0; j < transformComponent2.hitboxes.length; j++) {
+         const otherHitbox = transformComponent2.hitboxes[j];
+
+         // If the objects are colliding, add the colliding object and this object
+         if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, otherHitbox.collisionMask, otherHitbox.collisionBit) && box.getCollisionResult(otherHitbox.box).isColliding) {
+            return i + (j << 8);
+         }
+      }
+   }
+
+   return CollisionVars.NO_COLLISION;
+}
+
+export function hitboxIsCollidingWithEntity(hitbox: Hitbox, entity: Entity): boolean {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   
+   for (const currentHitbox of transformComponent.hitboxes) {
+      if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, currentHitbox.collisionMask, currentHitbox.collisionBit) && hitbox.box.getCollisionResult(currentHitbox.box).isColliding) {
+         return true;
+      }
+   }
+
+   return false;
 }
 
 export function boxArraysAreColliding(boxes1: ReadonlyArray<Box>, boxes2: ReadonlyArray<Box>): boolean {

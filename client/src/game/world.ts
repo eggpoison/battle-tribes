@@ -1,7 +1,7 @@
 import { Settings, Entity, EntityType, assert } from "webgl-test-shared";
 import { EntityRenderObject } from "./EntityRenderObject";
 import Layer from "./Layer";
-import { cleanEntityRenderParts, undirtyRenderObject } from "./rendering/render-part-matrices";
+import { cleanEntityRenderParts, entityDataUsesClientInterp, undirtyRenderObject } from "./rendering/render-part-matrices";
 import { calculateRenderDepthFromLayer, getEntityRenderLayer } from "./render-layers";
 import { removeEntitySounds } from "./sound";
 import { currentSnapshot } from "./game";
@@ -29,10 +29,10 @@ let currentLayer: Layer;
 export let surfaceLayer: Layer;
 export let undergroundLayer: Layer;
 
-const entityTypes: Partial<Record<Entity, EntityType>> = {};
-const entitySpawnTicks: Partial<Record<Entity, number>> = {};
-const entityLayers: Partial<Record<Entity, Layer>> = {};
-const entityRenderObject: Partial<Record<Entity, EntityRenderObject>> = {};
+const entityTypeMap: Partial<Record<Entity, EntityType>> = {};
+const entitySpawnTicksMap: Partial<Record<Entity, number>> = {};
+const entityLayerMap: Partial<Record<Entity, Layer>> = {};
+const entityRenderObjectMap: Partial<Record<Entity, EntityRenderObject>> = {};
 
 export function addLayer(layer: Layer): void {
    if (layers.length === 0) {
@@ -53,34 +53,35 @@ export function getCurrentLayer(): Layer {
 }
 
 export function getEntityAgeTicks(entity: Entity): number {
-   const spawnTicks = entitySpawnTicks[entity];
+   const spawnTicks = entitySpawnTicksMap[entity];
    assert(spawnTicks !== undefined);
    return currentSnapshot.tick - spawnTicks;
 }
 
 export function getEntityLayer(entity: Entity): Layer {
-   const layer = entityLayers[entity];
+   const layer = entityLayerMap[entity];
    assert(layer !== undefined);
    return layer;
 }
 
 export function getEntityType(entity: Entity): EntityType {
-   const entityType = entityTypes[entity];
+   const entityType = entityTypeMap[entity];
    assert(entityType !== undefined);
    return entityType;
 }
 
 export function getEntityRenderObject(entity: Entity): EntityRenderObject {
-   // Ok to not assert here, since EntityRenderObject is an object it will crash when it tries to access a property of undefined.
-   return entityRenderObject[entity]!;
+   const renderObject = entityRenderObjectMap[entity];
+   assert(renderObject !== undefined);
+   return renderObject;
 }
 
 export function entityExists(entity: Entity): boolean {
-   return entityLayers[entity] !== undefined;
+   return entityLayerMap[entity] !== undefined;
 }
 
 export function setEntityLayer(entity: Entity, layer: Layer): void {
-   entityLayers[entity] = layer;
+   entityLayerMap[entity] = layer;
 }
 
 // @Cleanup: remove the need to pass in Entity
@@ -100,7 +101,8 @@ export function createEntityCreationInfo(entity: Entity, entityComponentData: En
    const renderLayer = getEntityRenderLayer(entityType, entityComponentData);
    const renderHeight = calculateRenderDepthFromLayer(renderLayer, entityComponentData);
 
-   const renderObject = new EntityRenderObject(entity, renderLayer, renderHeight, maxNumRenderParts);
+   const isClientInterp = entityDataUsesClientInterp(entityComponentData.serverComponentData);
+   const renderObject = new EntityRenderObject(entity, renderLayer, renderHeight, maxNumRenderParts, isClientInterp);
 
    // Populate render object
    if (hasIntermediateInfo(entityType)) { // @Hacky optimization for grass pretty much
@@ -114,14 +116,10 @@ export function createEntityCreationInfo(entity: Entity, entityComponentData: En
       }
    }
 
-   // Immediately fill the correct render object, because that is required for adding chunk-rendered entities to the world in addEntityToWorld
-   // @HACK: tickInterp!
-   cleanEntityRenderParts(renderObject, 0);
-
    return {
-      entity: entity,
-      entityComponentData: entityComponentData,
-      renderObject: renderObject
+      entity,
+      entityComponentData,
+      renderObject
    };
 }
 
@@ -137,15 +135,14 @@ export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo:
    for (let i = 0, len = componentArrays.length; i < len; i++) {
       const componentArray = componentArrays[i];
       const componentIntermediateInfo = intermediateInfos[i];
-      // @Hack: the cast
       const component = componentArray.createComponent(creationInfo.entityComponentData, componentIntermediateInfo, creationInfo.renderObject);
       componentArray.addComponent(entity, component);
    }
 
-   entityTypes[entity] = entityType;
-   entitySpawnTicks[entity] = spawnTicks;
-   entityLayers[entity] = layer;
-   entityRenderObject[entity] = creationInfo.renderObject;
+   entityTypeMap[entity] = entityType;
+   entitySpawnTicksMap[entity] = spawnTicks;
+   entityLayerMap[entity] = layer;
+   entityRenderObjectMap[entity] = creationInfo.renderObject;
       
    // @Incomplete: is this really the right place to do this? is onLoad even what i want?
    // Call onLoad functions
@@ -158,6 +155,9 @@ export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo:
 
    if (addToRendering) {
       const renderObject = creationInfo.renderObject;
+      // Immediately fill the correct render object, because that is required for adding chunk-rendered entities to the world in addEntityToWorld
+      // @HACK: interp!
+      cleanEntityRenderParts(renderObject, 0, 0);
       layer.addEntityToRendering(entity, renderObject.renderLayer, renderObject.renderHeight);
    }
    
@@ -167,7 +167,8 @@ export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo:
    const ageTicks = getEntityAgeTicks(entity);
    // e.g. if packets are sent half as often as teh tick rate, then ageTicks <= 1 means it has spawned in.
    if (ageTicks <= Math.ceil(Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE) - 1) {
-      for (const componentArray of componentArrays) {
+      for (let i = 0, len = componentArrays.length; i < len; i++) {
+         const componentArray = componentArrays[i];
          if (componentArray.onSpawn !== undefined) {
             componentArray.onSpawn(entity);
          }
@@ -199,7 +200,7 @@ export function removeEntity(entity: Entity, isDeath: boolean): void {
    removeEntitySounds(entity);
 
    if (renderObject.renderPartsAreDirty) {
-      undirtyRenderObject(renderObject);
+      undirtyRenderObject(entity, renderObject);
    }
    deleteEntityRenderData(renderObject);
    
@@ -218,8 +219,8 @@ export function removeEntity(entity: Entity, isDeath: boolean): void {
       }
    }
 
-   delete entityTypes[entity];
-   delete entitySpawnTicks[entity];
-   delete entityLayers[entity];
-   delete entityRenderObject[entity];
+   delete entityTypeMap[entity];
+   delete entitySpawnTicksMap[entity];
+   delete entityLayerMap[entity];
+   delete entityRenderObjectMap[entity];
 }

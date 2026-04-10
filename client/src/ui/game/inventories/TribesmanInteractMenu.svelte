@@ -32,7 +32,7 @@
    <div class="flex-container space-around">
       {#if backpackSlotInventory.itemSlots.hasOwnProperty(1)}
          <div>
-            <InventoryContainer isBordered class="backapck" entityID={tribesman} inventory={getInventory(inventoryComponent, InventoryName.backpack)!} />
+            <InventoryContainer isBordered class="backapck" entity={tribesman} inventory={getInventory(inventoryComponent, InventoryName.backpack)!} />
          </div>
       {/if}
       <div>
@@ -42,10 +42,10 @@
 
    {#if tribeComponent.tribeID === playerTribe.id}
       <div class="hotbar-container">
-         <InventoryContainer isBordered className="hotbar" entityID={tribesman} inventory={getInventory(inventoryComponent, InventoryName.hotbar)!} selectedItemSlot={getLimbByInventoryName(inventoryUseComponent, InventoryName.hotbar).selectedItemSlot} />
+         <InventoryContainer isBordered className="hotbar" entity={tribesman} inventory={getInventory(inventoryComponent, InventoryName.hotbar)!} selectedItemSlot={getLimbByInventoryName(inventoryUseComponent, InventoryName.hotbar).selectedItemSlot} />
          <div class="inventory">
-            <ItemSlot class="armour-slot" entityID={playerID} inventory={backpackSlotInventory} itemSlot={1} placeholderImg={BackpackWireframeImage} validItemSpecifier={itemTypeIsBackpack} />
-            <ItemSlot class="backpack-slot" entityID={playerID} inventory={armourSlotInventory} itemSlot={1} placeholderImg={ArmourWireframeImage} validItemSpecifier={itemTypeIsArmour} />
+            <ItemSlot class="armour-slot" entity={playerID} inventory={backpackSlotInventory} itemSlot={1} placeholderImg={BackpackWireframeImage} validItemSpecifier={itemTypeIsBackpack} />
+            <ItemSlot class="backpack-slot" entity={playerID} inventory={armourSlotInventory} itemSlot={1} placeholderImg={ArmourWireframeImage} validItemSpecifier={itemTypeIsArmour} />
          </div>
       </div>
    {/if}

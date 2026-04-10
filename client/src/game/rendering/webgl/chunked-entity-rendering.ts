@@ -1,11 +1,14 @@
-import { Settings, Entity, assert } from "webgl-test-shared";
+import { Settings, Entity, assert, EntityTypeString, _point } from "webgl-test-shared";
 import { RenderLayer } from "../../render-layers";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { clearEntityInVertexData, createEntityRenderData, EntityRenderingVars, getEntityRenderingProgram, setRenderObjectInVertexData } from "./entity-rendering";
 import { gl } from "../../webgl";
 import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
-import { getEntityLayer, getEntityRenderObject } from "../../world";
+import { getEntityLayer, getEntityRenderObject, getEntityType } from "../../world";
 import Layer from "../../Layer";
+import { getMatrixPosition } from "../render-part-matrices";
+
+// @Cleanup: Shouldn't this all go off of the entity type not the render layer?
 
 export type ChunkedRenderLayer = typeof CHUNKED_RENDER_LAYERS[number];
 
@@ -13,8 +16,8 @@ export type RenderLayerChunkDataRecord = Record<ChunkedRenderLayer, Partial<Reco
 
 export interface EntityChunkData {
    numEntities: number;
-   readonly entityIDToBufferIndexRecord: Partial<Record<Entity, number>>;
-   readonly bufferIndexToEntityIDRecord: Uint32Array;
+   readonly entityToBufferIndexRecord: Partial<Record<Entity, number>>;
+   readonly bufferIndexToEntityRecord: Uint32Array;
    readonly vertexData: Float32Array;
    readonly vertexBuffer: WebGLBuffer;
    readonly indexBuffer: WebGLBuffer;
@@ -51,6 +54,7 @@ export function renderLayerIsChunkRendered(renderLayer: RenderLayer): renderLaye
 }
 
 function createEntityRenderedChunkData(layer: Layer, chunkIdx: number): void {
+   // @SPEED: Creates for all!!
    for (const renderLayer of CHUNKED_RENDER_LAYERS) {
       const renderLayerInfo = CHUNKED_LAYER_INFO_RECORD[renderLayer];
       const maxRenderParts = renderLayerInfo.maxEntitiesPerChunk * renderLayerInfo.maxRenderPartsPerEntity;
@@ -59,8 +63,8 @@ function createEntityRenderedChunkData(layer: Layer, chunkIdx: number): void {
 
       const data: EntityChunkData = {
          numEntities: 0,
-         entityIDToBufferIndexRecord: {},
-         bufferIndexToEntityIDRecord: new Uint32Array(renderLayerInfo.maxEntitiesPerChunk),
+         entityToBufferIndexRecord: {},
+         bufferIndexToEntityRecord: new Uint32Array(renderLayerInfo.maxEntitiesPerChunk),
          vertexData: entityRenderData.vertexData,
          vertexBuffer: entityRenderData.vertexBuffer,
          indexBuffer: entityRenderData.indexBuffer,
@@ -70,8 +74,6 @@ function createEntityRenderedChunkData(layer: Layer, chunkIdx: number): void {
       layer.renderLayerChunkDataRecord[renderLayer][chunkIdx] = data;
       layer.visibleEntityChunkDatas[renderLayer].push(data);
    }
-
-   gl.bindVertexArray(null);
 }
 
 function removeEntityRenderedChunkData(layer: Layer, chunkIdx: number, chunkData: EntityChunkData): void {
@@ -97,11 +99,10 @@ const getEntityChunkIndex = (renderObject: EntityRenderObject): number => {
    // Use the position of the first render part (since this render parts array is being used extensively by this system, while the actual hitbox position isn't accessed at all.)
    const matrix = renderObject.renderPartsByZIndex[0].modelMatrix;
    
-   const x = matrix[4];
-   const y = matrix[5];
+   getMatrixPosition(matrix);
    
-   const chunkX = Math.floor(x / Settings.CHUNK_UNITS);
-   const chunkY = Math.floor(y / Settings.CHUNK_UNITS);
+   const chunkX = Math.floor(_point.x / Settings.CHUNK_UNITS);
+   const chunkY = Math.floor(_point.y / Settings.CHUNK_UNITS);
    return chunkY * Settings.WORLD_SIZE_CHUNKS + chunkX;
 }
 
@@ -109,8 +110,8 @@ const getFreeSpaceInChunk = (chunkData: EntityChunkData, renderLayer: ChunkedRen
    const renderLayerInfo = CHUNKED_LAYER_INFO_RECORD[renderLayer];
 
    for (let idx = 0; idx < renderLayerInfo.maxEntitiesPerChunk; idx++) {
-      const occupyingEntityID = chunkData.bufferIndexToEntityIDRecord[idx];
-      if (occupyingEntityID === 0) {
+      const occupyingEntity = chunkData.bufferIndexToEntityRecord[idx];
+      if (occupyingEntity === 0) {
          return idx;
       }
    }
@@ -161,8 +162,8 @@ export function registerChunkRenderedEntity(entity: Entity, layer: Layer, render
    registerBufferChange(layer, renderLayer, chunkIdx, bufferIndex * renderLayerInfo.maxRenderPartsPerEntity, bufferIndex * renderLayerInfo.maxRenderPartsPerEntity + renderObject.renderPartsByZIndex.length - 1);
 
    chunkData.numEntities++;
-   chunkData.bufferIndexToEntityIDRecord[bufferIndex] = entity;
-   chunkData.entityIDToBufferIndexRecord[entity] = bufferIndex;
+   chunkData.bufferIndexToEntityRecord[bufferIndex] = entity;
+   chunkData.entityToBufferIndexRecord[entity] = bufferIndex;
 
    // Set data
    const renderPartIdx = bufferIndex * renderLayerInfo.maxRenderPartsPerEntity;
@@ -172,17 +173,13 @@ export function registerChunkRenderedEntity(entity: Entity, layer: Layer, render
 export function removeChunkRenderedEntity(entity: Entity, layer: Layer, renderLayer: ChunkedRenderLayer): void {
    const renderObject = getEntityRenderObject(entity);
 
-   const chunkDatas = layer.renderLayerChunkDataRecord[renderLayer];
+   const chunkDataRecord = layer.renderLayerChunkDataRecord[renderLayer];
    const chunkIdx = getEntityChunkIndex(renderObject);
-   const chunkData = chunkDatas[chunkIdx];
-   if (chunkData === undefined) {
-      throw new Error();
-   }
+   const chunkData = chunkDataRecord[chunkIdx];
+   assert(chunkData !== undefined);
 
-   const bufferIndex = chunkData.entityIDToBufferIndexRecord[entity];
-   if (bufferIndex === undefined) {
-      throw new Error();
-   }
+   const bufferIndex = chunkData.entityToBufferIndexRecord[entity];
+   assert(bufferIndex !== undefined);
 
    const renderLayerInfo = CHUNKED_LAYER_INFO_RECORD[renderLayer];
 
@@ -192,8 +189,8 @@ export function removeChunkRenderedEntity(entity: Entity, layer: Layer, renderLa
    
    chunkData.numEntities--;
    assert(chunkData.numEntities >= 0);
-   chunkData.bufferIndexToEntityIDRecord[bufferIndex] = 0;
-   delete chunkData.entityIDToBufferIndexRecord[entity];
+   chunkData.bufferIndexToEntityRecord[bufferIndex] = 0;
+   delete chunkData.entityToBufferIndexRecord[entity];
 
    if (chunkData.numEntities === 0) {
       removeEntityRenderedChunkData(layer, chunkIdx, chunkData);
@@ -209,12 +206,22 @@ export function updateChunkRenderedEntity(renderObject: EntityRenderObject, rend
    const chunkDatas = layer.renderLayerChunkDataRecord[renderLayer];
    const chunkIdx = getEntityChunkIndex(renderObject);
    const chunkData = chunkDatas[chunkIdx];
-   if (chunkData === undefined) {
-      throw new Error();
-   }
+   assert(chunkData !== undefined);
 
-   const bufferIndex = chunkData.entityIDToBufferIndexRecord[renderObject.entity];
+   const bufferIndex = chunkData.entityToBufferIndexRecord[renderObject.entity];
    if (bufferIndex === undefined) {
+      console.log(EntityTypeString[getEntityType(renderObject.entity)])
+      for (let i = 0; i < 99999; i++) {
+         const chunkData = chunkDatas[i];
+         if (chunkData === undefined) {
+            continue;
+         }
+         
+         const bufferIndex = chunkData.entityToBufferIndexRecord[renderObject.entity];
+         if (bufferIndex !== undefined) {
+            console.log("YEP COCK!")
+         }
+      }
       throw new Error();
    }
 

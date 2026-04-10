@@ -1,5 +1,5 @@
 import { PacketReader, PacketType, TribeType } from "../../../shared/src";
-import { receivePacket, gameIsRunning, canStartGame, startGame, stopGame } from "../game/game";
+import { receivePacket, gameIsRunning, bufferHasEnoughForGameStart, startGame, stopGame } from "../game/game";
 import { processDevGameDataPacket } from "../game/networking/dev-packets";
 import { establishNewNetworkConnection, killSocket } from "../game/networking/networking";
 import { processSyncGameDataPacket, processForcePositionUpdatePacket, receiveChatMessagePacket, processSimulationStatusUpdatePacket, processShieldKnockPacket, processInitialGameDataPacket } from "../game/networking/packet-receiving";
@@ -11,41 +11,35 @@ import { windowHeight, windowWidth } from "../game/webgl";
 import { closeGameScreen, openGameScreen } from "./GameScreen";
 import { openMainMenu } from "./MainMenu";
 
-export const enum LoadingScreenStage {
-   establishingConnection,
-   sendingPlayerData,
-   initialisingGame,
-   connectionError
-}
-
-const TXT_STAGE_1 = "Connecting to server...";
-const TXT_STAGE_2 = "Sending player data...";
-const TXT_STAGE_3 = "Initialising game...";
+const TXT_CONNECTING = "Connecting to server...";
+const TXT_SENDING = "Sending player data...";
+const TXT_INITIALISING = "Initialising game...";
 
 const loadingScreenElem = document.getElementById("loading-screen")!;
 const textNode = document.getElementById("ls-text")!.firstChild as Text;
 
+// Init button events
 {
-   const reconnectBtn = document.getElementById("ls-reconnect-button")!;
+   const reconnectButton = document.getElementById("ls-reconnect-button")!;
 
-   // Reconnect button
-   reconnectBtn.onclick = () => {
+   reconnectButton.onclick = () => {
       establishNewNetworkConnection(playerUsername, playerTribe.tribeType, isSpectating, onSuccessfulConnection, onFailedConnection, onPacket);
 
       loadingScreenElem.className = "";
-      textNode.data = TXT_STAGE_1;
+      textNode.data = TXT_CONNECTING;
    };
-   // Main menu button
-   (reconnectBtn.nextSibling as HTMLElement).onclick = () => {
+
+   const mainMenuButton = reconnectButton.nextElementSibling as HTMLElement;
+   mainMenuButton.onclick = () => {
       closeLoadingScreen();
       openMainMenu();
 
-      textNode.data = TXT_STAGE_1;
+      textNode.data = TXT_CONNECTING;
    };
 }
 
 function onSuccessfulConnection(username: string, tribeType: TribeType, isSpectating: boolean): void {
-   textNode.data = TXT_STAGE_2;
+   textNode.data = TXT_SENDING;
 
    sendInitialPlayerDataPacket(username, tribeType, isSpectating, windowWidth, windowHeight);
 
@@ -54,24 +48,29 @@ function onSuccessfulConnection(username: string, tribeType: TribeType, isSpecta
 }
 
 function onFailedConnection(): void {
-   stopGame();
-   openLoadingScreenFromNotMainMenu();
-   setPlayerInstance(null); // @Cleanup: why?
+   if (gameIsRunning) {
+      stopGame();
+      closeGameScreen();
+      setPlayerInstance(null); // @Cleanup: why?
+
+      loadingScreenElem.hidden = false;
+   }
+
+   loadingScreenElem.className = "is-error";
 }
 
 async function onInitialGameDataPacket(reader: PacketReader): Promise<void> {
-   processInitialGameDataPacket(reader);
+   textNode.data = TXT_INITIALISING;
    
    // Initialise game
-
-   textNode.data = TXT_STAGE_3;
-   
+   processInitialGameDataPacket(reader);
    await setupRendering();
-   
    sendActivatePacket();
 }
 
-async function onPacket(msg: MessageEvent): Promise<void> {
+// @Location
+function onPacket(msg: MessageEvent): void {
+   // @Bug potentially: what if this fires for the initial game data packet somehow?
    if (document.hidden) {
       return;
    }
@@ -80,23 +79,46 @@ async function onPacket(msg: MessageEvent): Promise<void> {
    
    const packetType = reader.readNumber() as PacketType;
    switch (packetType) {
-      case PacketType.initialGameData: await onInitialGameDataPacket(reader); break;
+      case PacketType.initialGameData: {
+         void onInitialGameDataPacket(reader);
+         break;
+      }
       case PacketType.gameData: {
          receivePacket(reader);
+         
          // Once enough packets are received to show the gameplay, start the game
-         if (!gameIsRunning && canStartGame()) {
+         // @Speed: This only happens once, and then the hot path runs this check every single time!!!
+         if (!gameIsRunning && bufferHasEnoughForGameStart()) {
             closeLoadingScreen();
             openGameScreen();
             startGame();
          }
          break;
       }
-      case PacketType.syncGameData: processSyncGameDataPacket(reader); break;
-      case PacketType.forcePositionUpdate: processForcePositionUpdatePacket(reader); break;
-      case PacketType.serverToClientChatMessage: receiveChatMessagePacket(reader); break;
-      case PacketType.simulationStatusUpdate: processSimulationStatusUpdatePacket(reader); break;
-      case PacketType.devGameData: processDevGameDataPacket(reader); break;
-      case PacketType.shieldKnock: processShieldKnockPacket(); break;
+      case PacketType.syncGameData: {
+         processSyncGameDataPacket(reader);
+         break;
+      }
+      case PacketType.forcePositionUpdate: {
+         processForcePositionUpdatePacket(reader);
+         break;
+      }
+      case PacketType.serverToClientChatMessage: {
+         receiveChatMessagePacket(reader);
+         break;
+      }
+      case PacketType.simulationStatusUpdate: {
+         processSimulationStatusUpdatePacket(reader);
+         break;
+      }
+      case PacketType.devGameData: {
+         processDevGameDataPacket(reader);
+         break;
+      }
+      case PacketType.shieldKnock: {
+         processShieldKnockPacket();
+         break;
+      }
    }
 }
 
@@ -107,19 +129,11 @@ export function openLoadingScreenFromMainMenu(username: string, tribeType: Tribe
    loadingScreenElem.hidden = false;
 }
 
-export function openLoadingScreenFromNotMainMenu(): void {
-   loadingScreenElem.className = "is-error";
-   
-   if (loadingScreenElem.hidden) {
-      loadingScreenElem.hidden = false;
-      closeGameScreen();
-   }
-}
-
-export function closeLoadingScreen(): void {
+function closeLoadingScreen(): void {
    loadingScreenElem.hidden = true;
 }
 
+// @Location
 export function quitGame(): void {
    killSocket();
 

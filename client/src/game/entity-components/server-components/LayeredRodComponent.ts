@@ -216,10 +216,12 @@ const updateOffsets = (layeredRodComponent: LayeredRodComponent, entity: Entity)
    const bendY = layeredRodComponent.naturalBendY * naturalBendMultiplier + layeredRodComponent.bendY;
    
    const renderObject = getEntityRenderObject(entity);
-   for (let layer = 1; layer <= layeredRodComponent.numLayers; layer++) {
-      const renderPart = renderObject.renderPartsByZIndex[layer - 1];
-      renderPart.offsetX = bendX * layer;
-      renderPart.offsetY = bendY * layer;
+   // Start at layer=2 as to not bend the base of the strand at all.
+   // @Correctness: is this ok? would it look better if the base bended too? the only problem is that the chunked rendering system doesn't support that.
+   for (let i = 1; i <= layeredRodComponent.numLayers - 1; i++) {
+      const renderPart = renderObject.renderPartsByZIndex[i];
+      renderPart.offsetX = bendX * i;
+      renderPart.offsetY = bendY * i;
    }
 }
 
@@ -245,10 +247,11 @@ function onTick(entity: Entity): void {
    updateOffsets(layeredRodComponent, entity);
 
    const renderObject = getEntityRenderObject(entity);
-   registerDirtyRenderObject(renderObject);
+   registerDirtyRenderObject(entity, renderObject);
 }
 
 function onCollision(entity: Entity, collidingEntity: Entity, affectedHitbox: Hitbox, collidingHitbox: Hitbox): void {
+   // @Hack!!
    if (getEntityType(collidingEntity) === EntityType.tree) {
       return;
    }
@@ -284,5 +287,5 @@ function onCollision(entity: Entity, collidingEntity: Entity, affectedHitbox: Hi
    updateOffsets(layeredRodComponent, entity);
 
    const renderObject = getEntityRenderObject(entity);
-   registerDirtyRenderObject(renderObject);
+   registerDirtyRenderObject(entity, renderObject);
 }

@@ -141,7 +141,7 @@ const addConnector = (vertices: Array<number>, startX: number, startY: number, e
 }
 
 const renderConnectors = (pathData: PathData): void => {
-   const debugEntity = hoverDebugState.entityDebugData!.entityID;
+   const debugEntity = hoverDebugState.entityDebugData!.entity;
    if (!entityExists(debugEntity)) {
       return;
    }
@@ -196,7 +196,7 @@ const renderNodes = (vertexData: Float32Array): void => {
 }
 
 const getDebuggedPath = (entityDebugData: EntityDebugData | null): PathData | undefined => {
-   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
       return entityDebugData.pathData;
    }
 }
@@ -259,7 +259,7 @@ const addNodeData = (vertexData: Float32Array, segmentIdx: number, node: Pathfin
 export function renderPathfindingNodes(): void {
    const entityDebugData = hoverDebugState.entityDebugData;
 
-   const showEntityPathfindingNodes = nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID);
+   const showEntityPathfindingNodes = nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entity);
    if (!debugDisplayState.showPathfindingNodes && !showEntityPathfindingNodes) {
       return;
    }

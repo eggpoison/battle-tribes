@@ -1,6 +1,8 @@
-import { assert } from "../../../shared/src";
+import { assert, Entity, InventoryName } from "../../../shared/src";
+import { createItemsTab, destroyItemsTab } from "./game/dev/tabs/ItemsTab";
+import { closeCraftingMenu, openCraftingMenu } from "./game/menus/CraftingMenu";
 
-export enum Menu {
+export enum MenuType {
    buildMenu,
    animalStaffOptions,
    craftingMenu,
@@ -22,67 +24,160 @@ export enum Menu {
 }
 
 interface MenuInfo {
-   readonly menu: Menu;
+   readonly openFunction: () => void;
    readonly closeFunction: () => void;
+   readonly isInventory: boolean;
 }
 
-const menuStack = new Array<MenuInfo>();
-
-const MENU_IS_EMBODIED_RECORD: Record<Menu, boolean> = {
-   [Menu.buildMenu]: true,
-   [Menu.animalStaffOptions]: true,
-   [Menu.craftingMenu]: false,
-   [Menu.tamingMenu]: false,
-   [Menu.tamingRenamePrompt]: false,
-   [Menu.signInscribeMenu]: false,
-   [Menu.barrelInventory]: false,
-   [Menu.tribesmanInventory]: false,
-   [Menu.campfireInventory]: false,
-   [Menu.furnaceInventory]: false,
-   [Menu.ammoBoxInventory]: false,
-   [Menu.tombstoneEpitaph]: false,
-   [Menu.itemsDevTab]: false,
-   [Menu.summonDevTab]: false,
-   [Menu.titlesDevTab]: false,
-   [Menu.tribesDevTab]: false,
-   [Menu.tribePlanVisualiser]: false,
-   [Menu.techTree]: false,
+export interface MenuInventoryInfo {
+   readonly entity: Entity;
+   readonly inventoryName: InventoryName;
 }
 
-const MENU_IS_INVENTORY_RECORD: Record<Menu, boolean> = {
-   [Menu.buildMenu]: false,
-   [Menu.animalStaffOptions]: false,
-   [Menu.craftingMenu]: false,
-   [Menu.tamingMenu]: false,
-   [Menu.tamingRenamePrompt]: false,
-   [Menu.signInscribeMenu]: false,
-   [Menu.barrelInventory]: true,
-   [Menu.tribesmanInventory]: false,
-   [Menu.campfireInventory]: false,
-   [Menu.furnaceInventory]: false,
-   [Menu.ammoBoxInventory]: false,
-   [Menu.tombstoneEpitaph]: false,
-   [Menu.itemsDevTab]: false,
-   [Menu.summonDevTab]: false,
-   [Menu.titlesDevTab]: false,
-   [Menu.tribesDevTab]: false,
-   [Menu.tribePlanVisualiser]: false,
-   [Menu.techTree]: false,
+export interface Menu {
+   readonly type: MenuType;
+   readonly inventoryInfo?: MenuInventoryInfo;
+}
+
+const menuStack = new Array<Menu>();
+
+const MENU_INFO_RECORD: Record<MenuType, MenuInfo> = {
+   [MenuType.buildMenu]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.animalStaffOptions]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.craftingMenu]: {
+      openFunction: openCraftingMenu,
+      closeFunction: closeCraftingMenu,
+      isInventory: false
+   },
+   [MenuType.tamingMenu]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.tamingRenamePrompt]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.signInscribeMenu]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.barrelInventory]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: true
+   },
+   [MenuType.tribesmanInventory]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.campfireInventory]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.furnaceInventory]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.ammoBoxInventory]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.tombstoneEpitaph]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.itemsDevTab]: {
+      openFunction: createItemsTab,
+      closeFunction: destroyItemsTab,
+      isInventory: false
+   },
+   [MenuType.summonDevTab]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.titlesDevTab]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.tribesDevTab]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.tribePlanVisualiser]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
+   [MenuType.techTree]: {
+      openFunction: undefined as unknown as () => void, // @Incomplete
+      closeFunction: undefined as unknown as () => void, // @Incomplete
+      isInventory: false
+   },
 };
 
-export function menuIsInventory(menu: Menu): boolean {
-   return MENU_IS_INVENTORY_RECORD[menu];
+const MENU_IS_EMBODIED_RECORD: Record<MenuType, boolean> = {
+   [MenuType.buildMenu]: true,
+   [MenuType.animalStaffOptions]: true,
+   [MenuType.craftingMenu]: false,
+   [MenuType.tamingMenu]: false,
+   [MenuType.tamingRenamePrompt]: false,
+   [MenuType.signInscribeMenu]: false,
+   [MenuType.barrelInventory]: false,
+   [MenuType.tribesmanInventory]: false,
+   [MenuType.campfireInventory]: false,
+   [MenuType.furnaceInventory]: false,
+   [MenuType.ammoBoxInventory]: false,
+   [MenuType.tombstoneEpitaph]: false,
+   [MenuType.itemsDevTab]: false,
+   [MenuType.summonDevTab]: false,
+   [MenuType.titlesDevTab]: false,
+   [MenuType.tribesDevTab]: false,
+   [MenuType.tribePlanVisualiser]: false,
+   [MenuType.techTree]: false,
 }
 
-export function openMenu(menu: Menu, openFunction: () => void, closeFunction: () => void): void {
+export function menuIsInventory(menuType: MenuType): boolean {
+   return MENU_INFO_RECORD[menuType].isInventory;
+}
+
+export function getOpenMenu(): Menu | null {
+   if (menuStack.length === 0) {
+      return null;
+   }
+
+   return menuStack[menuStack.length - 1];
+}
+
+export function openMenu(menuType: MenuType, inventoryInfo?: MenuInventoryInfo): void {
    // Make sure the menu isn't already open
-   assert(!menuStack.some(menuInfo => menuInfo.menu === menu));
+   assert(!menuStack.some(currentMenu => currentMenu.type === menuType));
    
-   openFunction();
+   const menuInfo = MENU_INFO_RECORD[menuType];
+   
+   menuInfo.openFunction();
    
    menuStack.push({
-      menu: menu,
-      closeFunction: closeFunction
+      type: menuType,
+      inventoryInfo
    });
 }
 
@@ -114,8 +209,9 @@ if (playerInstance !== null) {
 */
 
 export function closeCurrentMenu(): boolean {
-   const menuInfo = menuStack.pop();
-   if (menuInfo) {
+   const menu = menuStack.pop();
+   if (menu) {
+      const menuInfo = MENU_INFO_RECORD[menu.type];
       menuInfo.closeFunction();
       return true;
    }
@@ -123,11 +219,11 @@ export function closeCurrentMenu(): boolean {
 }
 
 /** Closes a specific menu, and any menus opened after it. */
-export function closeMenu(menu: Menu): void {
+export function closeMenu(menuType: MenuType): void {
    let idx: number | undefined;
    for (let i = 0; i < menuStack.length; i++) {
-      const menuInfo = menuStack[i];
-      if (menuInfo.menu === menu) {
+      const menu = menuStack[i];
+      if (menu.type === menuType) {
          idx = i;
          break;
       }
@@ -138,14 +234,15 @@ export function closeMenu(menu: Menu): void {
    }
 
    for (let i = menuStack.length - 1; i >= idx; i--) {
-      const menuInfo = menuStack[i];
+      const menu = menuStack[i];
+      const menuInfo = MENU_INFO_RECORD[menu.type];
       menuInfo.closeFunction();
    }
    menuStack.splice(idx, menuStack.length - idx);
 }
 
-export function menuIsOpen(menu: Menu): boolean {
-   return menuStack.some(menuInfo => menuInfo.menu === menu);
+export function menuIsOpen(menuType: MenuType): boolean {
+   return menuStack.some(menu => menu.type === menuType);
 }
 
 export function hasOpenMenu(): boolean {
@@ -153,8 +250,8 @@ export function hasOpenMenu(): boolean {
 }
 
 export function hasOpenEmbodiedMenu(): boolean {
-   for (const menuInfo of menuStack) {
-      if (MENU_IS_EMBODIED_RECORD[menuInfo.menu]) {
+   for (const menu of menuStack) {
+      if (MENU_IS_EMBODIED_RECORD[menu.type]) {
          return true;
       }
    }
@@ -162,8 +259,8 @@ export function hasOpenEmbodiedMenu(): boolean {
 }
 
 export function hasOpenNonEmbodiedMenu(): boolean {
-   for (const menuInfo of menuStack) {
-      if (!MENU_IS_EMBODIED_RECORD[menuInfo.menu]) {
+   for (const menu of menuStack) {
+      if (!MENU_IS_EMBODIED_RECORD[menu.type]) {
          return true;
       }
    }
@@ -171,7 +268,7 @@ export function hasOpenNonEmbodiedMenu(): boolean {
 }
 
 /** If the menu is open, closes it. If no menu is open, opens the menu. If a different menu is open, do nothing. */
-export function toggleMenu(menu: Menu, openFunction: () => void, closeFunction: () => void): void {
+export function toggleMenu(menu: MenuType): void {
    if (hasOpenMenu() && !menuIsOpen(menu)) {
       return;
    }
@@ -180,6 +277,6 @@ export function toggleMenu(menu: Menu, openFunction: () => void, closeFunction: 
       closeMenu(menu);
    } else {
       // Otherwise, select the clicked tab.
-      openMenu(menu, openFunction, closeFunction);
+      openMenu(menu);
    }
 }

@@ -3,7 +3,7 @@ import { cursorWorldPos } from "./camera";
 import { selectItemSlot } from "./player-action-handling";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
-import { calculateHitboxRenderPosition, getEntityTickInterp, registerDirtyRenderObject } from "./rendering/render-part-matrices";
+import { calculateHitboxRenderPosition, registerDirtyRenderObject } from "./rendering/render-part-matrices";
 import { getEntityRenderObject } from "./world";
 import { gameUIState } from "../ui-state/game-ui-state";
 import { destroyHealthBar } from "../ui/game/HealthBar";
@@ -54,7 +54,7 @@ export function setPlayerUsername(username: string): void {
 }
 
 /** Updates the rotation of the player to match the cursor position */
-export function updatePlayerDirection(clientTickInterp: number, serverTickInterp: number): void {
+export function updatePlayerDirection(clientInterp: number, serverInterp: number): void {
    if (playerInstance === null) return;
 
    // Don't turn the player if they're meddling about in an inventory, cuz they're not actually looking at stuff while they're doing that
@@ -66,8 +66,7 @@ export function updatePlayerDirection(clientTickInterp: number, serverTickInterp
    const playerHitbox = transformComponent.hitboxes[0];
 
    // Use the render position instead of the hitboxes' actual game position, as that is not up-to-date for each and every rendered frame.
-   const tickInterp = getEntityTickInterp(playerInstance, clientTickInterp, serverTickInterp);
-   const playerHitboxRenderPos = calculateHitboxRenderPosition(playerHitbox, tickInterp);
+   const playerHitboxRenderPos = calculateHitboxRenderPosition(playerHitbox, clientInterp, serverInterp);
 
    const cursorDirection = playerHitboxRenderPos.angleTo(cursorWorldPos);
    
@@ -88,7 +87,7 @@ export function updatePlayerDirection(clientTickInterp: number, serverTickInterp
    setHitboxObservedAngularVelocity(playerHitbox, 0);
 
    const renderObject = getEntityRenderObject(playerInstance);
-   registerDirtyRenderObject(renderObject);
+   registerDirtyRenderObject(playerInstance, renderObject);
 }
 
 // @INCOMPLETE

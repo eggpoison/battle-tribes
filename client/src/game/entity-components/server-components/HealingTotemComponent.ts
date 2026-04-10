@@ -42,13 +42,13 @@ function decodeData(reader: PacketReader): HealingTotemComponentData {
    const healTargets = new Array<HealingTotemTargetData>();
    const numTargets = reader.readNumber();
    for (let i = 0; i < numTargets; i++) {
-      const healTargetID = reader.readNumber();
+      const healTarget: Entity = reader.readNumber();
       const x = reader.readNumber();
       const y = reader.readNumber();
       const ticksHealed = reader.readNumber();
 
       healTargets.push({
-         entityID: healTargetID,
+         entity: healTarget,
          x: x,
          y: y,
          ticksHealed: ticksHealed

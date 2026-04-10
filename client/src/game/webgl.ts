@@ -7,6 +7,7 @@ export const CIRCLE_VERTEX_COUNT = 50;
 
 export let gl: WebGL2RenderingContext;
 
+// @Location
 export let windowWidth = window.innerWidth;
 export let windowHeight = window.innerHeight;
 export let halfWindowWidth = windowWidth / 2;

@@ -7,7 +7,7 @@
 
 import { gameIsRunning } from "../../../game/game";
 import { addKeyListener } from "../../../game/keyboard-input";
-import { Menu, menuSelectorState } from "../../menus";
+import { MenuType, menuSelectorState } from "../../menus";
 
 // const boundsScale = 16;
 
@@ -104,7 +104,7 @@ import { Menu, menuSelectorState } from "../../menus";
 addKeyListener("p", () => {
    // Open/close tech tree
    if (gameIsRunning) {
-      menuSelectorState.toggleMenu(Menu.techTree);
+      menuSelectorState.toggleMenu(MenuType.techTree);
    }
 });
 

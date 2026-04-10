@@ -224,8 +224,6 @@ export function createEntityRenderData(maxRenderParts: number): EntityRenderData
 
    // @BUG: Never cleans up the index buffer??
 
-   gl.bindVertexArray(null);
-
    return {
       vao: vao,
       vertexBuffer: vertexBuffer,

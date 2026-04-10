@@ -1,4 +1,4 @@
-import { Entity, customTickIntervalHasPassed, lerp, randAngle, randFloat, randItem, PacketReader, StatusEffect, StatusEffectData, ServerComponentType } from "webgl-test-shared";
+import { Entity, customTickIntervalHasPassed, lerp, randAngle, randFloat, randItem, PacketReader, StatusEffect, StatusEffectData, ServerComponentType, _point } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import Particle from "../../Particle";
 import { createPoisonBubble, createBloodParticle, BloodParticleSize, createHeatParticle } from "../../particles";
@@ -272,7 +272,8 @@ function onTick(entity: Entity): void {
    const heatSicknessStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.heatSickness);
    if (heatSicknessStatusEffect !== null) {
       if (tickIntervalHasPassed(0.15)) {
-         const hitboxVelocity = getHitboxVelocity(hitbox);
+         getHitboxVelocity(hitbox);
+         const hitboxVelocity = _point;
          
          const spawnOffsetDirection = randAngle();
          const spawnPositionX = hitbox.box.position.x + 32 * Math.sin(spawnOffsetDirection);

@@ -1,4 +1,4 @@
-import { LimbAction } from "./entities";
+import { Entity, LimbAction } from "./entities";
 import { StatusEffect } from "./status-effects";
 import { TileType } from "./tiles";
 
@@ -140,7 +140,7 @@ export interface PathData {
 
 export interface EntityDebugData {
    /** ID of the entity being tracked */
-   readonly entityID: number;
+   readonly entity: Entity;
    readonly lines: Array<LineDebugData>;
    readonly circles: Array<CircleDebugData>;
    readonly tileHighlights: Array<TileHighlightData>;

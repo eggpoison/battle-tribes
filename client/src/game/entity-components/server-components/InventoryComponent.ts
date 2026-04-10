@@ -108,6 +108,9 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
                onItemDeselect(item.type, inventory.name === InventoryName.offhand);
                
                validatePlayerAction(inventory.name, null);
+            } else if (inventory.name === InventoryName.craftingOutputSlot) {
+               // @HACK @CLEANUP
+               
             }
          }
       }

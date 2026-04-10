@@ -1,4 +1,4 @@
-import { Box, boxIsCircular, HitboxCollisionType, HitboxFlag, Point, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, Settings, Entity, CollisionBit, distance, distBetweenPointAndRectangle, getAngleDiff, getTileIndexIncludingEdges, randSign } from "webgl-test-shared";
+import { Box, boxIsCircular, HitboxCollisionType, HitboxFlag, Point, randAngle, randFloat, rotatePointAroundOrigin, Settings, Entity, CollisionBit, distance, distBetweenPointAndRectangle, getAngleDiff, getTileIndexIncludingEdges, randSign, _point, Mutable } from "webgl-test-shared";
 import { getEntityLayer, getEntityRenderObject } from "./world";
 import { registerDirtyRenderObject } from "./rendering/render-part-matrices";
 import { Tile } from "./Tile";
@@ -51,25 +51,25 @@ export interface Hitbox {
 
 export function createHitbox(localID: number, entity: Entity, rootEntity: Entity, parent: Hitbox | null, children: Array<Hitbox>, isPartOfParent: boolean, isStatic: boolean, box: Box, previousPosition: Point, acceleration: Point, tethers: Array<HitboxTether>, previousRelativeAngle: number, angularAcceleration: number, mass: number, collisionType: HitboxCollisionType, collisionBit: CollisionBit, collisionMask: number, flags: ReadonlyArray<HitboxFlag>): Hitbox {
    return {
-      localID: localID,
-      entity: entity,
-      rootEntity: rootEntity,
-      parent: parent,
-      children: children,
-      box: box,
-      previousPosition: previousPosition,
-      acceleration: acceleration,
-      tethers: tethers,
+      localID,
+      entity,
+      rootEntity,
+      parent,
+      children,
+      box,
+      previousPosition,
+      acceleration,
+      tethers,
       previousAngle: box.angle,
-      previousRelativeAngle: previousRelativeAngle,
-      angularAcceleration: angularAcceleration,
-      mass: mass,
-      collisionType: collisionType,
-      collisionBit: collisionBit,
-      collisionMask: collisionMask,
-      flags: flags,
-      isPartOfParent: isPartOfParent,
-      isStatic: isStatic,
+      previousRelativeAngle,
+      angularAcceleration,
+      mass,
+      collisionType,
+      collisionBit,
+      collisionMask,
+      flags,
+      isPartOfParent,
+      isStatic,
       // Can't use the current snapshot's tick here cuz what if the hitbox is being created during the creation of the current snapshot! I gotta set it once the hitbox is actually added to the transform component.
       lastUpdateTicks: 0
    };
@@ -77,33 +77,32 @@ export function createHitbox(localID: number, entity: Entity, rootEntity: Entity
 
 export function createHitboxQuick(entity: Entity, localID: number, parent: Hitbox | null, box: Box, mass: number, collisionType: HitboxCollisionType, collisionBit: CollisionBit, collisionMask: number, flags: ReadonlyArray<HitboxFlag>): Hitbox {
    return {
-      localID: localID,
-      entity: entity,
+      localID,
+      entity,
       rootEntity: entity,
-      parent: parent,
+      parent,
       isPartOfParent: true,
       isStatic: false,
       children: [],
-      box: box,
+      box,
       previousPosition: box.position.copy(),
       acceleration: new Point(0, 0),
       tethers: [],
       previousAngle: box.angle,
       previousRelativeAngle: box.relativeAngle,
       angularAcceleration: 0,
-      mass: mass,
-      collisionType: collisionType,
-      collisionBit: collisionBit,
-      collisionMask: collisionMask,
-      flags: flags,
+      mass,
+      collisionType,
+      collisionBit,
+      collisionMask,
+      flags,
       lastUpdateTicks: 0
    };
 }
 
-export function getHitboxVelocity(hitbox: Hitbox): Point {
-   const vx = (hitbox.box.position.x - hitbox.previousPosition.x) * Settings.TICK_RATE;
-   const vy = (hitbox.box.position.y - hitbox.previousPosition.y) * Settings.TICK_RATE;
-   return new Point(vx, vy);
+export function getHitboxVelocity(hitbox: Hitbox): void {
+   (_point as Mutable<Point>).x = (hitbox.box.position.x - hitbox.previousPosition.x) * Settings.TICK_RATE;
+   (_point as Mutable<Point>).y = (hitbox.box.position.y - hitbox.previousPosition.y) * Settings.TICK_RATE;
 }
 
 export function setHitboxVelocityX(hitbox: Hitbox, vx: number): void {
@@ -160,7 +159,7 @@ export function setHitboxAngle(hitbox: Hitbox, angle: number): void {
    hitbox.previousRelativeAngle += add;
 
    const renderObject = getEntityRenderObject(hitbox.entity);
-   registerDirtyRenderObject(renderObject);
+   registerDirtyRenderObject(hitbox.entity, renderObject);
 }
 
 /** Makes the hitboxes' angle be that as specified, by only changing its relative angle */
@@ -170,7 +169,7 @@ export function setHitboxRelativeAngle(hitbox: Hitbox, angle: number): void {
    hitbox.previousRelativeAngle += add;
 
    const renderObject = getEntityRenderObject(hitbox.entity);
-   registerDirtyRenderObject(renderObject);
+   registerDirtyRenderObject(hitbox.entity, renderObject);
 }
 
 export function applyForce(hitbox: Hitbox, force: Point): void {
@@ -215,8 +214,9 @@ export function getRandomPositionInBox(box: Box): Point {
       const xOffset = randFloat(-halfWidth, halfWidth);
       const yOffset = randFloat(-halfHeight, halfHeight);
 
-      const x = box.position.x + rotateXAroundOrigin(xOffset, yOffset, box.angle);
-      const y = box.position.y + rotateYAroundOrigin(xOffset, yOffset, box.angle);
+      rotatePointAroundOrigin(xOffset, yOffset, box.angle);
+      const x = box.position.x + _point.x;
+      const y = box.position.y + _point.y;
       return new Point(x, y);
    }
 }
@@ -240,8 +240,9 @@ export function getRandomPositionOnBoxEdge(box: Box): Point {
          yOffset = randFloat(-halfHeight, halfHeight);
       }
 
-      const x = box.position.x + rotateXAroundOrigin(xOffset, yOffset, box.angle);
-      const y = box.position.y + rotateYAroundOrigin(xOffset, yOffset, box.angle);
+      rotatePointAroundOrigin(xOffset, yOffset, box.angle);
+      const x = box.position.x + _point.x;
+      const y = box.position.y + _point.y;
       return new Point(x, y);
    }
 }

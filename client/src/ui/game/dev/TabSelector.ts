@@ -1,4 +1,4 @@
-import { Menu } from "../../menus";
+import { MenuType } from "../../menus";
 import { createTab } from "./Tab";
 import { createItemsTab, destroyItemsTab } from "./tabs/ItemsTab";
 import ItemTabImage from "/src/images/ui/item-tab.png";
@@ -19,10 +19,10 @@ export function createTabSelector(parent: HTMLElement): void {
    tabSelectorElem.id = "tab-selection";
    parent.appendChild(tabSelectorElem);
 
-   createTab(tabSelectorElem, Menu.itemsDevTab, ItemTabImage, "Items", createItemsTab, destroyItemsTab);
-   createTab(tabSelectorElem, Menu.summonDevTab, SummonTabImage, "Summon", () => {}, () => {});
-   createTab(tabSelectorElem, Menu.titlesDevTab, TitlesTabImage, "Titles", () => {}, () => {});
-   createTab(tabSelectorElem, Menu.tribesDevTab, TribesTabImage, "Tribes", () => {}, () => {});
+   createTab(tabSelectorElem, MenuType.itemsDevTab, ItemTabImage, "Items");
+   createTab(tabSelectorElem, MenuType.summonDevTab, SummonTabImage, "Summon");
+   createTab(tabSelectorElem, MenuType.titlesDevTab, TitlesTabImage, "Titles");
+   createTab(tabSelectorElem, MenuType.tribesDevTab, TribesTabImage, "Tribes");
 }
 
 export function destroyTabSelector(): void {

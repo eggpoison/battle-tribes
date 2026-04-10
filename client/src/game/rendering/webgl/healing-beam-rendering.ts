@@ -1,5 +1,5 @@
 import { createWebGLProgram, gl } from "../../webgl";
-import { angle, distance, rotateXAroundPoint, rotateYAroundPoint, Settings } from "webgl-test-shared";
+import { _point, angle, distance, Entity, rotatePointAroundPoint, Settings } from "webgl-test-shared";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { HealingTotemComponentArray } from "../../entity-components/server-components/HealingTotemComponent";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
@@ -122,7 +122,7 @@ interface HealingBeam {
    readonly startY: number;
    readonly endX: number;
    readonly endY: number;
-   readonly entityID: number;
+   readonly entity: Entity;
    readonly ticksHealed: number;
 }
 
@@ -144,7 +144,7 @@ const getVisibleHealingBeams = (): ReadonlyArray<HealingBeam> => {
             startY: hitbox.box.position.y,
             endX: healingTargetData.x,
             endY: healingTargetData.y,
-            entityID: healingTargetData.entityID,
+            entity: healingTargetData.entity,
             ticksHealed: healingTargetData.ticksHealed
          });
       }
@@ -161,8 +161,8 @@ const createData = (visibleBeams: ReadonlyArray<HealingBeam>): ReadonlyArray<num
 
       let endX: number;
       let endY: number;
-      if (entityExists(beam.entityID)) {
-         const transformComponent = TransformComponentArray.getComponent(beam.entityID)
+      if (entityExists(beam.entity)) {
+         const transformComponent = TransformComponentArray.getComponent(beam.entity)
          const hitbox = transformComponent.hitboxes[0];
          endX = hitbox.box.position.x;
          endY = hitbox.box.position.y;
@@ -182,14 +182,18 @@ const createData = (visibleBeams: ReadonlyArray<HealingBeam>): ReadonlyArray<num
       const y1 = centerY - beamLength * 0.5;
       const y2 = centerY + beamLength * 0.5;
 
-      const tlX = rotateXAroundPoint(x1, y2, centerX, centerY, beamDirection);
-      const tlY = rotateYAroundPoint(x1, y2, centerX, centerY, beamDirection);
-      const trX = rotateXAroundPoint(x2, y2, centerX, centerY, beamDirection);
-      const trY = rotateYAroundPoint(x2, y2, centerX, centerY, beamDirection);
-      const blX = rotateXAroundPoint(x1, y1, centerX, centerY, beamDirection);
-      const blY = rotateYAroundPoint(x1, y1, centerX, centerY, beamDirection);
-      const brX = rotateXAroundPoint(x2, y1, centerX, centerY, beamDirection);
-      const brY = rotateYAroundPoint(x2, y1, centerX, centerY, beamDirection);
+      rotatePointAroundPoint(x1, y2, centerX, centerY, beamDirection);
+      const tlX = _point.x;
+      const tlY = _point.y;
+      rotatePointAroundPoint(x2, y2, centerX, centerY, beamDirection);
+      const trX = _point.x;
+      const trY = _point.y;
+      rotatePointAroundPoint(x1, y1, centerX, centerY, beamDirection);
+      const blX = _point.x;
+      const blY = _point.y;
+      rotatePointAroundPoint(x2, y1, centerX, centerY, beamDirection);
+      const brX = _point.x;
+      const brY = _point.y;
    
       const beamProjX = Math.sin(beamDirection + Math.PI/2);
       const beamProjY = Math.cos(beamDirection + Math.PI/2);

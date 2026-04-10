@@ -1,4 +1,4 @@
-import { Entity, EntityType, PlantedEntityType, assert, distance, Point, rotateXAroundOrigin, rotateYAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID } from "webgl-test-shared";
+import { Entity, EntityType, PlantedEntityType, assert, distance, Point, rotatePointAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID, _point } from "webgl-test-shared";
 import { currentSnapshot } from "./game";
 import { entityExists, getCurrentLayer, getEntityRenderObject, getEntityType } from "./world";
 import { TombstoneComponentArray } from "./entity-components/server-components/TombstoneComponent";
@@ -17,7 +17,7 @@ import { HealthComponentArray } from "./entity-components/server-components/Heal
 import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "./entity-components/server-components/TamingComponent";
 import { createHitboxQuick, getHitboxVelocity } from "./hitboxes";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
-import { closeCurrentMenu, hasOpenEmbodiedMenu, Menu, menuIsInventory, openMenu } from "../ui/menus";
+import { closeCurrentMenu, hasOpenEmbodiedMenu, MenuType, menuIsInventory, openMenu } from "../ui/menus";
 import { getPlayerSelectedItem, playerIsPlacingEntity } from "./player-action-handling";
 import { cameraPosition, cameraZoom, cursorWorldPos } from "./camera";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
@@ -25,7 +25,6 @@ import { AnimalStaffCommandType, createControlCommandParticles } from "./particl
 import { BuildMenuOption, buildMenuState, getBuildMenuOptions } from "../ui-state/build-menu-state";
 import { setActiveResearchBench } from "./research";
 import { getEntityComponentArrays } from "./entity-component-types";
-import { closeCraftingMenu, openCraftingMenu } from "../ui/game/menus/CraftingMenu";
 
 const enum InteractActionType {
    openBuildMenu,
@@ -81,7 +80,7 @@ interface ToggleDoorAction extends BaseInteractAction {
 
 interface OpenMenuAction extends BaseInteractAction {
    readonly type: InteractActionType.openMenu;
-   readonly menu: Menu;
+   readonly menu: MenuType;
 }
 
 interface OpenCraftingMenuAction extends BaseInteractAction {
@@ -195,22 +194,22 @@ export function getHighlightedRenderObject(): EntityRenderObject | null {
    return highlightedRenderObject;
 }
 
-const getEntityMenu = (entity: Entity): Menu | null => {
+const getEntityMenu = (entity: Entity): MenuType | null => {
    switch (getEntityType(entity)) {
-      case EntityType.barrel: return Menu.barrelInventory;
+      case EntityType.barrel: return MenuType.barrelInventory;
       case EntityType.tribeWorker:
-      case EntityType.tribeWarrior: return Menu.tribesmanInventory;
-      case EntityType.campfire: return Menu.campfireInventory;
-      case EntityType.furnace: return Menu.furnaceInventory;
+      case EntityType.tribeWarrior: return MenuType.tribesmanInventory;
+      case EntityType.campfire: return MenuType.campfireInventory;
+      case EntityType.furnace: return MenuType.furnaceInventory;
       case EntityType.tombstone: {
          const tombstoneComponent = TombstoneComponentArray.getComponent(entity);
          if (tombstoneComponent.deathInfo !== null) {
-            return Menu.tombstoneEpitaph;
+            return MenuType.tombstoneEpitaph;
          } else {
             return null;
          }
       }
-      case EntityType.ballista: return Menu.ammoBoxInventory;
+      case EntityType.ballista: return MenuType.ammoBoxInventory;
       default: return null;
    }
 }
@@ -234,8 +233,9 @@ const getSelectedCarrySlotIdx = (entity: Entity): number | null => {
    
    for (let i = 0; i < rideableComponent.carrySlots.length; i++) {
       const carrySlot = rideableComponent.carrySlots[i];
-      const x = hitbox.box.position.x + rotateXAroundOrigin(carrySlot.offsetX, carrySlot.offsetY, hitbox.box.angle);
-      const y = hitbox.box.position.y + rotateYAroundOrigin(carrySlot.offsetX, carrySlot.offsetY, hitbox.box.angle);
+      rotatePointAroundOrigin(carrySlot.offsetX, carrySlot.offsetY, hitbox.box.angle);
+      const x = hitbox.box.position.x + _point.x;
+      const y = hitbox.box.position.y + _point.y;
 
       const dist = distance(x, y, cursorWorldPos.x, cursorWorldPos.y);
       if (dist < minDist) {
@@ -395,7 +395,8 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
    if (entityType === EntityType.woodenArrow) {
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      if (getHitboxVelocity(hitbox).magnitude() < 1) {
+      getHitboxVelocity(hitbox);
+      if (_point.magnitude() < 1) {
          return {
             type: InteractActionType.pickUpEntity,
             interactEntity: entity,
@@ -457,7 +458,7 @@ const createInteractRenderObject = (interactAction: InteractAction): EntityRende
       case InteractActionType.mountCarrySlot: {
          const transformComponent = TransformComponentArray.getComponent(interactAction.interactEntity);
          
-         const renderObject = new EntityRenderObject(0, 0, 0, 1);
+         const renderObject = new EntityRenderObject(0, 0, 0, 1, true);
 
          const rideableComponent = RideableComponentArray.getComponent(interactAction.interactEntity);
          const carrySlot = rideableComponent.carrySlots[interactAction.carrySlotIdx];
@@ -492,7 +493,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       case InteractActionType.openBuildMenu: {
          setSelectedEntity(entity);
          buildMenuState.options = action.options;
-         openMenu(Menu.buildMenu);
+         openMenu(MenuType.buildMenu);
          break;
       }
       case InteractActionType.plantSeed: {
@@ -552,12 +553,12 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       }
       case InteractActionType.openCraftingStation: {
          setSelectedEntity(entity);
-         openMenu(Menu.craftingMenu, openCraftingMenu, closeCraftingMenu);
+         openMenu(MenuType.craftingMenu);
          break;
       }
       case InteractActionType.openAnimalStaffMenu: {
          setSelectedEntity(entity);
-         openMenu(Menu.animalStaffOptions);
+         openMenu(MenuType.animalStaffOptions);
          break;
       }
       case InteractActionType.mountCarrySlot: {
@@ -588,12 +589,12 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       }
       case InteractActionType.openTamingMenu: {
          setSelectedEntity(entity);
-         openMenu(Menu.tamingMenu);
+         openMenu(MenuType.tamingMenu);
          break;
       }
       case InteractActionType.inscribeFloorSign: {
          setSelectedEntity(entity);
-         openMenu(Menu.signInscribeMenu);
+         openMenu(MenuType.signInscribeMenu);
          break;
       }
       case InteractActionType.pickUpDustfleaEgg: {

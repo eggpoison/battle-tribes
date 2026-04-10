@@ -17,7 +17,7 @@
    }
 
    let { entityDebugData }: Props = $props();
-   const entity = $derived(entityDebugData.entityID);
+   const entity = $derived(entityDebugData.entity);
 
    const transformComponent = $derived(TransformComponentArray.getComponent(entity));
    const hitbox = $derived(transformComponent.hitboxes[0]);

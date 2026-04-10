@@ -1,5 +1,5 @@
 import { getCircleCircleCollisionResult, getCircleRectangleCollisionResult } from "../collision";
-import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "../utils";
+import { _point, Point, rotatePointAroundOrigin } from "../utils";
 import { PivotPointType } from "./BaseBox";
 import { CircularBox } from "./CircularBox";
 import { RectangularBox } from "./RectangularBox";
@@ -130,8 +130,9 @@ export function getRelativePivotPos(box: Box, angle: number): Point {
       relativePivotY = box.pivot.pos.y * height;
    }
 
-   let rotatedX = rotateXAroundOrigin(relativePivotX, relativePivotY, angle);
-   let rotatedY = rotateYAroundOrigin(relativePivotX, relativePivotY, angle);
+   rotatePointAroundOrigin(relativePivotX, relativePivotY, angle);
+   let rotatedX = _point.x;
+   let rotatedY = _point.y;
 
    if (box.totalFlipXMultiplier === -1) {
       rotatedX *= -1;

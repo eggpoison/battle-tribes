@@ -10,8 +10,8 @@ import { createCollapseParticles } from "./collapses";
 import { updateSlimeTrails } from "./rendering/webgl/slime-trail-rendering";
 import { updateDebugEntity } from "./entity-debugging";
 import { playerInstance, updatePlayerDirection } from "./player";
-import { resolvePlayerCollisions } from "./collision";
-import { decodeSnapshotFromGameDataPacket, PacketSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
+import { resolveEntityCollisions } from "./collision";
+import { decodeSnapshotFromGameDataPacket, TickSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
 import { sendDeactivatePacket, sendSyncRequestPacket } from "./networking/packet-sending/packet-sending";
 import { renderGame } from "./rendering/render";
 import { registerFrame, renderFrameGraph, resetFrameGraph } from "./rendering/webgl/frame-graph-rendering";
@@ -20,11 +20,10 @@ import { updatePlayerMovement } from "./player-action-handling";
 import { PacketReader } from "webgl-test-shared";
 import { sendPlayerDataPacket } from "./networking/packet-sending/player-data-packet";
 import { updateParticles } from "./rendering/webgl/particle-rendering";
-import { callEntityOnUpdateFunctions } from "./entity-components/component-arrays";
 import { debugInfoDisplay } from "../ui/game/dev/debug-info-display-funcs";
 import { getComponentArrays } from "./entity-components/ComponentArray";
 import { getEntityComponentArrays } from "./entity-component-types";
-import { getEntityType } from "./world";
+import { getEntityType, layers } from "./world";
 
 interface TickCallback {
    time: number;
@@ -43,12 +42,12 @@ export let gameIsFocused = true;
 let lastFrameTime = 0;
 
 let clientTick = 0;
-let clientTickInterp = 0;
+let clientInterp = 0;
 
-// @Garbage: I could create a set fixed number of packet snapshots, and then just override their data!
-const snapshotBuffer = new Array<PacketSnapshot>();
-export let currentSnapshot: PacketSnapshot;
-export let nextSnapshot: PacketSnapshot;
+// @Garbage: I could create a set fixed number of snapshots, and then just override their data!
+const snapshotBuffer = new Array<TickSnapshot>();
+export let currentSnapshot: TickSnapshot;
+export let nextSnapshot: TickSnapshot;
 
 let lastPacketTime = 0;
 let measuredServerPacketIntervalMS = 1000 / Settings.SERVER_PACKET_SEND_RATE; // Start it off at the value we expect it to be at
@@ -102,8 +101,7 @@ export function stopGame(): void {
 }
 
 export function receivePacket(reader: PacketReader): void {
-   const previousSnapshot = snapshotBuffer.length > 0 ? snapshotBuffer[snapshotBuffer.length - 1] : null;
-   const snapshot = decodeSnapshotFromGameDataPacket(reader, previousSnapshot);
+   const snapshot = decodeSnapshotFromGameDataPacket(reader);
    
    snapshotBuffer.push(snapshot);
    debugInfoDisplay.updateSnapshotBufferSize(snapshotBuffer.length);
@@ -128,17 +126,17 @@ export function receivePacket(reader: PacketReader): void {
    }
 }
 
-export function canStartGame(): boolean {
+export function bufferHasEnoughForGameStart(): boolean {
    return snapshotBuffer.length >= SNAPSHOT_BUFFER_LENGTH;
 }
 
-export function setCurrentSnapshot(snapshot: PacketSnapshot): void {
+export function setCurrentSnapshot(snapshot: TickSnapshot): void {
    currentSnapshot = snapshot;
    debugInfoDisplay.updateCurrentSnapshot(snapshot);
 }
 
 // @TEmporary? only for a hack
-export function setNextSnapshot(snapshot: PacketSnapshot): void {
+export function setNextSnapshot(snapshot: TickSnapshot): void {
    nextSnapshot = snapshot;
 }
 
@@ -244,7 +242,7 @@ function runFrame(frameStartTime: number): void {
    nextSnapshot = (snapshotBuffer[snapshotBuffer.indexOf(currentSnapshot) + 1]) || currentSnapshot;
 
    const snapshotTickDiff = nextSnapshot.tick - currentSnapshot.tick;
-   const serverTickInterp = snapshotTickDiff > 0 ? (renderTick - currentSnapshot.tick) / snapshotTickDiff : 0;
+   const serverInterp = snapshotTickDiff > 0 ? (renderTick - currentSnapshot.tick) / snapshotTickDiff : 0;
 
    // Send player packets to server
    playerPacketAccumulator += deltaTick;
@@ -255,22 +253,25 @@ function runFrame(frameStartTime: number): void {
 
    // Tick the player (independently from all other entities)
    // A loop to run at the proper tick rate
-   clientTickInterp += deltaTick;
-   while (clientTickInterp >= 1) {
+   clientInterp += deltaTick;
+   while (clientInterp >= 1) {
       // Call this outside of the check which makes sure the player is in-client, cuz we want the movement intention to update too!
       updatePlayerMovement();
       
       // @Cleanup: this function name i think is a lil weird for something which the contents of the if updates the player.
       if (playerInstance !== null && entityUsesClientInterp(playerInstance)) {
          callEntityOnUpdateFunctions(playerInstance);
-         resolvePlayerCollisions();
       }
 
-      clientTickInterp--;
+      clientInterp--;
 
       // Tick all entities (cuz the client interp loop is based on the network update rate not the tick rate)
       // @Incomplete @Bug THAT"S ACTUALLY BAD, the fact that the client interp loop is based on the network update rate. Cuz it means when the server is lagging the player is still moving at the same speeds when they should be being slowed.
       tickEntities();
+
+      for (const layer of layers) {
+         resolveEntityCollisions(layer);
+      }
       
       updateSpamFilter(deltaTimeMS);
 
@@ -290,7 +291,7 @@ function runFrame(frameStartTime: number): void {
       updateDebugEntity();
    }
 
-   renderGame(clientTickInterp, serverTickInterp, deltaTimeMS);
+   renderGame(clientInterp, serverInterp, deltaTimeMS);
 
    const frameEndTime = performance.now();
    registerFrame(frameStartTime, frameEndTime);

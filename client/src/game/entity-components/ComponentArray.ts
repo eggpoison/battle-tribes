@@ -200,8 +200,8 @@ export abstract class ComponentArray<
    }
 
    public deactivateQueue(): void {
-      for (const entityID of this.deactivateBuffer) {
-         this.deactivateComponent(entityID);
+      for (const entity of this.deactivateBuffer) {
+         this.deactivateComponent(entity);
       }
       this.deactivateBuffer = [];
    }

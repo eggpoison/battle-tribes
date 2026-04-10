@@ -9,7 +9,7 @@
    {@const inventoryComponent = InventoryComponentArray.getComponent(playerInstance)}
    {@const backpack = getInventory(inventoryComponent, InventoryName.backpack)!}
    <div id="backpack-inventory" class="inventory">
-      <InventoryContainer entityID={playerInstance || undefined} inventory={backpack} />
+      <InventoryContainer entity={playerInstance || undefined} inventory={backpack} />
    </div>
 {/if}
 

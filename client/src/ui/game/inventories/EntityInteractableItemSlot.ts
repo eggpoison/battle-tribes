@@ -2,7 +2,7 @@
    import { type Entity, type Inventory, InventoryName, ItemType } from "webgl-test-shared";
    import { type ItemRestTime } from "../../../game/player-action-handling";
    import ItemSlot from "./ItemSlot.ts";
-   import { Menu, menuSelectorState } from "../../menus";
+   import { MenuType, menuSelectorState } from "../../menus";
    import { InventoryComponentArray, getInventory } from "../../../game/entity-components/server-components/InventoryComponent";
    import { sendItemPickupPacket, sendItemReleasePacket, sendItemTransferPacket } from "../../../game/networking/packet-sending/packet-sending";
    import { playerInstance } from "../../../game/player";

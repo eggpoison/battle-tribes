@@ -1,4 +1,4 @@
-import { EntityType, distance, lerp, randAngle, randFloat, Settings } from "webgl-test-shared";
+import { EntityType, distance, lerp, randAngle, randFloat, Settings, Entity } from "webgl-test-shared";
 import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./webgl";
 import { getCurrentLayer, getEntityLayer, getEntityType } from "./world";
 import { getBuildingSafeties } from "./building-safety";
@@ -31,7 +31,7 @@ interface ResearchNumber extends TextNumber {
 }
 
 interface HealNumber extends TextNumber {
-   readonly healedEntityID: number;
+   readonly healedEntity: Entity;
    amount: number;
 }
 
@@ -119,10 +119,10 @@ export function createResearchNumber(positionX: number, positionY: number, amoun
    });
 }
 
-export function createHealNumber(healedEntityID: number, positionX: number, positionY: number, healAmount: number): void {
+export function createHealNumber(healedEntity: Entity, positionX: number, positionY: number, healAmount: number): void {
    // If there is an existing heal number for that entity, update it
    for (const healNumber of healNumbers) {
-      if (healNumber.healedEntityID === healedEntityID) {
+      if (healNumber.healedEntity === healedEntity) {
          healNumber.amount += healAmount;
          healNumber.positionX = positionX;
          healNumber.positionY = positionY;
@@ -134,7 +134,7 @@ export function createHealNumber(healedEntityID: number, positionX: number, posi
    
    // Otherwise make a new one
    healNumbers.push({
-      healedEntityID: healedEntityID,
+      healedEntity: healedEntity,
       positionX: positionX,
       positionY: positionY,
       amount: healAmount,
@@ -338,7 +338,7 @@ const renderName = (x: number, y: number, name: string, colour: string): void =>
 // @Speed
 // @Speed
 // @Speed
-const renderNames = (tickInterp: number): void => {
+const renderNames = (clientInterp: number, serverInterp: number): void => {
    ctx.fillStyle = "#000";
    ctx.font = "400 20px Helvetica";
    ctx.lineJoin = "round";
@@ -356,7 +356,7 @@ const renderNames = (tickInterp: number): void => {
 
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, tickInterp);
+      const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
       
       renderName(hitboxRenderPosition.x, hitboxRenderPosition.y + getHumanoidRadius(entity) + 4, tribeMemberComponent.name, getEntityType(entity) === EntityType.player ? "#fff" : "#bbb");
    }
@@ -372,7 +372,7 @@ const renderNames = (tickInterp: number): void => {
       if (name !== "") {
          const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[1];
-         const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, tickInterp);
+         const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
          
          renderName(hitboxRenderPosition.x, hitboxRenderPosition.y + 16 + 4, name, "#ccc");
       }
@@ -388,7 +388,7 @@ const renderNames = (tickInterp: number): void => {
       
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, tickInterp);
+      const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
 
       const x = hitboxRenderPosition.x;
       const y = hitboxRenderPosition.y;
@@ -672,9 +672,9 @@ const renderChunkWeights = (): void => {
    }
 }
 
-export function renderText(tickInterp: number): void {
+export function renderText(clientInterp: number, serverInterp: number): void {
    clearTextCanvas();
-   renderNames(tickInterp);
+   renderNames(clientInterp, serverInterp);
    renderDamageNumbers();
    renderResearchNumbers();
    renderHealNumbers();

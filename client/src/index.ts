@@ -30,7 +30,7 @@ document.addEventListener("keydown", onKeyDown);
 document.addEventListener("keyup", onKeyUp);
 // @SPEED: This listener shouldn't be added in the main menu. Will minorly affect loading perf.
 document.addEventListener("mousemove", onMouseMove);
-window.addEventListener("resize", onWindowResize);
+window.onresize = onWindowResize;
 createPlayerInputListeners();
 
 /** Checks whether a given username is valid or not */

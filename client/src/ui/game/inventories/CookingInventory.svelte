@@ -22,11 +22,11 @@
 </script>
 
 <MenuElem id="cooking-inventory" class={`heating-inventory inventory${entityType !== EntityType.campfire ? " with-fuel" : ""}`}>
-   <ItemSlot validItemSpecifier={(COOKING_INGREDIENT_ITEM_TYPES as unknown as Array<ItemType>).includes} class="ingredient-inventory" entityID={cookingEntity} inventory={ingredientInventory} itemSlot={1} />
+   <ItemSlot validItemSpecifier={(COOKING_INGREDIENT_ITEM_TYPES as unknown as Array<ItemType>).includes} class="ingredient-inventory" entity={cookingEntity} inventory={ingredientInventory} itemSlot={1} />
    {#if entityType !== EntityType.campfire}
-      <ItemSlot validItemSpecifier={(FUEL_SOURCE_ITEM_TYPES as unknown as Array<ItemType>).includes} class="fuel-inventory" entityID={cookingEntity} inventory={fuelInventory} itemSlot={1} />
+      <ItemSlot validItemSpecifier={(FUEL_SOURCE_ITEM_TYPES as unknown as Array<ItemType>).includes} class="fuel-inventory" entity={cookingEntity} inventory={fuelInventory} itemSlot={1} />
    {/if}
-   <ItemSlot validItemSpecifier={() => false} class="output-inventory" entityID={cookingEntity} inventory={outputInventory} itemSlot={1} />
+   <ItemSlot validItemSpecifier={() => false} class="output-inventory" entity={cookingEntity} inventory={outputInventory} itemSlot={1} />
 
    <div class="heating-progress-bar">
       <!-- @Cleanup: Hardcoded -->

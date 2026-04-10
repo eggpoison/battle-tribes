@@ -1,11 +1,11 @@
-import { EntityType, PacketReader, RequiredProperty, ServerComponentType } from "../../../shared/src";
+import { EntityType, PacketReader, ServerComponentType } from "../../../shared/src";
 import { ClientComponentType } from "./entity-components/client-component-types";
 import { ClientComponentData } from "./entity-components/client-components";
 import { getClientComponentArray } from "./entity-components/ClientComponentArray";
 import { ComponentArray } from "./entity-components/ComponentArray";
 import { ServerComponentData } from "./entity-components/components";
 import { TransformComponentData } from "./entity-components/server-components/TransformComponent";
-import { getServerComponentArray } from "./entity-components/ServerComponentArray";
+import ServerComponentArray, { getServerComponentArray } from "./entity-components/ServerComponentArray";
 
 export type EntityServerComponentData<T extends ServerComponentType = ServerComponentType> = ReadonlyArray<ServerComponentData<T>>;
 export type EntityClientComponentData<T extends ClientComponentType = ClientComponentType> = ReadonlyArray<ClientComponentData<T>>;
@@ -256,6 +256,7 @@ const ENTITY_CLIENT_COMPONENT_TYPES: ReadonlyArray<ReadonlyArray<ClientComponent
 ];
 
 const COMPONENT_ARRAYS = new Array<Array<ComponentArray>>();
+const SERVER_COMPONENT_ARRAYS = new Array<Array<ServerComponentArray>>();
 const COMPONENT_ARRAYS_HAVE_INTERMEDIATE_INFO = new Array<boolean>();
 
 // @Cleanup: the export!!
@@ -266,6 +267,7 @@ export function registerEntityComponentTypesFromData(reader: PacketReader): void
    for (let entityType = 0; entityType < numEntityTypes; entityType++) {
       const componentTypes = new Array<ServerComponentType>();
       const componentArrays = new Array<ComponentArray>();
+      const serverComponentArrays = new Array<ServerComponentArray>();
       
       let hasIntermediateInfo = false;
       const intermediateInfos = new Array<object>();
@@ -276,13 +278,15 @@ export function registerEntityComponentTypesFromData(reader: PacketReader): void
          componentTypes.push(componentType);
 
          const componentArray = getServerComponentArray(componentType);
+
+         serverComponentArrays.push(componentArray);
          
          // @Copynpaste
          componentArrays.push(componentArray);
          if (componentArray.populateIntermediateInfo !== undefined) {
             hasIntermediateInfo = true;
          }
-         intermediateInfos.push(null as unknown as object)
+         intermediateInfos.push(null as unknown as object);
       }
 
       ENTITY_SERVER_COMPONENT_TYPES.push(componentTypes);
@@ -300,6 +304,7 @@ export function registerEntityComponentTypesFromData(reader: PacketReader): void
       }
 
       COMPONENT_ARRAYS.push(componentArrays);
+      SERVER_COMPONENT_ARRAYS.push(serverComponentArrays);
       COMPONENT_ARRAYS_HAVE_INTERMEDIATE_INFO.push(hasIntermediateInfo);
       ENTITY_INTERMEDIATE_INFOS.push(intermediateInfos);
    }
@@ -311,6 +316,10 @@ export function getEntityServerComponentTypes(entityType: EntityType): ReadonlyA
 
 export function getEntityClientComponentTypes(entityType: EntityType): ReadonlyArray<ClientComponentType> {
    return ENTITY_CLIENT_COMPONENT_TYPES[entityType];
+}
+
+export function getEntityServerComponentArrays(entityType: EntityType): ReadonlyArray<ServerComponentArray> {
+   return SERVER_COMPONENT_ARRAYS[entityType];
 }
 
 export function getEntityComponentArrays(entityType: EntityType): ReadonlyArray<ComponentArray> {

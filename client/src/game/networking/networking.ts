@@ -11,7 +11,7 @@ export function killSocket(): void {
    socket = null;
 }
 
-export function establishNewNetworkConnection(username: string, tribeType: TribeType, isSpectating: boolean, onSuccessfulConnection: (username: string, tribeType: TribeType, isSpectating: boolean) => void, onFailedConnection: () => void, onPacket: (msg: MessageEvent) => Promise<void>): void {
+export function establishNewNetworkConnection(username: string, tribeType: TribeType, isSpectating: boolean, onSuccessfulConnection: (username: string, tribeType: TribeType, isSpectating: boolean) => void, onFailedConnection: () => void, onPacket: (msg: MessageEvent) => void): void {
    assert(socket === null);
    
    // @SQUEAM

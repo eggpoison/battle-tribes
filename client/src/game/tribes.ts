@@ -128,14 +128,14 @@ export function readExtendedTribeData(reader: PacketReader): ExtendedTribe {
    const tribesmen = new Array<TribesmanInfo>();
    const numTribesmen = reader.readNumber();
    for (let i = 0; i < numTribesmen; i++) {
-      const entity = reader.readNumber() as Entity;
+      const entity: Entity = reader.readNumber();
       const entityType = reader.readNumber() as EntityType;
       const name = reader.readString();
 
       const tribesman: TribesmanInfo = {
-         entity: entity,
-         entityType: entityType,
-         name: name
+         entity,
+         entityType,
+         name
       };
       tribesmen.push(tribesman);
    }

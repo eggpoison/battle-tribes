@@ -1,4 +1,4 @@
-import { PacketReader, Entity, assert, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
+import { PacketReader, Entity, assert, Point, rotatePointAroundOrigin, _point } from "webgl-test-shared";
 import { getEntityLayer, layers } from "./world";
 import { createTranslationMatrix, Matrix3x2 } from "./rendering/matrices";
 import { getHitboxByLocalID, Hitbox } from "./hitboxes";
@@ -66,8 +66,8 @@ export function attachLightToHitbox(light: Light, entity: Entity, hitbox: Hitbox
    lightMap.set(light.id, light);
    
    lightToHitboxRecord[light.id] = {
-      entity: entity,
-      hitbox: hitbox
+      entity,
+      hitbox
    };
 
    const lightIDs = hitboxToLightsMap.get(hitbox);
@@ -126,8 +126,9 @@ export function getLightPositionMatrix(light: Light): Matrix3x2 {
    if (attachedHitboxInfo !== undefined) {
       const hitbox = attachedHitboxInfo.hitbox;
 
-      const x = hitbox.box.position.x + rotateXAroundOrigin(light.offset.x, light.offset.y, hitbox.box.angle);
-      const y = hitbox.box.position.y + rotateYAroundOrigin(light.offset.x, light.offset.y, hitbox.box.angle);
+      rotatePointAroundOrigin(light.offset.x, light.offset.y, hitbox.box.angle);
+      const x = hitbox.box.position.x + _point.x;
+      const y = hitbox.box.position.y + _point.y;
       return createTranslationMatrix(x, y);
    }
 
@@ -158,7 +159,7 @@ export function readLightsFromData(reader: PacketReader): ReadonlyArray<LightDat
       const entity = reader.readNumber();
       const hitboxLocalID = reader.readNumber();
 
-      const lightID = reader.readNumber();
+      const id: LightID = reader.readNumber();
 
       const offset = reader.readPoint();
       const intensity = reader.readNumber();
@@ -169,16 +170,16 @@ export function readLightsFromData(reader: PacketReader): ReadonlyArray<LightDat
       const b = reader.readNumber();
 
       lightData.push({
-         entity: entity,
-         hitboxLocalID: hitboxLocalID,
-         id: lightID,
-         offset: offset,
-         intensity: intensity,
-         strength: strength,
-         radius: radius,
-         r: r,
-         g: g,
-         b: b
+         entity,
+         hitboxLocalID,
+         id,
+         offset,
+         intensity,
+         strength,
+         radius,
+         r,
+         g,
+         b
       });
    }
 

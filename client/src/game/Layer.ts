@@ -1,4 +1,4 @@
-import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings, getTileIndexIncludingEdges, getSubtileIndex, getSubtileX, getSubtileY } from "webgl-test-shared";
+import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings, getTileIndexIncludingEdges, getSubtileIndex, getSubtileX, getSubtileY, CollisionGroup } from "webgl-test-shared";
 import Chunk from "./Chunk";
 import { Light } from "./lights";
 import Particle from "./Particle";
@@ -29,6 +29,8 @@ export default class Layer {
    public readonly buildingBlockingTiles: ReadonlySet<TileIndex>;
 
    public readonly chunks: ReadonlyArray<Chunk>;
+
+   public readonly collisionGroupChunks = new Array<Array<Array<Entity>>>();
 
    public readonly wallSubtileVariants: Partial<Record<TileIndex, number>> = {};
    
@@ -64,6 +66,15 @@ export default class Layer {
          }
       }
       this.chunks = chunks;
+
+      const LAYER_NUM_CHUNKS = Settings.WORLD_SIZE_CHUNKS * Settings.WORLD_SIZE_CHUNKS;
+      for (let i = 0; i < CollisionGroup._LENGTH_; i++) {
+         const collisionChunks = new Array<Array<Entity>>();
+         for (let j = 0; j < LAYER_NUM_CHUNKS; j++) {
+            collisionChunks.push([]);
+         }
+         this.collisionGroupChunks.push(collisionChunks);
+      }
 
       const dropdownTiles = new Array<TileIndex>();
       for (let tileY = 0; tileY < Settings.WORLD_SIZE_TILES; tileY++) {
@@ -113,6 +124,19 @@ export default class Layer {
       for (const renderLayer of CHUNKED_RENDER_LAYERS) {
          this.visibleEntityChunkDatas[renderLayer] = [];
       }
+   }
+
+   // @Temporary @Speed @Hack
+   public getChunkIndex(chunk: Chunk): number {
+      const idx = this.chunks.indexOf(chunk);
+      if (idx === -1) {
+         throw new Error();
+      }
+      return idx;
+   }
+
+   public getCollisionChunkByIndex(collisionGroup: CollisionGroup, chunkIndex: number): Array<Entity> {
+      return this.collisionGroupChunks[collisionGroup][chunkIndex];
    }
 
    public tileIsBuildingBlocking(tileIndex: TileIndex): boolean {

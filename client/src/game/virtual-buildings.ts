@@ -14,7 +14,7 @@ import { createStatusEffectComponentData } from "./entity-components/server-comp
 import { createStructureComponentData } from "./entity-components/server-components/StructureComponent";
 import { createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
-import { EntityRenderObject, recalculateEntityRenderObjectData } from "./EntityRenderObject";
+import { EntityRenderObject, recalculateRenderObjectVertexData } from "./EntityRenderObject";
 import { currentSnapshot } from "./game";
 import Layer from "./Layer";
 import { thingIsVisualRenderPart } from "./render-parts/render-parts";
@@ -205,7 +205,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
    // renderObject.renderPosition.x = transformComponentData.position.x;
    // renderObject.renderPosition.y = transformComponentData.position.y;
    // renderObject.rotation = transformComponentData.rotation;
-   recalculateEntityRenderObjectData(renderObject);
+   recalculateRenderObjectVertexData(renderObject);
 
    return {
       entityType: entityType,

@@ -4,7 +4,7 @@ import { getCurrentLayer } from "../../../game/world";
 import { setCameraZoom } from "../../../game/camera";
 import { GameInteractState, gameUIState } from "../../../ui-state/game-ui-state";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
-import { PacketSnapshot } from "../../../game/networking/packet-snapshots";
+import { TickSnapshot } from "../../../game/networking/packet-snapshots";
 import { lowMonocolourParticles, lowTexturedParticles, highMonocolourParticles, highTexturedParticles } from "../../../game/rendering/webgl/particle-rendering";
 import { getNumSounds } from "../../../game/sound";
 import { debugInfoDisplay } from "./debug-info-display-funcs";
@@ -34,7 +34,7 @@ let numLights = "0";
 // @Incomplete
 let maxGreenSafety = "100";
 
-debugInfoDisplay.updateCurrentSnapshot = (snapshot: PacketSnapshot): void => {
+debugInfoDisplay.updateCurrentSnapshot = (snapshot: TickSnapshot): void => {
    time = roundNum(snapshot.time, 2).toString();
    if (timeNode) timeNode.data = time;
    ticks = roundNum(snapshot.tick, 2).toString();

@@ -1,7 +1,7 @@
 import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
 import { Settings } from "battletribes-shared/settings";
 import { getEntityCollisionGroup } from "battletribes-shared/collision-groups";
-import { angleToPoint, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
+import { _point, angleToPoint, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin } from "battletribes-shared/utils";
 import Layer from "../Layer";
 import Chunk from "../Chunk";
 import { Entity, EntityType, EntityTypeString } from "battletribes-shared/entities";
@@ -868,8 +868,9 @@ export function attachHitbox(hitbox: Hitbox, parentHitbox: Hitbox, isPartOfParen
    const diffX = hitbox.box.position.x - parentHitbox.box.position.x;
    const diffY = hitbox.box.position.y - parentHitbox.box.position.y;
 
-   hitbox.box.offset.x = rotateXAroundOrigin(diffX, diffY, -parentHitbox.box.angle);
-   hitbox.box.offset.y = rotateYAroundOrigin(diffX, diffY, -parentHitbox.box.angle);
+   rotatePointAroundOrigin(diffX, diffY, -parentHitbox.box.angle);
+   hitbox.box.offset.x = _point.x;
+   hitbox.box.offset.y = _point.y;
 
    const parentVelocity = getHitboxVelocity(parentHitbox);
    setHitboxVelocity(hitbox, parentVelocity.x, parentVelocity.y);
@@ -986,8 +987,9 @@ export function getRandomPositionInBox(box: Box): Point {
       const xOffset = randFloat(-halfWidth, halfWidth);
       const yOffset = randFloat(-halfHeight, halfHeight);
 
-      const x = box.position.x + rotateXAroundOrigin(xOffset, yOffset, box.angle);
-      const y = box.position.y + rotateYAroundOrigin(xOffset, yOffset, box.angle);
+      rotatePointAroundOrigin(xOffset, yOffset, box.angle);
+      const x = box.position.x + _point.x;
+      const y = box.position.y + _point.y;
       return new Point(x, y);
    }
 }

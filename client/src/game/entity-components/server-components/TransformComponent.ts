@@ -1,4 +1,4 @@
-import { Entity, EntityType, updateBox, ServerComponentType, PacketReader, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, getTileIndexIncludingEdges, _bounds } from "webgl-test-shared";
+import { Entity, EntityType, updateBox, ServerComponentType, PacketReader, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, getTileIndexIncludingEdges, _bounds, _point, getEntityCollisionGroup } from "webgl-test-shared";
 import Chunk from "../../Chunk";
 import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityRenderObject, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
@@ -107,6 +107,27 @@ export function removeHitboxFromEntity(transformComponent: TransformComponent, h
    }
 }
 
+const addToChunk = (entity: Entity, chunk: Chunk, layer: Layer): void => {
+   chunk.addEntity(entity);
+
+   const chunkIndex = layer.getChunkIndex(chunk);
+   const collisionGroup = getEntityCollisionGroup(getEntityType(entity));
+   const collisionChunk = layer.getCollisionChunkByIndex(collisionGroup, chunkIndex);
+   collisionChunk.push(entity);
+   // console.log("addd")
+}
+
+const removeFromChunk = (entity: Entity, chunk: Chunk, layer: Layer): void => {
+   chunk.removeEntity(entity);
+
+   const chunkIndex = layer.getChunkIndex(chunk);
+   const collisionGroup = getEntityCollisionGroup(getEntityType(entity));
+   const collisionChunk = layer.getCollisionChunkByIndex(collisionGroup, chunkIndex);
+   const idx = collisionChunk.indexOf(entity);
+   assert(idx !== -1);
+   collisionChunk.splice(idx, 1);
+}
+
 /** Recalculates which chunks the game object is contained in */
 const updateContainingChunks = (transformComponent: TransformComponent, entity: Entity): void => {
    const layer = getEntityLayer(entity);
@@ -131,7 +152,7 @@ const updateContainingChunks = (transformComponent: TransformComponent, entity: 
    // Find all chunks which aren't present in the new chunks and remove them
    for (const chunk of transformComponent.chunks) {
       if (!containingChunks.has(chunk)) {
-         chunk.removeEntity(entity);
+         removeFromChunk(entity, chunk, layer);
          transformComponent.chunks.delete(chunk);
       }
    }
@@ -139,7 +160,7 @@ const updateContainingChunks = (transformComponent: TransformComponent, entity: 
    // Add all new chunks
    for (const chunk of containingChunks) {
       if (!transformComponent.chunks.has(chunk)) {
-         chunk.addEntity(entity);
+         addToChunk(entity, chunk, layer);
          transformComponent.chunks.add(chunk);
       }
    }
@@ -151,7 +172,8 @@ const cleanHitboxIncludingChildrenTransform = (hitbox: Hitbox): void => {
    } else {
       updateBox(hitbox.box, hitbox.parent.box);
       // @Cleanup: maybe should be done in the updatebox function?? if it become updateHitbox??
-      const parentVelocity = getHitboxVelocity(hitbox.parent);
+      getHitboxVelocity(hitbox.parent);
+      const parentVelocity = _point;
       // @Speed: updating the box already sets its position, so we only need to set its previousPosition.
       setHitboxVelocity(hitbox, parentVelocity.x, parentVelocity.y);
    }
@@ -232,7 +254,8 @@ export function applyAccelerationFromGround(hitbox: Hitbox, accelerationX: numbe
    const desiredVelocityX = accelerationX * friction * tileMoveSpeedMultiplier;
    const desiredVelocityY = accelerationY * friction * tileMoveSpeedMultiplier;
 
-   const currentVelocity = getHitboxVelocity(hitbox);
+   getHitboxVelocity(hitbox);
+   const currentVelocity = _point;
    
    // Apply velocity with traction (blend towards desired velocity)
    hitbox.acceleration.x += (desiredVelocityX - currentVelocity.x) * transformComponent.traction;
@@ -474,35 +497,38 @@ function onTick(entity: Entity): void {
 
       // Water splash particles
       // @Cleanup: Move to particles file
-      if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.15) && getHitboxVelocity(hitbox).isNonZero() && getEntityType(entity) !== EntityType.fish) {
-         const lifetime = 2.5;
+      if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.15)) {
+         getHitboxVelocity(hitbox);
+         if (_point.isNonZero() && getEntityType(entity) !== EntityType.fish) {
+            const lifetime = 2.5;
 
-         const particle = new Particle(lifetime);
-         particle.getOpacity = (): number => {
-            return lerp(0.75, 0, Math.sqrt(particle.age / lifetime));
+            const particle = new Particle(lifetime);
+            particle.getOpacity = (): number => {
+               return lerp(0.75, 0, Math.sqrt(particle.age / lifetime));
+            }
+            particle.getScale = (): number => {
+               return 1 + particle.age / lifetime * 1.4;
+            }
+
+            addTexturedParticleToBufferContainer(
+               particle,
+               ParticleRenderLayer.low,
+               64, 64,
+               hitbox.box.position.x, hitbox.box.position.y,
+               0, 0, 
+               0, 0,
+               0,
+               randAngle(),
+               0,
+               0,
+               0,
+               8 * 1 + 5,
+               0, 0, 0
+            );
+            lowTexturedParticles.push(particle);
+
+            playSoundOnHitbox("water-splash-" + randInt(1, 3) + ".mp3", 0.25, 1, entity, hitbox, false);
          }
-         particle.getScale = (): number => {
-            return 1 + particle.age / lifetime * 1.4;
-         }
-
-         addTexturedParticleToBufferContainer(
-            particle,
-            ParticleRenderLayer.low,
-            64, 64,
-            hitbox.box.position.x, hitbox.box.position.y,
-            0, 0, 
-            0, 0,
-            0,
-            randAngle(),
-            0,
-            0,
-            0,
-            8 * 1 + 5,
-            0, 0, 0
-         );
-         lowTexturedParticles.push(particle);
-
-         playSoundOnHitbox("water-splash-" + randInt(1, 3) + ".mp3", 0.25, 1, entity, hitbox, false);
       }
    }
 }
@@ -545,10 +571,35 @@ function onUpdate(entity: Entity): void {
 }
 
 function onRemove(entity: Entity): void {
+   const layer = getEntityLayer(entity);
    const transformComponent = TransformComponentArray.getComponent(entity);
    for (const chunk of transformComponent.chunks) {
-      chunk.removeEntity(entity);
+      removeFromChunk(entity, chunk, layer);
    }
+}
+
+const entityShouldInterpolate = (newTransformData: TransformComponentData, previousTransformData: TransformComponentData): boolean => {
+   // If any hitboxes' positions or angles have changed
+   for (const newHitbox of newTransformData.hitboxes) {
+      // Find the previous hitbox
+      // @Speed
+      let previousHitbox: Hitbox | undefined;
+      for (const hitbox of previousTransformData.hitboxes) {
+         if (hitbox.localID === newHitbox.localID) {
+            previousHitbox = hitbox;
+         }
+      }
+      
+      if (previousHitbox !== undefined) {
+         if (newHitbox.box.position.x !== previousHitbox.box.position.x
+            || newHitbox.box.position.y !== previousHitbox.box.position.y
+            || newHitbox.box.angle !== previousHitbox.box.angle) {
+            return true;
+         }
+      }
+   }
+
+   return false;
 }
 
 function updateFromData(data: TransformComponentData, entity: Entity): void {
@@ -572,7 +623,8 @@ function updateFromData(data: TransformComponentData, entity: Entity): void {
          // }
       }
 
-      if (getHitboxVelocity(hitbox).isNonZero()) {
+      getHitboxVelocity(hitbox);
+      if (_point.isNonZero()) {
          anyHitboxHasVelocity = true;
          // @Temporary @Squeam for optimisation
          const entityType = getEntityType(entity);
@@ -620,7 +672,8 @@ function updatePlayerFromData(data: TransformComponentData, isInitialData: boole
       updatePlayerHitboxFromData(hitbox, hitboxData);
 
       // @Copynpaste
-      if (getHitboxVelocity(hitbox).isNonZero()) {
+      getHitboxVelocity(hitbox);
+      if (_point.isNonZero()) {
          anyHitboxHasVelocity = true;
       }
    }
@@ -770,7 +823,7 @@ export function changeEntityLayer(entity: Entity, newLayer: Layer): void {
 
    // Remove from all previous chunks
    for (const chunk of transformComponent.chunks) {
-      chunk.removeEntity(entity);
+      removeFromChunk(entity, chunk, previousLayer);
       transformComponent.chunks.delete(chunk);
    }
 
@@ -783,7 +836,7 @@ export function changeEntityLayer(entity: Entity, newLayer: Layer): void {
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const newChunk = newLayer.getChunk(chunkX, chunkY);
-         newChunk.addEntity(entity);
+         addToChunk(entity, newChunk, newLayer);
          transformComponent.chunks.add(newChunk);
       }
    }

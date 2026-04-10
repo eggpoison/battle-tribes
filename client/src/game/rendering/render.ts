@@ -54,11 +54,10 @@ import { createWallConnectionShaders, renderWallConnections } from "./webgl/wall
 import { createForcefieldShaders, renderForcefield } from "./webgl/world-border-forcefield-rendering";
 import { createWorldBorderShaders, renderWorldBorder } from "./webgl/world-border-rendering";
 import { playerIsHoldingPlaceableItem } from "../player-action-handling";
-import { entitySelectionState } from "../../ui-state/entity-selection-state";
 import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { debugDisplayState } from "../../ui-state/debug-display-state";
 import { nerdVision } from "../../ui-state/nerd-vision-funcs";
-import { Menu, menuIsOpen } from "../../ui/menus";
+import { MenuType, menuIsOpen } from "../../ui/menus";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -173,9 +172,9 @@ export async function setupRendering(): Promise<void> {
    }
 }
 
-const renderLayer = (layer: Layer, frameProgress: number): void => {
+const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): void => {
    if (layer === getCurrentLayer()) {
-      renderText(frameProgress);
+      renderText(serverInterp);
    }
    
    resetRenderOrder();
@@ -193,7 +192,7 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    renderTurretRange();
 
    const entityDebugData = hoverDebugState.entityDebugData;
-   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
       renderTriangleDebugData(entityDebugData);
    }
    renderRestrictedBuildingAreas();
@@ -240,12 +239,12 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
       const selectedEntity = getSelectedEntity();
       if (selectedEntity !== null) {
          const renderObject = getEntityRenderObject(selectedEntity);
-         renderEntitySelection(renderObject, frameProgress, true);
+         renderEntitySelection(renderObject, clientInterp, serverInterp, true);
       }
       const renderObject = getHighlightedRenderObject();
       const highlightedEntity = getHighlightedEntity();
       if (renderObject !== null && highlightedEntity !== selectedEntity) {
-         renderEntitySelection(renderObject, frameProgress, false);
+         renderEntitySelection(renderObject, clientInterp, serverInterp, false);
       }
    }
    
@@ -265,7 +264,7 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    if (debugDisplayState.showHitboxes) {
       renderHitboxes(layer);
    }
-   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
       renderLineDebugData(entityDebugData);
    }
 
@@ -289,7 +288,7 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    }
 }
 
-export function renderGame(clientTickInterp: number, serverTickInterp: number, deltaTimeMS: number): void {
+export function renderGame(clientInterp: number, serverInterp: number, deltaTimeMS: number): void {
    gl.bindFramebuffer(gl.FRAMEBUFFER, gameFramebuffer);
 
    if (lastTextureWidth !== windowWidth || lastTextureHeight !== windowHeight) {
@@ -309,21 +308,21 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number, d
 
    updateUBOs();
 
-   refreshCameraPosition(clientTickInterp, serverTickInterp);
+   refreshCameraPosition(clientInterp, serverInterp);
    refreshCameraView();
    // Done immediately following the camera position update as the player direction is reliant on it.
-   updatePlayerDirection(clientTickInterp, serverTickInterp);
+   updatePlayerDirection(clientInterp, serverInterp);
 
-   updateRenderPartMatrices(clientTickInterp, serverTickInterp);
+   updateRenderPartMatrices(clientInterp, serverInterp);
 
    // Render layers
    // @Hack
    if (layers.indexOf(getCurrentLayer()) === 0) {
-      renderLayer(layers[1], serverTickInterp);
+      renderLayer(layers[1], clientInterp, serverInterp);
       renderLayerDarkening();
-      renderLayer(layers[0], serverTickInterp);
+      renderLayer(layers[0], clientInterp, serverInterp);
    } else {
-      renderLayer(layers[1], serverTickInterp);
+      renderLayer(layers[1], clientInterp, serverInterp);
    }
 
    if (debugDisplayState.showSubtileSupports) {
@@ -338,7 +337,7 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number, d
    // @INCOMPLETE @SQUEAM
    // updateInspectHealthBar();
    
-   if (menuIsOpen(Menu.techTree)) {
+   if (menuIsOpen(MenuType.techTree)) {
       renderTechTree();
       renderTechTreeItems();
    }

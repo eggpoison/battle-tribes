@@ -193,7 +193,7 @@ function createCraftingArea(craftingAreaElem: HTMLElement): void {
 
    //       <div class="bottom">
    //          <button onclick={craftRecipe} class="craft-button" class:craftable={craftableRecipes.includes(selectedRecipe)}>CRAFT</button>
-   //          <!-- <EntityInteractableItemSlot class="crafting-output" entityID={playerInstance!} inventory={inventoryState.craftingOutputSlot} itemSlot={1} validItemSpecifier={() => false} /> -->
+   //          <!-- <EntityInteractableItemSlot class="crafting-output" entity={playerInstance!} inventory={inventoryState.craftingOutputSlot} itemSlot={1} validItemSpecifier={() => false} /> -->
    //          <EntityInteractableItemSlot entity={playerInstance!} inventory={inventoryState.craftingOutputSlot} itemSlot={1} validItemSpecifier={() => false} />
    //       </div>
    } else {

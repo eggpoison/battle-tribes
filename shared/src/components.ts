@@ -1,4 +1,4 @@
-import { EntityType } from "./entities";
+import { Entity, EntityType } from "./entities";
 import { ItemType } from "./items/items";
 import { Settings } from "./settings";
 import { StatusEffect } from "./status-effects";
@@ -365,7 +365,7 @@ export interface ScarInfo {
 }
 
 export interface HealingTotemTargetData {
-   readonly entityID: number;
+   readonly entity: Entity;
    readonly x: number;
    readonly y: number;
    readonly ticksHealed: number;

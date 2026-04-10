@@ -1,7 +1,7 @@
 import { Box } from "./boxes/boxes";
 import { RectangularBox } from "./boxes/RectangularBox";
 import { Settings } from "./settings";
-import { Mutable, Point, angle, distance, polarVec2, rotateXAroundPoint, rotateYAroundPoint } from "./utils";
+import { Mutable, Point, _point, distance, polarVec2, rotatePointAroundPoint } from "./utils";
 
 export enum CollisionBit {
    default = 1 << 0,
@@ -102,8 +102,9 @@ export function getCircleCircleCollisionResult(circle1Pos: Point, radius1: numbe
 /** Checks if a circle and rectangle are intersecting */
 export function getCircleRectangleCollisionResult(circlePos: Point, circleRadius: number, rectPos: Point, rectWidth: number, rectHeight: number, rectRotation: number): CollisionResult {
    // Rotate the circle around the rectangle to "align" it
-   const circlePosX = rotateXAroundPoint(circlePos.x, circlePos.y, rectPos.x, rectPos.y, -rectRotation);
-   const circlePosY = rotateYAroundPoint(circlePos.x, circlePos.y, rectPos.x, rectPos.y, -rectRotation);
+   rotatePointAroundPoint(circlePos.x, circlePos.y, rectPos.x, rectPos.y, -rectRotation);
+   const circlePosX = _point.x;
+   const circlePosY = _point.y;
 
    // 
    // Then do a regular rectangle check

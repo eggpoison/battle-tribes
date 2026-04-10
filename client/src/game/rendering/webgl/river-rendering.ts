@@ -1,4 +1,4 @@
-import { Settings, WaterRockData, WaterRockSize, lerp, randFloat, rotateXAroundPoint, rotateYAroundPoint, TileType, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges } from "webgl-test-shared";
+import { Settings, WaterRockData, WaterRockSize, lerp, randFloat, TileType, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges, _point, rotatePointAroundPoint } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getTexture } from "../../textures";
 import { RenderChunkRiverInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "../render-chunks";
@@ -869,14 +869,18 @@ const calculateRockVertexData = (waterRocks: ReadonlyArray<WaterRockData>): Floa
       const y1 = (waterRock.position[1] - size/2);
       const y2 = (waterRock.position[1] + size/2);
 
-      const topLeftX = rotateXAroundPoint(x1, y2, waterRock.position[0], waterRock.position[1], waterRock.rotation);
-      const topLeftY = rotateYAroundPoint(x1, y2, waterRock.position[0], waterRock.position[1], waterRock.rotation);
-      const topRightX = rotateXAroundPoint(x2, y2, waterRock.position[0], waterRock.position[1], waterRock.rotation);
-      const topRightY = rotateYAroundPoint(x2, y2, waterRock.position[0], waterRock.position[1], waterRock.rotation);
-      const bottomRightX = rotateXAroundPoint(x2, y1, waterRock.position[0], waterRock.position[1], waterRock.rotation);
-      const bottomRightY = rotateYAroundPoint(x2, y1, waterRock.position[0], waterRock.position[1], waterRock.rotation);
-      const bottomLeftX = rotateXAroundPoint(x1, y1, waterRock.position[0], waterRock.position[1], waterRock.rotation);
-      const bottomLeftY = rotateYAroundPoint(x1, y1, waterRock.position[0], waterRock.position[1], waterRock.rotation);
+      rotatePointAroundPoint(x1, y2, waterRock.position[0], waterRock.position[1], waterRock.rotation);
+      const topLeftX = _point.x;
+      const topLeftY = _point.y;
+      rotatePointAroundPoint(x2, y2, waterRock.position[0], waterRock.position[1], waterRock.rotation);
+      const topRightX = _point.x;
+      const topRightY = _point.y;
+      rotatePointAroundPoint(x2, y1, waterRock.position[0], waterRock.position[1], waterRock.rotation);
+      const bottomRightX = _point.x;
+      const bottomRightY = _point.y;
+      rotatePointAroundPoint(x1, y1, waterRock.position[0], waterRock.position[1], waterRock.rotation);
+      const bottomLeftX = _point.x;
+      const bottomLeftY = _point.y;
 
       const opacity = lerp(0.15, 0.4, waterRock.opacity);
 

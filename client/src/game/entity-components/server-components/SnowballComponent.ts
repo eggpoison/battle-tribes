@@ -1,4 +1,4 @@
-import { CircularBox, randAngle, randFloat, ServerComponentType, PacketReader, Entity, randInt } from "webgl-test-shared";
+import { CircularBox, randAngle, randFloat, ServerComponentType, PacketReader, Entity, randInt, _point } from "webgl-test-shared";
 import { createSnowParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
@@ -65,7 +65,8 @@ function getMaxRenderParts(): number {
 function onTick(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
-   const velocity = getHitboxVelocity(hitbox);
+   getHitboxVelocity(hitbox);
+   const velocity = _point;
    if (velocity.magnitude() > 50) {
       if (tickIntervalHasPassed(0.05)) {
          createSnowParticle(hitbox.box.position.x, hitbox.box.position.y, randFloat(40, 60));

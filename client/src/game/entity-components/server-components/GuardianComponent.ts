@@ -293,19 +293,19 @@ function updateFromData(data: GuardianComponentData, entity: Entity): void {
    if (actualRubyGemActivation !== guardianComponent.rubyGemActivation) {
       setColours(guardianComponent.rubyRenderParts, guardianComponent.rubyLights, actualRubyGemActivation, actualRubyGemActivation, 0, 0);
       const renderObject = getEntityRenderObject(entity);
-      registerDirtyRenderObject(renderObject);
+      registerDirtyRenderObject(entity, renderObject);
    }
    const actualEmeraldGemActivation = lerp(emeraldGemActivation, 1, limbEmeraldGemActivation);
    if (actualEmeraldGemActivation !== guardianComponent.emeraldGemActivation) {
       setColours(guardianComponent.emeraldRenderParts, guardianComponent.emeraldLights, actualEmeraldGemActivation, 0, actualEmeraldGemActivation, 0);
       const renderObject = getEntityRenderObject(entity);
-      registerDirtyRenderObject(renderObject);
+      registerDirtyRenderObject(entity, renderObject);
    }
    const actualAmethystGemActivation = lerp(amethystGemActivation, 1, limbAmethystGemActivation);
    if (actualAmethystGemActivation !== guardianComponent.amethystGemActivation) {
       setColours(guardianComponent.amethystRenderParts, guardianComponent.amethystLights, actualAmethystGemActivation, actualAmethystGemActivation * 0.9, actualAmethystGemActivation * 0.2, actualAmethystGemActivation * 0.9);
       const renderObject = getEntityRenderObject(entity);
-      registerDirtyRenderObject(renderObject);
+      registerDirtyRenderObject(entity, renderObject);
    }
 
    guardianComponent.rubyGemActivation = actualRubyGemActivation;
@@ -353,7 +353,7 @@ function updateFromData(data: GuardianComponentData, entity: Entity): void {
          light.b += limbAmethystGemActivation * 0.5;
       }
       const renderObject = getEntityRenderObject(entity);
-      registerDirtyRenderObject(renderObject);
+      registerDirtyRenderObject(entity, renderObject);
    }
 
    guardianComponent.limbRubyGemActivation = limbRubyGemActivation;

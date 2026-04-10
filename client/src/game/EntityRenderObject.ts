@@ -57,11 +57,14 @@ export class EntityRenderObject {
    public readonly vertexData: Float32Array | null;
    public readonly indexBuffer: WebGLBuffer | null;
 
-   constructor(associatedEntity: Entity, renderLayer: RenderLayer, renderHeight: number, maxRenderParts: number) {
+   public isClientInterp: boolean;
+
+   constructor(associatedEntity: Entity, renderLayer: RenderLayer, renderHeight: number, maxRenderParts: number, isClientInterp: boolean) {
       this.entity = associatedEntity;
       this.renderLayer = renderLayer;
       this.renderHeight = renderHeight;
       this.maxRenderParts = maxRenderParts;
+      this.isClientInterp = isClientInterp;
 
       if (!renderLayerIsChunkRendered(renderLayer)) {
          const entityRenderData = createEntityRenderData(maxRenderParts);
@@ -88,7 +91,7 @@ export class EntityRenderObject {
       //    throw new Error("Render part less-than-or-equal z-index compared to its parent.");
       // }
 
-      // Insert it before the first render part with a greater z-index
+      // Insert just before the first render part with a greater z-index
       let i = 0;
       for (i = 0; i < this.renderPartsByZIndex.length; i++) {
          const currentRenderPart = this.renderPartsByZIndex[i];
@@ -96,7 +99,12 @@ export class EntityRenderObject {
             break;
          }
       }
-      this.renderPartsByZIndex.splice(i, 0, renderPart);
+
+      if (i === this.renderPartsByZIndex.length) {
+         this.renderPartsByZIndex.push(renderPart);
+      } else {
+         this.renderPartsByZIndex.splice(i, 0, renderPart);
+      }
 
       if (renderParentIsHitbox(renderPart.parent)) {
          this.rootRenderParts.push(renderPart);
@@ -104,7 +112,7 @@ export class EntityRenderObject {
          renderPart.parent.children.push(renderPart);
       }
 
-      registerDirtyRenderObject(this);
+      registerDirtyRenderObject(this.entity, this);
    }
 
    public removeRenderPart(renderPart: RenderPart): void {
@@ -146,7 +154,7 @@ export class EntityRenderObject {
    }
 }
 
-export function recalculateEntityRenderObjectData(renderObject: EntityRenderObject): void {
+export function recalculateRenderObjectVertexData(renderObject: EntityRenderObject): void {
    assert(renderObject.vertexData !== null);
    
    // @Hack @Speed: only need to override places where there were render parts that no longer exist

@@ -1,12 +1,12 @@
-import { Menu, toggleMenu } from "../../menus";
+import { MenuType, toggleMenu } from "../../menus";
 
 // @Incomplete
 // const isSelected = $derived(menuSelectorState.menuIsOpen(props.menu));
 
-export function createTab(parent: HTMLElement, menu: Menu, imgSrc: string, text: string, openFunc: () => void, closeFunc: () => void): void {
+export function createTab(parent: HTMLElement, menu: MenuType, imgSrc: string, text: string): void {
    const tab = document.createElement("div");
    tab.className = "tab-selector devmode-container";
-   tab.onmousedown = (): void => { toggleMenu(menu, openFunc, closeFunc); };
+   tab.onmousedown = (): void => { toggleMenu(menu); };
    parent.appendChild(tab);
 
    const imgElem = document.createElement("img");

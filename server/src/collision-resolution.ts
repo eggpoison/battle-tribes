@@ -1,6 +1,6 @@
 import { Entity, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
+import { _point, Point, rotatePointAroundOrigin } from "battletribes-shared/utils";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
 import { getComponentArrayRecord } from "./components/ComponentArray";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
@@ -41,11 +41,12 @@ const resolveHardCollision = (affectedHitbox: Hitbox, collisionResult: Collision
    // Kill all the velocity going into the hitbox
    const _bx = collisionResult.overlap.x / collisionResult.overlap.magnitude();
    const _by = collisionResult.overlap.y / collisionResult.overlap.magnitude();
-   // @SPEED
-   const bx = rotateXAroundOrigin(_bx, _by, Math.PI/2);
-   const by = rotateYAroundOrigin(_bx, _by, Math.PI/2);
+   // @SPEED don't need a whole rotation for this
+   rotatePointAroundOrigin(_bx, _by, Math.PI/2);
    // const bx = Math.sin(pushInfo.direction + Math.PI/2);
    // const by = Math.cos(pushInfo.direction + Math.PI/2);
+   const bx = _point.x;
+   const by = _point.y;
    const velocityProjectionCoeff = previousVelocity.x * bx + previousVelocity.y * by;
    const vx = bx * velocityProjectionCoeff;
    const vy = by * velocityProjectionCoeff;
@@ -68,17 +69,20 @@ const resolveHardCollisionAndFlip = (affectedHitbox: Hitbox, collisionResult: Co
    const _separationAxisProjX = collisionResult.overlap.x / collisionResult.overlap.magnitude();
    const _separationAxisProjY = collisionResult.overlap.y / collisionResult.overlap.magnitude();
    // @Speed @Cleanup
-   const separationAxisProjX = rotateXAroundOrigin(_separationAxisProjX, _separationAxisProjY, Math.PI/2);
-   const separationAxisProjY = rotateYAroundOrigin(_separationAxisProjX, _separationAxisProjY, Math.PI/2);
+   rotatePointAroundOrigin(_separationAxisProjX, _separationAxisProjY, Math.PI/2);
    // const separationAxisProjX = Math.sin(pushInfo.direction + Math.PI/2);
    // const separationAxisProjY = Math.cos(pushInfo.direction + Math.PI/2);
+   const separationAxisProjX = _point.x;
+   const separationAxisProjY = _point.y;
+   
    const _pushAxisProjX = collisionResult.overlap.x / collisionResult.overlap.magnitude();
    const _pushAxisProjY = collisionResult.overlap.y / collisionResult.overlap.magnitude();
    // @Speed @Cleanup
-   const pushAxisProjX = rotateXAroundOrigin(_pushAxisProjX, _pushAxisProjY, Math.PI/2);
-   const pushAxisProjY = rotateYAroundOrigin(_pushAxisProjX, _pushAxisProjY, Math.PI/2);
+   rotatePointAroundOrigin(_pushAxisProjX, _pushAxisProjY, Math.PI/2);
    // const pushAxisProjX = Math.sin(pushInfo.direction + Math.PI);
    // const pushAxisProjY = Math.cos(pushInfo.direction + Math.PI);
+   const pushAxisProjX = _point.x;
+   const pushAxisProjY = _point.y;
    
    const velocitySeparationCoeff = previousVelocity.x * separationAxisProjX + previousVelocity.y * separationAxisProjY;
    const velocityPushCoeff = previousVelocity.x * pushAxisProjX + previousVelocity.y * pushAxisProjY;

@@ -1,4 +1,4 @@
-import { createZeroedLimbState, LimbConfiguration, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, SPEAR_CHARGED_LIMB_STATE, interpolateLimbState, copyLimbState, PacketReader, InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool, Settings, BlockType, ServerComponentType, Point, lerp, randAngle, randFloat, randItem, Entity, EntityType, LimbAction, HitboxFlag } from "webgl-test-shared";
+import { createZeroedLimbState, LimbConfiguration, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, SPEAR_CHARGED_LIMB_STATE, interpolateLimbState, copyLimbState, PacketReader, InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool, Settings, BlockType, ServerComponentType, Point, lerp, randAngle, randFloat, randItem, Entity, EntityType, LimbAction, HitboxFlag, _point } from "webgl-test-shared";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import Particle from "../../Particle";
@@ -634,7 +634,7 @@ function onTick(entity: Entity): void {
    // @Hack???
    // @Speed: needn't check this for all billion non-player entities
    // Used to do it in the updatePlayerFromData function. That's wrong cuz that'll only update according to the packet send rate, not tick rate.
-   // Previously was in a clientTickInterp >= 1 loop, but moved it into updatePlayerFromData because it makes more sense as this is the component the function works on. Felt it is strange to have this function in the critical game loop.
+   // Previously was in a clientInterp >= 1 loop, but moved it into updatePlayerFromData because it makes more sense as this is the component the function works on. Felt it is strange to have this function in the critical game loop.
    if (entity === playerInstance) {
       tickPlayerItems();
    }
@@ -649,13 +649,15 @@ function onTick(entity: Entity): void {
 
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      const velocity = getHitboxVelocity(hitbox);
+      getHitboxVelocity(hitbox);
+      const velocity = _point;
 
       switch (limbInfo.heldItemType) {
          case ItemType.deepfrost_heart: {
             // Make the deep frost heart item spew blue blood particles
             const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
-            const renderPosition = getRenderPartRenderPosition(activeItemRenderPart);
+            getRenderPartRenderPosition(activeItemRenderPart);
+            const renderPosition = _point;
             createDeepFrostHeartBloodParticles(renderPosition.x, renderPosition.y, velocity.x, velocity.y);
             break;
          }
@@ -668,7 +670,8 @@ function onTick(entity: Entity): void {
             
             // Ember particles
             if (tickIntervalHasPassed(0.08)) {
-               const renderPosition = getRenderPartRenderPosition(activeItemRenderPart);
+               getRenderPartRenderPosition(activeItemRenderPart);
+               const renderPosition = _point;
                let spawnPositionX = renderPosition.x;
                let spawnPositionY = renderPosition.y;
       
@@ -684,7 +687,8 @@ function onTick(entity: Entity): void {
 
             // Smoke particles
             if (tickIntervalHasPassed(0.18)) {
-               const renderPosition = getRenderPartRenderPosition(activeItemRenderPart);
+               getRenderPartRenderPosition(activeItemRenderPart);
+               const renderPosition = _point;
 
                const spawnOffsetMagnitude = 5 * Math.random();
                const spawnOffsetDirection = randAngle();
@@ -703,7 +707,8 @@ function onTick(entity: Entity): void {
             }
 
             if (tickIntervalHasPassed(0.4)) {
-               const renderPosition = getRenderPartRenderPosition(activeItemRenderPart);
+               getRenderPartRenderPosition(activeItemRenderPart);
+               const renderPosition = _point;
                let spawnPositionX = renderPosition.x;
                let spawnPositionY = renderPosition.y;
 

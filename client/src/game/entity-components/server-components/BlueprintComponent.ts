@@ -1,4 +1,4 @@
-import { Entity, PacketReader, assertUnreachable, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, BlueprintType, ServerComponentType } from "webgl-test-shared";
+import { Entity, PacketReader, assertUnreachable, randAngle, randFloat, rotatePointAroundOrigin, BlueprintType, ServerComponentType, _point } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../../particles";
 import { getEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
@@ -19,7 +19,7 @@ import { getServerComponentData } from "../../entity-component-types";
 export interface BlueprintComponentData {
    readonly blueprintType: BlueprintType;
    readonly blueprintProgress: number;
-   readonly associatedEntityID: number;
+   readonly associatedEntity: Entity;
 }
 
 export interface BlueprintComponent {
@@ -27,7 +27,7 @@ export interface BlueprintComponent {
    
    blueprintType: BlueprintType;
    lastBlueprintProgress: number;
-   associatedEntityID: number;
+   associatedEntity: Entity;
 }
 
 interface ProgressTextureInfo {
@@ -429,12 +429,12 @@ BlueprintComponentArray.onDie = onDie;
 function decodeData(reader: PacketReader): BlueprintComponentData {
    const blueprintType = reader.readNumber() as BlueprintType;
    const blueprintProgress = reader.readNumber();
-   const associatedEntityID = reader.readNumber();
+   const associatedEntity = reader.readNumber();
 
    return {
       blueprintType: blueprintType,
       blueprintProgress: blueprintProgress,
-      associatedEntityID: associatedEntityID
+      associatedEntity: associatedEntity
    };
 }
 
@@ -446,7 +446,7 @@ function createComponent(entityComponentData: EntityComponentData): BlueprintCom
       partialRenderParts: [],
       blueprintType: blueprintComponentData.blueprintType,
       lastBlueprintProgress: blueprintComponentData.blueprintProgress,
-      associatedEntityID: blueprintComponentData.associatedEntityID
+      associatedEntity: blueprintComponentData.associatedEntity
    };
 }
 
@@ -598,7 +598,7 @@ function updateFromData(data: BlueprintComponentData, entity: Entity): void {
    
    blueprintComponent.blueprintType = data.blueprintType;
    const blueprintProgress = data.blueprintProgress;
-   blueprintComponent.associatedEntityID = data.associatedEntityID;
+   blueprintComponent.associatedEntity = data.associatedEntity;
 
    // @Speed: don't do always, only if the data changes!
    updatePartialTexture(entity);
@@ -616,8 +616,9 @@ function updateFromData(data: BlueprintComponentData, entity: Entity): void {
       const textureArrayIndex = getTextureArrayIndex(progressTexture.completedTextureSource);
       const xShift = textureAtlas.textureWidths[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
       const yShift = textureAtlas.textureHeights[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
-      const particleOriginX = hitbox.box.position.x + rotateXAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
-      const particleOriginY = hitbox.box.position.y + rotateYAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
+      rotatePointAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
+      const particleOriginX = hitbox.box.position.x + _point.x;
+      const particleOriginY = hitbox.box.position.y + _point.y;
       
       // @Incomplete: Change the particle effect type depending on the material of the worked-on partial texture
       // Create particle effects

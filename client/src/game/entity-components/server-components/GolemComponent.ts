@@ -1,4 +1,4 @@
-import { Entity, CircularBox, PacketReader, randAngle, randItem, Settings, ServerComponentType } from "webgl-test-shared";
+import { Entity, CircularBox, PacketReader, randAngle, randItem, Settings, ServerComponentType, _point } from "webgl-test-shared";
 import { createRockSpeckParticle } from "../../particles";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -205,7 +205,8 @@ function onTick(entity: Entity): void {
          const hitbox = transformComponent.hitboxes[i];
          
          const box = hitbox.box as CircularBox;
-         const velocity = getHitboxVelocity(hitbox);
+         getHitboxVelocity(hitbox);
+         const velocity = _point;
 
          const offsetDirection = randAngle();
          const x = box.position.x + box.radius * Math.sin(offsetDirection);
@@ -220,7 +221,8 @@ function onTick(entity: Entity): void {
 
          const hitbox = transformComponent.hitboxes[i];
          const box = hitbox.box as CircularBox;
-         const velocity = getHitboxVelocity(hitbox);
+         getHitboxVelocity(hitbox);
+         const velocity = _point;
 
          const offsetDirection = randAngle();
          const x = box.position.x + box.radius * Math.sin(offsetDirection);

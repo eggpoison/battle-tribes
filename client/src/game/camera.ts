@@ -4,7 +4,7 @@ import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZ
 import Chunk from "./Chunk";
 import Layer from "./Layer";
 import { entityExists, getCurrentLayer } from "./world";
-import { calculateHitboxRenderPosition, getEntityTickInterp } from "./rendering/render-part-matrices";
+import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
 import { Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { debugDisplayState } from "../ui-state/debug-display-state";
@@ -138,13 +138,12 @@ export function updateCursorScreenPos(e: MouseEvent): void {
    updateCursorWorldPos();
 }
 
-export function refreshCameraPosition(clientTickInterp: number, serverTickInterp: number): void {
+export function refreshCameraPosition(clientInterp: number, serverInterp: number): void {
    if (cameraSubjectHitbox === null) {
       return;
    }
 
-   const tickInterp = getEntityTickInterp(cameraSubjectHitbox.entity, clientTickInterp, serverTickInterp);
-   const pos = calculateHitboxRenderPosition(cameraSubjectHitbox, tickInterp);
+   const pos = calculateHitboxRenderPosition(cameraSubjectHitbox, clientInterp, serverInterp);
    setCameraPosition(pos);
 }
 

@@ -134,7 +134,7 @@ export function createEntityDebugData(entity: Entity): EntityDebugData {
    }
 
    return {
-      entityID: entity,
+      entity: entity,
       lines: lines,
       circles: circles,
       tileHighlights: tileHighlights,

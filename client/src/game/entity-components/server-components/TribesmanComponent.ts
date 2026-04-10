@@ -1,4 +1,4 @@
-import { TileType, InventoryName, ItemType, CircularBox, TribeType, PacketReader, Point, assert, lerp, randAngle, randFloat, randInt, randItem, veryBadHash, TitleGenerationInfo, TribesmanTitle, Settings, ServerComponentType, Entity, EntityType } from "webgl-test-shared";
+import { TileType, InventoryName, ItemType, CircularBox, TribeType, PacketReader, Point, assert, lerp, randAngle, randFloat, randInt, randItem, veryBadHash, TitleGenerationInfo, TribesmanTitle, Settings, ServerComponentType, Entity, EntityType, _point } from "webgl-test-shared";
 import { Light } from "../../lights";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle, createSprintParticle, createTitleObtainParticle, LeafParticleSize } from "../../particles";
@@ -641,7 +641,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
             break;
          }
          case TribesmanTitle.wellful: {
-            const transformComponent = TransformComponentArray.getComponent(entity)!;
+            const transformComponent = TransformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
 
             const renderPart = new TexturedRenderPart(
@@ -719,7 +719,8 @@ function onTick(entity: Entity): void {
    }
 
    // Sprinter particles
-   const velocity = getHitboxVelocity(entityHitbox);
+   getHitboxVelocity(entityHitbox);
+   const velocity = _point;
    if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.sprinter) && velocity.magnitude() > 100) {
       const sprintParticleSpawnRate = Math.sqrt(velocity.magnitude() * 0.8);
       if (Math.random() < sprintParticleSpawnRate * Settings.DT_S) {

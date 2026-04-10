@@ -1,4 +1,4 @@
-import { randAngle, randFloat, Settings, PacketReader, Entity, ServerComponentType, CircularBox } from "webgl-test-shared";
+import { randAngle, randFloat, Settings, PacketReader, Entity, ServerComponentType, CircularBox, _point } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createSandParticle } from "../../particles";
@@ -84,7 +84,8 @@ function onTick(sandBall: Entity): void {
    const hitbox = transformComponent.hitboxes[0];
    if (hitbox.rootEntity !== sandBall) {
       const hitboxRadius = (hitbox.box as CircularBox).radius;
-      const hitboxVelocity = getHitboxVelocity(hitbox);
+      getHitboxVelocity(hitbox);
+      const hitboxVelocity = _point;
 
       let particleChance = hitboxRadius * Settings.DT_S * 0.8;
       while (Math.random() < particleChance--) {

@@ -4,8 +4,7 @@ import { getInventory, InventoryComponentArray } from "../../../game/entity-comp
 import { keyIsPressed } from "../../../game/keyboard-input";
 import { sendItemTransferPacket, sendItemPickupPacket, sendItemReleasePacket } from "../../../game/networking/packet-sending/packet-sending";
 import { playerInstance } from "../../../game/player";
-import { entitySelectionState } from "../../../ui-state/entity-selection-state";
-import { hasOpenMenu } from "../../menus";
+import { getOpenMenu, hasOpenMenu } from "../../menus";
 
 // interface Props extends HTMLAttributes<HTMLDivElement> {
 //    item: Item | null;
@@ -59,56 +58,23 @@ const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: numbe
       const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot)!;
       const heldItem = heldItemInventory.itemSlots[1];
       if (heldItem === undefined) {
-         // If shift is held, insta-send the item between the player's inventory and the opened inventory
+         // If shift is held, transfer the item between the player's inventory and the opened inventory
          if (keyIsPressed("shift")) {
-            let openMenuInventory: Inventory | null;
-            let openMenuEntity: Entity | null;
+            const openMenu = getOpenMenu();
+            if (openMenu !== null) {
+               const inventoryInfo = openMenu.inventoryInfo;
+               if (inventoryInfo !== undefined) {
+                  let otherOpenMenuInventory: Inventory;
+                  let otherOpenMenuEntity: Entity;
+                  if (inventoryInfo.entity === entity) {
+                     otherOpenMenuInventory = getInventory(playerInventoryComponent, InventoryName.hotbar)!;
+                     otherOpenMenuEntity = playerInstance!;
+                  } else {
+                     const entityInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
+                     otherOpenMenuInventory = getInventory(entityInventoryComponent, inventoryInfo.inventoryName)!;
+                     otherOpenMenuEntity = inventoryInfo.entity;
+                  }
 
-            if (menuSelectorState.menuStack.length === 1) {
-               const menuInfo = menuSelectorState.menuStack[0];
-               // @HACK
-               switch (menuInfo.menu) {
-                  case Menu.buildMenu: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.animalStaffOptions: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.craftingMenu: openMenuInventory = getInventory(InventoryComponentArray.getComponent(playerInstance!), InventoryName.craftingOutputSlot); openMenuEntity = playerInstance!; break;
-                  case Menu.tamingMenu: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.tamingRenamePrompt: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.signInscribeMenu: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.barrelInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
-                  case Menu.tribesmanInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.hotbar); openMenuEntity = entitySelectionState.selectedEntity!; break;
-                  case Menu.campfireInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
-                  case Menu.furnaceInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
-                  case Menu.ammoBoxInventory: openMenuInventory = getInventory(InventoryComponentArray.getComponent(entitySelectionState.selectedEntity!), InventoryName.inventory); openMenuEntity = entitySelectionState.selectedEntity!; break;
-                  case Menu.tombstoneEpitaph: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.itemsDevTab: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.summonDevTab: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.titlesDevTab: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.tribesDevTab: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.tribePlanVisualiser: openMenuInventory = null; openMenuEntity = null; break;
-                  case Menu.techTree: openMenuInventory = null; openMenuEntity = null; break;
-               }
-            } else {
-               openMenuInventory = null;
-               openMenuEntity = null;
-            }
-
-            let otherOpenMenuInventory: Inventory | null;
-            let otherOpenMenuEntity: Entity | null;
-            if (openMenuEntity === entity) {
-               const playerInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
-               otherOpenMenuInventory = getInventory(playerInventoryComponent, InventoryName.hotbar);
-               otherOpenMenuEntity = playerInstance!;
-            } else {
-               otherOpenMenuInventory = openMenuInventory;
-               otherOpenMenuEntity = openMenuEntity;
-            }
-
-            if (otherOpenMenuInventory !== null && otherOpenMenuEntity !== null) {
-               if (entity === playerInstance) {
-                  // Clicked hte player inventory, so transfer to the open menu
-                  sendItemTransferPacket(entity, inventory.name, itemSlot, otherOpenMenuEntity, otherOpenMenuInventory.name);
-               } else {
-                  // Clicked the open menu inventory, so transfer to the player inventory
                   sendItemTransferPacket(entity, inventory.name, itemSlot, otherOpenMenuEntity, otherOpenMenuInventory.name);
                }
             }

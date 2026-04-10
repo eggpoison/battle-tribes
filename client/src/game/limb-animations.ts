@@ -1,4 +1,4 @@
-import { Point, customTickIntervalHasPassed, lerp, randAngle, randFloat, randInt, randItem, rotateXAroundOrigin, rotateYAroundOrigin, secondsToTicks, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, getItemRecipe, Entity, LimbAction, Settings, assert } from "webgl-test-shared";
+import { Point, customTickIntervalHasPassed, lerp, randAngle, randFloat, randInt, randItem, rotatePointAroundOrigin, secondsToTicks, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, getItemRecipe, Entity, LimbAction, Settings, assert, _point } from "webgl-test-shared";
 import { InventoryUseComponentArray, LimbInfo } from "./entity-components/server-components/InventoryUseComponent";
 import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
@@ -61,8 +61,9 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
       if (ingredientType === ItemType.wood && Math.random() < 1 * Settings.DT_S) {
          const pos = generateRandomLimbPosition();
 
-         const x = hitbox.box.position.x + rotateXAroundOrigin(pos.x, pos.y, hitbox.box.angle);
-         const y = hitbox.box.position.y + rotateYAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+         rotatePointAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+         const x = hitbox.box.position.x + _point.x;
+         const y = hitbox.box.position.y + _point.y;
 
          createSawdustCloud(x, y);
       }
@@ -76,8 +77,9 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
          const colour = randItem(particleColours);
          const pos = generateRandomLimbPosition();
 
-         const x = hitbox.box.position.x + rotateXAroundOrigin(pos.x, pos.y, hitbox.box.angle);
-         const y = hitbox.box.position.y + rotateYAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+         rotatePointAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+         const x = hitbox.box.position.x + _point.x;
+         const y = hitbox.box.position.y + _point.y;
 
          createColouredParticle(x, y, randFloat(30, 50), colour[0], colour[1], colour[2]);
       }
@@ -133,8 +135,9 @@ export function createMedicineAnimationParticles(entity: Entity, limbIdx: number
       const colour = randItem(MEDICINE_PARTICLE_COLOURS);
       const pos = generateRandomLimbPosition();
       
-      const x = hitbox.box.position.x + rotateXAroundOrigin(pos.x, pos.y, hitbox.box.angle);
-      const y = hitbox.box.position.y + rotateYAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+      rotatePointAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+      const x = hitbox.box.position.x + _point.x;
+      const y = hitbox.box.position.y + _point.y;
       
       createColouredParticle(x, y, randFloat(20, 35), colour[0], colour[1], colour[2]);
    }

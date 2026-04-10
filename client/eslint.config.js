@@ -39,7 +39,8 @@ export default defineConfig([
          "@typescript-eslint/prefer-nullish-coalescing": "off", // i use || not ??
          "@typescript-eslint/no-unsafe-enum-comparison": "off", // lets me do math with enums n const enums
          "@typescript-eslint/no-dynamic-delete": "warn", // Downgrade to a warning cuz its most of the time suboptimal, but also a more long-term fix most of the time
-         "@typescript-eslint/prefer-for-of": "off" // For of is often slower
+         "@typescript-eslint/prefer-for-of": "off", // For of is often slower
+         "@typescript-eslint/prefer-optional-chain": "off" // Explicitly typing it is more performant
       },
    },
 ]);

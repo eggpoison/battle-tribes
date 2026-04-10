@@ -1,4 +1,4 @@
-import { RestrictedBuildingAreaData, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
+import { _point, RestrictedBuildingAreaData, rotatePointAroundOrigin } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
@@ -75,14 +75,18 @@ export function renderRestrictedBuildingAreas(): void {
 
       // Create transparent back
       
-      const blX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * -0.5 + BORDER_WIDTH, restrictedArea.height * -0.5 + BORDER_WIDTH, restrictedArea.rotation);
-      const blY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * -0.5 + BORDER_WIDTH, restrictedArea.height * -0.5 + BORDER_WIDTH, restrictedArea.rotation);
-      const brX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * -0.5 + BORDER_WIDTH, restrictedArea.rotation);
-      const brY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * -0.5 + BORDER_WIDTH, restrictedArea.rotation);
-      const tlX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * -0.5 + BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, restrictedArea.rotation);
-      const tlY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * -0.5 + BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, restrictedArea.rotation);
-      const trX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, restrictedArea.rotation);
-      const trY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, restrictedArea.rotation);
+      rotatePointAroundOrigin(restrictedArea.width * -0.5 + BORDER_WIDTH, restrictedArea.height * -0.5 + BORDER_WIDTH, restrictedArea.rotation);
+      const blX = restrictedArea.x + _point.x;
+      const blY = restrictedArea.y + _point.y;
+      rotatePointAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * -0.5 + BORDER_WIDTH, restrictedArea.rotation);
+      const brX = restrictedArea.x + _point.x;
+      const brY = restrictedArea.y + _point.y;
+      rotatePointAroundOrigin(restrictedArea.width * -0.5 + BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, restrictedArea.rotation);
+      const tlX = restrictedArea.x + _point.x;
+      const tlY = restrictedArea.y + _point.y;
+      rotatePointAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, restrictedArea.rotation);
+      const trX = restrictedArea.x + _point.x;
+      const trY = restrictedArea.y + _point.y;
 
       vertices.push(
          blX, blY, 0,
@@ -97,14 +101,18 @@ export function renderRestrictedBuildingAreas(): void {
       for (let i = 0; i < 2; i++) {
          const direction = restrictedArea.rotation + i * Math.PI;
 
-         const blX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * -0.5 + BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, direction);
-         const blY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * -0.5 + BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, direction);
-         const brX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, direction);
-         const brY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, direction);
-         const tlX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * -0.5, restrictedArea.height * 0.5, direction);
-         const tlY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * -0.5, restrictedArea.height * 0.5, direction);
-         const trX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * 0.5, restrictedArea.height * 0.5, direction);
-         const trY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * 0.5, restrictedArea.height * 0.5, direction);
+         rotatePointAroundOrigin(restrictedArea.width * -0.5 + BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, direction);
+         const blX = restrictedArea.x + _point.x;
+         const blY = restrictedArea.y + _point.y;
+         rotatePointAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, direction);
+         const brX = restrictedArea.x + _point.x;
+         const brY = restrictedArea.y + _point.y;
+         rotatePointAroundOrigin(restrictedArea.width * -0.5, restrictedArea.height * 0.5, direction);
+         const tlX = restrictedArea.x + _point.x;
+         const tlY = restrictedArea.y + _point.y;
+         rotatePointAroundOrigin(restrictedArea.width * 0.5, restrictedArea.height * 0.5, direction);
+         const trX = restrictedArea.x + _point.x;
+         const trY = restrictedArea.y + _point.y;
 
          vertices.push(
             blX, blY, 1,
@@ -120,14 +128,18 @@ export function renderRestrictedBuildingAreas(): void {
       for (let i = 0; i < 2; i++) {
          const direction = restrictedArea.rotation + i * Math.PI;
 
-         const blX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * -0.5 + BORDER_WIDTH, direction);
-         const blY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * -0.5 + BORDER_WIDTH, direction);
-         const brX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * 0.5, restrictedArea.height * -0.5, direction);
-         const brY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * 0.5, restrictedArea.height * -0.5, direction);
-         const tlX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, direction);
-         const tlY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, direction);
-         const trX = restrictedArea.x + rotateXAroundOrigin(restrictedArea.width * 0.5, restrictedArea.height * 0.5, direction);
-         const trY = restrictedArea.y + rotateYAroundOrigin(restrictedArea.width * 0.5, restrictedArea.height * 0.5, direction);
+         rotatePointAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * -0.5 + BORDER_WIDTH, direction);
+         const blX = restrictedArea.x + _point.x;
+         const blY = restrictedArea.y + _point.y;
+         rotatePointAroundOrigin(restrictedArea.width * 0.5, restrictedArea.height * -0.5, direction);
+         const brX = restrictedArea.x + _point.x;
+         const brY = restrictedArea.y + _point.y;
+         rotatePointAroundOrigin(restrictedArea.width * 0.5 - BORDER_WIDTH, restrictedArea.height * 0.5 - BORDER_WIDTH, direction);
+         const tlX = restrictedArea.x + _point.x;
+         const tlY = restrictedArea.y + _point.y;
+         rotatePointAroundOrigin(restrictedArea.width * 0.5, restrictedArea.height * 0.5, direction);
+         const trX = restrictedArea.x + _point.x;
+         const trY = restrictedArea.y + _point.y;
 
          vertices.push(
             blX, blY, 1,

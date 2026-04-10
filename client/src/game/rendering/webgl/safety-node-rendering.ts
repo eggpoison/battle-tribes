@@ -1,4 +1,4 @@
-import { BuildingPlanData, SafetyNodeData, TribeWallData, WallSideNodeData, Settings, distance, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
+import { BuildingPlanData, SafetyNodeData, TribeWallData, WallSideNodeData, Settings, distance, rotatePointAroundOrigin, _point } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { entitySelectionState } from "../../../ui-state/entity-selection-state";
@@ -256,14 +256,18 @@ export function renderSafetyNodes(): void {
       for (let i = 0; i < 4; i++) {
          const direction = i * Math.PI / 2;
 
-         const blX = x + rotateXAroundOrigin(HIGHLIGHTED_NODE_SIZE * -0.5 + HIGHLIGHTED_NODE_THICKNESS, HIGHLIGHTED_NODE_SIZE * 0.5 - HIGHLIGHTED_NODE_THICKNESS, direction);
-         const blY = y + rotateYAroundOrigin(HIGHLIGHTED_NODE_SIZE * -0.5 + HIGHLIGHTED_NODE_THICKNESS, HIGHLIGHTED_NODE_SIZE * 0.5 - HIGHLIGHTED_NODE_THICKNESS, direction);
-         const brX = x + rotateXAroundOrigin(HIGHLIGHTED_NODE_SIZE * 0.5 - HIGHLIGHTED_NODE_THICKNESS, HIGHLIGHTED_NODE_SIZE * 0.5 - HIGHLIGHTED_NODE_THICKNESS, direction);
-         const brY = y + rotateYAroundOrigin(HIGHLIGHTED_NODE_SIZE * 0.5 - HIGHLIGHTED_NODE_THICKNESS, HIGHLIGHTED_NODE_SIZE * 0.5 - HIGHLIGHTED_NODE_THICKNESS, direction);
-         const tlX = x + rotateXAroundOrigin(HIGHLIGHTED_NODE_SIZE * -0.5, HIGHLIGHTED_NODE_SIZE * 0.5, direction);
-         const tlY = y + rotateYAroundOrigin(HIGHLIGHTED_NODE_SIZE * -0.5, HIGHLIGHTED_NODE_SIZE * 0.5, direction);
-         const trX = x + rotateXAroundOrigin(HIGHLIGHTED_NODE_SIZE * 0.5, HIGHLIGHTED_NODE_SIZE * 0.5, direction);
-         const trY = y + rotateYAroundOrigin(HIGHLIGHTED_NODE_SIZE * 0.5, HIGHLIGHTED_NODE_SIZE * 0.5, direction);
+         rotatePointAroundOrigin(HIGHLIGHTED_NODE_SIZE * -0.5 + HIGHLIGHTED_NODE_THICKNESS, HIGHLIGHTED_NODE_SIZE * 0.5 - HIGHLIGHTED_NODE_THICKNESS, direction);
+         const blX = x + _point.x;
+         const blY = y + _point.y;
+         rotatePointAroundOrigin(HIGHLIGHTED_NODE_SIZE * 0.5 - HIGHLIGHTED_NODE_THICKNESS, HIGHLIGHTED_NODE_SIZE * 0.5 - HIGHLIGHTED_NODE_THICKNESS, direction);
+         const brX = x + _point.x;
+         const brY = y + _point.y;
+         rotatePointAroundOrigin(HIGHLIGHTED_NODE_SIZE * -0.5, HIGHLIGHTED_NODE_SIZE * 0.5, direction);
+         const tlX = x + _point.x;
+         const tlY = y + _point.y;
+         rotatePointAroundOrigin(HIGHLIGHTED_NODE_SIZE * 0.5, HIGHLIGHTED_NODE_SIZE * 0.5, direction);
+         const trX = x + _point.x;
+         const trY = y + _point.y;
 
          const vertexOffset = currentVertexCount * 3;
 

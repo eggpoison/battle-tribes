@@ -1,6 +1,6 @@
-import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp } from "webgl-test-shared";
+import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp, _point } from "webgl-test-shared";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
-import { closeCurrentMenu, hasOpenNonEmbodiedMenu, Menu, openMenu } from "../ui/menus";
+import { closeCurrentMenu, hasOpenNonEmbodiedMenu, MenuType, openMenu } from "../ui/menus";
 import { playerActionState } from "../ui-state/player-action-state";
 import { currentSnapshot, gameIsRunning, getElapsedTimeInSeconds } from "./game";
 import { getEntityClientComponentConfigs } from "./entity-components/client-components";
@@ -42,7 +42,6 @@ import { HeldItemComponentArray } from "./entity-components/server-components/He
 import { ServerComponentData } from "./entity-components/components";
 import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
 import { hotbarFuncs } from "../ui-state/hotbar-funcs";
-import { closeCraftingMenu, openCraftingMenu } from "../ui/game/menus/CraftingMenu";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -287,7 +286,8 @@ export function tickPlayerItems(): void {
 
          const transformComponent = TransformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];
-         const playerVelocity = getHitboxVelocity(playerHitbox);
+         getHitboxVelocity(playerHitbox);
+         const playerVelocity = _point;
 
          // Add extra range for moving attacks
          const velocityMagnitude = playerVelocity.magnitude();
@@ -742,11 +742,11 @@ const hideInventory = (): void => {
  
 /** Creates the key listener to toggle the inventory on and off. */
 const createInventoryToggleListeners = (): void => {
+   // Open crafting menu on E
    addKeyListener("e", () => {
       const didCloseMenu = closeCurrentMenu();
       if (!didCloseMenu) {
-         // Open the crafting menu
-         openMenu(Menu.craftingMenu, openCraftingMenu, closeCraftingMenu);
+         openMenu(MenuType.craftingMenu);
       }
    });
 

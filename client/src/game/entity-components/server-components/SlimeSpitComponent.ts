@@ -75,7 +75,6 @@ function onTick(entity: Entity): void {
    const rotatingRenderPart = renderObject.renderPartsByZIndex[0];
    
    rotatingRenderPart.angle += 1.5 * Math.PI * Settings.DT_S;
-   rotatingRenderPart.angle -= 1.5 * Math.PI * Settings.DT_S;
 
    if (tickIntervalHasPassed(0.2)) {
       for (let i = 0; i < 5; i++) {

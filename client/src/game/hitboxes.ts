@@ -33,6 +33,7 @@ export interface Hitbox {
    readonly tethers: Array<HitboxTether>;
 
    /** The angle the hitbox had last frame render. Just used to interpolate hitbox rotations. That's why this isn't present in the server definition */
+   // @MEMORY: If this is only used in interpolation, then why is this needed? Why not just use the value the hitbox had last snapshot?
    previousAngle: number;
    previousRelativeAngle: number;
    angularAcceleration: number;

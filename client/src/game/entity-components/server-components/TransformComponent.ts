@@ -491,7 +491,7 @@ function onTick(entity: Entity): void {
    if (hitboxIsInWater(hitbox)) {
       // Water droplet particles
       // @Hack @Cleanup: Don't hardcode fish condition
-      if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.05) && (getEntityType(entity) !== EntityType.fish)) {
+      if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.05) && getEntityType(entity) !== EntityType.fish) {
          createWaterSplashParticle(hitbox.box.position.x, hitbox.box.position.y);
       }
 

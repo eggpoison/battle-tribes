@@ -49,9 +49,15 @@ export enum PacketType {
    terminalCommand,
    // @Hack
    setSpectatingPosition,
+<<<<<<< HEAD
    startEntityInteraction,
    endEntityInteraction,
    screenResize,
+=======
+   openEntityInventory,
+   closeEntityInventory,
+   screenResize, // @HACK useless parity thing
+>>>>>>> 8ba4e90e (bad)
    forceCompleteTamingTier, // ((DEV))
    acquireTamingSkill,
    forceAcquireTamingSkill, // ((DEV))

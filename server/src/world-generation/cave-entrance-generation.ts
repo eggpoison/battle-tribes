@@ -1,7 +1,7 @@
 import { EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { SubtileType, TileType } from "battletribes-shared/tiles";
-import { getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randAngle, randItem, TileIndex } from "battletribes-shared/utils";
+import { getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randAngle, randItem, TileIndex, tileIsInWorldIncludingEdges } from "battletribes-shared/utils";
 import { getEntitiesInRange } from "../ai-shared";
 import { createGuardianConfig } from "../entities/mobs/guardian";
 import { createEntity, getEntityType } from "../world";
@@ -96,8 +96,10 @@ export function generateCaveEntrances(surfaceLayer: Layer): void {
 
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
-            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-            surfaceLayer.tileTypes[tileIndex] = TileType.dropdown;
+            if (tileIsInWorldIncludingEdges(tileX, tileY)) {
+               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+               surfaceLayer.tileTypes[tileIndex] = TileType.dropdown;
+            }
          }
       }
 
@@ -123,11 +125,13 @@ export function generateCaveEntrances(surfaceLayer: Layer): void {
 
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
-            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-            // @Incomplete: make into rough rock
-            surfaceLayer.tileTypes[tileIndex] = TileType.rock;
+            if (tileIsInWorldIncludingEdges(tileX, tileY)) {
+               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+               // @Incomplete: make into rough rock
+               surfaceLayer.tileTypes[tileIndex] = TileType.rock;
 
-            setWallInSubtiles(surfaceLayer.wallSubtileTypes, tileX, tileY, SubtileType.rockWall);
+               setWallInSubtiles(surfaceLayer.wallSubtileTypes, tileX, tileY, SubtileType.rockWall);
+            }
          }
       }
 
@@ -179,9 +183,11 @@ export function generateCaveEntrances(surfaceLayer: Layer): void {
 
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
-            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-            if (!tileHasWallSubtile(surfaceLayer.wallSubtileTypes, tileX, tileY)) {
-               tiles.push(tileIndex);
+            if (tileIsInWorldIncludingEdges(tileX, tileY)) {
+               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+               if (!tileHasWallSubtile(surfaceLayer.wallSubtileTypes, tileX, tileY)) {
+                  tiles.push(tileIndex);
+               }
             }
          }
       }

@@ -27,12 +27,12 @@ export function createTumbleweedLiveConfig(position: Point, angle: number): Enti
    
    return {
       entityType: EntityType.tumbleweedLive,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.tumbleweedLive]: tumbleweedLiveComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         tumbleweedLiveComponent
+      ],
       lights: []
    };
 }

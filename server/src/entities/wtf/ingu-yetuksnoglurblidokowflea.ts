@@ -7,7 +7,7 @@ import { ServerComponentType } from "../../../../shared/src/components";
 import { Entity, EntityType } from "../../../../shared/src/entities";
 import { Settings } from "../../../../shared/src/settings";
 import { getAbsAngleDiff, lerp, Point, polarVec2, rotatePoint } from "../../../../shared/src/utils";
-import { ChildConfigAttachInfo, EntityConfig } from "../../components";
+import { ChildConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../../components";
 import { AIHelperComponent } from "../../components/AIHelperComponent";
 import { HealthComponent } from "../../components/HealthComponent";
 import { InguYetuksnoglurblidokowfleaComponent } from "../../components/InguYetuksnoglurblidokowfleaComponent";
@@ -135,7 +135,7 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
       const seekerHeadConfig = createInguYetuksnoglurblidokowfleaSeekerHeadConfig(trunkPosition, angle, seekerOffset, true, 26);
       childConfigs.push({
          entityConfig: seekerHeadConfig,
-         attachedHitbox: seekerHeadConfig.components[ServerComponentType.transform]!.hitboxes[0],
+         attachedHitbox: getConfigTransformComponent(seekerHeadConfig.components).hitboxes[0],
          parentHitbox: body2Hitbox,
          isPartOfParent: true
       });
@@ -155,7 +155,7 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
       const tukmokHeadConfig = createInguYetuksnoglurblidokowfleaSeekerHeadConfig(trunkPosition, angle, seekerOffset, false, 44);
       childConfigs.push({
          entityConfig: tukmokHeadConfig,
-         attachedHitbox: tukmokHeadConfig.components[ServerComponentType.transform]!.hitboxes[0],
+         attachedHitbox: getConfigTransformComponent(tukmokHeadConfig.components).hitboxes[0],
          parentHitbox: body3Hitbox,
          isPartOfParent: true
       });
@@ -221,7 +221,7 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
       let hitbox: Hitbox;
       if (i === NUM_TAIL_SEGMENTS - 1) {
          const config = createTukmokTailClubConfig(hitboxPosition, 0, offset);
-         hitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+         hitbox = getConfigTransformComponent(config.components).hitboxes[0];
          tailConfig = config;
       } else {
          hitbox = new Hitbox(transformComponent, parent, true, new CircularBox(hitboxPosition, offset, 0, radius), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, flags);
@@ -304,12 +304,14 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
       for (let i = 0; i < 2; i++) {
          const sideIsFlipped = i === 1;
          const clawConfig = createOkrenClawConfig(bodySegment.box.position.copy(), 0, OkrenAgeStage.youth, OkrenClawGrowthStage.FOUR, sideIsFlipped);
+
+         const clawTransformComponent = getConfigTransformComponent(clawConfig.components);
          // @HACK
-         clawConfig.components[ServerComponentType.transform]!.hitboxes[0].box.offset.x = 40;
-         clawConfig.components[ServerComponentType.transform]!.hitboxes[0].box.offset.y = 40;
+         clawTransformComponent.hitboxes[0].box.offset.x = 40;
+         clawTransformComponent.hitboxes[0].box.offset.y = 40;
          childConfigs.push({
             entityConfig: clawConfig,
-            attachedHitbox: clawConfig.components[ServerComponentType.transform]!.hitboxes[0],
+            attachedHitbox: clawTransformComponent.hitboxes[0],
             parentHitbox: bodySegment,
             isPartOfParent: true
          });
@@ -326,13 +328,13 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
    
    return [{
       entityType: EntityType.inguYetuksnoglurblidokowflea,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.inguYetuksnoglurblidokowflea]: inguYetuksnoglurblidokowfleaComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         aiHelperComponent,
+         inguYetuksnoglurblidokowfleaComponent
+      ],
       lights: [],
       childConfigs: childConfigs,
    },tailConfig];

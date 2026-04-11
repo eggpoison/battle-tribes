@@ -8,7 +8,9 @@ import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TreePlantedComponentData {
    readonly growthProgress: number;
@@ -43,19 +45,21 @@ function decodeData(reader: PacketReader): TreePlantedComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponent.hitboxes[0];
 
-   const growthProgress = entityComponentData.serverComponentData[ServerComponentType.treePlanted]!.growthProgress;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const growthProgress = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treePlanted).growthProgress;
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       9,
       0,
+      0, 0,
       getTextureArrayIndex(getTextureSource(growthProgress))
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {
       renderPart: renderPart
@@ -63,7 +67,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TreePlantedComponent {
-   const growthProgress = entityComponentData.serverComponentData[ServerComponentType.treePlanted]!.growthProgress;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const growthProgress = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treePlanted).growthProgress;
    return {
       growthProgress: growthProgress,
       renderPart: intermediateInfo.renderPart

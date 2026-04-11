@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createPlanterBoxComponentData } from "../entity-components/server-components/PlanterBoxComponent";
@@ -10,7 +10,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createPlanterBoxConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
    const box = new RectangularBox(position, new Point(0, 0), rotation, 80, 80);
@@ -19,14 +19,14 @@ export function createPlanterBoxConfig(position: Point, rotation: number, tribe:
 
    return {
       entityType: EntityType.planterBox,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.planterBox]: createPlanterBoxComponentData()
-      },
-      clientComponentData: {}
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createPlanterBoxComponentData()
+      ],
+      clientComponentData: []
    };
 }

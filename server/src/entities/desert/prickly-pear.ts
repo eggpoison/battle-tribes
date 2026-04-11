@@ -29,13 +29,13 @@ export function createPricklyPearConfig(position: Point, offset: Point, angle: n
    
    return {
       entityType: EntityType.pricklyPear,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.energyStore]: energyStoreComponent,
-         [ServerComponentType.pricklyPear]: pricklyPearComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         energyStoreComponent,
+         pricklyPearComponent
+      ],
       lights: []
    };
 }

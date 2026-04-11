@@ -26,9 +26,6 @@ export function getEntityTextureAtlasUBO(): string {
    layout(std140) uniform ${UBO_NAME_RECORD[UBOBindingIndex.ENTITY_TEXTURE_ATLAS]} {
       // @Cleanup @Speed: might be better to premultiply this by ATLAS_SLOT_SIZE if it isn't used
       float u_atlasSize;
-      // @Cleanup: Use a struct for these 2
-      float u_textureSlotIndexes[${TEXTURE_SOURCES.length}];
-      vec2 u_textureSizes[${TEXTURE_SOURCES.length}];
    };
    `;
 }
@@ -48,26 +45,26 @@ let entityTextureAtlasBuffer: WebGLBuffer;
 
 export function createUBOs(): void {
    // Camera uniform buffer
-   cameraBuffer = gl.createBuffer()!;
+   cameraBuffer = gl.createBuffer();
    gl.bindBufferBase(gl.UNIFORM_BUFFER, UBOBindingIndex.CAMERA, cameraBuffer);
    gl.bufferData(gl.UNIFORM_BUFFER, cameraData.byteLength, gl.DYNAMIC_DRAW);
 
    // Time uniform buffer
-   timeBuffer = gl.createBuffer()!;
+   timeBuffer = gl.createBuffer();
    gl.bindBufferBase(gl.UNIFORM_BUFFER, UBOBindingIndex.TIME, timeBuffer);
    gl.bufferData(gl.UNIFORM_BUFFER, timeData.byteLength, gl.DYNAMIC_DRAW);
 
    // Camera uniform buffer (for the tech tree)
    {
       const gl = getTechTreeGL();
-      cameraBufferTechTree = gl.createBuffer()!;
+      cameraBufferTechTree = gl.createBuffer();
       gl.bindBufferBase(gl.UNIFORM_BUFFER, UBOBindingIndex.CAMERA, cameraBufferTechTree);
       gl.bufferData(gl.UNIFORM_BUFFER, cameraDataTechTree.byteLength, gl.DYNAMIC_DRAW);
    }
 
    // Entity texture atlas uniform buffer
 
-   if (typeof entityTextureAtlasData === "undefined") {
+   if (entityTextureAtlasData === undefined) {
       entityTextureAtlasData = new Float32Array(4 + TEXTURE_SOURCES.length * 8);
    }
 
@@ -81,7 +78,7 @@ export function createUBOs(): void {
       entityTextureAtlasData[4 + TEXTURE_SOURCES.length * 4 + i * 4 + 1] = textureAtlas.textureHeights[i];
    }
 
-   entityTextureAtlasBuffer = gl.createBuffer()!;
+   entityTextureAtlasBuffer = gl.createBuffer();
    gl.bindBufferBase(gl.UNIFORM_BUFFER, UBOBindingIndex.ENTITY_TEXTURE_ATLAS, entityTextureAtlasBuffer);
    gl.bufferData(gl.UNIFORM_BUFFER, entityTextureAtlasData, gl.STATIC_DRAW);
 }

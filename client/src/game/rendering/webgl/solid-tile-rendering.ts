@@ -1,8 +1,8 @@
-import { Settings, NUM_TILE_TYPES, SubtileType, TileType, TileTypeString } from "webgl-test-shared";
+import { Settings, NUM_TILE_TYPES, SubtileType, TileType, TileTypeString, getSubtileIndex, getTileIndexIncludingEdges } from "webgl-test-shared";
 import { gl, createWebGLProgram, createTextureArray } from "../../webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, RenderChunkSolidTileInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import Layer, { getSubtileIndex, getTileIndexIncludingEdges } from "../../Layer";
+import Layer from "../../Layer";
 import { layers } from "../../world";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
 
@@ -30,7 +30,7 @@ const FLOOR_TILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<TileType, number 
    let i = 0;
    for (let tileType: TileType = 0; tileType < NUM_TILE_TYPES; tileType++) {
       const textureSource = FLOOR_TILE_TEXTURE_SOURCE_RECORD[tileType];
-      if (typeof textureSource !== "undefined") {
+      if (textureSource !== undefined) {
          if (textureSource !== null) {
             FLOOR_TILE_TO_TEXTURE_ARRAY_INDEX_RECORD[tileType] = i;
             i++;
@@ -52,8 +52,8 @@ const WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<SubtileType, Ar
    let i = 0;
    for (let subtileType: SubtileType = 0; subtileType < SubtileType._LENGTH_; subtileType++) {
       const textureSources = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
-      if (typeof textureSources !== "undefined") {
-         if (typeof WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType] === "undefined") {
+      if (textureSources !== undefined) {
+         if (WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType] === undefined) {
             WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType] = [];
          }
          
@@ -65,8 +65,8 @@ const WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<SubtileType, Ar
    }
 })();
 
-let groundTileInfoArrays = new Array<Array<RenderChunkSolidTileInfo>>();
-let wallTileInfoArrays = new Array<Array<RenderChunkSolidTileInfo>>();
+let groundTileInfoArrays: Array<Array<RenderChunkSolidTileInfo>> = [];
+let wallTileInfoArrays: Array<Array<RenderChunkSolidTileInfo>> = [];
 
 let program: WebGLProgram;
 let floorTileTextureArray: WebGLTexture;
@@ -191,20 +191,20 @@ export function createSolidTileShaders(): void {
    gl.uniform1i(samplerUniformLocation, 0);
 
    // Floors
-   const floorTextureSources = new Array<string>();
+   const floorTextureSources: Array<string> = [];
    for (let tileType: TileType = 0; tileType < NUM_TILE_TYPES; tileType++) {
       const textureSource = FLOOR_TILE_TEXTURE_SOURCE_RECORD[tileType];
-      if (typeof textureSource !== "undefined" && textureSource !== null) {
+      if (textureSource !== undefined && textureSource !== null) {
          floorTextureSources.push(textureSource);
       }
    }
    floorTileTextureArray = createTextureArray(floorTextureSources, 16, 16, 5);
 
    // Walls
-   const wallTextureSources = new Array<string>();
+   const wallTextureSources: Array<string> = [];
    for (let subtileType: SubtileType = 0; subtileType < SubtileType._LENGTH_; subtileType++) {
       const textureSources = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
-      if (typeof textureSources !== "undefined") {
+      if (textureSources !== undefined) {
          for (const textureSource of textureSources) {
             wallTextureSources.push(textureSource);
          }
@@ -276,7 +276,7 @@ const updateFloorVertexData = (data: Float32Array, layer: Layer, renderChunkX: n
          const tile = layer.getTile(tileIndex);
 
          const textureIndex = FLOOR_TILE_TO_TEXTURE_ARRAY_INDEX_RECORD[tile.type];
-         if (typeof textureIndex === "undefined") {
+         if (textureIndex === undefined) {
             throw new Error(TileTypeString[tile.type]);
          }
          if (textureIndex === null) {
@@ -304,7 +304,13 @@ const updateFloorVertexData = (data: Float32Array, layer: Layer, renderChunkX: n
    }
 }
 
-const updateWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: number, renderChunkY: number): void => {
+const clearWallVertexData = (data: Float32Array): void => {
+   // Clear any previous data
+   // @SPEED don't need to clear the whole thing!!!
+   data.fill(0);
+}
+
+const setWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: number, renderChunkY: number): void => {
    const minTileX = getRenderChunkMinTileX(renderChunkX);
    const maxTileX = getRenderChunkMaxTileX(renderChunkX);
    const minTileY = getRenderChunkMinTileY(renderChunkY);
@@ -314,11 +320,6 @@ const updateWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: nu
    const maxSubtileX = maxTileX * 4 + 3;
    const minSubtileY = minTileY * 4;
    const maxSubtileY = maxTileY * 4 + 3;
-   
-   // Clear any previous data
-   for (let i = 0; i < data.length; i++) {
-      data[i] = 0;
-   }
    
    let i = 0;
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
@@ -330,7 +331,7 @@ const updateWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: nu
          }
 
          const textureIndexes = WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType];
-         if (typeof textureIndexes === "undefined") {
+         if (textureIndexes === undefined) {
             throw new Error(subtileType.toString());
          }
 
@@ -339,7 +340,7 @@ const updateWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: nu
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
 
          const variant = layer.wallSubtileVariants[tileIndex];
-         if (typeof variant === "undefined") {
+         if (variant === undefined) {
             throw new Error();
          }
          const textureIndex = textureIndexes[variant];
@@ -392,15 +393,15 @@ const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, rend
 
    const vertexData = new Float32Array(numElements * 6 * 7);
    if (isWallTiles) {
-      updateWallVertexData(vertexData, layer, renderChunkX, renderChunkY);
+      setWallVertexData(vertexData, layer, renderChunkX, renderChunkY);
    } else {
       updateFloorVertexData(vertexData, layer, renderChunkX, renderChunkY);
    }
 
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.DYNAMIC_DRAW);
    
@@ -415,8 +416,6 @@ const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, rend
    gl.enableVertexAttribArray(2);
    gl.enableVertexAttribArray(3);
    gl.enableVertexAttribArray(4);
-
-   gl.bindVertexArray(null);
 
    return {
       buffer: buffer,
@@ -450,7 +449,8 @@ const recalculateChunkData = (info: RenderChunkSolidTileInfo, layer: Layer, rend
    // @Memory @Garbage: Reuse previous array
    const vertexData = new Float32Array(info.vertexCount * 7);
    if (isWallTiles) {
-      updateWallVertexData(vertexData, layer, renderChunkX, renderChunkY);
+      clearWallVertexData(vertexData);
+      setWallVertexData(vertexData, layer, renderChunkX, renderChunkY);
    } else {
       updateFloorVertexData(vertexData, layer, renderChunkX, renderChunkY);
    }

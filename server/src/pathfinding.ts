@@ -20,6 +20,7 @@ import { surfaceLayer } from "./layers";
 import { TribeMemberComponentArray } from "./components/TribeMemberComponent";
 import { Hitbox } from "./hitboxes";
 import { getDistanceFromPointToEntity } from "./ai-shared";
+import { _bounds } from "../../shared/src/boxes/BaseBox";
 
 const enum Vars {
    NODE_ACCESSIBILITY_RESOLUTION = 3
@@ -196,10 +197,11 @@ const nodeIsAccessibleForEntity = (layer: Layer, node: PathfindingNodeIndex, ign
 const addCircularHitboxOccupiedNodes = (layer: Layer, occupiedPathfindingNodes: Set<PathfindingNodeIndex>, pathfindingGroupID: number, hitbox: Hitbox, entityType: EntityType): void => {
    const box = hitbox.box as CircularBox;
    
-   const minX = box.calculateBoundsMinX();
-   const maxX = box.calculateBoundsMaxX();
-   const minY = box.calculateBoundsMinY();
-   const maxY = box.calculateBoundsMaxY();
+   box.calculateBounds();
+   const minX = _bounds.minX;
+   const maxX = _bounds.maxX;
+   const minY = _bounds.minY;
+   const maxY = _bounds.maxY;
 
    const centerX = box.position.x / PathfindingSettings.NODE_SEPARATION;
    const centerY = box.position.y / PathfindingSettings.NODE_SEPARATION;
@@ -249,10 +251,11 @@ const addCircularHitboxOccupiedNodes = (layer: Layer, occupiedPathfindingNodes: 
 const addRectangularHitboxOccupiedNodes = (layer: Layer, occupiedPathfindingNodes: Set<PathfindingNodeIndex>, pathfindingGroupID: number, hitbox: Hitbox): void => {
    const box = hitbox.box as RectangularBox;
    
-   const minX = box.calculateBoundsMinX();
-   const maxX = box.calculateBoundsMaxX();
-   const minY = box.calculateBoundsMinY();
-   const maxY = box.calculateBoundsMaxY();
+   box.calculateBounds();
+   const minX = _bounds.minX;
+   const maxX = _bounds.maxX;
+   const minY = _bounds.minY;
+   const maxY = _bounds.maxY;
 
    // @Speed: Math.round might also work
    let minNodeX = Math.floor(minX / PathfindingSettings.NODE_SEPARATION);

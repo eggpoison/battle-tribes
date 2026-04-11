@@ -1,45 +1,37 @@
-import { EntityTickEventType, TribesmanTitle, SubtileType, TileType, STRUCTURE_TYPES, HitFlags, AttackEffectiveness, assert, Point, randAngle, randFloat, PacketReader, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
+import { EntityTickEventType, TribesmanTitle, SubtileType, TileType, STRUCTURE_TYPES, HitFlags, AttackEffectiveness, assert, Point, randAngle, randFloat, PacketReader, Entity, EntityType, ServerComponentType, _point } from "webgl-test-shared";
 import { setCameraSubject } from "../camera";
-import { getComponentArrays, getServerComponentArray } from "../entity-components/ComponentArray";
-import { setCurrentSnapshot } from "../client";
+import { currentSnapshot, setCurrentSnapshot, setNextSnapshot } from "../game";
 import Layer from "../Layer";
 import { playerInstance, setPlayerInstance } from "../player";
 import { playHeadSound, playSound } from "../sound";
 import { ExtendedTribe, readExtendedTribeData, readShortTribeData, Tribe, tribes, updatePlayerTribe } from "../tribes";
-import { addEntityToWorld, changeEntityLayer, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityComponentTypes, getEntityLayer, getEntityRenderInfo, getEntityType, layers, removeEntity, setCurrentLayer } from "../world";
-import { ClientComponentData, getEntityClientComponentConfigs } from "../entity-components/client-components";
+import { addEntityToWorld, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityLayer, getEntityRenderObject, getEntityType, layers, removeEntity, setCurrentLayer } from "../world";
+import { getEntityClientComponentConfigs } from "../entity-components/client-components";
 import { ServerComponentData } from "../entity-components/components";
-import { ClientComponentType } from "../entity-components/client-component-types";
-import { registerDirtyRenderInfo } from "../rendering/render-part-matrices";
+import { registerDirtyRenderObject } from "../rendering/render-part-matrices";
 import { LightData, readLightsFromData, updateLightsFromData } from "../lights";
-import { getRandomPositionInEntity, TransformComponentArray, TransformComponentData } from "../entity-components/server-components/TransformComponent";
+import { changeEntityLayer, getRandomPositionInEntity, TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle } from "../particles";
-import { addHitboxVelocity, getHitboxByLocalID, getHitboxVelocity, Hitbox, setHitboxVelocity } from "../hitboxes";
+import { addHitboxVelocity, getHitboxByLocalID, getHitboxVelocity, setHitboxVelocity } from "../hitboxes";
 import { createDamageNumber, createHealNumber, createResearchNumber } from "../text-canvas";
 import { processTickEvent } from "../entity-tick-events";
 import { setMinedSubtiles, tickCollapse } from "../collapses";
 import { GrassBlockerData, readGrassBlockers, updateGrassBlockersFromData } from "../grass-blockers";
-import Board from "../Board";
-import { tribesTabState } from "../../ui-state/tribes-tab-state.svelte";
-import { infocardsState } from "../../ui-state/infocards-state.svelte";
+import { tribesTabState } from "../../ui-state/tribes-tab-state";
+import { infocardsState } from "../../ui-state/infocards-state";
 import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
-import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
+import { updateParticles } from "../rendering/webgl/particle-rendering";
+import { EntityServerComponentData, getEntityComponentArrays, getEntityServerComponentArrays, getEntityServerComponentTypes, getServerComponentData } from "../entity-component-types";
+import { getSelectedEntity } from "../entity-selection";
+import { getComponentArrays } from "../entity-components/ComponentArray";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
-
-export type EntityServerComponentData = Partial<{
-   [T in ServerComponentType]: ServerComponentData<T>;
-}>;
-export type EntityClientComponentData = Partial<{
-   [T in ClientComponentType]: ClientComponentData<T>;
-}>;
 
 export interface EntitySnapshot {
    readonly entityType: EntityType;
    readonly spawnTicks: number;
    readonly layer: Layer;
-   readonly serverComponentData: EntityServerComponentData;
-   readonly clientComponentData: EntityClientComponentData;
+   readonly componentData: EntityServerComponentData;
 }
 
 interface RemovedEntityInfo {
@@ -105,13 +97,11 @@ interface CollapseData {
 }
 
 /** A snapshot of the game represented by a game tick packet. */
-export interface PacketSnapshot {
+export interface TickSnapshot {
    readonly tick: number;
    readonly time: number;
    readonly layer: Layer;
    readonly entities: Map<Entity, EntitySnapshot>;
-   /** Entities which have at least one thing which needs to be visually interpolated from the previous packet to this one. */
-   readonly interpolatingEntities: ReadonlyArray<Entity>;
    readonly removedEntities: ReadonlyArray<RemovedEntityInfo>;
    readonly playerTribeData: ExtendedTribe;
    readonly enemyTribeData: ReadonlyArray<Tribe>;
@@ -136,76 +126,43 @@ export interface PacketSnapshot {
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
 
-const entityShouldInterpolate = (newTransformData: TransformComponentData, previousTransformData: TransformComponentData): boolean => {
-   // If any hitboxes' positions or angles have changed
-   for (const newHitbox of newTransformData.hitboxes) {
-      // Find the previous hitbox
-      // @Speed
-      let previousHitbox: Hitbox | undefined;
-      for (const hitbox of previousTransformData.hitboxes) {
-         if (hitbox.localID === newHitbox.localID) {
-            previousHitbox = hitbox;
-         }
-      }
+// @Incomplete. Once lived in Board.ts
+/** Updates the client's copy of the tiles array to match any tile updates that have occurred */
+// public static loadTileUpdates(tileUpdates: ReadonlyArray<ServerTileUpdateData>): void {
+//    for (const update of tileUpdates) {
+//       const tileX = update.tileIndex % Settings.WORLD_SIZE_TILES;
+//       const tileY = Math.floor(update.tileIndex / Settings.WORLD_SIZE_TILES);
       
-      if (typeof previousHitbox !== "undefined") {
-         if (newHitbox.box.position.x !== previousHitbox.box.position.x
-            || newHitbox.box.position.y !== previousHitbox.box.position.y
-            || newHitbox.box.angle !== previousHitbox.box.angle) {
-            return true;
-         }
-      }
-   }
+//       let tile = this.getTile(tileX, tileY);
+//       tile.type = update.type;
+//       tile.isWall = update.isWall;
+//    }
+// }
 
-   return false;
-}
-
-const decodeEntitySnapshot = (reader: PacketReader, interpolatingEntities: Array<Entity>, previousSnapshot: PacketSnapshot | null, entity: Entity): EntitySnapshot => {
+const decodeEntitySnapshot = (reader: PacketReader): EntitySnapshot => {
    const entityType: EntityType = reader.readNumber();
    const spawnTicks = reader.readNumber();
-   
    const layerIdx = reader.readNumber();
-   console.assert(Number.isInteger(layerIdx) && layerIdx < layers.length);
-   const layer = layers[layerIdx];
 
-   const entityServerComponentTypes = new Array<ServerComponentType>();
-   const entityServerComponentData: EntityServerComponentData = {};
+   const componentArrays = getEntityServerComponentArrays(entityType);
+   
+   const entityServerComponentData: Array<ServerComponentData<ServerComponentType>> = [];
    
    // Component data
-   const numComponents = reader.readNumber();
-   for (let i = 0; i < numComponents; i++) {
-      const componentType: ServerComponentType = reader.readNumber();
-      assert(!entityServerComponentTypes.includes(componentType));
-      entityServerComponentTypes.push(componentType);
-
-      const componentArray = getServerComponentArray(componentType);
-
-      // @Cleanup: cast
-      entityServerComponentData[componentType] = componentArray.decodeData(reader) as any;
-
-      // @Speed: lot can be done to improve the way this is done
-      if (previousSnapshot !== null && componentType === ServerComponentType.transform) {
-         const previousEntityData = previousSnapshot.entities.get(entity);
-         if (typeof previousEntityData !== "undefined") {
-            const previousTransformComponentData = previousEntityData.serverComponentData[ServerComponentType.transform]!;
-            if (entityShouldInterpolate(entityServerComponentData[componentType]!, previousTransformComponentData)) {
-               interpolatingEntities.push(entity);
-            }
-         }
-      }
+   for (const componentArray of componentArrays) {
+      const componentData = componentArray.decodeData(reader);
+      entityServerComponentData.push(componentData);
    }
       
    return {
       entityType: entityType,
       spawnTicks: spawnTicks,
-      layer: layer,
-      serverComponentData: entityServerComponentData,
-      // @HACK
-      clientComponentData: getEntityClientComponentConfigs(entityType)
+      layer: layers[layerIdx],
+      componentData: entityServerComponentData
    };
 }
 
-export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousSnapshot: PacketSnapshot | null): PacketSnapshot {
+export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnapshot {
    const tick = reader.readNumber();
    
    const time = reader.readNumber();
@@ -215,21 +172,20 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
 
    const numEntities = reader.readNumber();
    const entities = new Map<Entity, EntitySnapshot>();
-   const interpolatingEntities = new Array<Entity>();
    for (let i = 0; i < numEntities; i++) {
-      const entity = reader.readNumber() as Entity;
-      const entitySnapshot = decodeEntitySnapshot(reader, interpolatingEntities, previousSnapshot, entity);
+      const entity: Entity = reader.readNumber();
+      const entitySnapshot = decodeEntitySnapshot(reader);
       entities.set(entity, entitySnapshot);
    }
 
    const numRemovedEntities = reader.readNumber();
-   const removedEntities = new Array<RemovedEntityInfo>();
+   const removedEntities: Array<RemovedEntityInfo> = [];
    for (let i = 0; i < numRemovedEntities; i++) {
       const entity = reader.readNumber();
       const isDestroyed = reader.readBool();
       removedEntities.push({
-         entity: entity,
-         isDestroyed: isDestroyed
+         entity,
+         isDestroyed
       });
    }
    
@@ -237,7 +193,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
    reader.readBool();
    const playerTribeData = readExtendedTribeData(reader);
    
-   const enemyTribeData = new Array<Tribe>();
+   const enemyTribeData: Array<Tribe> = [];
    const numEnemyTribes = reader.readNumber();
    for (let i = 0; i < numEnemyTribes; i++) {
       const isExtended = reader.readBool();
@@ -245,19 +201,16 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
       enemyTribeData.push(tribeData);
    }
 
-   let playerInstance: Entity | null = reader.readNumber();
-   if (playerInstance === 0) {
-      playerInstance = null;
-   }
+   const playerInstance: Entity | null = reader.readNumberOrNull();
    
-   const cameraSubject = reader.readNumber() as Entity;
+   const cameraSubject: Entity = reader.readNumber();
 
    const lightData = readLightsFromData(reader);
 
-   const hits = new Array<EntityHitData>();
+   const hits: Array<EntityHitData> = [];
    const numHits = reader.readNumber();
    for (let i = 0; i < numHits; i++) {
-      const hitEntity = reader.readNumber() as Entity;
+      const hitEntity: Entity = reader.readNumber();
       const hitHitboxLocalID = reader.readNumber();
       const hitPosition = reader.readPoint();
       const attackEffectiveness: AttackEffectiveness = reader.readNumber();
@@ -275,7 +228,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
       });
    }
 
-   const playerKnockbacks = new Array<PlayerKnockbackData>();
+   const playerKnockbacks: Array<PlayerKnockbackData> = [];
    const numKnockbacks = reader.readNumber();
    for (let i = 0; i < numKnockbacks; i++) {
       const knockback = reader.readNumber();
@@ -286,12 +239,12 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
       });
    }
 
-   const heals = new Array<EntityHealData>();
+   const heals: Array<EntityHealData> = [];
    const numHeals = reader.readNumber();
    for (let i = 0; i < numHeals; i++) {
       const position = reader.readPoint();
-      const healedEntity = reader.readNumber() as Entity;
-      const healerEntity = reader.readNumber() as Entity;
+      const healedEntity: Entity = reader.readNumber();
+      const healerEntity: Entity = reader.readNumber();
       const healAmount = reader.readNumber();
       heals.push({
          position: position,
@@ -301,7 +254,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
       });
    }
 
-   const researchOrbCompletes = new Array<ResearchOrbCompleteData>();
+   const researchOrbCompletes: Array<ResearchOrbCompleteData> = [];
    const numOrbs = reader.readNumber();
    for (let i = 0; i < numOrbs; i++) {
       const position = reader.readPoint();
@@ -313,9 +266,8 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
       });
    }
 
-   const tileUpdates = new Array<TileUpdateData>();
+   const tileUpdates: Array<TileUpdateData> = [];
    const numTileUpdates = reader.readNumber();
-   console.assert(Number.isInteger(numTileUpdates));
    for (let i = 0; i < numTileUpdates; i++) {
       const layerIdx = reader.readNumber();
       const layer = layers[layerIdx];
@@ -332,7 +284,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
    
    const wallSubtileUpdates = new Map<Layer, ReadonlyArray<WallSubtileUpdateData>>();
    for (const layer of layers) {
-      const layerSubtileUpdates = new Array<WallSubtileUpdateData>();
+      const layerSubtileUpdates: Array<WallSubtileUpdateData> = [];
       
       const numUpdates = reader.readNumber();
       for (let i = 0; i < numUpdates; i++) {
@@ -358,21 +310,21 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
       titleOffer = reader.readNumber();
    }
 
-   const entityTickEvents = new Array<EntityTickEventData>();
+   const entityTickEvents: Array<EntityTickEventData> = [];
    const numEntityTickEvents = reader.readNumber();
    for (let i = 0; i < numEntityTickEvents; i++) {
-      const entity = reader.readNumber() as Entity;
+      const entity: Entity = reader.readNumber();
       const type = reader.readNumber() as EntityTickEventType;
       const data = reader.readNumber();
 
       entityTickEvents.push({
-         entity: entity,
-         type: type,
-         data: data
+         entity,
+         type,
+         data
       });
    }
 
-   const minedSubtiles = new Array<MinedSubtileData>();
+   const minedSubtiles: Array<MinedSubtileData> = [];
    const numMinedSubtiles = reader.readNumber();
    for (let i = 0; i < numMinedSubtiles; i++) {
       const subtile = reader.readNumber();
@@ -389,7 +341,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
       minedSubtiles.push(minedSubtile);
    }
    
-   const collapses = new Array<CollapseData>();
+   const collapses: Array<CollapseData> = [];
    const numCollapses = reader.readNumber();
    assert(Number.isInteger(numCollapses));
    for (let i = 0; i < numCollapses; i++) {
@@ -408,7 +360,6 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
       time: time,
       layer: layer,
       entities: entities,
-      interpolatingEntities: interpolatingEntities,
       removedEntities: removedEntities,
       playerTribeData: playerTribeData,
       enemyTribeData: enemyTribeData,
@@ -433,9 +384,8 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader, previousS
 export function createEntityFromData(entity: Entity, data: EntitySnapshot): void {
    const entityComponentData: EntityComponentData = {
       entityType: data.entityType,
-      serverComponentData: data.serverComponentData,
-      // @HACK
-      clientComponentData: data.clientComponentData
+      serverComponentData: data.componentData,
+      clientComponentData: getEntityClientComponentConfigs(data.entityType)
    };
    
    const entityCreationInfo = createEntityCreationInfo(entity, entityComponentData);
@@ -448,13 +398,15 @@ const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {
       // Change layers
       changeEntityLayer(entity, data.layer);
    }
+
+   const entityType = getEntityType(entity);
+   const componentTypes = getEntityServerComponentTypes(entityType);
    
    // Update server components from data
-   const componentTypes = getEntityComponentTypes(entity);
-   for (const componentType of componentTypes) {
-      const componentArray = getServerComponentArray(componentType);
-      if (typeof componentArray.updateFromData !== "undefined") {
-         const componentData = data.serverComponentData[componentType]!;
+   const componentArrays = getEntityServerComponentArrays(entityType);
+   for (const componentArray of componentArrays) {
+      if (componentArray.updateFromData !== undefined) {
+         const componentData = getServerComponentData(data.componentData, componentTypes, componentArray.componentType);
          componentArray.updateFromData(componentData, entity);
       }
    }
@@ -462,8 +414,8 @@ const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {
    // @Speed: Does this mean we can just collect all updated entities each tick and not have to do the dirty array bullshit?
    // If you're updating the entity, then the server must have had some reason to send the data, so we should always consider the entity dirty.
    // @Incomplete: Are there some situations where this isn't the case?
-   const renderInfo = getEntityRenderInfo(entity);
-   registerDirtyRenderInfo(renderInfo);
+   const renderObject = getEntityRenderObject(entity);
+   registerDirtyRenderObject(entity, renderObject);
 }
 
 // @CLEANUP see comment in txt
@@ -474,22 +426,26 @@ const updatePlayerFromData = (playerInstance: number, data: EntitySnapshot): voi
       // Change layers
       changeEntityLayer(playerInstance, data.layer);
    }
-   
-   const componentTypes = getEntityComponentTypes(playerInstance);
-   for (const componentType of componentTypes) {
-      const componentArray = getServerComponentArray(componentType);
-      if (typeof componentArray.updatePlayerFromData !== "undefined") {
-         const componentData = data.serverComponentData[componentType]!;
+
+   const componentTypes = getEntityServerComponentTypes(EntityType.player);
+   const componentArrays = getEntityServerComponentArrays(EntityType.player);
+   for (const componentArray of componentArrays) {
+      if (componentArray.updatePlayerFromData !== undefined) {
+         const componentData = getServerComponentData(data.componentData, componentTypes, componentArray.componentType);
          // @INCOMPLETE: is never true??
          componentArray.updatePlayerFromData(componentData, false);
       }
    }
 }
 
-export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
-   // @HACK @CLEANUP impure Done before so that server data can override particles
-   Board.updateParticles();
+export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
+   // @HACK @CLEANUP impure. Done before so that server data can override particles
+   updateParticles();
 
+   // @HACKY! So that initial chunk-rendered-entities can fill their render object without crashing, because that requires currentSnapshot and nextSnapshot when interpolating
+   if (currentSnapshot === undefined) {
+      setNextSnapshot(snapshot);
+   }
    setCurrentSnapshot(snapshot);
 
    if (snapshot.layer !== getCurrentLayer()) {
@@ -500,16 +456,19 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
    // Tribes are done before entities because entity creation functions might require playerTribe to be defined.
    updatePlayerTribe(snapshot.playerTribeData);
    // @GARBAGE
-   tribes.splice(0, tribes.length);
+   tribes.length = 0;
    tribes.push(snapshot.playerTribeData);
    for (const tribe of snapshot.enemyTribeData) {
       tribes.push(tribe);
    }
    tribesTabState.updateTribes(tribes);
 
+   // Must be done before the entity update, so that playerInstance is correct for when the player entity is created (required for entityHasClientInterp)
+   setPlayerInstance(snapshot.playerInstance);
+   
    // Update entities
    for (const pair of snapshot.entities) {
-      const entity = pair[0] as Entity;
+      const entity: Entity = pair[0];
       const entitySnapshot = pair[1];
 
       if (entity === snapshot.playerInstance) {
@@ -526,18 +485,17 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
          }
       }
    }
-   const selectedEntity = entitySelectionState.selectedEntity;
+
+   // @Cleanup!!
+   const selectedEntity = getSelectedEntity();
    if (selectedEntity !== null) {
       const snapshotData = snapshot.entities.get(selectedEntity);
-      if (typeof snapshotData !== "undefined") {
-         const componentTypes = getEntityComponentTypes(selectedEntity);
-         for (const componentType of componentTypes) {
-            if (typeof snapshotData.serverComponentData[componentType] !== "undefined") {
-               const componentArray = getServerComponentArray(componentType);
-               if (typeof componentArray.updateSelectedEntityState !== "undefined") {
-                  // @Speed: until I make component data only send on change this will run every tick for selected entities!! which is bad not only for performance but for proofchecking - what if a component isn't having its data registered as changed when it's changed, but it's masked up cuz all the data is sent anyway???
-                  componentArray.updateSelectedEntityState(selectedEntity);
-               }
+      if (snapshotData !== undefined) {
+         const componentArrays = getEntityServerComponentArrays(getEntityType(selectedEntity));
+         for (const componentArray of componentArrays) {
+            if (componentArray.updateSelectedEntityState !== undefined) {
+               // @Speed: until I make component data only send on change this will run every tick for selected entities!! which is bad not only for performance but for proofchecking - what if a component isn't having its data registered as changed when it's changed, but it's masked up cuz all the data is sent anyway???
+               componentArray.updateSelectedEntityState(selectedEntity);
             }
          }
       }
@@ -549,8 +507,13 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
          removeEntity(entityRemoveInfo.entity, entityRemoveInfo.isDestroyed);
       }
    }
+   // Destroy removed components
+   const componentArrays = getComponentArrays();
+   for (let i = 0, len = componentArrays.length; i < len; i++) {
+      const componentArray = componentArrays[i];
+      componentArray.removeFlaggedComponents();
+   }
    
-   setPlayerInstance(snapshot.playerInstance);
    setCameraSubject(snapshot.cameraSubject);
 
    updateLightsFromData(snapshot.lights);
@@ -588,11 +551,9 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
 
             const hitHitbox = getHitboxByLocalID(transformComponent.hitboxes, hit.hitboxLocalID);
             if (hitHitbox !== null) {
-               // @Speed
-               const componentArrays = getComponentArrays();
-               for (let i = 0; i < componentArrays.length; i++) {
-                  const componentArray = componentArrays[i];
-                  if (typeof componentArray.onHit !== "undefined" && componentArray.hasComponent(hit.entity)) {
+               const componentArrays = getEntityComponentArrays(getEntityType(hit.entity));
+               for (const componentArray of componentArrays) {
+                  if (componentArray.onHit !== undefined) {
                      componentArray.onHit(hit.entity, hitHitbox, hit.position, hit.flags);
                   }
                }
@@ -610,7 +571,8 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
          const transformComponent = TransformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];
 
-         const previousVelocity = getHitboxVelocity(playerHitbox);
+         getHitboxVelocity(playerHitbox);
+         const previousVelocity = _point;
          setHitboxVelocity(playerHitbox, previousVelocity.x * 0.5, previousVelocity.y * 0.5);
 
          addHitboxVelocity(playerHitbox, knockbackData.knockback * Math.sin(knockbackData.knockbackDirection), knockbackData.knockback * Math.cos(knockbackData.knockbackDirection));
@@ -619,7 +581,7 @@ export function updateGameStateToSnapshot(snapshot: PacketSnapshot): void {
 
    for (const healData of snapshot.heals) {
       const healedEntity = healData.healedEntity;
-      const healerEntity = healData.healerEntity as Entity;
+      const healerEntity: Entity = healData.healerEntity;
       const healAmount = healData.healAmount;
 
       if (healAmount === 0) {

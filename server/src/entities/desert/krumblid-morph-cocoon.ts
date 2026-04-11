@@ -27,12 +27,12 @@ export function createKrumblidMorphCocoonConfig(position: Point, angle: number, 
    
    return {
       entityType: EntityType.krumblidMorphCocoon,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.krumblidMorphCocoon]: krumblidMorphCocoonComponent,
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         krumblidMorphCocoonComponent,
+      ],
       lights: []
    };
 }

@@ -59,15 +59,15 @@ export function createMithrilAnvilConfig(position: Point, rotation: number, trib
    
    return {
       entityType: EntityType.mithrilAnvil,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.craftingStation]: craftingStationComponent,
-         [ServerComponentType.mithrilAnvil]: mithrilAnvilComponent,
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         craftingStationComponent,
+         mithrilAnvilComponent,
+      ],
       lights: []
    };
 }

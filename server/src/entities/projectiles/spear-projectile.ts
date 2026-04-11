@@ -28,11 +28,11 @@ export function createSpearProjectileConfig(position: Point, rotation: number, t
    
    return {
       entityType: EntityType.spearProjectile,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.throwingProjectile]: throwingProjectileComponent,
-         [ServerComponentType.spearProjectile]: spearProjectileComponent
-      },
+      components: [
+         transformComponent,
+         throwingProjectileComponent,
+         spearProjectileComponent
+      ],
       lights: []
    };
 }

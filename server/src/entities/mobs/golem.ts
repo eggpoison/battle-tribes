@@ -142,12 +142,12 @@ export function createGolemConfig(position: Point, rotation: number): EntityConf
 
    return {
       entityType: EntityType.golem,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.golem]: golemComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         golemComponent
+      ],
       lights: lights
    };
 }

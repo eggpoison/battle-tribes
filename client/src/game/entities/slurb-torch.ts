@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, CircularBox, HitboxCollisionType } from "webgl-test-shared";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, CircularBox, HitboxCollisionType } from "webgl-test-shared";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createSlurbTorchComponentData } from "../entity-components/server-components/SlurbTorchComponent";
 import { createStatusEffectComponentData } from "../entity-components/server-components/StatusEffectComponent";
@@ -10,7 +10,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createSlurbTorchConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
    const box = new CircularBox(position, new Point(0, 0), rotation, 10);
@@ -19,14 +19,14 @@ export function createSlurbTorchConfig(position: Point, rotation: number, tribe:
 
    return {
       entityType: EntityType.slurbTorch,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.slurbTorch]: createSlurbTorchComponentData()
-      },
-      clientComponentData: {}
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createSlurbTorchComponentData()
+      ],
+      clientComponentData: []
    };
 }

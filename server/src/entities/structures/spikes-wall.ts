@@ -42,15 +42,15 @@ export function createWallSpikesConfig(position: Point, rotation: number, tribe:
    
    return {
       entityType: EntityType.wallSpikes,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.buildingMaterial]: buildingMaterialComponent,
-         [ServerComponentType.spikes]: spikesComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         buildingMaterialComponent,
+         spikesComponent
+      ],
       lights: []
    };
 }

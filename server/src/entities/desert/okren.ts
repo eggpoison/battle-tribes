@@ -10,7 +10,7 @@ import { Point, randInt } from "../../../../shared/src/utils";
 import { accelerateEntityToPosition, moveEntityToPosition, turnToPosition } from "../../ai-shared";
 import { OkrenCombatAI } from "../../ai/OkrenCombatAI";
 import { SandBallingAI } from "../../ai/SandBallingAI";
-import { ChildConfigAttachInfo, EntityConfig } from "../../components";
+import { ChildConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../../components";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import { HealthComponent } from "../../components/HealthComponent";
 import { EnergyStomachComponent } from "../../components/EnergyStomachComponent";
@@ -191,7 +191,7 @@ export function createOkrenConfig(position: Point, angle: number, size: OkrenAge
       const clawConfig = createOkrenClawConfig(bodyHitbox.box.position.copy(), 0, size, OkrenClawGrowthStage.FOUR, sideIsFlipped);
       childConfigs.push({
          entityConfig: clawConfig,
-         attachedHitbox: clawConfig.components[ServerComponentType.transform]!.hitboxes[0],
+         attachedHitbox: getConfigTransformComponent(clawConfig.components).hitboxes[0],
          parentHitbox: bodyHitbox,
          isPartOfParent: true
       });
@@ -223,18 +223,18 @@ export function createOkrenConfig(position: Point, angle: number, size: OkrenAge
    
    return {
       entityType: EntityType.okren,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.energyStore]: energyStoreComponent,
-         [ServerComponentType.energyStomach]: energyStomachComponent,
-         [ServerComponentType.rideable]: rideableComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.taming]: tamingComponent,
-         [ServerComponentType.okren]: okrenComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         aiHelperComponent,
+         energyStoreComponent,
+         energyStomachComponent,
+         rideableComponent,
+         lootComponent,
+         tamingComponent,
+         okrenComponent
+      ],
       lights: [],
       childConfigs: childConfigs
    };

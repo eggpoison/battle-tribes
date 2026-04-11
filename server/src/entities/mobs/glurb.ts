@@ -1,6 +1,6 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { Point, randInt } from "battletribes-shared/utils";
-import { EntityConfig } from "../../components";
+import { EntityConfig, getConfigTransformComponent } from "../../components";
 import { createGlurbHeadSegmentConfig } from "./glurb-head-segment";
 import { createGlurbBodySegmentConfig } from "./glurb-body-segment";
 import { createGlurbTailSegmentConfig } from "./glurb-tail-segment";
@@ -20,7 +20,7 @@ export function createGlurbConfig(position: Point, angle: number, numSegments: n
    const headConfig = createGlurbHeadSegmentConfig(position, angle, numSegments);
    configs.push(headConfig);
    
-   let lastHitbox = headConfig.components[ServerComponentType.transform]!.hitboxes[0];
+   let lastHitbox = getConfigTransformComponent(headConfig.components).hitboxes[0];
    let currentPos = position.copy();
    for (let i = 0; i < numSegments - 1; i++) {
       const newPos = currentPos.offset(30, angle + Math.PI);
@@ -35,7 +35,7 @@ export function createGlurbConfig(position: Point, angle: number, numSegments: n
       }
       configs.push(config);
 
-      const hitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+      const hitbox = getConfigTransformComponent(config.components).hitboxes[0];
       tetherGlurbSegments(hitbox, lastHitbox);
       lastHitbox = hitbox;
    }

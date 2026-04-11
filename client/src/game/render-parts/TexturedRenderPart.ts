@@ -5,8 +5,8 @@ import VisualRenderPart from "./VisualRenderPart";
 class TexturedRenderPart extends VisualRenderPart {
    public textureArrayIndex: number;
 
-   constructor(parent: RenderPartParent, zIndex: number, rotation: number, textureArrayIndex: number) {
-      super(parent, zIndex, rotation);
+   constructor(parent: RenderPartParent, zIndex: number, rotation: number, offsetX: number, offsetY: number, textureArrayIndex: number) {
+      super(parent, zIndex, rotation, offsetX, offsetY);
       
       this.textureArrayIndex = textureArrayIndex;
    }

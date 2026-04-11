@@ -39,14 +39,14 @@ export function createWallConfig(position: Point, rotation: number, tribe: Tribe
    
    return {
       entityType: EntityType.wall,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.buildingMaterial]: buildingMaterialComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         buildingMaterialComponent
+      ],
       lights: []
    };
 }

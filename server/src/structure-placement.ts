@@ -1,3 +1,4 @@
+import { _bounds } from "../../shared/src/boxes/BaseBox";
 import { boxIsCircular } from "../../shared/src/boxes/boxes";
 import { RectangularBox } from "../../shared/src/boxes/RectangularBox";
 import { boxIsCollidingWithSubtile } from "../../shared/src/collision";
@@ -6,12 +7,12 @@ import { BlueprintType, BuildingMaterial, ServerComponentType } from "../../shar
 import { Entity, EntityType } from "../../shared/src/entities";
 import { Settings } from "../../shared/src/settings";
 import { STRUCTURE_TYPES, StructureType } from "../../shared/src/structures";
-import { getSubtileIndex, subtileIsInWorld, getSubtileX, getSubtileY } from "../../shared/src/subtiles";
+import { getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY } from "../../shared/src/subtiles";
 import { SubtileType } from "../../shared/src/tiles";
 import { Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2 } from "../../shared/src/utils";
 import { getEntitiesInRange } from "./ai-shared";
 import { getHitboxesCollidingEntities } from "./collision-detection";
-import { EntityConfig } from "./components";
+import { EntityConfig, getConfigTransformComponent } from "./components";
 import { ItemComponentArray } from "./components/ItemComponent";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { createBallistaConfig } from "./entities/structures/ballista";
@@ -149,10 +150,11 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
    for (const hitbox of hitboxes) {
       const box = hitbox.box;
 
-      const minTileX = Math.floor(box.calculateBoundsMinX() / Settings.TILE_SIZE);
-      const maxTileX = Math.floor(box.calculateBoundsMaxX() / Settings.TILE_SIZE);
-      const minTileY = Math.floor(box.calculateBoundsMinY() / Settings.TILE_SIZE);
-      const maxTileY = Math.floor(box.calculateBoundsMaxY() / Settings.TILE_SIZE);
+      box.calculateBounds();
+      const minTileX = Math.floor(_bounds.minX / Settings.TILE_SIZE);
+      const maxTileX = Math.floor(_bounds.maxX / Settings.TILE_SIZE);
+      const minTileY = Math.floor(_bounds.minY / Settings.TILE_SIZE);
+      const maxTileY = Math.floor(_bounds.maxY / Settings.TILE_SIZE);
 
       for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
@@ -186,10 +188,11 @@ const structurePlaceIsValid = (hitboxes: ReadonlyArray<Hitbox>, layer: Layer): b
    for (const hitbox of hitboxes) {
       const box = hitbox.box;
 
-      const minSubtileX = Math.floor(box.calculateBoundsMinX() / Settings.SUBTILE_SIZE);
-      const maxSubtileX = Math.floor(box.calculateBoundsMaxX() / Settings.SUBTILE_SIZE);
-      const minSubtileY = Math.floor(box.calculateBoundsMinY() / Settings.SUBTILE_SIZE);
-      const maxSubtileY = Math.floor(box.calculateBoundsMaxY() / Settings.SUBTILE_SIZE);
+      box.calculateBounds();
+      const minSubtileX = Math.floor(_bounds.minX / Settings.SUBTILE_SIZE);
+      const maxSubtileX = Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE);
+      const minSubtileY = Math.floor(_bounds.minY / Settings.SUBTILE_SIZE);
+      const maxSubtileY = Math.floor(_bounds.maxY / Settings.SUBTILE_SIZE);
 
       for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
          for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
@@ -235,21 +238,19 @@ const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityAngle: n
    // @HACK
    const tribe = getTribes()[0];
    const entityConfig = createStructureConfig(tribe, entityType, new Point(0, 0), 0, []);
-   const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(entityConfig.components);
 
    let entityMinX = Number.MAX_SAFE_INTEGER;
    let entityMaxX = Number.MIN_SAFE_INTEGER;
    let entityMinY = Number.MAX_SAFE_INTEGER;
    let entityMaxY = Number.MIN_SAFE_INTEGER;
    
-   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-      const hitbox = transformComponent.hitboxes[i];
-      const box = hitbox.box;
-
-      const minX = box.calculateBoundsMinX();
-      const maxX = box.calculateBoundsMaxX();
-      const minY = box.calculateBoundsMinY();
-      const maxY = box.calculateBoundsMaxY();
+   for (const hitbox of transformComponent.hitboxes) {
+      hitbox.box.calculateBounds();
+      const minX = _bounds.minX;
+      const maxX = _bounds.maxX;
+      const minY = _bounds.minY;
+      const maxY = _bounds.maxY;
       
       if (minX < entityMinX) {
          entityMinX = minX;
@@ -290,10 +291,10 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
    const connectingEntityTransformComponent = TransformComponentArray.getComponent(connectingEntity);
    const connectingEntityType = getEntityType(connectingEntity);
    
-   // @HACK
+   // @HACK @HACK @HACK @SQUEAM
    const tribe = getTribes()[0];
    const entityConfig = createStructureConfig(tribe, entityType, new Point(0, 0), 0, []);
-   const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(entityConfig.components);
    
    const snapOrigin = getStructureSnapOrigin(connectingEntity);
    
@@ -385,7 +386,7 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
             // @SUPAHACK
             const tribe = getTribes()[0];
             const entityConfig = createStructureConfig(tribe, entityType, position.copy(), placingEntityAngle, []);
-            const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+            const transformComponent = getConfigTransformComponent(entityConfig.components);
             
             // Don't add the position if it would be colliding with the connecting entity
             let isValid = true;
@@ -585,7 +586,7 @@ const checkSubtileForWall = (subtileX: number, subtileY: number, layer: Layer): 
    // - Is in the world
    // - Is mined out
    
-   if (!subtileIsInWorld(subtileX, subtileY)) {
+   if (!subtileIsInWorldIncludingEdges(subtileX, subtileY)) {
       return false;
    }
 
@@ -680,7 +681,7 @@ const getBracingsPlaceInfo = (regularPlacePosition: Point, layer: Layer): Struct
    // @SUPAHACK
    const tribe = getTribes()[0];
    const entityConfig = createStructureConfig(tribe, EntityType.bracings, position, angle, []);
-   const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(entityConfig.components);
    
    if (structureIntersectsWithBuildingBlockingTiles(layer, transformComponent.hitboxes)) {
       isValid = false;
@@ -711,7 +712,7 @@ const calculatePlaceInfo = (desiredPlacePosition: Point, desiredPlaceAngle: numb
       // @HACK
       const tribe = getTribes()[0];
       const entityConfig = createStructureConfig(tribe, entityType, desiredPlacePosition.copy(), desiredPlaceAngle, []);
-      const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+      const transformComponent = getConfigTransformComponent(entityConfig.components);
       const hitboxes = transformComponent.hitboxes;
 
       // If no connections are found, use the regular place position

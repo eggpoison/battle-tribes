@@ -1,9 +1,11 @@
 import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { cleanupEntityRendering, renderEntity, setupEntityRendering } from "./entity-rendering";
-import { cleanEntityRenderInfo, getRenderPartRenderPosition, translateEntityRenderParts } from "../render-part-matrices";
-import { EntityRenderInfo, updateEntityRenderInfoRenderData } from "../../EntityRenderInfo";
+import { cleanEntityRenderObject, getRenderPartRenderPosition } from "../render-part-matrices";
+import { EntityRenderObject, recalculateRenderObjectVertexData } from "../../EntityRenderObject";
 import { gameFramebuffer } from "../render";
+import { _point } from "../../../../../shared/src";
+import { createTranslationMatrix, matrixMultiplyInPlace, overrideMatrix } from "../matrices";
 
 let renderProgram: WebGLProgram;
 
@@ -115,7 +117,7 @@ export function createStructureHighlightShaders(): void {
 
    // Framebuffer shit
    
-   framebuffer = gl.createFramebuffer()!;
+   framebuffer = gl.createFramebuffer();
 
    framebufferVertexData = new Float32Array(12);
    framebufferVertexData[2] = 1;
@@ -126,7 +128,15 @@ export function createStructureHighlightShaders(): void {
    framebufferVertexData[11] = 1;
 }
 
-export function renderEntitySelection(renderInfo: EntityRenderInfo, tickInterp: number, isSelected: boolean): void {
+const translateEntityRenderParts = (renderObject: EntityRenderObject, tx: number, ty: number): void => {
+   for (const thing of renderObject.renderPartsByZIndex) {
+      const matrix = createTranslationMatrix(tx, ty);
+      matrixMultiplyInPlace(thing.modelMatrix, matrix);
+      overrideMatrix(matrix, thing.modelMatrix);
+   }
+}
+
+export function renderEntitySelection(renderObject: EntityRenderObject, clientInterp: number, serverInterp: number, isSelected: boolean): void {
    // 
    // Framebuffer Program
    // 
@@ -155,59 +165,59 @@ export function renderEntitySelection(renderInfo: EntityRenderInfo, tickInterp: 
    setupEntityRendering();
 
    // Right
-   translateEntityRenderParts(renderInfo, 4, 0);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, 4, 0);
+   recalculateRenderObjectVertexData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
 
    // Left
-   translateEntityRenderParts(renderInfo, -4, 0);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, -4, 0);
+   recalculateRenderObjectVertexData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
 
    // Top
-   translateEntityRenderParts(renderInfo, 0, 4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, 0, 4);
+   recalculateRenderObjectVertexData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
 
    // Bottom
-   translateEntityRenderParts(renderInfo, 0, -4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, 0, -4);
+   recalculateRenderObjectVertexData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
 
    // Top right
-   translateEntityRenderParts(renderInfo, 4, 4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, 4, 4);
+   recalculateRenderObjectVertexData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
 
    // Bottom right
-   translateEntityRenderParts(renderInfo, 4, -4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, 4, -4);
+   recalculateRenderObjectVertexData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
 
    // Bottom left
-   translateEntityRenderParts(renderInfo, -4, -4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, -4, -4);
+   recalculateRenderObjectVertexData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
 
    // Top left
-   translateEntityRenderParts(renderInfo, -4, 4);
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo);
-   cleanEntityRenderInfo(renderInfo, tickInterp);
+   translateEntityRenderParts(renderObject, -4, 4);
+   recalculateRenderObjectVertexData(renderObject);
+   renderEntity(renderObject);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
 
    // Then, we want to subtract the middle area. To do this we multiply the existing drawn pixels
    // (dfactor) by 1 minus the middle alpha.
    gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
 
-   updateEntityRenderInfoRenderData(renderInfo);
-   renderEntity(renderInfo, { overrideAlphaWithOne: true });
+   recalculateRenderObjectVertexData(renderObject);
+   renderEntity(renderObject, { overrideAlphaWithOne: true });
 
    cleanupEntityRendering();
    
@@ -222,7 +232,7 @@ export function renderEntitySelection(renderInfo: EntityRenderInfo, tickInterp: 
    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
    // @Speed
-   const buffer2 = gl.createBuffer()!;
+   const buffer2 = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer2);
    gl.bufferData(gl.ARRAY_BUFFER, framebufferVertexData, gl.STATIC_DRAW);
 
@@ -231,7 +241,8 @@ export function renderEntitySelection(renderInfo: EntityRenderInfo, tickInterp: 
    gl.enableVertexAttribArray(0);
 
    // @HACK
-   const renderPosition = getRenderPartRenderPosition(renderInfo.renderPartsByZIndex[0]);
+   getRenderPartRenderPosition(renderObject.renderPartsByZIndex[0]);
+   const renderPosition = _point;
    
    gl.uniform1f(isSelectedUniformLocation, isSelected ? 1 : 0);
    gl.uniform2f(originPositionUniformLocation, renderPosition.x, renderPosition.y);

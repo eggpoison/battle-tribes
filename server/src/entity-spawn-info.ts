@@ -4,7 +4,6 @@ import { Settings } from "../../shared/src/settings";
 import { TileType } from "../../shared/src/tiles";
 import { assert, getTileIndexIncludingEdges, Point } from "../../shared/src/utils";
 import { EntityConfig } from "./components";
-import { AutoSpawnedComponent } from "./components/AutoSpawnedComponent";
 import Layer from "./Layer";
 
 // @Cleanup: should probably combine this file with entity-spawning...
@@ -249,10 +248,7 @@ export function addEntityToSpawnDistribution(spawnDistribution: SpawnDistributio
    }
 }
 
-export function removeEntityFromSpawnDistributions(entity: Entity, autoSpawnedComponent: AutoSpawnedComponent): void {
-   const spawnInfo = autoSpawnedComponent.spawnInfo;
-   const spawnDistribution = spawnInfo.spawnDistribution;
-   
+export function removeEntityFromSpawnDistributions(entity: Entity, spawnDistribution: SpawnDistribution): void {
    const densityInfos = spawnDistribution.entityDensityMap.get(entity);
    if (typeof densityInfos !== "undefined") {
       // Remove from the current densities
@@ -260,7 +256,7 @@ export function removeEntityFromSpawnDistributions(entity: Entity, autoSpawnedCo
       for (const densityInfo of densityInfos) {
          spawnDistribution.currentDensities[densityInfo.blockIdx] -= densityInfo.density;
       }
-      spawnInfo.spawnDistribution.entityDensityMap.delete(entity);
+      spawnDistribution.entityDensityMap.delete(entity);
    }
 }
 

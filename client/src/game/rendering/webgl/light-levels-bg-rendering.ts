@@ -1,11 +1,11 @@
-import { assert, mod, Settings, getLightLevelNodeX, getLightLevelNodeY, LightLevelNode, LightLevelVars } from "webgl-test-shared";
+import { assert, mod, Settings, getLightLevelNodeX, getLightLevelNodeY, LightLevelNode, LightLevelVar } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
-const enum Vars {
+const enum Var {
    SQUARE_SIZE = 6,
    NODES_IN_RENDERING_CHUNK = 16,
-   RENDERING_CHUNK_SIZE = LightLevelVars.LIGHT_NODE_SIZE * NODES_IN_RENDERING_CHUNK,
+   RENDERING_CHUNK_SIZE = LightLevelVar.LIGHT_NODE_SIZE * NODES_IN_RENDERING_CHUNK,
    // @Bug: doesn't account for light nodes outside world border
    RENDERING_CHUNKS_IN_WORLD_WIDTH = Settings.WORLD_UNITS / RENDERING_CHUNK_SIZE,
    ATTRIBUTES_PER_VERTEX = 3
@@ -83,13 +83,13 @@ export function getLightLevelRenderingChunkIndex(node: LightLevelNode): number {
    const nodeX = getLightLevelNodeX(node);
    const nodeY = getLightLevelNodeY(node);
 
-   const x = nodeX * LightLevelVars.LIGHT_NODE_SIZE;
-   const y = nodeY * LightLevelVars.LIGHT_NODE_SIZE;
+   const x = nodeX * LightLevelVar.LIGHT_NODE_SIZE;
+   const y = nodeY * LightLevelVar.LIGHT_NODE_SIZE;
 
-   const renderingChunkX = Math.floor(x / Vars.RENDERING_CHUNK_SIZE);
-   const renderingChunkY = Math.floor(y / Vars.RENDERING_CHUNK_SIZE);
+   const renderingChunkX = Math.floor(x / Var.RENDERING_CHUNK_SIZE);
+   const renderingChunkY = Math.floor(y / Var.RENDERING_CHUNK_SIZE);
 
-   return renderingChunkY * Vars.RENDERING_CHUNKS_IN_WORLD_WIDTH + renderingChunkX;
+   return renderingChunkY * Var.RENDERING_CHUNKS_IN_WORLD_WIDTH + renderingChunkX;
 }
 
 /** Each node in a rendering chunk has a unique instance idx, this function calculates that. */
@@ -97,10 +97,10 @@ const getNodeInstanceIdx = (node: LightLevelNode): number => {
    const nodeX = getLightLevelNodeX(node);
    const nodeY = getLightLevelNodeY(node);
 
-   const localNodeX = mod(nodeX, Vars.NODES_IN_RENDERING_CHUNK);
-   const localNodeY = mod(nodeY, Vars.NODES_IN_RENDERING_CHUNK);
+   const localNodeX = mod(nodeX, Var.NODES_IN_RENDERING_CHUNK);
+   const localNodeY = mod(nodeY, Var.NODES_IN_RENDERING_CHUNK);
 
-   return localNodeY * Vars.NODES_IN_RENDERING_CHUNK + localNodeX;
+   return localNodeY * Var.NODES_IN_RENDERING_CHUNK + localNodeX;
 }
 
 const setNodeRenderingChunkData = (vertexData: Float32Array, nodeInfo: LightLevelNodeAddInfo): void => {
@@ -108,17 +108,17 @@ const setNodeRenderingChunkData = (vertexData: Float32Array, nodeInfo: LightLeve
    const lightLevel = nodeInfo.lightLevel;
    
    const instanceIdx = getNodeInstanceIdx(node);
-   const dataOffset = instanceIdx * 6 * Vars.ATTRIBUTES_PER_VERTEX;
+   const dataOffset = instanceIdx * 6 * Var.ATTRIBUTES_PER_VERTEX;
       
    const nodeX = getLightLevelNodeX(node);
    const nodeY = getLightLevelNodeY(node);
-   const x = (nodeX + 0.5) * LightLevelVars.LIGHT_NODE_SIZE;
-   const y = (nodeY + 0.5) * LightLevelVars.LIGHT_NODE_SIZE;
+   const x = (nodeX + 0.5) * LightLevelVar.LIGHT_NODE_SIZE;
+   const y = (nodeY + 0.5) * LightLevelVar.LIGHT_NODE_SIZE;
 
-   const x1 = x - Vars.SQUARE_SIZE * 0.5;
-   const x2 = x + Vars.SQUARE_SIZE * 0.5;
-   const y1 = y - Vars.SQUARE_SIZE * 0.5;
-   const y2 = y + Vars.SQUARE_SIZE * 0.5;
+   const x1 = x - Var.SQUARE_SIZE * 0.5;
+   const x2 = x + Var.SQUARE_SIZE * 0.5;
+   const y1 = y - Var.SQUARE_SIZE * 0.5;
+   const y2 = y + Var.SQUARE_SIZE * 0.5;
    
    vertexData[dataOffset] = x1;
    vertexData[dataOffset + 1] = y1;
@@ -142,7 +142,7 @@ const setNodeRenderingChunkData = (vertexData: Float32Array, nodeInfo: LightLeve
 
 const clearNodeRenderingChunkData = (vertexData: Float32Array, nodeInfo: LightLevelNodeAddInfo): void => {
    const instanceIdx = getNodeInstanceIdx(nodeInfo.node);
-   const dataOffset = instanceIdx * 6 * Vars.ATTRIBUTES_PER_VERTEX;
+   const dataOffset = instanceIdx * 6 * Var.ATTRIBUTES_PER_VERTEX;
       
    vertexData[dataOffset] = 0;
    vertexData[dataOffset + 1] = 0;
@@ -172,24 +172,24 @@ export function updateLightLevelRenderingChunks(bgUpdateInfos: Map<number, Light
       const bgUpdateInfo = pair[1];
 
       const renderingChunk = renderingChunks.get(renderingChunkIndex);
-      if (typeof renderingChunk === "undefined") {
-         const vao = gl.createVertexArray()!;
+      if (renderingChunk === undefined) {
+         const vao = gl.createVertexArray();
          gl.bindVertexArray(vao);
          didBindVertexArray = true;
       
          // Create vertex data
-         const vertexData = new Float32Array(Vars.NODES_IN_RENDERING_CHUNK * Vars.NODES_IN_RENDERING_CHUNK * 6 * Vars.ATTRIBUTES_PER_VERTEX);
+         const vertexData = new Float32Array(Var.NODES_IN_RENDERING_CHUNK * Var.NODES_IN_RENDERING_CHUNK * 6 * Var.ATTRIBUTES_PER_VERTEX);
          for (let i = 0; i < bgUpdateInfo.addedNodeInfos.length; i++) {
             const nodeInfo = bgUpdateInfo.addedNodeInfos[i];
             setNodeRenderingChunkData(vertexData, nodeInfo);
          }
          
-         const vertexBuffer = gl.createBuffer()!;
+         const vertexBuffer = gl.createBuffer();
          gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
          gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.DYNAMIC_DRAW);
    
-         gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
-         gl.vertexAttribPointer(1, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+         gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
+         gl.vertexAttribPointer(1, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
          
          gl.enableVertexAttribArray(0);
          gl.enableVertexAttribArray(1);
@@ -202,7 +202,7 @@ export function updateLightLevelRenderingChunks(bgUpdateInfos: Map<number, Light
          };
          renderingChunks.set(renderingChunkIndex, renderingChunk);
       } else {
-         assert(typeof renderingChunk !== "undefined");
+         assert(renderingChunk !== undefined);
          renderingChunk.numNodes += bgUpdateInfo.addedNodeInfos.length;
          renderingChunk.numNodes -= bgUpdateInfo.removedNodeInfos.length;
 

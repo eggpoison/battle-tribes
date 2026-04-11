@@ -1,5 +1,5 @@
 import { Settings } from "../../../shared/src/settings";
-import { getSubtileIndex, subtileIsInWorld } from "../../../shared/src/subtiles";
+import { getSubtileIndex, subtileIsInWorldIncludingEdges } from "../../../shared/src/subtiles";
 import { SubtileType } from "../../../shared/src/tiles";
 import { angle, Point, randSign } from "../../../shared/src/utils";
 import { createSpikyBastardConfig } from "../entities/spiky-bastard";
@@ -57,7 +57,7 @@ export function generateSpikyBastards(undergroundLayer: Layer): void {
       // Make sure the bastard wouldn't go out of the world
       const finalSubtileX = attachedSubtileX + moveDirX * 2;
       const finalSubtileY = attachedSubtileY + moveDirY * 2;
-      if (!subtileIsInWorld(finalSubtileX, finalSubtileY)) {
+      if (!subtileIsInWorldIncludingEdges(finalSubtileX, finalSubtileY)) {
          continue;
       }
 

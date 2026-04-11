@@ -42,13 +42,13 @@ export function createGuardianSpikyBallConfig(position: Point, rotation: number,
    
    return {
       entityType: EntityType.guardianSpikyBall,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.projectile]: projectileComponent,
-         [ServerComponentType.guardianSpikyBall]: guardianSpikyBallComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         projectileComponent,
+         guardianSpikyBallComponent
+      ],
       lights: lights
    };
 }

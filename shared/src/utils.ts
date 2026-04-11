@@ -16,6 +16,8 @@ export type Mutable<T> = {
    -readonly [P in keyof T]: T[P];
 };
 
+export type RequiredProperty<T, P extends keyof T> = T & { [K in P]-?: T[K]};
+
 export interface Colour {
    r: number;
    g: number;
@@ -33,53 +35,6 @@ export enum AIPlanType {
    doTechItems,
    completeTech,
    gatherItem
-}
-
-const kRGBToYPrime = [0.299, 0.587, 0.114];
-const kRGBToI = [0.596, -0.275, -0.321];
-const kRGBToQ = [0.212, -0.523, 0.311];
-
-const kYIQToR = [1.0, 0.956, 0.621];
-const kYIQToG = [1.0, -0.272, -0.647];
-const kYIQToB = [1.0, -1.107, 1.704];
-
-export function hueShift(colour: Colour, hueAdjust: number): void {
-   // Convert to YIQ
-   const YPrime = colour.r * kRGBToYPrime[0] + colour.g * kRGBToYPrime[1] + colour.b * kRGBToYPrime[2];
-   let I = colour.r * kRGBToI[0] + colour.g * kRGBToI[1] + colour.b * kRGBToI[2];
-   let Q = colour.r * kRGBToQ[0] + colour.g * kRGBToQ[1] + colour.b * kRGBToQ[2];
-
-   // Calculate the hue and chroma
-   let hue = Math.atan2(Q, I);
-   const chroma = Math.sqrt(I * I + Q * Q);
-
-   // Make the user's adjustments
-   hue += hueAdjust;
-
-   // Convert back to YIQ
-   Q = chroma * Math.sin(hue);
-   I = chroma * Math.cos(hue);
-
-   // Convert back to RGB
-   colour.r = YPrime * kYIQToR[0] + I * kYIQToR[1] + Q * kYIQToR[2];
-   colour.g = YPrime * kYIQToG[0] + I * kYIQToG[1] + Q * kYIQToG[2];
-   colour.b = YPrime * kYIQToB[0] + I * kYIQToB[1] + Q * kYIQToB[2];
-}
-
-export function multiColourLerp(colours: ReadonlyArray<Colour>, u: number): Colour {
-   const progress = u * (colours.length - 1);
-   
-   const lowColour = colours[Math.floor(progress)];
-   const highColour = colours[Math.ceil(progress)];
-
-   const interLerp = progress % 1;
-
-   return {
-      r: lerp(lowColour.r, highColour.r, interLerp),
-      g: lerp(lowColour.g, highColour.g, interLerp),
-      b: lerp(lowColour.b, highColour.b, interLerp),
-      a: lerp(lowColour.a, highColour.a, interLerp)
-   };
 }
 
 /**
@@ -140,6 +95,10 @@ export class Point {
       return Math.PI/2 - angle;
    }
 
+   public angle() {
+      return Math.PI/2 - Math.atan2(this.y, this.x);
+   }
+
    public convertToVector(other?: Point): Vector {
       const targetPoint = other || new Point(0, 0);
 
@@ -184,6 +143,8 @@ export class Point {
       this.y = other.y;
    }
 }
+
+export const _point: Readonly<Point> = new Point(0, 0);
 
 export class Vector {
    public magnitude: number;
@@ -267,20 +228,20 @@ export function flipAngle(angle: number): number {
    return (angle + Math.PI) % Math.PI;
 }
 
-export function rotateXAroundPoint(x: number, y: number, pivotX: number, pivotY: number, rotation: number): number {
-   return Math.cos(rotation) * (x - pivotX) + Math.sin(rotation) * (y - pivotY) + pivotX;
+export function rotatePointAroundPoint(x: number, y: number, pivotX: number, pivotY: number, rotation: number): void {
+   const cosRotation = Math.cos(rotation);
+   const sinRotation = Math.sin(rotation);
+   
+   (_point as Mutable<Point>).x = cosRotation * (x - pivotX) + sinRotation * (y - pivotY) + pivotX;
+   (_point as Mutable<Point>).y = -sinRotation * (x - pivotX) + cosRotation * (y - pivotY) + pivotY;
 }
 
-export function rotateYAroundPoint(x: number, y: number, pivotX: number, pivotY: number, rotation: number): number {
-   return -Math.sin(rotation) * (x - pivotX) + Math.cos(rotation) * (y - pivotY) + pivotY;
-}
-
-export function rotateXAroundOrigin(x: number, y: number, rotation: number): number {
-   return Math.cos(rotation) * x + Math.sin(rotation) * y;
-}
-
-export function rotateYAroundOrigin(x: number, y: number, rotation: number): number {
-   return -Math.sin(rotation) * x + Math.cos(rotation) * y;
+export function rotatePointAroundOrigin(x: number, y: number, rotation: number): void {
+   const cosRotation = Math.cos(rotation);
+   const sinRotation = Math.sin(rotation);
+   
+   (_point as Mutable<Point>).x = cosRotation * x + sinRotation * y;
+   (_point as Mutable<Point>).y = -sinRotation * x + cosRotation * y;
 }
 
 export function rotatePointAroundPivot(point: Point, pivotPoint: Point, rotation: number): Point {
@@ -400,8 +361,9 @@ export function distToSegment(p: Point, v: Point, w: Point) { return Math.sqrt(d
 
 export function pointIsInRectangle(pointX: number, pointY: number, rectPosX: number, rectPosY: number, rectWidth: number, rectHeight: number, rectRotation: number): boolean {
    // Rotate point around rect to make the situation axis-aligned
-   const alignedPointX = rotateXAroundPoint(pointX, pointY, rectPosX, rectPosY, -rectRotation);
-   const alignedPointY = rotateYAroundPoint(pointX, pointY, rectPosX, rectPosY, -rectRotation);
+   rotatePointAroundPoint(pointX, pointY, rectPosX, rectPosY, -rectRotation);
+   const alignedPointX = _point.x;
+   const alignedPointY = _point.y;
 
    const x1 = rectPosX - rectWidth / 2;
    const x2 = rectPosX + rectWidth / 2;
@@ -418,16 +380,17 @@ export function smoothstep(value: number): number {
 
 export function distBetweenPointAndRectangle(pointX: number, pointY: number, rectPos: Point, rectWidth: number, rectHeight: number, rectRotation: number): number {
    // Rotate point around rect to make the situation axis-aligned
-   const alignedPointX = rotateXAroundPoint(pointX, pointY, rectPos.x, rectPos.y, -rectRotation);
-   const alignedPointY = rotateYAroundPoint(pointX, pointY, rectPos.x, rectPos.y, -rectRotation);
+   rotatePointAroundPoint(pointX, pointY, rectPos.x, rectPos.y, -rectRotation);
+   const alignedPointX = _point.x;
+   const alignedPointY = _point.y;
 
    const rectMinX = rectPos.x - rectWidth * 0.5;
    const rectMaxX = rectPos.x + rectWidth * 0.5;
    const rectMinY = rectPos.y - rectHeight * 0.5;
    const rectMaxY = rectPos.y + rectHeight * 0.5;
    
-   var dx = Math.max(rectMinX - alignedPointX, 0, alignedPointX - rectMaxX);
-   var dy = Math.max(rectMinY - alignedPointY, 0, alignedPointY - rectMaxY);
+   const dx = Math.max(rectMinX - alignedPointX, 0, alignedPointX - rectMaxX);
+   const dy = Math.max(rectMinY - alignedPointY, 0, alignedPointY - rectMaxY);
    return Math.sqrt(dx * dx + dy * dy);
 }
 
@@ -440,15 +403,9 @@ export function assertUnreachable(x: never): never {
    throw new Error("Why must I exist?");
 }
 
-export function assert(condition: unknown, errorMessage?: string | (() => string)): asserts condition {
+export function assert(condition: unknown): asserts condition {
    if (!condition) {
-      if (typeof errorMessage === "string") {
-         throw new Error(errorMessage);
-      } else if (typeof errorMessage === "function") {
-         throw new Error(errorMessage());
-      } else {
-         throw new Error();
-      }
+      throw new Error("Assertion failed");
    }
 }
 
@@ -471,6 +428,10 @@ export function angleToPoint(angle: number): Point {
 }
 
 export function getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
+   if (tileX < -Settings.EDGE_GENERATION_DISTANCE || tileX >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE || tileY < -Settings.EDGE_GENERATION_DISTANCE || tileY >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
+      throw new Error("Outside of world bounds!");
+   }
+
    return (tileY + Settings.EDGE_GENERATION_DISTANCE) * Settings.FULL_WORLD_SIZE_TILES + tileX + Settings.EDGE_GENERATION_DISTANCE;
 }
 

@@ -35,13 +35,13 @@ export function createBoulderConfig(position: Point, rotation: number): EntityCo
    
    return {
       entityType: EntityType.boulder,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.boulder]: boulderComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         boulderComponent
+      ],
       lights: []
    };
 }

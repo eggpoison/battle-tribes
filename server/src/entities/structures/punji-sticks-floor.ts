@@ -40,15 +40,15 @@ export function createFloorPunjiSticksConfig(position: Point, rotation: number, 
    
    return {
       entityType: EntityType.floorPunjiSticks,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.spikes]: spikesComponent,
-         [ServerComponentType.punjiSticks]: punjiSticksComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         spikesComponent,
+         punjiSticksComponent
+      ],
       lights: []
    };
 }

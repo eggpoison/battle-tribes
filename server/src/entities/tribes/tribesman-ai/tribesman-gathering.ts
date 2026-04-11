@@ -246,7 +246,7 @@ const moveTribesmanToBiome = (tribesman: Entity, layer: Layer, biome: Biome): vo
    // Not on the way to the biome - need to find a path
    
    const localBiome = findBiomeForGathering(tribesman, layer, biome);
-   assert(localBiome !== null, "There should always be a valid biome for the tribesman to move to, probs a bug causing the biome to not generate?");
+   assert(localBiome !== null);
    
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];

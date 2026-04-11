@@ -2,7 +2,7 @@
    import { type Entity } from "webgl-test-shared";
    import CLIENT_ENTITY_INFO_RECORD from "../../../../game/client-entity-info";
    import { type ExtendedTribe } from "../../../../game/tribes";
-   import { tribePlanVisualiserState } from "../../../../ui-state/tribe-plan-visualiser-state.svelte";
+   import { tribePlanVisualiserState } from "../../../../ui-state/tribe-plan-visualiser-state";
 
    interface Props {
       readonly tribe: ExtendedTribe;

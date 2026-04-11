@@ -7,7 +7,7 @@ import { TurretComponentArray } from "../../entity-components/server-components/
 import { playerInstance } from "../../player";
 import { calculateEntityPlaceInfo } from "../../structure-placement";
 import { getPlayerSelectedItem } from "../../player-action-handling";
-import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+import { getHoveredEntity } from "../../entity-selection";
 
 const CIRCLE_DETAIL = 300;
 
@@ -107,7 +107,7 @@ export function createTurretRangeShaders(): void {
 }
 
 const calculateVertices = (renderingInfo: TurretRangeRenderingInfo): ReadonlyArray<number> => {
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    
    const numTrigs = Math.ceil(CIRCLE_DETAIL * renderingInfo.rangeInfo.arc / (2 * Math.PI));
    for (let i = 0; i < numTrigs; i++) {
@@ -157,7 +157,7 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
       }
    }
 
-   const hoveredEntity = entitySelectionState.hoveredEntity;
+   const hoveredEntity = getHoveredEntity();
    if (hoveredEntity !== null && TurretComponentArray.hasComponent(hoveredEntity)) {
       const hoveredEntityTransformComponent = TransformComponentArray.getComponent(hoveredEntity);
       // @Hack
@@ -190,7 +190,7 @@ export function renderTurretRange(): void {
    // @Speed: should only be calculated once when the player first selects the item, with the result cached
    const vertices = calculateVertices(renderingInfo);
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 

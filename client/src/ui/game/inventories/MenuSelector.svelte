@@ -4,22 +4,22 @@
    import TombstoneEpitaph from "./TombstoneEpitaph.svelte";
    import TribesmanInteractMenu from "./TribesmanInteractMenu.svelte";
    import AmmoBoxInventory from "./AmmoBoxInventory.svelte";
-   import { menuSelectorState, Menu } from "../../../ui-state/menu-selector-state.svelte";
-   import { entitySelectionState } from "../../../ui-state/entity-selection-state.svelte";
+   import { menuSelectorState, Menu } from "../../menus";
+   import { entitySelectionState } from "../../../ui-state/entity-selection-state";
    import BuildMenu from "../menus/BuildMenu.svelte";
    import TamingMenu from "../taming-menu/TamingMenu.svelte";
    import SignInscribeMenu from "../SignInscribeMenu.svelte";
    import AnimalStaffOptions from "../AnimalStaffOptions.svelte";
    import TamingRenamePrompt from "../taming-menu/TamingRenamePrompt.svelte";
    import BackpackInventory from "./BackpackInventory.svelte";
-   import CraftingMenu from "../menus/crafting-menu/CraftingMenu.svelte";
+   import CraftingMenu from "../menus/CraftingMenu";
    import ItemsTab from "../dev/tabs/ItemsTab.svelte";
    import SummonTab from "../dev/tabs/SummonTab.svelte";
    import TitlesTab from "../dev/tabs/TitlesTab.svelte";
    import TribesTab from "../dev/tabs/TribesTab.svelte";
    import TribePlanVisualiser from "../tribe-plan-visualiser/TribePlanVisualiser.svelte";
-   import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
-   import TechTree from "../tech-tree/TechTree.svelte";
+   import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state";
+   import TechTree from "../tech-tree/TechTree";
    import { TamingComponentArray } from "../../../game/entity-components/server-components/TamingComponent";
 
    const selectedEntity = $derived(entitySelectionState.selectedEntity);

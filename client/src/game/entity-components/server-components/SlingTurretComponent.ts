@@ -3,7 +3,9 @@ import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getTransformComponentData } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface SlingTurretComponentData {}
 
@@ -22,16 +24,17 @@ function decodeData(): SlingTurretComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    // Base
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("entities/sling-turret/sling-turret-base.png")
       )
    );
@@ -41,20 +44,22 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       1,
       0,
+      0, 0,
       getTextureArrayIndex("entities/sling-turret/sling-turret-plate.png")
    );
-   plateRenderPart.addTag("turretComponent:pivoting");
-   renderInfo.attachRenderPart(plateRenderPart);
+   addRenderPartTag(plateRenderPart, "turretComponent:pivoting");
+   renderObject.attachRenderPart(plateRenderPart);
 
    // Sling
    const slingRenderPart = new TexturedRenderPart(
       plateRenderPart,
       2,
       0,
+      0, 0,
       getTextureArrayIndex("entities/sling-turret/sling-turret-sling.png")
    );
-   slingRenderPart.addTag("turretComponent:aiming");
-   renderInfo.attachRenderPart(slingRenderPart);
+   addRenderPartTag(slingRenderPart, "turretComponent:aiming");
+   renderObject.attachRenderPart(slingRenderPart);
 
    return {};
 }

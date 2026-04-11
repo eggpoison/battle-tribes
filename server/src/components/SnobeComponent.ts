@@ -23,6 +23,7 @@ import { createSnowballConfig } from "../entities/snowball";
 import { Packet } from "../../../shared/src/packets";
 import { DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
 import { createSnobeMoundConfig } from "../entities/tundra/snobe-mound";
+import { getConfigTransformComponent } from "../components";
 
 const MIN_EAR_WIGGLE_COOLDOWN_TICKS = 1.5 * Settings.TICK_RATE;
 const MAX_EAR_WIGGLE_COOLDOWN_TICKS = 5.5 * Settings.TICK_RATE;
@@ -142,7 +143,7 @@ function onTick(snobe: Entity): void {
             const position = hitbox.box.position.offset(randFloat(2, 8), offsetDir);
             const snowballConfig = createSnowballConfig(position, randAngle(), snobe, Math.random() < 0.75 ? 0 : 1);
 
-            const snowballTransformComponent = snowballConfig.components[ServerComponentType.transform]!;
+            const snowballTransformComponent = getConfigTransformComponent(snowballConfig.components);
             const snowballHitbox = snowballTransformComponent.hitboxes[0];
             addHitboxVelocity(snowballHitbox, polarVec2(randFloat(50, 80), offsetDir + randFloat(0.1, 0.3) * randSign()))
             

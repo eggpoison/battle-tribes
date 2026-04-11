@@ -40,15 +40,15 @@ export function createAutomatonAssemblerConfig(position: Point, rotation: number
    
    return {
       entityType: EntityType.automatonAssembler,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.craftingStation]: craftingStationComponent,
-         [ServerComponentType.automatonAssembler]: automatonAssemblerComponent,
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         craftingStationComponent,
+         automatonAssemblerComponent,
+      ],
       lights: []
    };
 }

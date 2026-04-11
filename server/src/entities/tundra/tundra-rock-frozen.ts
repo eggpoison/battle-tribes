@@ -47,12 +47,12 @@ export function createTundraRockFrozenConfig(position: Point, angle: number): En
    
    return {
       entityType: EntityType.tundraRockFrozen,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.tundraRockFrozen]: tundraRockFrozenComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         tundraRockFrozenComponent
+      ],
       lights: []
    };
 }

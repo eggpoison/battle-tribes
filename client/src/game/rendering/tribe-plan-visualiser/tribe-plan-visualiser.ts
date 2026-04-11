@@ -1,9 +1,9 @@
 import { AIPlanType, getTechByID, TechID, Tech,StructureType, PacketReader, ItemType, CRAFTING_RECIPES, CraftingRecipe, Entity, EntityType, BlueprintType } from "webgl-test-shared";
-import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
+import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state";
 import { ExtendedTribe, getTribeByID } from "../../tribes";
-import { Menu, menuSelectorState } from "../../../ui-state/menu-selector-state.svelte";
+import { MenuType, openMenu } from "../../../ui/menus";
 
-const enum Vars {
+const enum Var {
    NODE_DISPLAY_SIZE = 100
 }
 
@@ -233,7 +233,7 @@ const readAssignmentData = (reader: PacketReader, depth: number): AIPlan => {
    }
 
    if (numChildren === 0) {
-      plan.displayWidth += Vars.NODE_DISPLAY_SIZE;
+      plan.displayWidth += Var.NODE_DISPLAY_SIZE;
    }
 
    return plan;
@@ -287,6 +287,6 @@ export function setRenderedTribePlanID(renderedTribeID: number | null): void {
       tribePlanVisualiserState.setTribeAssignmentInfo(tribeAssignmentInfo);
       tribePlanVisualiserState.setTribe(getTribeByID(renderedTribeID) as ExtendedTribe);
       
-      menuSelectorState.openMenu(Menu.tribePlanVisualiser);
+      openMenu(MenuType.tribePlanVisualiser);
    }
 }

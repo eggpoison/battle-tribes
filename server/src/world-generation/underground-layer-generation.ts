@@ -12,14 +12,15 @@ import { generateSpikyBastards } from "./spiky-bastard-generation";
 import { getEntitiesInRange } from "../ai-shared";
 import { EntityType } from "../../../shared/src/entities";
 import { getLightLevelNode } from "../lights";
-import { LightLevelVars } from "../../../shared/src/light-levels";
+import { LightLevelVar } from "../../../shared/src/light-levels";
 import { generateMithrilOre } from "./mithril-ore-generation";
 import { createRawSpawnDistribution, registerNewSpawnInfo, SpawnDistribution } from "../entity-spawn-info";
-import { EntityConfig } from "../components";
+import { EntityConfig, getConfigComponent } from "../components";
 import { createBoulderConfig } from "../entities/resources/boulder";
 import { createMossConfig } from "../entities/moss";
 import { ServerComponentType } from "../../../shared/src/components";
 import { createGlurbConfig } from "../entities/mobs/glurb";
+import { getEntityComponentTypes } from "../entity-component-types";
 
 const enum Vars {
    DROPDOWN_TILE_WEIGHT_REDUCTION_RANGE = 9,
@@ -47,9 +48,9 @@ const propagateAmbientLightFactor = (ambientLightFactors: Float32Array, nodeX: n
    
    for (let currentNodeX = minNodeX; currentNodeX <= maxNodeX; currentNodeX++) {
       for (let currentNodeY = minNodeY; currentNodeY <= maxNodeY; currentNodeY++) {
-         const dist = distance(nodeX, nodeY, currentNodeX, currentNodeY) * LightLevelVars.LIGHT_NODE_SIZE;
+         const dist = distance(nodeX, nodeY, currentNodeX, currentNodeY) * LightLevelVar.LIGHT_NODE_SIZE;
          
-         const intensity = Math.exp(-dist / 64 / LightLevelVars.DROPDOWN_LIGHT_STRENGTH) * 1;
+         const intensity = Math.exp(-dist / 64 / LightLevelVar.DROPDOWN_LIGHT_STRENGTH) * 1;
          
          const node = getLightLevelNode(currentNodeX, currentNodeY);
          const prevIntensity = ambientLightFactors[node];
@@ -341,7 +342,7 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
             size = 2;
          }
          
-         const colour = firstEntityConfigs === null ? getMossColour(pos.x, pos.y): firstEntityConfigs[0].components[ServerComponentType.moss]!.colour;
+         const colour = firstEntityConfigs === null ? getMossColour(pos.x, pos.y): getConfigComponent(firstEntityConfigs[0].components, getEntityComponentTypes(EntityType.moss), ServerComponentType.moss).colour;
          return [createMossConfig(pos, angle, size, colour)];
       }
    });

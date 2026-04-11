@@ -1,9 +1,10 @@
 import { Entity, ItemType, randAngle, randFloat, randInt, EntityTickEventType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "./sound";
 import { entityExists } from "./world";
-import { getRandomPositionOnBoxEdge, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { createHotSparkParticle } from "./particles";
 import { playBowFireSound } from "./player-action-handling";
+import { getRandomPositionOnBoxEdge } from "./hitboxes";
 
 export function processTickEvent(entity: Entity, type: EntityTickEventType, data: number): void {
    // @HACK

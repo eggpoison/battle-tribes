@@ -1,6 +1,8 @@
 import { PacketReader, Entity, ServerComponentType, ItemType } from "webgl-test-shared";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface HeldItemComponentData {
    readonly itemType: ItemType;
@@ -24,10 +26,11 @@ function decodeData(reader: PacketReader): HeldItemComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): HeldItemComponent {
-   const blockAttackComponentData = entityComponentData.serverComponentData[ServerComponentType.heldItem]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const heldItemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.heldItem);
    
    return {
-      hasBlocked: blockAttackComponentData.hasBlocked
+      hasBlocked: heldItemComponentData.hasBlocked
    };
 }
 

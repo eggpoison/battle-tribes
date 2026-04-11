@@ -1,13 +1,6 @@
-import { gameIsRunning } from "./client";
-import { chatboxState } from "../ui-state/chatbox-state.svelte";
-import { gameUIState } from "../ui-state/game-ui-state.svelte";
-import { nerdVisionState } from "../ui-state/nerd-vision-state.svelte";
-import { sendAscendPacket } from "./networking/packet-sending";
-import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
-
 const keyListeners: { [key: string]: Array<(e: KeyboardEvent) => void> } = {};
 
-type IDKeyListener = {
+interface IDKeyListener {
    readonly key: string;
    readonly callback: (e: KeyboardEvent) => void;
 }
@@ -29,7 +22,7 @@ export function clearPressedKeys(): void {
 }
 
 export function addKeyListener(key: string, callback: (e: KeyboardEvent) => void, id?: string): void {
-   if (typeof id !== "undefined") {
+   if (id !== undefined) {
       idKeyListeners[id] = { key: key, callback: callback };
       return;
    }
@@ -68,47 +61,14 @@ export function onKeyDown(e: KeyboardEvent): void {
    }
 
    const key = getKey(e); 
-
-   callKeyListeners(key, e);
-
-   if (gameIsRunning) {
-      // Start a chat message
-      if (key === "t") {
-         chatboxState.isFocused = true;
-         e.preventDefault();
-         clearPressedKeys();
-         return;
-      // Toggle cinematic mode
-      } else if (key === "o") {
-         gameUIState.setCinematicModeIsEnabled(!gameUIState.cinematicModeIsEnabled);
-      // Close the settings
-      } else if (key === "Escape") {
-         gameUIState.setSettingsIsOpen(false);
-      // Open/close nerd vision
-      } else if (key === "`") {
-         nerdVisionState.setIsVisible(!nerdVisionState.isVisible);
-      // Open terminal on tilda press
-      } else if (key === "~") {
-         nerdVisionState.setIsVisible(true);
-         nerdVisionState.setTerminalIsVisible(true);
-      // Open/close tech tree
-      } else if (key === "p") {
-         menuSelectorState.toggleMenu(Menu.techTree);
-      // Ascend layers
-      } else if (key === " ") {
-         if (gameUIState.canAscendLayer) {
-            sendAscendPacket();
-         }
-      }
-   }
-
    pressedKeys[key] = true;
+   callKeyListeners(key, e);
 }
 
 export function onKeyUp(e: KeyboardEvent): void {
    // If the event's key is undefined, don't continue.
    // This can occur when using autocomplete in a text input.
-   if (typeof e.key === "undefined") {
+   if (e.key === undefined) {
       return;
    }
    

@@ -1,4 +1,4 @@
-import { Point } from "./utils";
+import { assert, Point } from "./utils";
 
 // @Cleanup: maybe extract into client-to-server and server-to-client ?
 export enum PacketType {
@@ -49,8 +49,9 @@ export enum PacketType {
    terminalCommand,
    // @Hack
    setSpectatingPosition,
-   openEntityInventory,
-   closeEntityInventory,
+   startEntityInteraction,
+   endEntityInteraction,
+   screenResize,
    forceCompleteTamingTier, // ((DEV))
    acquireTamingSkill,
    forceAcquireTamingSkill, // ((DEV))
@@ -83,9 +84,42 @@ export enum PacketType {
 
 abstract class BasePacketObject {
    public currentByteOffset: number;
+   private readonly startPaddingBytes: number;
 
-   constructor(byteOffset: number) {
+   public readonly buffer: ArrayBufferLike;
+   private readonly view: DataView;
+
+   constructor(byteOffset: number, buffer: ArrayBufferLike) {
       this.currentByteOffset = byteOffset;
+      this.startPaddingBytes = byteOffset;
+      this.buffer = buffer;
+      this.view = new DataView(buffer);
+   }
+
+   public readNumber(): number {
+      // this.cleanByteOffset();
+      if (this.currentByteOffset >= this.buffer.byteLength) {
+         throw new Error("Exceeded length of buffer (max buffer length is " + this.buffer.byteLength + " bytes.)");
+      }
+      if ((this.currentByteOffset - this.startPaddingBytes) % 4 !== 0) {
+         throw new Error("Misaligned");
+      }
+
+      // const number = this.buffer.readFloatLE(this.currentByteOffset);
+      // const number = this.floatView[this.currentByteOffset / 4];
+      const number = this.view.getFloat32(this.currentByteOffset, true);
+      
+      this.currentByteOffset += 4;
+
+      return number;
+   }
+
+   public readNumberOrNull(): number | null {
+      const number = this.readNumber();
+      if (number !== 0) {
+         return number;
+      }
+      return null;
    }
    
    public padOffset(paddingBytes: number): void {
@@ -104,22 +138,30 @@ export function alignLengthBytes(lengthBytes: number): number {
 const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder();
 
+const PACKET_TYPE_SIZE_BYTES = Float32Array.BYTES_PER_ELEMENT;
+
 export class Packet extends BasePacketObject {
-   public readonly buffer: ArrayBuffer;
    private readonly floatView: Float32Array;
    private readonly uint8View: Uint8Array;
    
-   constructor(packetType: PacketType, lengthBytes: number) {
-      super(0);
+   constructor(packetType: PacketType, lengthBytes: number, buffer?: ArrayBufferLike) {
+      // One extra float to store the packet type.
+      const fullLengthBytes = PACKET_TYPE_SIZE_BYTES + lengthBytes;
 
-      // One extra byte to store the packet type.
-      const fullLengthBytes = Float32Array.BYTES_PER_ELEMENT + lengthBytes;
-
-      this.buffer = new ArrayBuffer(fullLengthBytes);
+      if (buffer) {
+         assert(buffer.byteLength === lengthBytes);
+         super(0, buffer);
+      } else {
+         super(0, new ArrayBuffer(fullLengthBytes));
+      }
       this.floatView = new Float32Array(this.buffer);
       this.uint8View = new Uint8Array(this.buffer);
 
       this.writeNumber(packetType);
+   }
+
+   public reset(): void {
+      this.currentByteOffset = PACKET_TYPE_SIZE_BYTES;
    }
 
    public writeNumber(number: number): void {
@@ -138,6 +180,11 @@ export class Packet extends BasePacketObject {
       this.floatView[this.currentByteOffset / 4] = number;
       
       this.currentByteOffset += 4;
+   }
+
+   public checkNumber(expectedNumber: number): boolean {
+      const number = this.readNumber();
+      return Math.abs(number - expectedNumber) < 0.0001;
    }
 
    public writeString(str: string): void {
@@ -170,6 +217,16 @@ export class Packet extends BasePacketObject {
       this.writeNumber(point.x);
       this.writeNumber(point.y);
    }
+
+   public checkPoint(expectedPoint: Point): boolean {
+      if (!this.checkNumber(expectedPoint.x)) {
+         return false;
+      }
+      if (!this.checkNumber(expectedPoint.y)) {
+         return false;
+      }
+      return true;
+   }
 }
 
 export function getStringLengthBytes(str: string): number {
@@ -178,40 +235,12 @@ export function getStringLengthBytes(str: string): number {
 }
 
 export class PacketReader extends BasePacketObject {
-   private readonly startPaddingBytes: number;
-   private readonly buffer: ArrayBufferLike;
-   
    private readonly uint8View: Uint8Array;
-   // private readonly floatView: Float32Array;
-   private readonly view: DataView;
 
    constructor(buffer: ArrayBufferLike, startPaddingBytes: number) {
-      super(startPaddingBytes);
+      super(startPaddingBytes, buffer);
 
-      this.startPaddingBytes = startPaddingBytes;
-      this.buffer = buffer;
-      
       this.uint8View = new Uint8Array(buffer);
-      // this.floatView = new Float32Array(buffer);
-      this.view = new DataView(buffer);
-   }
-
-   public readNumber(): number {
-      // this.cleanByteOffset();
-      if (this.currentByteOffset >= this.buffer.byteLength) {
-         throw new Error("Exceeded length of buffer");
-      }
-      if ((this.currentByteOffset - this.startPaddingBytes) % 4 !== 0) {
-         throw new Error("Misaligned");
-      }
-
-      // const number = this.buffer.readFloatLE(this.currentByteOffset);
-      // const number = this.floatView[this.currentByteOffset / 4];
-      const number = this.view.getFloat32(this.currentByteOffset, true);
-      
-      this.currentByteOffset += 4;
-
-      return number;
    }
 
    public readString(): string {

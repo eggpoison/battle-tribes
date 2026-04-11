@@ -7,7 +7,7 @@ import { Settings } from "../../../shared/src/settings";
 import { customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randInt, secondsToTicks } from "../../../shared/src/utils";
 import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared";
 import { entitiesAreColliding, CollisionVars } from "../collision-detection";
-import { createEntityConfigAttachInfo } from "../components";
+import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components";
 import { createItemEntityConfig } from "../entities/item-entity";
 import { applyAcceleration, applyForce, Hitbox } from "../hitboxes";
 import { createItem } from "../items";
@@ -546,7 +546,7 @@ function onTick(tukmok: Entity): void {
                         const leafPosition = trunkHeadHitbox.box.position.offset(20, trunkHeadHitbox.box.angle);
 
                         const leafItemConfig = createItemEntityConfig(leafPosition, randAngle(), createItem(ItemType.leaf, 1, "", ""), null);
-                        const leafHitbox = leafItemConfig.components[ServerComponentType.transform]!.hitboxes[0];
+                        const leafHitbox = getConfigTransformComponent(leafItemConfig.components).hitboxes[0];
                         leafItemConfig.attachInfo = createEntityConfigAttachInfo(leafHitbox, trunkHeadHitbox, false);
                         createEntity(leafItemConfig, getEntityLayer(tukmok), 0);
 

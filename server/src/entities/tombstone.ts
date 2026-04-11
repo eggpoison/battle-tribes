@@ -26,12 +26,12 @@ export function createTombstoneConfig(position: Point, rotation: number): Entity
    
    return {
       entityType: EntityType.tombstone,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.tombstone]: tombstoneComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         tombstoneComponent
+      ],
       lights: []
    };
 }

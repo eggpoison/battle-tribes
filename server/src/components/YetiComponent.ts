@@ -26,6 +26,7 @@ import { applyAbsoluteKnockback, applyKnockback, getHitboxTile, Hitbox, addHitbo
 import { entitiesAreColliding, CollisionVars } from "../collision-detection";
 import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity-events";
 import { registerEntityTickEvent } from "../server/player-clients";
+import { getConfigTransformComponent } from "../components";
 
 const enum Vars {
    SMALL_SNOWBALL_THROW_SPEED_MIN = 550,
@@ -188,7 +189,7 @@ const throwSnowball = (yeti: Entity, size: number, throwAngle: number): void => 
 
    const config = createSnowballConfig(position, randAngle(), yeti, size);
 
-   const snowballHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+   const snowballHitbox = getConfigTransformComponent(config.components).hitboxes[0];
    addHitboxVelocity(snowballHitbox, polarVec2(velocityMagnitude, angle));
 
    createEntity(config, getEntityLayer(yeti), 0);

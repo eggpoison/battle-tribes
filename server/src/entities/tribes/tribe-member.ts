@@ -22,10 +22,10 @@ import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity
 import { registerEntityTickEvent } from "../../server/player-clients";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createWoodenArrowConfig } from "../projectiles/wooden-arrow";
-import { EntityConfig } from "../../components";
+import { EntityConfig, getConfigTransformComponent } from "../../components";
 import { createSpearProjectileConfig } from "../projectiles/spear-projectile";
 import { createBlueprintEntityConfig } from "../blueprint-entity";
-import { AttackVars, copyLimbState } from "battletribes-shared/attack-patterns";
+import { AttackVar, copyLimbState } from "battletribes-shared/attack-patterns";
 import { createEntity, destroyEntity, getEntityLayer, getEntityType, getGameTicks } from "../../world";
 import { awardTitle, hasTitle, TribesmanComponentArray } from "../../components/TribesmanComponent";
 import { calculateEntityPlaceInfo, createStructureConfig } from "../../structure-placement";
@@ -339,7 +339,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          }
 
          const tribeMemberVelocity = getHitboxVelocity(tribeMemberHitbox);
-         const arrowHitbox = arrowConfig.components[ServerComponentType.transform]!.hitboxes[0];
+         const arrowHitbox = getConfigTransformComponent(arrowConfig.components).hitboxes[0];
 
          const arrowVel = tribeMemberVelocity.copy();
          arrowVel.add(polarVec2(itemInfo.projectileSpeed, angle));
@@ -404,7 +404,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          // @Copynpaste from bow above
          const config = createWoodenArrowConfig(spawnPosition, tribeMemberHitbox.box.angle, tribeComponent.tribe, tribeMember);
 
-         const arrowHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+         const arrowHitbox = getConfigTransformComponent(config.components).hitboxes[0];
          addHitboxVelocity(arrowHitbox, polarVec2(itemInfo.projectileSpeed, tribeMemberHitbox.box.angle));
 
          createEntity(config, getEntityLayer(tribeMember), 0);
@@ -436,7 +436,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
 
          const config = createSpearProjectileConfig(new Point(x, y), tribeMemberHitbox.box.angle, tribeMember, null);
 
-         const spearProjectileHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+         const spearProjectileHitbox = getConfigTransformComponent(config.components).hitboxes[0];
          
          const tribeMemberVelocity = getHitboxVelocity(tribeMemberHitbox);
          const spearVel = tribeMemberVelocity.copy();
@@ -477,7 +477,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
 
          const tribeMemberVelocity = getHitboxVelocity(tribeMemberHitbox);
          
-         const battleaxeProjectileHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+         const battleaxeProjectileHitbox = getConfigTransformComponent(config.components).hitboxes[0];
          const vel = tribeMemberVelocity.copy();
          vel.add(polarVec2(velocityMagnitude, tribeMemberHitbox.box.angle));
          addHitboxVelocity(battleaxeProjectileHitbox, vel);
@@ -739,7 +739,7 @@ export function throwItem(tribesman: Entity, inventoryName: InventoryName, itemS
 
    // Throw the dropped item away from the player
    const tribesmanVelocity = getHitboxVelocity(tribesmanHitbox);
-   const itemHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+   const itemHitbox = getConfigTransformComponent(config.components).hitboxes[0];
 
    const vel = tribesmanVelocity.copy();
    vel.add(polarVec2(Vars.ITEM_THROW_FORCE, throwDirection));

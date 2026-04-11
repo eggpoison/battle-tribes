@@ -1,10 +1,10 @@
-import { distBetweenPointAndRectangularBox, Settings, RectangularBox, CircularBox, Box, boxIsCircular } from "webgl-test-shared";
+import { distBetweenPointAndRectangularBox, Settings, RectangularBox, CircularBox, Box, boxIsCircular, _bounds } from "webgl-test-shared";
 import Layer from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";
 import { layers } from "../../world";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
-const enum Vars {
+const enum Var {
    SLIME_LAST_TIME_SECONDS = 1,
    SLIME_BUILD_TIME_SECONDS = 1.2
 }
@@ -12,7 +12,7 @@ const enum Vars {
 let program: WebGLProgram;
 
 const convertToGamePixel = (x: number): number => {
-   return x >> 2;
+   return Math.floor(x / 4);
 }
 
 const getGamePixelIndex = (gamePixelX: number, gamePixelY: number): number => {
@@ -70,18 +70,14 @@ export function createSlimeTrailShaders(): void {
 }
 
 const coatFromCircularBox = (layer: Layer, box: CircularBox): void => {
-   const minX = box.calculateBoundsMinX();
-   const maxX = box.calculateBoundsMaxX();
-   const minY = box.calculateBoundsMinY();
-   const maxY = box.calculateBoundsMaxY();
-
    const centerX = box.position.x / 4;
    const centerY = box.position.y / 4;
    
-   const minGamePixelX = convertToGamePixel(minX);
-   const maxGamePixelX = convertToGamePixel(maxX);
-   const minGamePixelY = convertToGamePixel(minY);
-   const maxGamePixelY = convertToGamePixel(maxY);
+   box.calculateBounds();
+   const minGamePixelX = convertToGamePixel(_bounds.minX);
+   const maxGamePixelX = convertToGamePixel(_bounds.maxX);
+   const minGamePixelY = convertToGamePixel(_bounds.minY);
+   const maxGamePixelY = convertToGamePixel(_bounds.maxY);
 
    const pixelRadiusSquared = box.radius * box.radius / 16;
 
@@ -93,7 +89,7 @@ const coatFromCircularBox = (layer: Layer, box: CircularBox): void => {
             const gamePixelIndex = getGamePixelIndex(gamePixelX, gamePixelY);
             
             const previousOpacity = layer.slimeTrailPixels.get(gamePixelIndex) || 0;
-            const newOpacity = Math.min(previousOpacity + Settings.DT_S / Vars.SLIME_BUILD_TIME_SECONDS, 1);
+            const newOpacity = Math.min(previousOpacity + Settings.DT_S / Var.SLIME_BUILD_TIME_SECONDS, 1);
             layer.slimeTrailPixels.set(gamePixelIndex, newOpacity);
          }
       }
@@ -101,15 +97,11 @@ const coatFromCircularBox = (layer: Layer, box: CircularBox): void => {
 }
 
 const coatFromRectangularBox = (layer: Layer, box: RectangularBox): void => {
-   const minX = box.calculateBoundsMinX();
-   const maxX = box.calculateBoundsMaxX();
-   const minY = box.calculateBoundsMinY();
-   const maxY = box.calculateBoundsMaxY();
-   
-   const minGamePixelX = convertToGamePixel(minX);
-   const maxGamePixelX = convertToGamePixel(maxX);
-   const minGamePixelY = convertToGamePixel(minY);
-   const maxGamePixelY = convertToGamePixel(maxY);
+   box.calculateBounds();
+   const minGamePixelX = convertToGamePixel(_bounds.minX);
+   const maxGamePixelX = convertToGamePixel(_bounds.maxX);
+   const minGamePixelY = convertToGamePixel(_bounds.minY);
+   const maxGamePixelY = convertToGamePixel(_bounds.maxY);
 
    for (let gamePixelX = minGamePixelX; gamePixelX <= maxGamePixelX; gamePixelX++) {
       for (let gamePixelY = minGamePixelY; gamePixelY <= maxGamePixelY; gamePixelY++) {
@@ -164,7 +156,7 @@ export function updateSlimeTrails(): void {
          const numNeighbouring = getNumNeighbouringSlimePixels(layer, gamePixelIndex);
          const opacityDecreaseMultiplier = 1 - numNeighbouring / 5;
          
-         const newOpacity = opacity - 1 / Vars.SLIME_LAST_TIME_SECONDS * Settings.DT_S * opacityDecreaseMultiplier;
+         const newOpacity = opacity - 1 / Var.SLIME_LAST_TIME_SECONDS * Settings.DT_S * opacityDecreaseMultiplier;
          if (newOpacity <= 0) {
             layer.slimeTrailPixels.delete(gamePixelIndex);
          } else {
@@ -241,7 +233,7 @@ export function renderSlimeTrails(layer: Layer): void {
    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
    
    // @Speed
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 

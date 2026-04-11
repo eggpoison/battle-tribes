@@ -61,18 +61,18 @@ export function createBallistaConfig(position: Point, rotation: number, tribe: T
    
    return {
       entityType: EntityType.ballista,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.turret]: turretComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.ammoBox]: ammoBoxComponent,
-         [ServerComponentType.inventory]: inventoryComponent,
-         [ServerComponentType.ballista]: ballistaComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         turretComponent,
+         aiHelperComponent,
+         ammoBoxComponent,
+         inventoryComponent,
+         ballistaComponent
+      ],
       lights: []
    };
 }

@@ -1,9 +1,9 @@
-import { distance, roundNum, getLightLevelNodeX, getLightLevelNodeY, LightLevelVars } from "webgl-test-shared";
+import { distance, roundNum, getLightLevelNodeX, getLightLevelNodeY, LightLevelVar } from "webgl-test-shared";
 import { getLightLevelNodeInfos } from "../light-levels";
 import { getTextContext, getXPosInTextCanvas, getYPosInTextCanvas } from "../text-canvas";
 import { cursorWorldPos } from "../camera";
 
-const enum Vars {
+const enum Var {
    NODE_DISPLAY_DIST = 32
 }
 
@@ -28,11 +28,11 @@ export function renderLightLevelsText() {
 
       const nodeX = getLightLevelNodeX(node);
       const nodeY = getLightLevelNodeY(node);
-      const x = (nodeX + 0.5) * LightLevelVars.LIGHT_NODE_SIZE;
-      const y = (nodeY + 0.5) * LightLevelVars.LIGHT_NODE_SIZE;
+      const x = (nodeX + 0.5) * LightLevelVar.LIGHT_NODE_SIZE;
+      const y = (nodeY + 0.5) * LightLevelVar.LIGHT_NODE_SIZE;
 
       const dist = distance(x, y, cursorWorldPos.x, cursorWorldPos.y);
-      if (dist > Vars.NODE_DISPLAY_DIST) {
+      if (dist > Var.NODE_DISPLAY_DIST) {
          continue;
       }
 

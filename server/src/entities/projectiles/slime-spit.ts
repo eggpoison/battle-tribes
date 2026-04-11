@@ -20,10 +20,10 @@ export function createSlimeSpitConfig(position: Point, rotation: number, size: n
    
    return {
       entityType: EntityType.slimeSpit,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.slimeSpit]: slimeSpitComponent
-      },
+      components: [
+         transformComponent,
+         slimeSpitComponent
+         ],
       lights: []
    };
 }

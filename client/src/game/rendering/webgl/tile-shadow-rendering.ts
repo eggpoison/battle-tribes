@@ -1,8 +1,8 @@
-import { Settings, TileType } from "webgl-test-shared";
+import { Settings, subtileIsInWorldIncludingEdges, tileIsInWorldIncludingEdges, TileType } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { RenderChunkTileShadowInfo, getRenderChunkTileShadowInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import Layer, { subtileIsInWorld, tileIsWithinEdge } from "../../Layer";
+import Layer from "../../Layer";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
 
 export const enum TileShadowType {
@@ -142,11 +142,11 @@ export function createTileShadowShaders(): void {
 }
 
 const subtileIsWallInt = (layer: Layer, subtileX: number, subtileY: number): number => {
-   return (subtileIsInWorld(subtileX, subtileY) && layer.subtileIsWall(subtileX, subtileY)) ? 1 : 0;
+   return (subtileIsInWorldIncludingEdges(subtileX, subtileY) && layer.subtileIsWall(subtileX, subtileY)) ? 1 : 0;
 }
 
 const tileIsNotDropdownInt = (layer: Layer, tileX: number, tileY: number): number => {
-   if (tileIsWithinEdge(tileX, tileY)) {
+   if (tileIsInWorldIncludingEdges(tileX, tileY)) {
       const tile = layer.getTileFromCoords(tileX, tileY);
       return tile.type !== TileType.dropdown ? 1 : 0;
    }
@@ -165,7 +165,7 @@ const getChunkWallShadows = (layer: Layer, renderChunkX: number, renderChunkY: n
    const minSubtileY = minTileY * 4;
    const maxSubtileY = maxTileY * 4 + 3;
 
-   const tileShadows = new Array<TileShadowInfo>();
+   const tileShadows: Array<TileShadowInfo> = [];
 
    // Find all tiles bordering a wall in the render chunk
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
@@ -257,7 +257,7 @@ const getChunkDropdownShadows = (layer: Layer, renderChunkX: number, renderChunk
    const minTileY = getRenderChunkMinTileY(renderChunkY);
    const maxTileY = getRenderChunkMaxTileY(renderChunkY);
 
-   const tileShadows = new Array<TileShadowInfo>();
+   const tileShadows: Array<TileShadowInfo> = [];
 
    // Find all dropdown shadows
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
@@ -393,14 +393,19 @@ const calculateVertexData = (tileShadows: ReadonlyArray<TileShadowInfo>): Float3
    return vertexData;
 }
 
-export function calculateShadowInfo(layer: Layer, renderChunkX: number, renderChunkY: number, tileShadowType: TileShadowType): RenderChunkTileShadowInfo | null {
-   const tileShadows = tileShadowType === TileShadowType.wallShadow ? getChunkWallShadows(layer, renderChunkX, renderChunkY) : getChunkDropdownShadows(layer, renderChunkX, renderChunkY);
+export function calculateShadowInfo(layer: Layer, renderChunkX: number, renderChunkY: number, tileShadowType: TileShadowType, hasWallTiles: boolean): RenderChunkTileShadowInfo | null {
+   let tileShadows: ReadonlyArray<TileShadowInfo>;
+   if (!hasWallTiles) {
+      tileShadows = [];
+   } else {
+      tileShadows = tileShadowType === TileShadowType.wallShadow ? getChunkWallShadows(layer, renderChunkX, renderChunkY) : getChunkDropdownShadows(layer, renderChunkX, renderChunkY);
+   }
    const vertexData = calculateVertexData(tileShadows);
 
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 

@@ -1,8 +1,8 @@
 import { ServerComponentType } from "../../../shared/src/components";
 import { Entity } from "../../../shared/src/entities";
 import { Packet } from "../../../shared/src/packets";
-import { Point, rotatePoint, rotateXAroundOrigin, rotateYAroundOrigin } from "../../../shared/src/utils";
-import { getHitboxVelocity, Hitbox, translateHitbox } from "../hitboxes";
+import { _point, Point, rotatePoint, rotatePointAroundOrigin } from "../../../shared/src/utils";
+import { Hitbox, translateHitbox } from "../hitboxes";
 import { entityExists } from "../world";
 import { ComponentArray } from "./ComponentArray";
 import { attachHitbox, detachHitbox, TransformComponentArray } from "./TransformComponent";
@@ -61,8 +61,9 @@ export function mountCarrySlot(entity: Entity, carrySlot: CarrySlot): void {
    // Set the entity to the carry slot's position
    const entityTransformComponent = TransformComponentArray.getComponent(entity);
    const entityHitbox = entityTransformComponent.hitboxes[0];
-   entityHitbox.box.position.x = carrySlot.parentHitbox.box.position.x + rotateXAroundOrigin(carrySlot.offset.x, carrySlot.offset.y, carrySlot.parentHitbox.box.angle);
-   entityHitbox.box.position.y = carrySlot.parentHitbox.box.position.y + rotateYAroundOrigin(carrySlot.offset.x, carrySlot.offset.y, carrySlot.parentHitbox.box.angle);
+   rotatePointAroundOrigin(carrySlot.offset.x, carrySlot.offset.y, carrySlot.parentHitbox.box.angle);
+   entityHitbox.box.position.x = carrySlot.parentHitbox.box.position.x + _point.x;
+   entityHitbox.box.position.y = carrySlot.parentHitbox.box.position.y + _point.y;
    
    // attachEntityWithTether(entity, mount, carrySlot.parentHitbox, 0, 10, 0.4, false);
    // @INCOMPLETE: SHOULD USE TETHER!!!!

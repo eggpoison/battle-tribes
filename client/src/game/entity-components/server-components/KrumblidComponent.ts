@@ -8,7 +8,8 @@ import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { HealthComponentArray } from "./HealthComponent";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface KrumblidComponentData {}
 
@@ -25,24 +26,26 @@ function decodeData(): KrumblidComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    for (const hitbox of transformComponentData.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.KRUMBLID_BODY)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                1,
                0,
+               0, 0,
                getTextureArrayIndex("entities/krumblid/krumblid.png")
             )
          );
       } else {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                0,
                0,
+               0, 0,
                getTextureArrayIndex("entities/krumblid/mandible.png")
             )
          );

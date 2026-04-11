@@ -1,5 +1,5 @@
 <script lang="ts">
-   import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
+   import { hoverDebugState } from "../../../ui-state/hover-debug-state";
 
    interface Props {
       mouseX: number;
@@ -9,10 +9,10 @@
    let props: Props = $props();
    
    const debugData = $derived(hoverDebugState.entityDebugData);
-   const healthText = $derived(debugData !== null && typeof debugData.health !== "undefined" && typeof debugData.maxHealth !== "undefined" ? debugData.health.toFixed(2) + "/" + debugData.maxHealth.toFixed(2) : undefined);
+   const healthText = $derived(debugData !== null && debugData.health !== undefined && debugData.maxHealth !== undefined ? debugData.health.toFixed(2) + "/" + debugData.maxHealth.toFixed(2) : undefined);
 </script>
 
-{#if typeof healthText !== "undefined"}
+{#if healthText !== undefined}
    <div id="cursor-tooltip" style:bottom="{props.mouseX}px" style:left="{props.mouseY}px">
       <p>{healthText}</p>
    </div>

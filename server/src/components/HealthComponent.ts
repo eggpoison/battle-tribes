@@ -9,9 +9,10 @@ import { registerDirtyEntity, registerEntityHeal, registerEntityHit } from "../s
 import { ComponentArray, getComponentArrayRecord } from "./ComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
-import { destroyEntity, getEntityComponentTypes, getEntityType } from "../world";
+import { destroyEntity, getEntityType } from "../world";
 import { Hitbox } from "../hitboxes";
 import { HitFlags } from "../../../shared/src/client-server-types";
+import { getEntityComponentTypes } from "../entity-component-types";
 
 export class HealthComponent {
    public maxHealth: number;
@@ -62,7 +63,7 @@ export function canDamageEntity(healthComponent: HealthComponent, attackHash: st
 
 const callOnTakeDamageCallbacks = (entity: Entity, hitHitbox: Hitbox, attackingEntity: Entity | null, damageSource: DamageSource, damage: number): void => {
    const componentArrayRecord = getComponentArrayRecord();
-   const entityComponentTypes = getEntityComponentTypes(entity);
+   const entityComponentTypes = getEntityComponentTypes(getEntityType(entity));
    for (const componentType of entityComponentTypes) {
       const componentArray = componentArrayRecord[componentType];
       if (typeof componentArray.onTakeDamage !== "undefined") {
@@ -73,7 +74,7 @@ const callOnTakeDamageCallbacks = (entity: Entity, hitHitbox: Hitbox, attackingE
 
 const callOnDeathCallbacks = (entity: Entity, attackingEntity: Entity | null, damageSource: DamageSource): void => {
    const componentArrayRecord = getComponentArrayRecord();
-   const entityComponentTypes = getEntityComponentTypes(entity);
+   const entityComponentTypes = getEntityComponentTypes(getEntityType(entity));
    
    for (const componentType of entityComponentTypes) {
       const componentArray = componentArrayRecord[componentType];
@@ -94,7 +95,7 @@ export function damageEntity(hitHitbox: Hitbox, attackingEntity: Entity | null, 
    const componentArrayRecord = getComponentArrayRecord();
 
    let damageMultiplier = 1;
-   const attackedEntityComponentTypes = getEntityComponentTypes(entity);
+   const attackedEntityComponentTypes = getEntityComponentTypes(getEntityType(entity));
    for (const componentType of attackedEntityComponentTypes) {
       const componentArray = componentArrayRecord[componentType];
       if (typeof componentArray.getDamageTakenMultiplier !== "undefined") {
@@ -124,7 +125,7 @@ export function damageEntity(hitHitbox: Hitbox, attackingEntity: Entity | null, 
 
       // Call onKill events for the attacking entity
       if (attackingEntity !== null) {
-         const attackingEntityComponentTypes = getEntityComponentTypes(attackingEntity);
+         const attackingEntityComponentTypes = getEntityComponentTypes(getEntityType(attackingEntity));
          for (const componentType of attackingEntityComponentTypes) {
             const componentArray = componentArrayRecord[componentType];
             if (typeof componentArray.onKill !== "undefined") {
@@ -139,7 +140,7 @@ export function damageEntity(hitHitbox: Hitbox, attackingEntity: Entity | null, 
 
    // Call onDealDamage events for the attacking entity
    if (attackingEntity !== null) {
-      const attackingEntityComponentTypes = getEntityComponentTypes(attackingEntity);
+      const attackingEntityComponentTypes = getEntityComponentTypes(getEntityType(attackingEntity));
       for (const componentType of attackingEntityComponentTypes) {
          const componentArray = componentArrayRecord[componentType];
          if (typeof componentArray.onDealDamage !== "undefined") {

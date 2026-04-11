@@ -1,8 +1,6 @@
-import { Settings, SubtileType, customTickIntervalHasPassed, lerp, Point, randAngle, randFloat, randInt } from "webgl-test-shared";
-import Board from "./Board";
-import { getSubtileX, getSubtileY } from "./Layer";
+import { Settings, SubtileType, customTickIntervalHasPassed, lerp, Point, randAngle, randFloat, randInt, getSubtileX, getSubtileY } from "webgl-test-shared";
 import Particle from "./Particle";
-import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
+import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, highMonocolourParticles, lowMonocolourParticles, lowTexturedParticles, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
 import { playSound } from "./sound";
 import { undergroundLayer } from "./world";
 
@@ -19,7 +17,7 @@ let minedSubtiles: ReadonlyArray<MinedSubtile>;
 const COLLAPSE_THRESHOLD = 50;
 
 export function setMinedSubtiles(subtiles: ReadonlyArray<MinedSubtile>): void {
-   // const newMinedSubtiles = new Array<number>();
+   // const newMinedSubtiles: Array<number> = [];
    // for (const minedSubtile of subtiles) {
    //    if (!minedSubtile.isCollapsing) {
    //       continue;
@@ -135,9 +133,9 @@ const createSpeckDebris = (x: number, y: number, subtileType: SubtileType): void
       colour, colour, colour
    );
    if (particleRenderLayer === ParticleRenderLayer.low) {
-      Board.lowMonocolourParticles.push(particle);
+      lowMonocolourParticles.push(particle);
    } else {
-      Board.highMonocolourParticles.push(particle);
+      highMonocolourParticles.push(particle);
    }
 }
 
@@ -189,12 +187,11 @@ const createLargeDebrisParticle = (x: number, y: number, subtileType: SubtileTyp
       textureIndex,
       tint, tint, tint
    );
-   Board.lowTexturedParticles.push(particle);
+   lowTexturedParticles.push(particle);
 }
 
 export function createCollapseParticles(): void {
-   for (let i = 0; i < minedSubtiles.length; i++) {
-      const minedSubtile = minedSubtiles[i];
+   for (const minedSubtile of minedSubtiles) {
       const subtileIndex = minedSubtile.subtileIndex;
       const support = minedSubtile.support;
 

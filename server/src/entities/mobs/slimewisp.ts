@@ -46,13 +46,13 @@ export function createSlimewispConfig(position: Point, rotation: number): Entity
    
    return {
       entityType: EntityType.slimewisp,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.slimewisp]: slimewispComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         aiHelperComponent,
+         slimewispComponent
+      ],
       lights: []
    };
 }

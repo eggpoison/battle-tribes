@@ -1,17 +1,20 @@
-import { Settings } from "webgl-test-shared";
+import { Settings, subtileIsInWorldIncludingEdges } from "webgl-test-shared";
 import { maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY } from "../../camera";
 import { createWebGLProgram, gl } from "../../webgl";
-import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo } from "../render-chunks";
+import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo, setRenderChunkWallBorderInfo } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import Layer, { subtileIsInWorld } from "../../Layer";
+import Layer from "../../Layer";
 
-const enum Vars {
+const enum Var {
    ATTRIBUTES_PER_VERTEX = 3
 }
 
 const BORDER_THICKNESS = 4;
 
 let program: WebGLProgram;
+
+// @INCOMPLETE!
+const visibleWallBorderInfos: Array<RenderChunkWallBorderInfo> = [];
 
 export function createWallBorderShaders(): void {
    const vertexShaderText = `#version 300 es
@@ -72,8 +75,8 @@ const addVertices = (vertices: Array<number>, tlX: number, tlY: number, trX: num
 }
 
 const addTopVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
-   const leftOvershoot = subtileIsInWorld(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : 0;
-   const rightOvershoot = subtileIsInWorld(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : 0;
+   const leftOvershoot = subtileIsInWorldIncludingEdges(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : 0;
+   const rightOvershoot = subtileIsInWorldIncludingEdges(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : 0;
 
    let tlX = subtileX * Settings.SUBTILE_SIZE - leftOvershoot;
    let blX = tlX;
@@ -85,8 +88,8 @@ const addTopVertices = (vertices: Array<number>, layer: Layer, subtileX: number,
    let trY = tlY;
 
    if (isBackColour) {
-      const leftOvershoot = subtileIsInWorld(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const rightOvershoot = subtileIsInWorld(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const leftOvershoot = subtileIsInWorldIncludingEdges(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const rightOvershoot = subtileIsInWorldIncludingEdges(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
 
       tlX -= leftOvershoot;
       blX -= leftOvershoot;
@@ -127,8 +130,8 @@ const addTopVertices = (vertices: Array<number>, layer: Layer, subtileX: number,
 }
 
 const addRightVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
-   const topOvershoot = subtileIsInWorld(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : 0;
-   const bottomOvershoot = subtileIsInWorld(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : 0;
+   const topOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : 0;
+   const bottomOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : 0;
 
    let tlX = (subtileX + 1) * Settings.SUBTILE_SIZE - BORDER_THICKNESS;
    let blX = tlX;
@@ -139,8 +142,8 @@ const addRightVertices = (vertices: Array<number>, layer: Layer, subtileX: numbe
    let tlY = (subtileY + 1) * Settings.SUBTILE_SIZE + topOvershoot;
    let trY = tlY;
    if (isBackColour) {
-      const topOvershoot = subtileIsInWorld(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const bottomOvershoot = subtileIsInWorld(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const topOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const bottomOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
 
       tlX -= BORDER_THICKNESS;
       blX -= BORDER_THICKNESS;
@@ -179,8 +182,8 @@ const addRightVertices = (vertices: Array<number>, layer: Layer, subtileX: numbe
 }
 
 const addBottomVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
-   const leftOvershoot = subtileIsInWorld(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : 0;
-   const rightOvershoot = subtileIsInWorld(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : 0;
+   const leftOvershoot = subtileIsInWorldIncludingEdges(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : 0;
+   const rightOvershoot = subtileIsInWorldIncludingEdges(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : 0;
 
    let tlX = subtileX * Settings.SUBTILE_SIZE - leftOvershoot;
    let blX = tlX;
@@ -191,8 +194,8 @@ const addBottomVertices = (vertices: Array<number>, layer: Layer, subtileX: numb
    let tlY = subtileY * Settings.SUBTILE_SIZE + BORDER_THICKNESS;
    let trY = tlY;
    if (isBackColour) {
-      const leftOvershoot = subtileIsInWorld(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const rightOvershoot = subtileIsInWorld(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const leftOvershoot = subtileIsInWorldIncludingEdges(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const rightOvershoot = subtileIsInWorldIncludingEdges(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
 
       tlX -= leftOvershoot;
       blX -= leftOvershoot;
@@ -231,8 +234,8 @@ const addBottomVertices = (vertices: Array<number>, layer: Layer, subtileX: numb
 }
 
 const addLeftVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
-   const topOvershoot = subtileIsInWorld(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : 0;
-   const bottomOvershoot = subtileIsInWorld(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : 0;
+   const topOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : 0;
+   const bottomOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : 0;
 
    let tlX = subtileX * Settings.SUBTILE_SIZE;
    let blX = tlX;
@@ -243,8 +246,8 @@ const addLeftVertices = (vertices: Array<number>, layer: Layer, subtileX: number
    let tlY = (subtileY + 1) * Settings.SUBTILE_SIZE + topOvershoot;
    let trY = tlY;
    if (isBackColour) {
-      const topOvershoot = subtileIsInWorld(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const bottomOvershoot = subtileIsInWorld(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const topOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const bottomOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
 
       tlX += BORDER_THICKNESS;
       blX += BORDER_THICKNESS;
@@ -294,7 +297,7 @@ const calculateVertexData = (layer: Layer, renderChunkX: number, renderChunkY: n
    const maxSubtileY = maxTileY * 4 + 3;
 
    // Find all wall tiles in the render chunk, and categorise them based on what borders they have
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
          if (!layer.subtileIsWall(subtileX, subtileY)) {
@@ -302,22 +305,22 @@ const calculateVertexData = (layer: Layer, renderChunkX: number, renderChunkY: n
          }
 
          // Top border
-         if (subtileIsInWorld(subtileX, subtileY + 1) && !layer.subtileIsWall(subtileX, subtileY + 1)) {
+         if (subtileIsInWorldIncludingEdges(subtileX, subtileY + 1) && !layer.subtileIsWall(subtileX, subtileY + 1)) {
             addTopVertices(vertices, layer, subtileX, subtileY, true);
             addTopVertices(vertices, layer, subtileX, subtileY, false);
          }
          // Right border
-         if (subtileIsInWorld(subtileX + 1, subtileY) && !layer.subtileIsWall(subtileX + 1, subtileY)) {
+         if (subtileIsInWorldIncludingEdges(subtileX + 1, subtileY) && !layer.subtileIsWall(subtileX + 1, subtileY)) {
             addRightVertices(vertices, layer, subtileX, subtileY, true);
             addRightVertices(vertices, layer, subtileX, subtileY, false);
          }
          // Bottom border
-         if (subtileIsInWorld(subtileX, subtileY - 1) && !layer.subtileIsWall(subtileX, subtileY - 1)) {
+         if (subtileIsInWorldIncludingEdges(subtileX, subtileY - 1) && !layer.subtileIsWall(subtileX, subtileY - 1)) {
             addBottomVertices(vertices, layer, subtileX, subtileY, true);
             addBottomVertices(vertices, layer, subtileX, subtileY, false);
          }
          // Left border
-         if (subtileIsInWorld(subtileX - 1, subtileY) && !layer.subtileIsWall(subtileX - 1, subtileY)) {
+         if (subtileIsInWorldIncludingEdges(subtileX - 1, subtileY) && !layer.subtileIsWall(subtileX - 1, subtileY)) {
             addLeftVertices(vertices, layer, subtileX, subtileY, true);
             addLeftVertices(vertices, layer, subtileX, subtileY, false);
          }
@@ -327,13 +330,16 @@ const calculateVertexData = (layer: Layer, renderChunkX: number, renderChunkY: n
    return new Float32Array(vertices);
 }
 
-export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo {
+export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo | null {
    const vertexData = calculateVertexData(layer, renderChunkX, renderChunkY);
+   if (vertexData.length === 0) {
+      return null;
+   }
 
-   const vao = gl.createVertexArray()!;
+   const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
@@ -353,19 +359,41 @@ export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, rend
 
 export function recalculateWallBorders(layer: Layer, renderChunkX: number, renderChunkY: number): void {
    const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY);
-
-   wallBorderInfo.vertexData = calculateVertexData(layer, renderChunkX, renderChunkY);
-
-   gl.bindVertexArray(wallBorderInfo.vao);
-
-   gl.bindBuffer(gl.ARRAY_BUFFER, wallBorderInfo.buffer);
-   // @Speed
-   gl.bufferData(gl.ARRAY_BUFFER, wallBorderInfo.vertexData, gl.STATIC_DRAW);
-   
-   gl.bindVertexArray(null);
+   if (wallBorderInfo !== null) {
+      wallBorderInfo.vertexData = calculateVertexData(layer, renderChunkX, renderChunkY);
+      
+      gl.bindVertexArray(wallBorderInfo.vao);
+      
+      gl.bindBuffer(gl.ARRAY_BUFFER, wallBorderInfo.buffer);
+      // @Speed
+      gl.bufferData(gl.ARRAY_BUFFER, wallBorderInfo.vertexData, gl.STATIC_DRAW);
+      
+      gl.bindVertexArray(null);
+   } else {
+      const data = calculateWallBorderInfo(layer, renderChunkX, renderChunkY);
+      if (data !== null) {
+         setRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY, data);
+      }
+   }
 }
 
 export function renderWallBorders(layer: Layer): void {
+   // @Hack @Speed
+   let hasVisibleWallBorder = false;
+   
+   for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
+      for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
+         const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY);
+         if (wallBorderInfo !== null) {
+            hasVisibleWallBorder = true;
+            break;
+         }
+      }
+   }
+   if (!hasVisibleWallBorder) {
+      return;
+   }
+
    gl.useProgram(program);
 
    gl.enable(gl.BLEND);
@@ -380,7 +408,7 @@ export function renderWallBorders(layer: Layer): void {
          }
 
          gl.bindVertexArray(wallBorderInfo.vao);
-         gl.drawArrays(gl.TRIANGLES, 0, wallBorderInfo.vertexData.length / Vars.ATTRIBUTES_PER_VERTEX);
+         gl.drawArrays(gl.TRIANGLES, 0, wallBorderInfo.vertexData.length / Var.ATTRIBUTES_PER_VERTEX);
       }
    }
 

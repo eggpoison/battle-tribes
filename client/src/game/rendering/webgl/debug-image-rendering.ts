@@ -3,7 +3,7 @@ import { getTexture } from "../../textures";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
-const enum Vars {
+const enum Var {
    SPRING_WIDTH = 16
 }
 
@@ -54,7 +54,7 @@ export function createDebugImageShaders(): void {
 }
 
 export function renderDebugImages(): void {
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    for (let i = 0; i < TransformComponentArray.components.length; i++) {
       const transformComponent = TransformComponentArray.components[i];
 
@@ -64,17 +64,17 @@ export function renderDebugImages(): void {
             const direction = hitbox.box.position.angleTo(tether.originBox.position);
             const perpDirection = direction + Math.PI * 0.5;
             
-            const x1 = hitbox.box.position.x + Vars.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
-            const y1 = hitbox.box.position.y + Vars.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
+            const x1 = hitbox.box.position.x + Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
+            const y1 = hitbox.box.position.y + Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
             
-            const x2 = hitbox.box.position.x - Vars.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
-            const y2 = hitbox.box.position.y - Vars.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
+            const x2 = hitbox.box.position.x - Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
+            const y2 = hitbox.box.position.y - Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
             
-            const x3 = tether.originBox.position.x + Vars.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
-            const y3 = tether.originBox.position.y + Vars.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
+            const x3 = tether.originBox.position.x + Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
+            const y3 = tether.originBox.position.y + Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
             
-            const x4 = tether.originBox.position.x - Vars.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
-            const y4 = tether.originBox.position.y - Vars.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
+            const x4 = tether.originBox.position.x - Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
+            const y4 = tether.originBox.position.y - Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
    
             vertices.push(
                x1, y1, 0, 0,
@@ -104,7 +104,7 @@ export function renderDebugImages(): void {
    gl.bindTexture(gl.TEXTURE_2D, getTexture("debug/spring.png"));
    
    // @Speed
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 

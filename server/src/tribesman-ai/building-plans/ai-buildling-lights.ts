@@ -1,5 +1,5 @@
 import { EntityType } from "../../../../shared/src/entities";
-import { LightLevelVars } from "../../../../shared/src/light-levels";
+import { LightLevelVar } from "../../../../shared/src/light-levels";
 import { Settings } from "../../../../shared/src/settings";
 import { assert, distance, Point } from "../../../../shared/src/utils";
 import { createSlurbTorchConfig } from "../../entities/structures/slurb-torch";
@@ -19,8 +19,8 @@ export function structureLightLevelIsValid(lightLevel: number): boolean {
 
 /** Generates a virtual structure for a light which will light up a specific node */
 export function generateLightPosition(tribe: Tribe, layer: Layer, x: number, y: number): VirtualStructure {
-   const nodeX = Math.floor(x / LightLevelVars.LIGHT_NODE_SIZE);
-   const nodeY = Math.floor(y / LightLevelVars.LIGHT_NODE_SIZE);
+   const nodeX = Math.floor(x / LightLevelVar.LIGHT_NODE_SIZE);
+   const nodeY = Math.floor(y / LightLevelVar.LIGHT_NODE_SIZE);
    const node = getLightLevelNode(nodeX, nodeY);
 
    const startingLightLevel = getLightIntensityAtNode(layer, node);
@@ -46,7 +46,7 @@ export function generateLightPosition(tribe: Tribe, layer: Layer, x: number, y: 
       for (let currentNodeY = minNodeY; currentNodeY <= maxNodeY; currentNodeY++) {
          // @Copynpaste
 
-         let dist = distance(nodeX, nodeY, currentNodeX, currentNodeY) * LightLevelVars.LIGHT_NODE_SIZE;
+         let dist = distance(nodeX, nodeY, currentNodeX, currentNodeY) * LightLevelVar.LIGHT_NODE_SIZE;
          dist -= slurbTorchLight.radius;
          if (dist < 0) {
             dist = 0;
@@ -58,8 +58,8 @@ export function generateLightPosition(tribe: Tribe, layer: Layer, x: number, y: 
             continue;
          }
 
-         const x = (currentNodeX + 0.5) * LightLevelVars.LIGHT_NODE_SIZE;
-         const y = (currentNodeY + 0.5) * LightLevelVars.LIGHT_NODE_SIZE;
+         const x = (currentNodeX + 0.5) * LightLevelVar.LIGHT_NODE_SIZE;
+         const y = (currentNodeY + 0.5) * LightLevelVar.LIGHT_NODE_SIZE;
 
          const candidate = createBuildingCandidate(EntityType.slurbTorch, buildingLayer, x, y, 0);
          if (buildingCandidateIsValid(candidate)) {

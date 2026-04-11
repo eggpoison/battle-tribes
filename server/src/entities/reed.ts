@@ -25,10 +25,10 @@ export function createReedConfig(position: Point, rotation: number): EntityConfi
    
    return {
       entityType: EntityType.reed,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.layeredRod]: layeredRodComponent
-      },
+      components: [
+         transformComponent,
+         layeredRodComponent
+      ],
       lights: []
    };
 }

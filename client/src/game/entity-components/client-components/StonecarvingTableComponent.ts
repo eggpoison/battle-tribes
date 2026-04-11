@@ -1,10 +1,11 @@
 import { ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface StonecarvingTableComponentData {}
 
@@ -19,15 +20,16 @@ export function createStonecarvingTableComponentData(): StonecarvingTableCompone
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponent.hitboxes[0];
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          1,
          0,
+         0, 0,
          getTextureArrayIndex("entities/stonecarving-table/stonecarving-table.png")
       )
    );

@@ -182,13 +182,13 @@ export function createOkrenClawConfig(position: Point, angle: number, size: Okre
 
    return {
       entityType: EntityType.okrenClaw,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.energyStore]: energyStoreComponent,
-         [ServerComponentType.okrenClaw]: okrenClawComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         energyStoreComponent,
+         okrenClawComponent
+      ],
       lights: []
    };
 }

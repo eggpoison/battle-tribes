@@ -6,7 +6,9 @@ import { EntityComponentData } from "../../world";
 import { createPricklyPearParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface PricklyPearFragmentProjectileComponentData {
    readonly variant: number;
@@ -27,17 +29,19 @@ function decodeData(reader: PacketReader): PricklyPearFragmentProjectileComponen
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const pricklyPearFragmentProjectileComponentData = entityComponentData.serverComponentData[ServerComponentType.pricklyPearFragmentProjectile]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const pricklyPearFragmentProjectileComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.pricklyPearFragmentProjectile);
 
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("entities/prickly-pear-fragment-projectile/fragment-" + (pricklyPearFragmentProjectileComponentData.variant + 1) + ".png")
       )
    );

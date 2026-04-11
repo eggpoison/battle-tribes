@@ -8,7 +8,9 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getTransformComponentData } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface WarriorHutComponentData {}
 
@@ -25,8 +27,8 @@ export function createWarriorHutComponentData(): WarriorHutComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    // Hut
@@ -34,21 +36,23 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       2,
       0,
+      0, 0,
       getTextureArrayIndex("entities/warrior-hut/warrior-hut.png")
    );
-   renderInfo.attachRenderPart(hutRenderPart);
+   renderObject.attachRenderPart(hutRenderPart);
 
    // Doors
-   const doorRenderParts = new Array<VisualRenderPart>();
+   const doorRenderParts: Array<VisualRenderPart> = [];
    for (let i = 0; i < 2; i++) {
       const doorRenderPart = new TexturedRenderPart(
          hutRenderPart,
          1,
          0,
+         0, 0,
          getTextureArrayIndex("entities/warrior-hut/warrior-hut-door.png")
       );
-      doorRenderPart.addTag("hutComponent:door");
-      renderInfo.attachRenderPart(doorRenderPart);
+      addRenderPartTag(doorRenderPart, "hutComponent:door");
+      renderObject.attachRenderPart(doorRenderPart);
       doorRenderParts.push(doorRenderPart);
    }
 

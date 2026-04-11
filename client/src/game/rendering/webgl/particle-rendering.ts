@@ -1,5 +1,5 @@
-import { lerp } from "webgl-test-shared";
-import { createWebGLProgram, gl, tempFloat32ArrayLength1, tempFloat32ArrayLength2, tempFloat32ArrayLength3 } from "../../webgl";
+import { lerp, Settings } from "webgl-test-shared";
+import { createWebGLProgram, gl } from "../../webgl";
 import ObjectBufferContainer from "../ObjectBufferContainer";
 import { getTexture } from "../../textures";
 import Particle from "../../Particle";
@@ -32,6 +32,58 @@ export let highTexturedBufferContainer: ObjectBufferContainer;
 
 let monocolourProgram: WebGLProgram;
 let texturedProgram: WebGLProgram;
+
+export const tempFloat32ArrayLength1 = new Float32Array(1);
+export const tempFloat32ArrayLength2 = new Float32Array(2);
+export const tempFloat32ArrayLength3 = new Float32Array(3);
+
+// @Cleanup This is too messy. Perhaps combine all into one
+// public static readonly particles: Array<Particle> = [];
+export const lowMonocolourParticles: Array<Particle> = [];
+export const lowTexturedParticles: Array<Particle> = [];
+export const highMonocolourParticles: Array<Particle> = [];
+export const highTexturedParticles: Array<Particle> = [];
+
+function updateParticleArray(particles: Array<Particle>, bufferContainer: ObjectBufferContainer): void {
+   const removedParticleIndexes: Array<number> = [];
+   for (let i = 0; i < particles.length; i++) {
+      const particle = particles[i];
+
+      particle.age += 1 * Settings.DT_S;
+      if (particle.age >= particle.lifetime) {
+         removedParticleIndexes.push(i);
+      } else {
+         // Update opacity
+         if (particle.getOpacity !== undefined) {
+            const opacity = particle.getOpacity();
+            tempFloat32ArrayLength1[0] = opacity;
+            bufferContainer.setData(particle.id, 10, tempFloat32ArrayLength1);
+         }
+         // Update scale
+         if (particle.getScale !== undefined) {
+            const scale = particle.getScale();
+            tempFloat32ArrayLength1[0] = scale;
+            bufferContainer.setData(particle.id, 11, tempFloat32ArrayLength1);
+         }
+      }
+   }
+
+   // Remove removed particles
+   for (let i = removedParticleIndexes.length - 1; i >= 0; i--) {
+      const idx = removedParticleIndexes[i];
+      const particle = particles[idx];
+
+      bufferContainer.removeObject(particle.id);
+      particles.splice(idx, 1);
+   }
+}
+
+export function updateParticles(): void {
+   updateParticleArray(lowMonocolourParticles, lowMonocolourBufferContainer);
+   updateParticleArray(lowTexturedParticles, lowTexturedBufferContainer);
+   updateParticleArray(highMonocolourParticles, highMonocolourBufferContainer);
+   updateParticleArray(highTexturedParticles, highTexturedBufferContainer);
+}
 
 export function createParticleShaders(): void {
    const monocolourVertexShaderText = `#version 300 es
@@ -313,7 +365,7 @@ export function createParticleShaders(): void {
    vertPositionData[10] = 1;
    vertPositionData[11] = 1;
 
-   vertPositionBuffer = gl.createBuffer()!;
+   vertPositionBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, vertPositionBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertPositionData, gl.STATIC_DRAW);
    
@@ -394,7 +446,7 @@ export function addMonocolourParticleToBufferContainer(particle: Particle, rende
    
    bufferContainer.registerNewObject(particle.id);
    
-   const opacity = typeof particle.getOpacity !== "undefined" ? particle.getOpacity() : 1;
+   const opacity = particle.getOpacity !== undefined ? particle.getOpacity() : 1;
 
    // Half size
    tempFloat32ArrayLength2[0] = width / 2;
@@ -460,7 +512,7 @@ export function addTexturedParticleToBufferContainer(particle: Particle, renderL
    
    bufferContainer.registerNewObject(particle.id);
    
-   const opacity = typeof particle.getOpacity !== "undefined" ? particle.getOpacity() : 1;
+   const opacity = particle.getOpacity !== undefined ? particle.getOpacity() : 1;
 
    // Half size
    tempFloat32ArrayLength2[0] = width / 2;

@@ -3,11 +3,11 @@ import { cleanupEntityRendering, renderEntity, setupEntityRendering } from "./we
 import { RenderPartOverlayGroup, renderEntityOverlay } from "./webgl/overlay-rendering";
 import { NUM_RENDER_LAYERS, RenderLayer } from "../render-layers";
 import { renderChunkedEntities, renderLayerIsChunkRendered } from "./webgl/chunked-entity-rendering";
-import { getEntityRenderInfo, getEntityType, layers } from "../world";
+import { getEntityRenderObject, getEntityType, layers } from "../world";
 import Layer from "../Layer";
 import { Entity, EntityType } from "webgl-test-shared";
 import { gl } from "../webgl";
-import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
+import { debugDisplayState } from "../../ui-state/debug-display-state";
 
 export const enum RenderableType {
    entity,
@@ -26,7 +26,7 @@ interface RenderableInfo {
 }
 
 let currentRenderLayer: RenderLayer = 0;
-const layerRenderableArrays = new Array<RenderableArrays>();
+const layerRenderableArrays: Array<RenderableArrays> = [];
 
 export function initialiseRenderables(): void {
    for (let i = 0; i < layers.length; i++) {
@@ -105,7 +105,6 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
    
    switch (renderableType) {
       case RenderableType.entity: {
-         
          if (renderLayerIsChunkRendered(renderLayer)) {
             // @Bug: this always renders the whole render layer...
             renderChunkedEntities(layer, renderLayer);
@@ -121,9 +120,8 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
                   continue;
                }
                
-               // @Cleanup: cast
-               const renderInfo = getEntityRenderInfo(entity);
-               renderEntity(renderInfo);
+               const renderObject = getEntityRenderObject(entity);
+               renderEntity(renderObject);
             }
             cleanupEntityRendering();
 
@@ -162,7 +160,7 @@ export function renderNextRenderables(layer: Layer, maxRenderLayer: RenderLayer)
       const renderables = renderableArrays[currentRenderLayer];
 
       let currentRenderableType = RenderableType.entity;
-      let currentRenderables = new Array<Renderable>();
+      let currentRenderables: Array<Renderable> = [];
 
       for (let idx = 0; idx < renderables.length; idx++) {
          const renderableInfo = renderables[idx];

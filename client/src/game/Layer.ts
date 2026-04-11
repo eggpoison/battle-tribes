@@ -1,60 +1,17 @@
-import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings } from "webgl-test-shared";
-import Board from "./Board";
+import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings, getTileIndexIncludingEdges, getSubtileIndex, getSubtileX, getSubtileY, CollisionGroup, subtileIsInWorldIncludingEdges, subtileIsInWorld } from "webgl-test-shared";
 import Chunk from "./Chunk";
 import { Light } from "./lights";
 import Particle from "./Particle";
-import { RenderLayer } from "./render-layers";
-import { RENDER_CHUNK_SIZE, RenderChunkRiverInfo } from "./rendering/render-chunks";
+import { NUM_RENDER_LAYERS, RenderLayer } from "./render-layers";
+import { getRenderChunkIndex, RENDER_CHUNK_SIZE, RenderChunkRiverInfo } from "./rendering/render-chunks";
 import { addRenderable, removeRenderable, RenderableType } from "./rendering/render-loop";
-import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity, createRenderLayerChunkDataRecord, createModifiedChunkIndicesArray } from "./rendering/webgl/chunked-entity-rendering";
-import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
+import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity, RenderLayerModifyInfo, EntityChunkData, ChunkedRenderLayer, CHUNKED_RENDER_LAYERS, RenderLayerChunkDataRecord } from "./rendering/webgl/chunked-entity-rendering";
+import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, lowMonocolourParticles, lowTexturedParticles, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
 import { recalculateWallSubtileRenderData, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
 import { recalculateTileShadows, TileShadowType } from "./rendering/webgl/tile-shadow-rendering";
 import { recalculateWallBorders } from "./rendering/webgl/wall-border-rendering";
 import { playSound } from "./sound";
 import { Tile } from "./Tile";
-
-// @Cleanup: location, @Copynpaste from server
-
-export function getTileX(tileIndex: number): number {
-   return tileIndex % Settings.FULL_WORLD_SIZE_TILES - Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function getTileY(tileIndex: number): number {
-   return Math.floor(tileIndex / Settings.FULL_WORLD_SIZE_TILES) - Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
-   if (tileX < -Settings.EDGE_GENERATION_DISTANCE || tileX >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE || tileY < -Settings.EDGE_GENERATION_DISTANCE || tileY >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
-      throw new Error("Outside of world bounds!");
-   }
-   
-   return (tileY + Settings.EDGE_GENERATION_DISTANCE) * (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE * 2) + tileX + Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function tileIsWithinEdge(tileX: number, tileY: number): boolean {
-   return tileX >= -Settings.EDGE_GENERATION_DISTANCE && tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE && tileY >= -Settings.EDGE_GENERATION_DISTANCE && tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function tileIsInWorld(tileX: number, tileY: number): boolean {
-   return tileX >= 0 && tileX < Settings.WORLD_SIZE_TILES && tileY >= 0 && tileY < Settings.WORLD_SIZE_TILES;
-}
-
-export function getSubtileIndex(subtileX: number, subtileY: number): number {
-   return (subtileY + Settings.EDGE_GENERATION_DISTANCE * 4) * Settings.FULL_WORLD_SIZE_TILES * 4 + subtileX + Settings.EDGE_GENERATION_DISTANCE * 4;
-}
-
-export function getSubtileX(subtileIndex: number): number {
-   return subtileIndex % (Settings.FULL_WORLD_SIZE_TILES * 4) - Settings.EDGE_GENERATION_DISTANCE * 4;
-}
-
-export function getSubtileY(subtileIndex: number): number {
-   return Math.floor(subtileIndex / (Settings.FULL_WORLD_SIZE_TILES * 4)) - Settings.EDGE_GENERATION_DISTANCE * 4;
-}
-
-export function subtileIsInWorld(subtileX: number, subtileY: number): boolean {
-   return subtileX >= -Settings.EDGE_GENERATION_DISTANCE * 4 && subtileX < (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 && subtileY >= -Settings.EDGE_GENERATION_DISTANCE * 4 && subtileY < (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4;
-}
 
 export default class Layer {
    public readonly idx: number;
@@ -64,7 +21,7 @@ export default class Layer {
    public readonly wallSubtileDamageTakenMap: Map<number, number>;
    public readonly riverFlowDirections: RiverFlowDirectionsRecord;
    public readonly waterRocks: Array<WaterRockData>;
-   public readonly grassInfo: Record<number, Record<number, GrassTileInfo>>;
+   public readonly grassInfo: Partial<Record<number, Partial<Record<number, GrassTileInfo>>>>;
 
    /** All dropdown tiles in the layer */
    public readonly dropdownTiles: ReadonlyArray<TileIndex>;
@@ -73,21 +30,27 @@ export default class Layer {
 
    public readonly chunks: ReadonlyArray<Chunk>;
 
+   public readonly collisionGroupChunks: Array<Array<Array<Entity>>> = [];
+
    public readonly wallSubtileVariants: Partial<Record<TileIndex, number>> = {};
    
-   public readonly lights = new Array<Light>();
+   public readonly lights: Array<Light> = [];
 
    // For chunked entity rendering
-   public readonly renderLayerChunkDataRecord = createRenderLayerChunkDataRecord();
+   public readonly renderLayerChunkDataRecord: RenderLayerChunkDataRecord;
+   public readonly visibleEntityChunkDatas: Record<ChunkedRenderLayer, Array<EntityChunkData>>;
    /** Each render layer contains a set of which chunks have been modified */
-   public modifiedChunkIndicesArray = createModifiedChunkIndicesArray();
+   public readonly modifiedChunkIndicesArray: Array<RenderLayerModifyInfo>;
 
    // @Speed: Polymorphism
-   public riverInfoArray = new Array<RenderChunkRiverInfo | null>();
+   public riverInfoArray: Array<RenderChunkRiverInfo | null> = [];
 
    public readonly slimeTrailPixels = new Map<number, number>();
    
-   constructor(idx: number, tiles: ReadonlyArray<Tile>, buildingBlockingTiles: ReadonlySet<TileIndex>, wallSubtileTypes: Float32Array, wallSubtileDamageTakenMap: Map<number, number>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, grassInfo: Record<number, Record<number, GrassTileInfo>>) {
+   // @Memory
+   public readonly renderChunksWithWalls = new Set<number>();
+   
+   constructor(idx: number, tiles: ReadonlyArray<Tile>, buildingBlockingTiles: ReadonlySet<TileIndex>, wallSubtileTypes: Float32Array, wallSubtileDamageTakenMap: Map<number, number>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, grassInfo: Partial<Record<number, Partial<Record<number, GrassTileInfo>>>>) {
       this.idx = idx;
       this.wallSubtileTypes = wallSubtileTypes;
       this.wallSubtileDamageTakenMap = wallSubtileDamageTakenMap;
@@ -98,7 +61,7 @@ export default class Layer {
       this.grassInfo = grassInfo;
 
       // Create the chunk array
-      const chunks = new Array<Chunk>();
+      const chunks: Array<Chunk> = [];
       for (let x = 0; x < Settings.WORLD_SIZE_CHUNKS; x++) {
          for (let y = 0; y < Settings.WORLD_SIZE_CHUNKS; y++) {
             const chunk = new Chunk(x, y);
@@ -107,7 +70,16 @@ export default class Layer {
       }
       this.chunks = chunks;
 
-      const dropdownTiles = new Array<TileIndex>();
+      const LAYER_NUM_CHUNKS = Settings.WORLD_SIZE_CHUNKS * Settings.WORLD_SIZE_CHUNKS;
+      for (let i = 0; i < CollisionGroup._LENGTH_; i++) {
+         const collisionChunks: Array<Array<Entity>> = [];
+         for (let j = 0; j < LAYER_NUM_CHUNKS; j++) {
+            collisionChunks.push([]);
+         }
+         this.collisionGroupChunks.push(collisionChunks);
+      }
+
+      const dropdownTiles: Array<TileIndex> = [];
       for (let tileY = 0; tileY < Settings.WORLD_SIZE_TILES; tileY++) {
          for (let tileX = 0; tileX < Settings.WORLD_SIZE_TILES; tileX++) {
             const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -126,7 +98,7 @@ export default class Layer {
             const subtileType = wallSubtileTypes[subtileIndex] as SubtileType;
             if (subtileType !== SubtileType.none) {
                const textureSources = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
-               if (typeof textureSources === "undefined") {
+               if (textureSources === undefined) {
                   throw new Error();
                }
    
@@ -134,9 +106,47 @@ export default class Layer {
                const tileY = Math.floor(subtileY / 4);
                const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
                this.wallSubtileVariants[tileIndex] = Math.floor(Math.random() * textureSources.length);
+
+               if (subtileIsInWorld(subtileX, subtileY)) {
+                  const renderChunkX = Math.floor(tileX / RENDER_CHUNK_SIZE);
+                  const renderChunkY = Math.floor(tileY / RENDER_CHUNK_SIZE);
+                  const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
+                  this.renderChunksWithWalls.add(renderChunkIndex);
+               }
             }
          }
       }
+
+      this.renderLayerChunkDataRecord = {} as RenderLayerChunkDataRecord;
+      for (const renderLayer of CHUNKED_RENDER_LAYERS) {
+         this.renderLayerChunkDataRecord[renderLayer] = {};
+      }
+
+      this.modifiedChunkIndicesArray = [];
+      for (let i = 0; i < NUM_RENDER_LAYERS; i++) {
+         this.modifiedChunkIndicesArray.push({
+            modifiedChunkIndices: new Set(),
+            modifyInfoRecord: {}
+         });
+      }
+
+      this.visibleEntityChunkDatas = {} as Record<ChunkedRenderLayer, Array<EntityChunkData>>;
+      for (const renderLayer of CHUNKED_RENDER_LAYERS) {
+         this.visibleEntityChunkDatas[renderLayer] = [];
+      }
+   }
+
+   // @Temporary @Speed @Hack
+   public getChunkIndex(chunk: Chunk): number {
+      const idx = this.chunks.indexOf(chunk);
+      if (idx === -1) {
+         throw new Error();
+      }
+      return idx;
+   }
+
+   public getCollisionChunkByIndex(collisionGroup: CollisionGroup, chunkIndex: number): Array<Entity> {
+      return this.collisionGroupChunks[collisionGroup][chunkIndex];
    }
 
    public tileIsBuildingBlocking(tileIndex: TileIndex): boolean {
@@ -198,7 +208,7 @@ export default class Layer {
                Math.abs(angularVelocity) / lifetime / 1.5,
                colour, colour, colour
             );
-            Board.lowMonocolourParticles.push(particle);
+            lowMonocolourParticles.push(particle);
          }
          
          // Larger debris pieces
@@ -248,7 +258,7 @@ export default class Layer {
                textureIndex,
                tint, tint, tint
             );
-            Board.lowTexturedParticles.push(particle);
+            lowTexturedParticles.push(particle);
          }
       }
       
@@ -303,12 +313,12 @@ export default class Layer {
 
    public getRiverFlowDirection(tileX: number, tileY: number): number {
       const rowDirections = this.riverFlowDirections[tileX];
-      if (typeof rowDirections === "undefined") {
+      if (rowDirections === undefined) {
          throw new Error("Tried to get the river flow direction of a non-water tile.");
       }
 
       const direction = rowDirections[tileY];
-      if (typeof direction === "undefined") {
+      if (direction === undefined) {
          throw new Error("Tried to get the river flow direction of a non-water tile.");
       }
       

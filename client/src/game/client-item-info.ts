@@ -1,4 +1,5 @@
 import { assert, ItemType } from "webgl-test-shared";
+import { registerTextureSource } from "./texture-atlases/texture-sources";
 
 export type ClientItemInfo = {
    readonly entityTextureSource: string;
@@ -881,9 +882,19 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
    },
 };
 
+// Add item textures to entity textures
+for (const clientItemInfo of Object.values(CLIENT_ITEM_INFO_RECORD)) {
+   registerTextureSource(clientItemInfo.entityTextureSource);
+
+   // Add tool item textures
+   if (clientItemInfo.toolTextureSource !== "") {
+      registerTextureSource(clientItemInfo.toolTextureSource);
+   }
+}
+
 export function getItemTypeImage(itemType: ItemType): string {
    const img = itemImages["/src/images/" + CLIENT_ITEM_INFO_RECORD[itemType].textureSource] as string;
-   assert(typeof img !== "undefined");
+   assert(img !== undefined);
    return img;
 }
 

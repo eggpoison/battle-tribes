@@ -21,10 +21,10 @@ export function createIceShardConfig(position: Point, rotation: number): EntityC
    
    return {
       entityType: EntityType.iceShardProjectile,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.iceShard]: iceShardComponent
-      },
+      components: [
+         transformComponent,
+         iceShardComponent
+      ],
       lights: []
    };
 }

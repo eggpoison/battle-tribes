@@ -1,7 +1,7 @@
 import { ServerComponentType } from "../../../shared/src/components";
 import { Entity } from "../../../shared/src/entities";
 import { getStringLengthBytes, Packet } from "../../../shared/src/packets";
-import { Point } from "../../../shared/src/utils";
+import { Point, polarVec2 } from "../../../shared/src/utils";
 import Tribe from "../Tribe";
 import { entityExists } from "../world";
 import { ComponentArray } from "./ComponentArray";
@@ -160,12 +160,13 @@ export function getRiderTargetPosition(rider: Entity): Point | null {
 
    if (TribesmanComponentArray.hasComponent(rider)) {
       const tribesmanComponent = TribesmanComponentArray.getComponent(rider);
-      if (tribesmanComponent.movementIntention.isNonZero()) {
+      if (tribesmanComponent.moveIntention !== null) {
          const transformComponent = TransformComponentArray.getComponent(rider);
          const playerHitbox = transformComponent.hitboxes[0];
    
-         const x = playerHitbox.box.position.x + 400 * tribesmanComponent.movementIntention.x;
-         const y = playerHitbox.box.position.y + 400 * tribesmanComponent.movementIntention.y;
+         const moveIntention = polarVec2(400, tribesmanComponent.moveIntention);
+         const x = playerHitbox.box.position.x + moveIntention.x;
+         const y = playerHitbox.box.position.y + moveIntention.y;
          return new Point(x, y);
       }
    }

@@ -6,7 +6,9 @@ import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface DustfleaMorphCocoonComponentData {
    readonly stage: number;
@@ -44,19 +46,21 @@ function decodeData(reader: PacketReader): DustfleaMorphCocoonComponentData {
    return createDustfleaMorphCocoonComponentData(stage);
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const dustfleaMorphCocoonComponentData = entityComponentData.serverComponentData[ServerComponentType.dustfleaMorphCocoon]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const dustfleaMorphCocoonComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.dustfleaMorphCocoon);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(getTextureSource(dustfleaMorphCocoonComponentData.stage))
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {
       renderPart: renderPart
@@ -64,7 +68,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): DustfleaMorphCocoonComponent {
-   const dustfleaMorphCocoonComponentData = entityComponentData.serverComponentData[ServerComponentType.dustfleaMorphCocoon]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const dustfleaMorphCocoonComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.dustfleaMorphCocoon);
 
    return {
       stage: dustfleaMorphCocoonComponentData.stage,

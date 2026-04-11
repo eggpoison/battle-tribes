@@ -1,18 +1,19 @@
-import { Point, TileIndex, Biome, TileType, Settings, PacketReader, WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, InventoryName, AttackVars } from "webgl-test-shared";
+import { TileIndex, Biome, TileType, Settings, PacketReader, WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, InventoryName, AttackVar, getTileX, getTileY, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges, tileIsInWorld } from "webgl-test-shared";
 import { refreshCameraView, setCameraPosition } from "../camera";
 import { Tile } from "../Tile";
 import { addLayer, layers, setCurrentLayer, surfaceLayer } from "../world";
 import { NEIGHBOUR_OFFSETS } from "../utils";
-import Layer, { getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld, tileIsWithinEdge } from "../Layer";
+import Layer from "../Layer";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { initialiseRenderables } from "../rendering/render-loop";
 import { playerInstance } from "../player";
 import { registerTamingSpecsFromData } from "../taming-specs";
-import { addChatMessage } from "../chat";
-import { gameUIState } from "../../ui-state/game-ui-state.svelte";
+import { gameUIState } from "../../ui-state/game-ui-state";
 import { getSelectedItemInfo } from "../player-action-handling";
-import { playerActionState } from "../../ui-state/player-action-state.svelte";
-import { gameIsRunning, receiveInitialPacket, resyncGame } from "../client";
+import { playerActionState } from "../../ui-state/player-action-state";
+import { gameIsRunning, resyncGame } from "../game";
+import { registerEntityComponentTypesFromData } from "../entity-component-types";
+import { addMessageToChatbox } from "../../ui/game/Chat";
 
 const getBuildingBlockingTiles = (): ReadonlySet<TileIndex> => {
    // Initially find all tiles below a dropdown tile
@@ -61,9 +62,9 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
    // Create layers
    const numLayers = reader.readNumber();
    for (let i = 0; i < numLayers; i++) {
-      const tiles = new Array<Tile>();
+      const tiles: Array<Tile> = [];
       const flowDirections: RiverFlowDirectionsRecord = {};
-      const grassInfoRecord: Record<number, Record<number, GrassTileInfo>> = {};
+      const grassInfoRecord: Partial<Record<number, Partial<Record<number, GrassTileInfo>>>> = {};
       for (let tileIndex = 0; tileIndex < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES; tileIndex++) {
          const tileType = reader.readNumber() as TileType;
          const tileBiome = reader.readNumber() as Biome;
@@ -74,14 +75,14 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
    
          const tileX = getTileX(tileIndex);
          const tileY = getTileY(tileIndex);
-   
+
          const tile = new Tile(tileX, tileY, tileType, tileBiome, mithrilRichness);
          tiles.push(tile);
    
-         if (typeof flowDirections[tileX] === "undefined") {
+         if (flowDirections[tileX] === undefined) {
             flowDirections[tileX] = {};
          }
-         flowDirections[tileX]![tileY] = flowDirection;
+         flowDirections[tileX][tileY] = flowDirection;
    
          const grassInfo: GrassTileInfo = {
             tileX: tileX,
@@ -89,10 +90,10 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
             temperature: temperature,
             humidity: humidity
          };
-         if (typeof grassInfoRecord[tileX] === "undefined") {
+         if (grassInfoRecord[tileX] === undefined) {
             grassInfoRecord[tileX] = {};
          }
-         grassInfoRecord[tileX]![tileY] = grassInfo;
+         grassInfoRecord[tileX][tileY] = grassInfo;
       }
 
       // Read in subtiles
@@ -123,7 +124,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
                const neighbourTileX = tileX + NEIGHBOUR_OFFSETS[j][0];
                const neighbourTileY = tileY + NEIGHBOUR_OFFSETS[j][1];
 
-               if (tileIsWithinEdge(neighbourTileX, neighbourTileY)) {
+               if (tileIsInWorldIncludingEdges(neighbourTileX, neighbourTileY)) {
                   const tileIndex = getTileIndexIncludingEdges(neighbourTileX, neighbourTileY);
                   const neighbourTile = tiles[tileIndex];
                   neighbourTile.bordersWater = true;
@@ -168,6 +169,8 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
    }
 
    registerTamingSpecsFromData(reader);
+
+   registerEntityComponentTypesFromData(reader);
 }
 
 
@@ -212,7 +215,7 @@ export function processForcePositionUpdatePacket(reader: PacketReader): void {
 export function receiveChatMessagePacket(reader: PacketReader): void {
    const username = reader.readString();
    const message = reader.readString();
-   addChatMessage(username, message);
+   addMessageToChatbox(username, message);
 }
    
 export function processSimulationStatusUpdatePacket(reader: PacketReader): void {
@@ -228,14 +231,14 @@ export function processShieldKnockPacket(): void {
    
    if (selectedItemInfo.inventoryName === InventoryName.hotbar) {
       playerActionState.setHotbarItemRestTime({
-         remainingTimeTicks: AttackVars.SHIELD_BLOCK_REST_TIME_TICKS,
-         durationTicks: AttackVars.SHIELD_BLOCK_REST_TIME_TICKS,
+         remainingTimeTicks: AttackVar.SHIELD_BLOCK_REST_TIME_TICKS,
+         durationTicks: AttackVar.SHIELD_BLOCK_REST_TIME_TICKS,
          itemSlot: selectedItemInfo.itemSlot
       });
    } else {
       playerActionState.setOffhandItemRestTime({
-         remainingTimeTicks: AttackVars.SHIELD_BLOCK_REST_TIME_TICKS,
-         durationTicks: AttackVars.SHIELD_BLOCK_REST_TIME_TICKS,
+         remainingTimeTicks: AttackVar.SHIELD_BLOCK_REST_TIME_TICKS,
+         durationTicks: AttackVar.SHIELD_BLOCK_REST_TIME_TICKS,
          itemSlot: selectedItemInfo.itemSlot
       });
    }

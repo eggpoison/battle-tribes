@@ -1,13 +1,16 @@
 import { randAngle, randFloat, randInt, Entity, ServerComponentType, PacketReader, CircularBox } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import { registerDirtyRenderInfo } from "../../rendering/render-part-matrices";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface BerryBushComponentData {
    readonly numBerries: number;
@@ -47,18 +50,22 @@ function decodeData(reader: PacketReader): BerryBushComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const berryBushComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.berryBush);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
-      getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[entityComponentData.serverComponentData[ServerComponentType.berryBush]!.numBerries])
+      0, 0,
+      getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponentData.numBerries])
    );
-   renderPart.addTag("berryBushComponent:renderPart");
-   renderInfo.attachRenderPart(renderPart)
+   addRenderPartTag(renderPart, "berryBushComponent:renderPart");
+   renderObject.attachRenderPart(renderPart)
 
    return {
       renderPart: renderPart
@@ -66,8 +73,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): BerryBushComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const berryBushComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.berryBush);
+
    return {
-      numBerries: entityComponentData.serverComponentData[ServerComponentType.berryBush]!.numBerries,
+      numBerries: berryBushComponentData.numBerries,
       renderPart: intermediateInfo.renderPart
    };
 }
@@ -82,8 +92,8 @@ function updateFromData(data: BerryBushComponentData, entity: Entity): void {
 
    berryBushComponent.renderPart.switchTextureSource(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponent.numBerries]);
 
-   const renderInfo = getEntityRenderInfo(entity);
-   registerDirtyRenderInfo(renderInfo);
+   const renderObject = getEntityRenderObject(entity);
+   registerDirtyRenderObject(entity, renderObject);
 }
 
 function onHit(entity: Entity): void {

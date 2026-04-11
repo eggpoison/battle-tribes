@@ -25,7 +25,7 @@ export interface TextureAtlasInfo extends BaseTextureAtlasInfo {
 
 export const ATLAS_SLOT_SIZE = 16;
 
-let unavailableSlots: Array<number>;
+let unavailableSlots = new Set<number>();
 let textureSlotIndexes: Array<number>;
 
 // @HACK: this just imports everythign..... slow... prolly some i dont need.
@@ -40,7 +40,7 @@ const getAvailableSlotIndex = (slotWidth: number, slotHeight: number, atlasSize:
          for (let cx = x; cx < x + slotWidth; cx++) {
             for (let cy = y; cy < y + slotHeight; cy++) {
                const slotIndex = cy * atlasSize + cx;
-               if (unavailableSlots.includes(slotIndex)) {
+               if (unavailableSlots.has(slotIndex)) {
                   isAvailable = false;
                   break;
                }
@@ -60,16 +60,16 @@ const expand = (atlasSize: number): void => {
    const newAtlasSize = atlasSize + 1;
 
    // Remap all previous available slots
-   const newSlots = new Array<number>();
+   const newSlots = new Set<number>();
    for (const slotIndex of unavailableSlots) {
       const width = slotIndex % atlasSize;
       const height = Math.floor(slotIndex / atlasSize);
-      newSlots.push(height * newAtlasSize + width);
+      newSlots.add(height * newAtlasSize + width);
    }
    unavailableSlots = newSlots;
 
    // Remap texture slot indexes
-   const newIndexes = new Array<number>();
+   const newIndexes: Array<number> = [];
    for (const slotIndex of textureSlotIndexes) {
       const width = slotIndex % atlasSize;
       const height = Math.floor(slotIndex / atlasSize);
@@ -82,7 +82,7 @@ const expand = (atlasSize: number): void => {
 //    return new Promise(resolve => {
 //       let numLoaded = 0;
       
-//       const textureImages = new Array<HTMLImageElement>();
+//       const textureImages: Array<HTMLImageElement> = [];
 //       for (let i = 0; i < textureSources.length; i++) {
 //          const textureSource = textureSources[i];
    
@@ -101,13 +101,13 @@ const expand = (atlasSize: number): void => {
 // }
 
 // @Hack @Cleanup @Location
-const textureImages = new Array<HTMLImageElement>();
+const textureImages: Array<HTMLImageElement> = [];
 
 export function preloadTextureAtlasImages(): void {
    for (let i = 0; i < TEXTURE_SOURCES.length; i++) {
       const textureSource = TEXTURE_SOURCES[i];
       const imageSrc = itemImages["../../images/" + textureSource] as string;
-      assert(typeof imageSrc !== "undefined");
+      assert(imageSrc !== undefined);
 
       const image = new Image();
       image.src = imageSrc;
@@ -118,11 +118,11 @@ export function preloadTextureAtlasImages(): void {
 
 export async function generateTextureAtlas(textureSources: ReadonlyArray<string>): Promise<TextureAtlasGenerationInfo> {
    return new Promise(async (resolve) => {
-      unavailableSlots = [];
+      unavailableSlots.clear();
       textureSlotIndexes = [];
 
-      const textureWidths = new Array<number>();
-      const textureHeights = new Array<number>();
+      const textureWidths: Array<number> = [];
+      const textureHeights: Array<number> = [];
       
       let atlasSize = 1;
       
@@ -165,9 +165,9 @@ export async function generateTextureAtlas(textureSources: ReadonlyArray<string>
             // Add to unavailable slots
             const x = slotIndex % atlasSize;
             const y = Math.floor(slotIndex / atlasSize);
-            for (let cx = x; cx < x + slotWidth; cx++) {
-               for (let cy = y; cy < y + slotHeight; cy++) {
-                  unavailableSlots.push(cy * atlasSize + cx);
+            for (let cy = y; cy < y + slotHeight; cy++) {
+               for (let cx = x; cx < x + slotWidth; cx++) {
+                  unavailableSlots.add(cy * atlasSize + cx);
                }
             }
          // });
@@ -198,7 +198,7 @@ export async function generateTextureAtlas(textureSources: ReadonlyArray<string>
 
 export function stitchTextureAtlas(generationInfo: TextureAtlasGenerationInfo, gl: WebGL2RenderingContext): TextureAtlasInfo {
    // Make atlas image into texture
-   const texture = gl.createTexture()!;
+   const texture = gl.createTexture();
    gl.bindTexture(gl.TEXTURE_2D, texture);
    // Set parameters
    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);

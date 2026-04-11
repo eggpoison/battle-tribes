@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
 import { createFenceGateComponentData } from "../entity-components/server-components/FenceGateComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createStatusEffectComponentData } from "../entity-components/server-components/StatusEffectComponent";
@@ -10,7 +10,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createFenceGateConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
    const box = new RectangularBox(position, new Point(0, 0), rotation, 56, 16);
@@ -19,14 +19,14 @@ export function createFenceGateConfig(position: Point, rotation: number, tribe: 
 
    return {
       entityType: EntityType.fenceGate,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.fenceGate]: createFenceGateComponentData()
-      },
-      clientComponentData: {}
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createFenceGateComponentData()
+      ],
+      clientComponentData: []
    };
 }

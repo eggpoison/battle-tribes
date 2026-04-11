@@ -105,14 +105,14 @@ const addLineVertices = (vertices: Array<number>, debugData: EntityDebugData, po
 export function renderLineDebugData(debugData: EntityDebugData): void {
    gl.useProgram(lineProgram);
 
-   if (!entityExists(debugData.entityID)) {
-      throw new Error("Couldn't find game object.");
+   if (!entityExists(debugData.entity)) {
+      throw new Error("Couldn't find entity.");
    }
 
-   const transformComponent = TransformComponentArray.getComponent(debugData.entityID);
+   const transformComponent = TransformComponentArray.getComponent(debugData.entity);
    const hitbox = transformComponent.hitboxes[0];
    
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    addCircleVertices(vertices, debugData, hitbox.box.position);
    addLineVertices(vertices, debugData, hitbox.box.position);
 
@@ -149,7 +149,7 @@ const addTileHighlightVertices = (vertices: Array<number>, debugData: EntityDebu
 }
 
 export function renderTriangleDebugData(debugData: EntityDebugData): void {
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    
    gl.useProgram(triangleProgram);
 

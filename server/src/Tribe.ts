@@ -15,7 +15,7 @@ import { ItemType, InventoryName } from "battletribes-shared/items/items";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
 import { addTribe, createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType, getGameTicks, removeTribe } from "./world";
 import Layer from "./Layer";
-import { EntityConfig } from "./components";
+import { EntityConfig, getConfigComponent } from "./components";
 import { createTribeWorkerConfig } from "./entities/tribes/tribe-worker";
 import { createTribeWarriorConfig } from "./entities/tribes/tribe-warrior";
 import { layers, surfaceLayer, undergroundLayer } from "./layers";
@@ -26,6 +26,7 @@ import PlayerClient from "./server/PlayerClient";
 import { TribeMemberComponentArray } from "./components/TribeMemberComponent";
 import { StructureComponentArray } from "./components/StructureComponent";
 import { TribesmanComponentArray } from "./components/TribesmanComponent";
+import { getEntityComponentTypes } from "./entity-component-types";
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TICK_RATE;
 const RESPAWN_TIME_TICKS = 5 * Settings.TICK_RATE;
@@ -399,7 +400,9 @@ export default class Tribe {
          }
       }
 
-      config.components[ServerComponentType.tribesmanAI]!.hut = hut;
+      const componentTypes = getEntityComponentTypes(getEntityType(hut));
+      const tribesmanAIComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.tribesmanAI);
+      tribesmanAIComponent.hut = hut;
       createEntity(config, getEntityLayer(hut), 0);
    }
 

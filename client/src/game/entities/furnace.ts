@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
 import { createCookingComponentData } from "../entity-components/server-components/CookingComponent";
 import { createFurnaceComponentData } from "../entity-components/server-components/FurnaceComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
@@ -12,7 +12,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createFurnaceConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
    const box = new RectangularBox(position, new Point(0, 0), rotation, 64, 64);
@@ -21,16 +21,16 @@ export function createFurnaceConfig(position: Point, rotation: number, tribe: Tr
 
    return {
       entityType: EntityType.furnace,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.inventory]: createInventoryComponentData({}),
-         [ServerComponentType.cooking]: createCookingComponentData(),
-         [ServerComponentType.furnace]: createFurnaceComponentData(),
-      },
-      clientComponentData: {}
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createInventoryComponentData({}),
+         createCookingComponentData(),
+         createFurnaceComponentData()
+      ],
+      clientComponentData: []
    };
 }

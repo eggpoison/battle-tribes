@@ -1,3 +1,4 @@
+import { _bounds } from "../../../../shared/src/boxes/BaseBox";
 import { Box } from "../../../../shared/src/boxes/boxes";
 import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
 import { boxIsCollidingWithSubtile } from "../../../../shared/src/collision";
@@ -7,6 +8,7 @@ import { StructureType } from "../../../../shared/src/structures";
 import { getSubtileIndex } from "../../../../shared/src/subtiles";
 import { getTileIndexIncludingEdges, Point, randAngle, randFloat } from "../../../../shared/src/utils";
 import { boxArraysAreColliding, boxHasCollisionWithBoxes } from "../../collision-detection";
+import { getConfigTransformComponent } from "../../components";
 import { createStructureConfig } from "../../structure-placement";
 import { getTribes } from "../../world";
 import { SafetyNode, addBoxesOccupiedNodes } from "../ai-building";
@@ -27,7 +29,7 @@ export function createBuildingCandidate(entityType: StructureType, buildingLayer
    // @SUPAHACK
    const tribe = getTribes()[0];
    const entityConfig = createStructureConfig(tribe, entityType, new Point(x, y), rotation, []);
-   const transformComponent = entityConfig.components[ServerComponentType.transform]!;
+   const transformComponent = getConfigTransformComponent(entityConfig.components);
 
    const candidate: BuildingCandidate = {
       buildingLayer: buildingLayer,
@@ -42,11 +44,8 @@ export function createBuildingCandidate(entityType: StructureType, buildingLayer
 export function buildingCandidateIsValid(candidate: BuildingCandidate): boolean {
    // Make sure the hitboxes don't go outside the world
    for (const box of candidate.boxes) {
-      const minX = box.calculateBoundsMinX();
-      const maxX = box.calculateBoundsMaxX();
-      const minY = box.calculateBoundsMinY();
-      const maxY = box.calculateBoundsMaxY();
-      if (minX < 0 || maxX >= Settings.WORLD_UNITS || minY < 0 || maxY >= Settings.WORLD_UNITS) {
+      box.calculateBounds();
+      if (_bounds.minX < 0 || _bounds.maxX >= Settings.WORLD_UNITS || _bounds.minY < 0 || _bounds.maxY >= Settings.WORLD_UNITS) {
          return false;
       }
    }
@@ -54,10 +53,11 @@ export function buildingCandidateIsValid(candidate: BuildingCandidate): boolean 
    // Make sure the building isn't in any walls
    const layer = candidate.buildingLayer.layer;
    for (const box of candidate.boxes) {
-      const minSubtileX = Math.floor(box.calculateBoundsMinX() / Settings.SUBTILE_SIZE);
-      const maxSubtileX = Math.floor(box.calculateBoundsMaxX() / Settings.SUBTILE_SIZE);
-      const minSubtileY = Math.floor(box.calculateBoundsMinY() / Settings.SUBTILE_SIZE);
-      const maxSubtileY = Math.floor(box.calculateBoundsMaxY() / Settings.SUBTILE_SIZE);
+      box.calculateBounds();
+      const minSubtileX = Math.floor(_bounds.minX / Settings.SUBTILE_SIZE);
+      const maxSubtileX = Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE);
+      const minSubtileY = Math.floor(_bounds.minY / Settings.SUBTILE_SIZE);
+      const maxSubtileY = Math.floor(_bounds.maxY / Settings.SUBTILE_SIZE);
 
       for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
          for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
@@ -72,10 +72,11 @@ export function buildingCandidateIsValid(candidate: BuildingCandidate): boolean 
    // Make sure the building isn't over any building blocking tiles
    // @Copynpaste from structureIntersectsWithBuildingBlockingTiles in shared
    for (const box of candidate.boxes) {
-      const minTileX = Math.floor(box.calculateBoundsMinX() / Settings.TILE_SIZE);
-      const maxTileX = Math.floor(box.calculateBoundsMaxX() / Settings.TILE_SIZE);
-      const minTileY = Math.floor(box.calculateBoundsMinY() / Settings.TILE_SIZE);
-      const maxTileY = Math.floor(box.calculateBoundsMaxY() / Settings.TILE_SIZE);
+      box.calculateBounds();
+      const minTileX = Math.floor(_bounds.minX / Settings.TILE_SIZE);
+      const maxTileX = Math.floor(_bounds.maxX / Settings.TILE_SIZE);
+      const minTileY = Math.floor(_bounds.minY / Settings.TILE_SIZE);
+      const maxTileY = Math.floor(_bounds.maxY / Settings.TILE_SIZE);
 
       for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          for (let tileY = minTileY; tileY <= maxTileY; tileY++) {

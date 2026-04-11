@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
 import { createAIHelperComponentData } from "../entity-components/server-components/AIHelperComponent";
 import { createAmmoBoxComponentData } from "../entity-components/server-components/AmmoBoxComponent";
 import { createBallistaComponentData } from "../entity-components/server-components/BallistaComponent";
@@ -14,7 +14,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createBallistaConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
    const box = new RectangularBox(position, new Point(0, 0), rotation, 100, 100);
@@ -23,18 +23,18 @@ export function createBallistaConfig(position: Point, rotation: number, tribe: T
 
    return {
       entityType: EntityType.ballista,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.turret]: createTurretComponentData(),
-         [ServerComponentType.aiHelper]: createAIHelperComponentData(),
-         [ServerComponentType.ammoBox]: createAmmoBoxComponentData(),
-         [ServerComponentType.inventory]: createInventoryComponentData({}),
-         [ServerComponentType.ballista]: createBallistaComponentData()
-      },
-      clientComponentData: {}
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createTurretComponentData(),
+         createAIHelperComponentData(),
+         createAmmoBoxComponentData(),
+         createInventoryComponentData({}),
+         createBallistaComponentData()
+      ],
+      clientComponentData: []
    };
 }

@@ -1,7 +1,7 @@
 import { Entity, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
-import { angle, curveWeight, Point, lerp, rotateXAroundPoint, rotateYAroundPoint, distance, distBetweenPointAndRectangle, TileIndex, getTileIndexIncludingEdges, assert, polarVec2, clamp } from "battletribes-shared/utils";
+import { angle, curveWeight, Point, lerp, rotatePointAroundPoint, distance, distBetweenPointAndRectangle, TileIndex, getTileIndexIncludingEdges, polarVec2, clamp, _point } from "battletribes-shared/utils";
 import Layer from "./Layer";
 import { getEntityPathfindingGroupID } from "./pathfinding";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
@@ -546,19 +546,27 @@ const getAngleToVertexOffset = (x: number, y: number, hitboxX: number, hitboxY: 
 }
 
 export function getMinAngleToRectangularBox(x: number, y: number, box: RectangularBox): number {
-   const tl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, box.topLeftVertexOffset.x, box.topLeftVertexOffset.y);
-   const tr = getAngleToVertexOffset(x, y, box.position.x, box.position.y, box.topRightVertexOffset.x, box.topRightVertexOffset.y);
-   const bl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -box.topLeftVertexOffset.x, -box.topLeftVertexOffset.y);
-   const br = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -box.topRightVertexOffset.x, -box.topRightVertexOffset.y);
+   // @Speed!
+   const topLeftVertexOffset = box.getTopLeftVertexOffset();
+   const topRightVertexOffset = box.getTopLeftVertexOffset();
+   
+   const tl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, topLeftVertexOffset.x, topLeftVertexOffset.y);
+   const tr = getAngleToVertexOffset(x, y, box.position.x, box.position.y, topRightVertexOffset.x, topRightVertexOffset.y);
+   const bl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -topLeftVertexOffset.x, -topLeftVertexOffset.y);
+   const br = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -topRightVertexOffset.x, -topRightVertexOffset.y);
    
    return Math.min(tl, tr, bl, br);
 }
 
 export function getMaxAngleToRectangularBox(x: number, y: number, box: RectangularBox): number {
-   const tl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, box.topLeftVertexOffset.x, box.topLeftVertexOffset.y);
-   const tr = getAngleToVertexOffset(x, y, box.position.x, box.position.y, box.topRightVertexOffset.x, box.topRightVertexOffset.y);
-   const bl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -box.topLeftVertexOffset.x, -box.topLeftVertexOffset.y);
-   const br = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -box.topRightVertexOffset.x, -box.topRightVertexOffset.y);
+   // @Speed!
+   const topLeftVertexOffset = box.getTopLeftVertexOffset();
+   const topRightVertexOffset = box.getTopLeftVertexOffset();
+   
+   const tl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, topLeftVertexOffset.x, topLeftVertexOffset.y);
+   const tr = getAngleToVertexOffset(x, y, box.position.x, box.position.y, topRightVertexOffset.x, topRightVertexOffset.y);
+   const bl = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -topLeftVertexOffset.x, -topLeftVertexOffset.y);
+   const br = getAngleToVertexOffset(x, y, box.position.x, box.position.y, -topRightVertexOffset.x, -topRightVertexOffset.y);
    
    return Math.max(tl, tr, bl, br);
 }
@@ -619,12 +627,15 @@ export function turnAngle(angle: number, targetAngle: number, turnSpeed: number)
 }
 
 const lineIntersectsRectangularHitbox = (lineX1: number, lineY1: number, lineX2: number, lineY2: number, rect: RectangularBox): boolean => {
+   
    // Rotate the line and rectangle to axis-align the rectangle
    const rectAngle = rect.angle;
-   const x1 = rotateXAroundPoint(lineX1, lineY1, rect.position.x, rect.position.y, -rectAngle);
-   const y1 = rotateYAroundPoint(lineX1, lineY1, rect.position.x, rect.position.y, -rectAngle);
-   const x2 = rotateXAroundPoint(lineX2, lineY2, rect.position.x, rect.position.y, -rectAngle);
-   const y2 = rotateYAroundPoint(lineX2, lineY2, rect.position.x, rect.position.y, -rectAngle);
+   rotatePointAroundPoint(lineX1, lineY1, rect.position.x, rect.position.y, -rectAngle);
+   const x1 = _point.x;
+   const y1 = _point.y;
+   rotatePointAroundPoint(lineX2, lineY2, rect.position.x, rect.position.y, -rectAngle);
+   const x2 = _point.x;
+   const y2 = _point.x;
 
    const xMin = Math.min(x1, x2);
    const xMax = Math.max(x1, x2);

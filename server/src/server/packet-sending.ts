@@ -1,15 +1,14 @@
 import { ServerComponentTypeString } from "battletribes-shared/components";
 import { Entity, EntityTypeString } from "battletribes-shared/entities";
 import Layer from "../Layer";
-import { ComponentArrays, getComponentArrayRecord } from "../components/ComponentArray";
-import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
+import { getComponentArrayRecord } from "../components/ComponentArray";
 import { Settings } from "battletribes-shared/settings";
 import PlayerClient from "./PlayerClient";
 import { PlayerComponentArray } from "../components/PlayerComponent";
-import { Inventory, InventoryName } from "battletribes-shared/items/items";
+import { Inventory } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { alignLengthBytes, getStringLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
-import { entityExists, getEntityComponentTypes, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes } from "../world";
+import { entityExists, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes } from "../world";
 import { getPlayerNearbyCollapses, getSubtileSupport, subtileIsCollapsing } from "../collapses";
 import { getSubtileIndex } from "../../../shared/src/subtiles";
 import { layers } from "../layers";
@@ -19,6 +18,7 @@ import { addTamingSpecToData, getTamingSpecDataLength, getTamingSpecsMap } from 
 import { Point } from "../../../shared/src/utils";
 import { addLightData, getEntityHitboxLights, getLightDataLength } from "../lights";
 import { getPlayerClients } from "./player-clients";
+import { ENTITY_COMPONENT_TYPES, getEntityComponentTypes } from "../entity-component-types";
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -50,48 +50,44 @@ export function addInventoryDataToPacket(packet: Packet, inventory: Inventory): 
 }
 
 export function getEntityDataLength(entity: Entity, player: Entity | null): number {
-   let lengthBytes = 5 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
 
-   for (let i = 0; i < ComponentArrays.length; i++) {
-      const componentArray = ComponentArrays[i];
+   const componentTypes = getEntityComponentTypes(getEntityType(entity));
+   const componentArrayRecord = getComponentArrayRecord();
 
-      if (componentArray.hasComponent(entity)) {
-         lengthBytes += Float32Array.BYTES_PER_ELEMENT; // Component type
-         lengthBytes += componentArray.getDataLength(entity, player);
-      }
+   for (const componentType of componentTypes) {
+      const componentArray = componentArrayRecord[componentType];
+      lengthBytes += componentArray.getDataLength(entity, player);
    }
 
    return lengthBytes;
 }
 
 export function addEntityDataToPacket(packet: Packet, entity: Entity, player: Entity | null): void {
+   const entityType = getEntityType(entity);
+   
    // Entity ID, type, spawn time, and layer
    packet.writeNumber(entity);
-   packet.writeNumber(getEntityType(entity));
+   packet.writeNumber(entityType);
    // @Bandwidth: Only include when client doesn't know about this information
    packet.writeNumber(getEntitySpawnTicks(entity));
    packet.writeNumber(layers.indexOf(getEntityLayer(entity)));
 
-   const componentTypes = getEntityComponentTypes(entity);
+   const componentTypes = getEntityComponentTypes(entityType);
    const componentArrayRecord = getComponentArrayRecord();
 
    // Components
-   packet.writeNumber(componentTypes.length);
    for (let i = 0; i < componentTypes.length; i++) {
       const componentType = componentTypes[i];
       const componentArray = componentArrayRecord[componentType];
 
-      // @Speed
-      if (componentArray.hasComponent(entity)) {
-         const start = packet.currentByteOffset;
-         
-         packet.writeNumber(componentType);
-         componentArray.addDataToPacket(packet, entity, player);
+      const start = packet.currentByteOffset;
+      
+      componentArray.addDataToPacket(packet, entity, player);
 
-         // @Speed
-         if (packet.currentByteOffset - start !== (Float32Array.BYTES_PER_ELEMENT + componentArray.getDataLength(entity, player))) {
-            throw new Error(`Component type '${ServerComponentTypeString[componentType]}' has wrong data length for entity type '${EntityTypeString[getEntityType(entity)]}'. (getDataLength returned ${Float32Array.BYTES_PER_ELEMENT + componentArray.getDataLength(entity, player)}, while the length of the added data was ${packet.currentByteOffset - start})`)
-         }
+      // @Speed
+      if (packet.currentByteOffset - start !== componentArray.getDataLength(entity, player)) {
+         throw new Error(`Component type '${ServerComponentTypeString[componentType]}' has wrong data length for entity type '${EntityTypeString[getEntityType(entity)]}'. (getDataLength returned ${Float32Array.BYTES_PER_ELEMENT + componentArray.getDataLength(entity, player)}, while the length of the added data was ${packet.currentByteOffset - start})`)
       }
    }
 }
@@ -141,7 +137,7 @@ const getVisibleMinedSubtiles = (playerClient: PlayerClient): ReadonlyArray<numb
    return minedSubtiles;
 }
 
-export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<Entity>, removedEntities: Array<Entity>): ArrayBuffer {
+export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<Entity>, removedEntities: Array<Entity>): ArrayBufferLike {
    // @Cleanup: The mined subtile system here exists really only to send particles. Can be entirely encompassed in a server particles system!
 
    const player = entityExists(playerClient.instance) ? playerClient.instance : null;
@@ -190,7 +186,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    for (const entity of playerClient.visibleEntities) {
       const hitboxLights = getEntityHitboxLights(entity);
       if (hitboxLights !== null) {
-         for (const _pair of hitboxLights) {
+         for (const _ of hitboxLights) {
             lengthBytes += getLightDataLength();
             numVisibleLights++;
          }
@@ -250,7 +246,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    packet.writeNumber(layers.indexOf(layer));
 
-   // Add entities
+   // Add entities 
    packet.writeNumber(entitiesToSend.size);
    for (const entity of entitiesToSend) {
       addEntityDataToPacket(packet, entity, player);
@@ -437,7 +433,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    return packet.buffer;
 }
 
-export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Point): ArrayBuffer {
+export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Point): ArrayBufferLike {
    const tamingSpecsMap = getTamingSpecsMap();
 
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 4;
@@ -458,6 +454,11 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
    for (const pair of tamingSpecsMap) {
       lengthBytes += Float32Array.BYTES_PER_ELEMENT;
       lengthBytes += getTamingSpecDataLength(pair[1]);
+   }
+   // Entity component types
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   for (const componentTypes of ENTITY_COMPONENT_TYPES) {
+      lengthBytes += Float32Array.BYTES_PER_ELEMENT + componentTypes.length * Float32Array.BYTES_PER_ELEMENT;
    }
    lengthBytes = alignLengthBytes(lengthBytes);
    const packet = new Packet(PacketType.initialGameData, lengthBytes);
@@ -515,10 +516,19 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
       addTamingSpecToData(packet, pair[1]);
    }
 
+   // Entity component types
+   packet.writeNumber(ENTITY_COMPONENT_TYPES.length);
+   for (const componentTypes of ENTITY_COMPONENT_TYPES) {
+      packet.writeNumber(componentTypes.length);
+      for (const componentType of componentTypes) {
+         packet.writeNumber(componentType);
+      }
+   }
+
    return packet.buffer;
 }
 
-export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBuffer {
+export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBufferLike {
    const player = playerClient.instance;
 
    const packet = new Packet(PacketType.syncGameData, 8 * Float32Array.BYTES_PER_ELEMENT);

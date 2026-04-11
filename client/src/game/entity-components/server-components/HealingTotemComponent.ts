@@ -6,7 +6,9 @@ import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface HealingTotemComponentData {
    readonly healingTargetsData: ReadonlyArray<HealingTotemTargetData>;
@@ -37,16 +39,16 @@ export function createHealingTotemComponentData(): HealingTotemComponentData {
 }
 
 function decodeData(reader: PacketReader): HealingTotemComponentData {
-   const healTargets = new Array<HealingTotemTargetData>();
+   const healTargets: Array<HealingTotemTargetData> = [];
    const numTargets = reader.readNumber();
    for (let i = 0; i < numTargets; i++) {
-      const healTargetID = reader.readNumber();
+      const healTarget: Entity = reader.readNumber();
       const x = reader.readNumber();
       const y = reader.readNumber();
       const ticksHealed = reader.readNumber();
 
       healTargets.push({
-         entityID: healTargetID,
+         entity: healTarget,
          x: x,
          y: y,
          ticksHealed: ticksHealed
@@ -58,15 +60,16 @@ function decodeData(reader: PacketReader): HealingTotemComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("entities/healing-totem/healing-totem.png")
       )
    );
@@ -75,8 +78,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): HealingTotemComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const healingTotemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.healingTotem);
+
    return {
-      healingTargetsData: entityComponentData.serverComponentData[ServerComponentType.healingTotem]!.healingTargetsData,
+      healingTargetsData: healingTotemComponentData.healingTargetsData,
       ticksSpentHealing: 0,
       eyeLights: []
    };
@@ -110,8 +116,8 @@ function onTick(entity: Entity): void {
             // );
 
             // // @Hack
-            // const renderInfo = getEntityRenderInfo(entity);
-            // attachLightToRenderPart(light, renderInfo.renderPartsByZIndex[0], entity);
+            // const renderObject = getEntityRenderObject(entity);
+            // attachLightToRenderPart(light, renderObject.renderPartsByZIndex[0], entity);
 
             // healingTotemComponent.eyeLights.push(light);
          }

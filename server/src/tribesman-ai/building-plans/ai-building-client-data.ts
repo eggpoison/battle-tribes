@@ -15,6 +15,7 @@ import { CRAFTING_RECIPES } from "../../../../shared/src/items/crafting-recipes"
 import PlayerClient from "../../server/PlayerClient";
 import { getTribes } from "../../world";
 import { AIAssignmentComponentArray } from "../../components/AIAssignmentComponent";
+import { _bounds } from "../../../../shared/src/boxes/BaseBox";
 
 // @Cleanup: should this be here?
 export function getVisibleTribes(playerLayer: Layer, chunkBounds: VisibleChunkBounds): ReadonlyArray<Tribe> {
@@ -167,10 +168,11 @@ const virtualStructureIsSentToPlayer = (playerClient: PlayerClient, virtualBuild
    let minY = Number.MAX_SAFE_INTEGER;
    let maxY = Number.MIN_SAFE_INTEGER;
    for (const box of virtualBuilding.boxes) {
-      const boxMinX = box.calculateBoundsMinX();
-      const boxMaxX = box.calculateBoundsMaxX();
-      const boxMinY = box.calculateBoundsMinY();
-      const boxMaxY = box.calculateBoundsMaxY();
+      box.calculateBounds();
+      const boxMinX = _bounds.minX;
+      const boxMaxX = _bounds.maxX;
+      const boxMinY = _bounds.minY;
+      const boxMaxY = _bounds.maxY;
       
       if (boxMinX < minX) {
          minX = boxMinX;

@@ -11,13 +11,13 @@ export type RenderPart = VisualRenderPart | RenderAttachPoint;
 export type RenderPartParent = Hitbox | RenderPart;
 
 export function renderPartIsTextured(renderPart: VisualRenderPart): renderPart is TexturedRenderPart {
-   return typeof (renderPart as TexturedRenderPart).textureArrayIndex !== "undefined";
+   return (renderPart as TexturedRenderPart).textureArrayIndex !== undefined;
 }
 
 export function thingIsVisualRenderPart(thing: Readonly<RenderPart>): thing is VisualRenderPart {
-   return typeof (thing as VisualRenderPart).tintR !== "undefined";
+   return (thing as VisualRenderPart).tintR !== undefined;
 }
 
 export function renderParentIsHitbox(parent: RenderPartParent): parent is Hitbox {
-   return parent !== null && typeof (parent as Hitbox).mass !== "undefined";
+   return parent !== null && (parent as Hitbox).mass !== undefined;
 }

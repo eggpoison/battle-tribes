@@ -24,11 +24,11 @@ export function createFibrePlantConfig(position: Point, rotation: number): Entit
    
    return {
       entityType: EntityType.fibrePlant,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent
+      ],
       lights: []
    };
 }

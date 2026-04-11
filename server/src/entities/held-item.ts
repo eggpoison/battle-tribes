@@ -31,11 +31,11 @@ export function createHeldItemConfig(limbHitbox: Hitbox, itemType: ItemType): En
 
    return {
       entityType: EntityType.heldItem,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.heldItem]: heldItemComponent,
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         heldItemComponent,
+      ],
       lights: [],
       attachInfo: createEntityConfigAttachInfo(hitbox, limbHitbox, true)
    };

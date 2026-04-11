@@ -6,7 +6,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType } from "../world";
 import { PlantedComponentArray } from "./PlantedComponent";
-import { createEntityConfigAttachInfo, EntityConfig } from "../components";
+import { createEntityConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../components";
 import { createTreePlantedConfig } from "../entities/resources/tree-planted";
 import { createIceSpikesPlantedConfig } from "../entities/resources/ice-spikes-planted";
 import { createBerryBushPlantedConfig } from "../entities/resources/berry-bush-planted";
@@ -89,7 +89,7 @@ export function placePlantInPlanterBox(planterBox: Entity, plantedEntityType: Pl
          break;
       }
    }
-   const plantTransformComponent = config.components[ServerComponentType.transform]!;
+   const plantTransformComponent = getConfigTransformComponent(config.components);
    const plantHitbox = plantTransformComponent.hitboxes[0];
    config.attachInfo = createEntityConfigAttachInfo(plantHitbox, planterBoxHitbox, false);
    planterBoxComponent.plant = createEntity(config, getEntityLayer(planterBox), 0);

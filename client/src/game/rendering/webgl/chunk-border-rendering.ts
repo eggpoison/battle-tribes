@@ -41,13 +41,13 @@ export function createChunkBorderShaders(): void {
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
    bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 
-   buffer = gl.createBuffer()!;
+   buffer = gl.createBuffer();
 }
 
 export function renderChunkBorders(minX: number, maxX: number, minY: number, maxY: number, chunkSize: number, thickness: number): void {
    gl.useProgram(program);
    
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
 
    const halfThickness = thickness/2;
 

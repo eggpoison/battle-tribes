@@ -6,7 +6,9 @@ import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface IceSpikesPlantedComponentData {
    readonly growthProgress: number;
@@ -40,20 +42,22 @@ function decodeData(reader: PacketReader): IceSpikesPlantedComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const iceSpikesPlantedComponentData = entityComponentData.serverComponentData[ServerComponentType.iceSpikesPlanted]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const iceSpikesPlantedComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.iceSpikesPlanted);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       // @Cleanup: why is this 9 instead of 0?
       9,
       0,
+      0, 0,
       getTextureArrayIndex(getTextureSource(iceSpikesPlantedComponentData.growthProgress))
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {
       renderPart: renderPart

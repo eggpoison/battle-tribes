@@ -3,10 +3,10 @@ import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, getEntityTextureAtlasUBO, UBOBindingIndex } from "../ubos";
 import { RenderableType, addRenderable } from "../render-loop";
 import { VisualRenderPart } from "../../render-parts/render-parts";
-import { getEntityLayer, getEntityRenderInfo } from "../../world";
+import { getEntityLayer, getEntityRenderObject } from "../../world";
 import { calculateRenderPartDepth } from "./entity-rendering";
 
-const enum Vars {
+const enum Var {
    ATTRIBUTES_PER_VERTEX = 8
 }
 
@@ -32,8 +32,8 @@ const getOverlayRenderHeight = (overlay: RenderPartOverlayGroup): number => {
    let minDepth = 999999;
    for (let i = 0; i < overlay.renderParts.length; i++) {
       const renderPart = overlay.renderParts[i];
-      const renderInfo = getEntityRenderInfo(overlay.entity);
-      const depth = calculateRenderPartDepth(renderPart, renderInfo);
+      const renderObject = getEntityRenderObject(overlay.entity);
+      const depth = calculateRenderPartDepth(renderPart, renderObject);
       if (depth < minDepth) {
          minDepth = depth;
       }
@@ -44,15 +44,15 @@ const getOverlayRenderHeight = (overlay: RenderPartOverlayGroup): number => {
 
 export function createRenderPartOverlayGroup(entity: Entity, textureSource: string, renderParts: Array<VisualRenderPart>): RenderPartOverlayGroup {
    const overlay: RenderPartOverlayGroup = {
-      entity: entity,
-      textureSource: textureSource,
-      renderParts: renderParts
+      entity,
+      textureSource,
+      renderParts
    };
 
-   const renderInfo = getEntityRenderInfo(entity);
+   const renderObject = getEntityRenderObject(entity);
    
    // @Cleanup: Side effect
-   addRenderable(getEntityLayer(entity), RenderableType.overlay, overlay, renderInfo.renderLayer, getOverlayRenderHeight(overlay));
+   addRenderable(getEntityLayer(entity), RenderableType.overlay, overlay, renderObject.renderLayer, getOverlayRenderHeight(overlay));
 
    return overlay;
 }
@@ -173,7 +173,7 @@ export async function createEntityOverlayShaders(): Promise<void> {
    // gl.activeTexture(gl.TEXTURE1);
    // gl.bindTexture(gl.TEXTURE_2D, null);
 
-   // overlayTextureArray = gl.createTexture()!;
+   // overlayTextureArray = gl.createTexture();
    // gl.bindTexture(gl.TEXTURE_2D_ARRAY, overlayTextureArray);
    // gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 5, gl.RGBA8, 16, 16, OVERLAY_TEXTURE_SOURCES.length);
 
@@ -194,17 +194,17 @@ export async function createEntityOverlayShaders(): Promise<void> {
    // Create VAO
    // 
 
-   vao = gl.createVertexArray()!;
+   vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
-   buffer = gl.createBuffer()!;
+   buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 7 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 7 * Float32Array.BYTES_PER_ELEMENT);
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -212,7 +212,7 @@ export async function createEntityOverlayShaders(): Promise<void> {
    gl.enableVertexAttribArray(3);
    gl.enableVertexAttribArray(4);
 
-   indexBuffer = gl.createBuffer()!;
+   indexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
    gl.bindVertexArray(null);
@@ -226,7 +226,7 @@ export function renderEntityOverlay(overlay: RenderPartOverlayGroup): void {
 
    // const entityTextureAtlas = getEntityTextureAtlas();
 
-   // const vertexData = new Float32Array(numParts * 4 * Vars.ATTRIBUTES_PER_VERTEX);
+   // const vertexData = new Float32Array(numParts * 4 * Var.ATTRIBUTES_PER_VERTEX);
    // const indicesData = new Uint16Array(numParts * 6);
 
    // const overlayTextureArrayIndex = OVERLAY_TEXTURE_SOURCES.indexOf(overlay.textureSource);
@@ -260,7 +260,7 @@ export function renderEntityOverlay(overlay: RenderPartOverlayGroup): void {
    //    const bottomRightX = rotateXAroundPoint(x2, y1, renderPart.renderPosition.x, renderPart.renderPosition.y, renderPart.totalParentRotation + renderPart.angle);
    //    const bottomRightY = rotateYAroundPoint(x2, y1, renderPart.renderPosition.x, renderPart.renderPosition.y, renderPart.totalParentRotation + renderPart.angle);
 
-   //    const vertexDataOffset = i * 4 * Vars.ATTRIBUTES_PER_VERTEX;
+   //    const vertexDataOffset = i * 4 * Var.ATTRIBUTES_PER_VERTEX;
 
    //    vertexData[vertexDataOffset] = bottomLeftX;
    //    vertexData[vertexDataOffset + 1] = bottomLeftY;

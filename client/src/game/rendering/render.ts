@@ -1,6 +1,6 @@
 import { Settings } from "webgl-test-shared";
 import { maxVisibleChunkX, maxVisibleChunkY, maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleChunkX, minVisibleChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY, refreshCameraPosition, refreshCameraView } from "../camera";
-import { getHighlightedRenderInfo } from "../entity-selection";
+import { getHighlightedEntity, getHighlightedRenderObject, getSelectedEntity } from "../entity-selection";
 import Layer from "../Layer";
 import { updatePlayerDirection } from "../player";
 import { RenderLayer, MAX_RENDER_LAYER } from "../render-layers";
@@ -10,8 +10,8 @@ import { preloadTextureAtlasImages } from "../texture-atlases/texture-atlas-stit
 import { createTextureAtlases } from "../texture-atlases/texture-atlases";
 import { preloadTextureImages, loadTextures } from "../textures";
 import { isDev } from "../utils";
-import { gl, windowWidth, windowHeight, createTexture, createWebGLContext } from "../webgl";
-import { layers, getCurrentLayer, entityExists, getEntityRenderInfo } from "../world";
+import { gl, windowWidth, windowHeight, createTexture, setupWebGL } from "../webgl";
+import { layers, getCurrentLayer, entityExists, getEntityRenderObject } from "../world";
 import { renderLightLevelsText } from "./light-levels-text-rendering";
 import { createRenderChunks, RENDER_CHUNK_SIZE } from "./render-chunks";
 import { resetRenderOrder, renderNextRenderables } from "./render-loop";
@@ -54,10 +54,10 @@ import { createWallConnectionShaders, renderWallConnections } from "./webgl/wall
 import { createForcefieldShaders, renderForcefield } from "./webgl/world-border-forcefield-rendering";
 import { createWorldBorderShaders, renderWorldBorder } from "./webgl/world-border-rendering";
 import { playerIsHoldingPlaceableItem } from "../player-action-handling";
-import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
-import { nerdVisionState } from "../../ui-state/nerd-vision-state.svelte";
-import { hoverDebugState } from "../../ui-state/hover-debug-state.svelte";
-import { debugDisplayState } from "../../ui-state/debug-display-state.svelte";
+import { hoverDebugState } from "../../ui-state/hover-debug-state";
+import { debugDisplayState } from "../../ui-state/debug-display-state";
+import { nerdVision } from "../../ui-state/nerd-vision-funcs";
+import { MenuType, menuIsOpen } from "../../ui/menus";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -73,7 +73,7 @@ export async function setupRendering(): Promise<void> {
       return new Promise(async resolve => {
          const start = performance.now();
          let l = performance.now();
-         createWebGLContext();
+         setupWebGL();
          createTechTreeGLContext();
          createTextCanvasContext();
 
@@ -115,7 +115,7 @@ export async function setupRendering(): Promise<void> {
          createUBOs();
 
          // @Cleanup: Move to separate function
-         gameFramebuffer = gl.createFramebuffer()!;
+         gameFramebuffer = gl.createFramebuffer();
 
          // Create shaders
          createSolidTileShaders();
@@ -172,9 +172,9 @@ export async function setupRendering(): Promise<void> {
    }
 }
 
-const renderLayer = (layer: Layer, frameProgress: number): void => {
+const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): void => {
    if (layer === getCurrentLayer()) {
-      renderText(frameProgress);
+      renderText(serverInterp);
    }
    
    resetRenderOrder();
@@ -192,14 +192,14 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    renderTurretRange();
 
    const entityDebugData = hoverDebugState.entityDebugData;
-   if (nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
       renderTriangleDebugData(entityDebugData);
    }
    renderRestrictedBuildingAreas();
-   if (nerdVisionState.isVisible && debugDisplayState.showChunkBorders) {
+   if (nerdVision.isVisible() && debugDisplayState.showChunkBorders) {
       renderChunkBorders(minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY, Settings.CHUNK_SIZE, 1);
    }
-   if (nerdVisionState.isVisible && debugDisplayState.showRenderChunkBorders) {
+   if (nerdVision.isVisible() && debugDisplayState.showRenderChunkBorders) {
       renderChunkBorders(minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY, RENDER_CHUNK_SIZE, 2);
    }
 
@@ -236,13 +236,15 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    if (layer === getCurrentLayer()) {
       // @Cleanup: should this only be for the current layer?
       // @Cleanup this is so messy
-      if (entitySelectionState.selectedEntity !== null) {
-         const renderInfo = getEntityRenderInfo(entitySelectionState.selectedEntity);
-         renderEntitySelection(renderInfo, frameProgress, true);
+      const selectedEntity = getSelectedEntity();
+      if (selectedEntity !== null) {
+         const renderObject = getEntityRenderObject(selectedEntity);
+         renderEntitySelection(renderObject, clientInterp, serverInterp, true);
       }
-      const renderInfo = getHighlightedRenderInfo();
-      if (renderInfo !== null && entitySelectionState.highlightedEntity !== entitySelectionState.selectedEntity) {
-         renderEntitySelection(renderInfo, frameProgress, false);
+      const renderObject = getHighlightedRenderObject();
+      const highlightedEntity = getHighlightedEntity();
+      if (renderObject !== null && highlightedEntity !== selectedEntity) {
+         renderEntitySelection(renderObject, clientInterp, serverInterp, false);
       }
    }
    
@@ -262,7 +264,7 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    if (debugDisplayState.showHitboxes) {
       renderHitboxes(layer);
    }
-   if (nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
       renderLineDebugData(entityDebugData);
    }
 
@@ -286,7 +288,7 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
    }
 }
 
-export function renderGame(clientTickInterp: number, serverTickInterp: number, deltaTimeMS: number): void {
+export function renderGame(clientInterp: number, serverInterp: number, deltaTimeMS: number): void {
    gl.bindFramebuffer(gl.FRAMEBUFFER, gameFramebuffer);
 
    if (lastTextureWidth !== windowWidth || lastTextureHeight !== windowHeight) {
@@ -306,21 +308,21 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number, d
 
    updateUBOs();
 
-   refreshCameraPosition(clientTickInterp, serverTickInterp, deltaTimeMS);
+   refreshCameraPosition(clientInterp, serverInterp);
    refreshCameraView();
    // Done immediately following the camera position update as the player direction is reliant on it.
-   updatePlayerDirection(clientTickInterp, serverTickInterp);
+   updatePlayerDirection(clientInterp, serverInterp);
 
-   updateRenderPartMatrices(clientTickInterp, serverTickInterp);
+   updateRenderPartMatrices(clientInterp, serverInterp);
 
    // Render layers
    // @Hack
    if (layers.indexOf(getCurrentLayer()) === 0) {
-      renderLayer(layers[1], serverTickInterp);
+      renderLayer(layers[1], clientInterp, serverInterp);
       renderLayerDarkening();
-      renderLayer(layers[0], serverTickInterp);
+      renderLayer(layers[0], clientInterp, serverInterp);
    } else {
-      renderLayer(layers[1], serverTickInterp);
+      renderLayer(layers[1], clientInterp, serverInterp);
    }
 
    if (debugDisplayState.showSubtileSupports) {
@@ -335,6 +337,8 @@ export function renderGame(clientTickInterp: number, serverTickInterp: number, d
    // @INCOMPLETE @SQUEAM
    // updateInspectHealthBar();
    
-   renderTechTree();
-   renderTechTreeItems();
+   if (menuIsOpen(MenuType.techTree)) {
+      renderTechTree();
+      renderTechTreeItems();
+   }
 }

@@ -57,14 +57,14 @@ export function createEmbrasureConfig(position: Point, rotation: number, tribe: 
    
    return {
       entityType: EntityType.embrasure,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.buildingMaterial]: buildingMaterialComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         buildingMaterialComponent
+      ],
       lights: []
    };
 }

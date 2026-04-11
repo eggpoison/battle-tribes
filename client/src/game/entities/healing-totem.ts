@@ -11,7 +11,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createHealingTotemConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
    const box = new CircularBox(position, new Point(0, 0), rotation, 48);
@@ -20,15 +20,15 @@ export function createHealingTotemConfig(position: Point, rotation: number, trib
 
    return {
       entityType: EntityType.healingTotem,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.aiHelper]: createAIHelperComponentData(),
-         [ServerComponentType.healingTotem]: createHealingTotemComponentData()
-      },
-      clientComponentData: {}
+      serverComponentData: [
+         [ServerComponentType.transform, createTransformComponentData(hitboxes)],
+         [ServerComponentType.health, createHealthComponentData()],
+         [ServerComponentType.statusEffect, createStatusEffectComponentData()],
+         [ServerComponentType.structure, createStructureComponentData()],
+         [ServerComponentType.tribe, createTribeComponentData(tribe)],
+         [ServerComponentType.aiHelper, createAIHelperComponentData()],
+         [ServerComponentType.healingTotem, createHealingTotemComponentData()]
+      ],
+      clientComponentData: []
    };
 }

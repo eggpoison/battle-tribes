@@ -9,8 +9,11 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { RenderPart } from "../../render-parts/render-parts";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { tickIntervalHasPassed } from "../../client";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { tickIntervalHasPassed } from "../../game";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface CowComponentData {
    readonly species: CowSpecies;
@@ -54,10 +57,11 @@ function decodeData(reader: PacketReader): CowComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    
-   const cowComponentData = entityComponentData.serverComponentData[ServerComponentType.cow]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cowComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cow);
    const cowNum = cowComponentData.species === CowSpecies.brown ? 1 : 2;
 
    let headRenderPart!: RenderPart;
@@ -67,19 +71,21 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
             hitbox,
             0,
             0,
+            0, 0,
             getTextureArrayIndex(`entities/cow/cow-body-${cowNum}.png`)
          );
-         renderInfo.attachRenderPart(bodyRenderPart);
+         renderObject.attachRenderPart(bodyRenderPart);
       } else if (hitbox.flags.includes(HitboxFlag.COW_HEAD)) {
          // Head
          headRenderPart = new TexturedRenderPart(
             hitbox,
             1,
             0,
+            0, 0,
             getTextureArrayIndex(`entities/cow/cow-head-${cowNum}.png`)
          );
-         headRenderPart.addTag("tamingComponent:head");
-         renderInfo.attachRenderPart(headRenderPart);
+         addRenderPartTag(headRenderPart, "tamingComponent:head");
+         renderObject.attachRenderPart(headRenderPart);
       }
    }
 
@@ -89,7 +95,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): CowComponent {
-   const cowComponentData = entityComponentData.serverComponentData[ServerComponentType.cow]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cowComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cow);
    
    return {
       species: cowComponentData.species,

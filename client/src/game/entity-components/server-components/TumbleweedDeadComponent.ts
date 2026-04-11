@@ -1,5 +1,5 @@
 import { randFloat, Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
@@ -7,6 +7,7 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface TumbleweedDeadComponentData {}
 
@@ -23,20 +24,21 @@ function decodeData(): TumbleweedDeadComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex("entities/tumbleweed-dead/tumbleweed-dead.png")
    );
    renderPart.tintR = randFloat(-0.03, 0.03);
    renderPart.tintG = randFloat(-0.03, 0.03);
    renderPart.tintB = randFloat(-0.03, 0.03);
-   renderInfo.attachRenderPart(renderPart)
+   renderObject.attachRenderPart(renderPart)
 
    return {
       renderPart: renderPart

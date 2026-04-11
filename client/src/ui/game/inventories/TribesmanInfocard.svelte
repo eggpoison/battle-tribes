@@ -4,7 +4,7 @@
    import { TribeMemberComponentArray } from "../../../game/entity-components/server-components/TribeMemberComponent";
    import { TribesmanAIComponentArray } from "../../../game/entity-components/server-components/TribesmanAIComponent";
    import { TribesmanComponentArray } from "../../../game/entity-components/server-components/TribesmanComponent";
-   import { sendRecruitTribesmanPacket } from "../../../game/networking/packet-sending";
+   import { sendRecruitTribesmanPacket } from "../../../game/networking/packet-sending/packet-sending";
    import { playerTribe, getTribeByID } from "../../../game/tribes";
    import { getEntityAgeTicks } from "../../../game/world";
    import TribesmanRelationSlider from "./TribesmanRelationSlider.svelte";

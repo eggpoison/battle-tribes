@@ -1,9 +1,11 @@
 import { randFloat, PacketReader, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface MossComponentData {
    readonly size: number;
@@ -26,11 +28,12 @@ function decodeData(reader: PacketReader): MossComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
-   
-   const mossComponentData = entityComponentData.serverComponentData[ServerComponentType.moss]!;
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const mossComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.moss);
 
    let colourString: string;
    switch (mossComponentData.colour) {
@@ -55,12 +58,13 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(textureSource)
    );
    renderPart.tintR = randFloat(-0.04, 0.04);
    renderPart.tintG = randFloat(-0.04, 0.04);
    renderPart.tintB = randFloat(-0.04, 0.04);
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }

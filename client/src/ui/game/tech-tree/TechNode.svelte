@@ -1,10 +1,10 @@
 <script lang="ts">
    import { Point, randFloat, randAngle, ItemTally2, tallyInventoryItems, InventoryName, type Tech, TechID } from "webgl-test-shared";
    import TechTooltip from "./TechTooltip.svelte";
-   import { sendForceUnlockTechPacket, sendSelectTechPacket, sendUnlockTechPacket } from "../../../game/networking/packet-sending";
+   import { sendForceUnlockTechPacket, sendSelectTechPacket, sendUnlockTechPacket } from "../../../game/networking/packet-sending/packet-sending";
    import { playHeadSound } from "../../../game/sound";
    import { playerTribe } from "../../../game/tribes";
-   import { techTreeIcons, techTreeState } from "../../../ui-state/tech-tree-state.svelte";
+   import { techTreeIcons, techTreeState } from "../../../ui-state/tech-tree-state";
    import { InventoryComponentArray, getInventory } from "../../../game/entity-components/server-components/InventoryComponent";
    import { playerInstance } from "../../../game/player";
    import { createTechTreeItem } from "../../../game/rendering/webgl/tech-tree-item-rendering";

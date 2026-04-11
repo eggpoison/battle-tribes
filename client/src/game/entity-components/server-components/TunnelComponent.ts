@@ -1,13 +1,15 @@
 import { angle, lerp, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TUNNEL_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TunnelComponentData {
    readonly doorBitset: number;
@@ -75,26 +77,29 @@ function decodeData(reader: PacketReader): TunnelComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const buildingMaterialComponentData = entityComponentData.serverComponentData[ServerComponentType.buildingMaterial]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
 
    const renderPart = new TexturedRenderPart(
       hitbox,
       1,
       0,
+      0, 0,
       getTextureArrayIndex(TUNNEL_TEXTURE_SOURCES[buildingMaterialComponentData.material])
    );
 
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }
 
 function createComponent(entityComponentData: EntityComponentData): TunnelComponent {
-   const tunnelComponentData = entityComponentData.serverComponentData[ServerComponentType.tunnel]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tunnelComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tunnel);
    
    return {
       doorBitset: tunnelComponentData.doorBitset,
@@ -116,14 +121,14 @@ const addDoor = (tunnelComponent: TunnelComponent, entity: Entity, doorBit: numb
       hitbox,
       0,
       doorBit === 0b10 ? Math.PI : 0,
+      0, doorBit === 0b10 ? -32 : 32,
       getTextureArrayIndex("entities/tunnel/tunnel-door.png")
    );
-   renderPart.offset.y = doorBit === 0b10 ? -32 : 32;
    
    tunnelComponent.doorRenderParts[doorBit] = renderPart;
 
-   const renderInfo = getEntityRenderInfo(entity);
-   renderInfo.attachRenderPart(renderPart);
+   const renderObject = getEntityRenderObject(entity);
+   renderObject.attachRenderPart(renderPart);
 
    // @Temporary
    playSoundOnHitbox("spike-place.mp3", 0.5, 1, entity, hitbox, false);
@@ -133,8 +138,8 @@ const updateDoor = (tunnelComponent: TunnelComponent, doorBit: number, openProgr
    const doorInfo = getTunnelDoorInfo(doorBit, openProgress);
 
    const doorRenderPart = tunnelComponent.doorRenderParts[doorBit];
-   doorRenderPart.offset.x = doorInfo.offsetX;
-   doorRenderPart.offset.y = doorInfo.offsetY;
+   doorRenderPart.offsetX = doorInfo.offsetX;
+   doorRenderPart.offsetY = doorInfo.offsetY;
    doorRenderPart.angle = doorInfo.rotation;
 }
 

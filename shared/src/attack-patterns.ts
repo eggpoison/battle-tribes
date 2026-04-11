@@ -1,7 +1,7 @@
 import { Settings } from "./settings";
 import { lerp } from "./utils";
 
-export enum AttackVars {
+export enum AttackVar {
    MAX_EXTRA_ATTACK_RANGE = 24,
    // The speed needed to have the max attack range
    MAX_EXTRA_ATTACK_RANGE_SPEED = 300,

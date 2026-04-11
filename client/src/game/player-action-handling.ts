@@ -1,11 +1,8 @@
-import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, EntityComponents, ServerComponentType, BuildingMaterial, AttackVars, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp } from "webgl-test-shared";
-import { entitySelectionState } from "../ui-state/entity-selection-state.svelte";
-import { GameInteractState, gameUIState } from "../ui-state/game-ui-state.svelte";
-import { inventoryState } from "../ui-state/inventory-state.svelte";
-import { Menu, menuSelectorState } from "../ui-state/menu-selector-state.svelte";
-import { playerActionState } from "../ui-state/player-action-state.svelte";
-import { getElapsedTimeInSeconds } from "./Board";
-import { currentSnapshot } from "./client";
+import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, ServerComponentType, BuildingMaterial, AttackVar, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp, _point } from "webgl-test-shared";
+import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
+import { closeCurrentMenu, hasOpenNonEmbodiedMenu, MenuType, openMenu } from "../ui/menus";
+import { playerActionState } from "../ui-state/player-action-state";
+import { currentSnapshot, gameIsRunning, getElapsedTimeInSeconds } from "./game";
 import { getEntityClientComponentConfigs } from "./entity-components/client-components";
 import { createBarrelComponentData } from "./entity-components/server-components/BarrelComponent";
 import { createBracingsComponentData } from "./entity-components/server-components/BracingsComponent";
@@ -22,20 +19,19 @@ import { createSlurbTorchComponentData } from "./entity-components/server-compon
 import { createSpikesComponentData } from "./entity-components/server-components/SpikesComponent";
 import { StatusEffectComponentArray, createStatusEffectComponentData } from "./entity-components/server-components/StatusEffectComponent";
 import { createStructureComponentData } from "./entity-components/server-components/StructureComponent";
-import { TransformComponentArray, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray, applyAccelerationFromGround, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
 import { getHumanoidRadius, TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
-import { attemptEntitySelection } from "./entity-selection";
-import { EntityRenderInfo } from "./EntityRenderInfo";
-import { getHitboxVelocity, applyAccelerationFromGround, Hitbox, setHitboxRelativeAngle } from "./hitboxes";
+import { attemptEntitySelection, getHoveredEntity, getSelectedEntity, setSelectedEntity } from "./entity-selection";
+import { EntityRenderObject } from "./EntityRenderObject";
+import { getHitboxVelocity, Hitbox, setHitboxRelativeAngle } from "./hitboxes";
 import { countItemTypesInInventory } from "./inventory-manipulation";
 import { addKeyListener, keyIsPressed } from "./keyboard-input";
-import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSpectateEntityPacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket } from "./networking/packet-sending";
-import { EntityServerComponentData } from "./networking/packet-snapshots";
+import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket, sendSpectateEntityPacket, sendAscendPacket } from "./networking/packet-sending/packet-sending";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
 import { playerInstance, isSpectating } from "./player";
 import { thingIsVisualRenderPart } from "./render-parts/render-parts";
-import { removeGhostRenderInfo, addGhostRenderInfo } from "./rendering/webgl/entity-ghost-rendering";
+import { removeGhostRenderObject, addGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";
 import { attemptToCompleteNode } from "./research";
 import { playHeadSound, playSoundOnHitbox } from "./sound";
 import { calculateEntityPlaceInfo } from "./structure-placement";
@@ -43,6 +39,9 @@ import { playerTribe } from "./tribes";
 import { entityExists, getEntityLayer, getCurrentLayer, EntityComponentData, createEntityCreationInfo } from "./world";
 import { cursorWorldPos, setCameraVelocity } from "./camera";
 import { HeldItemComponentArray } from "./entity-components/server-components/HeldItemComponent";
+import { ServerComponentData } from "./entity-components/components";
+import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
+import { hotbarFuncs } from "../ui-state/hotbar-funcs";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -92,7 +91,7 @@ let attackBufferTime = 0;
 let bufferedInputType = BufferedInputType.attack;
 let bufferedInputInventory = InventoryName.hotbar;
 
-let placeableEntityGhostRenderInfo: EntityRenderInfo | null = null;
+let placeableEntityGhostRenderObject: EntityRenderObject | null = null;
 
 const hotbarCrossbowLoadProgressRecord: Partial<Record<number, number>> = {};
 
@@ -102,9 +101,9 @@ export function setShittyCarrier(entity: Entity): void {
    carrier = entity;
 }
 
-const playerMoveIntention = new Point(0, 0);
+let playerMoveIntention = -999;
 
-export function getPlayerMoveIntention(): Point {
+export function getPlayerMoveIntention(): number {
    return playerMoveIntention;
 }
 
@@ -137,6 +136,13 @@ const BOW_DRAWING_CHARGE_END_LIMB_STATE: LimbState = {
    extraOffsetX: 0,
    extraOffsetY: 8
 };
+
+addKeyListener(" ", () => {
+   // Ascend layers
+   if (gameIsRunning && gameUIState.canAscendLayer) {
+      sendAscendPacket();
+   }
+});
 
 export function getHotbarSelectedItemSlot(): number {
    return hotbarSelectedItemSlot;
@@ -280,14 +286,15 @@ export function tickPlayerItems(): void {
 
          const transformComponent = TransformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];
-         const playerVelocity = getHitboxVelocity(playerHitbox);
+         getHitboxVelocity(playerHitbox);
+         const playerVelocity = _point;
 
          // Add extra range for moving attacks
          const velocityMagnitude = playerVelocity.magnitude();
          if (velocityMagnitude > 0) {
             const attackAlignment = (playerVelocity.x * Math.sin(playerHitbox.box.angle) + playerVelocity.y * Math.cos(playerHitbox.box.angle)) / velocityMagnitude;
             if (attackAlignment > 0) {
-               const extraAmount = AttackVars.MAX_EXTRA_ATTACK_RANGE * Math.min(velocityMagnitude / AttackVars.MAX_EXTRA_ATTACK_RANGE_SPEED);
+               const extraAmount = AttackVar.MAX_EXTRA_ATTACK_RANGE * Math.min(velocityMagnitude / AttackVar.MAX_EXTRA_ATTACK_RANGE_SPEED);
                limb.currentActionEndLimbState.extraOffsetY += extraAmount;
             }
          }
@@ -434,19 +441,19 @@ export function tickPlayerItems(): void {
       if (limb.action === LimbAction.windShieldBash && getElapsedTimeInSeconds(limb.currentActionElapsedTicks) * Settings.TICK_RATE >= limb.currentActionDurationTicks) {
          limb.action = LimbAction.pushShieldBash;
          limb.currentActionElapsedTicks = 0;
-         limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_PUSH_TIME_TICKS;
+         limb.currentActionDurationTicks = AttackVar.SHIELD_BASH_PUSH_TIME_TICKS;
       }
 
       if (limb.action === LimbAction.pushShieldBash && getElapsedTimeInSeconds(limb.currentActionElapsedTicks) * Settings.TICK_RATE >= limb.currentActionDurationTicks) {
          limb.action = LimbAction.returnShieldBashToRest;
          limb.currentActionElapsedTicks = 0;
-         limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_RETURN_TIME_TICKS;
+         limb.currentActionDurationTicks = AttackVar.SHIELD_BASH_RETURN_TIME_TICKS;
       }
 
       if (limb.action === LimbAction.returnShieldBashToRest && getElapsedTimeInSeconds(limb.currentActionElapsedTicks) * Settings.TICK_RATE >= limb.currentActionDurationTicks) {
          limb.action = LimbAction.block;
          limb.currentActionElapsedTicks = 0;
-         limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_RETURN_TIME_TICKS;
+         limb.currentActionDurationTicks = AttackVar.SHIELD_BASH_RETURN_TIME_TICKS;
       }
 
       // Buffered attacks
@@ -534,7 +541,7 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
    if (playerInstance === null) {
       return false;
    }
-   
+
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance);
 
    const limb = getLimbByInventoryName(inventoryUseComponent, inventoryName);
@@ -545,7 +552,7 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
       if (limb.action === LimbAction.block) {
          limb.action = LimbAction.windShieldBash;
          limb.currentActionElapsedTicks = 0;
-         limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_WINDUP_TIME_TICKS;
+         limb.currentActionDurationTicks = AttackVar.SHIELD_BASH_WINDUP_TIME_TICKS;
          limb.currentActionRate = 1;
 
          // @Speed: Garbage collection
@@ -553,7 +560,9 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
          // @Speed: Garbage collection
          limb.currentActionEndLimbState = copyLimbState(SHIELD_BASH_WIND_UP_LIMB_STATE);
 
-         sendAttackPacket();
+         const transformComponent = TransformComponentArray.getComponent(playerInstance);
+         const playerHitbox = transformComponent.hitboxes[0];
+         sendAttackPacket(hotbarSelectedItemSlot, playerHitbox.box.angle);
       }
       return false;
    }
@@ -575,7 +584,9 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
    // @Speed: Garbage collection
    limb.currentActionEndLimbState = copyLimbState(attackPattern.windedBack);
 
-   sendAttackPacket();
+   const transformComponent = TransformComponentArray.getComponent(playerInstance);
+   const playerHitbox = transformComponent.hitboxes[0];
+   sendAttackPacket(hotbarSelectedItemSlot, playerHitbox.box.angle);
 
    return true;
 }
@@ -591,7 +602,7 @@ const getAttackTimeMultiplier = (itemType: ItemType | null): number => {
 
    // Builders swing hammers 30% faster
    const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!);
-   if (tribesmanComponent !== null && tribesmanHasTitle(tribesmanComponent, TribesmanTitle.builder) && itemType !== null && ITEM_TYPE_RECORD[itemType] === "hammer") {
+   if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.builder) && itemType !== null && ITEM_TYPE_RECORD[itemType] === "hammer") {
       swingTimeMultiplier /= 1.3;
    }
 
@@ -605,7 +616,7 @@ const getAttackTimeMultiplier = (itemType: ItemType | null): number => {
 //       const glovesInventory = inventoryComponent.getInventory(InventoryName.gloveSlot);
 
 //       const gloves = glovesInventory.itemSlots[1];
-//       if (typeof gloves !== "undefined" && gloves.type === ItemType.gardening_gloves) {
+//       if (gloves !== undefined && gloves.type === ItemType.gardening_gloves) {
 //          return Settings.DEFAULT_ATTACK_COOLDOWN * 1.5;
 //       }
 //    }
@@ -701,21 +712,21 @@ export function getSelectedItemInfo(): SelectedItemInfo | null {
 
 const createHotbarKeyListeners = (): void => {
    for (let itemSlot = 1; itemSlot <= Settings.INITIAL_PLAYER_HOTBAR_SIZE; itemSlot++) {
-      addKeyListener(itemSlot.toString(), () => selectItemSlot(itemSlot));
+      addKeyListener(itemSlot.toString(), () => { selectItemSlot(itemSlot); });
    }
-   addKeyListener("!", () => selectItemSlot(1));
-   addKeyListener("@", () => selectItemSlot(2));
-   addKeyListener("#", () => selectItemSlot(3));
-   addKeyListener("$", () => selectItemSlot(4));
-   addKeyListener("%", () => selectItemSlot(5));
-   addKeyListener("^", () => selectItemSlot(6));
-   addKeyListener("&", () => selectItemSlot(7));
+   addKeyListener("!", () => { selectItemSlot(1); });
+   addKeyListener("@", () => { selectItemSlot(2); });
+   addKeyListener("#", () => { selectItemSlot(3); });
+   addKeyListener("$", () => { selectItemSlot(4); });
+   addKeyListener("%", () => { selectItemSlot(5); });
+   addKeyListener("^", () => { selectItemSlot(6); });
+   addKeyListener("&", () => { selectItemSlot(7); });
 }
 
 const hideInventory = (): void => {
    _inventoryIsOpen = false;
    
-   menuSelectorState.closeCurrentMenu();
+   closeCurrentMenu();
 
    // If the player is holding an item when their inventory is closed, throw the item out
    if (playerInstance !== null) {
@@ -731,11 +742,11 @@ const hideInventory = (): void => {
  
 /** Creates the key listener to toggle the inventory on and off. */
 const createInventoryToggleListeners = (): void => {
+   // Open crafting menu on E
    addKeyListener("e", () => {
-      const didCloseMenu = menuSelectorState.closeCurrentMenu();
+      const didCloseMenu = closeCurrentMenu();
       if (!didCloseMenu) {
-         // Open the crafting menu
-         menuSelectorState.openMenu(Menu.craftingMenu);
+         openMenu(MenuType.craftingMenu);
       }
    });
 
@@ -746,7 +757,7 @@ const createInventoryToggleListeners = (): void => {
       }
    });
    addKeyListener("escape", () => {
-      menuSelectorState.closeCurrentMenu();
+      closeCurrentMenu();
    });
 }
 
@@ -758,10 +769,9 @@ export function createPlayerInputListeners(): void {
    document.body.addEventListener("wheel", e => {
       // Don't scroll hotbar if element is being scrolled instead
       const elemPath = e.composedPath() as Array<HTMLElement>;
-      for (let i = 0; i < elemPath.length; i++) {
-         const elem = elemPath[i];
+      for (const elem of elemPath) {
          // @Hack
-         if (typeof elem.style !== "undefined") {
+         if (elem.style !== undefined) {
             const overflowY = getComputedStyle(elem).getPropertyValue("overflow-y");
             if (overflowY === "scroll") {
                return;
@@ -796,7 +806,7 @@ export function createPlayerInputListeners(): void {
 
    addKeyListener("shift", () => {
       // Don't want to dismount the player's mount when they're shift clicking an item in an inventory!
-      if (menuSelectorState.hasOpenNonEmbodiedMenu()) {
+      if (hasOpenNonEmbodiedMenu()) {
          return;
       }
       
@@ -813,7 +823,7 @@ export function createPlayerInputListeners(): void {
 export function onGameMouseDown(e: MouseEvent): void {
    if (e.button === 0) { // Left click
       if (gameUIState.gameInteractState === GameInteractState.spectateEntity) {
-         const hoveredEntity = entitySelectionState.hoveredEntity;
+         const hoveredEntity = getHoveredEntity();
          if (hoveredEntity !== null) {
             sendSpectateEntityPacket(hoveredEntity);
             gameUIState.setGameInteractState(GameInteractState.none);
@@ -824,10 +834,10 @@ export function onGameMouseDown(e: MouseEvent): void {
             e.preventDefault();
          }
       } else if (gameUIState.gameInteractState === GameInteractState.selectRiderDepositLocation) {
-         const selectedEntity = entitySelectionState.selectedEntity;
+         const selectedEntity = getSelectedEntity();
          if (selectedEntity !== null) {
             sendSelectRiderDepositLocationPacket(selectedEntity, cursorWorldPos);
-            entitySelectionState.setSelectedEntity(null);
+            setSelectedEntity(null);
             gameUIState.setGameInteractState(GameInteractState.none);
          }
       } else {
@@ -842,7 +852,7 @@ export function onGameMouseDown(e: MouseEvent): void {
       }
 
       if (gameUIState.gameInteractState === GameInteractState.selectMoveTargetPosition) {
-         const selectedEntity = entitySelectionState.selectedEntity;
+         const selectedEntity = getSelectedEntity();
          if (selectedEntity !== null) {
             sendSetMoveTargetPositionPacket(selectedEntity, cursorWorldPos.x, cursorWorldPos.y);
             gameUIState.setGameInteractState(GameInteractState.none);
@@ -961,8 +971,7 @@ const updateNonSpectatorMovement = (moveDirection: number | null): void => {
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
 
    if (moveDirection !== null) {
-      playerMoveIntention.x = Math.sin(moveDirection);
-      playerMoveIntention.y = Math.cos(moveDirection);
+      playerMoveIntention = moveDirection;
 
       const playerAction = getInstancePlayerAction(InventoryName.hotbar);
       
@@ -995,8 +1004,7 @@ const updateNonSpectatorMovement = (moveDirection: number | null): void => {
 
       applyAccelerationFromGround(playerHitbox, accelerationX, accelerationY);
    } else {
-      playerMoveIntention.x = 0;
-      playerMoveIntention.y = 0;
+      playerMoveIntention = -999;
    }
 }
 
@@ -1069,9 +1077,9 @@ export function onItemDeselect(itemType: ItemType, isOffhand: boolean): void {
       }
       case "placeable": {
          // Clear entity ghost
-         if (placeableEntityGhostRenderInfo !== null) {
-            removeGhostRenderInfo(placeableEntityGhostRenderInfo);
-            placeableEntityGhostRenderInfo = null;
+         if (placeableEntityGhostRenderObject !== null) {
+            removeGhostRenderObject(placeableEntityGhostRenderObject);
+            placeableEntityGhostRenderObject = null;
          }
          break;
       }
@@ -1131,11 +1139,11 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
             limb.currentActionStartLimbState = copyLimbState(initialLimbState);
             limb.currentActionEndLimbState = limb.heldItemType !== null && ITEM_TYPE_RECORD[limb.heldItemType] === "shield" ? SHIELD_BLOCKING_LIMB_STATE : BLOCKING_LIMB_STATE;
             
-            sendStartItemUsePacket();
+            sendStartItemUsePacket(hotbarSelectedItemSlot);
          }
          return;
       // Feign attack
-      } else if (limb.action === LimbAction.windAttack || (limb.action === LimbAction.attack && limb.currentActionElapsedTicks <= AttackVars.FEIGN_SWING_TICKS_LEEWAY)) {
+      } else if (limb.action === LimbAction.windAttack || (limb.action === LimbAction.attack && limb.currentActionElapsedTicks <= AttackVar.FEIGN_SWING_TICKS_LEEWAY)) {
          // @Copynpaste
          const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
          const progress = secondsSinceLastAction * Settings.TICK_RATE / limb.currentActionDurationTicks;
@@ -1144,7 +1152,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
          
          limb.action = LimbAction.feignAttack;
          limb.currentActionElapsedTicks = 0;
-         limb.currentActionElapsedTicks = AttackVars.FEIGN_TIME_TICKS;
+         limb.currentActionElapsedTicks = AttackVar.FEIGN_TIME_TICKS;
          limb.currentActionRate = 1;
          limb.currentActionStartLimbState = interpolateLimbState(limb.currentActionStartLimbState, limb.currentActionEndLimbState, progress);
          limb.currentActionEndLimbState = RESTING_LIMB_STATES[limbConfiguration];
@@ -1183,7 +1191,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
             limb.action = action;
             limb.lastEatTicks = currentSnapshot.tick;
 
-            sendStartItemUsePacket();
+            sendStartItemUsePacket(hotbarSelectedItemSlot);
             // @Incomplete
             // if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
             //    // @Cleanup
@@ -1204,7 +1212,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
             playHeadSound("crossbow-load.mp3", 0.4, 1);
          } else {
             // Fire crossbow
-            sendItemUsePacket();
+            sendItemUsePacket(hotbarSelectedItemSlot);
             playHeadSound("crossbow-fire.mp3", 0.4, 1);
          }
          break;
@@ -1238,7 +1246,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
             drawingLimb.currentActionStartLimbState = startDrawingLimbState;
             drawingLimb.currentActionEndLimbState = QUIVER_PULL_LIMB_STATE;
             
-            sendStartItemUsePacket();
+            sendStartItemUsePacket(hotbarSelectedItemSlot);
          }
 
          break;
@@ -1266,13 +1274,13 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
       }
       case "glove":
       case "armour": {
-         sendItemUsePacket();
+         sendItemUsePacket(hotbarSelectedItemSlot);
          break;
       }
       case "placeable": {
          const playerHitbox = transformComponent.hitboxes[0];
 
-         const layer = getEntityLayer(playerInstance!);
+         const layer = getEntityLayer(playerInstance);
          const structureType = ITEM_INFO_RECORD[itemType as PlaceableItemType].entityType;
          const placeInfo = calculateEntityPlaceInfo(playerHitbox.box.position, playerHitbox.box.angle, structureType, layer);
          
@@ -1280,7 +1288,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
             const limb = getLimbByInventoryName(inventoryUseComponent, itemInventoryName);
             limb.lastAttackTicks = currentSnapshot.tick;
 
-            sendItemUsePacket();
+            sendItemUsePacket(hotbarSelectedItemSlot);
          }
 
          break;
@@ -1336,7 +1344,7 @@ const onItemEndUse = (item: Item, inventoryName: InventoryName): void => {
             limb.currentActionDurationTicks = 0;
             
             if (chargeTime >= 1) {
-               sendItemUsePacket();
+               sendItemUsePacket(hotbarSelectedItemSlot);
             } else {
                sendStopItemUsePacket();
                playHeadSound("error.mp3", 0.4, 1);
@@ -1354,15 +1362,16 @@ const onItemEndUse = (item: Item, inventoryName: InventoryName): void => {
             limb.thrownBattleaxeItemID = item.id;
 
             // @Hack?
-            if (inventoryName === InventoryName.offhand) {
-               inventoryState.setOffhandThrownBattleaxeItemID(item.id);
-            } else {
-               inventoryState.setHotbarThrownBattleaxeItemID(item.id);
-            }
+            // @INCOMPLETE since I removed inventoryState
+            // if (inventoryName === InventoryName.offhand) {
+            //    inventoryState.setOffhandThrownBattleaxeItemID(item.id);
+            // } else {
+            //    inventoryState.setHotbarThrownBattleaxeItemID(item.id);
+            // }
          }
          
          if (limb.action === LimbAction.chargeBow && limb.currentActionElapsedTicks >= limb.currentActionDurationTicks) {
-            sendItemUsePacket();
+            sendItemUsePacket(hotbarSelectedItemSlot);
             // @HACK: commented it out cuz it was doubling the sound due to the one also received by the server. But this is actually the correct thing to do, to eliminate ping delay, have this play immediately locally and then disregard the sound sent by the server. Same with all sounds caused by the player which we know will happen immediately.
             // playBowFireSound(playerInstance!, item.type);
          }
@@ -1415,17 +1424,17 @@ export function selectItemSlot(itemSlot: number): void {
    const previousItem = hotbarInventory.itemSlots[hotbarSelectedItemSlot];
 
    hotbarSelectedItemSlot = itemSlot;
-   inventoryState.setSelectedItemSlot(itemSlot);
+   hotbarFuncs.selectItemSlot(hotbarInventory, itemSlot);
 
    // Clear any buffered inputs
    attackBufferTime = 0;
 
    // Deselect the previous item and select the new item
-   if (typeof previousItem !== "undefined") {
+   if (previousItem !== undefined) {
       onItemDeselect(previousItem.type, false);
    }
    const newItem = hotbarInventory.itemSlots[itemSlot];
-   if (typeof newItem !== "undefined") {
+   if (newItem !== undefined) {
       onItemSelect(newItem.type);
 
       // @Temporary
@@ -1433,8 +1442,7 @@ export function selectItemSlot(itemSlot: number): void {
       // if (rightMouseButtonIsPressed) {
       //    onItemStartUse(newItem.type, InventoryName.hotbar, itemSlot);
       // }
-      // But I've decided that this isn't the right behaviour, as we don't want items to be
-      // able to be switched while they are being used.
+      // But I've decided that this isn't the right behaviour, as we don't want items to be able to be switched while they are being used.
    }
 
    const hotbarUseInfo = getLimbByInventoryName(inventoryUseComponent, InventoryName.hotbar);
@@ -1494,19 +1502,16 @@ const tickItem = (itemType: ItemType): void => {
          
          const placeInfo = calculateEntityPlaceInfo(playerHitbox.box.position, playerHitbox.box.angle, entityType, layer);
 
-         const components = {} as EntityServerComponentData;
+         const serverComponentTypes = getEntityServerComponentTypes(entityType);
+         
+         const components: Array<ServerComponentData<ServerComponentType>> = [];
 
-         // @Hack @Cleanup: make the client and server use the some component data system
-         const componentTypes = EntityComponents[entityType];
-         for (let i = 0; i < componentTypes.length; i++) {
-            const componentType = componentTypes[i];
-
+         for (const componentType of serverComponentTypes) {
             switch (componentType) {
                case ServerComponentType.transform: {
-                  const hitboxes = new Array<Hitbox>();
-                  const staticHitboxes = new Array<Hitbox>();
-                  for (let i = 0; i < placeInfo.hitboxes.length; i++) {
-                     const hitbox = placeInfo.hitboxes[i];
+                  const hitboxes: Array<Hitbox> = [];
+                  const staticHitboxes: Array<Hitbox> = [];
+                  for (const hitbox of placeInfo.hitboxes) {
                      hitboxes.push(hitbox);
                      // @Hack
                      staticHitboxes.push(hitbox);
@@ -1516,152 +1521,167 @@ const tickItem = (itemType: ItemType): void => {
                      hitboxes
                   );
 
-                  components[componentType] = transformComponentData;
+                  components.push(transformComponentData);
                   break;
                }
                case ServerComponentType.health: {
                   const data = createHealthComponentData();
-                  components[componentType] = data;
+                  components.push(data);
                   break;
                }
                case ServerComponentType.statusEffect: {
                   const data = createStatusEffectComponentData();
-                  components[componentType] = data;
+                  components.push(data);
                   break;
                }
                case ServerComponentType.structure: {
-                  components[componentType] = createStructureComponentData();
+                  components.push(createStructureComponentData());
                   break;
                }
                case ServerComponentType.tribe: {
-                  components[componentType] = createTribeComponentData(playerTribe);
+                  components.push(createTribeComponentData(playerTribe));
                   break;
                }
                case ServerComponentType.buildingMaterial: {
-                  components[componentType] = createBuildingMaterialComponentData(BuildingMaterial.wood);
+                  components.push(createBuildingMaterialComponentData(BuildingMaterial.wood));
                   break;
                }
                case ServerComponentType.bracings: {
-                  components[componentType] = createBracingsComponentData();
+                  components.push(createBracingsComponentData());
                   break;
                }
                case ServerComponentType.inventory: {
-                  components[componentType] = createInventoryComponentData({});
+                  components.push(createInventoryComponentData([]));
                   break;
                }
                case ServerComponentType.cooking: {
-                  components[componentType] = createCookingComponentData();
+                  components.push(createCookingComponentData());
                   break;
                }
                case ServerComponentType.campfire: {
-                  components[componentType] = createCampfireComponentData();
+                  components.push(createCampfireComponentData());
                   break;
                }
                case ServerComponentType.furnace: {
-                  components[componentType] = createFurnaceComponentData();
+                  components.push(createFurnaceComponentData());
                   break;
                }
                case ServerComponentType.spikes: {
-                  components[componentType] = createSpikesComponentData();
+                  components.push(createSpikesComponentData());
                   break;
                }
                case ServerComponentType.fireTorch: {
-                  components[componentType] = createFireTorchComponentData();
+                  components.push(createFireTorchComponentData());
                   break;
                }
                case ServerComponentType.slurbTorch: {
-                  components[componentType] = createSlurbTorchComponentData();
+                  components.push(createSlurbTorchComponentData());
                   break;
                }
                case ServerComponentType.barrel: {
-                  components[componentType] = createBarrelComponentData();
+                  components.push(createBarrelComponentData());
                   break;
                }
                case ServerComponentType.researchBench: {
-                  components[componentType] = createResearchBenchComponentData();
+                  components.push(createResearchBenchComponentData());
                   break;
                }
                case ServerComponentType.scrappy: {
-                  components[componentType] = {};
+                  components.push({});
                   break;
                }
                case ServerComponentType.cogwalker: {
-                  components[componentType] = {};
+                  components.push({});
                   break;
                }
                case ServerComponentType.craftingStation: {
-                  components[componentType] = {
+                  components.push({
                      craftingStation: 0
-                  };
+                  });
                   break;
                }
                case ServerComponentType.automatonAssembler: {
-                  components[componentType] = {};
+                  components.push({});
                   break;
                }
                case ServerComponentType.turret: {
-                  components[componentType] = {
+                  components.push({
                      aimDirection: 0,
                      chargeProgress: 0,
                      reloadProgress: 0
-                  };
+                  });
                   break;
                }
                case ServerComponentType.aiHelper: {
-                  components[componentType] = {};
+                  components.push({});
                   break;
                }
                case ServerComponentType.slingTurret: {
-                  components[componentType] = {};
+                  components.push({});
                   break;
                }
                case ServerComponentType.ammoBox: {
-                  components[componentType] = {
+                  components.push({
                      ammoType: 0,
                      ammoRemaining: 0
-                  };
+                  });
                   break;
                }
                case ServerComponentType.ballista: {
-                  components[componentType] = {};
+                  components.push({});
                   break;
                }
                case ServerComponentType.mithrilAnvil: {
-                  components[componentType] = {};
+                  components.push({});
                   break;
                }
                case ServerComponentType.punjiSticks: {
-                  components[componentType] = {};
+                  components.push({});
                   break;
                }
                case ServerComponentType.fence: {
-                  components[componentType] = {};
+                  components.push({});
                   break;
                }
                case ServerComponentType.planterBox: {
-                  components[componentType] = {
+                  components.push({
                      plantedEntityType: -1,
                      isFertilised: false
-                  };
+                  });
                   break;
                }
                case ServerComponentType.hut: {
-                  components[componentType] = {
+                  components.push({
                      doorSwingAmount: 0,
                      isRecalling: false
-                  };
+                  });
                   break;
                }
                case ServerComponentType.totemBanner: {
-                  components[componentType] = {
+                  components.push({
                      banners: []
-                  };
+                  });
                   break;
                }
                case ServerComponentType.floorSign: {
-                  components[componentType] = {
+                  components.push({
                      message: ""
-                  };
+                  });
+                  break;
+               }
+               case ServerComponentType.tribeMember: {
+                  components.push({
+                     name: ""
+                  });
+                  break;
+               }
+               case ServerComponentType.tribesmanAI: {
+                  components.push({
+                     aiType: 0,
+                     relationsWithPlayer: 0,
+                     craftingItemType: 0,
+                     craftingProgress: 0
+                  });
                   break;
                }
                default: {
@@ -1679,38 +1699,38 @@ const tickItem = (itemType: ItemType): void => {
          };
 
          // Create the entity
-         assert(entityComponentData.serverComponentData[ServerComponentType.transform]!.hitboxes.length > 0);
+         assert(getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.transform).hitboxes.length > 0);
          const creationInfo = createEntityCreationInfo(0, entityComponentData);
 
-         const renderInfo = creationInfo.renderInfo;
+         const renderObject = creationInfo.renderObject;
 
          // @Hack: Could potentially get overridden in the future
-         renderInfo.tintR = placeInfo.isValid ? 0 : 0.5;
-         renderInfo.tintG = placeInfo.isValid ? 0 : -0.5;
-         renderInfo.tintB = placeInfo.isValid ? 0 : -0.5;
+         renderObject.tintR = placeInfo.isValid ? 0 : 0.5;
+         renderObject.tintG = placeInfo.isValid ? 0 : -0.5;
+         renderObject.tintB = placeInfo.isValid ? 0 : -0.5;
 
          // Modify all the render part's opacity
-         for (let i = 0; i < renderInfo.renderPartsByZIndex.length; i++) {
-            const renderThing = renderInfo.renderPartsByZIndex[i];
+         for (let i = 0; i < renderObject.renderPartsByZIndex.length; i++) {
+            const renderThing = renderObject.renderPartsByZIndex[i];
             if (thingIsVisualRenderPart(renderThing)) {
                renderThing.opacity *= 0.5;
             }
          }
 
-         // Remove any previous render info
-         if (placeableEntityGhostRenderInfo !== null) {
-            removeGhostRenderInfo(placeableEntityGhostRenderInfo);
+         // Remove any previous render object
+         if (placeableEntityGhostRenderObject !== null) {
+            removeGhostRenderObject(placeableEntityGhostRenderObject);
          }
          
-         placeableEntityGhostRenderInfo = renderInfo;
-         addGhostRenderInfo(renderInfo);
+         placeableEntityGhostRenderObject = renderObject;
+         addGhostRenderObject(renderObject);
 
-         // @Hack: Manually set the render info's position and rotation
+         // @Hack: Manually set the render object's position and rotation
          // @INCOMPLETE
          // const transformComponentData = components[ServerComponentType.transform]!;
-         // renderInfo.renderPosition.x = transformComponentData.position.x;
-         // renderInfo.renderPosition.y = transformComponentData.position.y;
-         // renderInfo.rotation = transformComponentData.rotation;
+         // renderObject.renderPosition.x = transformComponentData.position.x;
+         // renderObject.renderPosition.y = transformComponentData.position.y;
+         // renderObject.rotation = transformComponentData.rotation;
 
          break;
       }

@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, CircularBox, HitboxCollisionType } from "webgl-test-shared";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, CircularBox, HitboxCollisionType } from "webgl-test-shared";
 import { createAIHelperComponentData } from "../entity-components/server-components/AIHelperComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createStatusEffectComponentData } from "../entity-components/server-components/StatusEffectComponent";
@@ -11,7 +11,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createCogwalkerConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
    const hitbox = createHitboxQuick(0, hitboxLocalID++, null, new CircularBox(position, new Point(0, 0), rotation, 28), 1.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
@@ -19,15 +19,15 @@ export function createCogwalkerConfig(position: Point, rotation: number, tribe: 
 
    return {
       entityType: EntityType.cogwalker,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.tribeMember]: createTribeMemberComponentData(),
-         [ServerComponentType.tribesmanAI]: createTribesmanAIComponentData(),
-         [ServerComponentType.aiHelper]: createAIHelperComponentData(),
-      },
-      clientComponentData: {}
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createTribeComponentData(tribe),
+         createTribeMemberComponentData(),
+         createTribesmanAIComponentData(),
+         createAIHelperComponentData()
+      ],
+      clientComponentData: []
    };
 }

@@ -1,5 +1,5 @@
 import { PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { createGenericGemParticle } from "../../particles";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -8,6 +8,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface GuardianGemFragmentProjectileComponentData {
    readonly fragmentShape: number;
@@ -45,16 +47,18 @@ function decodeData(reader: PacketReader): GuardianGemFragmentProjectileComponen
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
-   
-   const guardianGemFragmentProjectileComponentData = entityComponentData.serverComponentData[ServerComponentType.guardianGemFragmentProjectile]!;
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const guardianGemFragmentProjectileComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.guardianGemFragmentProjectile);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(TEXTURE_SOURCES[guardianGemFragmentProjectileComponentData.fragmentShape])
    );
 
@@ -84,7 +88,7 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       }
    }
 
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {
       renderPart: renderPart

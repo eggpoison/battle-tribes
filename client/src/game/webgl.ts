@@ -5,19 +5,15 @@ import { TEXTURE_IMAGE_RECORD } from "./textures";
 
 export const CIRCLE_VERTEX_COUNT = 50;
 
-let canvas: HTMLCanvasElement;
 export let gl: WebGL2RenderingContext;
 
+// @Location
 export let windowWidth = window.innerWidth;
 export let windowHeight = window.innerHeight;
 export let halfWindowWidth = windowWidth / 2;
 export let halfWindowHeight = windowHeight / 2;
 
 export let MAX_ACTIVE_TEXTURE_UNITS = 8;
-
-export const tempFloat32ArrayLength1 = new Float32Array(1);
-export const tempFloat32ArrayLength2 = new Float32Array(2);
-export const tempFloat32ArrayLength3 = new Float32Array(3);
 
 export function resizeCanvas(): void {
    windowWidth = window.innerWidth;
@@ -26,7 +22,8 @@ export function resizeCanvas(): void {
    halfWindowWidth = windowWidth / 2;
    halfWindowHeight = windowHeight / 2;
 
-   if (typeof canvas === "undefined") return;
+   const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
+   if (canvas === null) return;
 
    // Update the size of the canvas
    canvas.width = window.innerWidth;
@@ -34,36 +31,49 @@ export function resizeCanvas(): void {
 
    gl.viewport(0, 0, windowWidth, windowHeight);
 
-   const textCanvas = document.getElementById("text-canvas") as HTMLCanvasElement;
-   textCanvas.width = windowWidth;
-   textCanvas.height = windowHeight;
+   const textCanvas = document.getElementById("text-canvas") as HTMLCanvasElement | null;
+   if (textCanvas !== null) {
+      textCanvas.width = windowWidth;
+      textCanvas.height = windowHeight;
+   }
 
-   const techTreeCanvas = document.getElementById("tech-tree-canvas") as HTMLCanvasElement;
-   techTreeCanvas.width = windowWidth;
-   techTreeCanvas.height = windowHeight;
+   const techTreeCanvas = document.getElementById("tech-tree-canvas") as HTMLCanvasElement | null;
+   if (techTreeCanvas !== null) {
+      techTreeCanvas.width = windowWidth;
+      techTreeCanvas.height = windowHeight;
+   }
    updateTechTreeCanvasSize();
 }
 
-// Run the resizeCanvas function whenever the window is resize
-window.addEventListener("resize", resizeCanvas);
+function createWebGLCanvas(canvasID: string): HTMLCanvasElement {
+   const canvas = document.createElement("canvas");
+   canvas.id = canvasID;
+   canvas.hidden = true;
+   document.body.appendChild(canvas);
+   return canvas;
+}
 
-export function createWebGLContext(): void {
-   const canvasCheck = document.getElementById("game-canvas");
-   if (canvasCheck instanceof HTMLCanvasElement) {
-      canvas = canvasCheck;
-   }
-   
-   const glAttempt = canvas.getContext("webgl2", { alpha: false });
-
-   if (glAttempt === null) {
+export function createWebGLRenderingContext(canvas: HTMLCanvasElement): WebGL2RenderingContext {
+   const gl = canvas.getContext("webgl2", { alpha: false });
+   if (gl === null) {
       alert("Your browser does not support WebGL.");
       throw new Error("Your browser does not support WebGL.");
    }
-   gl = glAttempt;
 
    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-   MAX_ACTIVE_TEXTURE_UNITS = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+   // @SPEED @HACK @CLEANUP: Set multiple times!!
+   MAX_ACTIVE_TEXTURE_UNITS = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) as number;
+
+   return gl;
+}
+
+export function setupWebGL(): void {
+   const gameCanvas = createWebGLCanvas("game-canvas");
+   gl = createWebGLRenderingContext(gameCanvas);
+   const techTreeCanvas = createWebGLCanvas("tech-tree-canvas");
+   createWebGLRenderingContext(techTreeCanvas);
+
 }
 
 export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText: string, fragmentShaderText: string): WebGLProgram {
@@ -79,7 +89,7 @@ export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText:
    // Create the program and attach shaders to the program
    // 
 
-   const program = gl.createProgram()!;
+   const program = gl.createProgram();
 
    gl.attachShader(program, vertexShader);
    gl.attachShader(program, fragmentShader);
@@ -142,7 +152,7 @@ export function generateLine(startPosition: Point, endPosition: Point, thickness
 }
 
 export function generateThickCircleWireframeVertices(position: Point, radius: number, thickness: number, r: number, g: number, b: number): Array<number> {
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    const step = 2 * Math.PI / CIRCLE_VERTEX_COUNT;
    
    // Add the outer vertices
@@ -182,7 +192,7 @@ export function getCirclePoint(numPoints: number, i: number, origin: Readonly<Po
 }
 
 export function createTexture(width: number, height: number): WebGLTexture {
-   const texture = gl.createTexture()!;
+   const texture = gl.createTexture();
    gl.bindTexture(gl.TEXTURE_2D, texture);
    
    // Define size and format of level 0
@@ -203,7 +213,7 @@ export function createTexture(width: number, height: number): WebGLTexture {
 }
 
 export function createTextureArray(textureSources: ReadonlyArray<string>, width: number, height: number, numLevels: number): WebGLTexture {
-   const textureArray = gl.createTexture()!;
+   const textureArray = gl.createTexture();
    gl.bindTexture(gl.TEXTURE_2D_ARRAY, textureArray);
    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, numLevels, gl.RGBA8, width, height, textureSources.length);
 

@@ -1,5 +1,5 @@
 import { Entity } from "../../shared/src/entities";
-import { LightLevelNode, LightLevelVars } from "../../shared/src/light-levels";
+import { LightLevelNode, LightLevelVar } from "../../shared/src/light-levels";
 import { Packet } from "../../shared/src/packets";
 import { Settings } from "../../shared/src/settings";
 import { assert, distance, lerp, Point } from "../../shared/src/utils";
@@ -67,7 +67,7 @@ const clearLightLitNodes = (light: Light, lightLayer: Layer): void => {
 
 export function calculateLightRangeNodes(lightStrength: number, lightIntensity: number, lightRadius: number): number {
    const rangeUnits = -64 * lightStrength * Math.log(Vars.MIN_CALCULATED_LIGHT_INTENSITY / lightIntensity) + lightRadius;
-   return Math.ceil(rangeUnits / LightLevelVars.LIGHT_NODE_SIZE);
+   return Math.ceil(rangeUnits / LightLevelVar.LIGHT_NODE_SIZE);
 }
 
 const updateLight = (light: Light, nodeX: number, nodeY: number, layer: Layer) => {
@@ -95,7 +95,7 @@ const updateLight = (light: Light, nodeX: number, nodeY: number, layer: Layer) =
 
    for (let currentNodeX = minNodeX; currentNodeX <= maxNodeX; currentNodeX++) {
       for (let currentNodeY = minNodeY; currentNodeY <= maxNodeY; currentNodeY++) {
-         let dist = distance(nodeX, nodeY, currentNodeX, currentNodeY) * LightLevelVars.LIGHT_NODE_SIZE;
+         let dist = distance(nodeX, nodeY, currentNodeX, currentNodeY) * LightLevelVar.LIGHT_NODE_SIZE;
          dist -= light.radius;
          if (dist < 0) {
             dist = 0;
@@ -131,8 +131,8 @@ export function updateEntityLights(entity: Entity): void {
       const hitbox = pair[0];
       const light = pair[1];
 
-      const nodeX = Math.floor(hitbox.box.position.x / LightLevelVars.LIGHT_NODE_SIZE);
-      const nodeY = Math.floor(hitbox.box.position.y / LightLevelVars.LIGHT_NODE_SIZE);
+      const nodeX = Math.floor(hitbox.box.position.x / LightLevelVar.LIGHT_NODE_SIZE);
+      const nodeY = Math.floor(hitbox.box.position.y / LightLevelVar.LIGHT_NODE_SIZE);
       updateLight(light, nodeX, nodeY, layer);
    }
 }
@@ -216,18 +216,18 @@ export function getLightIntensityAtNode(layer: Layer, node: LightLevelNode): num
 }
 
 export function getLightIntensityAtPos(layer: Layer, x: number, y: number): number {
-   const nodeX = Math.floor(x / LightLevelVars.LIGHT_NODE_SIZE);
-   const nodeY = Math.floor(y / LightLevelVars.LIGHT_NODE_SIZE);
+   const nodeX = Math.floor(x / LightLevelVar.LIGHT_NODE_SIZE);
+   const nodeY = Math.floor(y / LightLevelVar.LIGHT_NODE_SIZE);
    const node = getLightLevelNode(nodeX, nodeY);
    
    return getLightIntensityAtNode(layer, node);
 }
 
 export function getPlayerLightLevelsDataLength(playerClient: PlayerClient): number {
-   const minNodeX = Math.floor(playerClient.minVisibleX / LightLevelVars.LIGHT_NODE_SIZE);
-   const maxNodeX = Math.floor(playerClient.maxVisibleX / LightLevelVars.LIGHT_NODE_SIZE);
-   const minNodeY = Math.floor(playerClient.minVisibleY / LightLevelVars.LIGHT_NODE_SIZE);
-   const maxNodeY = Math.floor(playerClient.maxVisibleY / LightLevelVars.LIGHT_NODE_SIZE);
+   const minNodeX = Math.floor(playerClient.minVisibleX / LightLevelVar.LIGHT_NODE_SIZE);
+   const maxNodeX = Math.floor(playerClient.maxVisibleX / LightLevelVar.LIGHT_NODE_SIZE);
+   const minNodeY = Math.floor(playerClient.minVisibleY / LightLevelVar.LIGHT_NODE_SIZE);
+   const maxNodeY = Math.floor(playerClient.maxVisibleY / LightLevelVar.LIGHT_NODE_SIZE);
 
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
 
@@ -238,10 +238,10 @@ export function getPlayerLightLevelsDataLength(playerClient: PlayerClient): numb
 }
 
 export function addPlayerLightLevelsData(packet: Packet, playerClient: PlayerClient): void {
-   const minNodeX = Math.floor(playerClient.minVisibleX / LightLevelVars.LIGHT_NODE_SIZE);
-   const maxNodeX = Math.floor(playerClient.maxVisibleX / LightLevelVars.LIGHT_NODE_SIZE);
-   const minNodeY = Math.floor(playerClient.minVisibleY / LightLevelVars.LIGHT_NODE_SIZE);
-   const maxNodeY = Math.floor(playerClient.maxVisibleY / LightLevelVars.LIGHT_NODE_SIZE);
+   const minNodeX = Math.floor(playerClient.minVisibleX / LightLevelVar.LIGHT_NODE_SIZE);
+   const maxNodeX = Math.floor(playerClient.maxVisibleX / LightLevelVar.LIGHT_NODE_SIZE);
+   const minNodeY = Math.floor(playerClient.minVisibleY / LightLevelVar.LIGHT_NODE_SIZE);
+   const maxNodeY = Math.floor(playerClient.maxVisibleY / LightLevelVar.LIGHT_NODE_SIZE);
 
    const numNodes = (maxNodeX + 1 - minNodeX) * (maxNodeY + 1 - minNodeY);
    packet.writeNumber(numNodes);

@@ -1,4 +1,4 @@
-import { Entity, Box, boxIsCircular, getRelativePivotPos, HitboxCollisionType, CollisionGroup, getEntityCollisionGroup, Point, polarVec2, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
+import { Entity, Box, boxIsCircular, getRelativePivotPos, HitboxCollisionType, CollisionGroup, getEntityCollisionGroup, Point, polarVec2, rotatePointAroundOrigin, _point } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
@@ -50,16 +50,16 @@ export function createHitboxShaders(): void {
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
    bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 
-   buffer = gl.createBuffer()!;
+   buffer = gl.createBuffer();
 }
 
 const calculateBoxAdjustment = (entity: Entity): Point => {
    return new Point(0, 0);
    // @INCOMPLETE
    // const transformComponent = TransformComponentArray.getComponent(entity);
-   // const renderInfo = getEntityRenderInfo(entity);
+   // const renderObject = getEntityRenderObject(entity);
 
-   // const adjustment = renderInfo.renderPosition.copy();
+   // const adjustment = renderObject.renderPosition.copy();
    // adjustment.x -= transformComponent.position.x;
    // adjustment.y -= transformComponent.position.y;
    // return adjustment;
@@ -71,14 +71,18 @@ const addRectVertices = (vertices: Array<number>, x: number, y: number, width: n
    
    // Top
    {
-      const tlX = x + rotateXAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
-      const tlY = y + rotateYAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
-      const trX = x + rotateXAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
-      const trY = y + rotateYAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
-      const blX = x + rotateXAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
-      const blY = y + rotateYAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
-      const brX = x + rotateXAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
-      const brY = y + rotateYAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
+      rotatePointAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
+      const tlX = x + _point.x;
+      const tlY = y + _point.y;
+      rotatePointAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
+      const trX = x + _point.x;
+      const trY = y + _point.y;
+      rotatePointAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
+      const blX = x + _point.x;
+      const blY = y + _point.y;
+      rotatePointAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
+      const brX = x + _point.x;
+      const brY = y + _point.y;
 
       vertices.push(
          blX, blY, r, g, b,
@@ -92,14 +96,18 @@ const addRectVertices = (vertices: Array<number>, x: number, y: number, width: n
    
    // Right
    {
-      const tlX = x + rotateXAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
-      const tlY = y + rotateYAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
-      const trX = x + rotateXAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
-      const trY = y + rotateYAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
-      const blX = x + rotateXAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
-      const blY = y + rotateYAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
-      const brX = x + rotateXAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
-      const brY = y + rotateYAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
+      rotatePointAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
+      const tlX = x + _point.x;
+      const tlY = y + _point.y;
+      rotatePointAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
+      const trX = x + _point.x;
+      const trY = y + _point.y;
+      rotatePointAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
+      const blX = x + _point.x;
+      const blY = y + _point.y;
+      rotatePointAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
+      const brX = x + _point.x;
+      const brY = y + _point.y;
 
       vertices.push(
          blX, blY, r, g, b,
@@ -113,14 +121,18 @@ const addRectVertices = (vertices: Array<number>, x: number, y: number, width: n
    
    // Bottom
    {
-      const tlX = x + rotateXAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
-      const tlY = y + rotateYAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
-      const trX = x + rotateXAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
-      const trY = y + rotateYAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
-      const blX = x + rotateXAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
-      const blY = y + rotateYAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
-      const brX = x + rotateXAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
-      const brY = y + rotateYAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
+      rotatePointAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
+      const tlX = x + _point.x;
+      const tlY = y + _point.y;
+      rotatePointAroundOrigin(halfWidth - HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
+      const trX = x + _point.x;
+      const trY = y + _point.y;
+      rotatePointAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
+      const blX = x + _point.x;
+      const blY = y + _point.y;
+      rotatePointAroundOrigin(halfWidth + HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
+      const brX = x + _point.x;
+      const brY = y + _point.y;
 
       vertices.push(
          blX, blY, r, g, b,
@@ -134,14 +146,18 @@ const addRectVertices = (vertices: Array<number>, x: number, y: number, width: n
    
    // Left
    {
-      const tlX = x + rotateXAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
-      const tlY = y + rotateYAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
-      const trX = x + rotateXAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
-      const trY = y + rotateYAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
-      const blX = x + rotateXAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
-      const blY = y + rotateYAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
-      const brX = x + rotateXAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
-      const brY = y + rotateYAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
+      rotatePointAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, halfHeight + HALF_BORDER_THICKNESS, angle);
+      const tlX = x + _point.x;
+      const tlY = y + _point.y;
+      rotatePointAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, halfHeight - HALF_BORDER_THICKNESS, angle);
+      const trX = x + _point.x;
+      const trY = y + _point.y;
+      rotatePointAroundOrigin(-halfWidth - HALF_BORDER_THICKNESS, -halfHeight - HALF_BORDER_THICKNESS, angle);
+      const blX = x + _point.x;
+      const blY = y + _point.y;
+      rotatePointAroundOrigin(-halfWidth + HALF_BORDER_THICKNESS, -halfHeight + HALF_BORDER_THICKNESS, angle);
+      const brX = x + _point.x;
+      const brY = y + _point.y;
 
       vertices.push(
          blX, blY, r, g, b,
@@ -214,7 +230,7 @@ const renderVertices = (vertices: Array<number>): void => {
 }
 
 export function renderHitboxes(layer: Layer): void {
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    
    for (let i = 0; i < TransformComponentArray.entities.length; i++) {
       const entity = TransformComponentArray.entities[i];

@@ -35,13 +35,13 @@ export function createTreeRootSegmentConfig(position: Point, rotation: number, r
    
    return {
       entityType: EntityType.treeRootSegment,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.treeRootSegment]: treeRootSegmentComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         treeRootSegmentComponent
+      ],
       lights: []
    };
 }

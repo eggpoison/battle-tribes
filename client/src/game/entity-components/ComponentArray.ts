@@ -1,63 +1,39 @@
-import { assert, Point, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "./ServerComponentArray";
-import ClientComponentArray from "./ClientComponentArray";
-import { ClientComponentType } from "./client-component-types";
+import { assert, Point, Entity } from "webgl-test-shared";
 import { EntityComponentData } from "../world";
 import { Hitbox } from "../hitboxes";
-import { EntityRenderInfo } from "../EntityRenderInfo";
+import { ComponentTint, EntityRenderObject } from "../EntityRenderObject";
 
-export const enum ComponentArrayType {
-   server,
-   client
-}
-
-let componentArrayIDCounter = 0;
-
-type ComponentTypeForArray = {
-   [ComponentArrayType.server]: ServerComponentType,
-   [ComponentArrayType.client]: ClientComponentType
-};
-
-let componentArrays = new Array<ComponentArray>();
-let serverComponentArrays = new Array<ServerComponentArray>();
-
-let clientComponentArrayRecord: Record<ClientComponentType, ClientComponentArray> = {} as any;
-let serverComponentArrayRecord: Record<ServerComponentType, ServerComponentArray> = {} as any;
+const componentArrays: Array<ComponentArray> = [];
 
 export abstract class ComponentArray<
    T extends object = object,
-   ComponentIntermediateInfo extends object | never = object | never,
-   ArrayType extends ComponentArrayType = ComponentArrayType,
-   ComponentType extends ComponentTypeForArray[ArrayType] = ComponentTypeForArray[ArrayType]
+   ComponentIntermediateInfo extends object | never = object | never
 > {
-   public readonly id = componentArrayIDCounter++;
    private readonly isActiveByDefault: boolean;
-
-   // @HACK here for hack
-   private readonly componentType: ComponentType;
    
-   public entities = new Array<Entity>();
-   public components = new Array<T>();
+   public entities: Array<Entity> = [];
+   public components: Array<T> = [];
 
    /** Maps entity IDs to component indexes */
    private entityToIndexMap: Partial<Record<Entity, number>> = {};
    /** Maps component indexes to entity IDs */
    private indexToEntityMap: Partial<Record<number, Entity>> = {};
    
-   public activeComponents = new Array<T>();
-   public activeEntities = new Array<Entity>();
+   public activeEntities: Array<Entity> = [];
+   public activeComponents: Array<T> = [];
 
    /** Maps entity IDs to component indexes */
-   private activeEntityToIndexMap: Record<Entity, number> = {};
+   private activeEntityToIndexMap: Partial<Record<Entity, number>> = {};
    /** Maps component indexes to entity IDs */
    private activeIndexToEntityMap: Record<number, Entity> = {};
 
-   private deactivateBuffer = new Array<number>();
+   private deactivateBuffer: Array<Entity> = [];
+   private removeBuffer: Array<Entity> = [];
 
    // In reality this is just all information beyond its config which the component wishes to expose to other components
    // This is a separate layer so that, for example, components can immediately get render parts without having to wait for onLoad (introducing polymorphism)
-   public populateIntermediateInfo?(renderInfo: EntityRenderInfo, entityComponentData: Readonly<EntityComponentData>): ComponentIntermediateInfo;
-   public readonly createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderInfo: EntityRenderInfo) => T;
+   public populateIntermediateInfo?(renderObject: EntityRenderObject, entityComponentData: Readonly<EntityComponentData>): ComponentIntermediateInfo;
+   public readonly createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject) => T;
    public readonly getMaxRenderParts: (entityComponentData: EntityComponentData) => number;
    /** Called once when the entity is being created, just after all the components are created from their data */
    public onLoad?(entity: Entity): void;
@@ -72,32 +48,25 @@ export abstract class ComponentArray<
    /** Called when the entity dies, not when the entity leaves the player's vision. */
    public onDie?(entity: Entity): void;
    public onRemove?(entity: Entity): void;
+   /** Called whenever the entity is first selected or its data is changed while selected. */
+   public updateSelectedEntityState?(entity: Entity): void;
+   public calculateTint?(entity: Entity): ComponentTint;
 
-   constructor(arrayType: ArrayType, componentType: ComponentType, isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderInfo: EntityRenderInfo) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number) {
+   constructor(isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number) {
       this.isActiveByDefault = isActiveByDefault;
-
-      this.componentType = componentType;
       
       this.createComponent = createComponent;
       this.getMaxRenderParts = getMaxRenderParts;
 
+      // @Cleanup: cast
       componentArrays.push(this as unknown as ComponentArray);
-      if (arrayType === ComponentArrayType.server) {
-         assert(typeof serverComponentArrayRecord[componentType as ServerComponentType] === "undefined");
-         
-         // @Cleanup: casts
-         serverComponentArrays.push(this as unknown as ServerComponentArray);
-         serverComponentArrayRecord[componentType as ServerComponentType] = this as unknown as ServerComponentArray;
-      } else {
-         assert(typeof clientComponentArrayRecord[componentType as ClientComponentType] === "undefined");
-
-         // @Cleanup: casts
-         clientComponentArrayRecord[componentType as ClientComponentType] = this as unknown as ClientComponentArray;
-      }
    }
 
-   // @HACK: the entity type param
-   public addComponent(entity: Entity, component: T, entityType: EntityType): void {
+   public addComponentToRemoveBuffer(entity: Entity): void {
+      this.removeBuffer.push(entity);
+   }
+
+   public addComponent(entity: Entity, component: T): void {
       // Put new entry at end and update the maps
       const newIndex = this.components.length;
       this.entityToIndexMap[entity] = newIndex;
@@ -106,55 +75,94 @@ export abstract class ComponentArray<
       this.entities.push(entity);
 
       if (this.isActiveByDefault) {
-         // @Hack so that Board.updateEntities doesn't kill everything with slow
-         if (!(this.componentType === ServerComponentType.transform && entityType === EntityType.grassStrand)) {
+         // @INCOMPLETE @SQUEAM
+         // @Hack so that tickEntities doesn't kill everything with slow
+         // if (!(this.componentType === ServerComponentType.transform && entityType === EntityType.grassStrand)) {
             this.activateComponent(component, entity);
+         // }
+      }
+   }
+
+   public removeFlaggedComponents(): void {
+      const entitiesToRemove = this.removeBuffer;
+      const len = entitiesToRemove.length;
+      if (len === 0) {
+         return;
+      }
+      
+      let numDeactivated = 0;
+
+      for (let i = 0; i < len; i++) {
+         const entity = entitiesToRemove[i];
+      
+         const indexOfRemovedEntity = this.entityToIndexMap[entity]!;
+         const indexOfLastEntity = this.entities.length - 1 - i;
+
+         // Copy element at end into deleted element's place to maintain density
+         this.components[indexOfRemovedEntity] = this.components[indexOfLastEntity];
+         this.entities[indexOfRemovedEntity] = this.entities[indexOfLastEntity];
+
+         // Update map to point to moved spot
+         const entityOfLastElement = this.indexToEntityMap[indexOfLastEntity]!;
+         this.entityToIndexMap[entityOfLastElement] = indexOfRemovedEntity;
+         this.indexToEntityMap[indexOfRemovedEntity] = entityOfLastElement;
+
+         delete this.entityToIndexMap[entity];
+         delete this.indexToEntityMap[indexOfLastEntity];
+
+         // Batched component deactivation
+         if (this.activeEntityToIndexMap[entity] !== undefined) {
+            const indexOfRemovedEntity = this.activeEntityToIndexMap[entity];
+            const indexOfLastEntity = this.activeEntities.length - 1 - numDeactivated;
+
+            // Copy element at end into deleted element's place to maintain density
+            this.activeComponents[indexOfRemovedEntity] = this.activeComponents[indexOfLastEntity];
+            this.activeEntities[indexOfRemovedEntity] = this.activeEntities[indexOfLastEntity];
+
+            // Update map to point to moved spot
+            const entityOfLastElement = this.activeIndexToEntityMap[indexOfLastEntity];
+            this.activeEntityToIndexMap[entityOfLastElement] = indexOfRemovedEntity;
+            this.activeIndexToEntityMap[indexOfRemovedEntity] = entityOfLastElement;
+
+            delete this.activeEntityToIndexMap[entity];
+            delete this.activeIndexToEntityMap[indexOfLastEntity];
+
+            numDeactivated++;
          }
       }
-   }
 
-   public removeComponent(entity: Entity): void {
-		// Copy element at end into deleted element's place to maintain density
-      const indexOfRemovedEntity = this.entityToIndexMap[entity]!;
-      this.components[indexOfRemovedEntity] = this.components[this.components.length - 1];
-      this.entities[indexOfRemovedEntity] = this.entities[this.entities.length - 1];
+      const newLength = this.entities.length - len;
+      this.entities.length = newLength;
+      this.components.length = newLength;
 
-		// Update map to point to moved spot
-      const entityOfLastElement = this.indexToEntityMap[this.components.length - 1]!;
-      this.entityToIndexMap[entityOfLastElement] = indexOfRemovedEntity;
-      this.indexToEntityMap[indexOfRemovedEntity] = entityOfLastElement;
-
-      delete this.entityToIndexMap[entity];
-      delete this.indexToEntityMap[this.components.length - 1];
-
-      this.components.pop();
-      this.entities.pop();
-
-      if (typeof this.activeEntityToIndexMap[entity] !== "undefined") {
-         this.deactivateComponent(entity);
+      if (numDeactivated > 0) {
+         const newLength = this.activeEntities.length - numDeactivated;
+         this.activeEntities.length = newLength;
+         this.activeComponents.length = newLength;
       }
+
+      this.removeBuffer.length = 0;
    }
 
-   public getComponent(entity: Entity) {
-      const idx = this.entityToIndexMap[entity];
-      assert(typeof idx !== "undefined");
+   public getComponent(entity: Entity): T {
+      const idx = this.entityToIndexMap[entity]!;
       return this.components[idx];
    }
 
    public tryGetComponent(entity: Entity): T | null {
       const idx = this.entityToIndexMap[entity];
-      if (typeof idx === "undefined") {
+      if (idx === undefined) {
          return null;
       }
       return this.components[idx];
    }
 
    public hasComponent(entity: Entity): boolean {
-      return typeof this.entityToIndexMap[entity] !== "undefined";
+      return this.entityToIndexMap[entity] !== undefined;
    }
 
    public componentIsActive(entity: Entity): boolean {
-      return typeof this.activeEntityToIndexMap[entity] !== "undefined";
+      return this.activeEntityToIndexMap[entity] !== undefined;
    }
 
    public activateComponent(component: T, entity: Entity): void {
@@ -174,7 +182,7 @@ export abstract class ComponentArray<
 
    private deactivateComponent(entity: Entity): void {
       // Copy element at end into deleted element's place to maintain density
-      const indexOfRemovedEntity = this.activeEntityToIndexMap[entity];
+      const indexOfRemovedEntity = this.activeEntityToIndexMap[entity]!;
       this.activeComponents[indexOfRemovedEntity] = this.activeComponents[this.activeComponents.length - 1];
       this.activeEntities[indexOfRemovedEntity] = this.activeEntities[this.activeComponents.length - 1];
 
@@ -195,9 +203,8 @@ export abstract class ComponentArray<
    }
 
    public deactivateQueue(): void {
-      for (let i = 0; i < this.deactivateBuffer.length; i++) {
-         const entityID = this.deactivateBuffer[i];
-         this.deactivateComponent(entityID);
+      for (const entity of this.deactivateBuffer) {
+         this.deactivateComponent(entity);
       }
       this.deactivateBuffer = [];
    }
@@ -212,10 +219,10 @@ export abstract class ComponentArray<
             break;
          }
       }
-      assert(typeof idx !== "undefined");
+      assert(idx !== undefined);
 
       const entity = this.indexToEntityMap[idx];
-      assert(typeof entity !== "undefined");
+      assert(entity !== undefined);
 
       return entity;
    }
@@ -223,29 +230,4 @@ export abstract class ComponentArray<
 
 export function getComponentArrays(): ReadonlyArray<ComponentArray> {
    return componentArrays;
-}
-
-export function getServerComponentArrays(): ReadonlyArray<ServerComponentArray> {
-   return serverComponentArrays;
-}
-
-export function getClientComponentArray(componentType: ClientComponentType): ClientComponentArray {
-   return clientComponentArrayRecord[componentType];
-}
-
-export function getServerComponentArray(componentType: ServerComponentType): ServerComponentArray {
-   return serverComponentArrayRecord[componentType];
-}
-
-export function callEntityOnUpdateFunctions(entity: Entity): void {
-   for (let i = 0; i < componentArrays.length; i++) {
-      const componentArray = componentArrays[i];
-      if (typeof componentArray.onUpdate === "undefined") {
-         continue;
-      }
-      
-      if (componentArray.hasComponent(entity)) {
-         componentArray.onUpdate(entity);
-      }
-   }
 }

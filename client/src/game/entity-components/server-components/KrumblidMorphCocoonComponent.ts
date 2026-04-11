@@ -6,7 +6,9 @@ import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface KrumblidMorphCocoonComponentData {
    readonly stage: number;
@@ -44,19 +46,21 @@ function decodeData(reader: PacketReader): KrumblidMorphCocoonComponentData {
    return createKrumblidMorphCocoonComponentData(stage);
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const krumblidMorphCocoonComponentData = entityComponentData.serverComponentData[ServerComponentType.krumblidMorphCocoon]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const krumblidMorphCocoonComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.krumblidMorphCocoon);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(getTextureSource(krumblidMorphCocoonComponentData.stage))
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {
       renderPart: renderPart
@@ -64,7 +68,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): KrumblidMorphCocoonComponent {
-   const krumblidMorphCocoonComponentData = entityComponentData.serverComponentData[ServerComponentType.krumblidMorphCocoon]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const krumblidMorphCocoonComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.krumblidMorphCocoon);
 
    return {
       stage: krumblidMorphCocoonComponentData.stage,

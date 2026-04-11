@@ -1,5 +1,5 @@
 import { Box, PacketReader } from "webgl-test-shared";
-import { currentSnapshot } from "./client";
+import { currentSnapshot } from "./game";
 import Layer from "./Layer";
 import { readBoxFromData } from "./networking/packet-hitboxes";
 import { calculateGrassBlockerVertexData } from "./rendering/webgl/grass-blocker-rendering";
@@ -36,7 +36,7 @@ export function getGrassBlockers(): ReadonlyMap<number, Readonly<GrassBlocker>> 
 
 const createGrassBlockerFromData = (data: GrassBlockerData): GrassBlocker => {
    const vao = gl.createVertexArray();
-   const vertexBuffer = gl.createBuffer()!;
+   const vertexBuffer = gl.createBuffer();
 
    const blocker: GrassBlocker = {
       box: data.box,
@@ -80,7 +80,7 @@ const updateGrassBlockerVertices = (blocker: GrassBlocker): void => {
 }
 
 export function readGrassBlockers(reader: PacketReader): ReadonlyArray<GrassBlockerData> {
-   const grassBlockerData = new Array<GrassBlockerData>();
+   const grassBlockerData: Array<GrassBlockerData> = [];
    const numBlockers = reader.readNumber();
    for (let i = 0; i < numBlockers; i++) {
       const id = reader.readNumber();
@@ -107,7 +107,7 @@ export function readGrassBlockers(reader: PacketReader): ReadonlyArray<GrassBloc
 export function updateGrassBlockersFromData(grassBlockerData: ReadonlyArray<GrassBlockerData>): void {
    for (const data of grassBlockerData) {
       const existingGrassBlocker = grassBlockers.get(data.id);
-      if (typeof existingGrassBlocker !== "undefined") {
+      if (existingGrassBlocker !== undefined) {
          // Update grass blocker
          existingGrassBlocker.blockAmount = data.blockAmount;
          updateGrassBlockerVertices(existingGrassBlocker);

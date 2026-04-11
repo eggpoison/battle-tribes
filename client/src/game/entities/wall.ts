@@ -1,4 +1,4 @@
-import { Point, EntityType, BuildingMaterial, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
+import { Point, EntityType, BuildingMaterial, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
 import { createBuildingMaterialComponentData } from "../entity-components/server-components/BuildingMaterialComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createStatusEffectComponentData } from "../entity-components/server-components/StatusEffectComponent";
@@ -10,7 +10,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createWallConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
    const box = new RectangularBox(position, new Point(0, 0), rotation, 64, 64);
@@ -19,14 +19,14 @@ export function createWallConfig(position: Point, rotation: number, tribe: Tribe
 
    return {
       entityType: EntityType.wall,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.buildingMaterial]: createBuildingMaterialComponentData(material)
-      },
-      clientComponentData: {}
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createBuildingMaterialComponentData(material)
+      ],
+      clientComponentData: []
    };
 }

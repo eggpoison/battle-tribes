@@ -1,5 +1,5 @@
-import { Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { _point, Entity } from "webgl-test-shared";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -9,6 +9,7 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface BallistaFrostcicleComponentData {}
 
@@ -24,15 +25,16 @@ export function createBallistaFrostcicleComponentData(): BallistaFrostcicleCompo
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("projectiles/ballista-frostcicle.png")
       )
    );
@@ -51,7 +53,8 @@ function getMaxRenderParts(): number {
 function onDie(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
-   const velocity = getHitboxVelocity(hitbox);
+   getHitboxVelocity(hitbox);
+   const velocity = _point;
 
    // Create arrow break particles
    for (let i = 0; i < 6; i++) {

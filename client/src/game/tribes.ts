@@ -1,5 +1,5 @@
 import { TribeType, getTechByID, Tech, TechID, TechTreeUnlockProgress, PacketReader, ItemType, Entity, EntityType, ItemRequirements } from "webgl-test-shared";
-import { techTreeState } from "../ui-state/tech-tree-state.svelte";
+import { techTreeState } from "../ui-state/tech-tree-state";
 import { playHeadSound } from "./sound";
 
 export interface TribesmanInfo {
@@ -28,15 +28,15 @@ export interface ExtendedTribe extends ShortTribe {
 export type Tribe = ExtendedTribe | ShortTribe;
 
 export let playerTribe: ExtendedTribe;
-export const tribes = new Array<Tribe>();
+export const tribes: Array<Tribe> = [];
 
 export function tribeHasExtendedInfo(tribe: Tribe): tribe is ExtendedTribe {
-   return typeof (tribe as ExtendedTribe).tribesmen !== "undefined";
+   return (tribe as ExtendedTribe).tribesmen !== undefined;
 }
 
 export function updatePlayerTribe(tribe: ExtendedTribe): void {
    // @Hack: the check for undefined
-   if (typeof playerTribe !== "undefined" && tribe.unlockedTechs.length > playerTribe.unlockedTechs.length) {
+   if (playerTribe !== undefined && tribe.unlockedTechs.length > playerTribe.unlockedTechs.length) {
       playHeadSound("research.mp3", 0.4, 1);
    }
 
@@ -85,7 +85,7 @@ export function readExtendedTribeData(reader: PacketReader): ExtendedTribe {
    const numHuts = reader.readNumber();
    const tribesmanCap = reader.readNumber();
 
-   const area = new Array<[tileX: number, tileY: number]>();
+   const area: Array<[tileX: number, tileY: number]> = [];
    const areaLength = reader.readNumber();
    for (let i = 0; i < areaLength; i++) {
       const tileX = reader.readNumber();
@@ -96,7 +96,7 @@ export function readExtendedTribeData(reader: PacketReader): ExtendedTribe {
    const rawSelectedTechID = reader.readNumber();
    const selectedTech = rawSelectedTechID !== -1 ? getTechByID(rawSelectedTechID) : null;
 
-   const unlockedTechs = new Array<Tech>();
+   const unlockedTechs: Array<Tech> = [];
    const numUnlockedTechs = reader.readNumber();
    for (let i = 0; i < numUnlockedTechs; i++) {
       const techID = reader.readNumber();
@@ -125,17 +125,17 @@ export function readExtendedTribeData(reader: PacketReader): ExtendedTribe {
       };
    }
 
-   const tribesmen = new Array<TribesmanInfo>();
+   const tribesmen: Array<TribesmanInfo> = [];
    const numTribesmen = reader.readNumber();
    for (let i = 0; i < numTribesmen; i++) {
-      const entity = reader.readNumber() as Entity;
+      const entity: Entity = reader.readNumber();
       const entityType = reader.readNumber() as EntityType;
       const name = reader.readString();
 
       const tribesman: TribesmanInfo = {
-         entity: entity,
-         entityType: entityType,
-         name: name
+         entity,
+         entityType,
+         name
       };
       tribesmen.push(tribesman);
    }

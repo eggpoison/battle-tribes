@@ -140,12 +140,12 @@ export function createInguYetuksnoglurblidokowfleaSeekerHeadConfig(position: Poi
 
    return {
       entityType: EntityType.inguYetuksnoglurblidokowfleaSeekerHead,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.inguYetuksnoglurblidokowfleaSeekerHead]: inguYetuksnoglurblidokowfleaSeekerHeadComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         inguYetuksnoglurblidokowfleaSeekerHeadComponent
+      ],
       lights: []
    };
 }

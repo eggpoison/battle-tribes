@@ -2,7 +2,7 @@
    import { ItemType, BlueprintType, type Entity } from "webgl-test-shared";
    import { getItemTypeImage } from "../../../game/client-item-info";
    import { GhostType } from "../../../game/rendering/webgl/entity-ghost-rendering";
-   import { OptionType } from "../../../ui-state/build-menu-state.svelte";
+   import { OptionType } from "../../../ui-state/build-menu-state";
 
    interface OptionCost {
       readonly itemType: ItemType;
@@ -30,7 +30,7 @@
 
    let props: Props = $props();
 
-   const isUnclickable = typeof props.isClickable !== "undefined" && !props.isClickable(props.entity);
+   const isUnclickable = props.isClickable !== undefined && !props.isClickable(props.entity);
    
    // + 0.5 so that the segments go between the options
    const direction = -(2 * Math.PI * (props.i + 0.5) / props.numOptions) + Math.PI/2;

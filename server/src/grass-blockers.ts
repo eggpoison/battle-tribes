@@ -2,7 +2,7 @@ import { Settings } from "battletribes-shared/settings";
 import Chunk from "./Chunk";
 import { Entity, EntityType } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./components/TransformComponent";
-import { Box, boxIsCircular, cloneBox, HitboxFlag, updateVertexPositionsAndSideAxes } from "battletribes-shared/boxes/boxes";
+import { Box, boxIsCircular, cloneBox, HitboxFlag } from "battletribes-shared/boxes/boxes";
 import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "./world";
 import { surfaceLayer } from "./layers";
 import { Packet } from "../../shared/src/packets";
@@ -10,9 +10,8 @@ import { Point, unitsToChunksClamped } from "../../shared/src/utils";
 import Layer from "./Layer";
 import { boxIsInRange } from "./ai-shared";
 import { addBoxDataToPacket, getBoxDataLength } from "./server/packet-hitboxes";
-import { TileType } from "../../shared/src/tiles";
-import { getHitboxTile } from "./hitboxes";
 import { createGrassStrandConfig } from "./entities/grass-strand";
+import { _bounds } from "../../shared/src/boxes/BaseBox";
 
 const enum Vars {
    GRASS_FULL_REGROW_TICKS = Settings.TICK_RATE * 120,
@@ -42,10 +41,11 @@ const blockers = new Array<GrassBlocker>();
 const blockerAssociatedEntities = new Array<Entity>();
 
 const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {
-   const minX = blocker.box.calculateBoundsMinX();
-   const maxX = blocker.box.calculateBoundsMaxX();
-   const minY = blocker.box.calculateBoundsMinY();
-   const maxY = blocker.box.calculateBoundsMaxY();
+   blocker.box.calculateBounds();
+   const minX = _bounds.minX;
+   const maxX = _bounds.maxX;
+   const minY = _bounds.minY;
+   const maxY = _bounds.maxY;
    
    const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
@@ -76,11 +76,12 @@ const addGrassBlocker = (blocker: GrassBlocker, associatedEntityID: number): voi
 
 const getBlockedGrasses = (box: Box, layer: Layer): ReadonlyArray<Entity> => {
    const grasses = new Array<Entity>();
-   
-   const minChunkX = unitsToChunksClamped(box.calculateBoundsMinX());
-   const maxChunkX = unitsToChunksClamped(box.calculateBoundsMaxX());
-   const minChunkY = unitsToChunksClamped(box.calculateBoundsMinY());
-   const maxChunkY = unitsToChunksClamped(box.calculateBoundsMaxY());
+
+   box.calculateBounds();
+   const minChunkX = unitsToChunksClamped(_bounds.minX);
+   const maxChunkX = unitsToChunksClamped(_bounds.maxX);
+   const minChunkY = unitsToChunksClamped(_bounds.minY);
+   const maxChunkY = unitsToChunksClamped(_bounds.maxY);
    for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
       for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          const chunk = layer.getChunk(chunkX, chunkY);
@@ -190,7 +191,6 @@ export function createStructureGrassBlockers(structure: Entity): void {
       } else {
          box.width += 2 * Vars.STRUCTURE_BLOCKER_PADDING;
          box.height += 2 * Vars.STRUCTURE_BLOCKER_PADDING;
-         updateVertexPositionsAndSideAxes(box);
       }
 
       createGrassBlocker(box, layer, 0, 1, structure);

@@ -3,7 +3,8 @@ import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface GlurbBodySegmentComponentData {}
 
@@ -22,8 +23,8 @@ function decodeData(): GlurbBodySegmentComponentData {
    return createGlurbHeadSegmentComponentData();
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    const renderPart = new TexturedRenderPart(
@@ -31,9 +32,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       // @Hack: 0.1 so that the moss ball can be z-index 0
       0.1,
       0,
+      0, 0,
       getTextureArrayIndex("entities/glurb/glurb-middle-segment.png")
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }

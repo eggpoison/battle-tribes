@@ -1,17 +1,18 @@
-import { Entity, customTickIntervalHasPassed, lerp, randAngle, randFloat, randItem, PacketReader, StatusEffect, StatusEffectData, ServerComponentType } from "webgl-test-shared";
+import { Entity, customTickIntervalHasPassed, lerp, randAngle, randFloat, randItem, PacketReader, StatusEffect, StatusEffectData, ServerComponentType, _point } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
-import Board from "../../Board";
 import Particle from "../../Particle";
 import { createPoisonBubble, createBloodParticle, BloodParticleSize, createHeatParticle } from "../../particles";
-import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour } from "../../rendering/webgl/particle-rendering";
+import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour, lowTexturedParticles, highMonocolourParticles, highTexturedParticles } from "../../rendering/webgl/particle-rendering";
 import { Light, removeLight } from "../../lights";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
-import { ComponentTint, createComponentTint } from "../../EntityRenderInfo";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
+import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
 import { playerInstance } from "../../player";
 import { getHitboxVelocity } from "../../hitboxes";
-import { tickIntervalHasPassed } from "../../client";
+import { tickIntervalHasPassed } from "../../game";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface StatusEffectComponentData {
    readonly statusEffects: Array<StatusEffectData>;
@@ -62,7 +63,7 @@ export function createStatusEffectComponentData(): StatusEffectComponentData {
 }
 
 function decodeData(reader: PacketReader): StatusEffectComponentData {
-   const statusEffects = new Array<StatusEffectData>();
+   const statusEffects: Array<StatusEffectData> = [];
    const numStatusEffects = reader.readNumber();
    for (let i = 0; i < numStatusEffects; i++) {
       const type = reader.readNumber() as StatusEffect;
@@ -81,8 +82,10 @@ function decodeData(reader: PacketReader): StatusEffectComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): StatusEffectComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const statusEffectComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.statusEffect);
    return {
-      statusEffects: entityComponentData.serverComponentData[ServerComponentType.statusEffect]!.statusEffects,
+      statusEffects: statusEffectComponentData.statusEffects,
       burningLight: null
    };
 }
@@ -128,7 +131,7 @@ function onTick(entity: Entity): void {
             6,
             0, 0, 0
          );
-         Board.lowTexturedParticles.push(particle);
+         lowTexturedParticles.push(particle);
       }
 
       // Poison bubbles
@@ -158,8 +161,8 @@ function onTick(entity: Entity): void {
          // );
 
          // // @Hack
-         // const renderInfo = getEntityRenderInfo(entity);
-         // attachLightToRenderPart(statusEffectComponent.burningLight, renderInfo.renderPartsByZIndex[0], entity);
+         // const renderObject = getEntityRenderObject(entity);
+         // attachLightToRenderPart(statusEffectComponent.burningLight, renderObject.renderPartsByZIndex[0], entity);
       }
       
       // Ember particles
@@ -203,7 +206,7 @@ function onTick(entity: Entity): void {
             0,
             colour[0], colour[1], colour[2]
          );
-         Board.highMonocolourParticles.push(particle);
+         highMonocolourParticles.push(particle);
       }
 
       // Smoke particles
@@ -249,7 +252,7 @@ function onTick(entity: Entity): void {
             5,
             0, 0, 0
          );
-         Board.highTexturedParticles.push(particle);
+         highTexturedParticles.push(particle);
       }
    } else if (statusEffectComponent.burningLight !== null) {
       removeLight(statusEffectComponent.burningLight);
@@ -269,7 +272,8 @@ function onTick(entity: Entity): void {
    const heatSicknessStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.heatSickness);
    if (heatSicknessStatusEffect !== null) {
       if (tickIntervalHasPassed(0.15)) {
-         const hitboxVelocity = getHitboxVelocity(hitbox);
+         getHitboxVelocity(hitbox);
+         const hitboxVelocity = _point;
          
          const spawnOffsetDirection = randAngle();
          const spawnPositionX = hitbox.box.position.x + 32 * Math.sin(spawnOffsetDirection);
@@ -302,8 +306,8 @@ function updateFromData(data: StatusEffectComponentData, entity: Entity): void {
 
    const newHasFreezing = hasStatusEffect(statusEffectComponent, StatusEffect.freezing);
    if (newHasFreezing !== previousHasFreezing) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.recalculateTint();
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.recalculateTint();
    }
 }
 

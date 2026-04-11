@@ -26,12 +26,12 @@ export function createDustfleaMorphCocoonConfig(position: Point, angle: number):
    
    return {
       entityType: EntityType.dustfleaMorphCocoon,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.dustfleaMorphCocoon]: dustfleaMorphCocoonComponent,
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         dustfleaMorphCocoonComponent,
+      ],
       lights: []
    };
 }

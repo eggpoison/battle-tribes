@@ -3,7 +3,7 @@
    import { assert } from "webgl-test-shared";
    import { type Entity } from "webgl-test-shared";
    import PlanNode from "./PlanNode.svelte";
-   import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state.svelte";
+   import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state";
    import { type ExtendedTribe } from "../../../game/tribes";
     import TribesmanAssignmentDropdown from "../dev/tabs/TribesmanAssignmentDropdown.svelte";
 
@@ -33,7 +33,7 @@
       }
 
       const assignment = tribeAssignmentInfo.entityAssignments[selectedEntity];
-      assert(typeof assignment !== "undefined");
+      assert(assignment !== undefined);
       return assignment;
    }
 

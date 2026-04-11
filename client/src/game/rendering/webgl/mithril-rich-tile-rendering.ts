@@ -1,6 +1,6 @@
-import { clampToBoardDimensions, SubtileType, Settings } from "webgl-test-shared";
+import { clampToBoardDimensions, SubtileType, Settings, getTileIndexIncludingEdges, getSubtileIndex } from "webgl-test-shared";
 import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY } from "../../camera";
-import Layer, { getSubtileIndex, getTileIndexIncludingEdges } from "../../Layer";
+import Layer from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getCurrentLayer, surfaceLayer } from "../../world";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
@@ -57,7 +57,7 @@ export function createMithrilRichTileRenderingShaders(): void {
 
 // @Garbage
 const getFloorVertices = (layer: Layer): Array<number> => {
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
 
    const minTileX = clampToBoardDimensions(Math.floor(minVisibleX / Settings.TILE_SIZE));
    const maxTileX = clampToBoardDimensions(Math.floor(maxVisibleX / Settings.TILE_SIZE));
@@ -95,7 +95,7 @@ const getFloorVertices = (layer: Layer): Array<number> => {
 
 // @Garbage
 const getWallVertices = (layer: Layer): Array<number> => {
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
 
    const minSubtileX = clampToBoardDimensions(Math.floor(minVisibleX / Settings.SUBTILE_SIZE));
    const maxSubtileX = clampToBoardDimensions(Math.floor(maxVisibleX / Settings.SUBTILE_SIZE));
@@ -137,9 +137,9 @@ const getWallVertices = (layer: Layer): Array<number> => {
    return vertices;
 }
 
-// @Speed: SO BAD. like 1/33rd of CPU time... but it's about 1/1000th of the gameplay
+// @Speed: SO BAD. like 1/33rd of CPU time... but it's about 1/10000th of the gameplay
 export function renderMithrilRichTileOverlays(layer: Layer, isWallTiles: boolean): void {
-   // @Temporary
+   // @HACK
    if (getCurrentLayer()===surfaceLayer)return;
    
    const vertices = isWallTiles ? getWallVertices(layer) : getFloorVertices(layer);

@@ -35,12 +35,12 @@ export function createIceArrowConfig(position: Point, rotation: number, tribe: T
    
    return {
       entityType: EntityType.iceArrow,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.projectile]: projectileComponent,
-         [ServerComponentType.iceArrow]: iceArrowComponent
-      },
+      components: [
+         transformComponent,
+         tribeComponent,
+         projectileComponent,
+         iceArrowComponent
+      ],
       lights: []
    };
 }

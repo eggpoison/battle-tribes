@@ -1,6 +1,5 @@
-import { Settings } from "webgl-test-shared";
+import { getTileIndexIncludingEdges, Settings } from "webgl-test-shared";
 import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY } from "../../camera";
-import { getTileIndexIncludingEdges } from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getCurrentLayer } from "../../world";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
@@ -84,7 +83,7 @@ export function renderBuildingBlockingTiles(): void {
    const minVisibleTileY = Math.floor(minVisibleY / Settings.TILE_SIZE);
    const maxVisibleTileY = Math.floor(maxVisibleY / Settings.TILE_SIZE);
    
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    for (let tileX = minVisibleTileX; tileX <= maxVisibleTileX; tileX++) {
       for (let tileY = minVisibleTileY; tileY <= maxVisibleTileY; tileY++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);

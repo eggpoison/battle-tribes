@@ -1,4 +1,3 @@
-import { ServerComponentType } from "battletribes-shared/components";
 import { EntityConfig } from "../components";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 import { Point } from "battletribes-shared/utils";
@@ -17,9 +16,9 @@ export function createLilypadConfig(position: Point, rotation: number): EntityCo
    
    return {
       entityType: EntityType.lilypad,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-      },
+      components: [
+         transformComponent,
+      ],
       lights: []
    };
 }

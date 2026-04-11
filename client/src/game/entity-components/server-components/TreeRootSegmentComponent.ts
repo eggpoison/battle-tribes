@@ -1,5 +1,5 @@
 import { randFloat, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createWoodSpeckParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -8,6 +8,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TreeRootSegmentComponentData {
    readonly variant: number;
@@ -31,29 +33,33 @@ function decodeData(reader: PacketReader): TreeRootSegmentComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const treeRootSegmentComponentData = entityComponentData.serverComponentData[ServerComponentType.treeRootSegment]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const treeRootSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treeRootSegment);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex("entities/tree-root-segment/tree-root-segment-" + (treeRootSegmentComponentData.variant + 1) + ".png")
    );
    if (Math.random() < 0.5) {
       renderPart.setFlipX(true);
    }
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }
 
 function createComponent(entityComponentData: EntityComponentData): TreeRootSegmentComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const treeRootSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treeRootSegment);
    return {
-      variant: entityComponentData.serverComponentData[ServerComponentType.treeRootSegment]!.variant
+      variant: treeRootSegmentComponentData.variant
    };
 }
 

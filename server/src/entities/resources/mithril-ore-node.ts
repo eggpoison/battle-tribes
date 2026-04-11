@@ -35,13 +35,13 @@ export function createMithrilOreNodeConfig(position: Point, rotation: number, si
    
    return {
       entityType: EntityType.mithrilOreNode,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.mithrilOreNode]: mithrilOreNodeComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         mithrilOreNodeComponent
+      ],
       lights: []
    };
 }

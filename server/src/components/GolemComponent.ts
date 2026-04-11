@@ -13,6 +13,8 @@ import { createEntity, destroyEntity, entityExists, getEntityLayer, getGameTicks
 import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity, HealthComponentArray } from "./HealthComponent";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { applyAccelerationFromGround, applyKnockback, Hitbox, turnHitboxToAngle } from "../hitboxes";
+import { getEntityComponentTypes } from "../entity-component-types";
+import { getConfigComponent } from "../components";
 
 const enum Vars {
    TARGET_ENTITY_FORGET_TIME = 20,
@@ -152,7 +154,11 @@ const summonPebblums = (golem: Entity, golemComponent: GolemComponent, target: E
       const y = golemHitbox.box.position.y + offsetMagnitude * Math.cos(offsetDirection);
       
       const config = createPebblumConfig(new Point(x, y), randAngle());
-      config.components[ServerComponentType.pebblum]!.targetEntityID = target;
+      
+      const componentTypes = getEntityComponentTypes(config.entityType);
+      const pebblumComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.pebblum);
+      pebblumComponent.targetEntityID = target;
+
       const pebblum = createEntity(config, layer, 0);
       
       golemComponent.summonedPebblumIDs.push(pebblum);

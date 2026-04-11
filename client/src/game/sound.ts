@@ -4,8 +4,7 @@ import { TransformComponentArray } from "./entity-components/server-components/T
 import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { cameraPosition, maxVisibleChunkX, maxVisibleChunkY, minVisibleChunkX, minVisibleChunkY } from "./camera";
-import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
-import { gameIsFocused } from "./client";
+import { gameIsFocused } from "./game";
 
 type SoundID = number;
 
@@ -16,7 +15,7 @@ export const ROCK_DESTROY_SOUNDS: ReadonlyArray<string> = ["rock-destroy-1.mp3",
 let idCounter: SoundID = 0;
 
 let audioContext: AudioContext;
-let audioBuffers: Partial<Record<string, AudioBuffer>>;
+let audioBuffers: Partial<Record<string, AudioBuffer>> = {};
 
 export interface Sound {
    readonly id: SoundID;
@@ -32,7 +31,7 @@ interface SoundAttachInfo {
 }
 
 // @Cleanup: remove this once the 'attach to world' thing is in place
-const activeSounds = new Array<Sound>();
+const activeSounds: Array<Sound> = [];
 const soundsAttachedToHitboxes = new Map<Hitbox, Array<SoundAttachInfo>>();
 const soundToHitboxMap = new Map<Sound, Hitbox | null>();
 
@@ -341,20 +340,16 @@ export async function loadSoundEffects(): Promise<void> {
       "lazur.mp3"
    ];
 
-   const tempAudioBuffers: Partial<Record<string, AudioBuffer>> = {};
-   
    const audioBufferPromises = AUDIO_FILE_PATHS.map(async (filePath) => {
       const sound = soundFiles["../sounds/" + filePath] as string;
       
       const response = await fetch(sound);
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      tempAudioBuffers[filePath] = audioBuffer;
+      audioBuffers[filePath] = audioBuffer;
    });
 
    await Promise.all(audioBufferPromises);
-   
-   audioBuffers = tempAudioBuffers as Record<string, AudioBuffer>;
 }
 
 const calculateSoundVolume = (volume: number, position: Point): number => {
@@ -378,11 +373,11 @@ const removeSound = (sound: Sound): void => {
    }
 
    const hitbox = soundToHitboxMap.get(sound);
-   if (typeof hitbox !== "undefined" && hitbox !== null) {
+   if (hitbox !== undefined && hitbox !== null) {
       const attachedSounds = soundsAttachedToHitboxes.get(hitbox);
 
       // @Hack: shouldn't be necessary
-      if (typeof attachedSounds !== "undefined") {
+      if (attachedSounds !== undefined) {
          for (let i = 0; i < attachedSounds.length; i++) {
             const attachInfo = attachedSounds[i];
             if (attachInfo.sound === sound) {
@@ -415,7 +410,7 @@ export function playSound(filePath: string, volume: number, pitchMultiplier: num
    assert(Number.isFinite(volume));
    
    const audioBuffer = audioBuffers[filePath];
-   assert(typeof audioBuffer !== "undefined");
+   assert(audioBuffer !== undefined);
 
    const gainNode = audioContext.createGain();
    gainNode.gain.value = calculateSoundVolume(volume, source);
@@ -481,8 +476,8 @@ export function playSoundOnHitbox(filePath: string, volume: number, pitchMultipl
 export function removeEntitySounds(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    for (const hitbox of transformComponent.hitboxes) {
-      const entityAttachedSounds = soundsAttachedToHitboxes.get(hitbox)!;
-      if (typeof entityAttachedSounds === "undefined") {
+      const entityAttachedSounds = soundsAttachedToHitboxes.get(hitbox);
+      if (entityAttachedSounds === undefined) {
          return;
       }
    
@@ -524,8 +519,6 @@ export function updateSounds(): void {
          sound.gainNode.gain.value = calculateSoundVolume(sound.volume, sound.position);
       }
    }
-
-   debugDisplayState.numActiveSounds = activeSounds.length;
 }
 
 // @Hack: There should really be unique sounds for each entity type, not one generic sound.
@@ -536,25 +529,36 @@ export function playBuildingHitSound(entity: Entity, hitbox: Hitbox): void {
 export function playRiverSounds(): void {
    const layer = getCurrentLayer();
    
+   // @INCOMPLETE: This should be a square- even circular check, not a rectangular one. Otherwise some tiles might have potential to make sound to the left and right, but not top and bottom.
    const minTileX = minVisibleChunkX * Settings.CHUNK_SIZE;
    const maxTileX = (maxVisibleChunkX + 1) * Settings.CHUNK_SIZE - 1;
    const minTileY = minVisibleChunkY * Settings.CHUNK_SIZE;
    const maxTileY = (maxVisibleChunkY + 1) * Settings.CHUNK_SIZE - 1;
+   
+   // Calculate the number of random checks to conduct
+   const width = maxTileX - minTileX;
+   const height = maxTileY - minTileY;
+   let numSamples = width * height * 0.1 * Settings.DT_S;
+   if (Math.random() < numSamples % 1) {
+      numSamples = Math.ceil(numSamples);
+   } else {
+      numSamples = Math.floor(numSamples);
+   }
 
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = layer.getTileFromCoords(tileX, tileY);
-         if (tile === null) {
-            continue;
-         }
+   for (let i = 0; i < numSamples; i++) {
+      const tileX = randInt(minTileX, maxTileX);
+      const tileY = randInt(minTileY, maxTileY);
+      const tile = layer.getTileFromCoords(tileX, tileY);
+      if (tile === null) {
+         throw new Error();
+      }
 
-         if (tile.type === TileType.water && Math.random() < 0.1 * Settings.DT_S) {
-            const flowDirection = layer.getRiverFlowDirection(tileX, tileY);
-            if (flowDirection > 0) {
-               const x = (tileX + Math.random()) * Settings.TILE_SIZE;
-               const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-               playSound("water-flowing-" + randInt(1, 4) + ".mp3", 0.2, 1, new Point(x, y), layer);
-            }
+      if (tile.type === TileType.water && Math.random() < 0.1 * Settings.DT_S) {
+         const flowDirection = layer.getRiverFlowDirection(tileX, tileY);
+         if (flowDirection > 0) {
+            const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+            const y = (tileY + Math.random()) * Settings.TILE_SIZE;
+            playSound("water-flowing-" + randInt(1, 4) + ".mp3", 0.2, 1, new Point(x, y), layer);
          }
       }
    }

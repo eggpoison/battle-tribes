@@ -39,15 +39,15 @@ export function createWallPunjiSticksConfig(position: Point, rotation: number, t
    
    return {
       entityType: EntityType.wallPunjiSticks,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.spikes]: spikesComponent,
-         [ServerComponentType.punjiSticks]: punjiSticksComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         spikesComponent,
+         punjiSticksComponent
+      ],
       lights: []
    };
 }

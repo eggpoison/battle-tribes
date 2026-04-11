@@ -32,11 +32,11 @@ export function createBallistaRockConfig(position: Point, rotation: number, trib
    
    return {
       entityType: EntityType.ballistaRock,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.projectile]: projectileComponent
-      },
+      components: [
+         transformComponent,
+         tribeComponent,
+         projectileComponent
+      ],
       lights: []
    };
 }

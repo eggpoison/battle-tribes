@@ -2,14 +2,14 @@
    import { InventoryName } from "webgl-test-shared";
    import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
    import { playerInstance } from "../../../game/player";
-   import InventoryContainer from "./ItemSlotsContainer.svelte";
+   import InventoryContainer from "./Inventory";
 </script>
 
 {#if playerInstance !== null}
    {@const inventoryComponent = InventoryComponentArray.getComponent(playerInstance)}
    {@const backpack = getInventory(inventoryComponent, InventoryName.backpack)!}
    <div id="backpack-inventory" class="inventory">
-      <InventoryContainer entityID={playerInstance || undefined} inventory={backpack} />
+      <InventoryContainer entity={playerInstance || undefined} inventory={backpack} />
    </div>
 {/if}
 

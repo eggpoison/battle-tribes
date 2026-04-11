@@ -1,5 +1,5 @@
 import { assert, PacketReader, CircleDebugData, EntityDebugData, LineDebugData, PathData, PathfindingNodeIndex, TileHighlightData, SafetyNodeData } from "webgl-test-shared";
-import { hoverDebugState } from "../../ui-state/hover-debug-state.svelte";
+import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { readTribeBuildingSafeties, resetBuildingSafeties } from "../building-safety";
 import { updateLightLevelsFromData } from "../light-levels";
 import { updateLocalBiomesFromData } from "../local-biomes";
@@ -11,9 +11,9 @@ import { setSpawnDistributionBlocks, SpawnDistributionBlock } from "../text-canv
 import { readGhostVirtualBuildings, pruneGhostBuildingPlans } from "../virtual-buildings";
 
 const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData => {
-   const entityID = reader.readNumber();
+   const entity = reader.readNumber();
 
-   const lines = new Array<LineDebugData>();
+   const lines: Array<LineDebugData> = [];
    const numLines = reader.readNumber();
    for (let i = 0; i < numLines; i++) {
       const r = reader.readNumber();
@@ -30,7 +30,7 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
       });
    }
 
-   const circles = new Array<CircleDebugData>();
+   const circles: Array<CircleDebugData> = [];
    const numCircles = reader.readNumber();
    for (let i = 0; i < numCircles; i++) {
       const r = reader.readNumber();
@@ -46,7 +46,7 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
       });
    }
 
-   const tileHighlights = new Array<TileHighlightData>();
+   const tileHighlights: Array<TileHighlightData> = [];
    const numTileHighlights = reader.readNumber();
    for (let i = 0; i < numTileHighlights; i++) {
       const r = reader.readNumber();
@@ -61,11 +61,11 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
       });
    }
    
-   const entries = new Array<string>();
+   const debugEntries: Array<string> = [];
    const numDebugEntries = reader.readNumber();
    for (let i = 0; i < numDebugEntries; i++) {
       const entry = reader.readString();
-      entries.push(entry);
+      debugEntries.push(entry);
    }
 
    let pathData: PathData | undefined;
@@ -75,21 +75,21 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
       const goalX = reader.readNumber();
       const goalY = reader.readNumber();
       
-      const pathNodes = new Array<PathfindingNodeIndex>();
+      const pathNodes: Array<PathfindingNodeIndex> = [];
       const numPathNodes = reader.readNumber();
       for (let i = 0; i < numPathNodes; i++) {
          const nodeIndex = reader.readNumber();
          pathNodes.push(nodeIndex);
       }
    
-      const rawPathNodes = new Array<PathfindingNodeIndex>();
+      const rawPathNodes: Array<PathfindingNodeIndex> = [];
       const numRawPathNodes = reader.readNumber();
       for (let i = 0; i < numRawPathNodes; i++) {
          const nodeIndex = reader.readNumber();
          rawPathNodes.push(nodeIndex);
       }
    
-      const visitedNodes = new Array<PathfindingNodeIndex>();
+      const visitedNodes: Array<PathfindingNodeIndex> = [];
       const numVisitedNodes = reader.readNumber();
       for (let i = 0; i < numVisitedNodes; i++) {
          const nodeIndex = reader.readNumber();
@@ -108,12 +108,12 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
    }
    
    return {
-      entityID: entityID,
-      lines: lines,
-      circles: circles,
-      tileHighlights: tileHighlights,
-      debugEntries: entries,
-      pathData: pathData
+      entity,
+      lines,
+      circles,
+      tileHighlights,
+      debugEntries,
+      pathData
    };
 }
 
@@ -121,7 +121,7 @@ export function processDevGameDataPacket(reader: PacketReader): void {
    // Subtile supports
    const numSubtiles = reader.readNumber();
    if (numSubtiles > 0) {
-      const subtileSupports = new Array<SubtileSupportInfo>();
+      const subtileSupports: Array<SubtileSupportInfo> = [];
       
       for (let i = 0; i < numSubtiles; i++) {
          const subtileIndex = reader.readNumber();
@@ -139,7 +139,7 @@ export function processDevGameDataPacket(reader: PacketReader): void {
    // Pathfinding node occupances
    const numPathfindingNodes = reader.readNumber();
    if (numPathfindingNodes > 0) {
-      const visiblePathfindingNodeOccupances = new Array<PathfindingNodeIndex>();
+      const visiblePathfindingNodeOccupances: Array<PathfindingNodeIndex> = [];
       
       for (let i = 0; i < numPathfindingNodes; i++) {
          const node = reader.readNumber();
@@ -152,7 +152,7 @@ export function processDevGameDataPacket(reader: PacketReader): void {
    // AI building safety nodes
    const numVisibleSafetyNodes = reader.readNumber();
    if (numVisibleSafetyNodes > 0) {
-      const visibleSafetyNodes = new Array<SafetyNodeData>();
+      const visibleSafetyNodes: Array<SafetyNodeData> = [];
 
       for (let i = 0; i < numVisibleSafetyNodes; i++) {
          const index = reader.readNumber();
@@ -197,7 +197,7 @@ export function processDevGameDataPacket(reader: PacketReader): void {
 
    const hasSpawnDistribution = reader.readBool();
    if (hasSpawnDistribution) {
-      const chunkWeights = new Array<SpawnDistributionBlock>();
+      const chunkWeights: Array<SpawnDistributionBlock> = [];
       
       const numBlocks = reader.readNumber();
       for (let i = 0; i < numBlocks; i++) {

@@ -3,10 +3,12 @@ import { cursorWorldPos } from "./camera";
 import { selectItemSlot } from "./player-action-handling";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
-import { calculateHitboxRenderPosition, getEntityTickInterp, registerDirtyRenderInfo } from "./rendering/render-part-matrices";
-import { getEntityRenderInfo } from "./world";
-import { gameUIState } from "../ui-state/game-ui-state.svelte";
-import { menuSelectorState } from "../ui-state/menu-selector-state.svelte";
+import { calculateHitboxRenderPosition, registerDirtyRenderObject } from "./rendering/render-part-matrices";
+import { getEntityRenderObject } from "./world";
+import { gameUIState } from "../ui-state/game-ui-state";
+import { destroyHealthBar } from "../ui/game/HealthBar";
+import { deathScreen } from "../ui-state/death-screen-funcs";
+import { closeCurrentMenu, hasOpenNonEmbodiedMenu } from "../ui/menus";
 
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
 // but this is in the client so these optimisations are less important. The ease-of-use is worth it
@@ -25,9 +27,12 @@ const onPlayerRespawn = (): void => {
 
 const onPlayerDeath = (): void => {
    gameUIState.setIsDead(true);
+
+   destroyHealthBar();
+   deathScreen.open();
    
    // Close any open menus
-   while (menuSelectorState.closeCurrentMenu());
+   while (closeCurrentMenu());
 }
 
 export function setPlayerInstance(newPlayerInstance: Entity | null): void {
@@ -49,11 +54,11 @@ export function setPlayerUsername(username: string): void {
 }
 
 /** Updates the rotation of the player to match the cursor position */
-export function updatePlayerDirection(clientTickInterp: number, serverTickInterp: number): void {
+export function updatePlayerDirection(clientInterp: number, serverInterp: number): void {
    if (playerInstance === null) return;
 
    // Don't turn the player if they're meddling about in an inventory, cuz they're not actually looking at stuff while they're doing that
-   if (menuSelectorState.hasOpenNonEmbodiedMenu()) {
+   if (hasOpenNonEmbodiedMenu()) {
       return;
    }
 
@@ -61,8 +66,7 @@ export function updatePlayerDirection(clientTickInterp: number, serverTickInterp
    const playerHitbox = transformComponent.hitboxes[0];
 
    // Use the render position instead of the hitboxes' actual game position, as that is not up-to-date for each and every rendered frame.
-   const tickInterp = getEntityTickInterp(playerInstance, clientTickInterp, serverTickInterp);
-   const playerHitboxRenderPos = calculateHitboxRenderPosition(playerHitbox, tickInterp);
+   const playerHitboxRenderPos = calculateHitboxRenderPosition(playerHitbox, clientInterp, serverInterp);
 
    const cursorDirection = playerHitboxRenderPos.angleTo(cursorWorldPos);
    
@@ -82,6 +86,19 @@ export function updatePlayerDirection(clientTickInterp: number, serverTickInterp
    // setHitboxObservedAngularVelocity(playerHitbox, (playerHitbox.box.angle - previousAngle) * Settings.TICK_RATE);
    setHitboxObservedAngularVelocity(playerHitbox, 0);
 
-   const renderInfo = getEntityRenderInfo(playerInstance);
-   registerDirtyRenderInfo(renderInfo);
+   const renderObject = getEntityRenderObject(playerInstance);
+   registerDirtyRenderObject(playerInstance, renderObject);
 }
+
+// @INCOMPLETE
+// if (import.meta.hot) {
+//    if (playerInstance !== null) {
+//       createHotbar();
+//    }
+
+//    import.meta.hot.dispose(() => {
+//       hotbarElem?.remove();
+//    });
+   
+//    import.meta.hot.accept();
+// }

@@ -1,5 +1,5 @@
 import { assert, TileIndex, PacketReader, EntityType } from "webgl-test-shared";
-import { currentSnapshot } from "./client";
+import { currentSnapshot } from "./game";
 
 interface LocalEntityCensusInfo {
    count: number;
@@ -16,7 +16,7 @@ interface LocalBiome {
 const visibleLocalBiomes = new Map<number, LocalBiome>();
 
 const readLocalBiome = (reader: PacketReader): LocalBiome => {
-   const tiles = new Array<TileIndex>();
+   const tiles: Array<TileIndex> = [];
    const numTiles = reader.readNumber();
    for (let i = 0; i < numTiles; i++) {
       const tileIndex = reader.readNumber();
@@ -45,12 +45,12 @@ const readLocalBiome = (reader: PacketReader): LocalBiome => {
 }
 
 const updateLocalBiomeFromData = (reader: PacketReader, localBiome: LocalBiome): void => {
-   localBiome.tiles.splice(0, localBiome.tiles.length);
+   localBiome.tiles.length = 0;
 
    // @Hack
    const numTiles = reader.readNumber();
    for (let i = 0; i < numTiles; i++) {
-      const tileIndex = reader.readNumber() as TileIndex;
+      const tileIndex: TileIndex = reader.readNumber();
       localBiome.tiles.push(tileIndex);
    }
 
@@ -74,6 +74,7 @@ const updateLocalBiomeFromData = (reader: PacketReader, localBiome: LocalBiome):
       });
    }
 
+   // @Speed: 329ms
    for (const pair of localBiome.entityCensus) {
       const entityCensusInfo = pair[1];
       if (entityCensusInfo.count === 0) {
@@ -87,12 +88,11 @@ const updateLocalBiomeFromData = (reader: PacketReader, localBiome: LocalBiome):
 
 export function updateLocalBiomesFromData(reader: PacketReader): void {
    const numLocalBiomes = reader.readNumber();
-   assert(Number.isInteger(numLocalBiomes));
    for (let i = 0; i < numLocalBiomes; i++) {
       const localBiomeID = reader.readNumber();
 
       const existingLocalBiome = visibleLocalBiomes.get(localBiomeID);
-      if (typeof existingLocalBiome !== "undefined") {
+      if (existingLocalBiome !== undefined) {
          updateLocalBiomeFromData(reader, existingLocalBiome);
       } else {
          const localBiome = readLocalBiome(reader);

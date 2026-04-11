@@ -1,5 +1,4 @@
 import { EntityType } from "webgl-test-shared";
-import { EntityClientComponentData } from "../networking/packet-snapshots";
 import { ClientComponentType } from "./client-component-types";
 import { BallistaFrostcicleComponentData, createBallistaFrostcicleComponentData } from "./client-components/BallistaFrostcicleComponent";
 import { BallistaRockComponentData, createBallistaRockComponentData } from "./client-components/BallistaRockComponent";
@@ -20,6 +19,7 @@ import { createWarriorHutComponentData, WarriorHutComponentData } from "./client
 import { createWoodenArrowComponentData, WoodenArrowComponentData } from "./client-components/WoodenArrowComponent";
 import { createWorkbenchComponentData, WorkbenchComponentData } from "./client-components/WorkbenchComponent";
 import { createWorkerHutComponentData, WorkerHutComponentData } from "./client-components/WorkerHutComponent";
+import { EntityClientComponentData } from "../entity-component-types";
 
 const ClientComponentDataRecord = {
    [ClientComponentType.equipment]: (): EquipmentComponentData => 0 as any,
@@ -47,138 +47,116 @@ export type ClientComponentData<T extends ClientComponentType> = ReturnType<type
 
 // @Cleanup: if this gets too large/unwieldy i should rework this
 export function getEntityClientComponentConfigs(entityType: EntityType): EntityClientComponentData {
+   const clientComponentData: Array<ClientComponentData<ClientComponentType>> = [];
+   
    switch (entityType) {
       case EntityType.cow: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.3, 20, 64, 5, 40, false)
-         };
+         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
+         break;
       }
       case EntityType.player: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.2, 20, 64, 4, 64, false),
-            [ClientComponentType.equipment]: createEquipmentComponentData()
-         };
+         clientComponentData.push(createFootprintComponentData(0.2, 20, 64, 4, 64, false));
+         clientComponentData.push(createEquipmentComponentData());
+         break;
       }
       case EntityType.tribeWorker: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.15, 20, 64, 4, 50, false),
-            [ClientComponentType.equipment]: createEquipmentComponentData()
-         };
+         clientComponentData.push(createFootprintComponentData(0.15, 20, 64, 4, 50, false));
+         clientComponentData.push(createEquipmentComponentData());
+         break;
       }
       case EntityType.tribeWarrior: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.15, 20, 64, 4, 64, false),
-            [ClientComponentType.equipment]: createEquipmentComponentData()
-         };
+         clientComponentData.push(createFootprintComponentData(0.15, 20, 64, 4, 64, false));
+         clientComponentData.push(createEquipmentComponentData());
+         break;
       }
       case EntityType.krumblid: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.3, 20, 64, 5, 50, false)
-         };
+         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 50, false));
+         break;
       }
       case EntityType.lilypad: {
-         return {
-            [ClientComponentType.lilypad]: createLilypadComponentData()
-         };
+         clientComponentData.push(createLilypadComponentData());
+         break;
       }
       case EntityType.frostshaper: {
-         return {
-            [ClientComponentType.frostshaper]: createFrostshaperComponentData()
-         };
+         clientComponentData.push(createFrostshaperComponentData());
+         break;
       }
       case EntityType.embrasure: {
-         return {
-            [ClientComponentType.embrasure]: createEmbrasureComponentData()
-         };
+         clientComponentData.push(createEmbrasureComponentData());
+         break;
       }
       case EntityType.pebblum: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.3, 20, 64, 5, 40, false)
-         };
+         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
+         break;
       }
       case EntityType.wallSpikes:
       case EntityType.floorSpikes: {
-         return {
-            [ClientComponentType.regularSpikes]: createRegularSpikesComponentData()
-         };
+         clientComponentData.push(createRegularSpikesComponentData());
+         break;
       }
       case EntityType.stonecarvingTable: {
-         return {
-            [ClientComponentType.stonecarvingTable]: createStonecarvingTableComponentData()
-         };
+         clientComponentData.push(createStonecarvingTableComponentData());
+         break;
       }
       case EntityType.wall: {
-         return {
-            [ClientComponentType.wall]: createWallComponentData()
-         };
+         clientComponentData.push(createWallComponentData());
+         break;
       }
       case EntityType.warriorHut: {
-         return {
-            [ClientComponentType.warriorHut]: createWarriorHutComponentData()
-         };
+         clientComponentData.push(createWarriorHutComponentData());
+         break;
       }
       case EntityType.workbench: {
-         return {
-            [ClientComponentType.workbench]: createWorkbenchComponentData()
-         };
+         clientComponentData.push(createWorkbenchComponentData());
+         break;
       }
       case EntityType.workerHut: {
-         return {
-            [ClientComponentType.workerHut]: createWorkerHutComponentData()
-         };
+         clientComponentData.push(createWorkerHutComponentData());
+         break;
       }
       case EntityType.yeti: {
-         return {
-            [ClientComponentType.randomSound]: createRandomSoundComponentData()
-         };
+         clientComponentData.push(createRandomSoundComponentData());
+         break;
       }
       case EntityType.ballistaFrostcicle: {
-         return {
-            [ClientComponentType.ballistaFrostcicle]: createBallistaFrostcicleComponentData()
-         };
+         clientComponentData.push(createBallistaFrostcicleComponentData());
+         break;
       }
       case EntityType.ballistaRock: {
-         return {
-            [ClientComponentType.ballistaRock]: createBallistaRockComponentData()
-         };
+         clientComponentData.push(createBallistaRockComponentData());
+         break;
       }
       case EntityType.ballistaSlimeball: {
-         return {
-            [ClientComponentType.ballistaSlimeball]: createBallistaSlimeballComponentData()
-         };
+         clientComponentData.push(createBallistaSlimeballComponentData());
+         break;
       }
       case EntityType.ballistaWoodenBolt: {
-         return {
-            [ClientComponentType.ballistaWoodenBolt]: createBallistaWoodenBoltComponentData()
-         };
+         clientComponentData.push(createBallistaWoodenBoltComponentData());
+         break;
       }
       case EntityType.battleaxeProjectile: {
-         return {
-            [ClientComponentType.thrownBattleaxe]: createThrownBattleaxeComponentData()
-         };
+         clientComponentData.push(createThrownBattleaxeComponentData());
+         break;
       }
       case EntityType.woodenArrow: {
-         return {
-            [ClientComponentType.woodenArrow]: createWoodenArrowComponentData()
-         };
+         clientComponentData.push(createWoodenArrowComponentData());
+         break;
       }
       case EntityType.glurbTailSegment: {
-         return {
-            [ClientComponentType.glurbTailSegment]: {}
-         };
+         clientComponentData.push({});
+         break;
       }
       case EntityType.snobe: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.3, 20, 48, 5, 40, true),
-            [ClientComponentType.randomSound]: createRandomSoundComponentData()
-         };
+         clientComponentData.push(createFootprintComponentData(0.3, 20, 48, 5, 40, true));
+         clientComponentData.push(createRandomSoundComponentData());
+         break;
       }
+      // @Cleanup: doubled. i think this is supposed to be a different entity??
       case EntityType.snobe: {
-         return {
-            [ClientComponentType.footprint]: createFootprintComponentData(0.3, 20, 64, 5, 40, false),
-         };
+         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
+         break;
       }
    }
 
-   return {};
+   return clientComponentData;
 }

@@ -3,7 +3,9 @@ import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TundraRockComponentData {
    readonly variant: number;
@@ -25,16 +27,18 @@ function decodeData(reader: PacketReader): TundraRockComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const tundraRockComponentData = entityComponentData.serverComponentData[ServerComponentType.tundraRock]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tundraRockComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tundraRock);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex("entities/tundra-rock/rock-" + (tundraRockComponentData.variant + 1) + ".png")
    )
    if (tundraRockComponentData.variant === 0) {
@@ -44,14 +48,16 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    } else if (tundraRockComponentData.variant === 2) {
       renderPart.angle = -Math.PI * 0.08;
    }
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }
 
 function createComponent(entityComponentData: EntityComponentData): TundraRockComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tundraRockComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tundraRock);
    return {
-      variant: entityComponentData.serverComponentData[ServerComponentType.tundraRock]!.variant
+      variant: tundraRockComponentData.variant
    };
 }
 

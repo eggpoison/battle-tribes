@@ -1,4 +1,4 @@
-import { Point, customTickIntervalHasPassed, lerp, randAngle, randFloat, randInt, randItem, rotateXAroundOrigin, rotateYAroundOrigin, secondsToTicks, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, getItemRecipe, Entity, LimbAction, Settings } from "webgl-test-shared";
+import { Point, customTickIntervalHasPassed, lerp, randAngle, randFloat, randInt, randItem, rotatePointAroundOrigin, secondsToTicks, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, getItemRecipe, Entity, LimbAction, Settings, assert, _point } from "webgl-test-shared";
 import { InventoryUseComponentArray, LimbInfo } from "./entity-components/server-components/InventoryUseComponent";
 import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
@@ -8,8 +8,9 @@ import TexturedRenderPart from "./render-parts/TexturedRenderPart";
 import { VisualRenderPart } from "./render-parts/render-parts";
 import { TribesmanAIComponentArray } from "./entity-components/server-components/TribesmanAIComponent";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { getEntityAgeTicks, getEntityRenderInfo } from "./world";
-import { currentSnapshot } from "./client";
+import { getEntityAgeTicks, getEntityRenderObject } from "./world";
+import { currentSnapshot } from "./game";
+import { getRenderPartAge } from "./render-parts/render-part-ages";
 
 enum CustomItemState {
    usingMedicine,
@@ -60,8 +61,9 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
       if (ingredientType === ItemType.wood && Math.random() < 1 * Settings.DT_S) {
          const pos = generateRandomLimbPosition();
 
-         const x = hitbox.box.position.x + rotateXAroundOrigin(pos.x, pos.y, hitbox.box.angle);
-         const y = hitbox.box.position.y + rotateYAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+         rotatePointAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+         const x = hitbox.box.position.x + _point.x;
+         const y = hitbox.box.position.y + _point.y;
 
          createSawdustCloud(x, y);
       }
@@ -71,12 +73,13 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
       }
       
       const particleColours = INGREDIENT_PARTICLE_COLOURS[ingredientType];
-      if (typeof particleColours !== "undefined") {
+      if (particleColours !== undefined) {
          const colour = randItem(particleColours);
          const pos = generateRandomLimbPosition();
 
-         const x = hitbox.box.position.x + rotateXAroundOrigin(pos.x, pos.y, hitbox.box.angle);
-         const y = hitbox.box.position.y + rotateYAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+         rotatePointAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+         const x = hitbox.box.position.x + _point.x;
+         const y = hitbox.box.position.y + _point.y;
 
          createColouredParticle(x, y, randFloat(30, 50), colour[0], colour[1], colour[2]);
       }
@@ -86,32 +89,31 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
 const createBandageRenderPart = (entity: Entity): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
+
+   const offsetMagnitude = 32 * Math.random();
+   const offsetDirection = randAngle();
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       6,
       randAngle(),
+      offsetMagnitude * Math.sin(offsetDirection), offsetMagnitude * Math.cos(offsetDirection),
       getTextureArrayIndex("entities/miscellaneous/bandage.png")
    );
 
-   const offsetMagnitude = 32 * Math.random();
-   const offsetDirection = randAngle();
-   renderPart.offset.x = offsetMagnitude * Math.sin(offsetDirection);
-   renderPart.offset.y = offsetMagnitude * Math.cos(offsetDirection);
-
-   const renderInfo = getEntityRenderInfo(entity);
-   renderInfo.attachRenderPart(renderPart);
+   const renderObject = getEntityRenderObject(entity);
+   renderObject.attachRenderPart(renderPart);
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    inventoryUseComponent.bandageRenderParts.push(renderPart);
 }
 
 export function updateBandageRenderPart(entity: Entity, renderPart: VisualRenderPart): void {
-   const renderPartAge = renderPart.getAge();
+   const renderPartAge = getRenderPartAge(renderPart);
    
    if (renderPartAge >= BANDAGE_LIFETIME_TICKS) {
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.removeRenderPart(renderPart);
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.removeRenderPart(renderPart);
 
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
       const idx = inventoryUseComponent.bandageRenderParts.indexOf(renderPart);
@@ -133,8 +135,9 @@ export function createMedicineAnimationParticles(entity: Entity, limbIdx: number
       const colour = randItem(MEDICINE_PARTICLE_COLOURS);
       const pos = generateRandomLimbPosition();
       
-      const x = hitbox.box.position.x + rotateXAroundOrigin(pos.x, pos.y, hitbox.box.angle);
-      const y = hitbox.box.position.y + rotateYAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+      rotatePointAroundOrigin(pos.x, pos.y, hitbox.box.angle);
+      const x = hitbox.box.position.x + _point.x;
+      const y = hitbox.box.position.y + _point.y;
       
       createColouredParticle(x, y, randFloat(20, 35), colour[0], colour[1], colour[2]);
    }
@@ -172,9 +175,7 @@ const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState):
                lastEatTicks = limbInfo.lastEatTicks;
             }
          }
-         if (typeof lastEatTicks === "undefined") {
-            throw new Error();
-         }
+         assert(lastEatTicks !== undefined);
          
          const useInfo = ITEM_INFO_RECORD[ItemType.herbal_medicine] as ConsumableItemInfo;
 
@@ -218,12 +219,12 @@ export function updateCustomItemRenderPart(entity: Entity): void {
             hitbox,
             getTextureArrayIndex(getCustomItemRenderPartTextureSource(entity, customItemState)),
             9,
+            0, 38,
             0
          );
-         inventoryUseComponent.customItemRenderPart.offset.y = 38;
 
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.attachRenderPart(inventoryUseComponent.customItemRenderPart);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.attachRenderPart(inventoryUseComponent.customItemRenderPart);
       } else {
          inventoryUseComponent.customItemRenderPart.switchTextureSource(getCustomItemRenderPartTextureSource(entity, customItemState));
       }
@@ -231,8 +232,8 @@ export function updateCustomItemRenderPart(entity: Entity): void {
       inventoryUseComponent.customItemRenderPart.opacity = getCustomItemRenderPartOpacity(entity, customItemState);
    } else {
       if (inventoryUseComponent.customItemRenderPart !== null) {
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.removeRenderPart(inventoryUseComponent.customItemRenderPart);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.removeRenderPart(inventoryUseComponent.customItemRenderPart);
          inventoryUseComponent.customItemRenderPart = null;
       }
    }
@@ -257,6 +258,6 @@ export function animateLimb(limb: VisualRenderPart, limbInfo: LimbInfo): void {
 
    // Move offset
    const moveProgress = limbInfo.animationTicksElapsed / limbInfo.animationDurationTicks;
-   limb.offset.x = lerp(limbInfo.animationStartOffset.x, limbInfo.animationEndOffset.x, moveProgress);
-   limb.offset.y = lerp(limbInfo.animationStartOffset.y, limbInfo.animationEndOffset.y, moveProgress);
+   limb.offsetX = lerp(limbInfo.animationStartOffset.x, limbInfo.animationEndOffset.x, moveProgress);
+   limb.offsetY = lerp(limbInfo.animationStartOffset.y, limbInfo.animationEndOffset.y, moveProgress);
 }

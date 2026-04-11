@@ -4,12 +4,12 @@ import { getLightPositionMatrix } from "../../lights";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import Layer from "../../Layer";
 import { surfaceLayer } from "../../world";
-import { currentSnapshot } from "../../client";
+import { currentSnapshot } from "../../game";
 import { cameraPosition } from "../../camera";
 import { gameFramebufferTexture } from "../render";
-import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
+import { debugDisplayState } from "../../../ui-state/debug-display-state";
 
-const enum Vars {
+const enum Var {
    MAX_LIGHTS = 64,
    DROPDOWN_LIGHT_STRENGTH = 6,
 
@@ -39,12 +39,19 @@ let lastTextureHeight = 0;
 let darknessVAO: WebGLVertexArrayObject;
 
 let ambientLightLevelUniformLocation: WebGLUniformLocation;
+let darknessNumLightsLocation: WebGLUniformLocation;
+let lightPosLocation: WebGLUniformLocation;
+let lightIntensityLocation: WebGLUniformLocation;
+let lightStrengthLocation: WebGLUniformLocation;
+let lightRadiiLocation: WebGLUniformLocation;
+let lightColourLocation: WebGLUniformLocation;
+let numRectLightsLocation: WebGLUniformLocation;
 
-const lightPositionMatricesData = new Float32Array(9 * Vars.MAX_LIGHTS);
-const lightIntensitiesData = new Float32Array(Vars.MAX_LIGHTS);
-const lightStrengthsData = new Float32Array(Vars.MAX_LIGHTS);
-const lightRadiiData = new Float32Array(Vars.MAX_LIGHTS);
-const lightColoursData = new Float32Array(3 * Vars.MAX_LIGHTS);
+const lightPositionMatricesData = new Float32Array(9 * Var.MAX_LIGHTS);
+const lightIntensitiesData = new Float32Array(Var.MAX_LIGHTS);
+const lightStrengthsData = new Float32Array(Var.MAX_LIGHTS);
+const lightRadiiData = new Float32Array(Var.MAX_LIGHTS);
+const lightColoursData = new Float32Array(3 * Var.MAX_LIGHTS);
 
 let lastNumLightsRendered = 0;
 
@@ -76,7 +83,7 @@ export function createNightShaders(): void {
    const lightingFragmentShader = `#version 300 es
    precision mediump float;
    
-   #define MAX_LIGHTS ${Vars.MAX_LIGHTS}
+   #define MAX_LIGHTS ${Var.MAX_LIGHTS}
    #define TILE_SIZE ${Settings.TILE_SIZE.toFixed(1)}
 
    struct RectLight {
@@ -189,7 +196,7 @@ export function createNightShaders(): void {
 
       if (minDistFromRectLight < 999999.9) {
          float lightIntensity = 1.0;
-         float strength = ${Vars.DROPDOWN_LIGHT_STRENGTH.toFixed(1)};
+         float strength = ${Var.DROPDOWN_LIGHT_STRENGTH.toFixed(1)};
 
          float intensity = exp(-minDistFromRectLight / 64.0 / strength) * lightIntensity;
          if (intensity > 0.0) {
@@ -246,7 +253,14 @@ export function createNightShaders(): void {
    gl.useProgram(lightingProgram);
 
    ambientLightLevelUniformLocation = gl.getUniformLocation(lightingProgram, "u_ambientLightLevel")!;
-   
+   darknessNumLightsLocation = gl.getUniformLocation(lightingProgram, "u_numLights")!;
+   lightPosLocation = gl.getUniformLocation(lightingProgram, "u_lightPositionMatrices")!;
+   lightIntensityLocation = gl.getUniformLocation(lightingProgram, "u_lightIntensities")!;
+   lightStrengthLocation = gl.getUniformLocation(lightingProgram, "u_lightStrengths")!;
+   lightRadiiLocation = gl.getUniformLocation(lightingProgram, "u_lightRadii")!;
+   lightColourLocation = gl.getUniformLocation(lightingProgram, "u_lightColours")!;
+   numRectLightsLocation = gl.getUniformLocation(lightingProgram, "u_numRectLights")!;
+
    // Framebuffer Program
 
    darknessFramebufferProgram = createWebGLProgram(gl, darknessFramebufferVertexShader, darknessFramebufferFragmentShader);
@@ -256,7 +270,7 @@ export function createNightShaders(): void {
    gl.useProgram(darknessFramebufferProgram);
    gl.uniform1i(darknessFramebufferTextureUniformLocation, 0);
 
-   darknessFramebuffer = gl.createFramebuffer()!;
+   darknessFramebuffer = gl.createFramebuffer();
 
    darknessFramebufferVertexData = new Float32Array(12);
    darknessFramebufferVertexData[2] = 1;
@@ -266,7 +280,7 @@ export function createNightShaders(): void {
    darknessFramebufferVertexData[10] = 1;
    darknessFramebufferVertexData[11] = 1;
 
-   darknessVAO = gl.createVertexArray()!;
+   darknessVAO = gl.createVertexArray();
    gl.bindVertexArray(darknessVAO);
 
    // @Speed: Garbage collection
@@ -279,7 +293,7 @@ export function createNightShaders(): void {
       1, 1
    ];
    
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
@@ -318,7 +332,7 @@ const getVisibleRectLights = (layer: Layer): ReadonlyArray<RectLight> => {
    }
    
    // Check the surface layer for dropdown tiles
-   const rectLights = new Array<RectLight>();
+   const rectLights: Array<RectLight> = [];
    for (let i = 0; i < surfaceLayer.dropdownTiles.length; i++) {
       const tileIndex = surfaceLayer.dropdownTiles[i];
       const tileX = getTileX(tileIndex);
@@ -329,7 +343,7 @@ const getVisibleRectLights = (layer: Layer): ReadonlyArray<RectLight> => {
 
       const dist = distance(x, y, cameraPosition.x, cameraPosition.y);
       const tileDist = dist / Settings.TILE_SIZE;
-      if (tileDist < Vars.DROPDOWN_LIGHT_STRENGTH * Vars.DROPDOWN_LIGHT_STRENGTH) {
+      if (tileDist < Var.DROPDOWN_LIGHT_STRENGTH * Var.DROPDOWN_LIGHT_STRENGTH) {
          rectLights.push({
             x: (tileX + 0.5) * Settings.TILE_SIZE,
             y: (tileY + 0.5) * Settings.TILE_SIZE,
@@ -348,7 +362,7 @@ export function renderLighting(layer: Layer): void {
    // @Speed
    const rectLights = getVisibleRectLights(layer);
 
-   const numLightsRendered = Math.min(pointLights.length, Vars.MAX_LIGHTS);
+   const numLightsRendered = Math.min(pointLights.length, Var.MAX_LIGHTS);
 
    // Fill point light data
    for (let i = 0; i < numLightsRendered; i++) {
@@ -429,22 +443,15 @@ export function renderLighting(layer: Layer): void {
 
    gl.uniform1f(ambientLightLevelUniformLocation, ambientLightLevel);
 
-   const darknessNumLightsLocation = gl.getUniformLocation(lightingProgram, "u_numLights")!;
    gl.uniform1i(darknessNumLightsLocation, pointLights.length);
    if (pointLights.length > 0) {
-      const lightPosLocation = gl.getUniformLocation(lightingProgram, "u_lightPositionMatrices")!;
       gl.uniformMatrix3fv(lightPosLocation, false, lightPositionMatricesData);
-      const lightIntensityLocation = gl.getUniformLocation(lightingProgram, "u_lightIntensities")!;
       gl.uniform1fv(lightIntensityLocation, lightIntensitiesData);
-      const lightStrengthLocation = gl.getUniformLocation(lightingProgram, "u_lightStrengths")!;
       gl.uniform1fv(lightStrengthLocation, lightStrengthsData);
-      const lightRadiiLocation = gl.getUniformLocation(lightingProgram, "u_lightRadii")!;
       gl.uniform1fv(lightRadiiLocation, lightRadiiData);
-      const lightColourLocation = gl.getUniformLocation(lightingProgram, "u_lightColours")!;
       gl.uniform3fv(lightColourLocation, lightColoursData);
    }
 
-   const numRectLightsLocation = gl.getUniformLocation(lightingProgram, "u_numRectLights")!;
    gl.uniform1i(numRectLightsLocation, rectLights.length);
    for (let i = 0; i < rectLights.length; i++) {
       const rectLight = rectLights[i];

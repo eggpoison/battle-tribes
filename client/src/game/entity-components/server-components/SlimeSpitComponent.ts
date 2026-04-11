@@ -4,10 +4,11 @@ import { playSoundOnHitbox } from "../../sound";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { tickIntervalHasPassed } from "../../client";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { tickIntervalHasPassed } from "../../game";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface SlimeSpitComponentData {}
 
@@ -26,29 +27,31 @@ function decodeData(reader: PacketReader): SlimeSpitComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
    // @Incomplete: SIZE DOESN'T ACTUALLY AFFECT ANYTHING
 
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
    const renderPart1 = new TexturedRenderPart(
       hitbox,
       1,
       0,
+      0, 0,
       getTextureArrayIndex("projectiles/slime-spit-medium.png")
    );
    renderPart1.opacity = 0.75;
-   renderInfo.attachRenderPart(renderPart1);
+   renderObject.attachRenderPart(renderPart1);
 
    const renderPart2 = new TexturedRenderPart(
       hitbox,
       0,
       Math.PI/4,
+      0, 0,
       getTextureArrayIndex("projectiles/slime-spit-medium.png")
    );
    renderPart2.opacity = 0.75;
-   renderInfo.attachRenderPart(renderPart2);
+   renderObject.attachRenderPart(renderPart2);
 
    return {};
 }
@@ -68,11 +71,10 @@ function onLoad(entity: Entity): void {
 }
 
 function onTick(entity: Entity): void {
-   const renderInfo = getEntityRenderInfo(entity);
-   const rotatingRenderPart = renderInfo.renderPartsByZIndex[0];
+   const renderObject = getEntityRenderObject(entity);
+   const rotatingRenderPart = renderObject.renderPartsByZIndex[0];
    
    rotatingRenderPart.angle += 1.5 * Math.PI * Settings.DT_S;
-   rotatingRenderPart.angle -= 1.5 * Math.PI * Settings.DT_S;
 
    if (tickIntervalHasPassed(0.2)) {
       for (let i = 0; i < 5; i++) {

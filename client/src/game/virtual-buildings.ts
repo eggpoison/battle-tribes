@@ -1,4 +1,4 @@
-import { Box, HitboxCollisionType, distance, Point, StructureType, PacketReader, EntityComponents, ServerComponentType, BuildingMaterial, DEFAULT_COLLISION_MASK, CollisionBit } from "webgl-test-shared";
+import { Box, HitboxCollisionType, distance, Point, StructureType, PacketReader, ServerComponentType, BuildingMaterial, DEFAULT_COLLISION_MASK, CollisionBit } from "webgl-test-shared";
 import { createHitboxQuick } from "./hitboxes";
 import { createBracingsComponentData } from "./entity-components/server-components/BracingsComponent";
 import { createBuildingMaterialComponentData } from "./entity-components/server-components/BuildingMaterialComponent";
@@ -14,17 +14,18 @@ import { createStatusEffectComponentData } from "./entity-components/server-comp
 import { createStructureComponentData } from "./entity-components/server-components/StructureComponent";
 import { createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
-import { EntityRenderInfo, updateEntityRenderInfoRenderData } from "./EntityRenderInfo";
-import { currentSnapshot } from "./client";
+import { EntityRenderObject, recalculateRenderObjectVertexData } from "./EntityRenderObject";
+import { currentSnapshot } from "./game";
 import Layer from "./Layer";
 import { thingIsVisualRenderPart } from "./render-parts/render-parts";
-import { removeGhostRenderInfo } from "./rendering/webgl/entity-ghost-rendering";
+import { removeGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";
 import { playerTribe } from "./tribes";
 import { createEntityCreationInfo, EntityComponentData, layers } from "./world";
 import { padBoxData, readBoxFromData } from "./networking/packet-hitboxes";
 import { createBarrelComponentData } from "./entity-components/server-components/BarrelComponent";
-import { EntityServerComponentData } from "./networking/packet-snapshots";
 import { cursorWorldPos } from "./camera";
+import { ServerComponentData } from "./entity-components/components";
+import { getEntityServerComponentTypes } from "./entity-component-types";
 
 export interface VirtualBuilding {
    readonly entityType: StructureType;
@@ -33,7 +34,7 @@ export interface VirtualBuilding {
    readonly position: Readonly<Point>;
    readonly rotation: number;
    readonly boxes: ReadonlyArray<Box>;
-   readonly renderInfo: EntityRenderInfo;
+   readonly renderObject: EntityRenderObject;
 }
 
 export interface VirtualBuildingSafetySimulation {
@@ -68,7 +69,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
    const layer = layers[layerDepth];
 
    // Hitboxes
-   const boxes = new Array<Box>();
+   const boxes: Array<Box> = [];
    const numHitboxes = reader.readNumber();
    for (let i = 0; i < numHitboxes; i++) {
       const box = readBoxFromData(reader);
@@ -77,10 +78,9 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
 
    // @Copynpaste @Hack
 
-   const components: EntityServerComponentData = {};
+   const components: Array<ServerComponentData<ServerComponentType>> = [];
 
-   // @Hack @Cleanup: make the client and server use the some component data system
-   const componentTypes = EntityComponents[entityType];
+   const componentTypes = getEntityServerComponentTypes(entityType);
    for (let i = 0; i < componentTypes.length; i++) {
       const componentType = componentTypes[i];
 
@@ -93,84 +93,84 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
                }),
             );
 
-            components[componentType] = transformComponentData;
+            components.push(transformComponentData);
             break;
          }
          case ServerComponentType.health: {
             const data = createHealthComponentData();
-            components[componentType] = data;
+            components.push(data);
             break;
          }
          case ServerComponentType.statusEffect: {
             const data = createStatusEffectComponentData();
-            components[componentType] = data;
+            components.push(data);
             break;
          }
          case ServerComponentType.structure: {
-            components[componentType] = createStructureComponentData();
+            components.push(createStructureComponentData());
             break;
          }
          case ServerComponentType.tribe: {
-            components[componentType] = createTribeComponentData(playerTribe);
+            components.push(createTribeComponentData(playerTribe));
             break;
          }
          case ServerComponentType.buildingMaterial: {
-            components[componentType] = createBuildingMaterialComponentData(BuildingMaterial.wood);
+            components.push(createBuildingMaterialComponentData(BuildingMaterial.wood));
             break;
          }
          case ServerComponentType.bracings: {
-            components[componentType] = createBracingsComponentData();
+            components.push(createBracingsComponentData());
             break;
          }
          case ServerComponentType.inventory: {
-            components[componentType] = createInventoryComponentData({});
+            components.push(createInventoryComponentData({}));
             break;
          }
          case ServerComponentType.cooking: {
-            components[componentType] = createCookingComponentData();
+            components.push(createCookingComponentData());
             break;
          }
          case ServerComponentType.campfire: {
-            components[componentType] = createCampfireComponentData();
+            components.push(createCampfireComponentData());
             break;
          }
          case ServerComponentType.furnace: {
-            components[componentType] = createFurnaceComponentData();
+            components.push(createFurnaceComponentData());
             break;
          }
          case ServerComponentType.spikes: {
-            components[componentType] = createSpikesComponentData();
+            components.push(createSpikesComponentData());
             break;
          }
          case ServerComponentType.fireTorch: {
-            components[componentType] = createFireTorchComponentData();
+            components.push(createFireTorchComponentData());
             break;
          }
          case ServerComponentType.slurbTorch: {
-            components[componentType] = createSlurbTorchComponentData();
+            components.push(createSlurbTorchComponentData());
             break;
          }
          case ServerComponentType.barrel: {
-            components[componentType] = createBarrelComponentData();
+            components.push(createBarrelComponentData());
             break;
          }
          case ServerComponentType.researchBench: {
-            components[componentType] = {
+            components.push({
                isOccupied: false
-            };
+            });
             break;
          }
          case ServerComponentType.totemBanner: {
-            components[componentType] = {
+            components.push({
                banners: []
-            };
+            });
             break;
          }
          case ServerComponentType.hut: {
-            components[componentType] = {
+            components.push({
                doorSwingAmount: 0,
                isRecalling: false
-            };
+            });
             break;
          }
          default: {
@@ -183,29 +183,29 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
       entityType: entityType,
       serverComponentData: components,
       // @Incomplete
-      clientComponentData: {}
+      clientComponentData: []
    };
 
    // Create the entity
    const creationInfo = createEntityCreationInfo(0, entityComponentData);
 
-   const renderInfo = creationInfo.renderInfo;
+   const renderObject = creationInfo.renderObject;
 
    // Modify all the render part's opacity
-   for (let i = 0; i < renderInfo.renderPartsByZIndex.length; i++) {
-      const renderThing = renderInfo.renderPartsByZIndex[i];
+   for (let i = 0; i < renderObject.renderPartsByZIndex.length; i++) {
+      const renderThing = renderObject.renderPartsByZIndex[i];
       if (thingIsVisualRenderPart(renderThing)) {
          renderThing.opacity *= 0.5;
       }
    }
 
-   // @Hack: Manually set the render info's position and rotation
+   // @Hack: Manually set the render object's position and rotation
    // @INCOMPLETE
    // const transformComponentData = components[ServerComponentType.transform]!;
-   // renderInfo.renderPosition.x = transformComponentData.position.x;
-   // renderInfo.renderPosition.y = transformComponentData.position.y;
-   // renderInfo.rotation = transformComponentData.rotation;
-   updateEntityRenderInfoRenderData(renderInfo);
+   // renderObject.renderPosition.x = transformComponentData.position.x;
+   // renderObject.renderPosition.y = transformComponentData.position.y;
+   // renderObject.rotation = transformComponentData.rotation;
+   recalculateRenderObjectVertexData(renderObject);
 
    return {
       entityType: entityType,
@@ -214,7 +214,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
       position: new Point(x, y),
       rotation: rotation,
       boxes: boxes,
-      renderInfo: renderInfo
+      renderObject: renderObject
    };
 }
 
@@ -223,7 +223,7 @@ export function readGhostVirtualBuildings(reader: PacketReader): void {
       const virtualBuildingID = reader.readNumber();
 
       const existingGhostBuildingPlan = ghostBuildingPlans.get(virtualBuildingID);
-      if (typeof existingGhostBuildingPlan !== "undefined") {
+      if (existingGhostBuildingPlan !== undefined) {
          padVirtualBuildingData(reader);
 
          const numPotentialPlans = reader.readNumber();
@@ -276,7 +276,7 @@ export function getVisibleBuildingPlan(): GhostBuildingPlan | null {
       }
    }
 
-   if (typeof closestGhostBuildingPlan !== "undefined") {
+   if (closestGhostBuildingPlan !== undefined) {
       return closestGhostBuildingPlan;
    }
    return null;
@@ -286,7 +286,7 @@ export function pruneGhostBuildingPlans(): void {
    for (const pair of ghostBuildingPlans) {
       const ghostBuildingInfo = pair[1];
       if (ghostBuildingInfo.lastUpdateTicks !== currentSnapshot.tick) {
-         removeGhostRenderInfo(ghostBuildingInfo.virtualBuilding.renderInfo);
+         removeGhostRenderObject(ghostBuildingInfo.virtualBuilding.renderObject);
          ghostBuildingPlans.delete(pair[0]);
       }
    }

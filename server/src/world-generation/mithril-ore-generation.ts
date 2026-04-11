@@ -1,6 +1,6 @@
 import { Entity, EntityType } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
-import { getSubtileIndex, subtileIsInWorld } from "../../../shared/src/subtiles";
+import { getSubtileIndex, subtileIsInWorldIncludingEdges } from "../../../shared/src/subtiles";
 import { SubtileType } from "../../../shared/src/tiles";
 import { angle, Point, randFloat, randInt, randSign } from "../../../shared/src/utils";
 import { getEntitiesInRange } from "../ai-shared";
@@ -93,7 +93,7 @@ const canSpawnMithrilOre = (layer: Layer, subtileX: number, subtileY: number, mo
    }
 
    // Check right subtile
-   if (subtileIsInWorld(subtileX + moveDirY, subtileY + moveDirX)) {
+   if (subtileIsInWorldIncludingEdges(subtileX + moveDirY, subtileY + moveDirX)) {
       const subtileIndex = getSubtileIndex(subtileX + moveDirY, subtileY + moveDirX);
       if (layer.getSubtileType(subtileIndex) === SubtileType.none) {
          return false;
@@ -101,7 +101,7 @@ const canSpawnMithrilOre = (layer: Layer, subtileX: number, subtileY: number, mo
    }
 
    // Check left subtile
-   if (subtileIsInWorld(subtileX - moveDirY, subtileY - moveDirX)) {
+   if (subtileIsInWorldIncludingEdges(subtileX - moveDirY, subtileY - moveDirX)) {
       const subtileIndex = getSubtileIndex(subtileX - moveDirY, subtileY - moveDirX);
       if (layer.getSubtileType(subtileIndex) === SubtileType.none) {
          return false;

@@ -1,7 +1,6 @@
 import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
 import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
 import { Entity, EntityType } from "../../../../shared/src/entities";
 import { Point, polarVec2 } from "../../../../shared/src/utils";
 import { EntityConfig } from "../../components";
@@ -40,11 +39,11 @@ export function createOkrenTongueConfig(position: Point, angle: number, okrenHit
    
    return {
       entityType: EntityType.okrenTongue,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.okrenTongue]: okrenTongueComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         okrenTongueComponent
+      ],
       lights: []
    };
 }

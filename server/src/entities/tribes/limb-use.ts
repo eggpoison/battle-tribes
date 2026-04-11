@@ -2,7 +2,7 @@ import { Entity, LimbAction } from "battletribes-shared/entities";
 import { getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ItemType } from "battletribes-shared/items/items";
 import { getHeldItem, getLimbConfiguration, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { AttackVars, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES } from "battletribes-shared/attack-patterns";
+import { AttackVar, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES } from "battletribes-shared/attack-patterns";
 import { getHitboxVelocity } from "../../hitboxes";
 
 const enum Vars {
@@ -50,7 +50,7 @@ export function beginSwing(attackingEntity: Entity, itemSlot: number, inventoryN
          limb.selectedItemSlot = itemSlot;
          limb.action = LimbAction.windShieldBash;
          limb.currentActionElapsedTicks = 0;
-         limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_WINDUP_TIME_TICKS;
+         limb.currentActionDurationTicks = AttackVar.SHIELD_BASH_WINDUP_TIME_TICKS;
          limb.currentActionRate = 1;
          // @Speed: Garbage collection
          limb.currentActionStartLimbState = copyLimbState(SHIELD_BLOCKING_LIMB_STATE);
@@ -95,7 +95,7 @@ export function beginSwing(attackingEntity: Entity, itemSlot: number, inventoryN
 
    const attackAlignment = (velocity.x * Math.sin(attackingEntityHitbox.box.angle) + velocity.y * Math.cos(attackingEntityHitbox.box.angle)) / velocityMagnitude;
    if (attackAlignment > 0) {
-      const extraAmount = AttackVars.MAX_EXTRA_ATTACK_RANGE * Math.min(velocityMagnitude / AttackVars.MAX_EXTRA_ATTACK_RANGE_SPEED);
+      const extraAmount = AttackVar.MAX_EXTRA_ATTACK_RANGE * Math.min(velocityMagnitude / AttackVar.MAX_EXTRA_ATTACK_RANGE_SPEED);
       limb.currentActionEndLimbState.extraOffsetY += extraAmount;
    }
 

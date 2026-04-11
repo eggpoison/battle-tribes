@@ -30,13 +30,13 @@ export function createDesertSmallWeedConfig(position: Point, angle: number): Ent
    
    return {
       entityType: EntityType.desertSmallWeed,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.energyStore]: energyStoreComponent,
-         [ServerComponentType.desertSmallWeed]: desertSmallWeedComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         energyStoreComponent,
+         desertSmallWeedComponent
+      ],
       lights: []
    };
 }

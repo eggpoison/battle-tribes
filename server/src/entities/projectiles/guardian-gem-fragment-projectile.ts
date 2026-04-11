@@ -26,11 +26,11 @@ export function createGuardianGemFragmentProjectileConfig(position: Point, rotat
    
    return {
       entityType: EntityType.guardianGemFragmentProjectile,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.projectile]: projectileComponent,
-         [ServerComponentType.guardianGemFragmentProjectile]: guardianGemFragmentProjectileComponent
-      },
+      components: [
+         transformComponent,
+         projectileComponent,
+         guardianGemFragmentProjectileComponent
+      ],
       lights: []
    };
 }

@@ -1,14 +1,17 @@
 import { GuardianAttackType, GuardianCrystalBurstStage, GuardianCrystalSlamStage, GuardianSpikyBallSummonStage, ServerComponentType, lerp, PacketReader, Entity, HitboxFlag } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Light } from "../../lights";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { registerDirtyRenderInfo } from "../../rendering/render-part-matrices";
+import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 
 export interface GuardianComponentData {
    readonly rubyGemActivation: number;
@@ -61,7 +64,7 @@ export interface GuardianComponent {
    attackStage: number;
 }
 
-const enum Vars {
+const enum Var {
    SPIKY_BALL_SUMMON_SHAKE_AMOUNT = 2
 }
 
@@ -95,17 +98,17 @@ function decodeData(reader: PacketReader): GuardianComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponent.hitboxes[0];
    
-   const rubyRenderParts = new Array<VisualRenderPart>();
-   const amethystRenderParts = new Array<VisualRenderPart>();
-   const emeraldRenderParts = new Array<VisualRenderPart>();
+   const rubyRenderParts: Array<VisualRenderPart> = [];
+   const amethystRenderParts: Array<VisualRenderPart> = [];
+   const emeraldRenderParts: Array<VisualRenderPart> = [];
 
-   const rubyLights = new Array<[number, Light]>();
-   const emeraldLights = new Array<[number, Light]>();
-   const amethystLights = new Array<[number, Light]>();
+   const rubyLights: Array<[number, Light]> = [];
+   const emeraldLights: Array<[number, Light]> = [];
+   const amethystLights: Array<[number, Light]> = [];
 
    // Body
 
@@ -113,26 +116,29 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       1,
       0,
+      0, 0,
       getTextureArrayIndex("entities/guardian/guardian-body.png")
    );
-   renderInfo.attachRenderPart(bodyRenderPart);
+   renderObject.attachRenderPart(bodyRenderPart);
 
    const bodyAmethystsRenderPart = new TexturedRenderPart(
       bodyRenderPart,
       1.1,
       0,
+      0, 0,
       getTextureArrayIndex("entities/guardian/guardian-body-amethysts.png")
    );
-   renderInfo.attachRenderPart(bodyAmethystsRenderPart);
+   renderObject.attachRenderPart(bodyAmethystsRenderPart);
    amethystRenderParts.push(bodyAmethystsRenderPart);
 
    const bodyEmeraldsRenderPart = new TexturedRenderPart(
       bodyRenderPart,
       1.1,
       0,
+      0, 0,
       getTextureArrayIndex("entities/guardian/guardian-body-emeralds.png")
    );
-   renderInfo.attachRenderPart(bodyEmeraldsRenderPart);
+   renderObject.attachRenderPart(bodyEmeraldsRenderPart);
    emeraldRenderParts.push(bodyEmeraldsRenderPart);
 
    // Head
@@ -141,26 +147,27 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       bodyRenderPart,
       2,
       0,
+      0, 28,
       getTextureArrayIndex("entities/guardian/guardian-head.png")
    );
-   headRenderPart.offset.y = 28;
-   renderInfo.attachRenderPart(headRenderPart);
+   renderObject.attachRenderPart(headRenderPart);
    
    const headRubies = new TexturedRenderPart(
       headRenderPart,
       2.1,
       0,
+      0, 0,
       getTextureArrayIndex("entities/guardian/guardian-head-rubies.png")
    );
-   renderInfo.attachRenderPart(headRubies);
+   renderObject.attachRenderPart(headRubies);
    rubyRenderParts.push(headRubies);
 
-   const limbRenderParts = new Array<VisualRenderPart>();
-   const limbCrackRenderParts = new Array<VisualRenderPart>();
-   const limbCrackLights = new Array<Light>();
+   const limbRenderParts: Array<VisualRenderPart> = [];
+   const limbCrackRenderParts: Array<VisualRenderPart> = [];
+   const limbCrackLights: Array<Light> = [];
    
    // Attach limb render parts
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
       const hitbox = transformComponentData.hitboxes[i];
       
@@ -169,18 +176,20 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
             hitbox,
             0,
             0,
+            0, 0,
             getTextureArrayIndex("entities/guardian/guardian-limb.png")
          );
-         renderInfo.attachRenderPart(limbRenderPart);
+         renderObject.attachRenderPart(limbRenderPart);
          limbRenderParts.push(limbRenderPart);
 
          const cracksRenderPart = new TexturedRenderPart(
             limbRenderPart,
             0,
             0,
+            0, 0,
             getTextureArrayIndex("entities/guardian/guardian-limb-gem-cracks.png")
          );
-         renderInfo.attachRenderPart(cracksRenderPart);
+         renderObject.attachRenderPart(cracksRenderPart);
          limbCrackRenderParts.push(cracksRenderPart);
 
          // @INCOMPLETE
@@ -215,7 +224,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GuardianComponent {
-   const guardianComponentData = entityComponentData.serverComponentData[ServerComponentType.guardian]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const guardianComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.guardian);
 
    return {
       rubyRenderParts: intermediateInfo.rubyRenderParts,
@@ -241,7 +251,7 @@ function createComponent(entityComponentData: EntityComponentData, intermediateI
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
    let maxRenderParts = 5;
    
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    maxRenderParts += 2 * transformComponentData.hitboxes.length;
 
    return maxRenderParts;
@@ -282,20 +292,20 @@ function updateFromData(data: GuardianComponentData, entity: Entity): void {
    const actualRubyGemActivation = lerp(rubyGemActivation, 1, limbRubyGemActivation);
    if (actualRubyGemActivation !== guardianComponent.rubyGemActivation) {
       setColours(guardianComponent.rubyRenderParts, guardianComponent.rubyLights, actualRubyGemActivation, actualRubyGemActivation, 0, 0);
-      const renderInfo = getEntityRenderInfo(entity);
-      registerDirtyRenderInfo(renderInfo);
+      const renderObject = getEntityRenderObject(entity);
+      registerDirtyRenderObject(entity, renderObject);
    }
    const actualEmeraldGemActivation = lerp(emeraldGemActivation, 1, limbEmeraldGemActivation);
    if (actualEmeraldGemActivation !== guardianComponent.emeraldGemActivation) {
       setColours(guardianComponent.emeraldRenderParts, guardianComponent.emeraldLights, actualEmeraldGemActivation, 0, actualEmeraldGemActivation, 0);
-      const renderInfo = getEntityRenderInfo(entity);
-      registerDirtyRenderInfo(renderInfo);
+      const renderObject = getEntityRenderObject(entity);
+      registerDirtyRenderObject(entity, renderObject);
    }
    const actualAmethystGemActivation = lerp(amethystGemActivation, 1, limbAmethystGemActivation);
    if (actualAmethystGemActivation !== guardianComponent.amethystGemActivation) {
       setColours(guardianComponent.amethystRenderParts, guardianComponent.amethystLights, actualAmethystGemActivation, actualAmethystGemActivation * 0.9, actualAmethystGemActivation * 0.2, actualAmethystGemActivation * 0.9);
-      const renderInfo = getEntityRenderInfo(entity);
-      registerDirtyRenderInfo(renderInfo);
+      const renderObject = getEntityRenderObject(entity);
+      registerDirtyRenderObject(entity, renderObject);
    }
 
    guardianComponent.rubyGemActivation = actualRubyGemActivation;
@@ -342,8 +352,8 @@ function updateFromData(data: GuardianComponentData, entity: Entity): void {
          light.g += limbAmethystGemActivation * 0.2;
          light.b += limbAmethystGemActivation * 0.5;
       }
-      const renderInfo = getEntityRenderInfo(entity);
-      registerDirtyRenderInfo(renderInfo);
+      const renderObject = getEntityRenderObject(entity);
+      registerDirtyRenderObject(entity, renderObject);
    }
 
    guardianComponent.limbRubyGemActivation = limbRubyGemActivation;
@@ -352,7 +362,7 @@ function updateFromData(data: GuardianComponentData, entity: Entity): void {
 
    for (let i = 0; i < guardianComponent.limbRenderParts.length; i++) {
       const renderPart = guardianComponent.limbRenderParts[i];
-      renderPart.shakeAmount = 0;
+      setRenderPartShakeAmount(renderPart, 0);
    }
    
    const transformComponent = TransformComponentArray.getComponent(entity);
@@ -399,15 +409,15 @@ function updateFromData(data: GuardianComponentData, entity: Entity): void {
             let shakeAmount: number;
             switch (attackStage) {
                case GuardianSpikyBallSummonStage.windup: {
-                  shakeAmount = Vars.SPIKY_BALL_SUMMON_SHAKE_AMOUNT * stageProgress;
+                  shakeAmount = Var.SPIKY_BALL_SUMMON_SHAKE_AMOUNT * stageProgress;
                   break;
                }
                case GuardianSpikyBallSummonStage.focus: {
-                  shakeAmount = Vars.SPIKY_BALL_SUMMON_SHAKE_AMOUNT;
+                  shakeAmount = Var.SPIKY_BALL_SUMMON_SHAKE_AMOUNT;
                   break;
                }
                case GuardianSpikyBallSummonStage.return: {
-                  shakeAmount = Vars.SPIKY_BALL_SUMMON_SHAKE_AMOUNT * (1 - stageProgress);
+                  shakeAmount = Var.SPIKY_BALL_SUMMON_SHAKE_AMOUNT * (1 - stageProgress);
                   break;
                }
                default: {
@@ -415,7 +425,7 @@ function updateFromData(data: GuardianComponentData, entity: Entity): void {
                }
             }
 
-            renderPart.shakeAmount = shakeAmount;
+            setRenderPartShakeAmount(renderPart, shakeAmount);
          }
          break;
       }

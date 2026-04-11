@@ -45,10 +45,10 @@ export function createRiverSteppingStoneConfig(position: Point, angle: number, s
    
    return {
       entityType: EntityType.riverSteppingStone,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.riverSteppingStone]: riverSteppingStoneComponent
-      },
+      components: [
+         transformComponent,
+         riverSteppingStoneComponent
+      ],
       lights: []
    };
 }

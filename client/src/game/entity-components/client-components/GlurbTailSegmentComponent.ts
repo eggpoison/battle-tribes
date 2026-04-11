@@ -1,10 +1,10 @@
-import { ServerComponentType } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface GlurbTailSegmentComponentData {}
 
@@ -15,8 +15,8 @@ export interface GlurbTailSegmentComponent {}
 export const GlurbTailSegmentComponentArray = new ClientComponentArray<GlurbTailSegmentComponent, IntermediateInfo>(ClientComponentType.glurbTailSegment, true, createComponent, getMaxRenderParts);
 GlurbTailSegmentComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
    const textureSource = "entities/glurb/glurb-tail-segment.png";
@@ -26,9 +26,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       // @Hack: 0.1 so that the moss ball can be z-index 0
       0.1,
       0,
+      0, 0,
       getTextureArrayIndex(textureSource)
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }

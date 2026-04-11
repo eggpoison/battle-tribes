@@ -3,7 +3,8 @@ import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface FenceGateComponentData {}
 
@@ -22,25 +23,27 @@ function decodeData(): FenceGateComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    
    for (const hitbox of transformComponent.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.FENCE_GATE_DOOR)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
                new TexturedRenderPart(
                hitbox,
                1,
                0,
+               0, 0,
                getTextureArrayIndex("entities/fence-gate/door.png")
             )
          );
       } else {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
                new TexturedRenderPart(
                hitbox,
                0,
                0,
+               0, 0,
                getTextureArrayIndex("entities/fence-gate/side.png")
             )
          );

@@ -8,7 +8,7 @@ import { getInventory, hasInventory, InventoryComponentArray } from "./Inventory
 import { customTickIntervalHasPassed, lerp, Point, polarVec2, randAngle } from "battletribes-shared/utils";
 import { assertBoxIsCircular, Box, HitboxFlag } from "battletribes-shared/boxes/boxes";
 import { getHitboxesByFlag, TransformComponentArray } from "./TransformComponent";
-import { AttackVars, BLOCKING_LIMB_STATE, copyLimbState, LimbConfiguration, LimbState, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, interpolateLimbState } from "battletribes-shared/attack-patterns";
+import { AttackVar, BLOCKING_LIMB_STATE, copyLimbState, LimbConfiguration, LimbState, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, interpolateLimbState } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity, registerEntityTickEvent } from "../server/player-clients";
 import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
 import Layer from "../Layer";
@@ -35,6 +35,7 @@ import { getEntityRelationship, EntityRelationship, entitiesBelongToSameTribe, T
 import { hasTitle } from "./TribesmanComponent";
 import { createHeldItemConfig } from "../entities/held-item";
 import { createEntityConfigAttachInfo } from "../components";
+import { _bounds } from "../../../shared/src/boxes/BaseBox";
 
 // @Cleanup: Make into class Limb with getHeldItem method
 export interface LimbInfo {
@@ -252,15 +253,11 @@ const boxIsCollidingWithSubtile = (box: Box, subtileX: number, subtileY: number)
 }
 
 const getBoxCollidingWallSubtiles = (layer: Layer, box: Box): ReadonlyArray<number> => {
-   const boundsMinX = box.calculateBoundsMinX();
-   const boundsMaxX = box.calculateBoundsMaxX();
-   const boundsMinY = box.calculateBoundsMinY();
-   const boundsMaxY = box.calculateBoundsMaxY();
-
-   const minSubtileX = Math.max(Math.floor(boundsMinX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
-   const maxSubtileX = Math.min(Math.floor(boundsMaxX / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
-   const minSubtileY = Math.max(Math.floor(boundsMinY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
-   const maxSubtileY = Math.min(Math.floor(boundsMaxY / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
+   box.calculateBounds();
+   const minSubtileX = Math.max(Math.floor(_bounds.minX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+   const maxSubtileX = Math.min(Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
+   const minSubtileY = Math.max(Math.floor(_bounds.minY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
+   const maxSubtileY = Math.min(Math.floor(_bounds.maxY / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
 
    const collidingWallSubtiles = new Array<number>();
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
@@ -356,7 +353,7 @@ function onTick(entity: Entity): void {
             case LimbAction.windShieldBash: {
                limb.action = LimbAction.pushShieldBash;
                limb.currentActionElapsedTicks = 0;
-               limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_PUSH_TIME_TICKS;
+               limb.currentActionDurationTicks = AttackVar.SHIELD_BASH_PUSH_TIME_TICKS;
 
                // Push forwards
                const transformComponent = TransformComponentArray.getComponent(entity);
@@ -390,7 +387,7 @@ function onTick(entity: Entity): void {
             case LimbAction.pushShieldBash: {
                limb.action = LimbAction.returnShieldBashToRest;
                limb.currentActionElapsedTicks = 0;
-               limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_RETURN_TIME_TICKS;
+               limb.currentActionDurationTicks = AttackVar.SHIELD_BASH_RETURN_TIME_TICKS;
 
                // limb.limbDamageBox.isActive = false;
                // limb.heldItemDamageBox.isActive = false;

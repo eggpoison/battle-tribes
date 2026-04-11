@@ -87,14 +87,14 @@ export function createSlimeConfig(position: Point, rotation: number, size: Slime
    
    return {
       entityType: EntityType.slime,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.slime]: slimeComponent,
-         [ServerComponentType.craftingStation]: craftingStationComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         aiHelperComponent,
+         slimeComponent,
+         craftingStationComponent
+      ],
       lights: []
    };
 }

@@ -3,7 +3,9 @@ import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TribeWarriorComponentData {
    readonly scars: Array<ScarInfo>;
@@ -20,7 +22,7 @@ TribeWarriorComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 TribeWarriorComponentArray.updateFromData = updateFromData;
 
 function decodeData(reader: PacketReader): TribeWarriorComponentData {
-   const scars = new Array<ScarInfo>();
+   const scars: Array<ScarInfo> = [];
    const numScars = reader.readNumber();
    for (let i = 0; i < numScars; i++) {
       const offsetX = reader.readNumber();
@@ -41,11 +43,12 @@ function decodeData(reader: PacketReader): TribeWarriorComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const tribeWarriorComponentData = entityComponentData.serverComponentData[ServerComponentType.tribeWarrior]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
    for (let i = 0; i < tribeWarriorComponentData.scars.length; i++) {
       const scarInfo = tribeWarriorComponentData.scars[i];
 
@@ -53,25 +56,27 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
          hitbox,
          2.5,
          scarInfo.rotation,
+         scarInfo.offsetX, scarInfo.offsetY,
          getTextureArrayIndex("scars/scar-" + (scarInfo.type + 1) + ".png")
       );
-      renderPart.offset.x = scarInfo.offsetX;
-      renderPart.offset.y = scarInfo.offsetY;
 
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
    }
 
    return {};
 }
 
 function createComponent(entityComponentData: EntityComponentData): TribeWarriorComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
    return {
-      scars: entityComponentData.serverComponentData[ServerComponentType.tribeWarrior]!.scars
+      scars: tribeWarriorComponentData.scars
    };
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const tribeWarriorComponentData = entityComponentData.serverComponentData[ServerComponentType.tribeWarrior]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
    return tribeWarriorComponentData.scars.length;
 }
 

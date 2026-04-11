@@ -8,6 +8,7 @@ import Layer from "../Layer";
 import { getSubtileIndex } from "../../../shared/src/subtiles";
 import TribeBuildingLayer, { getNumWallConnections, updateTribeWalls } from "./building-plans/TribeBuildingLayer";
 import { CircularBox } from "../../../shared/src/boxes/CircularBox";
+import { _bounds } from "../../../shared/src/boxes/BaseBox";
 
 const enum Vars {
    /** How much safety increases when moving in a node */
@@ -59,18 +60,14 @@ export function getSafetyNode(nodeX: number, nodeY: number): SafetyNode {
 }
 
 const addCircularBoxNodePositions = (box: CircularBox, positions: Set<SafetyNode>): void => {
-   const minX = box.calculateBoundsMinX();
-   const maxX = box.calculateBoundsMaxX();
-   const minY = box.calculateBoundsMinY();
-   const maxY = box.calculateBoundsMaxY();
-
    const centerX = box.position.x / Settings.SAFETY_NODE_SEPARATION;
    const centerY = box.position.y / Settings.SAFETY_NODE_SEPARATION;
    
-   const minNodeX = Math.max(Math.floor(minX / Settings.SAFETY_NODE_SEPARATION), 0);
-   const maxNodeX = Math.min(Math.ceil(maxX / Settings.SAFETY_NODE_SEPARATION), Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1);
-   const minNodeY = Math.max(Math.floor(minY / Settings.SAFETY_NODE_SEPARATION), 0);
-   const maxNodeY = Math.min(Math.ceil(maxY / Settings.SAFETY_NODE_SEPARATION), Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1);
+   box.calculateBounds();
+   const minNodeX = Math.max(Math.floor(_bounds.minX / Settings.SAFETY_NODE_SEPARATION), 0);
+   const maxNodeX = Math.min(Math.ceil(_bounds.maxX / Settings.SAFETY_NODE_SEPARATION), Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1);
+   const minNodeY = Math.max(Math.floor(_bounds.minY / Settings.SAFETY_NODE_SEPARATION), 0);
+   const maxNodeY = Math.min(Math.ceil(_bounds.maxY / Settings.SAFETY_NODE_SEPARATION), Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1);
 
    const hitboxNodeRadius = box.radius / Settings.SAFETY_NODE_SEPARATION + 0.5;
    const hitboxNodeRadiusSquared = hitboxNodeRadius * hitboxNodeRadius;
@@ -115,7 +112,8 @@ export function addBoxesOccupiedNodes(boxes: ReadonlyArray<Box>, positions: Set<
       if (boxIsCircular(box)) {
          addCircularBoxNodePositions(box, positions);
       } else {
-         addRectangularSafetyNodePositions(box.position, box.width, box.height, box.angle, box.calculateBoundsMinX(), box.calculateBoundsMaxX(), box.calculateBoundsMinY(), box.calculateBoundsMaxY(), positions);
+         box.calculateBounds();
+         addRectangularSafetyNodePositions(box.position, box.width, box.height, box.angle, _bounds.minX, _bounds.maxX, _bounds.minY, _bounds.maxY, positions);
       }
    }
 }

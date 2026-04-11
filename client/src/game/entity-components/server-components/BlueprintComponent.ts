@@ -1,22 +1,25 @@
-import { Entity, PacketReader, assertUnreachable, randAngle, randFloat, rotateXAroundOrigin, rotateYAroundOrigin, BlueprintType, ServerComponentType } from "webgl-test-shared";
+import { Entity, PacketReader, assertUnreachable, randAngle, randFloat, rotatePointAroundOrigin, BlueprintType, ServerComponentType, _point } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../../particles";
 import { getEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { BALLISTA_GEAR_X, BALLISTA_GEAR_Y, BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../../utils";
 import { WARRIOR_HUT_SIZE } from "./HutComponent";
 import { TribeComponentArray } from "./TribeComponent";
 import { playerTribe } from "../../tribes";
 import { Hitbox } from "../../hitboxes";
+import { registerTextureSource } from "../../texture-atlases/texture-sources";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface BlueprintComponentData {
    readonly blueprintType: BlueprintType;
    readonly blueprintProgress: number;
-   readonly associatedEntityID: number;
+   readonly associatedEntity: Entity;
 }
 
 export interface BlueprintComponent {
@@ -24,7 +27,7 @@ export interface BlueprintComponent {
    
    blueprintType: BlueprintType;
    lastBlueprintProgress: number;
-   associatedEntityID: number;
+   associatedEntity: Entity;
 }
 
 interface ProgressTextureInfo {
@@ -366,6 +369,15 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ]
 };
 
+// Add partial blueprint textures
+for (const progressTextureInfoArray of Object.values(BLUEPRINT_PROGRESS_TEXTURE_SOURCES)) {
+   for (const progressTextureInfo of progressTextureInfoArray) {
+      for (const textureSource of progressTextureInfo.progressTextureSources) {
+         registerTextureSource(textureSource);
+      }
+   }
+}
+
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
@@ -417,28 +429,30 @@ BlueprintComponentArray.onDie = onDie;
 function decodeData(reader: PacketReader): BlueprintComponentData {
    const blueprintType = reader.readNumber() as BlueprintType;
    const blueprintProgress = reader.readNumber();
-   const associatedEntityID = reader.readNumber();
+   const associatedEntity = reader.readNumber();
 
    return {
       blueprintType: blueprintType,
       blueprintProgress: blueprintProgress,
-      associatedEntityID: associatedEntityID
+      associatedEntity: associatedEntity
    };
 }
 
 function createComponent(entityComponentData: EntityComponentData): BlueprintComponent {
-   const blueprintComponentData = entityComponentData.serverComponentData[ServerComponentType.blueprint]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const blueprintComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.blueprint);
    
    return {
       partialRenderParts: [],
       blueprintType: blueprintComponentData.blueprintType,
       lastBlueprintProgress: blueprintComponentData.blueprintProgress,
-      associatedEntityID: blueprintComponentData.associatedEntityID
+      associatedEntity: blueprintComponentData.associatedEntity
    };
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const blueprintComponentData = entityComponentData.serverComponentData[ServerComponentType.blueprint]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const blueprintComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.blueprint);
    return 2 * BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponentData.blueprintType].length;
 }
 
@@ -482,13 +496,12 @@ const updatePartialTexture = (entity: Entity): void => {
             hitbox,
             progressTextureInfo.zIndex + 0.01,
             progressTextureInfo.rotation,
+            progressTextureInfo.offsetX, progressTextureInfo.offsetY,
             getTextureArrayIndex(textureSource)
          );
-         renderPart.offset.x = progressTextureInfo.offsetX
-         renderPart.offset.y = progressTextureInfo.offsetY;
 
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.attachRenderPart(renderPart);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.attachRenderPart(renderPart);
          blueprintComponent.partialRenderParts.push(renderPart);
       } else {
          // Existing render part
@@ -512,7 +525,7 @@ function onLoad(entity: Entity): void {
    
    // Create completed render parts
    const progressTextureInfoArray = BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponent.blueprintType];
-   const renderInfo = getEntityRenderInfo(entity);
+   const renderObject = getEntityRenderObject(entity);
    for (let i = 0; i < progressTextureInfoArray.length; i++) {
       const progressTextureInfo = progressTextureInfoArray[i];
 
@@ -523,14 +536,10 @@ function onLoad(entity: Entity): void {
          hitbox,
          progressTextureInfo.zIndex,
          progressTextureInfo.rotation,
+         // @HACK, this shittery is cuz the fence gate doesn't have its first hitbox at the 'core' position
+         progressTextureInfo.offsetX + (blueprintComponent.blueprintType === BlueprintType.fenceGate ? 32 : 0), progressTextureInfo.offsetY,
          getTextureArrayIndex(progressTextureInfo.completedTextureSource)
       );
-      renderPart.offset.x = progressTextureInfo.offsetX;
-      // @HACK, this shittery is cuz the fence gate doesn't have its first hitbox at the 'core' position
-      if (blueprintComponent.blueprintType === BlueprintType.fenceGate) {
-         renderPart.offset.x += 32;
-      }
-      renderPart.offset.y = progressTextureInfo.offsetY;
       renderPart.opacity = 0.5;
       if (tribeComponent.tribeID === playerTribe.id) {
          renderPart.tintR = 0.2;
@@ -541,7 +550,7 @@ function onLoad(entity: Entity): void {
          renderPart.tintG = 0.0;
          renderPart.tintB = 0.15;
       }
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
    }
 }
 
@@ -589,7 +598,7 @@ function updateFromData(data: BlueprintComponentData, entity: Entity): void {
    
    blueprintComponent.blueprintType = data.blueprintType;
    const blueprintProgress = data.blueprintProgress;
-   blueprintComponent.associatedEntityID = data.associatedEntityID;
+   blueprintComponent.associatedEntity = data.associatedEntity;
 
    // @Speed: don't do always, only if the data changes!
    updatePartialTexture(entity);
@@ -607,8 +616,9 @@ function updateFromData(data: BlueprintComponentData, entity: Entity): void {
       const textureArrayIndex = getTextureArrayIndex(progressTexture.completedTextureSource);
       const xShift = textureAtlas.textureWidths[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
       const yShift = textureAtlas.textureHeights[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
-      const particleOriginX = hitbox.box.position.x + rotateXAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
-      const particleOriginY = hitbox.box.position.y + rotateYAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
+      rotatePointAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
+      const particleOriginX = hitbox.box.position.x + _point.x;
+      const particleOriginY = hitbox.box.position.y + _point.y;
       
       // @Incomplete: Change the particle effect type depending on the material of the worked-on partial texture
       // Create particle effects

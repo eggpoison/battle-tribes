@@ -1,10 +1,12 @@
-import { assert, rotateXAroundOrigin, rotateYAroundOrigin, PacketReader, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
-import { getHitboxVelocity, translateHitbox } from "../../hitboxes";
+import { assert, rotatePointAroundOrigin, PacketReader, Entity, EntityType, ServerComponentType, _point } from "webgl-test-shared";
+import { translateHitbox } from "../../hitboxes";
 import { playerInstance } from "../../player";
 import { playSound } from "../../sound";
 import { entityExists, EntityComponentData, getEntityLayer, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../entity-component-types";
 
 interface CarrySlot {
    occupiedEntity: Entity;
@@ -33,7 +35,7 @@ export function createRideableComponentData(carrySlots: ReadonlyArray<CarrySlot>
 }
 
 function decodeData(reader: PacketReader): RideableComponentData {
-   const carrySlots = new Array<CarrySlot>();
+   const carrySlots: Array<CarrySlot> = [];
    
    const numCarrySlots = reader.readNumber();
    for (let i = 0; i < numCarrySlots; i++) {
@@ -62,7 +64,8 @@ function decodeData(reader: PacketReader): RideableComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): RideableComponent {
-   const rideableComponentData = entityComponentData.serverComponentData[ServerComponentType.rideable]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const rideableComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.rideable);
    return {
       carrySlots: rideableComponentData.carrySlots
    };
@@ -84,7 +87,7 @@ function updateFromData(data: RideableComponentData, entity: Entity): void {
       if (occupiedEntity !== carrySlot.occupiedEntity) {
          const transformComponent = TransformComponentArray.getComponent(entity);
          const mountHitbox = transformComponent.hitboxMap.get(carrySlot.hitboxLocalID);
-         assert(typeof mountHitbox !== "undefined");
+         assert(mountHitbox !== undefined);
          const layer = getEntityLayer(entity);
          
          if (entityExists(occupiedEntity)) {
@@ -109,9 +112,8 @@ function updateFromData(data: RideableComponentData, entity: Entity): void {
                const transformComponent = TransformComponentArray.getComponent(playerInstance);
                const playerHitbox = transformComponent.hitboxes[0];
 
-               const tx = rotateXAroundOrigin(carrySlot.offsetX + carrySlot.dismountOffsetX, carrySlot.offsetY + carrySlot.dismountOffsetY, mountHitbox.box.angle);
-               const ty = rotateYAroundOrigin(carrySlot.offsetX + carrySlot.dismountOffsetX, carrySlot.offsetY + carrySlot.dismountOffsetY, mountHitbox.box.angle);
-               translateHitbox(playerHitbox, tx, ty);
+               rotatePointAroundOrigin(carrySlot.offsetX + carrySlot.dismountOffsetX, carrySlot.offsetY + carrySlot.dismountOffsetY, mountHitbox.box.angle);
+               translateHitbox(playerHitbox, _point.x, _point.y);
 
                // @HACK reset acceleration because it's accumulated a bunch for some reason
                playerHitbox.acceleration.x = 0;

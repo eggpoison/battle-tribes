@@ -45,15 +45,15 @@ export function createDoorConfig(position: Point, rotation: number, tribe: Tribe
    
    return {
       entityType: EntityType.door,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.buildingMaterial]: buildingMaterialComponent,
-         [ServerComponentType.door]: doorComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         buildingMaterialComponent,
+         doorComponent
+      ],
       lights: []
    };
 }

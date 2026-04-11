@@ -4,13 +4,12 @@ import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZ
 import Chunk from "./Chunk";
 import Layer from "./Layer";
 import { entityExists, getCurrentLayer } from "./world";
-import { calculateHitboxRenderPosition, getEntityTickInterp } from "./rendering/render-part-matrices";
+import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
 import { Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
-import { hoverDebugState } from "../ui-state/hover-debug-state.svelte";
+import { debugDisplayState } from "../ui-state/debug-display-state";
+import { hoverDebugState } from "../ui-state/hover-debug-state";
 import { Tile } from "./Tile";
-import { isSpectating } from "./player";
 
 let cameraSubjectHitbox: Hitbox | null = null;
 
@@ -20,8 +19,8 @@ const cameraVelocity = new Point(0, 0);
 
 /** Larger = zoomed in, smaller = zoomed out */
 // @INCOMPLETE @HACK rn i have to fiddle around with this manually, make it be calcualted automatically before public testing
-export let cameraZoom = 1.4;
-// export let cameraZoom = 1;
+// export let cameraZoom = 1.4;
+export let cameraZoom = 1;
 
 export let minVisibleX = 0;
 export let maxVisibleX = 0;
@@ -51,9 +50,13 @@ export const cursorWorldPos = new Point(0, 0);
 //    // removeEntityRenderedChunkData(chunk.x, chunk.y);
 // }
 
+function registerVisibleRenderChunk(renderChunkX: number, renderChunkY: number): void {
+
+}
+
 // @Incomplete: unused
 const getChunksFromRange = (layer: Layer, minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number): ReadonlyArray<Chunk> => {
-   const chunks = new Array<Chunk>();
+   const chunks: Array<Chunk> = [];
    
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -68,7 +71,7 @@ const getChunksFromRange = (layer: Layer, minChunkX: number, maxChunkX: number, 
 // @Incomplete: unused
 /** Gets all the chunks in chunks B missing from chunks A */
 const getMissingChunks = (chunksA: ReadonlyArray<Chunk>, chunksB: ReadonlyArray<Chunk>): ReadonlyArray<Chunk> => {
-   const missing = new Array<Chunk>();
+   const missing: Array<Chunk> = [];
    for (const chunk of chunksB) {
       if (!chunksA.includes(chunk)) {
          missing.push(chunk);
@@ -103,7 +106,7 @@ const updateCursorWorldPos = (): void => {
 
    const layer = getCurrentLayer();
    // @Hack? @Cleanup If the player moves their mouse before the layers are initialised, this function is called with currentLayer as undefined.
-   if (typeof layer !== "undefined") {
+   if (layer !== undefined) {
       const tileX = Math.floor(cursorWorldPos.x / Settings.TILE_SIZE);
       const tileY = Math.floor(cursorWorldPos.y / Settings.TILE_SIZE);
 
@@ -135,19 +138,12 @@ export function updateCursorScreenPos(e: MouseEvent): void {
    updateCursorWorldPos();
 }
 
-export function refreshCameraPosition(clientTickInterp: number, serverTickInterp: number, deltaTimeMS: number): void {
+export function refreshCameraPosition(clientInterp: number, serverInterp: number): void {
    if (cameraSubjectHitbox === null) {
-      if (isSpectating) {
-         const dt = deltaTimeMS / 1000;
-         cameraPosition.x += cameraVelocity.x * dt;
-         cameraPosition.y += cameraVelocity.y * dt;
-      }
-      
       return;
    }
 
-   const tickInterp = getEntityTickInterp(cameraSubjectHitbox.entity, clientTickInterp, serverTickInterp);
-   const pos = calculateHitboxRenderPosition(cameraSubjectHitbox, tickInterp);
+   const pos = calculateHitboxRenderPosition(cameraSubjectHitbox, clientInterp, serverInterp);
    setCameraPosition(pos);
 }
 

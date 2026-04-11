@@ -8,16 +8,16 @@
    import { getHitboxVelocity } from "../../../game/hitboxes";
    import CLIENT_ENTITY_INFO_RECORD from "../../../game/client-entity-info";
    import { getEntityType } from "../../../game/world";
-   import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
-   import ItemSlotsContainer from "../inventories/ItemSlotsContainer.svelte";
-   import ItemSlot from "../inventories/ItemSlot.svelte";
+   import { hoverDebugState } from "../../../ui-state/hover-debug-state";
+   import ItemSlotsContainer from "../inventories/Inventory";
+   import ItemSlot from "../inventories/ItemSlot";
 
    interface Props {
       entityDebugData: EntityDebugData;
    }
 
    let { entityDebugData }: Props = $props();
-   const entity = $derived(entityDebugData.entityID);
+   const entity = $derived(entityDebugData.entity);
 
    const transformComponent = $derived(TransformComponentArray.getComponent(entity));
    const hitbox = $derived(transformComponent.hitboxes[0]);
@@ -41,7 +41,7 @@
 
 <p>x: <span class="highlight">{displayX}</span>, y: <span class="highlight">{displayY}</span></p>
 
-{#if typeof displayVelocityMagnitude !== "undefined"}
+{#if displayVelocityMagnitude !== undefined}
    <p>Velocity: <span class="highlight">{displayVelocityMagnitude}</span></p>
 {/if}
 

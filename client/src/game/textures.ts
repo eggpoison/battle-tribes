@@ -51,11 +51,11 @@ export function preloadTextureImages(): Array<HTMLImageElement> {
    }
 
 
-   const images = new Array<HTMLImageElement>();
+   const images: Array<HTMLImageElement> = [];
    for (let i = 0; i < miscTextureSources.length; i++) {
       const textureSource = miscTextureSources[i];
       const texture = itemImages["/src/images/" + textureSource] as string;
-      assert(typeof texture !== "undefined");
+      assert(texture !== undefined);
       
       const image = new Image();
       image.src = texture;
@@ -75,7 +75,7 @@ export async function loadTextures(textureImages: Array<HTMLImageElement>): Prom
       
       const textureSource = miscTextureSources[i];
       
-      const texture = gl.createTexture()!;
+      const texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
 
       // Set parameters

@@ -1,16 +1,17 @@
-import { CircularBox, randAngle, randFloat, ServerComponentType, PacketReader, Entity, randInt } from "webgl-test-shared";
-import Board from "../../Board";
+import { CircularBox, randAngle, randFloat, ServerComponentType, PacketReader, Entity, randInt, _point } from "webgl-test-shared";
 import { createSnowParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import Particle from "../../Particle";
-import { addMonocolourParticleToBufferContainer, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
+import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
-import { tickIntervalHasPassed } from "../../client";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { tickIntervalHasPassed } from "../../game";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface SnowballComponentData {
    readonly size: number;
@@ -33,17 +34,19 @@ function decodeData(reader: PacketReader): SnowballComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const snowballComponentData = entityComponentData.serverComponentData[ServerComponentType.snowball]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const snowballComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.snowball);
 
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex("entities/snowball/size-" + (snowballComponentData.size + 1) + ".png")
       )
    );
@@ -62,7 +65,8 @@ function getMaxRenderParts(): number {
 function onTick(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
-   const velocity = getHitboxVelocity(hitbox);
+   getHitboxVelocity(hitbox);
+   const velocity = _point;
    if (velocity.magnitude() > 50) {
       if (tickIntervalHasPassed(0.05)) {
          createSnowParticle(hitbox.box.position.x, hitbox.box.position.y, randFloat(40, 60));
@@ -101,7 +105,7 @@ const createSnowSpeckParticle = (spawnPositionX: number, spawnPositionY: number)
       0,
       colour, colour, colour
    );
-   Board.lowMonocolourParticles.push(particle);
+   lowMonocolourParticles.push(particle);
 }
 
 function onHit(entity: Entity, hitbox: Hitbox): void {

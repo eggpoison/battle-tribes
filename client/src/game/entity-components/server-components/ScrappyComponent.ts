@@ -5,7 +5,9 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { updateLimb_TEMP } from "./InventoryUseComponent";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getTransformComponentData } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface ScrappyComponentData {}
 
@@ -20,16 +22,17 @@ function decodeData(): ScrappyComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          // @Copynpaste @Hack
          2,
          0,
+         0, 0,
          getTextureArrayIndex("entities/scrappy/body.png")
       )
    );
@@ -39,19 +42,21 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const attachPoint = new RenderAttachPoint(
       hitbox,
       1,
-      0
+      0,
+      0, 0
    );
-   attachPoint.addTag("inventoryUseComponent:attachPoint");
-   renderInfo.attachRenderPart(attachPoint);
+   addRenderPartTag(attachPoint, "inventoryUseComponent:attachPoint");
+   renderObject.attachRenderPart(attachPoint);
    
    const handRenderPart = new TexturedRenderPart(
       attachPoint,
       1.2,
       0,
-      getTextureArrayIndex("entities/scrappy/hand.png")
+      getTextureArrayIndex("entities/scrappy/hand.png"),
+      0, 0
    );
-   handRenderPart.addTag("inventoryUseComponent:hand");
-   renderInfo.attachRenderPart(handRenderPart);
+   addRenderPartTag(handRenderPart, "inventoryUseComponent:hand");
+   renderObject.attachRenderPart(handRenderPart);
 
    // @Temporary: so that the hand shows correctly when the player is placing a scrappy
    updateLimb_TEMP(handRenderPart, attachPoint, 20, LimbConfiguration.singleHanded);

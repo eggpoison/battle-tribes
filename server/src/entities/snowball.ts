@@ -39,12 +39,12 @@ export function createSnowballConfig(position: Point, rotation: number, yeti: En
    
    return {
       entityType: EntityType.snowball,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.snowball]: snowballComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         snowballComponent
+      ],
       lights: []
    };
 }

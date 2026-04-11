@@ -26,12 +26,12 @@ export function createSpikyBastardConfig(position: Point, rotation: number): Ent
    
    return {
       entityType: EntityType.spikyBastard,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.spikyBastard]: spikyBastardComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         spikyBastardComponent
+      ],
       lights: []
    };
 }

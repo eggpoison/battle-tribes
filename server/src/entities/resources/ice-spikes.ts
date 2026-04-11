@@ -36,13 +36,13 @@ export function createIceSpikesConfig(position: Point, rotation: number, rootIce
    
    return {
       entityType: EntityType.iceSpikes,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.iceSpikes]: iceSpikesComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         iceSpikesComponent
+      ],
       lights: []
    };
 }

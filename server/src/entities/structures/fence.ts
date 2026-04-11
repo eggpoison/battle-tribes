@@ -37,14 +37,14 @@ export function createFenceConfig(position: Point, rotation: number, tribe: Trib
    
    return {
       entityType: EntityType.fence,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.fence]: fenceComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         fenceComponent
+      ],
       lights: []
    };
 }

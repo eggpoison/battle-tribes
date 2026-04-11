@@ -1,11 +1,12 @@
 import { randFloat, randInt, Settings, Entity, HitboxFlag, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData, getCurrentLayer } from "../../world";
 import { playSound } from "../../sound";
 import { cameraPosition } from "../../camera";
+import { getTransformComponentData } from "../../entity-component-types";
 
 export interface InguYetuksnoglurblidokowfleaComponentData {}
 
@@ -25,8 +26,8 @@ function decodeData(): InguYetuksnoglurblidokowfleaComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
       const hitbox = transformComponentData.hitboxes[i];
@@ -35,105 +36,118 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
             hitbox,
             4,
             0,
+            0, 0,
             getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/body-1.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.YETUK_BODY_2)) {
          const renderPart = new TexturedRenderPart(
             hitbox,
             3,
             0,
+            0, 0,
             getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/body-2.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.YETUK_BODY_3)) {
          const renderPart = new TexturedRenderPart(
             hitbox,
             2,
             0,
+            0, 0,
             getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/body-3.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.YETUK_BODY_4)) {
          const renderPart = new TexturedRenderPart(
             hitbox,
             1,
             0,
+            0, 0,
             getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/body-4.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.YETUK_SNOBE_TAIL)) {
          const renderPart = new TexturedRenderPart(
             hitbox,
             1.1,
             0,
+            0, 0,
             getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/snobe-tail.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.YETUK_GLURB_SEGMENT)) {
          const renderPart = new TexturedRenderPart(
             hitbox,
             0,
             0,
+            0, 0,
             getTextureArrayIndex("entities/glurb/glurb-middle-segment.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.YETI_HEAD)) {
          const renderPart = new TexturedRenderPart(
             hitbox,
             5,
             0,
+            0, 0,
             getTextureArrayIndex("entities/yeti/yeti-head.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.YETUK_MANDIBLE_BIG)) {
          const renderPart = new TexturedRenderPart(
             hitbox,
             4.8,
             0,
+            0, 0,
             getTextureArrayIndex("entities/okren/adult/mandible.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.YETUK_MANDIBLE_MEDIUM)) {
          const renderPart = new TexturedRenderPart(
             hitbox,
             4.7,
             0,
+            0, 0,
             getTextureArrayIndex("entities/okren/juvenile/mandible.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.YETUK_DUSTFLEA_DISPENSION_PORT)) {
          const renderPart = new TexturedRenderPart(
             hitbox,
             4.1,
             0,
+            0, 0,
             getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/dustflea-dispension-port.png")
          );
-         renderInfo.attachRenderPart(renderPart);
+         renderObject.attachRenderPart(renderPart);
       } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_SMALL)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                i * 0.02,
                0,
+               0, 0,
                getTextureArrayIndex("entities/tukmok/tail-segment-small.png")
             )
          );
       } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_MEDIUM)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                i * 0.02,
                0,
+               0, 0,
                getTextureArrayIndex("entities/tukmok/tail-segment-medium.png")
             )
          );
       } else {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                i * 0.02,
                0,
+               0, 0,
                getTextureArrayIndex("entities/tukmok/tail-segment-big.png")
             )
          );

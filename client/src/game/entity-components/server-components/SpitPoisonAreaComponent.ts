@@ -4,7 +4,7 @@ import { createAcidParticle, createPoisonBubble } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 
-const enum Vars {
+const enum Var {
    MAX_RANGE = 55
 }
 
@@ -57,10 +57,10 @@ function onTick(entity: Entity): void {
    const range = box.radius;
 
    if (spitPoisonAreaComponent.soundInfo !== null) {
-      spitPoisonAreaComponent.soundInfo.sound.volume = lerp(0.25, 0, 1 - range / Vars.MAX_RANGE);
+      spitPoisonAreaComponent.soundInfo.sound.volume = lerp(0.25, 0, 1 - range / Var.MAX_RANGE);
    }
 
-   if (Vars.MAX_RANGE * Math.random() < range) {
+   if (Var.MAX_RANGE * Math.random() < range) {
       // Calculate spawn position
       const offsetMagnitude = range * Math.random();
       const moveDirection = randAngle();

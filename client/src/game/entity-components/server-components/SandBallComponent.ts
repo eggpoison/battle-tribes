@@ -1,5 +1,5 @@
-import { randAngle, randFloat, Settings, PacketReader, Entity, ServerComponentType, CircularBox } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { randAngle, randFloat, Settings, PacketReader, Entity, ServerComponentType, CircularBox, _point } from "webgl-test-shared";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createSandParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -7,6 +7,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface SandBallComponentData {
    readonly size: number;
@@ -42,19 +44,21 @@ const getTextureSource = (size: number): string => {
    return "entities/sand-ball/size-" + size + ".png";
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const sandBallComponentData = entityComponentData.serverComponentData[ServerComponentType.sandBall]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const sandBallComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.sandBall);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(getTextureSource(sandBallComponentData.size))
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {
       renderPart: renderPart
@@ -62,7 +66,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): SandBallComponent {
-   const sandBallComponentData = entityComponentData.serverComponentData[ServerComponentType.sandBall]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const sandBallComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.sandBall);
 
    return {
       size: sandBallComponentData.size,
@@ -79,7 +84,8 @@ function onTick(sandBall: Entity): void {
    const hitbox = transformComponent.hitboxes[0];
    if (hitbox.rootEntity !== sandBall) {
       const hitboxRadius = (hitbox.box as CircularBox).radius;
-      const hitboxVelocity = getHitboxVelocity(hitbox);
+      getHitboxVelocity(hitbox);
+      const hitboxVelocity = _point;
 
       let particleChance = hitboxRadius * Settings.DT_S * 0.8;
       while (Math.random() < particleChance--) {

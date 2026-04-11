@@ -20,10 +20,10 @@ export function createDecorationConfig(position: Point, rotation: number, decora
    
    return {
       entityType: EntityType.decoration,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.decoration]: decorationComponent
-      },
+      components: [
+         transformComponent,
+         decorationComponent
+      ],
       lights: []
    };
 }

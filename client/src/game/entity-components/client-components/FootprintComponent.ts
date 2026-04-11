@@ -1,12 +1,15 @@
-import { Entity, TileType, randInt, Settings } from "webgl-test-shared";
+import { Entity, TileType, randInt, Settings, _point } from "webgl-test-shared";
 import { playSound } from "../../sound";
 import { createFootprintParticle } from "../../particles";
 import { EntityComponentData, getEntityLayer } from "../../world";
-import { hitboxIsInWater, TransformComponentArray } from "../server-components/TransformComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { getHitboxTile, getHitboxVelocity } from "../../hitboxes";
-import { tickIntervalHasPassed } from "../../client";
+import { tickIntervalHasPassed } from "../../game";
+import { getEntityClientComponentTypes } from "../../entity-component-types";
+import { getClientComponentData } from "../../entity-component-types";
+import { hitboxIsInWater } from "../../collision";
 
 export interface FootprintComponentData {
    readonly footstepParticleIntervalSeconds: number;
@@ -44,7 +47,8 @@ export function createFootprintComponentData(footstepParticleIntervalSeconds: nu
 }
 
 function createComponent(entityComponentData: EntityComponentData): FootprintComponent {
-   const footprintComponentData = entityComponentData.clientComponentData[ClientComponentType.footprint]!;
+   const clientComponentTypes = getEntityClientComponentTypes(entityComponentData.entityType);
+   const footprintComponentData = getClientComponentData(entityComponentData.clientComponentData, clientComponentTypes, ClientComponentType.footprint);
    
    return {
       footstepParticleIntervalSeconds: footprintComponentData.footstepParticleIntervalSeconds,
@@ -104,7 +108,8 @@ function onTick(entity: Entity): void {
    if (hitbox.parent === null) {
       const footprintComponent = FootprintComponentArray.getComponent(entity);
       
-      const velocity = getHitboxVelocity(hitbox);
+      getHitboxVelocity(hitbox);
+      const velocity = _point;
       
       // Footsteps
       if (velocity.magnitude() >= 50 && !hitboxIsInWater(hitbox) && tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds)) {

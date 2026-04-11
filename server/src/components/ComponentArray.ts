@@ -397,7 +397,6 @@ export function sortComponentArrays(): void {
       [ServerComponentType.desertBushLively]: ComponentArrayPriority.medium,
       [ServerComponentType.desertBushSandy]: ComponentArrayPriority.medium,
       [ServerComponentType.desertSmallWeed]: ComponentArrayPriority.medium,
-      [ServerComponentType.autoSpawned]: ComponentArrayPriority.medium,
       [ServerComponentType.desertShrub]: ComponentArrayPriority.medium,
       [ServerComponentType.tumbleweedLive]: ComponentArrayPriority.medium,
       [ServerComponentType.tumbleweedDead]: ComponentArrayPriority.medium,

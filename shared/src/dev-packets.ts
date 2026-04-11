@@ -105,7 +105,6 @@ const SUMMON_DATA_RECORD = {
    [ServerComponentType.floorSign]: {},
    [ServerComponentType.desertBushLively]: {},
    [ServerComponentType.desertBushSandy]: {},
-   [ServerComponentType.autoSpawned]: {},
    [ServerComponentType.desertSmallWeed]: {},
    [ServerComponentType.desertShrub]: {},
    [ServerComponentType.tumbleweedLive]: {},

@@ -55,14 +55,14 @@ export function createBerryBushPlantedConfig(position: Point, rotation: number, 
 
    return {
       entityType: EntityType.berryBushPlanted,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.planted]: plantedComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.berryBushPlanted]: berryBushPlantedComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         plantedComponent,
+         lootComponent,
+         berryBushPlantedComponent
+      ],
       lights: []
    };
 }

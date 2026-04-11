@@ -1,8 +1,8 @@
 <script lang="ts">
    import { FloorSignComponentArray } from "../../game/entity-components/server-components/FloorSignComponent";
-   import { sendSetSignMessagePacket } from "../../game/networking/packet-sending";
-   import { entitySelectionState } from "../../ui-state/entity-selection-state.svelte";
-    import { menuSelectorState } from "../../ui-state/menu-selector-state.svelte";
+   import { sendSetSignMessagePacket } from "../../game/networking/packet-sending/packet-sending";
+   import { entitySelectionState } from "../../ui-state/entity-selection-state";
+    import { menuSelectorState } from "../menus";
    import MenuElem from "./menus/MenuElem.svelte";
 
    // @Hack: "!"

@@ -1,4 +1,4 @@
-import { EntityType, distance, lerp, randAngle, randFloat, Settings } from "webgl-test-shared";
+import { EntityType, distance, lerp, randAngle, randFloat, Settings, Entity } from "webgl-test-shared";
 import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./webgl";
 import { getCurrentLayer, getEntityLayer, getEntityType } from "./world";
 import { getBuildingSafeties } from "./building-safety";
@@ -6,13 +6,13 @@ import { getVisibleBuildingPlan, GhostBuildingPlan, VirtualBuildingSafetySimulat
 import { TribeMemberComponentArray } from "./entity-components/server-components/TribeMemberComponent";
 import { getHumanoidRadius } from "./entity-components/server-components/TribesmanComponent";
 import { playerInstance } from "./player";
-import { addGhostRenderInfo, removeGhostRenderInfo } from "./rendering/webgl/entity-ghost-rendering";
+import { addGhostRenderObject, removeGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
 import { TamingComponentArray } from "./entity-components/server-components/TamingComponent";
 import { cameraPosition, cameraZoom, cursorWorldPos } from "./camera";
-import { debugDisplayState } from "../ui-state/debug-display-state.svelte";
+import { debugDisplayState } from "../ui-state/debug-display-state";
 
 // @Cleanup: The logic for damage, research and heal numbers is extremely similar, can probably be combined
 
@@ -31,7 +31,7 @@ interface ResearchNumber extends TextNumber {
 }
 
 interface HealNumber extends TextNumber {
-   readonly healedEntityID: number;
+   readonly healedEntity: Entity;
    amount: number;
 }
 
@@ -47,8 +47,8 @@ const HEAL_NUMBER_LIFETIME = 1.75;
 const damageColours: ReadonlyArray<string> = ["#ddd", "#fbff2b", "#ffc130", "#ff6430"];
 const damageColourThresholds: ReadonlyArray<number> = [0, 3, 5, 7];
 
-const researchNumbers = new Array<ResearchNumber>();
-const healNumbers = new Array<HealNumber>();
+const researchNumbers: Array<ResearchNumber> = [];
+const healNumbers: Array<HealNumber> = [];
 
 let ctx: CanvasRenderingContext2D;
 
@@ -66,14 +66,16 @@ export interface SpawnDistributionBlock {
    readonly targetDensity: number;
 }
 
-let spawnDistributionBlocks = new Array<SpawnDistributionBlock>();
+let spawnDistributionBlocks: Array<SpawnDistributionBlock> = [];
 
 export function setSpawnDistributionBlocks(newSpawnDistributionBlocks: Array<SpawnDistributionBlock>): void {
    spawnDistributionBlocks = newSpawnDistributionBlocks;
 }
 
 export function createTextCanvasContext(): void {
-   const textCanvas = document.getElementById("text-canvas") as HTMLCanvasElement;
+   const textCanvas = document.createElement("canvas");
+   textCanvas.id = "text-canvas";
+   document.body.appendChild(textCanvas);
 
    ctx = textCanvas.getContext("2d")!;
 }
@@ -117,11 +119,10 @@ export function createResearchNumber(positionX: number, positionY: number, amoun
    });
 }
 
-export function createHealNumber(healedEntityID: number, positionX: number, positionY: number, healAmount: number): void {
+export function createHealNumber(healedEntity: Entity, positionX: number, positionY: number, healAmount: number): void {
    // If there is an existing heal number for that entity, update it
-   for (let i = 0; i < healNumbers.length; i++) {
-      const healNumber = healNumbers[i];
-      if (healNumber.healedEntityID === healedEntityID) {
+   for (const healNumber of healNumbers) {
+      if (healNumber.healedEntity === healedEntity) {
          healNumber.amount += healAmount;
          healNumber.positionX = positionX;
          healNumber.positionY = positionY;
@@ -133,7 +134,7 @@ export function createHealNumber(healedEntityID: number, positionX: number, posi
    
    // Otherwise make a new one
    healNumbers.push({
-      healedEntityID: healedEntityID,
+      healedEntity: healedEntity,
       positionX: positionX,
       positionY: positionY,
       amount: healAmount,
@@ -203,7 +204,7 @@ const renderDamageNumbers = (): void => {
    const cameraX = getXPosInTextCanvas(damageNumberX);
    const cameraY = getYPosInTextCanvas(damageNumberY);
 
-   ctx.font = "bold 35px sans-serif";
+   ctx.font = "bold 28px sans-serif";
    ctx.lineJoin = "round";
    ctx.miterLimit = 2;
 
@@ -337,7 +338,7 @@ const renderName = (x: number, y: number, name: string, colour: string): void =>
 // @Speed
 // @Speed
 // @Speed
-const renderNames = (tickInterp: number): void => {
+const renderNames = (clientInterp: number, serverInterp: number): void => {
    ctx.fillStyle = "#000";
    ctx.font = "400 20px Helvetica";
    ctx.lineJoin = "round";
@@ -355,7 +356,7 @@ const renderNames = (tickInterp: number): void => {
 
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, tickInterp);
+      const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
       
       renderName(hitboxRenderPosition.x, hitboxRenderPosition.y + getHumanoidRadius(entity) + 4, tribeMemberComponent.name, getEntityType(entity) === EntityType.player ? "#fff" : "#bbb");
    }
@@ -371,7 +372,7 @@ const renderNames = (tickInterp: number): void => {
       if (name !== "") {
          const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[1];
-         const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, tickInterp);
+         const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
          
          renderName(hitboxRenderPosition.x, hitboxRenderPosition.y + 16 + 4, name, "#ccc");
       }
@@ -387,7 +388,7 @@ const renderNames = (tickInterp: number): void => {
       
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, tickInterp);
+      const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
 
       const x = hitboxRenderPosition.x;
       const y = hitboxRenderPosition.y;
@@ -437,10 +438,10 @@ const renderPotentialBuildingPlans = (): void => {
 
    // @Speed
    if (lastGhostBuildingPlan !== null) {
-      removeGhostRenderInfo(lastGhostBuildingPlan.virtualBuilding.renderInfo);
+      removeGhostRenderObject(lastGhostBuildingPlan.virtualBuilding.renderObject);
    }
    if (ghostBuildingPlan !== null) {
-      addGhostRenderInfo(ghostBuildingPlan.virtualBuilding.renderInfo);
+      addGhostRenderObject(ghostBuildingPlan.virtualBuilding.renderObject);
    }
    lastGhostBuildingPlan = ghostBuildingPlan;
    if (ghostBuildingPlan === null) {
@@ -604,9 +605,7 @@ const renderBuildingSafetys = (): void => {
    const fontSize = 18;
 
    const buildingSafeties = getBuildingSafeties();
-   for (let i = 0; i < buildingSafeties.length; i++) {
-      const buildingSafetyData = buildingSafeties[i];
-
+   for (const buildingSafetyData of buildingSafeties) {
       ctx.font = "400 " + fontSize + "px Helvetica";
       ctx.lineJoin = "round";
       ctx.miterLimit = 2;
@@ -652,6 +651,10 @@ const renderBuildingSafetys = (): void => {
 }
 
 const renderChunkWeights = (): void => {
+   if (spawnDistributionBlocks.length === 0) {
+      return;
+   }
+   
    const fontSize = 18;
    
    ctx.font = "400 " + fontSize + "px Helvetica";
@@ -662,8 +665,8 @@ const renderChunkWeights = (): void => {
       const top = getYPosInTextCanvas(block.y);
       
       ctx.fillStyle = "#fff";
-      ctx.fillText(block.currentDensity.toFixed(2).toString(), left, top + fontSize);
-      ctx.fillText(block.targetDensity.toFixed(2).toString(), left, top + fontSize + fontSize + 4);
+      ctx.fillText(block.currentDensity.toFixed(2), left, top + fontSize);
+      ctx.fillText(block.targetDensity.toFixed(2), left, top + fontSize + fontSize + 4);
 
       const mult = block.currentDensity / block.targetDensity
       if (mult >= 1) {
@@ -673,9 +676,9 @@ const renderChunkWeights = (): void => {
    }
 }
 
-export function renderText(tickInterp: number): void {
+export function renderText(clientInterp: number, serverInterp: number): void {
    clearTextCanvas();
-   renderNames(tickInterp);
+   renderNames(clientInterp, serverInterp);
    renderDamageNumbers();
    renderResearchNumbers();
    renderHealNumbers();
@@ -690,5 +693,6 @@ export function renderText(tickInterp: number): void {
       // renderHoveredPotentialPlanInfo();
    // }
 
+   // @SPEED: shouldn't be done when the option isn't selected.
    renderChunkWeights();
 }

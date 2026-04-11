@@ -127,7 +127,7 @@ export function renderLightingDebug(layer: Layer): void {
 
    gl.useProgram(program);
 
-   const vertexBuffer = gl.createBuffer()!;
+   const vertexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 

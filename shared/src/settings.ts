@@ -1,8 +1,8 @@
 // @CLEANUP: Rename this to "config.ts"
 
+import { assert } from "./utils";
 
-
-export enum Settings {
+export const enum Settings {
    SERVER_PORT = 8000,
    // @Incomplete was gunna bring these out of the settings enum but cuz this is typescript this messes up some other shit, wait until i can mark them as constexpr
    /** Server ticks per second. */
@@ -21,6 +21,7 @@ export enum Settings {
    /** Number of tiles in a chunk's width and height */
    CHUNK_SIZE = 4,
    CHUNK_UNITS = CHUNK_SIZE * TILE_SIZE,
+   CHUNK_UNITS_LOG2 = 8,
    WORLD_SIZE_TILES = WORLD_SIZE_CHUNKS * CHUNK_SIZE,
    WORLD_UNITS = WORLD_SIZE_TILES * TILE_SIZE,
    TILES_IN_WORLD_WIDTH = WORLD_UNITS / TILE_SIZE,
@@ -40,6 +41,8 @@ export enum Settings {
    TIME_PASS_RATE = 150,
    NIGHT_LIGHT_LEVEL = 0.15
 }
+
+assert(Math.pow(2, Settings.CHUNK_UNITS_LOG2) === Settings.CHUNK_UNITS);
 
 export enum PathfindingSettings {
    /** Units of separation between the nodes horizontally and vertically */

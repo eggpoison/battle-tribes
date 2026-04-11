@@ -1,6 +1,6 @@
 import { Settings } from "./settings";
 
-export enum LightLevelVars {
+export const enum LightLevelVar {
    LIGHT_NODE_SIZE = 16,
    /** Strength in tiles (@Cleanup: should this be in units instead?) */
    DROPDOWN_LIGHT_STRENGTH = 6

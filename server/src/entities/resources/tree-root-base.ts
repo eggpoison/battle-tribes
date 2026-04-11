@@ -35,13 +35,13 @@ export function createTreeRootBaseConfig(position: Point, rotation: number): Ent
    
    return {
       entityType: EntityType.treeRootBase,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.treeRootBase]: treeRootBaseComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         treeRootBaseComponent
+      ],
       lights: []
    };
 }

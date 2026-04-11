@@ -8,7 +8,7 @@ import Layer from "../Layer";
 import { createIceSpikesConfig } from "../entities/resources/ice-spikes";
 import { TransformComponentArray } from "./TransformComponent";
 import { createEntity, entityExists, getEntityLayer, getEntityType } from "../world";
-import { EntityConfig } from "../components";
+import { EntityConfig, getConfigComponent, getConfigTransformComponent } from "../components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { createIceShardConfig } from "../entities/projectiles/ice-shard";
@@ -16,6 +16,7 @@ import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerab
 import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
 import { getDistanceToClosestEntity } from "../layer-utils";
 import { applyKnockback, Hitbox, addHitboxVelocity } from "../hitboxes";
+import { getEntityComponentTypes } from "../entity-component-types";
 
 const enum Vars {
    TICKS_TO_GROW = 1/5 * Settings.TICK_RATE,
@@ -44,8 +45,11 @@ IceSpikesComponentArray.preRemove = preRemove;
 IceSpikesComponentArray.onHitboxCollision = onHitboxCollision;
 
 function onInitialise(config: EntityConfig, entity: Entity): void {
-   if (config.components[ServerComponentType.iceSpikes]!.rootIceSpike === 0) {
-      config.components[ServerComponentType.iceSpikes]!.rootIceSpike = entity;
+   const componentTypes = getEntityComponentTypes(config.entityType);
+   const iceSpikesComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.iceSpikes);
+      
+   if (iceSpikesComponent.rootIceSpike === 0) {
+      iceSpikesComponent.rootIceSpike = entity;
    }
 }
 
@@ -149,7 +153,7 @@ export function createIceShardExplosion(layer: Layer, originX: number, originY: 
 
       const config = createIceShardConfig(position, moveDirection);
 
-      const iceShardHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+      const iceShardHitbox = getConfigTransformComponent(config.components).hitboxes[0];
       addHitboxVelocity(iceShardHitbox, polarVec2(700, moveDirection));
 
       createEntity(config, layer, 0);

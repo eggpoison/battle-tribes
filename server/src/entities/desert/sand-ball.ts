@@ -26,12 +26,12 @@ export function createSandBallConfig(position: Point, angle: number): EntityConf
    
    return {
       entityType: EntityType.sandBall,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.sandBall]: sandBallComponent,
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         sandBallComponent,
+      ],
       lights: []
    };
 }

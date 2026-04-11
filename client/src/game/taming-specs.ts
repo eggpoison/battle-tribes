@@ -6,7 +6,7 @@ const TAMING_SPECS: Partial<Record<EntityType, EntityTamingSpec>> = {};
 export function getEntityTamingSpec(entity: Entity): EntityTamingSpec {
    const entityType = getEntityType(entity);
    const spec = TAMING_SPECS[entityType];
-   assert(typeof spec !== "undefined");
+   assert(spec !== undefined);
    return spec;
 }
 
@@ -14,7 +14,7 @@ const readTamingSpecFromData = (reader: PacketReader): EntityTamingSpec => {
    const maxTamingTier = reader.readNumber() as TamingTier;
    
    const numSkills = reader.readNumber();
-   const skillNodes = new Array<TamingSkillNode>();
+   const skillNodes: Array<TamingSkillNode> = [];
    for (let i = 0; i < numSkills; i++) {
       const skillID = reader.readNumber() as TamingSkillID;
       const x = reader.readNumber();

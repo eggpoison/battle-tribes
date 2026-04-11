@@ -52,12 +52,12 @@ export function createSandstoneRockConfig(position: Point, angle: number, size: 
    
    return {
       entityType: EntityType.sandstoneRock,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.sandstoneRock]: sandstoneRockComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         sandstoneRockComponent
+      ],
       lights: []
    };
 }

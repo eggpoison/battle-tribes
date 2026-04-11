@@ -1,5 +1,5 @@
 import { randFloat, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
@@ -7,6 +7,8 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface DesertBushSandyComponentData {
    readonly size: number;
@@ -28,11 +30,12 @@ function decodeData(reader: PacketReader): DesertBushSandyComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const desertBushSandyComponentData = entityComponentData.serverComponentData[ServerComponentType.desertBushSandy]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const desertBushSandyComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.desertBushSandy);
    
    let textureSource: string;
    if (desertBushSandyComponentData.size === 0) {
@@ -45,12 +48,13 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(textureSource)
    );
    renderPart.tintR = randFloat(-0.02, 0.02);
    renderPart.tintG = randFloat(-0.02, 0.02);
    renderPart.tintB = randFloat(-0.02, 0.02);
-   renderInfo.attachRenderPart(renderPart)
+   renderObject.attachRenderPart(renderPart)
 
    return {
       renderPart: renderPart

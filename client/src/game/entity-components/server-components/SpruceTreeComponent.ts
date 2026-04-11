@@ -7,7 +7,9 @@ import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface SpruceTreeComponentData {
    readonly treeSize: TreeSize;
@@ -46,32 +48,35 @@ function decodeData(reader: PacketReader): SpruceTreeComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const spruceTreeComponentData = entityComponentData.serverComponentData[ServerComponentType.spruceTree]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const spruceTreeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.spruceTree);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(treeTextures[spruceTreeComponentData.treeSize])
    )
    renderPart.tintR = randFloat(-0.05, 0.05);
    renderPart.tintG = randFloat(-0.05, 0.05);
    renderPart.tintB = randFloat(-0.05, 0.05);
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    // Snow overlay
    const snowVariant = spruceTreeComponentData.snowVariant;
    if (snowVariant !== 0) {
       const sizeStr = spruceTreeComponentData.treeSize === TreeSize.large ? "large" : "small";
-      renderInfo.attachRenderPart(
+      renderObject.attachRenderPart(
          new TexturedRenderPart(
             hitbox,
             1,
             0,
+            0, 0,
             getTextureArrayIndex("entities/spruce-tree/snow-overlay-" + sizeStr + "-" + snowVariant + ".png")
          )
       );
@@ -81,8 +86,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): SpruceTreeComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const spruceTreeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.spruceTree);
    return {
-      treeSize: entityComponentData.serverComponentData[ServerComponentType.spruceTree]!.treeSize
+      treeSize: spruceTreeComponentData.treeSize
    };
 }
 

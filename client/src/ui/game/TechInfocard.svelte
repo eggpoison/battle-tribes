@@ -1,6 +1,6 @@
 <script lang="ts">
    import { playerTribe } from "../../game/tribes";
-   import { techTreeState } from "../../ui-state/tech-tree-state.svelte";
+   import { techTreeState } from "../../ui-state/tech-tree-state";
    import TechTreeProgressBar from "./tech-tree/TechTreeProgressBar.svelte";
 
    const selectedTech = techTreeState.getSelectedTech();

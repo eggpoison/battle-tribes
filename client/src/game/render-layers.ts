@@ -1,5 +1,6 @@
 import { assert, BlueprintType, DecorationType, ServerComponentType, EntityType } from "webgl-test-shared";
 import { EntityComponentData } from "./world";
+import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
 
 export enum RenderLayer {
    lowDecorations,
@@ -78,7 +79,7 @@ const decorationIsHigh = (decorationType: DecorationType): boolean => {
 export function getEntityRenderLayer(entityType: EntityType, entityComponentData: EntityComponentData): RenderLayer {
    // Crafting stations render below tribesmen so they can see the limbs
    // @SQUEAM disabled so that workbenches can render on top of cows
-   // if (typeof entityComponentData.serverComponentData[ServerComponentType.craftingStation] !== "undefined") {
+   // if (entityComponentData.serverComponentData.get(ServerComponentType.craftingStation) !== undefined) {
    //    return RenderLayer.lowEntities;
    // }
    
@@ -95,8 +96,9 @@ export function getEntityRenderLayer(entityType: EntityType, entityComponentData
       }
       // Decorations
       case EntityType.decoration: {
-         const decorationComponentData = entityComponentData.serverComponentData[ServerComponentType.decoration];
-         assert(typeof decorationComponentData !== "undefined");
+         const serverComponentTypes = getEntityServerComponentTypes(entityType);
+         const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
+         assert(decorationComponentData !== undefined);
          return decorationIsHigh(decorationComponentData.decorationType) ? RenderLayer.highDecorations : RenderLayer.lowDecorations;
       }
       case EntityType.moss: {
@@ -121,7 +123,8 @@ export function getEntityRenderLayer(entityType: EntityType, entityComponentData
       // @Incomplete: Only blueprints which go on existing buildings should be here, all others should be low entities
       // Blueprints
       case EntityType.blueprintEntity: {
-         const blueprintComponentData = entityComponentData.serverComponentData[ServerComponentType.blueprint]!;
+         const serverComponentTypes = getEntityServerComponentTypes(entityType);
+         const blueprintComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.blueprint);
          switch (blueprintComponentData.blueprintType) {
             case BlueprintType.stoneWall:
             case BlueprintType.stoneDoorUpgrade: {
@@ -224,7 +227,8 @@ export function calculateRenderDepthFromLayer(renderLayer: RenderLayer, entityCo
    /** Variation between 0 and 1 */
    let variation: number;
    if (renderLayer === RenderLayer.mithril) {
-      const mithrilOreNodeComponentData = entityComponentData.serverComponentData[ServerComponentType.mithrilOreNode]!;
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const mithrilOreNodeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.mithrilOreNode);
       variation = mithrilOreNodeComponentData.renderHeight;
    } else {
       variation = Math.random();

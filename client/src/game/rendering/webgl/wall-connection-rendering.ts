@@ -1,7 +1,7 @@
-import { WallConnectionData, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
+import { WallConnectionData, _point, rotatePointAroundOrigin } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
+import { debugDisplayState } from "../../../ui-state/debug-display-state";
 
 const CONNECTION_WIDTH = 4;
 const CONNECTION_HEIGHT = 8;
@@ -59,20 +59,24 @@ export function renderWallConnections(): void {
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
    // @Speed
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    for (let i = 0; i < wallConnections.length; i++) {
       const connection = wallConnections[i];
 
       // Create transparent back
       
-      const blX = connection.x + rotateXAroundOrigin(-CONNECTION_WIDTH, -CONNECTION_HEIGHT, connection.rotation);
-      const blY = connection.y + rotateYAroundOrigin(-CONNECTION_WIDTH, -CONNECTION_HEIGHT, connection.rotation);
-      const brX = connection.x + rotateXAroundOrigin(CONNECTION_WIDTH, -CONNECTION_HEIGHT, connection.rotation);
-      const brY = connection.y + rotateYAroundOrigin(CONNECTION_WIDTH, -CONNECTION_HEIGHT, connection.rotation);
-      const tlX = connection.x + rotateXAroundOrigin(-CONNECTION_WIDTH, CONNECTION_HEIGHT, connection.rotation);
-      const tlY = connection.y + rotateYAroundOrigin(-CONNECTION_WIDTH, CONNECTION_HEIGHT, connection.rotation);
-      const trX = connection.x + rotateXAroundOrigin(CONNECTION_WIDTH, CONNECTION_HEIGHT, connection.rotation);
-      const trY = connection.y + rotateYAroundOrigin(CONNECTION_WIDTH, CONNECTION_HEIGHT, connection.rotation);
+      rotatePointAroundOrigin(-CONNECTION_WIDTH, -CONNECTION_HEIGHT, connection.rotation);
+      const blX = connection.x + _point.x;
+      const blY = connection.y + _point.y;
+      rotatePointAroundOrigin(CONNECTION_WIDTH, -CONNECTION_HEIGHT, connection.rotation);
+      const brX = connection.x + _point.x;
+      const brY = connection.y + _point.y;
+      rotatePointAroundOrigin(-CONNECTION_WIDTH, CONNECTION_HEIGHT, connection.rotation);
+      const tlX = connection.x + _point.x;
+      const tlY = connection.y + _point.y;
+      rotatePointAroundOrigin(CONNECTION_WIDTH, CONNECTION_HEIGHT, connection.rotation);
+      const trX = connection.x + _point.x;
+      const trY = connection.y + _point.y;
 
       vertices.push(
          blX, blY,

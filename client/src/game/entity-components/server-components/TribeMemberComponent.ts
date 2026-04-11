@@ -1,6 +1,8 @@
 import { PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
+import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface TribeMemberComponentData {
    readonly name: string;
@@ -27,7 +29,8 @@ function decodeData(reader: PacketReader): TribeMemberComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): TribeMemberComponent {
-   const tribeMemberComponentData = entityComponentData.serverComponentData[ServerComponentType.tribeMember]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeMemberComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeMember);
    return {
       name: tribeMemberComponentData.name
    };

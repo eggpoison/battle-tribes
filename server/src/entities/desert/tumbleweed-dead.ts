@@ -26,12 +26,12 @@ export function createTumbleweedDeadConfig(position: Point, angle: number): Enti
    
    return {
       entityType: EntityType.tumbleweedDead,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.tumbleweedDead]: tumbleweedDeadComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         tumbleweedDeadComponent
+      ],
       lights: []
    };
 }

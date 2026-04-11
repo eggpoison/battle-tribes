@@ -183,17 +183,17 @@ export function createCowConfig(position: Point, angle: number, species: CowSpec
    
    return {
       entityType: EntityType.cow,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.attackingEntities]: attackingEntitiesComponent,
-         [ServerComponentType.rideable]: rideableComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.taming]: tamingComponent,
-         [ServerComponentType.cow]: cowComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         aiHelperComponent,
+         attackingEntitiesComponent,
+         rideableComponent,
+         lootComponent,
+         tamingComponent,
+         cowComponent
+      ],
       lights: []
    };
 }

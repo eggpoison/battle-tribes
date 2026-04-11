@@ -47,14 +47,14 @@ export function createTreePlantedConfig(position: Point, rotation: number, plant
    
    return {
       entityType: EntityType.treePlanted,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.planted]: plantedComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.treePlanted]: treePlantedComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         plantedComponent,
+         lootComponent,
+         treePlantedComponent
+      ],
       lights: []
    };
 }

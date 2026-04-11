@@ -1,4 +1,4 @@
-import { ItemType, Settings, Point, polarVec2, randAngle, randFloat, randSign, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared";
+import { ItemType, Settings, Point, polarVec2, randAngle, randFloat, randSign, rotatePointAroundPoint, _point } from "webgl-test-shared";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth } from "../../webgl";
 import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
 import { getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
@@ -6,7 +6,7 @@ import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import { getTechTreeGL } from "./tech-tree-rendering";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 import { TEXTURE_SOURCES } from "../../texture-atlases/texture-sources";
-import { techTreeState } from "../../../ui-state/tech-tree-state.svelte";
+import { techTreeState } from "../../../ui-state/tech-tree-state";
 
 interface TechTreeItem {
    readonly itemType: ItemType;
@@ -18,7 +18,7 @@ interface TechTreeItem {
    readonly lifetime: number;
 }
 
-const items = new Array<TechTreeItem>();
+const items: Array<TechTreeItem> = [];
 
 let program: WebGLProgram;
 let vao: WebGLVertexArrayObject;
@@ -140,10 +140,10 @@ export function createTechTreeItemShaders(): void {
    // Create VAO
    // 
 
-   vao = gl.createVertexArray()!;
+   vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
 
-   buffer = gl.createBuffer()!;
+   buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
@@ -156,7 +156,7 @@ export function createTechTreeItemShaders(): void {
    gl.enableVertexAttribArray(2);
    gl.enableVertexAttribArray(3);
 
-   indexBuffer = gl.createBuffer()!;
+   indexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
    gl.bindVertexArray(null);
@@ -245,14 +245,18 @@ export function renderTechTreeItems(): void {
 
       // Rotate the render part to match its rotation
       // @Speed: hopefully remove the need for this with instanced rendering
-      const topLeftX = calculateXScreenPos(rotateXAroundPoint(x1, y2, x, y, item.rotation));
-      const topLeftY = calculateYScreenPos(rotateYAroundPoint(x1, y2, x, y, item.rotation));
-      const topRightX = calculateXScreenPos(rotateXAroundPoint(x2, y2, x, y, item.rotation));
-      const topRightY = calculateYScreenPos(rotateYAroundPoint(x2, y2, x, y, item.rotation));
-      const bottomLeftX = calculateXScreenPos(rotateXAroundPoint(x1, y1, x, y, item.rotation));
-      const bottomLeftY = calculateYScreenPos(rotateYAroundPoint(x1, y1, x, y, item.rotation));
-      const bottomRightX = calculateXScreenPos(rotateXAroundPoint(x2, y1, x, y, item.rotation));
-      const bottomRightY = calculateYScreenPos(rotateYAroundPoint(x2, y1, x, y, item.rotation));
+      rotatePointAroundPoint(x1, y2, x, y, item.rotation)
+      const topLeftX = calculateXScreenPos(_point.x);
+      const topLeftY = calculateYScreenPos(_point.y);
+      rotatePointAroundPoint(x2, y2, x, y, item.rotation)
+      const topRightX = calculateXScreenPos(_point.x);
+      const topRightY = calculateYScreenPos(_point.y);
+      rotatePointAroundPoint(x1, y1, x, y, item.rotation)
+      const bottomLeftX = calculateXScreenPos(_point.x);
+      const bottomLeftY = calculateYScreenPos(_point.y);
+      rotatePointAroundPoint(x2, y1, x, y, item.rotation)
+      const bottomRightX = calculateXScreenPos(_point.x);
+      const bottomRightY = calculateYScreenPos(_point.y);
 
       vertexData[vertexDataOffset] = bottomLeftX;
       vertexData[vertexDataOffset + 1] = bottomLeftY;

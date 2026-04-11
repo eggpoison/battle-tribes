@@ -12,7 +12,7 @@ import { getTamingSkill, TamingSkillID } from "../../../../shared/src/taming";
 import { lerp, Point, polarVec2, randInt, rotatePoint } from "../../../../shared/src/utils";
 import { findAngleAlignment } from "../../ai-shared";
 import WanderAI from "../../ai/WanderAI";
-import { ChildConfigAttachInfo, EntityConfig } from "../../components";
+import { ChildConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../../components";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent";
 import { EnergyStomachComponent } from "../../components/EnergyStomachComponent";
@@ -179,7 +179,7 @@ export function createTukmokConfig(position: Point, angle: number): ReadonlyArra
       const trunkConfig = createTukmokSpurConfig(spurPosition, 0, offset, 0.75, HitboxFlag.TUKMOK_SPUR_HEAD, sideIsFlipped);
       childConfigs.push({
          entityConfig: trunkConfig,
-         attachedHitbox: trunkConfig.components[ServerComponentType.transform]!.hitboxes[0],
+         attachedHitbox: getConfigTransformComponent(trunkConfig.components).hitboxes[0],
          parentHitbox: headHitbox,
          isPartOfParent: true
       });
@@ -191,7 +191,7 @@ export function createTukmokConfig(position: Point, angle: number): ReadonlyArra
    const shoulderSpurLeftFrontConfig = createTukmokSpurConfig(shoulderSpurLeftFrontPosition, -Math.PI * 0.05, shoulderSpurLeftFrontOffset, 0.2, HitboxFlag.TUKMOK_SPUR_SHOULDER_LEFT_FRONT, false);
    childConfigs.push({
       entityConfig: shoulderSpurLeftFrontConfig,
-      attachedHitbox: shoulderSpurLeftFrontConfig.components[ServerComponentType.transform]!.hitboxes[0],
+      attachedHitbox: getConfigTransformComponent(shoulderSpurLeftFrontConfig.components).hitboxes[0],
       parentHitbox: bodyHitbox,
       isPartOfParent: true
    });
@@ -202,7 +202,7 @@ export function createTukmokConfig(position: Point, angle: number): ReadonlyArra
    const shoulderSpurLeftBackConfig = createTukmokSpurConfig(shoulderSpurLeftBackPosition, 0, shoulderSpurLeftBackOffset, 0.2, HitboxFlag.TUKMOK_SPUR_SHOULDER_LEFT_BACK, false);
    childConfigs.push({
       entityConfig: shoulderSpurLeftBackConfig,
-      attachedHitbox: shoulderSpurLeftBackConfig.components[ServerComponentType.transform]!.hitboxes[0],
+      attachedHitbox: getConfigTransformComponent(shoulderSpurLeftBackConfig.components).hitboxes[0],
       parentHitbox: bodyHitbox,
       isPartOfParent: true
    });
@@ -213,7 +213,7 @@ export function createTukmokConfig(position: Point, angle: number): ReadonlyArra
    const shoulderSpurRightFrontConfig = createTukmokSpurConfig(shoulderSpurRightFrontPosition, -Math.PI * 0.04, shoulderSpurRightFrontOffset, 0.2, HitboxFlag.TUKMOK_SPUR_SHOULDER_RIGHT_FRONT, false);
    childConfigs.push({
       entityConfig: shoulderSpurRightFrontConfig,
-      attachedHitbox: shoulderSpurRightFrontConfig.components[ServerComponentType.transform]!.hitboxes[0],
+      attachedHitbox: getConfigTransformComponent(shoulderSpurRightFrontConfig.components).hitboxes[0],
       parentHitbox: bodyHitbox,
       isPartOfParent: true
    });
@@ -224,7 +224,7 @@ export function createTukmokConfig(position: Point, angle: number): ReadonlyArra
    const shoulderSpurRightBackConfig = createTukmokSpurConfig(shoulderSpurRightBackPosition, Math.PI * 0.08, shoulderSpurRightBackOffset, 0.2, HitboxFlag.TUKMOK_SPUR_SHOULDER_RIGHT_BACK, false);
    childConfigs.push({
       entityConfig: shoulderSpurRightBackConfig,
-      attachedHitbox: shoulderSpurRightBackConfig.components[ServerComponentType.transform]!.hitboxes[0],
+      attachedHitbox: getConfigTransformComponent(shoulderSpurRightBackConfig.components).hitboxes[0],
       parentHitbox: bodyHitbox,
       isPartOfParent: true
    });
@@ -235,7 +235,7 @@ export function createTukmokConfig(position: Point, angle: number): ReadonlyArra
    const trunkConfig = createTukmokTrunkConfig(trunkPosition, angle, trunkOffset);
    childConfigs.push({
       entityConfig: trunkConfig,
-      attachedHitbox: trunkConfig.components[ServerComponentType.transform]!.hitboxes[0],
+      attachedHitbox: getConfigTransformComponent(trunkConfig.components).hitboxes[0],
       parentHitbox: headHitbox,
       isPartOfParent: true
    });
@@ -285,7 +285,7 @@ export function createTukmokConfig(position: Point, angle: number): ReadonlyArra
       let hitbox: Hitbox;
       if (i === NUM_TAIL_SEGMENTS - 1) {
          const config = createTukmokTailClubConfig(hitboxPosition, 0, offset);
-         hitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+         hitbox = getConfigTransformComponent(config.components).hitboxes[0];
          entityConfigs.push(config);
       } else {
          hitbox = new Hitbox(transformComponent, parent, true, new CircularBox(hitboxPosition, offset, 0, radius), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, flags);
@@ -339,18 +339,18 @@ export function createTukmokConfig(position: Point, angle: number): ReadonlyArra
    
    entityConfigs.push({
       entityType: EntityType.tukmok,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.aiHelper]: aiHelperComponent,
-         [ServerComponentType.attackingEntities]: attackingEntitiesComponent,
-         [ServerComponentType.energyStomach]: energyStomachComponent,
-         [ServerComponentType.rideable]: rideableComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.taming]: tamingComponent,
-         [ServerComponentType.tukmok]: tukmokComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         aiHelperComponent,
+         attackingEntitiesComponent,
+         energyStomachComponent,
+         rideableComponent,
+         lootComponent,
+         tamingComponent,
+         tukmokComponent
+      ],
       lights: [],
       childConfigs: childConfigs
    });

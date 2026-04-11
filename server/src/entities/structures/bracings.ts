@@ -46,15 +46,15 @@ export function createBracingsConfig(position: Point, rotation: number, tribe: T
    
    return {
       entityType: EntityType.bracings,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.structure]: structureComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.buildingMaterial]: buildingMaterialComponent,
-         [ServerComponentType.bracings]: bracingsComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         structureComponent,
+         tribeComponent,
+         buildingMaterialComponent,
+         bracingsComponent
+      ],
       lights: []
    };
 }

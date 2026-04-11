@@ -8,6 +8,7 @@ import { TransformComponentArray } from "../components/TransformComponent";
 import { createGuardianGemFragmentProjectileConfig } from "../entities/projectiles/guardian-gem-fragment-projectile";
 import { createEntity, getEntityLayer } from "../world";
 import { Hitbox, addHitboxAngularVelocity, addHitboxVelocity } from "../hitboxes";
+import { getConfigTransformComponent } from "../components";
 
 const enum Vars {
    WINDUP_TIME_TICKS = (1.5 * Settings.TICK_RATE) | 0,
@@ -35,7 +36,7 @@ const createFragmentProjectile = (guardian: Entity): void => {
    
    const config = createGuardianGemFragmentProjectileConfig(new Point(originX, originY), randAngle(), guardian);
 
-   const snowballHitbox = config.components[ServerComponentType.transform]!.hitboxes[0];
+   const snowballHitbox = getConfigTransformComponent(config.components).hitboxes[0];
    addHitboxVelocity(snowballHitbox, vel);
    addHitboxAngularVelocity(snowballHitbox, randFloat(3.5 * Math.PI, 6 * Math.PI) * randSign());
 

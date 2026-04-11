@@ -30,11 +30,11 @@ export function createWoodenArrowConfig(position: Point, rotation: number, tribe
    
    return {
       entityType: EntityType.woodenArrow,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.projectile]: projectileComponent
-      },
+      components: [
+         transformComponent,
+         tribeComponent,
+         projectileComponent
+      ],
       lights: []
    };
 }

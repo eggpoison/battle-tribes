@@ -85,25 +85,13 @@
    flex-direction: column;
 }
 
-.item-slots-container {
-   /* background-color: #666; */
-   display: inline-block;
-   /* @Hack Disgusting, must be done for the code comments due to white-space: nowrap */
-   font-size: 0;
+.inventory {
+   display: grid;
+   grid-template-columns: repeat(var(--width), 1fr);
+   position: relative;
 }
-.item-slots-container.bordered {
+.inventory.border {
    border: 5px solid #000;
-}
-
-.item-slots-container.set-width {
-   width: calc(var(--item-slot-size) * var(--width-items));
-}
-.item-slots-container.min-height {
-   min-height: calc(var(--item-slot-size) * var(--min-height-items));
-}
-.item-slots-container:not(.set-width) {
-   /* Stops item slots from spilling down if there "isn't enough space" */
-   white-space: nowrap;
 }
 
 .item-slot {
@@ -112,32 +100,20 @@
    background-image: url("../../../images/miscellaneous/item-slot.png");
    background-size: 100%;
    image-rendering: pixelated;
-   position: relative;
    user-select: none;
-   display: inline-block;
 }
 
 .item-slot.selected {
    /* @Temporary */
    background-image: url("../../../images/miscellaneous/item-slot-selected.png");
 }
-.item-slot:not(.empty)::after {
-   content: "";
-   position: absolute;
-   top: 0;
-   right: 0; 
-   bottom: 0;
-   left: 0;
-   z-index: 0;
-}
 
 .item-slot img {
+   /* 16px image size, times 3.75 (@Hack why this specifically) */
+   width: 60px;
+   height: 60px;
    image-rendering: pixelated;
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%) scale(3.75);
-   z-index: 1;
+   margin: calc(var(--item-slot-size) * 0.125) calc(var(--item-slot-size) * 0.125);
 }
 
 /* @HACK: #held-item */
@@ -148,11 +124,7 @@
    font-weight: bold;
    text-shadow: 0 0 1px #000, 0 0 2px #000, 0 0 3px #000, 0 0 4px #000;
    text-align: right;
-   position: absolute;
-   right: 25%;
-   bottom: 25%;
-   transform: translate(50%, 50%);
-   z-index: 2;
+   transform: translate(-6px, -34px);
 }
 .item-slot .cooldown-bg {
    width: 100%;

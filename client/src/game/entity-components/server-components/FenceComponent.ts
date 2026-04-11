@@ -1,13 +1,15 @@
 import { assert, Entity, ServerComponentType } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { RenderPart } from "../../render-parts/render-parts";
 import { StructureConnection } from "../../structure-placement";
 import { Hitbox } from "../../hitboxes";
 import { TransformComponentArray } from "./TransformComponent";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface FenceComponentData {}
 
@@ -68,23 +70,23 @@ const createConnectingRenderPart = (connection: StructureConnection, parentHitbo
       parentHitbox,
       0,
       relativeOffsetDirection,
+      offsetMagnitude * Math.sin(relativeOffsetDirection), offsetMagnitude * Math.cos(relativeOffsetDirection),
       getTextureArrayIndex("entities/fence/fence-top-rail.png")
    );
-   renderPart.offset.x = offsetMagnitude * Math.sin(relativeOffsetDirection);
-   renderPart.offset.y = offsetMagnitude * Math.cos(relativeOffsetDirection);
    
    return renderPart;
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponent.hitboxes[0];
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          1,
          0,
+         0, 0,
          getTextureArrayIndex("entities/fence/fence-node.png")
       )
    );
@@ -92,10 +94,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
    const connectingRenderParts: Record<Entity, RenderPart> = {};
 
    // Create initial connecting render parts
-   const structureComponentData = entityComponentData.serverComponentData[ServerComponentType.structure]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const structureComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.structure);
    for (const connection of structureComponentData.connections) {
       const renderPart = createConnectingRenderPart(connection, hitbox);
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
       connectingRenderParts[connection.entity] = renderPart;
    }
 
@@ -121,10 +124,10 @@ export function addFenceConnection(fence: Entity, connection: StructureConnectio
    
    const fenceComponent = FenceComponentArray.getComponent(fence);
 
-   const renderInfo = getEntityRenderInfo(fence);
+   const renderObject = getEntityRenderObject(fence);
    
    const renderPart = createConnectingRenderPart(connection, hitbox);
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
    fenceComponent.connectingRenderParts[connection.entity] = renderPart;
 }
 
@@ -132,10 +135,10 @@ export function removeFenceConnection(fence: Entity, connection: StructureConnec
    const fenceComponent = FenceComponentArray.getComponent(fence);
 
    const renderPart = fenceComponent.connectingRenderParts[connection.entity];
-   assert(typeof renderPart !== "undefined");
+   assert(renderPart !== undefined);
 
-   const renderInfo = getEntityRenderInfo(fence);
-   renderInfo.removeRenderPart(renderPart);
+   const renderObject = getEntityRenderObject(fence);
+   renderObject.removeRenderPart(renderPart);
    
    delete fenceComponent.connectingRenderParts[connection.entity];
 }

@@ -34,13 +34,13 @@ export function createDesertBushSandyConfig(position: Point, angle: number): Ent
    
    return {
       entityType: EntityType.desertBushSandy,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.energyStore]: energyStoreComponent,
-         [ServerComponentType.desertBushSandy]: desertBushSandyComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         energyStoreComponent,
+         desertBushSandyComponent
+      ],
       lights: []
    };
 }

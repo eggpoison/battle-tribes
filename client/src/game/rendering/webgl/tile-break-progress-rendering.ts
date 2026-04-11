@@ -71,11 +71,27 @@ export function createTileBreakProgressShaders(): void {
 }
 
 export function renderTileBreakProgress(layer: Layer): void {
-   const minSubtileX = Math.max(Math.floor(minVisibleX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
-   const maxSubtileX = Math.min(Math.floor(maxVisibleX / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4);
-   const minSubtileY = Math.max(Math.floor(minVisibleY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
-   const maxSubtileY = Math.min(Math.floor(maxVisibleY / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4);
+   let hasVisibleTileBreak = false;
+   for (const pair of layer.wallSubtileDamageTakenMap) {
+      const subtileIndex = pair[0];
 
+      const subtileX = getSubtileX(subtileIndex);
+      const subtileY = getSubtileY(subtileIndex);
+
+      const x1 = subtileX * Settings.SUBTILE_SIZE;
+      const x2 = x1 + Settings.SUBTILE_SIZE;
+      const y1 = subtileY * Settings.SUBTILE_SIZE;
+      const y2 = y1 + Settings.SUBTILE_SIZE;
+
+      if (x2 >= minVisibleX || x1 <= maxVisibleX || y2 >= minVisibleY || y1 <= maxVisibleY) {
+         hasVisibleTileBreak = true;
+         break;
+      }
+   }
+   if (!hasVisibleTileBreak) {
+      return;
+   }
+   
    gl.useProgram(program);
 
    gl.activeTexture(gl.TEXTURE0);
@@ -85,7 +101,7 @@ export function renderTileBreakProgress(layer: Layer): void {
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
    // @Speed
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    for (const pair of layer.wallSubtileDamageTakenMap) {
       const subtileIndex = pair[0];
       const damageTaken = pair[0];
@@ -141,7 +157,7 @@ export function renderTileBreakProgress(layer: Layer): void {
 
    const vertexData = new Float32Array(vertices);
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
    

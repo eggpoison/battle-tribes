@@ -11,7 +11,7 @@ import { EntityComponentData } from "../world";
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 
 export function createBracingsConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
    
    const hitbox1 = createHitboxQuick(0, hitboxLocalID++, null, new RectangularBox(position.copy(), new Point(0, Settings.TILE_SIZE * -0.5), rotation, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [])
@@ -22,15 +22,15 @@ export function createBracingsConfig(position: Point, rotation: number, tribe: T
    
    return {
       entityType: EntityType.bracings,
-      serverComponentData: {
-         [ServerComponentType.transform]: createTransformComponentData(hitboxes),
-         [ServerComponentType.health]: createHealthComponentData(),
-         [ServerComponentType.statusEffect]: createStatusEffectComponentData(),
-         [ServerComponentType.structure]: createStructureComponentData(),
-         [ServerComponentType.tribe]: createTribeComponentData(tribe),
-         [ServerComponentType.buildingMaterial]: createBuildingMaterialComponentData(material),
-         [ServerComponentType.bracings]: createBracingsComponentData()
-      },
-      clientComponentData: {}
+      serverComponentData: [
+         createTransformComponentData(hitboxes),
+         createHealthComponentData(),
+         createStatusEffectComponentData(),
+         createStructureComponentData(),
+         createTribeComponentData(tribe),
+         createBuildingMaterialComponentData(material),
+         createBracingsComponentData()
+      ],
+      clientComponentData: []
    };
 }

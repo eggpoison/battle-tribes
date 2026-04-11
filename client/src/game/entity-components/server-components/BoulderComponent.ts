@@ -8,7 +8,9 @@ import { ROCK_HIT_SOUNDS, ROCK_DESTROY_SOUNDS, playSoundOnHitbox } from "../../s
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
 
 export interface BoulderComponentData {
    readonly boulderType: number;
@@ -37,17 +39,19 @@ function decodeData(reader: PacketReader): BoulderComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const boulderComponentData = entityComponentData.serverComponentData[ServerComponentType.boulder]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const boulderComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.boulder);
    
-   renderInfo.attachRenderPart(
+   renderObject.attachRenderPart(
       new TexturedRenderPart(
          hitbox,
          0,
          0,
+         0, 0,
          getTextureArrayIndex(TEXTURE_SOURCES[boulderComponentData.boulderType])
       )
    );
@@ -56,8 +60,11 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): BoulderComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const boulderComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.boulder);
+
    return {
-      boulderType: entityComponentData.serverComponentData[ServerComponentType.boulder]!.boulderType
+      boulderType: boulderComponentData.boulderType
    };
 }
 

@@ -1,9 +1,9 @@
-import { PacketReader, Entity, assert, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared";
+import { PacketReader, Entity, assert, Point, rotatePointAroundOrigin, _point } from "webgl-test-shared";
 import { getEntityLayer, layers } from "./world";
 import { createTranslationMatrix, Matrix3x2 } from "./rendering/matrices";
 import { getHitboxByLocalID, Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { currentSnapshot } from "./client";
+import { currentSnapshot } from "./game";
 
 export type LightID = number;
 
@@ -66,12 +66,12 @@ export function attachLightToHitbox(light: Light, entity: Entity, hitbox: Hitbox
    lightMap.set(light.id, light);
    
    lightToHitboxRecord[light.id] = {
-      entity: entity,
-      hitbox: hitbox
+      entity,
+      hitbox
    };
 
    const lightIDs = hitboxToLightsMap.get(hitbox);
-   if (typeof lightIDs === "undefined") {
+   if (lightIDs === undefined) {
       hitboxToLightsMap.set(hitbox, [light.id]);
    } else {
       lightIDs.push(light.id);
@@ -93,7 +93,7 @@ export function removeLight(light: Light): void {
       delete lightToHitboxRecord[light.id];
 
       // If the light was attached to a hitbox, register the light's removal from that hitbox
-      if (typeof renderPartInfo !== "undefined") {
+      if (renderPartInfo !== undefined) {
          const hitbox = renderPartInfo.hitbox;
          
          const lightIDs = hitboxToLightsMap.get(hitbox)!;
@@ -108,14 +108,14 @@ export function removeLight(light: Light): void {
 
 export function removeLightsAttachedToHitbox(hitbox: Hitbox): void {
    const lightIDs = hitboxToLightsMap.get(hitbox);
-   if (typeof lightIDs === "undefined") {
+   if (lightIDs === undefined) {
       return;
    }
 
    for (let i = lightIDs.length - 1; i >= 0; i--) {
       const lightID = lightIDs[i];
       const light = lightMap.get(lightID);
-      if (typeof light !== "undefined") {
+      if (light !== undefined) {
          removeLight(light);
       }
    }
@@ -123,11 +123,12 @@ export function removeLightsAttachedToHitbox(hitbox: Hitbox): void {
 
 export function getLightPositionMatrix(light: Light): Matrix3x2 {
    const attachedHitboxInfo = lightToHitboxRecord[light.id];
-   if (typeof attachedHitboxInfo !== "undefined") {
+   if (attachedHitboxInfo !== undefined) {
       const hitbox = attachedHitboxInfo.hitbox;
 
-      const x = hitbox.box.position.x + rotateXAroundOrigin(light.offset.x, light.offset.y, hitbox.box.angle);
-      const y = hitbox.box.position.y + rotateYAroundOrigin(light.offset.x, light.offset.y, hitbox.box.angle);
+      rotatePointAroundOrigin(light.offset.x, light.offset.y, hitbox.box.angle);
+      const x = hitbox.box.position.x + _point.x;
+      const y = hitbox.box.position.y + _point.y;
       return createTranslationMatrix(x, y);
    }
 
@@ -151,14 +152,14 @@ export interface LightData {
 }
 
 export function readLightsFromData(reader: PacketReader): ReadonlyArray<LightData> {
-   const lightData = new Array<LightData>();
+   const lightData: Array<LightData> = [];
    
    const numLights = reader.readNumber();
    for (let i = 0; i < numLights; i++) {
       const entity = reader.readNumber();
       const hitboxLocalID = reader.readNumber();
 
-      const lightID = reader.readNumber();
+      const id: LightID = reader.readNumber();
 
       const offset = reader.readPoint();
       const intensity = reader.readNumber();
@@ -169,16 +170,16 @@ export function readLightsFromData(reader: PacketReader): ReadonlyArray<LightDat
       const b = reader.readNumber();
 
       lightData.push({
-         entity: entity,
-         hitboxLocalID: hitboxLocalID,
-         id: lightID,
-         offset: offset,
-         intensity: intensity,
-         strength: strength,
-         radius: radius,
-         r: r,
-         g: g,
-         b: b
+         entity,
+         hitboxLocalID,
+         id,
+         offset,
+         intensity,
+         strength,
+         radius,
+         r,
+         g,
+         b
       });
    }
 
@@ -197,7 +198,7 @@ export function updateLightsFromData(lightData: ReadonlyArray<LightData>): void 
       const lightID = data.id;
 
       const existingLight = lightMap.get(lightID);
-      if (typeof existingLight !== "undefined") {
+      if (existingLight !== undefined) {
          existingLight.intensity = data.intensity;
          existingLight.strength = data.strength;
          existingLight.radius = data.radius

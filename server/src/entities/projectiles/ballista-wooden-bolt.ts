@@ -27,11 +27,11 @@ export function createBallistaWoodenBoltConfig(position: Point, rotation: number
    
    return {
       entityType: EntityType.ballistaWoodenBolt,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.projectile]: projectileComponent
-      },
+      components: [
+         transformComponent,
+         tribeComponent,
+         projectileComponent
+      ],
       lights: []
    };
 }

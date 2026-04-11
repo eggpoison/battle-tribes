@@ -36,13 +36,13 @@ export function createPalmTreeConfig(position: Point, angle: number): EntityConf
    
    return {
       entityType: EntityType.palmTree,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.palmTree]: palmTreeComponent
-      },
+      components: [
+         transformComponent,
+         statusEffectComponent,
+         healthComponent,
+         lootComponent,
+         palmTreeComponent
+      ],
       lights: []
    };
 }

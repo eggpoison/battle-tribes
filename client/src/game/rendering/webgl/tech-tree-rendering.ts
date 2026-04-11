@@ -1,7 +1,7 @@
 import { angle, TECHS, TechID, Tech, getTechByID } from "webgl-test-shared";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "../../webgl";
 import { playerTribe } from "../../tribes";
-import { techTreeState } from "../../../ui-state/tech-tree-state.svelte";
+import { techTreeState } from "../../../ui-state/tech-tree-state";
 
 const ConnectorType = {
    unlocked: 0,
@@ -262,7 +262,7 @@ export function createTechTreeShaders(): void {
 }
 
 const renderBackground = (): void => {
-   const techPositions = new Array<number>();
+   const techPositions: Array<number> = [];
    for (const tech of TECHS) {
       if (techIsDirectlyAccessible(tech)) {
          techPositions.push(tech.positionX);
@@ -292,7 +292,7 @@ const renderBackground = (): void => {
       1, -1,
       1, 1
    ];
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
@@ -380,7 +380,7 @@ export function techIsDirectlyAccessible(tech: Tech): boolean {
 }
 
 const calculateConnectorVertices = (): ReadonlyArray<number> => {
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    
    // For all unlocked techs, draw the connectors for their dependencies
    for (const tech of playerTribe.unlockedTechs) {
@@ -401,7 +401,7 @@ const calculateConnectorVertices = (): ReadonlyArray<number> => {
    }
 
    // Conflicting connection ids
-   const conflictingConnectionIDs = new Array<TechID>();
+   const conflictingConnectionIDs: Array<TechID> = [];
    for (const tech of TECHS) {
       if (!playerTribe.unlockedTechs.includes(tech) && techIsDirectlyAccessible(tech)) {
          for (const conflictingTechID of tech.conflictingTechs) {
@@ -440,7 +440,7 @@ const renderConnectors = (): void => {
 
    const vertices = calculateConnectorVertices();
 
-   const buffer = gl.createBuffer()!;
+   const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 

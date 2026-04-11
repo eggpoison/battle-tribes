@@ -10,6 +10,6 @@
    let props: Props = $props();
 </script>
 
-<div class="menu{typeof props.class !== "undefined" ? " " + props.class : undefined}" {...props} oncontextmenu={preventDefault}>
+<div class="menu{props.class !== undefined ? " " + props.class : undefined}" {...props} oncontextmenu={preventDefault}>
    {@render props.children()}
 </div>

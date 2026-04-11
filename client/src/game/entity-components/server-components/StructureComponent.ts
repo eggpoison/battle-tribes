@@ -5,6 +5,8 @@ import { EntityComponentData, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { addFenceConnection, FenceComponentArray, removeFenceConnection } from "./FenceComponent";
 import { TransformComponentArray } from "./TransformComponent";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData } from "../../entity-component-types";
 
 export interface StructureComponentData {
    readonly hasActiveBlueprint: boolean;
@@ -30,10 +32,10 @@ export function createStructureComponentData(): StructureComponentData {
 function decodeData(reader: PacketReader): StructureComponentData {
    const hasActiveBlueprint = reader.readBool();
 
-   const connections = new Array<StructureConnection>();
+   const connections: Array<StructureConnection> = [];
    const numConnections = reader.readNumber();
    for (let i = 0; i < numConnections; i++) {
-      const entity = reader.readNumber() as Entity;
+      const entity: Entity = reader.readNumber();
       const relativeOffsetDirection = reader.readNumber();
 
       const connection = createStructureConnection(entity, relativeOffsetDirection);
@@ -47,7 +49,8 @@ function decodeData(reader: PacketReader): StructureComponentData {
 }
 
 function createComponent(entityComponentData: EntityComponentData): StructureComponent {
-   const structureComponentData = entityComponentData.serverComponentData[ServerComponentType.structure]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const structureComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.structure);
    
    return {
       hasActiveBlueprint: structureComponentData.hasActiveBlueprint,
@@ -123,7 +126,7 @@ function updateFromData(data: StructureComponentData, entity: Entity): void {
 
    structureComponent.hasActiveBlueprint = data.hasActiveBlueprint;
 
-   const newConnectedEntities = new Array<Entity>();
+   const newConnectedEntities: Array<Entity> = [];
    for (let i = 0; i < data.connections.length; i++) {
       const connectionData = data.connections[i];
       const connectedEntity = connectionData.entity;

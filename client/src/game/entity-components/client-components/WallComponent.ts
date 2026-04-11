@@ -1,16 +1,19 @@
 import { EntityType, ServerComponentType, Entity, Point } from "webgl-test-shared";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { EntityComponentData, getEntityRenderInfo, getEntityType } from "../../world";
+import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { WALL_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
 import { HealthComponentArray } from "../server-components/HealthComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 // @Speed: Could make damage render part an overlay instead of a whole render part
 
@@ -34,21 +37,23 @@ export function createWallComponentData(): WallComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
-   const buildingMaterialComponentData = entityComponentData.serverComponentData[ServerComponentType.buildingMaterial]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponentData.material])
    );
-   renderPart.addTag("buildingMaterialComponent:material");
+   addRenderPartTag(renderPart, "buildingMaterialComponent:material");
 
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }
@@ -71,8 +76,8 @@ const updateDamageRenderPart = (entity: Entity, health: number, maxHealth: numbe
    let damageStage = maxHealth > 0 ? Math.ceil((1 - health / maxHealth) * NUM_DAMAGE_STAGES) : 0;
    if (damageStage === 0) {
       if (wallComponent.damageRenderPart !== null) {
-         const renderInfo = getEntityRenderInfo(entity);
-         renderInfo.removeRenderPart(wallComponent.damageRenderPart);
+         const renderObject = getEntityRenderObject(entity);
+         renderObject.removeRenderPart(wallComponent.damageRenderPart);
          wallComponent.damageRenderPart = null;
       }
       return;
@@ -91,10 +96,11 @@ const updateDamageRenderPart = (entity: Entity, health: number, maxHealth: numbe
          hitbox,
          1,
          0,
+         0, 0,
          getTextureArrayIndex(textureSource)
       );
-      const renderInfo = getEntityRenderInfo(entity);
-      renderInfo.attachRenderPart(wallComponent.damageRenderPart);
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.attachRenderPart(wallComponent.damageRenderPart);
    } else {
       wallComponent.damageRenderPart.switchTextureSource(textureSource);
    }

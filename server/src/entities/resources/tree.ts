@@ -59,13 +59,13 @@ export function createTreeConfig(position: Point, angle: number, size: TreeSize)
    
    return {
       entityType: EntityType.tree,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.loot]: lootComponent,
-         [ServerComponentType.tree]: treeComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         lootComponent,
+         treeComponent
+      ],
       lights: []
    };
 }

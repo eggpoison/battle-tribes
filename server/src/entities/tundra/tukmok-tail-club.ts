@@ -25,12 +25,12 @@ export function createTukmokTailClubConfig(position: Point, angle: number, offse
    
    return {
       entityType: EntityType.tukmokTailClub,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.health]: healthComponent,
-         [ServerComponentType.statusEffect]: statusEffectComponent,
-         [ServerComponentType.tukmokTailClub]: tukmokTailComponent
-      },
+      components: [
+         transformComponent,
+         healthComponent,
+         statusEffectComponent,
+         tukmokTailComponent
+      ],
       lights: []
    };
 }

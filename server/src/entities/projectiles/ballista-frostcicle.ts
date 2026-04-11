@@ -27,11 +27,11 @@ export function createBallistaFrostcicleConfig(position: Point, rotation: number
    
    return {
       entityType: EntityType.ballistaFrostcicle,
-      components: {
-         [ServerComponentType.transform]: transformComponent,
-         [ServerComponentType.tribe]: tribeComponent,
-         [ServerComponentType.projectile]: projectileComponent
-      },
+      components: [
+         transformComponent,
+         tribeComponent,
+         projectileComponent
+      ],
       lights: []
    };
 }

@@ -1,5 +1,5 @@
 import { Settings } from "../../shared/src/settings";
-import { getSubtileX, getSubtileY, subtileIsInWorld, getSubtileIndex } from "../../shared/src/subtiles";
+import { getSubtileX, getSubtileY, subtileIsInWorldIncludingEdges, getSubtileIndex } from "../../shared/src/subtiles";
 import { SubtileType } from "../../shared/src/tiles";
 import { customTickIntervalHasPassed, distance } from "../../shared/src/utils";
 import { TransformComponent } from "./components/TransformComponent";
@@ -78,25 +78,25 @@ export function registerMinedSubtile(layer: Layer, subtileIndex: number, subtile
    let support = 0;
 
    // Right
-   if (subtileIsInWorld(subtileX + 1, subtileY)) {
+   if (subtileIsInWorldIncludingEdges(subtileX + 1, subtileY)) {
       const rightSubtileIndex = getSubtileIndex(subtileX + 1, subtileY);
       support = Math.max(support, getNeighbourSupport(layer, rightSubtileIndex));
    }
 
    // Left
-   if (subtileIsInWorld(subtileX - 1, subtileY)) {
+   if (subtileIsInWorldIncludingEdges(subtileX - 1, subtileY)) {
       const leftSubtileIndex = getSubtileIndex(subtileX - 1, subtileY);
       support = Math.max(support, getNeighbourSupport(layer, leftSubtileIndex));
    }
 
    // Top
-   if (subtileIsInWorld(subtileX, subtileY + 1)) {
+   if (subtileIsInWorldIncludingEdges(subtileX, subtileY + 1)) {
       const topSubtileIndex = getSubtileIndex(subtileX, subtileY + 1);
       support = Math.max(support, getNeighbourSupport(layer, topSubtileIndex));
    }
 
    // Bottom
-   if (subtileIsInWorld(subtileX, subtileY - 1)) {
+   if (subtileIsInWorldIncludingEdges(subtileX, subtileY - 1)) {
       const bottomSubtileIndex = getSubtileIndex(subtileX, subtileY - 1);
       support = Math.max(support, getNeighbourSupport(layer, bottomSubtileIndex));
    }

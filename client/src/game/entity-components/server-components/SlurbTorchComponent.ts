@@ -5,9 +5,10 @@ import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { TransformComponentArray } from "./TransformComponent";
 import { createSlurbParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getTransformComponentData } from "../../entity-component-types";
 
-const enum Vars {
+const enum Var {
    MIN_PARTICLE_CREATION_INTERVAL_SECONDS = 0.45,
    MAX_PARTICLE_CREATION_INTERVAL_SECONDS = 1.55
 }
@@ -32,24 +33,25 @@ function decodeData(): SlurbTorchComponentData {
    return {};
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
    
    const renderPart = new TexturedRenderPart(
       hitbox,
       0,
       0,
+      0, 0,
       getTextureArrayIndex("entities/slurb-torch/slurb-torch.png")
    );
-   renderInfo.attachRenderPart(renderPart);
+   renderObject.attachRenderPart(renderPart);
 
    return {};
 }
 
 function createComponent(): SlurbTorchComponent {
    return {
-      particleCreationTimer: randFloat(Vars.MIN_PARTICLE_CREATION_INTERVAL_SECONDS, Vars.MAX_PARTICLE_CREATION_INTERVAL_SECONDS)
+      particleCreationTimer: randFloat(Var.MIN_PARTICLE_CREATION_INTERVAL_SECONDS, Var.MAX_PARTICLE_CREATION_INTERVAL_SECONDS)
    };
 }
 
@@ -67,7 +69,7 @@ function onTick(entity: Entity): void {
    const slurbTorchComponent = SlurbTorchComponentArray.getComponent(entity);
    slurbTorchComponent.particleCreationTimer -= Settings.DT_S;
    if (slurbTorchComponent.particleCreationTimer <= 0) {
-      slurbTorchComponent.particleCreationTimer += randFloat(Vars.MIN_PARTICLE_CREATION_INTERVAL_SECONDS, Vars.MAX_PARTICLE_CREATION_INTERVAL_SECONDS);
+      slurbTorchComponent.particleCreationTimer += randFloat(Var.MIN_PARTICLE_CREATION_INTERVAL_SECONDS, Var.MAX_PARTICLE_CREATION_INTERVAL_SECONDS);
 
       let spawnPositionX = hitbox.box.position.x;
       let spawnPositionY = hitbox.box.position.y;

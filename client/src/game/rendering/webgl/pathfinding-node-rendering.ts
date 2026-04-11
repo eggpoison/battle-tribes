@@ -3,9 +3,9 @@ import { EntityDebugData, PathData, PathfindingNodeIndex, angle, PathfindingSett
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { entityExists } from "../../world";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
-import { nerdVisionState } from "../../../ui-state/nerd-vision-state.svelte";
-import { debugDisplayState } from "../../../ui-state/debug-display-state.svelte";
-import { hoverDebugState } from "../../../ui-state/hover-debug-state.svelte";
+import { debugDisplayState } from "../../../ui-state/debug-display-state";
+import { hoverDebugState } from "../../../ui-state/hover-debug-state";
+import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 
 enum NodeType {
    occupied,
@@ -141,7 +141,7 @@ const addConnector = (vertices: Array<number>, startX: number, startY: number, e
 }
 
 const renderConnectors = (pathData: PathData): void => {
-   const debugEntity = hoverDebugState.entityDebugData!.entityID;
+   const debugEntity = hoverDebugState.entityDebugData!.entity;
    if (!entityExists(debugEntity)) {
       return;
    }
@@ -149,7 +149,7 @@ const renderConnectors = (pathData: PathData): void => {
    const transformComponent = TransformComponentArray.getComponent(debugEntity);
    const entityHitbox = transformComponent.hitboxes[0];
    
-   const vertices = new Array<number>();
+   const vertices: Array<number> = [];
    let lastNodeX = entityHitbox.box.position.x;
    let lastNodeY = entityHitbox.box.position.y;
    for (let i = 0; i < pathData.pathNodes.length; i++) {
@@ -196,7 +196,7 @@ const renderNodes = (vertexData: Float32Array): void => {
 }
 
 const getDebuggedPath = (entityDebugData: EntityDebugData | null): PathData | undefined => {
-   if (nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID)) {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
       return entityDebugData.pathData;
    }
 }
@@ -259,19 +259,19 @@ const addNodeData = (vertexData: Float32Array, segmentIdx: number, node: Pathfin
 export function renderPathfindingNodes(): void {
    const entityDebugData = hoverDebugState.entityDebugData;
 
-   const showEntityPathfindingNodes = nerdVisionState.isVisible && entityDebugData !== null && entityExists(entityDebugData.entityID);
+   const showEntityPathfindingNodes = nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entity);
    if (!debugDisplayState.showPathfindingNodes && !showEntityPathfindingNodes) {
       return;
    }
    
-   if (nerdVisionState.isVisible && entityDebugData !== null && typeof entityDebugData.pathData !== "undefined") {
+   if (nerdVision.isVisible() && entityDebugData !== null && entityDebugData.pathData !== undefined) {
       renderConnectors(entityDebugData.pathData);
    }
 
    const debuggedPath = getDebuggedPath(entityDebugData);
 
    let numNodes = visiblePathfindingNodeOccupances.length;
-   if (typeof debuggedPath !== "undefined") {
+   if (debuggedPath !== undefined) {
       numNodes += debuggedPath.pathNodes.length + debuggedPath.rawPathNodes.length + debuggedPath.visitedNodes.length;
    }
    
@@ -289,7 +289,7 @@ export function renderPathfindingNodes(): void {
    
       if (showEntityPathfindingNodes) {
          const pathData = entityDebugData.pathData;
-         if (typeof pathData !== "undefined") {
+         if (pathData !== undefined) {
             for (const node of pathData.visitedNodes) {
                segmentIdx = addNodeData(vertexData, segmentIdx, node, NodeType.visited);
             }

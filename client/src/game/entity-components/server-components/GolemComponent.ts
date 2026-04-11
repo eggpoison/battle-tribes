@@ -1,4 +1,4 @@
-import { Entity, CircularBox, PacketReader, randAngle, randItem, Settings, ServerComponentType } from "webgl-test-shared";
+import { Entity, CircularBox, PacketReader, randAngle, randItem, Settings, ServerComponentType, _point } from "webgl-test-shared";
 import { createRockSpeckParticle } from "../../particles";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -10,7 +10,10 @@ import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 
 enum GolemRockSize {
    massive,
@@ -117,12 +120,12 @@ function decodeData(reader: PacketReader): GolemComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    
-   const rockRenderParts = new Array<VisualRenderPart>();
-   const eyeRenderParts = new Array<VisualRenderPart>();
-   const eyeLights = new Array<Light>();
+   const rockRenderParts: Array<VisualRenderPart> = [];
+   const eyeRenderParts: Array<VisualRenderPart> = [];
+   const eyeLights: Array<Light> = [];
    
    // Add new rocks
    for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
@@ -135,9 +138,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
          hitbox,
          getZIndex(size),
          randAngle(),
+         0, 0,
          getTextureArrayIndex(getTextureSource(size))
       );
-      renderInfo.attachRenderPart(renderPart);
+      renderObject.attachRenderPart(renderPart);
       rockRenderParts.push(renderPart);
 
       if (size === GolemRockSize.large) {
@@ -146,13 +150,12 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
                renderPart,
                6,
                0,
+               20 * (i === 0 ? -1 : 1), 17,
                getTextureArrayIndex("entities/golem/eye.png")
             );
             eyeRenderPart.opacity = 0;
-            eyeRenderPart.offset.x = 20 * (i === 0 ? -1 : 1);
-            eyeRenderPart.offset.y = 17;
             eyeRenderPart.inheritParentRotation = false;
-            renderInfo.attachRenderPart(eyeRenderPart);
+            renderObject.attachRenderPart(eyeRenderPart);
             eyeRenderParts.push(eyeRenderPart);
          }
       }
@@ -166,8 +169,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GolemComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const golemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.golem);
    return {
-      wakeProgress: entityComponentData.serverComponentData[ServerComponentType.golem]!.wakeProgress,
+      wakeProgress: golemComponentData.wakeProgress,
       rockRenderParts: intermediateInfo.rockRenderParts,
       eyeRenderParts: intermediateInfo.eyeRenderParts,
       eyeLights: intermediateInfo.eyeLights
@@ -175,7 +180,7 @@ function createComponent(entityComponentData: EntityComponentData, intermediateI
 }
 
 function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    
    let maxRenderParts = 0;
    for (const hitbox of transformComponentData.hitboxes) {
@@ -200,7 +205,8 @@ function onTick(entity: Entity): void {
          const hitbox = transformComponent.hitboxes[i];
          
          const box = hitbox.box as CircularBox;
-         const velocity = getHitboxVelocity(hitbox);
+         getHitboxVelocity(hitbox);
+         const velocity = _point;
 
          const offsetDirection = randAngle();
          const x = box.position.x + box.radius * Math.sin(offsetDirection);
@@ -215,7 +221,8 @@ function onTick(entity: Entity): void {
 
          const hitbox = transformComponent.hitboxes[i];
          const box = hitbox.box as CircularBox;
-         const velocity = getHitboxVelocity(hitbox);
+         getHitboxVelocity(hitbox);
+         const velocity = _point;
 
          const offsetDirection = randAngle();
          const x = box.position.x + box.radius * Math.sin(offsetDirection);
@@ -251,7 +258,7 @@ function updateFromData(data: GolemComponentData, entity: Entity): void {
 
       // renderPart.offset.x = box.offset.x;
       // renderPart.offset.y = box.offset.y;
-      renderPart.shakeAmount = shakeAmount;
+      setRenderPartShakeAmount(renderPart, shakeAmount);
    }
 
    for (let i = 0; i < 2; i++) {

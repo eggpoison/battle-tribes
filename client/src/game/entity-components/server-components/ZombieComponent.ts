@@ -9,7 +9,10 @@ import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, create
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 export interface ZombieComponentData {
    readonly zombieType: number;
@@ -39,46 +42,50 @@ function decodeData(reader: PacketReader): ZombieComponentData {
    };
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    const hitbox = transformComponentData.hitboxes[0];
 
-   const zombieComponentData = entityComponentData.serverComponentData[ServerComponentType.zombie]!;
-   const inventoryUseComponentData = entityComponentData.serverComponentData[ServerComponentType.inventoryUse]!;
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const zombieComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.zombie);
+   const inventoryUseComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventoryUse);
 
    const bodyRenderPart = new TexturedRenderPart(
       hitbox,
       2,
       0,
+      0, 0,
       getTextureArrayIndex(ZOMBIE_TEXTURE_SOURCES[zombieComponentData.zombieType])
    );
-   renderInfo.attachRenderPart(bodyRenderPart);
+   renderObject.attachRenderPart(bodyRenderPart);
 
    // @Hack @Copynpaste
 
    // Hand render parts
    const handTextureSource = ZOMBIE_HAND_TEXTURE_SOURCES[zombieComponentData.zombieType];
-   const handRenderParts = new Array<VisualRenderPart>();
+   const handRenderParts: Array<VisualRenderPart> = [];
    for (let i = 0; i < inventoryUseComponentData.limbInfos.length; i++) {
       const attachPoint = new RenderAttachPoint(
          bodyRenderPart,
          1,
-         0
+         0,
+         0, 0
       );
       if (i === 1) {
          attachPoint.setFlipX(true);
       }
-      attachPoint.addTag("inventoryUseComponent:attachPoint");
-      renderInfo.attachRenderPart(attachPoint);
+      addRenderPartTag(attachPoint, "inventoryUseComponent:attachPoint");
+      renderObject.attachRenderPart(attachPoint);
       
       const renderPart = new TexturedRenderPart(
          attachPoint,
          1.2,
          0,
+         0, 0,
          getTextureArrayIndex(handTextureSource)
       );
-      renderPart.addTag("inventoryUseComponent:hand");
-      renderInfo.attachRenderPart(renderPart);
+      addRenderPartTag(renderPart, "inventoryUseComponent:hand");
+      renderObject.attachRenderPart(renderPart);
       handRenderParts.push(renderPart);
    }
 
@@ -86,8 +93,10 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): ZombieComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const zombieComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.zombie);
    return {
-      zombieType: entityComponentData.serverComponentData[ServerComponentType.zombie]!.zombieType
+      zombieType: zombieComponentData.zombieType
    };
 }
 

@@ -2,11 +2,14 @@ import { Point, randAngle, randFloat, Entity, HitboxFlag, ServerComponentType, P
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { EntityComponentData, getEntityRenderInfo } from "../../world";
+import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { createOkrenEyeParticle } from "../../particles";
-import { EntityRenderInfo } from "../../EntityRenderInfo";
+import { EntityRenderObject } from "../../EntityRenderObject";
 import { renderParentIsHitbox } from "../../render-parts/render-parts";
+import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { addRenderPartTag } from "../../render-parts/render-part-tags";
 
 // @Copynpaste from server
 export const enum OkrenAgeStage {
@@ -65,8 +68,9 @@ const getEyeTextureSource = (okrenSize: number, eyeHardenTimer: number): string 
    }
 }
 
-function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentData: EntityComponentData): IntermediateInfo {
-   const okrenComponentData = entityComponentData.serverComponentData[ServerComponentType.okren]!;
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const okrenComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.okren);
    
    let sizeString: string;
    switch (okrenComponentData.size) {
@@ -78,33 +82,36 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
       default: throw new Error();
    }
    
-   const transformComponentData = entityComponentData.serverComponentData[ServerComponentType.transform]!;
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
    for (const hitbox of transformComponentData.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.OKREN_BODY)) {
          const bodyRenderPart = new TexturedRenderPart(
             hitbox,
             3,
             0,
+            0, 0,
             getTextureArrayIndex("entities/okren/" + sizeString + "/body.png")
          );
-         bodyRenderPart.addTag("tamingComponent:head");
-         renderInfo.attachRenderPart(bodyRenderPart);
+         addRenderPartTag(bodyRenderPart, "tamingComponent:head");
+         renderObject.attachRenderPart(bodyRenderPart);
       } else if (hitbox.flags.includes(HitboxFlag.OKREN_EYE)) {
          const hardenTimer = hitbox.box.flipX ? okrenComponentData.leftEyeHardenTimer : okrenComponentData.rightEyeHardenTimer;
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                5,
                0,
+               0, 0,
                getTextureArrayIndex(getEyeTextureSource(okrenComponentData.size, hardenTimer))
             )
          );
       } else if (hitbox.flags.includes(HitboxFlag.OKREN_MANDIBLE)) {
-         renderInfo.attachRenderPart(
+         renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                2,
                0,
+               0, 0,
                getTextureArrayIndex("entities/okren/" + sizeString + "/mandible.png")
             )
          );
@@ -115,8 +122,8 @@ function populateIntermediateInfo(renderInfo: EntityRenderInfo, entityComponentD
 }
 
 function createComponent(entityComponentData: EntityComponentData): OkrenComponent {
-   const okrenComponentData = entityComponentData.serverComponentData[ServerComponentType.okren]!;
-   
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const okrenComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.okren);
    return {
       size: okrenComponentData.size
    };
@@ -127,8 +134,8 @@ function getMaxRenderParts(): number {
 }
    
 const getEyeRenderPart = (okren: Entity, flipX: boolean): TexturedRenderPart => {
-   const renderInfo = getEntityRenderInfo(okren);
-   for (const renderPart of renderInfo.renderPartsByZIndex) {
+   const renderObject = getEntityRenderObject(okren);
+   for (const renderPart of renderObject.renderPartsByZIndex) {
       if (renderParentIsHitbox(renderPart.parent) && renderPart.parent.flags.includes(HitboxFlag.OKREN_EYE) && renderPart.parent.box.flipX === flipX) {
          return renderPart as TexturedRenderPart;
       }

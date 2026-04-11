@@ -61,15 +61,11 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    const accelerationX = reader.readNumber();
    const accelerationY = reader.readNumber();
 
-   const movementIntentionX = reader.readNumber();
-   const movementIntentionY = reader.readNumber();
+   const moveIntention = reader.readNumber();
 
    // @HACK just made this not set "playerHitbox.previousRelativeAngle" to fix the overshooting
    const previousRelativeAngle = reader.readNumber();
    const angularAcceleration = reader.readNumber();
-
-   const screenWidth = reader.readNumber();
-   const screenHeight = reader.readNumber();
    
    const selectedHotbarItemSlot = reader.readNumber();
    const mainAction = reader.readNumber() as LimbAction;
@@ -78,8 +74,6 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    const interactingEntityID = reader.readNumber();
    const gameDataOptions = reader.readNumber();
 
-   playerClient.screenWidth = screenWidth;
-   playerClient.screenHeight = screenHeight;
    playerClient.updatePosition(x, y);
    playerClient.gameDataOptions = gameDataOptions;
    
@@ -100,8 +94,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
          playerHitbox.acceleration.y = accelerationY;
       }
       
-      tribesmanComponent.movementIntention.x = movementIntentionX;
-      tribesmanComponent.movementIntention.y = movementIntentionY;
+      tribesmanComponent.moveIntention = moveIntention !== -999 ? moveIntention : null;
 
       playerHitbox.angularAcceleration = angularAcceleration;
 
@@ -140,9 +133,6 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
          hotbarLimbInfo.selectedItemSlot = selectedHotbarItemSlot;
          registerDirtyEntity(player);
       }
-
-      const playerComponent = PlayerComponentArray.getComponent(player);
-      playerComponent.interactingEntityID = interactingEntityID;
 
       // @Bug: won't work for using medicine in offhand
       let overrideOffhand = false;
@@ -608,6 +598,13 @@ export function processSpectateEntityPacket(playerClient: PlayerClient, reader: 
    const entity: Entity = reader.readNumber();
    if (entityExists(entity)) {
       playerClient.cameraSubject = entity;
+   } else if (entity === 0) {
+      // A value of 0 means to stop spectating whatever was being spectated.
+      if (entityExists(playerClient.instance)) {
+         playerClient.cameraSubject = playerClient.instance;
+      } else {
+         playerClient.cameraSubject = 0;
+      }
    }
 }
 
@@ -1169,7 +1166,7 @@ export function processDevChangeTribeTypePacket(reader: PacketReader): void {
    }
 }
 
-export function processOpenEntityInventoryPacket(reader: PacketReader): void {
+export function processStartEntityInteractionPacket(playerClient: PlayerClient, reader: PacketReader): void {
    const entity: Entity = reader.readNumber();
    
    if (BarrelComponentArray.hasComponent(entity)) {
@@ -1180,10 +1177,13 @@ export function processOpenEntityInventoryPacket(reader: PacketReader): void {
             registerDirtyEntity(entity);
          }
       }
+   } else if (TribesmanComponentArray.hasComponent(entity)) {
+      const playerComponent = PlayerComponentArray.getComponent(playerClient.instance);
+      playerComponent.interactingEntityID = entity;
    }
 }
 
-export function processCloseEntityInventoryPacket(reader: PacketReader): void {
+export function processEndEntityInteractionPacket(playerClient: PlayerClient, reader: PacketReader): void {
    const entity: Entity = reader.readNumber();
    
    if (BarrelComponentArray.hasComponent(entity)) {
@@ -1195,6 +1195,9 @@ export function processCloseEntityInventoryPacket(reader: PacketReader): void {
             registerDirtyEntity(entity);
          }
       }
+   } else if (TribesmanComponentArray.hasComponent(entity)) {
+      const playerComponent = PlayerComponentArray.getComponent(playerClient.instance);
+      playerComponent.interactingEntityID = 0;
    }
 }
 
@@ -1218,4 +1221,15 @@ export function processSetDebugEntityPacket(reader: PacketReader): void {
    const entity: Entity = reader.readNumber();
    // @Cleanup: shouldn't be in the server!
    SERVER.setTrackedGameObject(entity);
+}
+
+export function processScreenResizePacket(playerClient: PlayerClient, reader: PacketReader): void {
+   const screenWidth = reader.readNumber();
+   const screenHeight = reader.readNumber();
+
+   playerClient.screenWidth = screenWidth;
+   playerClient.screenHeight = screenHeight;
+   // @Cleanup: is super bad to have to uselessly define the same x and y
+   // @Cleanup: have to do this because this function actually relies on screenWidth and screenHeight, but that's not clear from this! maybe pass em in?? idk
+   playerClient.updatePosition(playerClient.lastViewedPositionX, playerClient.lastViewedPositionY);
 }

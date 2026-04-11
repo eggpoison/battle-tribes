@@ -1,6 +1,6 @@
 import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { cleanupEntityRendering, renderEntity, setupEntityRendering } from "./entity-rendering";
+import { cleanupEntityRendering, renderEntity, setEntityRenderingOverrideAlphaWithOne, setupEntityRendering } from "./entity-rendering";
 import { cleanEntityRenderObject, getRenderPartRenderPosition } from "../render-part-matrices";
 import { EntityRenderObject, recalculateRenderObjectVertexData } from "../../EntityRenderObject";
 import { gameFramebuffer } from "../render";
@@ -217,7 +217,9 @@ export function renderEntitySelection(renderObject: EntityRenderObject, clientIn
    gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
 
    recalculateRenderObjectVertexData(renderObject);
-   renderEntity(renderObject, { overrideAlphaWithOne: true });
+   setEntityRenderingOverrideAlphaWithOne(true);
+   renderEntity(renderObject);
+   setEntityRenderingOverrideAlphaWithOne(false);
 
    cleanupEntityRendering();
    

@@ -1,10 +1,20 @@
 import { Settings, NUM_TILE_TYPES, SubtileType, TileType, TileTypeString, getSubtileIndex, getTileIndexIncludingEdges } from "webgl-test-shared";
 import { gl, createWebGLProgram, createTextureArray } from "../../webgl";
-import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, RenderChunkSolidTileInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
+import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import Layer from "../../Layer";
 import { layers } from "../../world";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
+
+const enum Var {
+   ATTRIBUTES_PER_VERTEX = 6
+}
+
+interface RenderInfo {
+   readonly buffer: WebGLBuffer;
+   vao: WebGLVertexArrayObject;
+   numElements: number;
+}
 
 export const FLOOR_TILE_TEXTURE_SOURCE_RECORD: Partial<Record<TileType, string | null>> = {
    [TileType.grass]: "tiles/grass.png",
@@ -65,12 +75,14 @@ const WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<SubtileType, Ar
    }
 })();
 
-let groundTileInfoArrays: Array<Array<RenderChunkSolidTileInfo>> = [];
-let wallTileInfoArrays: Array<Array<RenderChunkSolidTileInfo>> = [];
+let groundTileInfoArrays: Array<Array<RenderInfo>> = [];
+let wallTileInfoArrays: Array<Array<RenderInfo>> = [];
 
 let program: WebGLProgram;
 let floorTileTextureArray: WebGLTexture;
 let wallTileTextureArray: WebGLTexture;
+
+let sizeUniformLocation: WebGLUniformLocation;
 
 export function createSolidTileShaders(): void {
    const vertexShaderText = `#version 300 es
@@ -81,9 +93,11 @@ export function createSolidTileShaders(): void {
       uniform vec2 u_halfWindowSize;
       uniform float u_zoom;
    };
+
+   uniform float u_size;
    
    layout(location = 0) in vec2 a_tilePos;
-   layout(location = 1) in vec2 a_texCoord;
+   layout(location = 1) in float a_uvIndex;
    layout(location = 2) in float a_textureIndex;
    layout(location = 3) in float a_temperature;
    layout(location = 4) in float a_humidity;
@@ -94,11 +108,29 @@ export function createSolidTileShaders(): void {
    out float v_humidity;
    
    void main() {
-      vec2 screenPos = (a_tilePos - u_playerPos) * u_zoom + u_halfWindowSize;
+      int vertexIndex = gl_VertexID;
+
+      int u = vertexIndex & 1;
+      int v = ((vertexIndex % 3) + (vertexIndex / 4)) >> 1;
+      vec2 uv = vec2(float(u), float(v));
+   
+      vec2 pos = a_tilePos + uv * u_size;
+      // vec2 pos = a_tilePos;
+      vec2 screenPos = (pos - u_playerPos) * u_zoom + u_halfWindowSize;
       vec2 clipSpacePos = screenPos / u_halfWindowSize - 1.0;
       gl_Position = vec4(clipSpacePos, 0.0, 1.0);
    
-      v_texCoord = a_texCoord;
+      if (a_uvIndex == -1.0) {
+         // Tile UV (-1)
+         v_texCoord = uv;
+      } else {
+         // Subtile UV (0 to 15)
+         float uIdx = float(int(a_uvIndex) % 4) + uv.x;
+         float vIdx = float(int(a_uvIndex) / 4) + uv.y;
+         float u = float(uIdx) / 4.0;
+         float v = float(vIdx) / 4.0;
+         v_texCoord = vec2(u, v);
+      }
       v_textureIndex = a_textureIndex;
       v_temperature = a_temperature;
       v_humidity = a_humidity;
@@ -190,6 +222,8 @@ export function createSolidTileShaders(): void {
    const samplerUniformLocation = gl.getUniformLocation(program, "u_sampler")!;
    gl.uniform1i(samplerUniformLocation, 0);
 
+   sizeUniformLocation = gl.getUniformLocation(program, "u_size")!;
+
    // Floors
    const floorTextureSources: Array<string> = [];
    for (let tileType: TileType = 0; tileType < NUM_TILE_TYPES; tileType++) {
@@ -213,54 +247,13 @@ export function createSolidTileShaders(): void {
    wallTileTextureArray = createTextureArray(wallTextureSources, 16, 16, 5);
 }
 
-const addElementToData = (data: Float32Array, dataOffset: number, x1: number, x2: number, y1: number, y2: number, u1: number, u2: number, v1: number, v2: number, textureIndex: number, temperature: number, humidity: number): void => {
-   data[dataOffset] = x1;
-   data[dataOffset + 1] = y1;
-   data[dataOffset + 2] = u1;
-   data[dataOffset + 3] = v1;
-   data[dataOffset + 4] = textureIndex;
-   data[dataOffset + 5] = temperature;
-   data[dataOffset + 6] = humidity;
-
-   data[dataOffset + 7] = x2;
-   data[dataOffset + 8] = y1;
-   data[dataOffset + 9] = u2;
-   data[dataOffset + 10] = v1;
-   data[dataOffset + 11] = textureIndex;
-   data[dataOffset + 12] = temperature;
-   data[dataOffset + 13] = humidity;
-
-   data[dataOffset + 14] = x1;
-   data[dataOffset + 15] = y2;
-   data[dataOffset + 16] = u1;
-   data[dataOffset + 17] = v2;
-   data[dataOffset + 18] = textureIndex;
-   data[dataOffset + 19] = temperature;
-   data[dataOffset + 20] = humidity;
-
-   data[dataOffset + 21] = x1;
-   data[dataOffset + 22] = y2;
-   data[dataOffset + 23] = u1;
-   data[dataOffset + 24] = v2;
-   data[dataOffset + 25] = textureIndex;
-   data[dataOffset + 26] = temperature;
-   data[dataOffset + 27] = humidity;
-
-   data[dataOffset + 28] = x2;
-   data[dataOffset + 29] = y1;
-   data[dataOffset + 30] = u2;
-   data[dataOffset + 31] = v1;
-   data[dataOffset + 32] = textureIndex;
-   data[dataOffset + 33] = temperature;
-   data[dataOffset + 34] = humidity;
-
-   data[dataOffset + 35] = x2;
-   data[dataOffset + 36] = y2;
-   data[dataOffset + 37] = u2;
-   data[dataOffset + 38] = v2;
-   data[dataOffset + 39] = textureIndex;
-   data[dataOffset + 40] = temperature;
-   data[dataOffset + 41] = humidity;
+const addElementToData = (data: Float32Array, dataOffset: number, x: number, y: number, uvIndex: number, textureIndex: number, temperature: number, humidity: number): void => {
+   data[dataOffset] = x;
+   data[dataOffset + 1] = y;
+   data[dataOffset + 2] = uvIndex;
+   data[dataOffset + 3] = textureIndex;
+   data[dataOffset + 4] = temperature;
+   data[dataOffset + 5] = humidity;
 }
 
 const updateFloorVertexData = (data: Float32Array, layer: Layer, renderChunkX: number, renderChunkY: number): void => {
@@ -269,9 +262,11 @@ const updateFloorVertexData = (data: Float32Array, layer: Layer, renderChunkX: n
    const minTileY = getRenderChunkMinTileY(renderChunkY);
    const maxTileY = getRenderChunkMaxTileY(renderChunkY);
    
-   let i = 0;
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+   let dataOffset = 0;
+   for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+      const y = tileY * Settings.TILE_SIZE;
+
+      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          const tile = layer.getTile(tileIndex);
 
@@ -283,23 +278,19 @@ const updateFloorVertexData = (data: Float32Array, layer: Layer, renderChunkX: n
             continue;
          }
 
-         const x1 = tile.x * Settings.TILE_SIZE;
-         const x2 = (tile.x + 1) * Settings.TILE_SIZE;
-         const y1 = tile.y * Settings.TILE_SIZE;
-         const y2 = (tile.y + 1) * Settings.TILE_SIZE;
-
          let temperature = -1;
          let humidity = -1;
          if (tile.type === TileType.grass) {
-            const grassInfo = layer.grassInfo[tileX][tileY];
+            const grassInfo = layer.grassInfo[tileX]![tileY]!;
             temperature = grassInfo.temperature;
             humidity = grassInfo.humidity;
          }
 
-         const dataOffset = i * 42;
-         addElementToData(data, dataOffset, x1, x2, y1, y2, 0, 1, 0, 1, textureIndex, temperature, humidity);
+         const x = tileX * Settings.TILE_SIZE;
 
-         i++;
+         addElementToData(data, dataOffset, x, y, -1, textureIndex, temperature, humidity);
+
+         dataOffset += Var.ATTRIBUTES_PER_VERTEX;
       }
    }
 }
@@ -321,9 +312,11 @@ const setWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: numbe
    const minSubtileY = minTileY * 4;
    const maxSubtileY = maxTileY * 4 + 3;
    
-   let i = 0;
-   for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
-      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+   let dataOffset = 0;
+   for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+      const y = subtileY * Settings.SUBTILE_SIZE;
+
+      for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
          const subtileIndex = getSubtileIndex(subtileX, subtileY);
          const subtileType = layer.getSubtileType(subtileIndex);
          if (subtileType === SubtileType.none) {
@@ -345,27 +338,22 @@ const setWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: numbe
          }
          const textureIndex = textureIndexes[variant];
          
-         const x1 = subtileX * Settings.SUBTILE_SIZE;
-         const x2 = (subtileX + 1) * Settings.SUBTILE_SIZE;
-         const y1 = subtileY * Settings.SUBTILE_SIZE;
-         const y2 = (subtileY + 1) * Settings.SUBTILE_SIZE;
+         const x = subtileX * Settings.SUBTILE_SIZE;
 
-         const u1 = (subtileX / 4) % 1;
-         const u2 = u1 + 0.25;
-         const v1 = (subtileY / 4) % 1;
-         const v2 = v1 + 0.25;
+         const uIdx = subtileX % 4;
+         const vIdx = subtileY % 4;
+         const uvIdx = vIdx * 4 + uIdx;
 
-         const dataOffset = i * 42;
-         addElementToData(data, dataOffset, x1, x2, y1, y2, u1, u2, v1, v2, textureIndex, -1, -1);
+         addElementToData(data, dataOffset, x, y, uvIdx, textureIndex, -1, -1);
 
-         i++;
+         dataOffset += Var.ATTRIBUTES_PER_VERTEX;
       }
    }
 }
 
 // @Cleanup: A lot of the webgl calls in create and update render data are the same
 
-const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, renderChunkY: number, isWallTiles: boolean): RenderChunkSolidTileInfo => {
+const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, renderChunkY: number, isWallTiles: boolean): RenderInfo => {
    let numElements: number;
    if (isWallTiles) {
       const minTileX = getRenderChunkMinTileX(renderChunkX);
@@ -390,8 +378,7 @@ const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, rend
       numElements = RENDER_CHUNK_SIZE * RENDER_CHUNK_SIZE;
    }
    
-
-   const vertexData = new Float32Array(numElements * 6 * 7);
+   const vertexData = new Float32Array(numElements * Var.ATTRIBUTES_PER_VERTEX);
    if (isWallTiles) {
       setWallVertexData(vertexData, layer, renderChunkX, renderChunkY);
    } else {
@@ -405,11 +392,16 @@ const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, rend
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.DYNAMIC_DRAW);
    
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribDivisor(0, 1);
+   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribDivisor(1, 1);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribDivisor(2, 1);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribDivisor(3, 1);
+   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribDivisor(4, 1);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -420,7 +412,7 @@ const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, rend
    return {
       buffer: buffer,
       vao: vao,
-      vertexCount: numElements * 6
+      numElements: numElements
    };
 }
 
@@ -445,9 +437,9 @@ export function createTileRenderChunks(layer: Layer): void {
    wallTileInfoArrays.push(wallTileInfoArray);
 }
 
-const recalculateChunkData = (info: RenderChunkSolidTileInfo, layer: Layer, renderChunkX: number, renderChunkY: number, isWallTiles: boolean): void => {
-   // @Memory @Garbage: Reuse previous array
-   const vertexData = new Float32Array(info.vertexCount * 7);
+const recalculateChunkData = (info: RenderInfo, layer: Layer, renderChunkX: number, renderChunkY: number, isWallTiles: boolean): void => {
+   // @Memory @Garbage: Reuse previous array. then will not access ATTRIBUTES_PER_VERTEX too!! which is good
+   const vertexData = new Float32Array(info.numElements * Var.ATTRIBUTES_PER_VERTEX);
    if (isWallTiles) {
       clearWallVertexData(vertexData);
       setWallVertexData(vertexData, layer, renderChunkX, renderChunkY);
@@ -483,6 +475,9 @@ export function renderSolidTiles(layer: Layer, isWallTiles: boolean): void {
    gl.activeTexture(gl.TEXTURE0);
    const textureArray = isWallTiles ? wallTileTextureArray : floorTileTextureArray;
    gl.bindTexture(gl.TEXTURE_2D_ARRAY, textureArray);
+
+   gl.uniform1f(sizeUniformLocation, isWallTiles ? Settings.SUBTILE_SIZE : Settings.TILE_SIZE);
+   
    // @Hack
    const layerIdx = layers.indexOf(layer);
    
@@ -493,7 +488,7 @@ export function renderSolidTiles(layer: Layer, isWallTiles: boolean): void {
          const tileInfo = infoArray[idx];
 
          gl.bindVertexArray(tileInfo.vao);
-         gl.drawArrays(gl.TRIANGLES, 0, tileInfo.vertexCount);
+         gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, tileInfo.numElements);
       }
    }
 

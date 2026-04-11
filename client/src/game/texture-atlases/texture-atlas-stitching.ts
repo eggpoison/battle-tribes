@@ -29,7 +29,7 @@ let unavailableSlots = new Set<number>();
 let textureSlotIndexes: Array<number>;
 
 // @HACK: this just imports everythign..... slow... prolly some i dont need.
-const itemImages = import.meta.glob("../../images/**/*", { eager: true, query: "?url", import: "default" });
+const itemImages = import.meta.glob("../../images/**/*", { query: "?url", import: "default" });
 
 /** Attempts to find an available space for a texture, returning -1 if no available space can be found. */
 const getAvailableSlotIndex = (slotWidth: number, slotHeight: number, atlasSize: number): number => {
@@ -103,17 +103,20 @@ const expand = (atlasSize: number): void => {
 // @Hack @Cleanup @Location
 const textureImages: Array<HTMLImageElement> = [];
 
-export function preloadTextureAtlasImages(): void {
-   for (let i = 0; i < TEXTURE_SOURCES.length; i++) {
-      const textureSource = TEXTURE_SOURCES[i];
-      const imageSrc = itemImages["../../images/" + textureSource] as string;
-      assert(imageSrc !== undefined);
+export async function preloadTextureAtlasImages(): Promise<void> {
+   const loadPromises = TEXTURE_SOURCES.map(async textureSource => {
+      const imageSrc = await itemImages["../../images/" + textureSource]() as string;
 
-      const image = new Image();
-      image.src = imageSrc;
-
-      textureImages.push(image);
-   }
+      return new Promise<void>((resolve, reject) => {
+         const image = new Image();
+         image.onload = () => resolve();
+         image.onerror = reject;
+         image.src = imageSrc;
+         textureImages.push(image);
+      });
+   })
+   
+   await Promise.all(loadPromises);
 }
 
 export async function generateTextureAtlas(textureSources: ReadonlyArray<string>): Promise<TextureAtlasGenerationInfo> {

@@ -1,9 +1,8 @@
 import { Settings, Entity, assert, EntityTypeString, _point } from "webgl-test-shared";
 import { RenderLayer } from "../../render-layers";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { clearEntityInVertexData, createEntityRenderData, EntityRenderingVar, getEntityRenderingProgram, setRenderObjectInVertexData } from "./entity-rendering";
+import { clearEntityInVertexData, createEntityRenderData, EntityRenderingVar, setRenderObjectInVertexData, setupEntityRendering } from "./entity-rendering";
 import { gl } from "../../webgl";
-import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { getEntityLayer, getEntityRenderObject, getEntityType } from "../../world";
 import Layer from "../../Layer";
 import { getMatrixPosition } from "../render-part-matrices";
@@ -250,9 +249,9 @@ export function refreshChunkedEntityRenderingBuffers(layer: Layer): void {
          
          const chunkData = layer.renderLayerChunkDataRecord[renderLayer as ChunkedRenderLayer][chunkIdx]!;
 
-         const dstByteOffset = modifyInfo.firstModifiedRenderPartIdx * 4 * EntityRenderingVar.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
-         const srcOffset = modifyInfo.firstModifiedRenderPartIdx * EntityRenderingVar.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
-         const length = (modifyInfo.lastModifiedRenderPartIdx - modifyInfo.firstModifiedRenderPartIdx + 1) * EntityRenderingVar.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
+         const dstByteOffset = modifyInfo.firstModifiedRenderPartIdx * EntityRenderingVar.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
+         const srcOffset = modifyInfo.firstModifiedRenderPartIdx * EntityRenderingVar.ATTRIBUTES_PER_VERTEX;
+         const length = (modifyInfo.lastModifiedRenderPartIdx - modifyInfo.firstModifiedRenderPartIdx + 1) * EntityRenderingVar.ATTRIBUTES_PER_VERTEX;
          
          gl.bindBuffer(gl.ARRAY_BUFFER, chunkData.vertexBuffer);
          gl.bufferSubData(gl.ARRAY_BUFFER, dstByteOffset, chunkData.vertexData, srcOffset, length);
@@ -267,28 +266,19 @@ export function renderChunkedEntities(layer: Layer, renderLayer: ChunkedRenderLa
    const renderLayerInfo = CHUNKED_LAYER_INFO_RECORD[renderLayer];
    const visibleChunkDatas = layer.visibleEntityChunkDatas[renderLayer];
 
-   const textureAtlas = getEntityTextureAtlas();
-   
-   const program = getEntityRenderingProgram();
-   gl.useProgram(program);
+   setupEntityRendering();
 
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-   // Bind texture atlas
-   gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
-
-   const renderPartVerticesPerChunk = renderLayerInfo.maxEntitiesPerChunk * renderLayerInfo.maxRenderPartsPerEntity * 4;
+   const renderPartsPerChunk = renderLayerInfo.maxEntitiesPerChunk * renderLayerInfo.maxRenderPartsPerEntity;
    for (let i = 0, len = visibleChunkDatas.length; i < len; i++) {
       const chunkData = visibleChunkDatas[i];
       gl.bindVertexArray(chunkData.vao);
       // @SPEED: don't always draw the maximum number!!
-      gl.drawElements(gl.TRIANGLES, renderPartVerticesPerChunk, gl.UNSIGNED_SHORT, 0);
+      gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, renderPartsPerChunk);
    }
 
    gl.disable(gl.BLEND);
    gl.blendFunc(gl.ONE, gl.ZERO);
-
-   gl.bindVertexArray(null);
 }

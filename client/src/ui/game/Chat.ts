@@ -94,10 +94,9 @@ function onInputKeydown(e: KeyboardEvent): void {
       // Send the chat message
       case "Enter": {
          if (message !== "") {
-            // Make sure it passes the spam filter
-            
             const currentTime = performance.now();
 
+            // Make sure it passes the spam filter
             const oldest = spamFilterTimestamps[spamFilterHead];
             if (currentTime - oldest > Var.SPAM_FILTER_MESSAGE_DURATION_MS) {
                spamFilterTimestamps[spamFilterHead] = currentTime;

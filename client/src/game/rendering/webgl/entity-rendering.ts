@@ -5,15 +5,11 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { VisualRenderPart, renderPartIsTextured, thingIsVisualRenderPart } from "../../render-parts/render-parts";
 
 const enum Var {
-   ATTRIBUTES_PER_VERTEX = 16
+   ATTRIBUTES_PER_VERTEX = 14
 }
 
 export const enum EntityRenderingVar {
    ATTRIBUTES_PER_VERTEX = Var.ATTRIBUTES_PER_VERTEX
-}
-
-export interface EntityRenderingOptions {
-   readonly overrideAlphaWithOne?: boolean;
 }
 
 export interface EntityRenderData {
@@ -28,10 +24,6 @@ let overrideAlphaWithOneUniformLocation: WebGLUniformLocation;
 
 let previousOverrideAlphaWithOne = false;
 
-export function getEntityRenderingProgram(): WebGLProgram {
-   return program;
-}
-
 export function createEntityShaders(): void {
    const vertexShaderText = `#version 300 es
    precision highp float;
@@ -44,15 +36,15 @@ export function createEntityShaders(): void {
 
    ${getEntityTextureAtlasUBO()}
    
-   layout(location = 0) in vec2 a_position;
-   layout(location = 1) in float a_depth;
-   layout(location = 2) in float a_textureIndex;
-   layout(location = 3) in vec2 a_textureSize;
-   layout(location = 4) in vec3 a_tint;
-   layout(location = 5) in float a_opacity;
-   layout(location = 6) in vec2 a_modelMatrix_col0;
-   layout(location = 7) in vec2 a_modelMatrix_col1;
-   layout(location = 8) in vec2 a_modelMatrix_col2;
+   layout(location = 0) in float a_depth;
+   layout(location = 1) in float a_textureIndex;
+   layout(location = 2) in vec2 a_textureSize;
+   layout(location = 3) in vec3 a_tint;
+   // @SPEED This attribute is here only so that the snobe can dig down into snow through the illusion of its opacity decreasing. But a far better and actually better gameplay-wise too method is to have it actually dig down, and have snow stuff above it obscure it naturally.
+   layout(location = 4) in float a_opacity;
+   layout(location = 5) in vec2 a_modelMatrix_col0;
+   layout(location = 6) in vec2 a_modelMatrix_col1;
+   layout(location = 7) in vec2 a_modelMatrix_col2;
    
    out vec2 v_texCoord;
    out float v_textureIndex;
@@ -67,12 +59,13 @@ export function createEntityShaders(): void {
    }
    
    void main() {
+      int vertexID = gl_VertexID;
+
       vec2 textureSize;
       if (a_textureIndex == -1.0) {
          // Non-textured render parts
 
-         uint vertexID = uint(gl_VertexID);
-         uint hash = pcg_hash(vertexID);
+         uint hash = pcg_hash(uint(vertexID));
          float rand = fract(float(hash) / 10000.0);
 
          float size = mix(1.4, 1.6, rand);
@@ -81,19 +74,23 @@ export function createEntityShaders(): void {
          textureSize = a_textureSize;
       }
 
+      int u = vertexID & 1;
+      int v = vertexID >> 1;
+      vec2 position = vec2(float(u), float(v)) - 0.5;
+
       mat3 modelMatrix = mat3(
          a_modelMatrix_col0.x, a_modelMatrix_col0.y, 0.0,
          a_modelMatrix_col1.x, a_modelMatrix_col1.y, 0.0,
          a_modelMatrix_col2.x, a_modelMatrix_col2.y, 1.0
       );
 
-      vec2 worldPos = (modelMatrix * vec3(a_position * textureSize * 4.0, 1.0)).xy;
+      vec2 worldPos = (modelMatrix * vec3(position * textureSize * 4.0, 1.0)).xy;
 
       vec2 screenPos = (worldPos - u_playerPos) * u_zoom + u_halfWindowSize;
       vec2 clipSpacePos = screenPos / u_halfWindowSize - 1.0;
       gl_Position = vec4(clipSpacePos, a_depth, 1.0);
    
-      v_texCoord = a_position + 0.5;
+      v_texCoord = position + 0.5;
       v_textureIndex = a_textureIndex;
       v_textureSize = a_textureSize;
       v_tint = a_tint;
@@ -176,53 +173,51 @@ export function createEntityRenderData(maxRenderParts: number): EntityRenderData
    const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
    
-   const vertexData = new Float32Array(maxRenderParts * 4 * EntityRenderingVar.ATTRIBUTES_PER_VERTEX);
+   const vertexData = new Float32Array(maxRenderParts * EntityRenderingVar.ATTRIBUTES_PER_VERTEX);
 
    const vertexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.DYNAMIC_DRAW);
 
    const TOTAL_BYTES = EntityRenderingVar.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, TOTAL_BYTES, 0); // floatOffset=0
-   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, TOTAL_BYTES, 8); // floatOffset=2
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, TOTAL_BYTES, 12); // floatOffset=3
-   gl.vertexAttribPointer(3, 2, gl.FLOAT, false, TOTAL_BYTES, 16); // floatOffset=4
-   gl.vertexAttribPointer(4, 3, gl.FLOAT, false, TOTAL_BYTES, 24); // floatOffset=6
-   gl.vertexAttribPointer(5, 1, gl.FLOAT, false, TOTAL_BYTES, 36); // floatOffset=9
+   gl.vertexAttribPointer(0, 1, gl.FLOAT, false, TOTAL_BYTES, 0); // floatOffset=0
+   gl.vertexAttribDivisor(0, 1);
+   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, TOTAL_BYTES, 4); // floatOffset=1
+   gl.vertexAttribDivisor(1, 1);
+   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, TOTAL_BYTES, 8); // floatOffset=2
+   gl.vertexAttribDivisor(2, 1);
+   gl.vertexAttribPointer(3, 3, gl.FLOAT, false, TOTAL_BYTES, 16); // floatOffset=4
+   gl.vertexAttribDivisor(3, 1);
+   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, TOTAL_BYTES, 28); // floatOffset=7
+   gl.vertexAttribDivisor(4, 1);
 
+   gl.vertexAttribPointer(5, 2, gl.FLOAT, false, TOTAL_BYTES, 32); // floatOffset=8
+   gl.vertexAttribDivisor(5, 1);
    gl.vertexAttribPointer(6, 2, gl.FLOAT, false, TOTAL_BYTES, 40); // floatOffset=10
+   gl.vertexAttribDivisor(6, 1);
    gl.vertexAttribPointer(7, 2, gl.FLOAT, false, TOTAL_BYTES, 48); // floatOffset=12
-   gl.vertexAttribPointer(8, 2, gl.FLOAT, false, TOTAL_BYTES, 56); // floatOffset=14
+   gl.vertexAttribDivisor(7, 1);
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
    gl.enableVertexAttribArray(2);
    gl.enableVertexAttribArray(3);
    gl.enableVertexAttribArray(4);
-   gl.enableVertexAttribArray(5);
 
+   gl.enableVertexAttribArray(5);
    gl.enableVertexAttribArray(6);
    gl.enableVertexAttribArray(7);
-   gl.enableVertexAttribArray(8);
 
-   const indicesData = new Uint16Array(maxRenderParts * 6);
-   for (let i = 0; i < maxRenderParts; i++) {
-      const dataOffset = i * 6;
-      const indexOffset = i * 4;
-      
-      indicesData[dataOffset] = indexOffset;
-      indicesData[dataOffset + 1] = indexOffset + 1;
-      indicesData[dataOffset + 2] = indexOffset + 2;
-      indicesData[dataOffset + 3] = indexOffset + 2;
-      indicesData[dataOffset + 4] = indexOffset + 1;
-      indicesData[dataOffset + 5] = indexOffset + 3;
-   }
+   const indicesData = new Uint16Array(6);
+   indicesData[1] = 1;
+   indicesData[2] = 2;
+   indicesData[3] = 2;
+   indicesData[4] = 1;
+   indicesData[5] = 3;
 
    const indexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
-
-   // @BUG: Never cleans up the index buffer??
 
    return {
       vao: vao,
@@ -251,7 +246,7 @@ export function setRenderObjectInVertexData(renderObject: EntityRenderObject, ve
    const baseTintG = renderObject.tintG;
    const baseTintB = renderObject.tintB;
 
-   let vertexDataOffset = renderPartIdx * 4 * Var.ATTRIBUTES_PER_VERTEX;
+   let vertexDataOffset = renderPartIdx * Var.ATTRIBUTES_PER_VERTEX;
    for (const renderPart of renderObject.renderPartsByZIndex) {
       if (!thingIsVisualRenderPart(renderPart)) {
          continue;
@@ -278,88 +273,29 @@ export function setRenderObjectInVertexData(renderObject: EntityRenderObject, ve
       const tintB = baseTintB + renderPart.tintB;
 
       const modelMatrix = renderPart.modelMatrix;
-      const mm0 = modelMatrix[0];
-      const mm1 = modelMatrix[1];
-      const mm2 = modelMatrix[2];
-      const mm3 = modelMatrix[3];
-      const mm4 = modelMatrix[4];
-      const mm5 = modelMatrix[5];
 
-      vertexData[vertexDataOffset] = -0.5;
-      vertexData[vertexDataOffset + 1] = -0.5;
-      vertexData[vertexDataOffset + 2] = depth;
-      vertexData[vertexDataOffset + 3] = textureIndex;
-      vertexData[vertexDataOffset + 4] = textureWidth;
-      vertexData[vertexDataOffset + 5] = textureHeight;
-      vertexData[vertexDataOffset + 6] = tintR;
-      vertexData[vertexDataOffset + 7] = tintG;
-      vertexData[vertexDataOffset + 8] = tintB;
-      vertexData[vertexDataOffset + 9] = renderPart.opacity;
-      vertexData[vertexDataOffset + 10] = mm0;
-      vertexData[vertexDataOffset + 11] = mm1;
-      vertexData[vertexDataOffset + 12] = mm2;
-      vertexData[vertexDataOffset + 13] = mm3;
-      vertexData[vertexDataOffset + 14] = mm4;
-      vertexData[vertexDataOffset + 15] = mm5;
+      vertexData[vertexDataOffset] = depth;
+      vertexData[vertexDataOffset + 1] = textureIndex;
+      vertexData[vertexDataOffset + 2] = textureWidth;
+      vertexData[vertexDataOffset + 3] = textureHeight;
+      vertexData[vertexDataOffset + 4] = tintR;
+      vertexData[vertexDataOffset + 5] = tintG;
+      vertexData[vertexDataOffset + 6] = tintB;
+      vertexData[vertexDataOffset + 7] = renderPart.opacity;
+      vertexData[vertexDataOffset + 8] = modelMatrix[0];
+      vertexData[vertexDataOffset + 9] = modelMatrix[1];
+      vertexData[vertexDataOffset + 10] = modelMatrix[2];
+      vertexData[vertexDataOffset + 11] = modelMatrix[3];
+      vertexData[vertexDataOffset + 12] = modelMatrix[4];
+      vertexData[vertexDataOffset + 13] = modelMatrix[5];
 
-      vertexData[vertexDataOffset + 16] = 0.5;
-      vertexData[vertexDataOffset + 17] = -0.5;
-      vertexData[vertexDataOffset + 18] = depth;
-      vertexData[vertexDataOffset + 19] = textureIndex;
-      vertexData[vertexDataOffset + 20] = textureWidth;
-      vertexData[vertexDataOffset + 21] = textureHeight;
-      vertexData[vertexDataOffset + 22] = tintR;
-      vertexData[vertexDataOffset + 23] = tintG;
-      vertexData[vertexDataOffset + 24] = tintB;
-      vertexData[vertexDataOffset + 25] = renderPart.opacity;
-      vertexData[vertexDataOffset + 26] = mm0;
-      vertexData[vertexDataOffset + 27] = mm1;
-      vertexData[vertexDataOffset + 28] = mm2;
-      vertexData[vertexDataOffset + 29] = mm3;
-      vertexData[vertexDataOffset + 30] = mm4;
-      vertexData[vertexDataOffset + 31] = mm5;
-
-      vertexData[vertexDataOffset + 32] = -0.5;
-      vertexData[vertexDataOffset + 33] = 0.5;
-      vertexData[vertexDataOffset + 34] = depth;
-      vertexData[vertexDataOffset + 35] = textureIndex;
-      vertexData[vertexDataOffset + 36] = textureWidth;
-      vertexData[vertexDataOffset + 37] = textureHeight;
-      vertexData[vertexDataOffset + 38] = tintR;
-      vertexData[vertexDataOffset + 39] = tintG;
-      vertexData[vertexDataOffset + 40] = tintB;
-      vertexData[vertexDataOffset + 41] = renderPart.opacity;
-      vertexData[vertexDataOffset + 42] = mm0;
-      vertexData[vertexDataOffset + 43] = mm1;
-      vertexData[vertexDataOffset + 44] = mm2;
-      vertexData[vertexDataOffset + 45] = mm3;
-      vertexData[vertexDataOffset + 46] = mm4;
-      vertexData[vertexDataOffset + 47] = mm5;
-
-      vertexData[vertexDataOffset + 48] = 0.5;
-      vertexData[vertexDataOffset + 49] = 0.5;
-      vertexData[vertexDataOffset + 50] = depth;
-      vertexData[vertexDataOffset + 51] = textureIndex;
-      vertexData[vertexDataOffset + 52] = textureWidth;
-      vertexData[vertexDataOffset + 53] = textureHeight;
-      vertexData[vertexDataOffset + 54] = tintR;
-      vertexData[vertexDataOffset + 55] = tintG;
-      vertexData[vertexDataOffset + 56] = tintB;
-      vertexData[vertexDataOffset + 57] = renderPart.opacity;
-      vertexData[vertexDataOffset + 58] = mm0;
-      vertexData[vertexDataOffset + 59] = mm1;
-      vertexData[vertexDataOffset + 60] = mm2;
-      vertexData[vertexDataOffset + 61] = mm3;
-      vertexData[vertexDataOffset + 62] = mm4;
-      vertexData[vertexDataOffset + 63] = mm5;
-
-      vertexDataOffset += 4 * Var.ATTRIBUTES_PER_VERTEX;
+      vertexDataOffset += Var.ATTRIBUTES_PER_VERTEX;
    }
 }
 
 export function clearEntityInVertexData(vertexData: Float32Array, firstRenderPartIdx: number, numRenderParts: number): void {
-   const vertexDataOffset = firstRenderPartIdx * 4 * Var.ATTRIBUTES_PER_VERTEX;
-   vertexData.fill(0, vertexDataOffset, vertexDataOffset + numRenderParts * 4 * Var.ATTRIBUTES_PER_VERTEX - 1);
+   const vertexDataOffset = firstRenderPartIdx * Var.ATTRIBUTES_PER_VERTEX;
+   vertexData.fill(0, vertexDataOffset, vertexDataOffset + numRenderParts * Var.ATTRIBUTES_PER_VERTEX - 1);
 }
 
 export function setupEntityRendering(): void {
@@ -372,20 +308,17 @@ export function setupEntityRendering(): void {
 }
 
 /** NOTE: Callers must control the blending. */
-export function renderEntity(renderObject: Readonly<EntityRenderObject>, options?: EntityRenderingOptions): void {
-   // @Speed: could make a separate function so this isn't forced to run every time.
-   const overrideAlphaWithOne = options?.overrideAlphaWithOne || false;
-   if (overrideAlphaWithOne !== previousOverrideAlphaWithOne) {
-      previousOverrideAlphaWithOne = overrideAlphaWithOne;
-      gl.uniform1f(overrideAlphaWithOneUniformLocation, overrideAlphaWithOne ? 1 : 0);
-   }
-
+export function renderEntity(renderObject: Readonly<EntityRenderObject>): void {
    const numRenderParts = renderObject.renderPartsByZIndex.length;
    
    gl.bindVertexArray(renderObject.vao);
-   gl.drawElements(gl.TRIANGLES, numRenderParts * 6, gl.UNSIGNED_SHORT, 0);
+   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, numRenderParts);
 }
 
 export function cleanupEntityRendering(): void {
    gl.bindVertexArray(null);
+}
+
+export function setEntityRenderingOverrideAlphaWithOne(overrideAlphaWithOne: boolean): void {
+   gl.uniform1f(overrideAlphaWithOneUniformLocation, overrideAlphaWithOne ? 1 : 0);
 }

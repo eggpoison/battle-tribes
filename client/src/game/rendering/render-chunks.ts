@@ -14,12 +14,6 @@ export const WORLD_RENDER_CHUNK_SIZE = Settings.WORLD_SIZE_TILES / RENDER_CHUNK_
 
 export const RENDER_CHUNK_EDGE_GENERATION = Math.ceil(Settings.EDGE_GENERATION_DISTANCE / RENDER_CHUNK_SIZE);
 
-export interface RenderChunkSolidTileInfo {
-   readonly buffer: WebGLBuffer;
-   vao: WebGLVertexArrayObject;
-   vertexCount: number;
-}
-
 export interface RenderChunkRiverInfo {
    readonly baseVAO: WebGLVertexArrayObject;
    readonly baseVertexCount: number;

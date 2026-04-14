@@ -1,7 +1,7 @@
 import { GuardianSpikyBallSummonStage } from "battletribes-shared/components";
 import { Entity } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { Point, UtilVars, randAngle, randFloat, randInt } from "battletribes-shared/utils";
+import { Point, UtilVar, randAngle, randFloat, randInt } from "battletribes-shared/utils";
 import { turnToPosition } from "../ai-shared";
 import { GuardianComponentArray } from "../components/GuardianComponent";
 import { createGuardianSpikyBallConfig } from "../entities/projectiles/guardian-spiky-ball";
@@ -14,7 +14,7 @@ const enum Vars {
    FOCUS_DURATION_TICKS = (2.5 * Settings.TICK_RATE) | 0,
    RETURN_TIME_TICKS = (1 * Settings.TICK_RATE) | 0,
 
-   LIMB_DIRECTION = UtilVars.PI * 0.5
+   LIMB_DIRECTION = UtilVar.PI * 0.5
 }
 
 const createSpikyBall = (guardian: Entity, targetX: number, targetY: number): void => {

@@ -1,6 +1,6 @@
 import { Entity, CircularBox, PacketReader, randAngle, randItem, Settings, ServerComponentType, _point } from "webgl-test-shared";
 import { createRockSpeckParticle } from "../../particles";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { Light } from "../../lights";
 import { playSoundOnHitbox, ROCK_HIT_SOUNDS } from "../../sound";

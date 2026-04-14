@@ -1,6 +1,6 @@
 import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
 import { Entity, EntityType, FishColour } from "battletribes-shared/entities";
-import { angle, customTickIntervalHasPassed, Point, polarVec2, UtilVars } from "battletribes-shared/utils";
+import { angle, customTickIntervalHasPassed, Point, polarVec2, UtilVar } from "battletribes-shared/utils";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { FishComponent, FishComponentArray } from "../../components/FishComponent";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -23,7 +23,7 @@ import { applyAccelerationFromGround, getHitboxTile, Hitbox, addHitboxVelocity, 
 import { getEntityLayer } from "../../world";
 
 const enum Vars {
-   TURN_SPEED = UtilVars.PI / 1.5,
+   TURN_SPEED = UtilVar.PI / 1.5,
    LUNGE_FORCE = 200,
    LUNGE_INTERVAL = 1
 }

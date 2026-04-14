@@ -37,11 +37,9 @@ export function preloadTextureImages(): Array<HTMLImageElement> {
          miscTextureSources.push(textureSource);
       }
    }
-   for (const textureSources of Object.values(WALL_TILE_TEXTURE_SOURCE_RECORD)) {
-      for (const textureSource of textureSources) {
-         if (!miscTextureSources.includes(textureSource)) {
-            miscTextureSources.push(textureSource);
-         }
+   for (const textureSource of Object.values(WALL_TILE_TEXTURE_SOURCE_RECORD)) {
+      if (!miscTextureSources.includes(textureSource)) {
+         miscTextureSources.push(textureSource);
       }
    }
    for (const textureSource of BREAK_PROGRESS_TEXTURE_SOURCES) {
@@ -49,7 +47,6 @@ export function preloadTextureImages(): Array<HTMLImageElement> {
          miscTextureSources.push(textureSource);
       }
    }
-
 
    const images: Array<HTMLImageElement> = [];
    for (let i = 0; i < miscTextureSources.length; i++) {

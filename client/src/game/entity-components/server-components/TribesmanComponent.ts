@@ -1,6 +1,6 @@
 import { TileType, InventoryName, ItemType, CircularBox, TribeType, PacketReader, Point, assert, lerp, randAngle, randFloat, randInt, randItem, veryBadHash, TitleGenerationInfo, TribesmanTitle, Settings, ServerComponentType, Entity, EntityType, _point } from "webgl-test-shared";
 import { Light } from "../../lights";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle, createSprintParticle, createTitleObtainParticle, LeafParticleSize } from "../../particles";
 import { createRenderPartOverlayGroup } from "../../rendering/webgl/overlay-rendering";
 import { VisualRenderPart } from "../../render-parts/render-parts";

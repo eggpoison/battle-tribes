@@ -3,7 +3,7 @@ import { createSnowParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import Particle from "../../Particle";
 import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData } from "../../world";

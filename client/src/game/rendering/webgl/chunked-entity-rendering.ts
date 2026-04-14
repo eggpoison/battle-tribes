@@ -19,7 +19,6 @@ export interface EntityChunkData {
    readonly bufferIndexToEntityRecord: Uint32Array;
    readonly vertexData: Float32Array;
    readonly vertexBuffer: WebGLBuffer;
-   readonly indexBuffer: WebGLBuffer;
    readonly vao: WebGLVertexArrayObject;
 }
 
@@ -66,7 +65,6 @@ function createEntityRenderedChunkData(layer: Layer, chunkIdx: number): void {
          bufferIndexToEntityRecord: new Uint32Array(renderLayerInfo.maxEntitiesPerChunk),
          vertexData: entityRenderData.vertexData,
          vertexBuffer: entityRenderData.vertexBuffer,
-         indexBuffer: entityRenderData.indexBuffer,
          vao: entityRenderData.vao
       };
     
@@ -77,7 +75,6 @@ function createEntityRenderedChunkData(layer: Layer, chunkIdx: number): void {
 
 function removeEntityRenderedChunkData(layer: Layer, chunkIdx: number, chunkData: EntityChunkData): void {
    gl.deleteBuffer(chunkData.vertexBuffer);
-   gl.deleteBuffer(chunkData.indexBuffer);
    gl.deleteVertexArray(chunkData.vao);
 
    for (const renderLayer of CHUNKED_RENDER_LAYERS) {

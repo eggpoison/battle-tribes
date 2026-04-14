@@ -3,7 +3,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TUNNEL_TEXTURE_SOURCES } from "./BuildingMaterialComponent";

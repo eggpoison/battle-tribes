@@ -1,5 +1,5 @@
 import { PacketReader, Entity, ServerComponentType, TurretAmmoType } from "webgl-test-shared";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";

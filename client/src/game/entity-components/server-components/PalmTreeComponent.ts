@@ -1,7 +1,7 @@
 import { randFloat, randItem, randInt, Point, randAngle, ServerComponentType, CircularBox, HitFlags, Entity } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH, createWoodSpeckParticle } from "../../particles";

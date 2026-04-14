@@ -254,7 +254,9 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
             }
 
             undergroundLayer.tileTypes[tileIndex] = TileType.stoneWallFloor;
-            setWallInSubtiles(undergroundLayer.wallSubtileTypes, tileX, tileY, SubtileType.stoneWall);
+
+            const subtileType = Math.random() < 0.5 ? SubtileType.stoneWall1 : SubtileType.stoneWall2;
+            setWallInSubtiles(undergroundLayer.wallSubtileTypes, tileX, tileY, subtileType);
          } else {
             if (depth > 0.4 && weight > 0.54 && mithrilGenerationWeight > Vars.MIN_MITHRIL_GENERATION_WEIGHT) {
                isMithrilRich = true;

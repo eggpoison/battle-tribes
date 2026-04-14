@@ -1,7 +1,7 @@
-import { GuardianCrystalBurstStage, ServerComponentType } from "battletribes-shared/components";
+import { GuardianCrystalBurstStage } from "battletribes-shared/components";
 import { Entity } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { lerp, Point, polarVec2, randAngle, randFloat, randSign, UtilVars } from "battletribes-shared/utils";
+import { lerp, Point, polarVec2, randAngle, randFloat, randSign, UtilVar } from "battletribes-shared/utils";
 import { turnToPosition } from "../ai-shared";
 import { GuardianComponent, GuardianComponentArray, GuardianVars } from "../components/GuardianComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
@@ -15,8 +15,8 @@ const enum Vars {
    BURST_DURATION_TICKS = (2.5 * Settings.TICK_RATE) | 0,
    RETURN_TIME_TICKS = (1 * Settings.TICK_RATE) | 0,
 
-   RESTING_LIMB_DIRECTION = UtilVars.PI * 0.5,
-   BURST_LIMB_DIRECTION = UtilVars.PI * 0.3,
+   RESTING_LIMB_DIRECTION = UtilVar.PI * 0.5,
+   BURST_LIMB_DIRECTION = UtilVar.PI * 0.3,
 
    FRAGMENTS_PER_SECOND = 60
 }

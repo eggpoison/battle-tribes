@@ -1,6 +1,6 @@
 import { CowSpecies, DamageSource, Entity, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { getAbsAngleDiff, Point, polarVec2, positionIsInWorld, randAngle, randFloat, randInt, randItem, UtilVars } from "battletribes-shared/utils";
+import { getAbsAngleDiff, Point, polarVec2, positionIsInWorld, randAngle, randFloat, randInt, randItem, UtilVar } from "battletribes-shared/utils";
 import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity-events";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
@@ -55,7 +55,7 @@ const enum Vars {
    COHESION_INFLUENCE = 0.3,
    /** Angle that the head can be offset relative to the body */
    HEAD_DIRECTION_LEEWAY = 0.3,
-   HEAD_TURN_SPEED = 0.75 * UtilVars.PI,
+   HEAD_TURN_SPEED = 0.75 * UtilVar.PI,
 
    RAM_COOLDOWN_TICKS = Settings.TICK_RATE * 2,
    RAM_CHARGE_TICKS = Settings.TICK_RATE,

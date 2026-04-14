@@ -4,7 +4,7 @@ import { ComponentArray } from "./ComponentArray";
 import { DamageSource, Entity, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Biome } from "battletribes-shared/biomes";
-import { getTileIndexIncludingEdges, getTileX, getTileY, Point, polarVec2, randAngle, randFloat, randItem, TileIndex, tileIsInWorld, UtilVars } from "battletribes-shared/utils";
+import { getTileIndexIncludingEdges, getTileX, getTileY, Point, polarVec2, randAngle, randFloat, randItem, TileIndex, tileIsInWorld, UtilVar } from "battletribes-shared/utils";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { ItemType } from "battletribes-shared/items/items";
@@ -33,14 +33,14 @@ const enum Vars {
    SMALL_SNOWBALL_THROW_SPEED_MAX = 650,
    LARGE_SNOWBALL_THROW_SPEED_MIN = 350,
    LARGE_SNOWBALL_THROW_SPEED_MAX = 450,
-   SNOW_THROW_ARC = UtilVars.PI/5,
+   SNOW_THROW_ARC = UtilVar.PI/5,
    SNOW_THROW_OFFSET = 64,
    SNOW_THROW_WINDUP_TIME = 1.25,
    SNOW_THROW_HOLD_TIME = 0.1,
    SNOW_THROW_RETURN_TIME = 0.6,
    
-   TURN_SPEED = UtilVars.PI * 3/2,
-   SLOW_TURN_SPEED = UtilVars.PI * 1.5/2,
+   TURN_SPEED = UtilVar.PI * 3/2,
+   SLOW_TURN_SPEED = UtilVar.PI * 1.5/2,
 
    MEDIUM_ACCELERATION = 400,
    FAST_ACCELERATION = 700

@@ -1,7 +1,7 @@
 import { ServerComponentType } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";

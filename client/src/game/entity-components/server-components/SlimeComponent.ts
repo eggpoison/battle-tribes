@@ -1,5 +1,5 @@
 import { Settings, ServerComponentType, PacketReader, Entity, SlimeSize, lerp, randAngle, randFloat, randInt } from "webgl-test-shared";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";

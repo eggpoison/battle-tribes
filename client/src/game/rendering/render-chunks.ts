@@ -150,11 +150,8 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    };
    for (let renderChunkY = -RENDER_CHUNK_EDGE_GENERATION; renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
       for (let renderChunkX = -RENDER_CHUNK_EDGE_GENERATION; renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
-         const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
-         const hasWallTiles = layer.renderChunksWithWalls.has(renderChunkIndex);
-         
-         tileShadowInfoArray[TileShadowType.dropdownShadow].push(calculateShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.dropdownShadow, hasWallTiles));
-         tileShadowInfoArray[TileShadowType.wallShadow].push(calculateShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.wallShadow, hasWallTiles));
+         tileShadowInfoArray[TileShadowType.dropdownShadow].push(calculateShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.dropdownShadow));
+         tileShadowInfoArray[TileShadowType.wallShadow].push(calculateShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.wallShadow));
       }
    }
    // @Speed: makes it unpacked

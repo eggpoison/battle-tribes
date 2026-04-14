@@ -2,7 +2,7 @@ import { randFloat, randInt, Settings, Entity, HitboxFlag, ServerComponentType }
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { EntityComponentData, getCurrentLayer } from "../../world";
 import { playSound } from "../../sound";
 import { cameraPosition } from "../../camera";

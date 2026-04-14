@@ -25,6 +25,6 @@
          "webgl-test-shared": ["../shared/src"]
       }
    },
-   "include": ["src", "src/ui-state/nerd-vision-funcs.ts"],
-   "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
+   "include": ["src"],
+   "exclude": ["node_modules/*", "__sapper__/*", "public/*", "tools/*"]
 }

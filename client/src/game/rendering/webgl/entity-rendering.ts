@@ -1,11 +1,11 @@
 import { createWebGLProgram, gl } from "../../webgl";
-import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
+import { getEntityTextureAtlas } from "../../../texture-atlases";
 import { bindUBOToProgram, getEntityTextureAtlasUBO, UBOBindingIndex } from "../ubos";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { VisualRenderPart, renderPartIsTextured, thingIsVisualRenderPart } from "../../render-parts/render-parts";
 
 const enum Var {
-   ATTRIBUTES_PER_VERTEX = 14
+   ATTRIBUTES_PER_VERTEX = 12
 }
 
 export const enum EntityRenderingVar {
@@ -16,13 +16,14 @@ export interface EntityRenderData {
    readonly vao: WebGLVertexArrayObject;
    readonly vertexBuffer: WebGLBuffer;
    readonly vertexData: Float32Array;
-   readonly indexBuffer: WebGLBuffer;
 }
 
 let program: WebGLProgram;
 let overrideAlphaWithOneUniformLocation: WebGLUniformLocation;
 
 let previousOverrideAlphaWithOne = false;
+
+let indexBuffer: WebGLBuffer;
 
 export function createEntityShaders(): void {
    const vertexShaderText = `#version 300 es
@@ -37,20 +38,21 @@ export function createEntityShaders(): void {
    ${getEntityTextureAtlasUBO()}
    
    layout(location = 0) in float a_depth;
-   layout(location = 1) in float a_textureIndex;
-   layout(location = 2) in vec2 a_textureSize;
-   layout(location = 3) in vec3 a_tint;
+   layout(location = 1) in float a_textureArrayIndex;
+   layout(location = 2) in vec3 a_tint;
    // @SPEED This attribute is here only so that the snobe can dig down into snow through the illusion of its opacity decreasing. But a far better and actually better gameplay-wise too method is to have it actually dig down, and have snow stuff above it obscure it naturally.
-   layout(location = 4) in float a_opacity;
-   layout(location = 5) in vec2 a_modelMatrix_col0;
-   layout(location = 6) in vec2 a_modelMatrix_col1;
-   layout(location = 7) in vec2 a_modelMatrix_col2;
+   layout(location = 3) in float a_opacity;
+   layout(location = 4) in vec2 a_modelMatrix_col0;
+   layout(location = 5) in vec2 a_modelMatrix_col1;
+   layout(location = 6) in vec2 a_modelMatrix_col2;
    
    out vec2 v_texCoord;
-   out float v_textureIndex;
+   out float v_textureSlotIndex;
    out vec2 v_textureSize;
    out vec3 v_tint;
    out float v_opacity;
+   out float v_atlasSize;
+   out float v_atlasSlotSize;
 
    uint pcg_hash(uint val) {
       uint state = val * 747796405u + 2891336453u;
@@ -61,8 +63,9 @@ export function createEntityShaders(): void {
    void main() {
       int vertexID = gl_VertexID;
 
+      float textureSlotIndex;
       vec2 textureSize;
-      if (a_textureIndex == -1.0) {
+      if (a_textureArrayIndex == -1.0) {
          // Non-textured render parts
 
          uint hash = pcg_hash(uint(vertexID));
@@ -70,13 +73,58 @@ export function createEntityShaders(): void {
 
          float size = mix(1.4, 1.6, rand);
          textureSize = vec2(size, size);
+         textureSlotIndex = -1.0;
       } else {
-         textureSize = a_textureSize;
+         int idx = int(a_textureArrayIndex);
+
+         uvec4 slotIndexGroup = u_textureSlotIndices[idx / 8];
+         switch (idx % 8) {
+            case 0:
+               textureSlotIndex = float(slotIndexGroup.x & 0xFFFFu);
+               break;
+            case 1:
+               textureSlotIndex = float(slotIndexGroup.x >> 16u);
+               break;
+            case 2:
+               textureSlotIndex = float(slotIndexGroup.y & 0xFFFFu);
+               break;
+            case 3:
+               textureSlotIndex = float(slotIndexGroup.y >> 16u);
+               break;
+            case 4:
+               textureSlotIndex = float(slotIndexGroup.z & 0xFFFFu);
+               break;
+            case 5:
+               textureSlotIndex = float(slotIndexGroup.z >> 16u);
+               break;
+            case 6:
+               textureSlotIndex = float(slotIndexGroup.w & 0xFFFFu);
+               break;
+            default:
+               textureSlotIndex = float(slotIndexGroup.w >> 16u);
+               break;
+         }
+
+         uvec4 textureSizeGroup = u_textureSizes[idx / 4];
+         switch (idx % 4) {
+            case 0:
+               textureSize = vec2(textureSizeGroup.x & 0xFFFFu, textureSizeGroup.x >> 16u);
+               break;
+            case 1:
+               textureSize = vec2(textureSizeGroup.y & 0xFFFFu, textureSizeGroup.y >> 16u);
+               break;
+            case 2:
+               textureSize = vec2(textureSizeGroup.z & 0xFFFFu, textureSizeGroup.z >> 16u);
+               break;
+            default:
+               textureSize = vec2(textureSizeGroup.w & 0xFFFFu, textureSizeGroup.w >> 16u);
+               break;
+         }
       }
 
       int u = vertexID & 1;
       int v = vertexID >> 1;
-      vec2 position = vec2(float(u), float(v)) - 0.5;
+      vec2 position = vec2(u, v) - 0.5;
 
       mat3 modelMatrix = mat3(
          a_modelMatrix_col0.x, a_modelMatrix_col0.y, 0.0,
@@ -91,10 +139,12 @@ export function createEntityShaders(): void {
       gl_Position = vec4(clipSpacePos, a_depth, 1.0);
    
       v_texCoord = position + 0.5;
-      v_textureIndex = a_textureIndex;
-      v_textureSize = a_textureSize;
+      v_textureSlotIndex = textureSlotIndex;
+      v_textureSize = textureSize;
       v_tint = a_tint;
       v_opacity = a_opacity;
+      v_atlasSize = float(u_atlasSize); // @HACK
+      v_atlasSlotSize = ATLAS_SLOT_SIZE; // @HACK
    }
    `;
    
@@ -102,28 +152,29 @@ export function createEntityShaders(): void {
    precision highp float;
 
    uniform sampler2D u_textureAtlas;
-   ${getEntityTextureAtlasUBO()}
    
    uniform float u_overrideAlphaWithOne;
    
    in vec2 v_texCoord;
-   in float v_textureIndex;
+   in float v_textureSlotIndex;
    in vec2 v_textureSize;
    in vec3 v_tint;
    in float v_opacity;
+   in float v_atlasSize;
+   in float v_atlasSlotSize;
    
    out vec4 outputColour;
    
    void main() {
-      if (v_textureIndex == -1.0) {
+      if (v_textureSlotIndex == -1.0) {
          // Monocolour textures
          outputColour = vec4(v_tint, 1.0);
       } else {
-         float atlasPixelSize = u_atlasSize * ATLAS_SLOT_SIZE;
+         float atlasPixelSize = v_atlasSize * 16.0;
          
          // Calculate the coordinates of the top left corner of the texture
-         float textureXOffset = mod(v_textureIndex, u_atlasSize) * ATLAS_SLOT_SIZE;
-         float textureYOffset = floor(v_textureIndex / u_atlasSize) * ATLAS_SLOT_SIZE;
+         float textureXOffset = mod(v_textureSlotIndex, v_atlasSize) * 16.0;
+         float textureYOffset = floor(v_textureSlotIndex / v_atlasSize) * 16.0;
 
          float textureX = clamp(floor(v_texCoord.x * v_textureSize.x), 0.0, v_textureSize.x - 1.0);
          float textureY = clamp(floor(v_texCoord.y * v_textureSize.y), 0.0, v_textureSize.y - 1.0);
@@ -160,8 +211,17 @@ export function createEntityShaders(): void {
 
    overrideAlphaWithOneUniformLocation = gl.getUniformLocation(program, "u_overrideAlphaWithOne")!;
    gl.uniform1f(overrideAlphaWithOneUniformLocation, previousOverrideAlphaWithOne ? 1 : 0);
+   
+   const indicesData = new Uint16Array(6);
+   indicesData[1] = 1;
+   indicesData[2] = 2;
+   indicesData[3] = 2;
+   indicesData[4] = 1;
+   indicesData[5] = 3;
 
-   gl.bindVertexArray(null);
+   indexBuffer = gl.createBuffer();
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
 }
 
 export function createEntityRenderData(maxRenderParts: number): EntityRenderData {
@@ -179,58 +239,44 @@ export function createEntityRenderData(maxRenderParts: number): EntityRenderData
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.DYNAMIC_DRAW);
 
-   const TOTAL_BYTES = EntityRenderingVar.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
+   const TOTAL_BYTES = EntityRenderingVar.ATTRIBUTES_PER_VERTEX * 4;
    gl.vertexAttribPointer(0, 1, gl.FLOAT, false, TOTAL_BYTES, 0); // floatOffset=0
    gl.vertexAttribDivisor(0, 1);
    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, TOTAL_BYTES, 4); // floatOffset=1
    gl.vertexAttribDivisor(1, 1);
-   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, TOTAL_BYTES, 8); // floatOffset=2
+   gl.vertexAttribPointer(2, 3, gl.FLOAT, false, TOTAL_BYTES, 8); // floatOffset=2
    gl.vertexAttribDivisor(2, 1);
-   gl.vertexAttribPointer(3, 3, gl.FLOAT, false, TOTAL_BYTES, 16); // floatOffset=4
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, TOTAL_BYTES, 20); // floatOffset=5
    gl.vertexAttribDivisor(3, 1);
-   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, TOTAL_BYTES, 28); // floatOffset=7
-   gl.vertexAttribDivisor(4, 1);
 
+   gl.vertexAttribPointer(4, 2, gl.FLOAT, false, TOTAL_BYTES, 24); // floatOffset=6
+   gl.vertexAttribDivisor(4, 1);
    gl.vertexAttribPointer(5, 2, gl.FLOAT, false, TOTAL_BYTES, 32); // floatOffset=8
    gl.vertexAttribDivisor(5, 1);
    gl.vertexAttribPointer(6, 2, gl.FLOAT, false, TOTAL_BYTES, 40); // floatOffset=10
    gl.vertexAttribDivisor(6, 1);
-   gl.vertexAttribPointer(7, 2, gl.FLOAT, false, TOTAL_BYTES, 48); // floatOffset=12
-   gl.vertexAttribDivisor(7, 1);
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
    gl.enableVertexAttribArray(2);
    gl.enableVertexAttribArray(3);
+   
    gl.enableVertexAttribArray(4);
-
    gl.enableVertexAttribArray(5);
    gl.enableVertexAttribArray(6);
-   gl.enableVertexAttribArray(7);
 
-   const indicesData = new Uint16Array(6);
-   indicesData[1] = 1;
-   indicesData[2] = 2;
-   indicesData[3] = 2;
-   indicesData[4] = 1;
-   indicesData[5] = 3;
-
-   const indexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
 
    return {
       vao: vao,
       vertexBuffer: vertexBuffer,
-      vertexData: vertexData,
-      indexBuffer: indexBuffer
+      vertexData: vertexData
    };
 }
 
 export function deleteEntityRenderData(renderObject: EntityRenderObject): void {
    if (renderObject.vao !== null) {
       gl.deleteBuffer(renderObject.vertexBuffer);
-      gl.deleteBuffer(renderObject.indexBuffer);
       gl.deleteVertexArray(renderObject.vao);
    }
 }
@@ -240,8 +286,6 @@ export function calculateRenderPartDepth(renderPart: VisualRenderPart, renderObj
 }
 
 export function setRenderObjectInVertexData(renderObject: EntityRenderObject, vertexData: Float32Array, renderPartIdx: number): void {
-   const textureAtlas = getEntityTextureAtlas();
-
    const baseTintR = renderObject.tintR;
    const baseTintG = renderObject.tintG;
    const baseTintB = renderObject.tintB;
@@ -254,19 +298,7 @@ export function setRenderObjectInVertexData(renderObject: EntityRenderObject, ve
       
       const depth = calculateRenderPartDepth(renderPart, renderObject);
       
-      let textureIndex: number;
-      let textureWidth: number;
-      let textureHeight: number;
-      if (renderPartIsTextured(renderPart)) {
-         const textureArrayIndex = renderPart.textureArrayIndex;
-         textureIndex = textureAtlas.textureSlotIndexes[textureArrayIndex];
-         textureWidth = textureAtlas.textureWidths[textureArrayIndex];
-         textureHeight = textureAtlas.textureHeights[textureArrayIndex];
-      } else {
-         textureIndex = -1;
-         textureWidth = -1;
-         textureHeight = -1;
-      }
+      const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
 
       const tintR = baseTintR + renderPart.tintR;
       const tintG = baseTintG + renderPart.tintG;
@@ -275,19 +307,17 @@ export function setRenderObjectInVertexData(renderObject: EntityRenderObject, ve
       const modelMatrix = renderPart.modelMatrix;
 
       vertexData[vertexDataOffset] = depth;
-      vertexData[vertexDataOffset + 1] = textureIndex;
-      vertexData[vertexDataOffset + 2] = textureWidth;
-      vertexData[vertexDataOffset + 3] = textureHeight;
-      vertexData[vertexDataOffset + 4] = tintR;
-      vertexData[vertexDataOffset + 5] = tintG;
-      vertexData[vertexDataOffset + 6] = tintB;
-      vertexData[vertexDataOffset + 7] = renderPart.opacity;
-      vertexData[vertexDataOffset + 8] = modelMatrix[0];
-      vertexData[vertexDataOffset + 9] = modelMatrix[1];
-      vertexData[vertexDataOffset + 10] = modelMatrix[2];
-      vertexData[vertexDataOffset + 11] = modelMatrix[3];
-      vertexData[vertexDataOffset + 12] = modelMatrix[4];
-      vertexData[vertexDataOffset + 13] = modelMatrix[5];
+      vertexData[vertexDataOffset + 1] = textureArrayIndex;
+      vertexData[vertexDataOffset + 2] = tintR;
+      vertexData[vertexDataOffset + 3] = tintG;
+      vertexData[vertexDataOffset + 4] = tintB;
+      vertexData[vertexDataOffset + 5] = renderPart.opacity;
+      vertexData[vertexDataOffset + 6] = modelMatrix[0];
+      vertexData[vertexDataOffset + 7] = modelMatrix[1];
+      vertexData[vertexDataOffset + 8] = modelMatrix[2];
+      vertexData[vertexDataOffset + 9] = modelMatrix[3];
+      vertexData[vertexDataOffset + 10] = modelMatrix[4];
+      vertexData[vertexDataOffset + 11] = modelMatrix[5];
 
       vertexDataOffset += Var.ATTRIBUTES_PER_VERTEX;
    }
@@ -304,7 +334,7 @@ export function setupEntityRendering(): void {
    // Bind texture atlas
    const textureAtlas = getEntityTextureAtlas();
    gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
+   gl.bindTexture(gl.TEXTURE_2D, textureAtlas);
 }
 
 /** NOTE: Callers must control the blending. */

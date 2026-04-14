@@ -23,7 +23,8 @@ export enum SubtileType {
    none,
    rockWall,
    sandstoneWall,
-   stoneWall,
+   stoneWall1,
+   stoneWall2,
    permafrostWall,
 
    _LENGTH_

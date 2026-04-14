@@ -1,8 +1,6 @@
-import { getEntityTextureAtlas } from "../texture-atlases/texture-atlases";
-import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
+import { getEntityTextureAtlasInfo } from "../../texture-atlases";
 import { gl, halfWindowHeight, halfWindowWidth } from "../webgl";
 import { getTechTreeGL } from "./webgl/tech-tree-rendering";
-import { TEXTURE_SOURCES } from "../texture-atlases/texture-sources";
 import { cameraPosition, cameraZoom } from "../camera";
 
 export const enum UBOBindingIndex {
@@ -19,13 +17,18 @@ export const UBO_NAME_RECORD: Record<UBOBindingIndex, string> = {
 
 // This is in a function so that the ENTITY_TEXTURE_ATLAS_LENGTH value can wait until all the files register their texture sources
 export function getEntityTextureAtlasUBO(): string {
+   const textureAtlas = getEntityTextureAtlasInfo();
+   const numTextures = textureAtlas.textureWidths.length;
+   
    return `
-   #define ATLAS_SLOT_SIZE ${ATLAS_SLOT_SIZE.toFixed(1)}
+   #define ATLAS_SLOT_SIZE ${textureAtlas.atlasSlotSize.toFixed(1)}
 
    // Entity Texture Atlas
    layout(std140) uniform ${UBO_NAME_RECORD[UBOBindingIndex.ENTITY_TEXTURE_ATLAS]} {
       // @Cleanup @Speed: might be better to premultiply this by ATLAS_SLOT_SIZE if it isn't used
-      float u_atlasSize;
+      uint u_atlasSize;
+      uvec4 u_textureSlotIndices[${Math.ceil(numTextures / 8)}];
+      uvec4 u_textureSizes[${Math.ceil(numTextures / 4)}];
    };
    `;
 }
@@ -40,7 +43,7 @@ let cameraBufferTechTree: WebGLBuffer;
 const timeData = new Float32Array(4);
 let timeBuffer: WebGLBuffer;
 
-let entityTextureAtlasData: Float32Array;
+let entityTextureAtlasData: Uint32Array;
 let entityTextureAtlasBuffer: WebGLBuffer;
 
 export function createUBOs(): void {
@@ -62,20 +65,43 @@ export function createUBOs(): void {
       gl.bufferData(gl.UNIFORM_BUFFER, cameraDataTechTree.byteLength, gl.DYNAMIC_DRAW);
    }
 
+   // 
    // Entity texture atlas uniform buffer
+   // 
+
+   // @Memory: Could pack even tighter if I fit into one 32-bit uint instead of effectively 48 bits of data per. 9 bits for width, 9 bits for height, 14 for slot index. That would also be far faster to fill with the initial data
+
+   const textureAtlas = getEntityTextureAtlasInfo();
+   const textureSources = textureAtlas.textureSources;
 
    if (entityTextureAtlasData === undefined) {
-      entityTextureAtlasData = new Float32Array(4 + TEXTURE_SOURCES.length * 8);
+      entityTextureAtlasData = new Uint32Array(4 + Math.ceil(textureSources.length / 8) * 4 + Math.ceil(textureSources.length / 4) * 4);
    }
 
-   const textureAtlas = getEntityTextureAtlas();
-   entityTextureAtlasData[0] = textureAtlas.atlasSize;
-   for (let i = 0; i < TEXTURE_SOURCES.length; i++) {
-      entityTextureAtlasData[4 + i * 4] = textureAtlas.textureSlotIndexes[i];
+   let offset = 0;
+
+   entityTextureAtlasData[offset] = textureAtlas.atlasSize;
+
+   offset += 4;
+
+   for (let i = 0; i < textureSources.length / 8; i++) {
+      const iOffset = i * 8;
+
+      entityTextureAtlasData[offset] = textureAtlas.textureSlotIndexes[iOffset] | textureAtlas.textureSlotIndexes[iOffset + 1] << 16;
+      entityTextureAtlasData[offset + 1] = textureAtlas.textureSlotIndexes[iOffset + 2] | textureAtlas.textureSlotIndexes[iOffset + 3] << 16;
+      entityTextureAtlasData[offset + 2] = textureAtlas.textureSlotIndexes[iOffset + 4] | textureAtlas.textureSlotIndexes[iOffset + 5] << 16;
+      entityTextureAtlasData[offset + 3] = textureAtlas.textureSlotIndexes[iOffset + 6] | textureAtlas.textureSlotIndexes[iOffset + 7] << 16;
+      offset += 4;
    }
-   for (let i = 0; i < TEXTURE_SOURCES.length; i++) {
-      entityTextureAtlasData[4 + TEXTURE_SOURCES.length * 4 + i * 4] = textureAtlas.textureWidths[i];
-      entityTextureAtlasData[4 + TEXTURE_SOURCES.length * 4 + i * 4 + 1] = textureAtlas.textureHeights[i];
+
+   for (let i = 0; i < textureSources.length / 4; i++) {
+      const iOffset = i * 4;
+      
+      entityTextureAtlasData[offset] = textureAtlas.textureWidths[iOffset] | textureAtlas.textureHeights[iOffset] << 16;
+      entityTextureAtlasData[offset + 1] = textureAtlas.textureWidths[iOffset + 1] | textureAtlas.textureHeights[iOffset + 1] << 16;
+      entityTextureAtlasData[offset + 2] = textureAtlas.textureWidths[iOffset + 2] | textureAtlas.textureHeights[iOffset + 2] << 16;
+      entityTextureAtlasData[offset + 3] = textureAtlas.textureWidths[iOffset + 3] | textureAtlas.textureHeights[iOffset + 3] << 16;
+      offset += 4;
    }
 
    entityTextureAtlasBuffer = gl.createBuffer();
@@ -101,17 +127,15 @@ export function updateUBOs(): void {
       gl.bindBuffer(gl.UNIFORM_BUFFER, cameraBuffer);
       gl.bufferSubData(gl.UNIFORM_BUFFER, 0, cameraData);
 
-      {
-         cameraDataTechTree[0] = cameraPosition.x;
-         cameraDataTechTree[1] = cameraPosition.y;
-         cameraDataTechTree[2] = halfWindowWidth;
-         cameraDataTechTree[3] = halfWindowHeight;
-         cameraDataTechTree[4] = cameraZoom;
+      cameraDataTechTree[0] = cameraPosition.x;
+      cameraDataTechTree[1] = cameraPosition.y;
+      cameraDataTechTree[2] = halfWindowWidth;
+      cameraDataTechTree[3] = halfWindowHeight;
+      cameraDataTechTree[4] = cameraZoom;
 
-         const gl = getTechTreeGL();
-         gl.bindBuffer(gl.UNIFORM_BUFFER, cameraBufferTechTree);
-         gl.bufferSubData(gl.UNIFORM_BUFFER, 0, cameraDataTechTree);
-      }
+      const techTreeGL = getTechTreeGL();
+      techTreeGL.bindBuffer(techTreeGL.UNIFORM_BUFFER, cameraBufferTechTree);
+      techTreeGL.bufferSubData(techTreeGL.UNIFORM_BUFFER, 0, cameraDataTechTree);
    }
 
    // Update the time buffer

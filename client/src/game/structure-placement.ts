@@ -1,4 +1,4 @@
-import { BuildingMaterial, ServerComponentType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, SubtileType, getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, STRUCTURE_TYPES, StructureType, Settings, Entity, EntityType, getEntityCollisionGroup, CollisionGroup, boxIsCollidingWithSubtile, RectangularBox, boxIsCircular, _bounds } from "webgl-test-shared";
+import { BuildingMaterial, ServerComponentType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, SubtileType, getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, STRUCTURE_TYPES, StructureType, Settings, Entity, EntityType, getEntityCollisionGroup, CollisionGroup, boxIsCollidingWithSubtile, RectangularBox, boxIsCircular, _bounds, TileIndex, TileType, getTileX, getTileY, tileIsInWorld } from "webgl-test-shared";
 import { Hitbox } from "./hitboxes";
 import { ItemComponentArray } from "./entity-components/server-components/ItemComponent";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
@@ -37,6 +37,7 @@ import { createFrostshaperConfig } from "./entities/frostshaper";
 import { getEntitiesInRange, getHitboxesCollidingEntities } from "./collision";
 import { createFloorSignConfig } from "./entities/floor-sign";
 import { getTransformComponentData } from "./entity-component-types";
+import { minVisibleTileX, maxVisibleTileX, minVisibleTileY, maxVisibleTileY } from "./camera";
 
 const enum Var {
    STRUCTURE_PLACE_DISTANCE = 60,
@@ -74,6 +75,8 @@ export interface StructurePlaceInfo {
    readonly hitboxes: ReadonlyArray<Hitbox>;
    readonly isValid: boolean;
 }
+
+export const DROPDOWN_TILE_BUILDING_BLOCK_RANGE = 3;
 
 export function entityIsStructure(entityType: EntityType): entityType is StructureType {
    return STRUCTURE_TYPES.indexOf(entityType as StructureType) !== -1;
@@ -142,7 +145,53 @@ export function createStructureConfig(entityType: EntityType, position: Point, r
    return config;
 }
 
+export function getVisibleLayerBlockingTiles(layer: Layer): Set<TileIndex> {
+   // @SPEED @Hack
+   
+   const minBlockingTileX = minVisibleTileX - DROPDOWN_TILE_BUILDING_BLOCK_RANGE;
+   const maxBlockingTileX = maxVisibleTileX + DROPDOWN_TILE_BUILDING_BLOCK_RANGE;
+   const minBlockingTileY = minVisibleTileY - DROPDOWN_TILE_BUILDING_BLOCK_RANGE;
+   const maxBlockingTileY = maxVisibleTileY + DROPDOWN_TILE_BUILDING_BLOCK_RANGE;
+   
+   const blockingTiles = new Set<TileIndex>();
+   for (let tileX = minBlockingTileX; tileX <= maxBlockingTileX; tileX++) {
+      for (let tileY = minBlockingTileY; tileY <= maxBlockingTileY; tileY++) {
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         if (layer.getTile(tileIndex).type === TileType.dropdown) {
+            blockingTiles.add(tileIndex);
+         }
+      }
+   }
+
+   // Expand the tiles to their neighbours
+   for (let i = 0; i < 3; i++) {
+      const tilesToExpand = Array.from(blockingTiles);
+
+      for (const tileIndex of tilesToExpand) {
+         const tileX = getTileX(tileIndex);
+         const tileY = getTileY(tileIndex);
+         
+         if (tileIsInWorld(tileX + 1, tileY)) {
+            blockingTiles.add(getTileIndexIncludingEdges(tileX + 1, tileY));
+         }
+         if (tileIsInWorld(tileX, tileY + 1)) {
+            blockingTiles.add(getTileIndexIncludingEdges(tileX, tileY + 1));
+         }
+         if (tileIsInWorld(tileX - 1, tileY)) {
+            blockingTiles.add(getTileIndexIncludingEdges(tileX - 1, tileY));
+         }
+         if (tileIsInWorld(tileX, tileY - 1)) {
+            blockingTiles.add(getTileIndexIncludingEdges(tileX, tileY - 1));
+         }
+      }
+   }
+
+   return blockingTiles;
+}
+
 const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: ReadonlyArray<Hitbox>): boolean => {
+   const blockingTiles = getVisibleLayerBlockingTiles(layer);
+   
    for (const hitbox of hitboxes) {
       const box = hitbox.box;
 
@@ -155,7 +204,7 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
       for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
             const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-            if (!layer.tileIsBuildingBlocking(tileIndex)) {
+            if (!blockingTiles.has(tileIndex)) {
                continue;
             }
             

@@ -11,7 +11,7 @@ import { sendMountCarrySlotPacket, sendPickUpEntityPacket, sendStructureInteract
 import { EntityRenderObject } from "./EntityRenderObject";
 import { RideableComponentArray } from "./entity-components/server-components/RideableComponent";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../texture-atlases";
 import { playerInstance } from "./player";
 import { HealthComponentArray } from "./entity-components/server-components/HealthComponent";
 import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "./entity-components/server-components/TamingComponent";

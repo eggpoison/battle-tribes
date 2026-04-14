@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
 import path from 'path';
+import TextureAtlasStitchingPlugin from "./tools/vite-plugin-texture-atlas";
 import InlineConstEnumPlugin from "unplugin-inline-const-enum/vite";
 
 export default defineConfig({
    plugins: [
+      TextureAtlasStitchingPlugin(),
       // @INCOMPLETE don't think this is working for the Settings object in the shared project. check if its correctly const-enum'ing when its gone
       InlineConstEnumPlugin({
          sourceDir: "./src",

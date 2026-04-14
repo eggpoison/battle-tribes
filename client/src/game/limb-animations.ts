@@ -1,6 +1,6 @@
 import { Point, customTickIntervalHasPassed, lerp, randAngle, randFloat, randInt, randItem, rotatePointAroundOrigin, secondsToTicks, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, getItemRecipe, Entity, LimbAction, Settings, assert, _point } from "webgl-test-shared";
 import { InventoryUseComponentArray, LimbInfo } from "./entity-components/server-components/InventoryUseComponent";
-import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
 import { ParticleColour } from "./rendering/webgl/particle-rendering";
 import { createColouredParticle, createSawdustCloud } from "./particles";

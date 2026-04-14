@@ -1,11 +1,9 @@
 import { ItemType, Settings, Point, polarVec2, randAngle, randFloat, randSign, rotatePointAroundPoint, _point } from "webgl-test-shared";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth } from "../../webgl";
-import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
-import { getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getEntityTextureAtlasInfo, getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../../texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import { getTechTreeGL } from "./tech-tree-rendering";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import { TEXTURE_SOURCES } from "../../texture-atlases/texture-sources";
 import { techTreeState } from "../../../ui-state/tech-tree-state";
 
 interface TechTreeItem {
@@ -39,6 +37,9 @@ export function createTechTreeItem(itemType: ItemType, position: Point): void {
 }
 
 export function createTechTreeItemShaders(): void {
+   const textureAtlas = getEntityTextureAtlasInfo();
+   const textureSources = textureAtlas.textureSources;
+   
    const vertexShaderText = `#version 300 es
    precision highp float;
    
@@ -75,8 +76,8 @@ export function createTechTreeItemShaders(): void {
    uniform sampler2D u_textureAtlas;
    uniform float u_atlasPixelSize;
    uniform float u_atlasSlotSize;
-   uniform float u_textureSlotIndexes[${TEXTURE_SOURCES.length}];
-   uniform vec2 u_textureSizes[${TEXTURE_SOURCES.length}];
+   uniform float u_textureSlotIndexes[${textureSources.length}];
+   uniform vec2 u_textureSizes[${textureSources.length}];
    
    in vec2 v_texCoord;
    in float v_textureArrayIndex;
@@ -116,23 +117,21 @@ export function createTechTreeItemShaders(): void {
    const textureSlotIndexesUniformLocation = gl.getUniformLocation(program, "u_textureSlotIndexes")!;
    const textureSizesUniformLocation = gl.getUniformLocation(program, "u_textureSizes")!;
 
-   const textureAtlas = getTechTreeEntityTextureAtlas();
-   
-   const textureSlotIndexes = new Float32Array(TEXTURE_SOURCES.length);
-   for (let textureArrayIndex = 0; textureArrayIndex < TEXTURE_SOURCES.length; textureArrayIndex++) {
+   const textureSlotIndexes = new Float32Array(textureSources.length);
+   for (let textureArrayIndex = 0; textureArrayIndex < textureSources.length; textureArrayIndex++) {
       textureSlotIndexes[textureArrayIndex] = textureAtlas.textureSlotIndexes[textureArrayIndex];
    }
 
-   const textureSizes = new Float32Array(TEXTURE_SOURCES.length * 2);
-   for (let textureArrayIndex = 0; textureArrayIndex < TEXTURE_SOURCES.length; textureArrayIndex++) {
+   const textureSizes = new Float32Array(textureSources.length * 2);
+   for (let textureArrayIndex = 0; textureArrayIndex < textureSources.length; textureArrayIndex++) {
       textureSizes[textureArrayIndex * 2] = textureAtlas.textureWidths[textureArrayIndex];
       textureSizes[textureArrayIndex * 2 + 1] = textureAtlas.textureHeights[textureArrayIndex];
    }
 
    gl.useProgram(program);
    gl.uniform1i(textureUniformLocation, 0);
-   gl.uniform1f(atlasPixelSizeUniformLocation, textureAtlas.atlasSize * ATLAS_SLOT_SIZE);
-   gl.uniform1f(atlasSlotSizeUniformLocation, ATLAS_SLOT_SIZE);
+   gl.uniform1f(atlasPixelSizeUniformLocation, textureAtlas.atlasSize * textureAtlas.atlasSlotSize);
+   gl.uniform1f(atlasSlotSizeUniformLocation, textureAtlas.atlasSlotSize);
    gl.uniform1fv(textureSlotIndexesUniformLocation, textureSlotIndexes);
    gl.uniform2fv(textureSizesUniformLocation, textureSizes);
 
@@ -211,7 +210,7 @@ export function renderTechTreeItems(): void {
 
    const a = 16; // @Cleanup @Hack: what is this?
 
-   const textureAtlas = getTechTreeEntityTextureAtlas();
+   const textureAtlas = getEntityTextureAtlasInfo();
    const gl = getTechTreeGL();
    
    const vertexData = new Float32Array(items.length * 4 * 6);
@@ -303,7 +302,7 @@ export function renderTechTreeItems(): void {
 
    // Bind texture atlas
    gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
+   gl.bindTexture(gl.TEXTURE_2D, getTechTreeEntityTextureAtlas());
 
    gl.bindVertexArray(vao);
 

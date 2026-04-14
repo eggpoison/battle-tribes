@@ -1,4 +1,4 @@
-import { TribeType } from "../../shared/src";
+import { TribeType } from "webgl-test-shared";
 import "./css/index.css";
 import "./game/entity-components/components"; // So that the component arrays are all detected
 // @HACK because the whole nerdVision tree would otherwise never be imported

@@ -1,7 +1,7 @@
 import { LimbConfiguration, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { updateLimb_TEMP } from "./InventoryUseComponent";
 import { EntityComponentData } from "../../world";

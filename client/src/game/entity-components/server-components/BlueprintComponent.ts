@@ -1,7 +1,7 @@
 import { Entity, PacketReader, assertUnreachable, randAngle, randFloat, rotatePointAroundOrigin, BlueprintType, ServerComponentType, _point } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../../particles";
-import { getEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getEntityTextureAtlasInfo, getTextureArrayIndex } from "../../../texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
@@ -12,7 +12,6 @@ import { WARRIOR_HUT_SIZE } from "./HutComponent";
 import { TribeComponentArray } from "./TribeComponent";
 import { playerTribe } from "../../tribes";
 import { Hitbox } from "../../hitboxes";
-import { registerTextureSource } from "../../texture-atlases/texture-sources";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
 
@@ -369,15 +368,6 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ]
 };
 
-// Add partial blueprint textures
-for (const progressTextureInfoArray of Object.values(BLUEPRINT_PROGRESS_TEXTURE_SOURCES)) {
-   for (const progressTextureInfo of progressTextureInfoArray) {
-      for (const textureSource of progressTextureInfo.progressTextureSources) {
-         registerTextureSource(textureSource);
-      }
-   }
-}
-
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
@@ -612,7 +602,7 @@ function updateFromData(data: BlueprintComponentData, entity: Entity): void {
       const progressTexture = getCurrentBlueprintProgressTexture(blueprintComponent.blueprintType, blueprintProgress);
       
       // @Cleanup
-      const textureAtlas = getEntityTextureAtlas();
+      const textureAtlas = getEntityTextureAtlasInfo();
       const textureArrayIndex = getTextureArrayIndex(progressTexture.completedTextureSource);
       const xShift = textureAtlas.textureWidths[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
       const yShift = textureAtlas.textureHeights[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);

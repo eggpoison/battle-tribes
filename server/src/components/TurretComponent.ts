@@ -14,7 +14,7 @@ import { createBallistaWoodenBoltConfig } from "../entities/projectiles/ballista
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { TransformComponentArray, TransformComponent } from "./TransformComponent";
 import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "./TribeComponent";
-import { polarVec2, randAngle, UtilVars } from "battletribes-shared/utils";
+import { polarVec2, randAngle, UtilVar } from "battletribes-shared/utils";
 import { boxIsCircular } from "battletribes-shared/boxes/boxes";
 import { createEntity, getEntityLayer, getEntityType } from "../world";
 import { registerDirtyEntity } from "../server/player-clients";
@@ -41,8 +41,8 @@ TurretComponentArray.onTick = {
 
 const getAimArcSize = (turretEntityType: TurretEntityType): number => {
    switch (turretEntityType) {
-      case EntityType.slingTurret: return 2 * UtilVars.PI;
-      case EntityType.ballista: return UtilVars.PI * 0.5;
+      case EntityType.slingTurret: return 2 * UtilVar.PI;
+      case EntityType.ballista: return UtilVar.PI * 0.5;
       default: {
          throw new Error();
       }

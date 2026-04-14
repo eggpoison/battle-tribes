@@ -3,7 +3,7 @@ import { ComponentArray } from "./ComponentArray";
 import { Entity, EntityType, SlimeSize } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
-import { Point, randAngle, UtilVars } from "battletribes-shared/utils";
+import { Point, randAngle, UtilVar } from "battletribes-shared/utils";
 import { moveEntityToPosition } from "../ai-shared";
 import { createSlimeConfig } from "../entities/mobs/slime";
 import { AIHelperComponentArray } from "./AIHelperComponent";
@@ -14,7 +14,7 @@ import { getHitboxTile } from "../hitboxes";
 
 const enum Vars {
    ACCELERATION = 100,
-   TURN_SPEED = UtilVars.PI,
+   TURN_SPEED = UtilVar.PI,
    SLIMEWISP_MERGE_TIME = 2
 }
 

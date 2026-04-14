@@ -1,7 +1,7 @@
 import { GuardianCrystalSlamStage } from "battletribes-shared/components";
 import { Entity } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { lerp, Point, polarVec2, randAngle, UtilVars } from "battletribes-shared/utils";
+import { lerp, Point, polarVec2, randAngle, UtilVar } from "battletribes-shared/utils";
 import { moveEntityToPosition, turnToPosition } from "../ai-shared";
 import { GuardianComponent, GuardianComponentArray, GuardianVars } from "../components/GuardianComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
@@ -14,12 +14,12 @@ const enum Vars {
    SLAM_TIME_TICKS = (0.3 * Settings.TICK_RATE) | 0,
    RETURN_TIME_TICKS = (1.1 * Settings.TICK_RATE) | 0,
 
-   RESTING_LIMB_DIRECTION = UtilVars.PI * 0.5,
-   SLAMMED_LIMB_DIRECTION = UtilVars.PI * 0.05,
-   WINDUP_LIMB_DIRECTION = UtilVars.PI * 0.7,
+   RESTING_LIMB_DIRECTION = UtilVar.PI * 0.5,
+   SLAMMED_LIMB_DIRECTION = UtilVar.PI * 0.05,
+   WINDUP_LIMB_DIRECTION = UtilVar.PI * 0.7,
    LIMB_EXTEND_AMOUNT = 16,
 
-   QUAKE_ARC_SIZE = UtilVars.PI * 0.4
+   QUAKE_ARC_SIZE = UtilVar.PI * 0.4
 }
 
 export default class GuardianCrystalSlamAI {

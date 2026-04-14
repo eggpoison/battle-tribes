@@ -5,7 +5,7 @@ import { createSlurbParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { coatSlimeTrails } from "../../rendering/webgl/slime-trail-rendering";
 import { playSound, playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { EntityComponentData, getEntityLayer, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformComponent";

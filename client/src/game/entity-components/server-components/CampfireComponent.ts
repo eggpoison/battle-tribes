@@ -1,7 +1,7 @@
 import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { createSmokeParticle, createEmberParticle } from "../../particles";
 import { CookingComponentArray } from "./CookingComponent";
 import { TransformComponentArray } from "./TransformComponent";

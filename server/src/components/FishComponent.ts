@@ -6,7 +6,7 @@ import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
-import { customTickIntervalHasPassed, Point, polarVec2, randAngle, randFloat, randSign, UtilVars } from "battletribes-shared/utils";
+import { customTickIntervalHasPassed, Point, polarVec2, randAngle, randFloat, randSign, UtilVar } from "battletribes-shared/utils";
 import { runHerdAI } from "../ai-shared";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { runEscapeAI } from "../ai/EscapeAI";
@@ -19,7 +19,7 @@ import { CollisionVars, entitiesAreColliding } from "../collision-detection";
 import { applyAccelerationFromGround, applyKnockback, getHitboxTile, Hitbox, addHitboxVelocity, addHitboxAngularVelocity } from "../hitboxes";
 
 const enum Vars {
-   TURN_SPEED = UtilVars.PI / 1.5,
+   TURN_SPEED = UtilVar.PI / 1.5,
 
    ACCELERATION = 40,
    

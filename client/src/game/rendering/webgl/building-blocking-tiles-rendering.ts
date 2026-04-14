@@ -1,8 +1,10 @@
-import { getTileIndexIncludingEdges, Settings } from "webgl-test-shared";
-import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY } from "../../camera";
+import { getTileIndexIncludingEdges, getTileX, getTileY, Settings } from "webgl-test-shared";
+import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY, minVisibleTileX, maxVisibleTileX, minVisibleTileY, maxVisibleTileY } from "../../camera";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getCurrentLayer } from "../../world";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
+import { DROPDOWN_TILE_BUILDING_BLOCK_RANGE, getVisibleLayerBlockingTiles } from "../../structure-placement";
+import Layer from "../../Layer";
 
 let program: WebGLProgram;
 
@@ -73,38 +75,27 @@ export function createBuildingBlockingTileShaders(): void {
    bindUBOToProgram(gl, program, UBOBindingIndex.TIME);
 }
 
-export function renderBuildingBlockingTiles(): void {
-   // @Speed
-
-   const layer = getCurrentLayer();
+export function renderBuildingBlockingTiles(layer: Layer): void {
+   const blockingTiles = getVisibleLayerBlockingTiles(layer);
    
-   const minVisibleTileX = Math.floor(minVisibleX / Settings.TILE_SIZE);
-   const maxVisibleTileX = Math.floor(maxVisibleX / Settings.TILE_SIZE);
-   const minVisibleTileY = Math.floor(minVisibleY / Settings.TILE_SIZE);
-   const maxVisibleTileY = Math.floor(maxVisibleY / Settings.TILE_SIZE);
-   
-   const vertices: Array<number> = [];
-   for (let tileX = minVisibleTileX; tileX <= maxVisibleTileX; tileX++) {
-      for (let tileY = minVisibleTileY; tileY <= maxVisibleTileY; tileY++) {
-         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-         if (!layer.buildingBlockingTiles.has(tileIndex)) {
-            continue;
-         }
+   const vertices = new Array<number>();
+   for (const tileIndex of blockingTiles) {
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
 
-         const x1 = tileX * Settings.TILE_SIZE;
-         const x2 = (tileX + 1) * Settings.TILE_SIZE;
-         const y1 = tileY * Settings.TILE_SIZE;
-         const y2 = (tileY + 1) * Settings.TILE_SIZE;
+      const x1 = tileX * Settings.TILE_SIZE;
+      const x2 = (tileX + 1) * Settings.TILE_SIZE;
+      const y1 = tileY * Settings.TILE_SIZE;
+      const y2 = (tileY + 1) * Settings.TILE_SIZE;
 
-         vertices.push(
-            x1, y1,
-            x2, y1,
-            x1, y2,
-            x1, y2,
-            x2, y1,
-            x2, y2
-         );
-      }
+      vertices.push(
+         x1, y1,
+         x2, y1,
+         x1, y2,
+         x1, y2,
+         x2, y1,
+         x2, y2
+      );
    }
 
    if (vertices.length === 0) {

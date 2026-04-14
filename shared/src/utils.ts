@@ -1,7 +1,7 @@
 import { RectangularBox } from "./boxes/RectangularBox";
 import { Settings } from "./settings";
 
-export enum UtilVars {
+export enum UtilVar {
    PI = 3.14159265358979
 }
 

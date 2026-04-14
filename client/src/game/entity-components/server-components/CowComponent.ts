@@ -6,7 +6,7 @@ import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { RenderPart } from "../../render-parts/render-parts";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";

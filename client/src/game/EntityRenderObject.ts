@@ -55,7 +55,6 @@ export class EntityRenderObject {
    public readonly vao: WebGLVertexArrayObject | null;
    public readonly vertexBuffer: WebGLBuffer | null;
    public readonly vertexData: Float32Array | null;
-   public readonly indexBuffer: WebGLBuffer | null;
 
    public isClientInterp: boolean;
 
@@ -71,12 +70,10 @@ export class EntityRenderObject {
          this.vao = entityRenderData.vao;
          this.vertexBuffer = entityRenderData.vertexBuffer;
          this.vertexData = entityRenderData.vertexData;
-         this.indexBuffer = entityRenderData.indexBuffer;
       } else {
          this.vao = null;
          this.vertexBuffer = null;
          this.vertexData = null;
-         this.indexBuffer = null;
       }
    }
 

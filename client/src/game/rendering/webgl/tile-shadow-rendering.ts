@@ -393,13 +393,8 @@ const calculateVertexData = (tileShadows: ReadonlyArray<TileShadowInfo>): Float3
    return vertexData;
 }
 
-export function calculateShadowInfo(layer: Layer, renderChunkX: number, renderChunkY: number, tileShadowType: TileShadowType, hasWallTiles: boolean): RenderChunkTileShadowInfo | null {
-   let tileShadows: ReadonlyArray<TileShadowInfo>;
-   if (!hasWallTiles) {
-      tileShadows = [];
-   } else {
-      tileShadows = tileShadowType === TileShadowType.wallShadow ? getChunkWallShadows(layer, renderChunkX, renderChunkY) : getChunkDropdownShadows(layer, renderChunkX, renderChunkY);
-   }
+export function calculateShadowInfo(layer: Layer, renderChunkX: number, renderChunkY: number, tileShadowType: TileShadowType): RenderChunkTileShadowInfo | null {
+   const tileShadows = tileShadowType === TileShadowType.wallShadow ? getChunkWallShadows(layer, renderChunkX, renderChunkY) : getChunkDropdownShadows(layer, renderChunkX, renderChunkY);
    const vertexData = calculateVertexData(tileShadows);
 
    const vao = gl.createVertexArray();

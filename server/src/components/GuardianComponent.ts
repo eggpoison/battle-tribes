@@ -4,7 +4,7 @@ import { Entity, DamageSource } from "battletribes-shared/entities";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { Packet } from "battletribes-shared/packets";
 import { Settings } from "battletribes-shared/settings";
-import { getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVars } from "battletribes-shared/utils";
+import { getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVar } from "battletribes-shared/utils";
 import { moveEntityToPosition } from "../ai-shared";
 import { registerDirtyEntity } from "../server/player-clients";
 import { AIHelperComponentArray, AIType } from "./AIHelperComponent";
@@ -16,7 +16,7 @@ import { applyKnockback, Hitbox } from "../hitboxes";
 
 const enum Vars {
    VISION_RANGE = 250,
-   LIMB_ORBIT_SPEED = UtilVars.PI * 0.8,
+   LIMB_ORBIT_SPEED = UtilVar.PI * 0.8,
 
    DEFAULT_GEM_ACTIVATION = 0.25,
    ANGERED_GEM_ACTIVATION = 0.55,

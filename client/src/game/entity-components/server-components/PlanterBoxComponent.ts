@@ -5,7 +5,7 @@ import { createGrowthParticle } from "../../particles";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { getEntityRenderObject, getEntityAgeTicks, EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponent, TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";

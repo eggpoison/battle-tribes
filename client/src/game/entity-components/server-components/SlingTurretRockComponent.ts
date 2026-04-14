@@ -4,7 +4,7 @@ import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";

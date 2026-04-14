@@ -5,7 +5,7 @@ import { Packet } from "battletribes-shared/packets";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point, polarVec2, randFloat, UtilVars } from "battletribes-shared/utils";
+import { Point, polarVec2, randFloat, UtilVar } from "battletribes-shared/utils";
 import { moveEntityToPosition, runHerdAI } from "../ai-shared";
 import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent";
 import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity, healEntity, HealthComponentArray } from "./HealthComponent";
@@ -26,7 +26,7 @@ import { applyAbsoluteKnockback, applyAccelerationFromGround, applyKnockback, Hi
 import { entitiesAreColliding, CollisionVars } from "../collision-detection";
 
 const enum Vars {
-   TURN_SPEED = 3 * UtilVars.PI,
+   TURN_SPEED = 3 * UtilVar.PI,
 
    ACCELERATION = 275,
    ACCELERATION_SLOW = 150,

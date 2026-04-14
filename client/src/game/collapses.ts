@@ -104,7 +104,7 @@ const createSpeckDebris = (x: number, y: number, subtileType: SubtileType): void
    const angularVelocity = randFloat(-Math.PI, Math.PI) * 2;
    
    let colour: number;
-   if (subtileType === SubtileType.stoneWall) {
+   if (subtileType === SubtileType.stoneWall1 || subtileType === SubtileType.stoneWall2) {
       colour = randFloat(0.25, 0.55);
    } else if (subtileType === SubtileType.rockWall) {
       colour = randFloat(0.5, 0.75);

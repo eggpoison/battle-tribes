@@ -1,7 +1,7 @@
 import { CircularBox, Entity, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";

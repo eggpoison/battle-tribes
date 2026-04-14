@@ -27,6 +27,11 @@ export let maxVisibleX = 0;
 export let minVisibleY = 0;
 export let maxVisibleY = 0;
 
+export let minVisibleTileX = 0;
+export let maxVisibleTileX = 0;
+export let minVisibleTileY = 0;
+export let maxVisibleTileY = 0;
+
 export let minVisibleChunkX = 0;
 export let maxVisibleChunkX = 0;
 export let minVisibleChunkY = 0;
@@ -154,6 +159,11 @@ export function refreshCameraView(): void {
    maxVisibleX = cameraPosition.x + halfWindowWidth / cameraZoom;
    minVisibleY = cameraPosition.y - halfWindowHeight / cameraZoom;
    maxVisibleY = cameraPosition.y + halfWindowHeight / cameraZoom;
+
+   minVisibleTileX = Math.floor(minVisibleX / Settings.TILE_SIZE);
+   maxVisibleTileX = Math.floor(maxVisibleX / Settings.TILE_SIZE);
+   minVisibleTileY = Math.floor(minVisibleY / Settings.TILE_SIZE);
+   maxVisibleTileY = Math.floor(maxVisibleY / Settings.TILE_SIZE);
    
    minVisibleChunkX = Math.max(Math.floor(minVisibleX / Settings.CHUNK_UNITS), 0);
    maxVisibleChunkX = Math.min(Math.floor(maxVisibleX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);

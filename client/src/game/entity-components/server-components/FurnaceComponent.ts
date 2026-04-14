@@ -1,7 +1,7 @@
 import { randFloat, angle, randAngle, Entity, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { TransformComponentArray } from "./TransformComponent";

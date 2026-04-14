@@ -47,14 +47,7 @@ export function getNumSounds(): number {
    return activeSounds.length;
 }
 
-// @Hack: For some reason if we decode the audio too fast, then shit breaks. So we have to do this evilness. Why? Because god is not real.
-// await (new Promise<void>(resolve => {
-//    setTimeout(() => {
-//       resolve();
-//    }, 20)
-// }));
-
-export async function loadSoundEffects(): Promise<void> {
+export async function beginLoadingSounds(): Promise<void> {
    const AUDIO_FILE_PATHS = [
       "item-pickup.mp3",
       "rock-hit-1.mp3",
@@ -340,16 +333,39 @@ export async function loadSoundEffects(): Promise<void> {
       "lazur.mp3"
    ];
 
-   const audioBufferPromises = AUDIO_FILE_PATHS.map(async (filePath) => {
+   let idx = 0;
+
+   async function loadSound(): Promise<void> {
+      const filePath = AUDIO_FILE_PATHS[idx];
+      
       const sound = soundFiles["../sounds/" + filePath] as string;
       
       const response = await fetch(sound);
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
       audioBuffers[filePath] = audioBuffer;
-   });
+   }
 
-   await Promise.all(audioBufferPromises);
+   function scheduleLoad(): void {
+      loadSound();
+      
+      if (++idx < AUDIO_FILE_PATHS.length) {
+         requestIdleCallback(scheduleLoad);
+      }
+   }
+
+   requestIdleCallback(scheduleLoad);
+
+   // const audioBufferPromises = AUDIO_FILE_PATHS.map(async (filePath) => {
+   //    const sound = soundFiles["../sounds/" + filePath] as string;
+      
+   //    const response = await fetch(sound);
+   //    const arrayBuffer = await response.arrayBuffer();
+   //    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+   //    audioBuffers[filePath] = audioBuffer;
+   // });
+
+   // await Promise.all(audioBufferPromises);
 }
 
 const calculateSoundVolume = (volume: number, position: Point): number => {
@@ -410,6 +426,10 @@ export function playSound(filePath: string, volume: number, pitchMultiplier: num
    assert(Number.isFinite(volume));
    
    const audioBuffer = audioBuffers[filePath];
+   // @TEMPORARY @HACK
+   if (audioBuffer === undefined) {
+      return null;
+   }
    assert(audioBuffer !== undefined);
 
    const gainNode = audioContext.createGain();

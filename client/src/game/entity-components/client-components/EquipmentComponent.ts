@@ -1,4 +1,4 @@
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { TribeType, Entity, EntityType, ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName, ARMOUR_ITEM_TYPES, NUM_ITEM_TYPES, itemTypeIsGlove } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getInventory, InventoryComponentArray } from "../server-components/InventoryComponent";
@@ -7,9 +7,7 @@ import { InventoryUseComponentArray } from "../server-components/InventoryUseCom
 import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { TribeComponentArray } from "../server-components/TribeComponent";
-import { registerTextureSource } from "../../texture-atlases/texture-sources";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
 
 const enum ArmourPixelSize {
    _12x12,
@@ -48,24 +46,6 @@ const PIXEL_SIZE_STRINGS: Record<Exclude<ArmourPixelSize, ArmourPixelSize.__LENG
    [ArmourPixelSize._14x14]: "14x14",
    [ArmourPixelSize._16x16]: "16x16"
 };
-
-// Register all the armour texture sources
-for (let pixelSize: ArmourPixelSize = 0; pixelSize < ArmourPixelSize.__LENGTH; pixelSize++) {
-   for (const itemType of ARMOUR_ITEM_TYPES) {
-      const pixelSizeString = PIXEL_SIZE_STRINGS[pixelSize as Exclude<ArmourPixelSize, ArmourPixelSize.__LENGTH>];
-      const armourString = ARMOUR_TEXTURE_SOURCE_ENDINGS[itemType];
-      const textureSource = "armour/" + pixelSizeString + "/" + armourString;
-      registerTextureSource(textureSource);
-   }
-}
-
-// Register the glove texture sources
-for (let itemType: ItemType = 0; itemType < NUM_ITEM_TYPES; itemType++) {
-   if (itemTypeIsGlove(itemType)) {
-      const textureSource = GLOVES_TEXTURE_SOURCE_RECORD[itemType];
-      registerTextureSource(textureSource);
-   }
-}
 
 const getArmourTextureSource = (entityType: EntityType, tribeType: TribeType, armourItemType: ArmourItemType): string => {
    let textureSource = "armour/";

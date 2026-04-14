@@ -12,7 +12,7 @@ import { closeGameScreen, openGameScreen } from "./GameScreen";
 import { openMainMenu } from "./MainMenu";
 
 const TXT_CONNECTING = "Connecting to server...";
-const TXT_SENDING = "Sending player data...";
+const TXT_WAITING = "Waiting for data...";
 const TXT_INITIALISING = "Initialising game...";
 
 const loadingScreenElem = document.getElementById("loading-screen")!;
@@ -39,12 +39,12 @@ const textNode = document.getElementById("ls-text")!.firstChild as Text;
 }
 
 function onSuccessfulConnection(username: string, tribeType: TribeType, isSpectating: boolean): void {
-   textNode.data = TXT_SENDING;
-
    sendInitialPlayerDataPacket(username, tribeType, isSpectating, windowWidth, windowHeight);
-
+   
    setPlayerUsername(username);
    setIsSpectating(isSpectating);
+   
+   textNode.data = TXT_WAITING;
 }
 
 function onFailedConnection(): void {

@@ -1,6 +1,6 @@
 import { assert, Entity, ServerComponentType } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { RenderPart } from "../../render-parts/render-parts";

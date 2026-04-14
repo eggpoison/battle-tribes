@@ -5,7 +5,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { RandomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";

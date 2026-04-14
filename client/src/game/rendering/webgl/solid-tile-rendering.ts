@@ -1,4 +1,4 @@
-import { Settings, NUM_TILE_TYPES, SubtileType, TileType, TileTypeString, getSubtileIndex, getTileIndexIncludingEdges } from "webgl-test-shared";
+import { Settings, NUM_TILE_TYPES, SubtileType, TileType, TileTypeString, getSubtileIndex, getTileIndexIncludingEdges, assert } from "webgl-test-shared";
 import { gl, createWebGLProgram, createTextureArray } from "../../webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
@@ -51,26 +51,21 @@ const FLOOR_TILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<TileType, number 
    }
 })();
 
-export const WALL_TILE_TEXTURE_SOURCE_RECORD: Partial<Record<SubtileType, ReadonlyArray<string>>> = {
-   [SubtileType.rockWall]: ["tiles/dark-rock.png"],
-   [SubtileType.sandstoneWall]: ["tiles/sandstone.png"],
-   [SubtileType.stoneWall]: ["tiles/stone-wall-1.png", "tiles/stone-wall-2.png"],
-   [SubtileType.permafrostWall]: ["tiles/permafrost-wall.png"],
+export const WALL_TILE_TEXTURE_SOURCE_RECORD: Partial<Record<SubtileType, string>> = {
+   [SubtileType.rockWall]: "tiles/dark-rock.png",
+   [SubtileType.sandstoneWall]: "tiles/sandstone.png",
+   [SubtileType.stoneWall1]: "tiles/stone-wall-1.png",
+   [SubtileType.stoneWall2]: "tiles/stone-wall-2.png",
+   [SubtileType.permafrostWall]: "tiles/permafrost-wall.png"
 };
-const WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<SubtileType, Array<number>>> = {};
+const WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<SubtileType, number>> = {};
 (() => {
    let i = 0;
    for (let subtileType: SubtileType = 0; subtileType < SubtileType._LENGTH_; subtileType++) {
-      const textureSources = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
-      if (textureSources !== undefined) {
-         if (WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType] === undefined) {
-            WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType] = [];
-         }
-         
-         for (let j = 0; j < textureSources.length; j++) {
-            WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType]!.push(i);
-            i++;
-         }
+      const textureSource = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
+      if (textureSource !== undefined) {
+         WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType] = i;
+         i++;
       }
    }
 })();
@@ -237,11 +232,9 @@ export function createSolidTileShaders(): void {
    // Walls
    const wallTextureSources: Array<string> = [];
    for (let subtileType: SubtileType = 0; subtileType < SubtileType._LENGTH_; subtileType++) {
-      const textureSources = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
-      if (textureSources !== undefined) {
-         for (const textureSource of textureSources) {
-            wallTextureSources.push(textureSource);
-         }
+      const textureSource = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
+      if (textureSource !== undefined) {
+         wallTextureSources.push(textureSource);
       }
    }
    wallTileTextureArray = createTextureArray(wallTextureSources, 16, 16, 5);
@@ -323,21 +316,9 @@ const setWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: numbe
             continue;
          }
 
-         const textureIndexes = WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType];
-         if (textureIndexes === undefined) {
-            throw new Error(subtileType.toString());
-         }
+         const textureIndex = WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType];
+         assert(textureIndex !== undefined);
 
-         const tileX = Math.floor(subtileX / 4);
-         const tileY = Math.floor(subtileY / 4);
-         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-
-         const variant = layer.wallSubtileVariants[tileIndex];
-         if (variant === undefined) {
-            throw new Error();
-         }
-         const textureIndex = textureIndexes[variant];
-         
          const x = subtileX * Settings.SUBTILE_SIZE;
 
          const uIdx = subtileX % 4;

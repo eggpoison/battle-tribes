@@ -1,7 +1,7 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { Entity, EntityType } from "battletribes-shared/entities";
-import { polarVec2, UtilVars } from "battletribes-shared/utils";
+import { polarVec2, UtilVar } from "battletribes-shared/utils";
 import { moveEntityToPosition, runHerdAI } from "../ai-shared";
 import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent";
 import { runEscapeAI } from "../ai/EscapeAI";
@@ -27,7 +27,7 @@ import { Settings } from "../../../shared/src/settings";
 import { TamingSkillID } from "../../../shared/src/taming";
 
 const enum Vars {
-   TURN_SPEED = UtilVars.PI * 2
+   TURN_SPEED = UtilVar.PI * 2
 }
 
 export class KrumblidComponent {}

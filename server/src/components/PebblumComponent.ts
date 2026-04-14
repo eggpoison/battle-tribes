@@ -3,14 +3,14 @@ import { ComponentArray } from "./ComponentArray";
 import { DamageSource, Entity } from "battletribes-shared/entities";
 import { moveEntityToPosition } from "../ai-shared";
 import { TransformComponentArray } from "./TransformComponent";
-import { Point, polarVec2, UtilVars } from "battletribes-shared/utils";
+import { Point, polarVec2, UtilVar } from "battletribes-shared/utils";
 import { entityExists } from "../world";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
 import { applyKnockback, Hitbox } from "../hitboxes";
 
 const enum Vars {
-   TURN_SPEED = UtilVars.PI * 2
+   TURN_SPEED = UtilVar.PI * 2
 }
 
 export class PebblumComponent {

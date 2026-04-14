@@ -1,5 +1,5 @@
 import { PacketReader, ServerComponentType, Settings, Point, lerp, secondsToTicks, Entity, EntityType } from "webgl-test-shared";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";

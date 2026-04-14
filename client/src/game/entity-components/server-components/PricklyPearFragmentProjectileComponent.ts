@@ -1,7 +1,7 @@
 import { randAngle, randFloat, Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { createPricklyPearParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";

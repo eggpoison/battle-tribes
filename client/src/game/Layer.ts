@@ -3,11 +3,11 @@ import Chunk from "./Chunk";
 import { Light } from "./lights";
 import Particle from "./Particle";
 import { NUM_RENDER_LAYERS, RenderLayer } from "./render-layers";
-import { getRenderChunkIndex, RENDER_CHUNK_SIZE, RenderChunkRiverInfo } from "./rendering/render-chunks";
+import { RENDER_CHUNK_SIZE, RenderChunkRiverInfo } from "./rendering/render-chunks";
 import { addRenderable, removeRenderable, RenderableType } from "./rendering/render-loop";
 import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity, RenderLayerModifyInfo, EntityChunkData, ChunkedRenderLayer, CHUNKED_RENDER_LAYERS, RenderLayerChunkDataRecord } from "./rendering/webgl/chunked-entity-rendering";
 import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, lowMonocolourParticles, lowTexturedParticles, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
-import { recalculateWallSubtileRenderData, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
+import { recalculateWallSubtileRenderData } from "./rendering/webgl/solid-tile-rendering";
 import { recalculateTileShadows, TileShadowType } from "./rendering/webgl/tile-shadow-rendering";
 import { recalculateWallBorders } from "./rendering/webgl/wall-border-rendering";
 import { playSound } from "./sound";
@@ -26,14 +26,10 @@ export default class Layer {
    /** All dropdown tiles in the layer */
    public readonly dropdownTiles: ReadonlyArray<TileIndex>;
 
-   public readonly buildingBlockingTiles: ReadonlySet<TileIndex>;
-
    public readonly chunks: ReadonlyArray<Chunk>;
 
    public readonly collisionGroupChunks: Array<Array<Array<Entity>>> = [];
 
-   public readonly wallSubtileVariants: Partial<Record<TileIndex, number>> = {};
-   
    public readonly lights: Array<Light> = [];
 
    // For chunked entity rendering
@@ -47,15 +43,11 @@ export default class Layer {
 
    public readonly slimeTrailPixels = new Map<number, number>();
    
-   // @Memory
-   public readonly renderChunksWithWalls = new Set<number>();
-   
-   constructor(idx: number, tiles: ReadonlyArray<Tile>, buildingBlockingTiles: ReadonlySet<TileIndex>, wallSubtileTypes: Float32Array, wallSubtileDamageTakenMap: Map<number, number>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, grassInfo: Partial<Record<number, Partial<Record<number, GrassTileInfo>>>>) {
+   constructor(idx: number, tiles: ReadonlyArray<Tile>, wallSubtileTypes: Float32Array, wallSubtileDamageTakenMap: Map<number, number>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, grassInfo: Partial<Record<number, Partial<Record<number, GrassTileInfo>>>>) {
       this.idx = idx;
       this.wallSubtileTypes = wallSubtileTypes;
       this.wallSubtileDamageTakenMap = wallSubtileDamageTakenMap;
       this.tiles = tiles;
-      this.buildingBlockingTiles = buildingBlockingTiles;
       this.riverFlowDirections = riverFlowDirections;
       this.waterRocks = waterRocks;
       this.grassInfo = grassInfo;
@@ -91,32 +83,6 @@ export default class Layer {
       }
       this.dropdownTiles = dropdownTiles;
 
-      // Create subtile variants
-      for (let subtileY = -Settings.EDGE_GENERATION_DISTANCE * 4; subtileY < (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4; subtileY++) {
-         for (let subtileX = -Settings.EDGE_GENERATION_DISTANCE * 4; subtileX < (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4; subtileX++) {
-            const subtileIndex = getSubtileIndex(subtileX, subtileY);
-            const subtileType = wallSubtileTypes[subtileIndex] as SubtileType;
-            if (subtileType !== SubtileType.none) {
-               const textureSources = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
-               if (textureSources === undefined) {
-                  throw new Error();
-               }
-   
-               const tileX = Math.floor(subtileX / 4);
-               const tileY = Math.floor(subtileY / 4);
-               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-               this.wallSubtileVariants[tileIndex] = Math.floor(Math.random() * textureSources.length);
-
-               if (subtileIsInWorld(subtileX, subtileY)) {
-                  const renderChunkX = Math.floor(tileX / RENDER_CHUNK_SIZE);
-                  const renderChunkY = Math.floor(tileY / RENDER_CHUNK_SIZE);
-                  const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
-                  this.renderChunksWithWalls.add(renderChunkIndex);
-               }
-            }
-         }
-      }
-
       this.renderLayerChunkDataRecord = {} as RenderLayerChunkDataRecord;
       for (const renderLayer of CHUNKED_RENDER_LAYERS) {
          this.renderLayerChunkDataRecord[renderLayer] = {};
@@ -147,10 +113,6 @@ export default class Layer {
 
    public getCollisionChunkByIndex(collisionGroup: CollisionGroup, chunkIndex: number): Array<Entity> {
       return this.collisionGroupChunks[collisionGroup][chunkIndex];
-   }
-
-   public tileIsBuildingBlocking(tileIndex: TileIndex): boolean {
-      return this.buildingBlockingTiles.has(tileIndex);
    }
 
    private recalculateRenderChunkWalls(renderChunkX: number, renderChunkY: number): void {

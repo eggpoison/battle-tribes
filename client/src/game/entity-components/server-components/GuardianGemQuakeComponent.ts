@@ -2,7 +2,7 @@ import { randItem, PacketReader, Entity, ServerComponentType } from "webgl-test-
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { createGemQuakeProjectile } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
+import { getTextureArrayIndex } from "../../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";

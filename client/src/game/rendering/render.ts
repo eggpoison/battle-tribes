@@ -4,10 +4,9 @@ import { getHighlightedEntity, getHighlightedRenderObject, getSelectedEntity } f
 import Layer from "../Layer";
 import { updatePlayerDirection } from "../player";
 import { RenderLayer, MAX_RENDER_LAYER } from "../render-layers";
-import { loadSoundEffects } from "../sound";
+import { beginLoadingSounds } from "../sound";
 import { createTextCanvasContext, renderText } from "../text-canvas";
-import { preloadTextureAtlasImages } from "../texture-atlases/texture-atlas-stitching";
-import { createTextureAtlases } from "../texture-atlases/texture-atlases";
+import { loadTextureAtlas } from "../../texture-atlases";
 import { preloadTextureImages, loadTextures } from "../textures";
 import { isDev } from "../utils";
 import { gl, windowWidth, windowHeight, createTexture, setupWebGL } from "../webgl";
@@ -72,44 +71,19 @@ export async function setupRendering(): Promise<void> {
    if (!hasSetupRendering) {
       return new Promise(async resolve => {
          const start = performance.now();
-         let l = performance.now();
          setupWebGL();
          createTechTreeGLContext();
          createTextCanvasContext();
 
-         console.log("creating contexts",performance.now() - l);
-         l = performance.now();
-         
          clearSolidTileRenderingData();
          for (const layer of layers) {
             createRenderChunks(layer, layer.waterRocks);
          }
 
-         preloadTextureAtlasImages();
-         const textureImages = preloadTextureImages();
+         await loadTextureAtlas();
 
-         console.log("preloading images",performance.now() - l);
-         l = performance.now();
-         // @Speed
-         await loadSoundEffects();
-         
-         console.log("audio",performance.now() - l);
-         l = performance.now();
-         // We load the textures before we create the shaders because some shader initialisations stitch textures together
+         const textureImages = preloadTextureImages();
          await loadTextures(textureImages);
-         console.log("loading textures",performance.now() - l);
-         // @Hack
-         // @wtf
-         await new Promise<void>(resolve => {
-            setTimeout(() => {
-               resolve();
-            }, 1000)
-         });
-         l = performance.now();
-         // @Speed
-         await createTextureAtlases();
-         console.log("texture atlases",performance.now() - l);
-         l = performance.now();
          
          // Done after creating texture atlases as the data from them is used in a ubo
          createUBOs();
@@ -154,13 +128,10 @@ export async function setupRendering(): Promise<void> {
          if (isDev()) {
             setupFrameGraph();
          }
-
-         console.log("shader stuff",performance.now() - l);
-         l = performance.now();
-
-         console.log("render chunks",performance.now() - l);
-         console.log(performance.now() - start);
          
+         // Lazy load sound effects while the game is being played
+         beginLoadingSounds();
+
          hasSetupRendering = true;
          resolve();
       });
@@ -174,7 +145,7 @@ export async function setupRendering(): Promise<void> {
 
 const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): void => {
    if (layer === getCurrentLayer()) {
-      renderText(serverInterp);
+      renderText(clientInterp, serverInterp);
    }
    
    resetRenderOrder();
@@ -272,7 +243,7 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): 
 
    // Should be before lighting so that the player can't use building blocking tiles to see in the dark
    if (layer === getCurrentLayer() && playerIsHoldingPlaceableItem()) {
-      renderBuildingBlockingTiles();
+      renderBuildingBlockingTiles(layer);
    }
       
    gl.bindFramebuffer(gl.FRAMEBUFFER, null);

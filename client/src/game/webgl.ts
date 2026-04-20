@@ -28,23 +28,22 @@ export function onWindowResize(): void {
    halfWindowWidth = windowWidth / 2;
    halfWindowHeight = windowHeight / 2;
 
-   console.log("onresize")
+   const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
+   if (canvas !== null) {
+      resizeCanvas(canvas, gl);
+   }
 
-   // const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
-   // if (canvas !== null) {
-   //    resizeCanvas(canvas, gl);
-   // }
+   // @SPEED only do with the tech tree is open!!! setting canvas .width and .height is expensive AF
+   const techTreeCanvas = document.getElementById("tech-tree-canvas") as HTMLCanvasElement | null;
+   if (techTreeCanvas !== null) {
+      resizeCanvas(techTreeCanvas, getTechTreeGL());
+   }
 
-   // const techTreeCanvas = document.getElementById("tech-tree-canvas") as HTMLCanvasElement | null;
-   // if (techTreeCanvas !== null) {
-   //    resizeCanvas(techTreeCanvas, getTechTreeGL());
-   // }
-
-   // const textCanvas = document.getElementById("text-canvas") as HTMLCanvasElement | null;
-   // if (textCanvas !== null) {
-   //    textCanvas.width = windowWidth;
-   //    textCanvas.height = windowHeight;
-   // } 
+   const textCanvas = document.getElementById("text-canvas") as HTMLCanvasElement | null;
+   if (textCanvas !== null) {
+      textCanvas.width = windowWidth;
+      textCanvas.height = windowHeight;
+   } 
 }
 
 export function createWebGLCanvas(canvasID: string, isScreenwide: boolean): HTMLCanvasElement {
@@ -86,13 +85,6 @@ export function setupWebGL(): void {
 
    // Get WebGL parameters
    MAX_ACTIVE_TEXTURE_UNITS = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) as number;
-
-   const resizeObserver = new ResizeObserver(() => {
-      console.log("resizeObserver");
-      // onWindowResize();
-   });
-
-   resizeObserver.observe(document.body);
 }
 
 export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText: string, fragmentShaderText: string): WebGLProgram {

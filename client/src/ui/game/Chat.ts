@@ -34,6 +34,11 @@ export function addMessageToChat(username: string, message: string): void {
    } else {
       numMessages++;
    }
+
+   // Make the chat reappear
+   historyElem!.classList.remove("message-history");
+   historyElem!.offsetHeight;
+   historyElem!.classList.add("message-history");
 }
 
 export function createChat(): void {

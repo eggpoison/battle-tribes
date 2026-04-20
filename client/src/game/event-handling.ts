@@ -290,8 +290,6 @@ export function onKeyDown(e: KeyboardEvent): void {
       case ASCIICode.FIVE: selectItemSlot(5); break;
       case ASCIICode.SIX: selectItemSlot(6); break;
       case ASCIICode.SEVEN: selectItemSlot(7); break;
-      case ASCIICode.EIGHT: selectItemSlot(8); break;
-      case ASCIICode.NINE: selectItemSlot(9); break;
       case ASCIICode.A: onAStart(); break;
       case ASCIICode.D: onDStart(); break;
       case ASCIICode.E: openCraftingMenu(); break;

@@ -10,6 +10,7 @@ import { destroyHealthBar } from "../ui/game/HealthBar";
 import { deathScreen } from "../ui-state/death-screen-funcs";
 import { closeCurrentMenu, hasOpenNonEmbodiedMenu } from "../ui/menus";
 
+// @Cleanup: THis might literally be able to be removed.. along with this whole file.
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
 // but this is in the client so these optimisations are less important. The ease-of-use is worth it
 /** The player entity associated with the current player. If null, then the player is dead */

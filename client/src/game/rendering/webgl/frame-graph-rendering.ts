@@ -1,5 +1,5 @@
 import { lerp } from "webgl-test-shared";
-import { createWebGLProgram } from "../../webgl";
+import { createWebGLCanvas, createWebGLProgram, createWebGLRenderingContext } from "../../webgl";
 import { frameGraph } from "../../../ui-state/frame-graph-funcs";
 
 export interface FrameInfo {
@@ -31,7 +31,9 @@ export function resetFrameGraph(): void {
 }
 
 /** Registers that a frame has occured for use in showing the fps counter */
-export function registerFrame(frameStartTime: number, frameEndTime: number): void {
+export function updateFrameMetrics(frameStartTime: number, frameEndTime: number): void {
+   // @Garbage
+   
    frames.push({
       startTime: frameStartTime,
       endTime: frameEndTime
@@ -54,13 +56,7 @@ export function registerFrame(frameStartTime: number, frameEndTime: number): voi
       frames.splice(0, lastOldIdx + 1);
    }
    
-   frameGraph.setFPS(frames.length / FRAME_GRAPH_RECORD_TIME);
-
    if (frames.length > 0) {
-      frameGraph.setAverage(0);
-      frameGraph.setMin(0);
-      frameGraph.setMax(0);
-   } else {
       let totalDuration = 0;
       let min = Infinity;
       let max = -Infinity;
@@ -78,27 +74,17 @@ export function registerFrame(frameStartTime: number, frameEndTime: number): voi
       }
 
       const average = totalDuration / frames.length;
-
-      frameGraph.setAverage(average);
-      frameGraph.setMin(min);
-      frameGraph.setMax(max);
+      frameGraph.setMetrics(frames.length / FRAME_GRAPH_RECORD_TIME, average, min, max);
+   } else {
+      frameGraph.setMetrics(0, 0, 0, 0);
    }
+
+   renderFrameGraph(frameEndTime);
 }
 
 const createGLContext = (): void => {
-   const canvas = document.createElement("canvas");
-   canvas.id = "frame-graph-canvas";
-   document.body.appendChild(canvas);
-   
-   const glAttempt = canvas.getContext("webgl2");
-
-   if (glAttempt === null) {
-      alert("Your browser does not support WebGL.");
-      throw new Error("Your browser does not support WebGL.");
-   }
-   gl = glAttempt;
-
-   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+   const canvas = createWebGLCanvas("frame-graph-canvas", false);
+   gl = createWebGLRenderingContext(canvas, false);
 }
 
 const createShaders = (): void => {
@@ -191,11 +177,13 @@ const addRectData = (vertexData: Float32Array, x1: number, y1: number, x2: numbe
    rectIdx++;
 }
 
-export function renderFrameGraph(renderTime: number): void {
+function renderFrameGraph(renderTime: number): void {
    if (frames.length === 0) {
       return;
    }
-   
+
+   // @SPEED
+
    const numRects = (frames.length * 3 + 1);
    const vertexData = new Float32Array(numRects * 6 * 6);
    rectIdx = 0;

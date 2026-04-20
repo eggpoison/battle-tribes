@@ -1,6 +1,5 @@
 import { Entity, Settings } from "webgl-test-shared";
 import { updateTextNumbers } from "./text-canvas";
-import { resizeCanvas } from "./webgl";
 import { playRiverSounds, updateSounds } from "./sound";
 import { attemptToResearch, updateResearchOrb } from "./research";
 import { updateEntitySelections } from "./entity-selection";
@@ -9,34 +8,35 @@ import { entityUsesClientInterp } from "./rendering/render-part-matrices";
 import { createCollapseParticles } from "./collapses";
 import { updateSlimeTrails } from "./rendering/webgl/slime-trail-rendering";
 import { updateDebugEntity } from "./entity-debugging";
-import { playerInstance, updatePlayerDirection } from "./player";
-import { resolveEntityCollisions } from "./collision";
+import { playerInstance } from "./player";
+import { resolveCollisions } from "./collision";
 import { decodeSnapshotFromGameDataPacket, TickSnapshot, updateGameStateToSnapshot } from "./networking/packet-snapshots";
-import { sendDeactivatePacket, sendSyncRequestPacket } from "./networking/packet-sending/packet-sending";
-import { renderGame } from "./rendering/render";
-import { registerFrame, renderFrameGraph, resetFrameGraph } from "./rendering/webgl/frame-graph-rendering";
+import { gameFramebuffer, renderGame } from "./rendering/render";
+import { updateFrameMetrics } from "./rendering/webgl/frame-graph-rendering";
 import { updatePlayerMovement } from "./player-action-handling";
 import { PacketReader } from "webgl-test-shared";
 import { sendPlayerDataPacket } from "./networking/packet-sending/player-data-packet";
 import { updateParticles } from "./rendering/webgl/particle-rendering";
 import { debugInfoDisplay } from "../ui/game/dev/debug-info-display-funcs";
-import { getComponentArrays } from "./entity-components/ComponentArray";
 import { getEntityComponentArrays } from "./entity-component-types";
-import { getEntityType, layers } from "./world";
+import { getEntityType, } from "./world";
+import { cleanupEvents, gameIsFocused, setupEvents } from "./event-handling";
+import { COMPONENT_ARRAYS } from "./entity-components/ComponentArray";
+import { gl, windowHeight, windowWidth } from "./webgl";
+
+const enum Var {
+   SNAPSHOT_BUFFER_TARGET_SIZE = 2,
+   // SNAPSHOT_BUFFER_LENGTH = 10,
+   /** The number of ticks it takes for the measured server packet interval to fully adjust (if going from a constant tps of A to a constant tps of B) */
+   PACKET_INTERVAL_ADJUST_TIME = 10,
+   /*/ Controls how aggressively the client catches up to server */
+   TIME_DILATION_STRENGTH = 0.15
+}
 
 interface TickCallback {
    time: number;
    readonly callback: () => void;
 }
-
-const SNAPSHOT_BUFFER_LENGTH = 2;
-/** The number of ticks it takes for the measured server packet interval to fully adjust (if going from a constant tps of A to a constant tps of B) */
-const PACKET_INTERVAL_ADJUST_TIME = 10;
-
-export let gameIsRunning = false;
-
-// @Location: completely unused by all the client netcode stuff in here.
-export let gameIsFocused = true;
 
 let lastFrameTime = 0;
 
@@ -53,85 +53,63 @@ let measuredServerPacketIntervalMS = 1000 / Settings.SERVER_PACKET_SEND_RATE; //
 
 let playerPacketAccumulator = 0;
 
+// @CLEANUP this system is awful. kill it
 const tickCallbacks: Array<TickCallback> = [];
 
-document.addEventListener("visibilitychange", () => {
-   if (document.visibilityState === "visible") {
-      gameIsFocused = true;
-      lastPacketTime = performance.now();
+let runFrameHandle: number;
 
-      if (!gameIsRunning) {
-         // @Investigate: what if this request fails??? This is the only request sent, so will the client just be stuck?
-         sendSyncRequestPacket();
-      }
-   } else { // Now hidden!
-      gameIsFocused = false;
-      unsyncGame();
-      sendDeactivatePacket();
-   }
-});
-
-export function resyncGame(): void {
-   gameIsRunning = true;
-}
-
-function unsyncGame(): void {
-   gameIsRunning = false;
-   // @Cleanup: unnecessary??
-   // So that when the player returns to the game the dev frame graph doesn't show a maaassive frame
-   resetFrameGraph();
-}
-
-export function startGame(): void {
-   gameIsRunning = true;
-
-   resizeCanvas();
-
-   // Initial player direction
-   // @Cleanup: shouldn't this be the default state, and this be unnecessary?
-   updatePlayerDirection(0, 0);
-            
-   lastFrameTime = performance.now();
-   requestAnimationFrame(runFrame);
+export function startGame(time: number): void {
+   setupEvents();
+   frameLoop(time); // Start the game loop
 }
 
 export function stopGame(): void {
-   gameIsRunning = false;
+   cleanupEvents();
+   cancelAnimationFrame(runFrameHandle);
 }
 
-export function receivePacket(reader: PacketReader): void {
+export function onGameDataPacket(reader: PacketReader): void {
    const snapshot = decodeSnapshotFromGameDataPacket(reader);
-   
    snapshotBuffer.push(snapshot);
-   debugInfoDisplay.updateSnapshotBufferSize(snapshotBuffer.length);
-
+   
    const timeNow = performance.now();
-   
-   const delta = timeNow - lastPacketTime;
-
-   // Calculate new server packet interval using la "Exponential Moving Average"
-   const smoothingFactor = 2 / (PACKET_INTERVAL_ADJUST_TIME + 1);
-   measuredServerPacketIntervalMS = measuredServerPacketIntervalMS * (1 - smoothingFactor) + smoothingFactor * delta;
-   debugInfoDisplay.updateServerTPS(1000 / measuredServerPacketIntervalMS);
-   
+   const deltaMS = timeNow - lastPacketTime;
    lastPacketTime = timeNow;
 
+   // Calculate new server packet interval using la "Exponential Moving Average"
+   const smoothingFactor = 2 / (Var.PACKET_INTERVAL_ADJUST_TIME + 1);
+   measuredServerPacketIntervalMS = measuredServerPacketIntervalMS * (1 - smoothingFactor) + smoothingFactor * deltaMS;
+   
+   // When the game isn't focused, there is no animation loop to consume snapshots. So this has to be done to keep the game state updated and prevent snapshots from queuing up endlessly.
+   // @BUG: If gameIsFocused changes mid-frame, updateGame could be called twice
+   if (!gameIsFocused) {
+      updateGame(deltaMS);
+   }
+
    // First game packet
+   // @SPEED @Hack only needed for the first packet.
    if (currentSnapshot === undefined) {
-      lastPacketTime = performance.now();
       // Set currentSnapshot, and the game state, to the first game packet received.
       updateGameStateToSnapshot(snapshot);
       clientTick = snapshot.tick; // Start the client tick off at the tick of the very first packet received.
    }
+   
+   if (__DEV__) {
+      debugInfoDisplay.updateSnapshotBufferSize(snapshotBuffer.length);
+      debugInfoDisplay.updateServerTPS(1000 / measuredServerPacketIntervalMS);
+   }
 }
 
 export function bufferHasEnoughForGameStart(): boolean {
-   return snapshotBuffer.length >= SNAPSHOT_BUFFER_LENGTH;
+   return snapshotBuffer.length >= Var.SNAPSHOT_BUFFER_TARGET_SIZE;
 }
 
+// @Cleanup: this is weird. This file imports updateGameDataToSnapshot, and that function imports this from this file.
 export function setCurrentSnapshot(snapshot: TickSnapshot): void {
    currentSnapshot = snapshot;
-   debugInfoDisplay.updateCurrentSnapshot(snapshot);
+   if (__DEV__) {
+      debugInfoDisplay.updateCurrentSnapshot(snapshot);
+   }
 }
 
 // @TEmporary? only for a hack
@@ -139,14 +117,9 @@ export function setNextSnapshot(snapshot: TickSnapshot): void {
    nextSnapshot = snapshot;
 }
 
-export function tickIntervalHasPassed(intervalSeconds: number): boolean {
+export function tickIntervalHasPassed(intervalTicks: number): boolean {
    const currentTick = Math.floor(clientTick);
-   
-   const ticksPerInterval = intervalSeconds * Settings.TICK_RATE;
-   
-   const previousCheck = (currentTick - 1) / ticksPerInterval;
-   const check = currentTick / ticksPerInterval;
-   return Math.floor(previousCheck) !== Math.floor(check);
+   return (currentTick % intervalTicks) < 1;
 }
 
 export function getSecondsSinceTickTimestamp(ticks: number): number {
@@ -177,9 +150,7 @@ export function updateTickCallbacks(): void {
    }
 }
 function tickEntities(): void {
-   // @Cleanup: This is the only place where this function is used. The only place where getComponentArrays() is used. Seems like an awful waste of memory.
-   const componentArrays = getComponentArrays();
-   for (const componentArray of componentArrays) {
+   for (const componentArray of COMPONENT_ARRAYS) {
       if (componentArray.onTick !== undefined) {
          for (const entity of componentArray.activeEntities) {
             componentArray.onTick(entity);
@@ -199,51 +170,41 @@ function callEntityOnUpdateFunctions(entity: Entity): void {
    }
 }
 
-function runFrame(frameStartTime: number): void {
-   const deltaTimeMS = frameStartTime - lastFrameTime;
-   lastFrameTime = frameStartTime;
+function updateGame(deltaTimeMS: number): number {
+   // Delta tick accounting for the MEASURED tps of the server
+   const deltaTick = deltaTimeMS / measuredServerPacketIntervalMS * Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
 
    // Calculate the client tick's error
    const serverTick = snapshotBuffer[snapshotBuffer.length - 1].tick;
    const delayTicks = serverTick - clientTick;
    const errorTicks = delayTicks + Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
 
-   const timeDilationFactor = (errorTicks < -0.5 || errorTicks > 0.5) ? 1 + 0.15 * errorTicks : 1;
-   
-   // Delta tick accounting for the MEASURED tps of the server
-   const deltaTick = deltaTimeMS / measuredServerPacketIntervalMS * Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
-
+   const timeDilationFactor = 1 + Var.TIME_DILATION_STRENGTH * errorTicks * (Math.abs(errorTicks) > 0.5 ? 1 : 0);
    clientTick += deltaTick * timeDilationFactor;
    
-   // Calculate the subtick time to render at (render tick)
-   const renderTick = clientTick - SNAPSHOT_BUFFER_LENGTH * Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
+   const renderSubtick = clientTick - Var.SNAPSHOT_BUFFER_TARGET_SIZE * Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE;
 
    // Make sure the current snapshot is the snapshot just below the currently rendered tick
    let i = 0;
    for (; i < snapshotBuffer.length; i++) {
       const snapshot = snapshotBuffer[i];
-      if (snapshot.tick < renderTick) {
+      if (snapshot.tick < renderSubtick) {
          if (snapshot.tick > currentSnapshot.tick) {
             updateGameStateToSnapshot(snapshot);
-            currentSnapshot = snapshot;
          }
       } else {
          break;
       }
    }
    // Snapshots older than the current one are now useless
-   if (i > 0) {
+   if (i > 1) {
       snapshotBuffer.splice(0, i - 1);
    }
-   debugInfoDisplay.updateSnapshotBufferSize(snapshotBuffer.length);
 
    // @Cleanup kinda unclear at a glance
    nextSnapshot = (snapshotBuffer[snapshotBuffer.indexOf(currentSnapshot) + 1]) || currentSnapshot;
 
-   const snapshotTickDiff = nextSnapshot.tick - currentSnapshot.tick;
-   const serverInterp = snapshotTickDiff > 0 ? (renderTick - currentSnapshot.tick) / snapshotTickDiff : 0;
-
-   // Send player packets to server
+   // Packet send loop
    playerPacketAccumulator += deltaTick;
    while (playerPacketAccumulator >= Settings.TICK_RATE / Settings.CLIENT_PACKET_SEND_RATE) {
       sendPlayerDataPacket();
@@ -253,7 +214,8 @@ function runFrame(frameStartTime: number): void {
    // Tick the player (independently from all other entities)
    // A loop to run at the proper tick rate
    clientInterp += deltaTick;
-   while (clientInterp >= 1) {
+   const numUpdates = Math.floor(clientInterp);
+   for (let i = 0; i < numUpdates; i++) {
       // Call this outside of the check which makes sure the player is in-client, cuz we want the movement intention to update too!
       updatePlayerMovement();
       
@@ -262,15 +224,11 @@ function runFrame(frameStartTime: number): void {
          callEntityOnUpdateFunctions(playerInstance);
       }
 
-      clientInterp--;
-
       // Tick all entities (cuz the client interp loop is based on the network update rate not the tick rate)
       // @Incomplete @Bug THAT"S ACTUALLY BAD, the fact that the client interp loop is based on the network update rate. Cuz it means when the server is lagging the player is still moving at the same speeds when they should be being slowed.
       tickEntities();
 
-      for (const layer of layers) {
-         resolveEntityCollisions(layer);
-      }
+      resolveCollisions();
       
       updateResearchOrb();
       attemptToResearch();
@@ -285,24 +243,60 @@ function runFrame(frameStartTime: number): void {
       createCollapseParticles();
       updateSlimeTrails();
 
-      updateDebugEntity();
+      updateTextNumbers();
+      updateTickCallbacks();
+      updateParticles();
+
+      if (__DEV__) {
+         updateDebugEntity();
+      }
+   }
+   clientInterp -= numUpdates;
+
+   return renderSubtick;
+}
+
+function checkAndResizeCanvas(): void {
+   const canvas = document.getElementById("game-canvas") as HTMLCanvasElement;
+
+   const displayWidth = windowWidth;
+   const displayHeight = windowHeight;
+   
+   if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+      console.log("runtime check")
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, gameFramebuffer);
+      gl.viewport(0, 0, displayWidth, displayHeight);
+      
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.viewport(0, 0, displayWidth, displayHeight);
+   }
+}
+
+function frameLoop(frameStartTime: number): void {
+   checkAndResizeCanvas();
+   
+   const deltaTimeMS = frameStartTime - lastFrameTime;
+   lastFrameTime = frameStartTime;
+
+   const renderSubtick = updateGame(deltaTimeMS);
+
+   const snapshotTickDiff = nextSnapshot.tick - currentSnapshot.tick;
+   const serverInterp = snapshotTickDiff > 0 ? (renderSubtick - currentSnapshot.tick) / snapshotTickDiff : 0;
+
+   renderGame(clientInterp, serverInterp);
+
+   if (__DEV__) {
+      debugInfoDisplay.updateSnapshotBufferSize(snapshotBuffer.length);
+      debugInfoDisplay.refreshTickDebugData();
+
+      const frameEndTime = performance.now();
+      updateFrameMetrics(frameStartTime, frameEndTime);
    }
 
-   renderGame(clientInterp, serverInterp, deltaTimeMS);
-
-   const frameEndTime = performance.now();
-   registerFrame(frameStartTime, frameEndTime);
-
-   renderFrameGraph(frameEndTime);
-
-   updateTextNumbers();
-   updateTickCallbacks();
-   updateParticles();
-   debugInfoDisplay.refreshTickDebugData();
-
-   if (gameIsRunning) {
-      requestAnimationFrame(runFrame);
-   }
+   runFrameHandle = requestAnimationFrame(frameLoop);
 }
 
 if (import.meta.hot) {

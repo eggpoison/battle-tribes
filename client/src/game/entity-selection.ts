@@ -183,7 +183,9 @@ export function setSelectedEntity(newSelectedEntity: Entity | null): void {
       // Update UI state
       const componentArrays = getEntityComponentArrays(getEntityType(selectedEntity));
       for (const componentArray of componentArrays) {
-         componentArray.updateSelectedEntityState?.(selectedEntity);
+         if (componentArray.updateSelectedEntityState !== undefined) {
+            componentArray.updateSelectedEntityState(selectedEntity);
+         }
       }
    } else {
       selectedEntity = 0;

@@ -1,10 +1,10 @@
-import { Packet, PacketType, Point, InventoryName, GameDataPacketOptions } from "../../../../../shared/src";
+import { Packet, ClientPacketType, Point, InventoryName, GameDataPacketOptions } from "../../../../../shared/src";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
 import { cameraPosition } from "../../camera";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { playerInstance, isSpectating } from "../../player";
 import { getPlayerMoveIntention, getHotbarSelectedItemSlot, getInstancePlayerAction } from "../../player-action-handling";
-import { sendData } from "../networking";
+import { sendData } from "../socket";
 
 // ====================================
 // PLAYER DATA PACKET
@@ -28,7 +28,7 @@ import { sendData } from "../networking";
 // 
 
 const playerDataPacketBuffer = new ArrayBuffer(64);
-const playerDataPacket = new Packet(PacketType.playerData, 64, playerDataPacketBuffer);
+const playerDataPacket = new Packet(ClientPacketType.playerData, 64, playerDataPacketBuffer);
 
 export function sendPlayerDataPacket(): void {
    let position: Point;

@@ -291,7 +291,10 @@ export function setRenderObjectInVertexData(renderObject: EntityRenderObject, ve
    const baseTintB = renderObject.tintB;
 
    let vertexDataOffset = renderPartIdx * Var.ATTRIBUTES_PER_VERTEX;
-   for (const renderPart of renderObject.renderPartsByZIndex) {
+   const renderParts = renderObject.renderPartsByZIndex;
+   for (let i = 0, len = renderParts.length; i < len; i++) {
+      const renderPart = renderParts[i];
+      // @Speed: This continue means v8 cannot optimise accesses with vertexDataOffset (potentially? verify if the accesses are actually optimized if this is removed)
       if (!thingIsVisualRenderPart(renderPart)) {
          continue;
       }

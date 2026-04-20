@@ -1,4 +1,4 @@
-import { TileType, ServerComponentType, PacketReader, Entity, FishColour, randAngle, randFloat, randInt } from "webgl-test-shared";
+import { TileType, ServerComponentType, PacketReader, Entity, FishColour, randAngle, randFloat, randInt, Settings } from "webgl-test-shared";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
@@ -82,7 +82,7 @@ function onTick(entity: Entity): void {
    const hitbox = transformComponent.hitboxes[0];
    
    const tile = getHitboxTile(hitbox);
-   if (tile.type !== TileType.water && tickIntervalHasPassed(0.4)) {
+   if (tile.type !== TileType.water && tickIntervalHasPassed(0.4 * Settings.TICK_RATE)) {
       for (let i = 0; i < 8; i++) {
          const spawnOffsetDirection = randAngle();
          const spawnPositionX = hitbox.box.position.x + 8 * Math.sin(spawnOffsetDirection);

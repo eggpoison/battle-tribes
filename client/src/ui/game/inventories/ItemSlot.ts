@@ -1,7 +1,7 @@
 import { assert, Entity, Inventory, InventoryName, Item, ItemType } from "../../../../../shared/src";
 import { getItemTypeImage } from "../../../game/client-item-info";
 import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
-import { keyIsPressed } from "../../../game/keyboard-input";
+import { shiftIsPressed } from "../../../game/event-handling";
 import { sendItemTransferPacket, sendItemPickupPacket, sendItemReleasePacket } from "../../../game/networking/packet-sending/packet-sending";
 import { playerInstance } from "../../../game/player";
 import { getOpenMenu, hasOpenMenu } from "../../menus";
@@ -59,7 +59,7 @@ const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: numbe
       const heldItem = heldItemInventory.itemSlots[1];
       if (heldItem === undefined) {
          // If shift is held, transfer the item between the player's inventory and the opened inventory
-         if (keyIsPressed("shift")) {
+         if (shiftIsPressed) {
             const openMenu = getOpenMenu();
             if (openMenu !== null) {
                const inventoryInfo = openMenu.inventoryInfo;

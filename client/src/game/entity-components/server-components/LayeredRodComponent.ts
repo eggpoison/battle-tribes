@@ -10,7 +10,7 @@ import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { hueShift, multiColourLerp } from "../../render-parts/VisualRenderPart";
 
 const enum Var {
-   NATURAL_DRIFT = 20 * Settings.DT_S
+   SPRING_BACK_RATE = 8 * Settings.DT_S
 }
 
 export interface LayeredRodComponentData {
@@ -87,7 +87,7 @@ const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: Ent
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          const tileType = surfaceLayer.getTile(tileIndex).type;
    
-         const grassInfo = surfaceLayer.grassInfo[tileX][tileY];
+         const grassInfo = surfaceLayer.grassInfo[tileX]![tileY]!;
 
          // Lower layers are darker
          // let brightnessMultiplier = layer / data.numLayers;
@@ -227,10 +227,6 @@ const updateOffsets = (layeredRodComponent: LayeredRodComponent, entity: Entity)
 
 function onTick(entity: Entity): void {
    const layeredRodComponent = LayeredRodComponentArray.getComponent(entity);
-   if (layeredRodComponent.bendX === 0 && layeredRodComponent.bendY === 0) {
-      LayeredRodComponentArray.queueComponentDeactivate(entity);
-      return;
-   }
    
    const bendMagnitude = Math.sqrt(layeredRodComponent.bendX * layeredRodComponent.bendX + layeredRodComponent.bendY * layeredRodComponent.bendY);
 
@@ -241,10 +237,14 @@ function onTick(entity: Entity): void {
    // Make sure it doesn't completely stop movement
    bendSmoothnessMultiplier = bendSmoothnessMultiplier * 0.9 + 0.1;
    
-   layeredRodComponent.bendX -= Var.NATURAL_DRIFT * bendSmoothnessMultiplier * layeredRodComponent.bendX / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
-   layeredRodComponent.bendY -= Var.NATURAL_DRIFT * bendSmoothnessMultiplier * layeredRodComponent.bendY / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
+   layeredRodComponent.bendX -= Var.SPRING_BACK_RATE * bendSmoothnessMultiplier * layeredRodComponent.bendX / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
+   layeredRodComponent.bendY -= Var.SPRING_BACK_RATE * bendSmoothnessMultiplier * layeredRodComponent.bendY / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
 
    updateOffsets(layeredRodComponent, entity);
+
+   if (layeredRodComponent.bendX === 0 && layeredRodComponent.bendY === 0) {
+      LayeredRodComponentArray.queueComponentDeactivate(entity);
+   }
 
    const renderObject = getEntityRenderObject(entity);
    registerDirtyRenderObject(entity, renderObject);

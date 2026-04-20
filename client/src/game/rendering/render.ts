@@ -8,7 +8,6 @@ import { beginLoadingSounds } from "../sound";
 import { createTextCanvasContext, renderText } from "../text-canvas";
 import { loadTextureAtlas } from "../../texture-atlases";
 import { preloadTextureImages, loadTextures } from "../textures";
-import { isDev } from "../utils";
 import { gl, windowWidth, windowHeight, createTexture, setupWebGL } from "../webgl";
 import { layers, getCurrentLayer, entityExists, getEntityRenderObject } from "../world";
 import { renderLightLevelsText } from "./light-levels-text-rendering";
@@ -70,7 +69,6 @@ let hasSetupRendering = false;
 export async function setupRendering(): Promise<void> {
    if (!hasSetupRendering) {
       return new Promise(async resolve => {
-         const start = performance.now();
          setupWebGL();
          createTechTreeGLContext();
          createTextCanvasContext();
@@ -99,7 +97,6 @@ export async function setupRendering(): Promise<void> {
          createWorldBorderShaders();
          createChunkBorderShaders();
          createHitboxShaders();
-         createDebugDataShaders();
          createNightShaders();
          createParticleShaders();
          createWallBorderShaders();
@@ -117,15 +114,17 @@ export async function setupRendering(): Promise<void> {
          createWallConnectionShaders();
          createHealingBeamShaders();
          createGrassBlockerShaders();
-         createLightDebugShaders();
          createTileBreakProgressShaders();
          createSubtileSupportShaders();
          createSlimeTrailShaders();
          createBuildingBlockingTileShaders();
          createLightLevelsBGShaders();
          createMithrilRichTileRenderingShaders();
-         createDebugImageShaders();
-         if (isDev()) {
+
+         if (__DEV__) {
+            createDebugDataShaders();
+            createDebugImageShaders();
+            createLightDebugShaders();
             setupFrameGraph();
          }
          
@@ -259,7 +258,8 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): 
    }
 }
 
-export function renderGame(clientInterp: number, serverInterp: number, deltaTimeMS: number): void {
+export function renderGame(clientInterp: number, serverInterp: number): void {
+   // @SPEED: unnecessary!!
    gl.bindFramebuffer(gl.FRAMEBUFFER, gameFramebuffer);
 
    if (lastTextureWidth !== windowWidth || lastTextureHeight !== windowHeight) {
@@ -274,7 +274,9 @@ export function renderGame(clientInterp: number, serverInterp: number, deltaTime
    }
 
    // Reset the framebuffer
-   gl.clearColor(1, 1, 1, 1);
+   // @SQUEAM
+   // gl.clearColor(1, 0, 0, 1);
+   gl.clearColor(1, 0, 0, 1);
    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
    updateUBOs();

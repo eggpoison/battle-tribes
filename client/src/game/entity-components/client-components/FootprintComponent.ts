@@ -112,7 +112,7 @@ function onTick(entity: Entity): void {
       const velocity = _point;
       
       // Footsteps
-      if (velocity.magnitude() >= 50 && !hitboxIsInWater(hitbox) && tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds)) {
+      if (velocity.magnitude() >= 50 && !hitboxIsInWater(hitbox) && tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds * Settings.TICK_RATE)) {
          if (footprintComponent.doDoubleFootprints) {
             createFootprintParticle(entity, false, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
             createFootprintParticle(entity, true, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);

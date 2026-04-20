@@ -1,27 +1,11 @@
-import { gameIsRunning } from "../../../game/game";
-import { addKeyListener } from "../../../game/keyboard-input";
 import { openDebugInfoDisplay } from "./DebugInfoDisplay";
 import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 import { hideFrameGraph, showFrameGraph } from "./FrameGraph";
 import { createTabSelector, destroyTabSelector } from "./TabSelector";
+import { assert } from "../../../../../shared/src";
 
 let isVisible = false;
 let _terminalIsVisible = false;
-
-addKeyListener("`", () => {
-   // Open/close nerd vision
-   if (gameIsRunning) {
-      nerdVision.setIsVisible(!nerdVision.isVisible());
-   }
-});
-
-addKeyListener("~", () => {
-   // Open terminal on tilda press
-   if (gameIsRunning) {
-      nerdVision.setIsVisible(true);
-      nerdVision.setTerminalIsVisible(true);
-   }
-});
 
 nerdVision.isVisible = (): boolean => {
    return isVisible;
@@ -55,7 +39,9 @@ function openNerdVision(): void {
 };
 
 function closeNerdVision(): void {
-   document.getElementById("nerd-vision-wrapper")?.remove();
+   const nerdVisionElem = document.getElementById("nerd-vision-wrapper");
+   assert(nerdVisionElem !== null);
+   nerdVisionElem.remove();
 
    destroyTabSelector();
    

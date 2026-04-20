@@ -1,5 +1,5 @@
 import { Light, removeLight } from "../../lights";
-import { Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
+import { Entity, ServerComponentType, PacketReader, Settings } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { tickIntervalHasPassed } from "../../game";
@@ -75,7 +75,7 @@ const updateLight = (cookingComponent: CookingComponent, entity: Entity): void =
          // attachLightToRenderPart(cookingComponent.light, renderObject.renderPartsByZIndex[0], entity);
       }
 
-      if (tickIntervalHasPassed(0.15)) {
+      if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
          // cookingComponent.light.radius = 40 + randFloat(-7, 7);
       }
    } else if (cookingComponent.light !== null) {

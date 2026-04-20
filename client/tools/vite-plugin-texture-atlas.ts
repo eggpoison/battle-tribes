@@ -3,6 +3,7 @@ import { createCanvas, loadImage, Image } from "canvas";
 import fs, { Dirent } from "node:fs";
 import path from "node:path";
 
+// @Incomplete
 interface BaseTextureAtlasInfo {
    readonly atlasSize: number;
    /** The widths of all inputted textures, in the original order */

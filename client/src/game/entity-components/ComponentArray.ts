@@ -1,9 +1,10 @@
-import { assert, Point, Entity } from "webgl-test-shared";
+import { Point, Entity } from "webgl-test-shared";
 import { EntityComponentData } from "../world";
 import { Hitbox } from "../hitboxes";
 import { ComponentTint, EntityRenderObject } from "../EntityRenderObject";
 
-const componentArrays: Array<ComponentArray> = [];
+// @Cleanup @Location ...
+export const COMPONENT_ARRAYS: Array<ComponentArray> = [];
 
 export abstract class ComponentArray<
    T extends object = object,
@@ -59,10 +60,11 @@ export abstract class ComponentArray<
       this.getMaxRenderParts = getMaxRenderParts;
 
       // @Cleanup: cast
-      componentArrays.push(this as unknown as ComponentArray);
+      COMPONENT_ARRAYS.push(this as unknown as ComponentArray);
    }
 
    public addComponentToRemoveBuffer(entity: Entity): void {
+      // @Garbage
       this.removeBuffer.push(entity);
    }
 
@@ -208,26 +210,4 @@ export abstract class ComponentArray<
       }
       this.deactivateBuffer = [];
    }
-
-   /** VERY slow function. Should only be used for debugging purposes. */
-   public getEntityFromComponent(component: T): Entity {
-      let idx: number | undefined;
-      for (let i = 0; i < this.components.length; i++) {
-         const currentComponent = this.components[i];
-         if (currentComponent === component) {
-            idx = i;
-            break;
-         }
-      }
-      assert(idx !== undefined);
-
-      const entity = this.indexToEntityMap[idx];
-      assert(entity !== undefined);
-
-      return entity;
-   }
-}
-
-export function getComponentArrays(): ReadonlyArray<ComponentArray> {
-   return componentArrays;
 }

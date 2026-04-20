@@ -1,4 +1,4 @@
-import { Entity, ServerComponentType } from "webgl-test-shared";
+import { Entity, ServerComponentType, Settings } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
@@ -35,7 +35,7 @@ function onLoad(entity: Entity): void {
 }
 
 function onTick(entity: Entity): void {
-   if (tickIntervalHasPassed(0.25)) {
+   if (tickIntervalHasPassed(0.25 * Settings.TICK_RATE)) {
       playWhoosh(entity);
    }
 }

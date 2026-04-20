@@ -29,10 +29,10 @@ let currentLayer: Layer;
 export let surfaceLayer: Layer;
 export let undergroundLayer: Layer;
 
-const entityTypeMap: Partial<Record<Entity, EntityType>> = {};
-const entitySpawnTicksMap: Partial<Record<Entity, number>> = {};
-const entityLayerMap: Partial<Record<Entity, Layer>> = {};
-const entityRenderObjectMap: Partial<Record<Entity, EntityRenderObject>> = {};
+const entityTypes: Partial<Record<Entity, EntityType>> = {};
+const entitySpawnTicks: Partial<Record<Entity, number>> = {};
+const entityLayers: Partial<Record<Entity, Layer>> = {}; // @Speed: once this is array-ified, turn into layerIdx instead. Then that can be Uint8Array
+const entityRenderObjects: Partial<Record<Entity, EntityRenderObject>> = {};
 
 export function addLayer(layer: Layer): void {
    if (layers.length === 0) {
@@ -53,35 +53,33 @@ export function getCurrentLayer(): Layer {
 }
 
 export function getEntityAgeTicks(entity: Entity): number {
-   const spawnTicks = entitySpawnTicksMap[entity];
-   assert(spawnTicks !== undefined);
-   return currentSnapshot.tick - spawnTicks;
+   assert(entitySpawnTicks[entity] !== undefined);
+   return currentSnapshot.tick - entitySpawnTicks[entity];
 }
 
 export function getEntityLayer(entity: Entity): Layer {
-   const layer = entityLayerMap[entity];
-   assert(layer !== undefined);
-   return layer;
+   assert(entityLayers[entity] !== undefined);
+   return entityLayers[entity];
 }
 
 export function getEntityType(entity: Entity): EntityType {
-   const entityType = entityTypeMap[entity];
-   assert(entityType !== undefined);
-   return entityType;
+   assert(entityTypes[entity] !== undefined);
+   return entityTypes[entity];
 }
 
 export function getEntityRenderObject(entity: Entity): EntityRenderObject {
-   const renderObject = entityRenderObjectMap[entity];
-   assert(renderObject !== undefined);
-   return renderObject;
+   assert(entityRenderObjects[entity] !== undefined);
+   return entityRenderObjects[entity];
 }
 
 export function entityExists(entity: Entity): boolean {
-   return entityLayerMap[entity] !== undefined;
+   // Of all of them entityTypes is by far the hottest guh
+   //        ^ @Investigate: is this true? is entityTypes actually the fastest to use?
+   return entityTypes[entity] !== undefined;
 }
 
 export function setEntityLayer(entity: Entity, layer: Layer): void {
-   entityLayerMap[entity] = layer;
+   entityLayers[entity] = layer;
 }
 
 // @Cleanup: remove the need to pass in Entity
@@ -124,10 +122,11 @@ export function createEntityCreationInfo(entity: Entity, entityComponentData: En
 }
 
 // @Hack: this "addToRendering" thing seems a bit hacky
-export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo: EntityCreationInfo, addToRendering: boolean): void {
+export function createEntity(spawnTicks: number, layer: Layer, creationInfo: EntityCreationInfo, addToRendering: boolean): void {
    const entity = creationInfo.entity;
    const entityType = creationInfo.entityComponentData.entityType;
    
+   // @Speed: already called this above, in createEntityCreationInfo...
    const componentArrays = getEntityComponentArrays(entityType);
    const intermediateInfos = ENTITY_INTERMEDIATE_INFOS[entityType];
    
@@ -139,10 +138,10 @@ export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo:
       componentArray.addComponent(entity, component);
    }
 
-   entityTypeMap[entity] = entityType;
-   entitySpawnTicksMap[entity] = spawnTicks;
-   entityLayerMap[entity] = layer;
-   entityRenderObjectMap[entity] = creationInfo.renderObject;
+   entityTypes[entity] = entityType;
+   entitySpawnTicks[entity] = spawnTicks;
+   entityLayers[entity] = layer;
+   entityRenderObjects[entity] = creationInfo.renderObject;
       
    // @Incomplete: is this really the right place to do this? is onLoad even what i want?
    // Call onLoad functions
@@ -176,7 +175,7 @@ export function addEntityToWorld(spawnTicks: number, layer: Layer, creationInfo:
    }
 }
 
-export function removeEntity(entity: Entity, isDeath: boolean): void {
+export function destroyEntity(entity: Entity, isDeath: boolean): void {
    const renderObject = getEntityRenderObject(entity);
    
    const layer = getEntityLayer(entity);
@@ -208,19 +207,18 @@ export function removeEntity(entity: Entity, isDeath: boolean): void {
    //    removed by the light data update immediately after the entity data update, but i'm wondering if there
    //    are any cases where entities are removed not in the entity data update?? or could be in the future? cuz this is exported everywhence
    // removeAllAttachedLights(renderObject);
-
-   // @Speed: could be batched across component arrays?? That would also make the if statement check far better.
    for (let i = 0, len = componentArrays.length; i < len; i++) {
       const componentArray = componentArrays[i];
       componentArray.addComponentToRemoveBuffer(entity);
 
+      // @Speed: could be batched across component arrays?? That would also make the if statement check far better.
       if (componentArray.onRemove !== undefined) {
          componentArray.onRemove(entity);
       }
    }
 
-   delete entityTypeMap[entity];
-   delete entitySpawnTicksMap[entity];
-   delete entityLayerMap[entity];
-   delete entityRenderObjectMap[entity];
+   delete entityTypes[entity];
+   delete entitySpawnTicks[entity];
+   delete entityLayers[entity];
+   delete entityRenderObjects[entity];
 }

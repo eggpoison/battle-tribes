@@ -1,15 +1,12 @@
 import { assert, Point } from "./utils";
 
-// @Cleanup: maybe extract into client-to-server and server-to-client ?
-export enum PacketType {
-   // -----------------
-   // CLIENT-TO-SERVER
-   // -----------------
+/** Client-to-server packet types */
+export const enum ClientPacketType {
    initialPlayerData,
    activate,
-   deactivate,
+   deactivate, // @CLEANUP: unused now!!
    playerData,
-   syncRequest,
+   syncRequest, // @CLEANUP: unused now!!
    attack,
    respawn,
    startItemUse,
@@ -47,8 +44,7 @@ export enum PacketType {
    recruitTribesman,
    respondToTitleOffer,
    terminalCommand,
-   // @Hack
-   setSpectatingPosition,
+   setSpectatingPosition, // @Hack
    startEntityInteraction,
    endEntityInteraction,
    screenResize,
@@ -65,18 +61,19 @@ export enum PacketType {
    devRemoveTitle, // ((DEV))
    devCreateTribe, // ((DEV))
    devChangeTribeType, // ((DEV))
-   // -----------------
-   // SERVER-TO-CLIENT
-   // -----------------
+}
+
+/** Server-to-client packet types */
+export const enum ServerPacketType {
    initialGameData,
    gameData,
-   syncGameData,
+   syncGameData, // @CLEANUP: unused now!!!
+   // @BAD this will appear as missing thing on enum in prod. Just attach the dev game data to the end. Or make the dev stuff have to appear at the end of this?
    devGameData, // ((DEV))
    forcePositionUpdate,
-   // @CLEANUP i snapped on the 'serverToClient' prefix to this cuz chatMessage was taken to the client-to-server packet
-   serverToClientChatMessage,
+   chatMessage,
    simulationStatusUpdate,
-   shieldKnock
+   shieldKnock // @HACKKK
 }
 
 // @Bandwidth: figure out a way to be tightly packed (not have to add padding)
@@ -86,10 +83,10 @@ abstract class BasePacketObject {
    public currentByteOffset: number;
    private readonly startPaddingBytes: number;
 
-   public readonly buffer: ArrayBufferLike;
+   public readonly buffer: ArrayBuffer;
    private readonly view: DataView;
 
-   constructor(byteOffset: number, buffer: ArrayBufferLike) {
+   constructor(byteOffset: number, buffer: ArrayBuffer) {
       this.currentByteOffset = byteOffset;
       this.startPaddingBytes = byteOffset;
       this.buffer = buffer;
@@ -144,7 +141,7 @@ export class Packet extends BasePacketObject {
    private readonly floatView: Float32Array;
    private readonly uint8View: Uint8Array;
    
-   constructor(packetType: PacketType, lengthBytes: number, buffer?: ArrayBufferLike) {
+   constructor(packetType: number, lengthBytes: number, buffer?: ArrayBuffer) {
       // One extra float to store the packet type.
       const fullLengthBytes = PACKET_TYPE_SIZE_BYTES + lengthBytes;
 
@@ -237,7 +234,7 @@ export function getStringLengthBytes(str: string): number {
 export class PacketReader extends BasePacketObject {
    private readonly uint8View: Uint8Array;
 
-   constructor(buffer: ArrayBufferLike, startPaddingBytes: number) {
+   constructor(buffer: ArrayBuffer, startPaddingBytes: number) {
       super(startPaddingBytes, buffer);
 
       this.uint8View = new Uint8Array(buffer);

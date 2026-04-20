@@ -96,7 +96,7 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
       
       // If it doesn't exist in the server data, remove it
       const itemData = inventoryData.itemSlots[itemSlot];
-      if (itemData?.id !== item.id) {
+      if (itemData !== undefined && itemData.id !== item.id) {
          inventory.removeItem(itemSlot);
 
          if (isPlayer) {
@@ -125,7 +125,11 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
       
       // If there is a new item in the slot, add it
       const item = inventory.itemSlots[itemSlot];
-      if (item?.id !== itemData.id) {
+      if (item === undefined) {
+         continue;
+      }
+
+      if (item.id !== itemData.id) {
          const item = new Item(itemData.type, itemData.count, itemData.id, itemData.nickname, itemData.namer);
          inventory.addItem(item, itemSlot);
 

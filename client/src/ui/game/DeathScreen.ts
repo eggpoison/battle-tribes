@@ -1,8 +1,10 @@
 import { assert, randItem } from "webgl-test-shared";
 import { sendRespawnPacket } from "../../game/networking/packet-sending/packet-sending";
 import { addTickCallback } from "../../game/game";
-import { quitGame } from "../LoadingScreen";
 import { deathScreen } from "../../ui-state/death-screen-funcs";
+import { killSocket } from "../../game/networking/socket";
+import { closeGameScreen } from "../GameScreen";
+import { openMainMenu } from "../MainMenu";
 
 const RESPAWN_TIME_SECONDS = 8;
 
@@ -19,6 +21,15 @@ let respawnCountdownNode: Text | null = null;
 let secondsInScreen = 0;
 
 deathScreen.open = createDeathScreen;
+
+export function quitGame(): void {
+   killSocket();
+
+   closeGameScreen();
+   openMainMenu();
+}
+
+// A naive setTimeout won't work cuz that gets throttled 
 
 function tickDeathScreen(): void {
    assert(deathScreenElem !== null && respawnCountdownNode !== null && respawnCountdownElem !== null);

@@ -1,4 +1,4 @@
-import { CircularBox, randAngle, randFloat, ServerComponentType, PacketReader, Entity, randInt, _point } from "webgl-test-shared";
+import { CircularBox, randAngle, randFloat, ServerComponentType, PacketReader, Entity, randInt, _point, Settings } from "webgl-test-shared";
 import { createSnowParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
@@ -68,7 +68,7 @@ function onTick(entity: Entity): void {
    getHitboxVelocity(hitbox);
    const velocity = _point;
    if (velocity.magnitude() > 50) {
-      if (tickIntervalHasPassed(0.05)) {
+      if (tickIntervalHasPassed(0.05 * Settings.TICK_RATE)) {
          createSnowParticle(hitbox.box.position.x, hitbox.box.position.y, randFloat(40, 60));
       }
    }

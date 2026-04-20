@@ -177,7 +177,9 @@ if (import.meta.hot) {
    }
 
    import.meta.hot.dispose(() => {
-      hotbarElem?.remove();
+      if (hotbarElem !== null) {
+         destroyHotbar();
+      }
    });
    
    import.meta.hot.accept();

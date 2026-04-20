@@ -1,5 +1,5 @@
 // @Location
-const uiZoom = 1;
+const uiZoom = 1.4;
 // @Hack @Copynpaste
 document.documentElement.style.setProperty("--zoom", uiZoom.toString());
 

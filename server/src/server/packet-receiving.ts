@@ -1,4 +1,4 @@
-import { getStringLengthBytes, Packet, PacketReader, PacketType } from "battletribes-shared/packets";
+import { getStringLengthBytes, Packet, PacketReader, ServerPacketType } from "battletribes-shared/packets";
 import PlayerClient from "./PlayerClient";
 import { Entity, EntityType, LimbAction } from "battletribes-shared/entities";
 import { BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
@@ -588,7 +588,7 @@ export function processTPToEntityPacket(playerClient: PlayerClient, reader: Pack
    const targetTransformComponent = TransformComponentArray.getComponent(targetEntity);
    const targetHitbox = targetTransformComponent.hitboxes[0];
 
-   const packet = new Packet(PacketType.forcePositionUpdate, 2 * Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(ServerPacketType.forcePositionUpdate, 2 * Float32Array.BYTES_PER_ELEMENT);
    packet.writeNumber(targetHitbox.box.position.x);
    packet.writeNumber(targetHitbox.box.position.y);
    playerClient.socket.send(packet.buffer);
@@ -1039,7 +1039,7 @@ export function processRenameAnimalPacket(reader: PacketReader): void {
 export function receiveChatMessagePacket(reader: PacketReader, playerClient: PlayerClient): void {
    const message = reader.readString();
 
-   const packet = new Packet(PacketType.serverToClientChatMessage, getStringLengthBytes(playerClient.username) + getStringLengthBytes(message));
+   const packet = new Packet(ServerPacketType.chatMessage, getStringLengthBytes(playerClient.username) + getStringLengthBytes(message));
    packet.writeString(playerClient.username);
    packet.writeString(message);
 

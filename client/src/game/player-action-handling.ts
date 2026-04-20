@@ -1,8 +1,7 @@
 import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, ServerComponentType, BuildingMaterial, AttackVar, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp, _point } from "webgl-test-shared";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
-import { closeCurrentMenu, hasOpenNonEmbodiedMenu, MenuType, openMenu } from "../ui/menus";
 import { playerActionState } from "../ui-state/player-action-state";
-import { currentSnapshot, gameIsRunning, getElapsedTimeInSeconds } from "./game";
+import { currentSnapshot, getElapsedTimeInSeconds } from "./game";
 import { getEntityClientComponentConfigs } from "./entity-components/client-components";
 import { createBarrelComponentData } from "./entity-components/server-components/BarrelComponent";
 import { createBracingsComponentData } from "./entity-components/server-components/BracingsComponent";
@@ -26,8 +25,7 @@ import { attemptEntitySelection, getHoveredEntity, getSelectedEntity, setSelecte
 import { EntityRenderObject } from "./EntityRenderObject";
 import { getHitboxVelocity, Hitbox, setHitboxRelativeAngle } from "./hitboxes";
 import { countItemTypesInInventory } from "./inventory-manipulation";
-import { addKeyListener, keyIsPressed } from "./keyboard-input";
-import { sendStopItemUsePacket, sendAttackPacket, sendItemDropPacket, sendDismountCarrySlotPacket, sendStartItemUsePacket, sendItemUsePacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket, sendSpectateEntityPacket, sendAscendPacket } from "./networking/packet-sending/packet-sending";
+import { sendStopItemUsePacket, sendAttackPacket, sendStartItemUsePacket, sendItemUsePacket, sendSelectRiderDepositLocationPacket, sendSetMoveTargetPositionPacket, sendSpectateEntityPacket } from "./networking/packet-sending/packet-sending";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
 import { playerInstance, isSpectating } from "./player";
 import { thingIsVisualRenderPart } from "./render-parts/render-parts";
@@ -36,12 +34,13 @@ import { attemptToCompleteNode } from "./research";
 import { playHeadSound, playSoundOnHitbox } from "./sound";
 import { calculateEntityPlaceInfo } from "./structure-placement";
 import { playerTribe } from "./tribes";
-import { entityExists, getEntityLayer, getCurrentLayer, EntityComponentData, createEntityCreationInfo } from "./world";
+import { getEntityLayer, getCurrentLayer, EntityComponentData, createEntityCreationInfo } from "./world";
 import { cursorWorldPos, setCameraVelocity } from "./camera";
 import { HeldItemComponentArray } from "./entity-components/server-components/HeldItemComponent";
 import { ServerComponentData } from "./entity-components/components";
 import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
 import { hotbarFuncs } from "../ui-state/hotbar-funcs";
+import { getPlayerMoveDirection, playerIsLightspeed } from "./event-handling";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -80,9 +79,6 @@ let spectatorSpeed = 800;
 export let rightMouseButtonIsPressed = false;
 
 let hotbarSelectedItemSlot = 1;
-
-   /** Whether the inventory is open or not. */
-let _inventoryIsOpen = false;
 
 let discombobulationTimer = 0;
 
@@ -136,13 +132,6 @@ const BOW_DRAWING_CHARGE_END_LIMB_STATE: LimbState = {
    extraOffsetX: 0,
    extraOffsetY: 8
 };
-
-addKeyListener(" ", () => {
-   // Ascend layers
-   if (gameIsRunning && gameUIState.canAscendLayer) {
-      sendAscendPacket();
-   }
-});
 
 export function getHotbarSelectedItemSlot(): number {
    return hotbarSelectedItemSlot;
@@ -710,116 +699,6 @@ export function getSelectedItemInfo(): SelectedItemInfo | null {
    return null;
 }
 
-const createHotbarKeyListeners = (): void => {
-   for (let itemSlot = 1; itemSlot <= Settings.INITIAL_PLAYER_HOTBAR_SIZE; itemSlot++) {
-      addKeyListener(itemSlot.toString(), () => { selectItemSlot(itemSlot); });
-   }
-   addKeyListener("!", () => { selectItemSlot(1); });
-   addKeyListener("@", () => { selectItemSlot(2); });
-   addKeyListener("#", () => { selectItemSlot(3); });
-   addKeyListener("$", () => { selectItemSlot(4); });
-   addKeyListener("%", () => { selectItemSlot(5); });
-   addKeyListener("^", () => { selectItemSlot(6); });
-   addKeyListener("&", () => { selectItemSlot(7); });
-}
-
-const hideInventory = (): void => {
-   _inventoryIsOpen = false;
-   
-   closeCurrentMenu();
-
-   // If the player is holding an item when their inventory is closed, throw the item out
-   if (playerInstance !== null) {
-      const inventoryComponent = InventoryComponentArray.getComponent(playerInstance);
-      const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot)!;
-      if (heldItemInventory.hasItem(1)) {
-         const transformComponent = TransformComponentArray.getComponent(playerInstance);
-         const playerHitbox = transformComponent.hitboxes[0];
-         sendItemDropPacket(InventoryName.heldItemSlot, 1, 99999, playerHitbox.box.angle);
-      }
-   }
-}
- 
-/** Creates the key listener to toggle the inventory on and off. */
-const createInventoryToggleListeners = (): void => {
-   // Open crafting menu on E
-   addKeyListener("e", () => {
-      const didCloseMenu = closeCurrentMenu();
-      if (!didCloseMenu) {
-         openMenu(MenuType.craftingMenu);
-      }
-   });
-
-   addKeyListener("i", () => {
-      if (_inventoryIsOpen) {
-         hideInventory();
-         return;
-      }
-   });
-   addKeyListener("escape", () => {
-      closeCurrentMenu();
-   });
-}
-
-/** Creates keyboard and mouse listeners for the player. */
-export function createPlayerInputListeners(): void {
-   createHotbarKeyListeners();
-   createInventoryToggleListeners();
-
-   document.body.addEventListener("wheel", e => {
-      // Don't scroll hotbar if element is being scrolled instead
-      const elemPath = e.composedPath() as Array<HTMLElement>;
-      for (const elem of elemPath) {
-         // @Hack
-         if (elem.style !== undefined) {
-            const overflowY = getComputedStyle(elem).getPropertyValue("overflow-y");
-            if (overflowY === "scroll") {
-               return;
-            }
-         }
-      }
-      
-      const scrollDirection = Math.sign(e.deltaY);
-      let newSlot = hotbarSelectedItemSlot + scrollDirection;
-      if (newSlot <= 0) {
-         newSlot += Settings.INITIAL_PLAYER_HOTBAR_SIZE;
-      } else if (newSlot > Settings.INITIAL_PLAYER_HOTBAR_SIZE) {
-         newSlot -= Settings.INITIAL_PLAYER_HOTBAR_SIZE;
-      }
-      selectItemSlot(newSlot);
-   });
-
-   addKeyListener("q", () => {
-      if (playerInstance !== null) {
-         const selectedItemInfo = getSelectedItemInfo();
-         if (selectedItemInfo === null) {
-            return;
-         }
-
-         const playerTransformComponent = TransformComponentArray.getComponent(playerInstance);
-         const playerHitbox = playerTransformComponent.hitboxes[0];
-         
-         const dropAmount = keyIsPressed("shift") ? 99999 : 1;
-         sendItemDropPacket(selectedItemInfo.inventoryName, hotbarSelectedItemSlot, dropAmount, playerHitbox.box.angle);
-      }
-   });
-
-   addKeyListener("shift", () => {
-      // Don't want to dismount the player's mount when they're shift clicking an item in an inventory!
-      if (hasOpenNonEmbodiedMenu()) {
-         return;
-      }
-      
-      if (playerInstance !== null) {
-         const transformComponent = TransformComponentArray.getComponent(playerInstance);
-         const playerHitbox = transformComponent.hitboxes[0];
-         if (playerHitbox.parent !== null && entityExists(playerHitbox.parent.entity)) {
-            sendDismountCarrySlotPacket();
-         }
-      }
-   });
-}
-
 export function onGameMouseDown(e: MouseEvent): void {
    if (e.button === 0) { // Left click
       if (gameUIState.gameInteractState === GameInteractState.spectateEntity) {
@@ -976,7 +855,7 @@ const updateNonSpectatorMovement = (moveDirection: number | null): void => {
       const playerAction = getInstancePlayerAction(InventoryName.hotbar);
       
       let acceleration: number;
-      if (keyIsPressed("l")) {
+      if (playerIsLightspeed) {
          acceleration = PLAYER_LIGHTSPEED_ACCELERATION;
       // @Bug: doesn't account for offhand
       } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.chargeSpear || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || playerAction === LimbAction.windShieldBash || playerAction === LimbAction.pushShieldBash || playerAction === LimbAction.returnShieldBashToRest || playerIsPlacingEntity()) {
@@ -1010,35 +889,7 @@ const updateNonSpectatorMovement = (moveDirection: number | null): void => {
 
 /** Updates the player's movement to match what keys are being pressed. */
 export function updatePlayerMovement(): void {
-   // Get pressed keys
-   const wIsPressed = keyIsPressed("w") || keyIsPressed("W") || keyIsPressed("ArrowUp");
-   const aIsPressed = keyIsPressed("a") || keyIsPressed("A") || keyIsPressed("ArrowLeft");
-   const sIsPressed = keyIsPressed("s") || keyIsPressed("S") || keyIsPressed("ArrowDown");
-   const dIsPressed = keyIsPressed("d") || keyIsPressed("D") || keyIsPressed("ArrowRight");
-
-   const hash = (wIsPressed ? 1 : 0) + (aIsPressed ? 2 : 0) + (sIsPressed ? 4 : 0) + (dIsPressed ? 8 : 0);
-
-   // Update rotation
-   let moveDirection!: number | null;
-   switch (hash) {
-      case 0:  moveDirection = null;          break;
-      case 1:  moveDirection = 0;             break;
-      case 2:  moveDirection = Math.PI * 3/2; break;
-      case 3:  moveDirection = Math.PI * 7/4; break;
-      case 4:  moveDirection = Math.PI;       break;
-      case 5:  moveDirection = null;          break;
-      case 6:  moveDirection = Math.PI * 5/4; break;
-      case 7:  moveDirection = Math.PI * 3/2; break;
-      case 8:  moveDirection = Math.PI/2;     break;
-      case 9:  moveDirection = Math.PI / 4;   break;
-      case 10: moveDirection = null;          break;
-      case 11: moveDirection = 0;             break;
-      case 12: moveDirection = Math.PI * 3/4; break;
-      case 13: moveDirection = Math.PI/2;     break;
-      case 14: moveDirection = Math.PI;       break;
-      case 15: moveDirection = null;          break;
-   }
-
+   const moveDirection = getPlayerMoveDirection();
    if (isSpectating) {
       updateSpectatorMovement(moveDirection);
    } else {

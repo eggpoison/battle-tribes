@@ -1,9 +1,7 @@
 import { Entity } from "webgl-test-shared";
-import { entitySelectionState } from "../ui-state/entity-selection-state";
 import { getCameraSubject } from "./camera";
 import { sendSetDebugEntityPacket } from "./networking/packet-sending/packet-sending";
 import { playerInstance } from "./player";
-import { isDev } from "./utils";
 import { entityExists } from "./world";
 import { nerdVision } from "../ui-state/nerd-vision-funcs";
 import { getHoveredEntity } from "./entity-selection";
@@ -11,7 +9,7 @@ import { getHoveredEntity } from "./entity-selection";
 let previousDebugEntity = 0;
 
 export function updateDebugEntity(): void {
-   if (!isDev()) {
+   if (!__DEV__) {
       return;
    }
 

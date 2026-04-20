@@ -1,4 +1,4 @@
-import { BlockType, CactusFlowerSize, Entity, Point, _point, lerp, polarVec2, randAngle, randFloat, randInt, randItem, randSign } from "webgl-test-shared";
+import { BlockType, CactusFlowerSize, Entity, Point, Settings, _point, lerp, polarVec2, randAngle, randFloat, randInt, randItem, randSign } from "webgl-test-shared";
 import Particle from "./Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, highMonocolourParticles, highTexturedParticles, lowMonocolourParticles, lowTexturedParticles } from "./rendering/webgl/particle-rendering";
 import { TransformComponent, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
@@ -1638,7 +1638,7 @@ const createFrozenYetiBloodParticle = (size: BloodParticleSize, spawnPositionX: 
 }
 
 export function createDeepFrostHeartBloodParticles(originX: number, originY: number, extraVelocityX: number, extraVelocityY: number): void {
-   if (tickIntervalHasPassed(0.4)) {
+   if (tickIntervalHasPassed(0.4 * Settings.TICK_RATE)) {
       for (let i = 0; i < 6; i++) {
          const spawnPositionOffsetMagnitude = 13;
          const spawnPositionOffsetDirection = randAngle();

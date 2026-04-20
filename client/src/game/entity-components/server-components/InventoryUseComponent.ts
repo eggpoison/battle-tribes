@@ -669,7 +669,7 @@ function onTick(entity: Entity): void {
             }
             
             // Ember particles
-            if (tickIntervalHasPassed(0.08)) {
+            if (tickIntervalHasPassed(0.08 * Settings.TICK_RATE)) {
                getRenderPartRenderPosition(activeItemRenderPart);
                const renderPosition = _point;
                let spawnPositionX = renderPosition.x;
@@ -686,7 +686,7 @@ function onTick(entity: Entity): void {
             }
 
             // Smoke particles
-            if (tickIntervalHasPassed(0.18)) {
+            if (tickIntervalHasPassed(0.18 * Settings.TICK_RATE)) {
                getRenderPartRenderPosition(activeItemRenderPart);
                const renderPosition = _point;
 
@@ -706,7 +706,7 @@ function onTick(entity: Entity): void {
                break;
             }
 
-            if (tickIntervalHasPassed(0.4)) {
+            if (tickIntervalHasPassed(0.4 * Settings.TICK_RATE)) {
                getRenderPartRenderPosition(activeItemRenderPart);
                const renderPosition = _point;
                let spawnPositionX = renderPosition.x;
@@ -723,7 +723,7 @@ function onTick(entity: Entity): void {
       }
 
       // @Incomplete: If eating multiple foods at once, shouldn't be on the same tick interval
-      if (tickIntervalHasPassed(0.25) && limbInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[limbInfo.heldItemType] === "healing") {
+      if (tickIntervalHasPassed(0.25 * Settings.TICK_RATE) && limbInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[limbInfo.heldItemType] === "healing") {
          // Create food eating particles
          for (let i = 0; i < 3; i++) {
             let spawnPositionX = hitbox.box.position.x + 37 * Math.sin(hitbox.box.angle);
@@ -967,7 +967,7 @@ const updateLimbTorch = (limb: LimbInfo, heldItemRenderPart: RenderPart, entity:
             limb.torchLight.b = lightB;
          }
 
-         if (tickIntervalHasPassed(0.15) && heldItemType === ItemType.fireTorch) {
+         if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE) && heldItemType === ItemType.fireTorch) {
             // limb.torchLight.radius = lightRadius + randFloat(-7, 7);
          }
          

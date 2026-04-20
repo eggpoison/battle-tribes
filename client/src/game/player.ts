@@ -1,4 +1,4 @@
-import { Entity, updateBox } from "webgl-test-shared";
+import { Entity, TribeType, updateBox } from "webgl-test-shared";
 import { cursorWorldPos } from "./camera";
 import { selectItemSlot } from "./player-action-handling";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
@@ -17,8 +17,11 @@ export let playerInstance: Entity | null = null;
 
 export let isSpectating = false;
 
+// @MEMORY: Basically a temporary intermediate variable during socket connection!! Don't need to exist for the whole lifetime of the game!
 /** Username of the player. Empty string if the player's name has not yet been assigned. */
 export let playerUsername = "";
+// @MEMORY same with this one!!
+export let playerTribeType: TribeType;
 
 const onPlayerRespawn = (): void => {
    selectItemSlot(1);
@@ -51,6 +54,10 @@ export function setIsSpectating(newIsSpectating: boolean): void {
 
 export function setPlayerUsername(username: string): void {
    playerUsername = username;
+}
+
+export function setPlayerTribeType(tribeType: TribeType): void {
+   playerTribeType = tribeType;
 }
 
 /** Updates the rotation of the player to match the cursor position */
@@ -89,16 +96,3 @@ export function updatePlayerDirection(clientInterp: number, serverInterp: number
    const renderObject = getEntityRenderObject(playerInstance);
    registerDirtyRenderObject(playerInstance, renderObject);
 }
-
-// @INCOMPLETE
-// if (import.meta.hot) {
-//    if (playerInstance !== null) {
-//       createHotbar();
-//    }
-
-//    import.meta.hot.dispose(() => {
-//       hotbarElem?.remove();
-//    });
-   
-//    import.meta.hot.accept();
-// }

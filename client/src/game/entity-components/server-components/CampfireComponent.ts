@@ -1,4 +1,4 @@
-import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-shared";
+import { randAngle, randFloat, Entity, ServerComponentType, Settings } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../../texture-atlases";
@@ -61,7 +61,7 @@ function onTick(entity: Entity): void {
       const hitbox = transformComponent.hitboxes[0];
 
       // Smoke particles
-      if (tickIntervalHasPassed(0.17)) {
+      if (tickIntervalHasPassed(0.17 * Settings.TICK_RATE)) {
          const spawnOffsetMagnitude = 20 * Math.random();
          const spawnOffsetDirection = randAngle();
          const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
@@ -70,7 +70,7 @@ function onTick(entity: Entity): void {
       }
 
       // Ember particles
-      if (tickIntervalHasPassed(0.05)) {
+      if (tickIntervalHasPassed(0.05 * Settings.TICK_RATE)) {
          let spawnPositionX = hitbox.box.position.x;
          let spawnPositionY = hitbox.box.position.y;
 

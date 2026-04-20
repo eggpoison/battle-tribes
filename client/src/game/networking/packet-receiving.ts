@@ -1,8 +1,7 @@
-import { TileIndex, Biome, TileType, Settings, PacketReader, WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, InventoryName, AttackVar, getTileX, getTileY, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges } from "webgl-test-shared";
+import { Biome, TileType, Settings, PacketReader, WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, InventoryName, AttackVar, getTileX, getTileY, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges } from "webgl-test-shared";
 import { refreshCameraView, setCameraPosition } from "../camera";
 import { Tile } from "../Tile";
 import { addLayer, layers, setCurrentLayer } from "../world";
-import { NEIGHBOUR_OFFSETS } from "../utils";
 import Layer from "../Layer";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { initialiseRenderables } from "../rendering/render-loop";
@@ -11,9 +10,19 @@ import { registerTamingSpecsFromData } from "../taming-specs";
 import { gameUIState } from "../../ui-state/game-ui-state";
 import { getSelectedItemInfo } from "../player-action-handling";
 import { playerActionState } from "../../ui-state/player-action-state";
-import { gameIsRunning, resyncGame } from "../game";
 import { registerEntityComponentTypesFromData } from "../entity-component-types";
-import { addMessageToChatbox } from "../../ui/game/Chat";
+import { addMessageToChat } from "../../ui/game/Chat";
+
+const NEIGHBOUR_OFFSETS = [
+   [1, 0],
+   [-1, 0],
+   [0, -1],
+   [-1, -1],
+   [1, 1],
+   [-1, 1],
+   [0, 1],
+   [1, -1]
+];
 
 export function processInitialGameDataPacket(reader: PacketReader): void {
    const layerIdx = reader.readNumber();
@@ -134,9 +143,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
 }
 
 
-export function processSyncGameDataPacket(reader: PacketReader): void {
-   if (!gameIsRunning) return;
-   
+export function onSyncGameDataPacket(reader: PacketReader): void {
    const position = reader.readPoint();
    const angle = reader.readNumber();
    const previousPosition = reader.readPoint();
@@ -151,14 +158,9 @@ export function processSyncGameDataPacket(reader: PacketReader): void {
       playerHitbox.previousPosition.set(previousPosition);
       playerHitbox.acceleration.set(acceleration);
    }
-
-   // @Squeam
-   // receiveInitialPacket(reader);
-   
-   resyncGame();
 }
 
-export function processForcePositionUpdatePacket(reader: PacketReader): void {
+export function onForcePositionUpdatePacket(reader: PacketReader): void {
    if (playerInstance === null) {
       return;
    }
@@ -172,18 +174,18 @@ export function processForcePositionUpdatePacket(reader: PacketReader): void {
    playerHitbox.box.position.y = y;
 }
 
-export function receiveChatMessagePacket(reader: PacketReader): void {
+export function onChatMessagePacket(reader: PacketReader): void {
    const username = reader.readString();
    const message = reader.readString();
-   addMessageToChatbox(username, message);
+   addMessageToChat(username, message);
 }
    
-export function processSimulationStatusUpdatePacket(reader: PacketReader): void {
+export function onSimulationStatusUpdatePacket(reader: PacketReader): void {
    const isSimulating = reader.readBool();
    gameUIState.setIsSimulating(isSimulating);
 }
 
-export function processShieldKnockPacket(): void {
+export function onShieldKnockPacket(): void {
    const selectedItemInfo = getSelectedItemInfo();
    if (selectedItemInfo === null) {
       return;

@@ -1,5 +1,4 @@
 import { CommandPermissions, assert, commandIsValid } from "webgl-test-shared";
-import { isDev } from "../../../game/utils";
 import { sendTerminalCommandPacket } from "../../../game/networking/packet-sending/packet-sending";
 import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 
@@ -51,7 +50,7 @@ const enterCommand = (): void => {
       return;
    }
 
-   const userPermissions = isDev() ? CommandPermissions.dev : CommandPermissions.player;
+   const userPermissions = __DEV__ ? CommandPermissions.dev : CommandPermissions.player;
 
    const isValidResult = commandIsValid(command, userPermissions);
    if (isValidResult.isValid) {

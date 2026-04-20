@@ -1,5 +1,4 @@
 import { assert } from "../../../../shared/src";
-import { addKeyListener, clearPressedKeys } from "../../game/keyboard-input";
 import { sendChatMessagePacket } from "../../game/networking/packet-sending/packet-sending";
 
 const enum Var {
@@ -20,16 +19,7 @@ const spamFilterTimestamps: Array<number> = [0, 0, 0, 0, 0];
 /** Points to the oldest message timestamp */
 let spamFilterHead = 0;
 
-addKeyListener("t", e => {
-   // Open chat message input
-   if (inputElem !== null) {
-      inputElem.focus();
-      e.preventDefault();
-      clearPressedKeys();
-   }
-});
-
-export function addMessageToChatbox(username: string, message: string): void {
+export function addMessageToChat(username: string, message: string): void {
    const messageElem = document.createElement("div");
    messageElem.className = "msg";
 
@@ -46,7 +36,7 @@ export function addMessageToChatbox(username: string, message: string): void {
    }
 }
 
-export function createChatbox(): void {
+export function createChat(): void {
    assert(rootElem === null);
    
    rootElem = document.createElement("div");
@@ -64,7 +54,7 @@ export function createChatbox(): void {
    rootElem.appendChild(historyElem);
 }
 
-export function destroyChatbox(): void {
+export function destroyChat(): void {
    document.body.removeChild(rootElem!);
 
    rootElem = null;
@@ -74,6 +64,15 @@ export function destroyChatbox(): void {
    numMessages = 0;
 
    spamFilterTimestamps.fill(0);
+}
+
+export function openChatMessageInput(e: Event): void {
+   if (inputElem !== null) {
+      inputElem.focus();
+      e.preventDefault();
+      // clearPressedKeys();
+      // @Incomplete
+   }
 }
 
 function onInputKeydown(e: KeyboardEvent): void {

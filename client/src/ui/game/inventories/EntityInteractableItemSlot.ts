@@ -6,7 +6,6 @@
    import { InventoryComponentArray, getInventory } from "../../../game/entity-components/server-components/InventoryComponent";
    import { sendItemPickupPacket, sendItemReleasePacket, sendItemTransferPacket } from "../../../game/networking/packet-sending/packet-sending";
    import { playerInstance } from "../../../game/player";
-   import { keyIsPressed } from "../../../game/keyboard-input";
    import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 
    export interface ItemSlotCallbackInfo {

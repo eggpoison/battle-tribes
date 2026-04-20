@@ -4,7 +4,7 @@ import { TransformComponentArray } from "./entity-components/server-components/T
 import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { cameraPosition, maxVisibleChunkX, maxVisibleChunkY, minVisibleChunkX, minVisibleChunkY } from "./camera";
-import { gameIsFocused } from "./game";
+import { gameIsFocused } from "./event-handling";
 
 type SoundID = number;
 
@@ -355,17 +355,6 @@ export async function beginLoadingSounds(): Promise<void> {
    }
 
    requestIdleCallback(scheduleLoad);
-
-   // const audioBufferPromises = AUDIO_FILE_PATHS.map(async (filePath) => {
-   //    const sound = soundFiles["../sounds/" + filePath] as string;
-      
-   //    const response = await fetch(sound);
-   //    const arrayBuffer = await response.arrayBuffer();
-   //    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-   //    audioBuffers[filePath] = audioBuffer;
-   // });
-
-   // await Promise.all(audioBufferPromises);
 }
 
 const calculateSoundVolume = (volume: number, position: Point): number => {

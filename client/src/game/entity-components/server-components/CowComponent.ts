@@ -115,7 +115,7 @@ function onTick(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const cowComponent = CowComponentArray.getComponent(entity);
 
-   if (cowComponent.grazeProgress !== -1 && tickIntervalHasPassed(0.1)) {
+   if (cowComponent.grazeProgress !== -1 && tickIntervalHasPassed(0.1 * Settings.TICK_RATE)) {
       const hitbox = transformComponent.hitboxes[0];
       
       const spawnOffsetMagnitude = 30 * Math.random();

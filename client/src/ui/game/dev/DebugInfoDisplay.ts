@@ -8,7 +8,7 @@ import { lowMonocolourParticles, lowTexturedParticles, highMonocolourParticles, 
 import { getNumSounds } from "../../../game/sound";
 import { debugInfoDisplay } from "./debug-info-display-funcs";
 import { sendToggleSimulationPacket, sendDevSetViewedSpawnDistributionPacket, sendSpectateEntityPacket } from "../../../game/networking/packet-sending/packet-sending";
-import { getNetworkBufferedBytes } from "../../../game/networking/networking";
+import { getNetworkBufferedBytes } from "../../../game/networking/socket";
 
 let lastTime = 0;
 
@@ -224,7 +224,7 @@ export function openDebugInfoDisplay(parent: HTMLElement): void {
    }
 
    debugInfoDisplay.updateServerTPS = (tps: number): void => {
-      serverTPSNode.data = (Math.round(tps * 100) * 0.01).toString();
+      serverTPSNode.data = tps.toFixed(2);
    }
 
    debugInfoDisplay.updateSnapshotBufferSize = (snapshotBufferSize: number): void => {

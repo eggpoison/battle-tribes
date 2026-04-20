@@ -117,7 +117,7 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
    };
 }
 
-export function processDevGameDataPacket(reader: PacketReader): void {
+export function onDevGameDataPacket(reader: PacketReader): void {
    // Subtile supports
    const numSubtiles = reader.readNumber();
    if (numSubtiles > 0) {

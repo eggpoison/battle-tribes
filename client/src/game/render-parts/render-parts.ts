@@ -6,7 +6,6 @@ import TexturedRenderPart from "./TexturedRenderPart";
 export type VisualRenderPart = ColouredRenderPart | TexturedRenderPart;
 export type RenderPart = VisualRenderPart | RenderAttachPoint;
 
-
 // @HACK: changing this from Hitbox to HitboxReference.
 export type RenderPartParent = Hitbox | RenderPart;
 

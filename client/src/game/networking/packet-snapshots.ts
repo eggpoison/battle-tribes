@@ -5,7 +5,7 @@ import Layer from "../Layer";
 import { playerInstance, setPlayerInstance } from "../player";
 import { playHeadSound, playSound } from "../sound";
 import { ExtendedTribe, readExtendedTribeData, readShortTribeData, Tribe, tribes, updatePlayerTribe } from "../tribes";
-import { addEntityToWorld, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityLayer, getEntityRenderObject, getEntityType, layers, removeEntity, setCurrentLayer } from "../world";
+import { createEntity, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityLayer, getEntityRenderObject, getEntityType, layers, destroyEntity, setCurrentLayer } from "../world";
 import { getEntityClientComponentConfigs } from "../entity-components/client-components";
 import { ServerComponentData } from "../entity-components/components";
 import { registerDirtyRenderObject } from "../rendering/render-part-matrices";
@@ -23,7 +23,7 @@ import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
 import { updateParticles } from "../rendering/webgl/particle-rendering";
 import { EntityServerComponentData, getEntityComponentArrays, getEntityServerComponentArrays, getEntityServerComponentTypes, getServerComponentData } from "../entity-component-types";
 import { getSelectedEntity } from "../entity-selection";
-import { getComponentArrays } from "../entity-components/ComponentArray";
+import { COMPONENT_ARRAYS } from "../entity-components/ComponentArray";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
@@ -389,7 +389,7 @@ export function createEntityFromData(entity: Entity, data: EntitySnapshot): void
    };
    
    const entityCreationInfo = createEntityCreationInfo(entity, entityComponentData);
-   addEntityToWorld(data.spawnTicks, data.layer, entityCreationInfo, true);
+   createEntity(data.spawnTicks, data.layer, entityCreationInfo, true);
 }
 
 const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {
@@ -504,13 +504,12 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
    for (const entityRemoveInfo of snapshot.removedEntities) {
       // @HACK @INCOMPLETE sometimes entities don't exist here... suggesting some deeper bug. This is a shitty hack.
       if (entityExists(entityRemoveInfo.entity)) {
-         removeEntity(entityRemoveInfo.entity, entityRemoveInfo.isDestroyed);
+         destroyEntity(entityRemoveInfo.entity, entityRemoveInfo.isDestroyed);
       }
    }
    // Destroy removed components
-   const componentArrays = getComponentArrays();
-   for (let i = 0, len = componentArrays.length; i < len; i++) {
-      const componentArray = componentArrays[i];
+   for (let i = 0, len = COMPONENT_ARRAYS.length; i < len; i++) {
+      const componentArray = COMPONENT_ARRAYS[i];
       componentArray.removeFlaggedComponents();
    }
    

@@ -7,7 +7,7 @@ import PlayerClient from "./PlayerClient";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { Inventory } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
-import { alignLengthBytes, getStringLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
+import { alignLengthBytes, getStringLengthBytes, Packet, ServerPacketType } from "battletribes-shared/packets";
 import { entityExists, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes } from "../world";
 import { getPlayerNearbyCollapses, getSubtileSupport, subtileIsCollapsing } from "../collapses";
 import { getSubtileIndex } from "../../../shared/src/subtiles";
@@ -239,7 +239,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    lengthBytes = alignLengthBytes(lengthBytes);
 
-   const packet = new Packet(PacketType.gameData, lengthBytes);
+   const packet = new Packet(ServerPacketType.gameData, lengthBytes);
 
    packet.writeNumber(getGameTicks());
    packet.writeNumber(getGameTime());
@@ -461,7 +461,7 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
       lengthBytes += Float32Array.BYTES_PER_ELEMENT + componentTypes.length * Float32Array.BYTES_PER_ELEMENT;
    }
    lengthBytes = alignLengthBytes(lengthBytes);
-   const packet = new Packet(PacketType.initialGameData, lengthBytes);
+   const packet = new Packet(ServerPacketType.initialGameData, lengthBytes);
    
    // Layer idx
    packet.writeNumber(layers.indexOf(spawnLayer));
@@ -531,7 +531,7 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
 export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBufferLike {
    const player = playerClient.instance;
 
-   const packet = new Packet(PacketType.syncGameData, 8 * Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(ServerPacketType.syncGameData, 8 * Float32Array.BYTES_PER_ELEMENT);
 
    let pos: Point;
    let angle: number;
@@ -562,7 +562,7 @@ export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBuffe
 }
 
 const createSimulationStatusUpdatePacket = (isSimulating: boolean): Packet => {
-   const packet = new Packet(PacketType.simulationStatusUpdate, Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(ServerPacketType.simulationStatusUpdate, Float32Array.BYTES_PER_ELEMENT);
    packet.writeBool(isSimulating);
    return packet;
 }
@@ -583,6 +583,6 @@ export function broadcastSimulationStatus(isSimulating: boolean): void {
 }
 
 export function createShieldKnockPacket(): Packet {
-   const packet = new Packet(PacketType.shieldKnock, 0);
+   const packet = new Packet(ServerPacketType.shieldKnock, 0);
    return packet;
 }

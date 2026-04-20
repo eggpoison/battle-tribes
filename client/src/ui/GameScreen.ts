@@ -1,27 +1,22 @@
-import { gameIsRunning } from "../game/game";
-import { addKeyListener } from "../game/keyboard-input";
-import { gameUIState } from "../ui-state/game-ui-state";
-import { createChatbox, destroyChatbox } from "./game/Chat";
+import { assert } from "../../../shared/src";
+import { playerInstance } from "../game/player";
+import { createChat, destroyChat } from "./game/Chat";
 import { createFrameGraph, destroyFrameGraph } from "./game/dev/FrameGraph";
 import { closeGameInteractableLayer, openGameInteractableLayer } from "./game/GameInteractableLayer";
 import { createHealthBar, destroyHealthBar } from "./game/HealthBar";
 import { createHotbar, destroyHotbar } from "./game/inventories/Hotbar";
 
-addKeyListener("o", () => {
-   // Toggle cinematic mode
-   if (gameIsRunning) {
-      gameUIState.setCinematicModeIsEnabled(!gameUIState.cinematicModeIsEnabled);
-   }
-});
+let canvas: HTMLCanvasElement | undefined;
 
 export function openGameScreen(): void {
-   // Unhide the previous-created game canvas
-   document.getElementById("game-canvas")!.hidden = false;
+   canvas!.hidden = false;
 
-   createHotbar();
-   createHealthBar();
+   if (playerInstance !== null) {
+      createHotbar();
+      createHealthBar();
+   }
    openGameInteractableLayer();
-   createChatbox();
+   createChat();
    // @Speed: only if dev!
    createFrameGraph();
    
@@ -38,8 +33,17 @@ export function closeGameScreen(): void {
    destroyHotbar();
    destroyHealthBar();
    closeGameInteractableLayer();
-   destroyChatbox();
+   destroyChat();
    destroyFrameGraph();
+}
+
+export function setGameScreenCanvas(gameCanvas: HTMLCanvasElement): void {
+   assert(canvas === undefined);
+   canvas = gameCanvas;
+}
+
+export function gameScreenIsOpen(): boolean {
+   return canvas !== undefined;
 }
 
 /*

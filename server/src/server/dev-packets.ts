@@ -1,5 +1,5 @@
 import { GameDataPacketOptions } from "../../../shared/src/client-server-types";
-import { Packet, PacketType } from "../../../shared/src/packets";
+import { Packet, ServerPacketType } from "../../../shared/src/packets";
 import { Settings } from "../../../shared/src/settings";
 import { AIPlanType, clamp, clampToBoardDimensions, getTileIndexIncludingEdges, TileIndex } from "../../../shared/src/utils";
 import { getSubtileSupport, getVisibleSubtileSupports } from "../collapses";
@@ -295,7 +295,7 @@ export function createDevGameDataPacket(playerClient: PlayerClient): Packet {
    lengthBytes += Float32Array.BYTES_PER_ELEMENT; // Has debug data boolean
    lengthBytes += debugData !== null ? getEntityDebugDataLength(debugData) : 0;
 
-   const packet = new Packet(PacketType.devGameData, lengthBytes);
+   const packet = new Packet(ServerPacketType.devGameData, lengthBytes);
    
    // Subtile supports
    if (playerClient.hasPacketOption(GameDataPacketOptions.sendSubtileSupports)) {

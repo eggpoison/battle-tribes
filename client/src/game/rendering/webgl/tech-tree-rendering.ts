@@ -21,10 +21,6 @@ export function getTechTreeGL(): WebGL2RenderingContext {
    return gl;
 }
 
-export function updateTechTreeCanvasSize(): void {
-   gl.viewport(0, 0, windowWidth, windowHeight);
-}
-
 // @Cleanup: Copy and paste
 export function createTechTreeGLContext(): void {
    const canvas = document.getElementById("tech-tree-canvas") as HTMLCanvasElement;

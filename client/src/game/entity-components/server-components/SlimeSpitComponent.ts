@@ -76,7 +76,7 @@ function onTick(entity: Entity): void {
    
    rotatingRenderPart.angle += 1.5 * Math.PI * Settings.DT_S;
 
-   if (tickIntervalHasPassed(0.2)) {
+   if (tickIntervalHasPassed(0.2 * Settings.TICK_RATE)) {
       for (let i = 0; i < 5; i++) {
          createPoisonParticle(entity);
       }

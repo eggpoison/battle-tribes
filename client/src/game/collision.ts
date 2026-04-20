@@ -1,6 +1,6 @@
 import { Settings, collisionBitsAreCompatible, Point, rotatePointAroundOrigin, Box, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, Entity, CollisionResult, _bounds, EntityType, TileType, _point, CollisionGroup, collisionGroupsCanCollide, overrideCollisionGroup } from "webgl-test-shared";
 import { TransformComponent, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { getEntityLayer, getEntityType } from "./world";
+import { getEntityLayer, getEntityType, layers } from "./world";
 import Layer from "./Layer";
 import { playerInstance } from "./player";
 import { applyForce, getHitboxTile, getHitboxVelocity, Hitbox, setHitboxVelocity, translateHitbox } from "./hitboxes";
@@ -161,7 +161,7 @@ const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, global
    }
 }
 
-export function resolveEntityCollisions(layer: Layer): void {
+function resolveLayerCollisions(layer: Layer): void {
    const entityCollisionPairs: Array<EntityCollisionPair> = [];
    const globalCollisionInfo: GlobalCollisionInfo = new Map();
 
@@ -229,6 +229,12 @@ export function resolveEntityCollisions(layer: Layer): void {
       }
 
       collide(entity, collidingEntity, collisionInfo.collidingHitboxPairs);
+   }
+}
+
+export function resolveCollisions(): void {
+   for (const layer of layers) {
+      resolveLayerCollisions(layer);
    }
 }
 

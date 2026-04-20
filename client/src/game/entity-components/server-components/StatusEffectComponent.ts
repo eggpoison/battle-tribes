@@ -1,4 +1,4 @@
-import { Entity, customTickIntervalHasPassed, lerp, randAngle, randFloat, randItem, PacketReader, StatusEffect, StatusEffectData, ServerComponentType, _point } from "webgl-test-shared";
+import { Entity, customTickIntervalHasPassed, lerp, randAngle, randFloat, randItem, PacketReader, StatusEffect, StatusEffectData, ServerComponentType, _point, Settings } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import Particle from "../../Particle";
 import { createPoisonBubble, createBloodParticle, BloodParticleSize, createHeatParticle } from "../../particles";
@@ -261,7 +261,7 @@ function onTick(entity: Entity): void {
 
    const bleedingStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.bleeding);
    if (bleedingStatusEffect !== null) {
-      if (tickIntervalHasPassed(0.15)) {
+      if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
          const spawnOffsetDirection = randAngle();
          const spawnPositionX = hitbox.box.position.x + 32 * Math.sin(spawnOffsetDirection);
          const spawnPositionY = hitbox.box.position.y + 32 * Math.cos(spawnOffsetDirection);
@@ -271,7 +271,7 @@ function onTick(entity: Entity): void {
 
    const heatSicknessStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.heatSickness);
    if (heatSicknessStatusEffect !== null) {
-      if (tickIntervalHasPassed(0.15)) {
+      if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
          getHitboxVelocity(hitbox);
          const hitboxVelocity = _point;
          

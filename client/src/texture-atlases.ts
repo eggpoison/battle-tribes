@@ -19,7 +19,7 @@ export async function loadTextureAtlas(): Promise<void> {
       fetch("/atlas-meta.json").then(res => res.json()),
       new Promise<HTMLImageElement>(resolve => {
          const img = new Image();
-         img.src = "/atlas.png";
+         img.src = "atlas.png";
          img.onload = () => resolve(img);
          
          // Uncomment to see the texture atlas visually :D

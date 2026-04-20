@@ -5,10 +5,6 @@
 // import { debugDisplayState } from "../../../ui-state/debug-display-state";
 // import { onDestroy, onMount } from "svelte";
 
-import { gameIsRunning } from "../../../game/game";
-import { addKeyListener } from "../../../game/keyboard-input";
-import { MenuType, menuSelectorState } from "../../menus";
-
 // const boundsScale = 16;
 
 // let minX = 0;
@@ -101,12 +97,6 @@ import { MenuType, menuSelectorState } from "../../menus";
 //    isDragging = false;
 // }
 
-addKeyListener("p", () => {
-   // Open/close tech tree
-   if (gameIsRunning) {
-      menuSelectorState.toggleMenu(MenuType.techTree);
-   }
-});
 
 export function openTechTree() {}
    

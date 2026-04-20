@@ -9,12 +9,12 @@ import { createWaterSplashParticle } from "../../particles";
 import { addTexturedParticleToBufferContainer, lowTexturedParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { playSoundOnHitbox } from "../../sound";
 import { hitboxIsInWater, resolveWallCollisions } from "../../collision";
-import { keyIsPressed } from "../../keyboard-input";
 import { currentSnapshot } from "../../game";
 import { gameUIState } from "../../../ui-state/game-ui-state";
 import { getTransformComponentData } from "../../entity-component-types";
 import Layer from "../../Layer";
 import { readHitboxFromData, updateHitboxFromData, updatePlayerHitboxFromData } from "../../networking/packet-hitboxes";
+import { playerIsLightspeed } from "../../event-handling";
 
 export interface TransformComponentData {
    readonly traction: number;
@@ -555,7 +555,8 @@ function onUpdate(entity: Entity): void {
    cleanEntityTransform(entity);
    
    // Don't resolve wall tile collisions in lightspeed mode
-   if (!(entity === playerInstance && keyIsPressed("l"))) { 
+   // @SPEED
+   if (!(entity === playerInstance && playerIsLightspeed)) { 
       const hasMoved = resolveWallCollisions(entity);
 
       if (hasMoved) {

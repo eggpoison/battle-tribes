@@ -3,13 +3,14 @@ import { playSound } from "../../sound";
 import { createFootprintParticle } from "../../particles";
 import { EntityComponentData, getEntityLayer } from "../../world";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { getHitboxTile, getHitboxVelocity } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getEntityClientComponentTypes } from "../../entity-component-types";
 import { getClientComponentData } from "../../entity-component-types";
 import { hitboxIsInWater } from "../../collision";
+import { registerClientComponentArray } from "../component-register";
+import ClientComponentArray from "../ClientComponentArray";
 
 export interface FootprintComponentData {
    readonly footstepParticleIntervalSeconds: number;
@@ -32,8 +33,57 @@ export interface FootprintComponent {
    distanceTracker: number;
 }
 
-export const FootprintComponentArray = new ClientComponentArray<FootprintComponent>(ClientComponentType.footprint, true, createComponent, getMaxRenderParts);
-FootprintComponentArray.onTick = onTick;
+class _FootprintComponentArray extends ClientComponentArray<FootprintComponent> {
+   public createComponent(entityComponentData: EntityComponentData): FootprintComponent {
+      const clientComponentTypes = getEntityClientComponentTypes(entityComponentData.entityType);
+      const footprintComponentData = getClientComponentData(entityComponentData.clientComponentData, clientComponentTypes, ClientComponentType.footprint);
+      
+      return {
+         footstepParticleIntervalSeconds: footprintComponentData.footstepParticleIntervalSeconds,
+         footstepOffset: footprintComponentData.footstepOffset,
+         footstepSize: footprintComponentData.footstepSize,
+         footstepLifetime: footprintComponentData.footstepLifetime,
+         footstepSoundIntervalDist: footprintComponentData.footstepSoundIntervalDist,
+         doDoubleFootprints: footprintComponentData.doDoubleFootprints,
+         numFootstepsTaken: 0,
+         distanceTracker: 0
+      }
+   }
+
+   public getMaxRenderParts(): number {
+      return 0;
+   }
+
+   public onTick(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      
+      const hitbox = transformComponent.hitboxes[0];
+      if (hitbox.parent === null) {
+         const footprintComponent = FootprintComponentArray.getComponent(entity);
+         
+         getHitboxVelocity(hitbox);
+         const velocity = _point;
+         
+         // Footsteps
+         if (velocity.magnitude() >= 50 && !hitboxIsInWater(hitbox) && tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds * Settings.TICK_RATE)) {
+            if (footprintComponent.doDoubleFootprints) {
+               createFootprintParticle(entity, false, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
+               createFootprintParticle(entity, true, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
+            } else {
+               createFootprintParticle(entity, footprintComponent.numFootstepsTaken % 2 === 0, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
+            }
+            footprintComponent.numFootstepsTaken++;
+         }
+         footprintComponent.distanceTracker += velocity.magnitude() * Settings.DT_S;
+         if (footprintComponent.distanceTracker > footprintComponent.footstepSoundIntervalDist) {
+            footprintComponent.distanceTracker -= footprintComponent.footstepSoundIntervalDist;
+            createFootstepSound(entity);
+         }
+      }
+   }
+}
+
+export const FootprintComponentArray = registerClientComponentArray(ClientComponentType.footprint, _FootprintComponentArray, true);
 
 export function createFootprintComponentData(footstepParticleIntervalSeconds: number, footstepOffset: number, footstepSize: number, footstepLifetime: number, footstepSoundIntervalDist: number, doDoubleFootprints: boolean): FootprintComponentData {
    return {
@@ -44,26 +94,6 @@ export function createFootprintComponentData(footstepParticleIntervalSeconds: nu
       footstepSoundIntervalDist: footstepSoundIntervalDist,
       doDoubleFootprints: doDoubleFootprints
    };
-}
-
-function createComponent(entityComponentData: EntityComponentData): FootprintComponent {
-   const clientComponentTypes = getEntityClientComponentTypes(entityComponentData.entityType);
-   const footprintComponentData = getClientComponentData(entityComponentData.clientComponentData, clientComponentTypes, ClientComponentType.footprint);
-   
-   return {
-      footstepParticleIntervalSeconds: footprintComponentData.footstepParticleIntervalSeconds,
-      footstepOffset: footprintComponentData.footstepOffset,
-      footstepSize: footprintComponentData.footstepSize,
-      footstepLifetime: footprintComponentData.footstepLifetime,
-      footstepSoundIntervalDist: footprintComponentData.footstepSoundIntervalDist,
-      doDoubleFootprints: footprintComponentData.doDoubleFootprints,
-      numFootstepsTaken: 0,
-      distanceTracker: 0
-   }
-}
-
-function getMaxRenderParts(): number {
-   return 0;
 }
 
 const createFootstepSound = (entity: Entity): void => {
@@ -97,34 +127,6 @@ const createFootstepSound = (entity: Entity): void => {
             playSound("rock-walk-" + randInt(1, 4) + ".mp3", 0.08, 1, hitbox.box.position, layer);
          }
          break;
-      }
-   }
-}
-
-function onTick(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   
-   const hitbox = transformComponent.hitboxes[0];
-   if (hitbox.parent === null) {
-      const footprintComponent = FootprintComponentArray.getComponent(entity);
-      
-      getHitboxVelocity(hitbox);
-      const velocity = _point;
-      
-      // Footsteps
-      if (velocity.magnitude() >= 50 && !hitboxIsInWater(hitbox) && tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds * Settings.TICK_RATE)) {
-         if (footprintComponent.doDoubleFootprints) {
-            createFootprintParticle(entity, false, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
-            createFootprintParticle(entity, true, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
-         } else {
-            createFootprintParticle(entity, footprintComponent.numFootstepsTaken % 2 === 0, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
-         }
-         footprintComponent.numFootstepsTaken++;
-      }
-      footprintComponent.distanceTracker += velocity.magnitude() * Settings.DT_S;
-      if (footprintComponent.distanceTracker > footprintComponent.footstepSoundIntervalDist) {
-         footprintComponent.distanceTracker -= footprintComponent.footstepSoundIntervalDist;
-         createFootstepSound(entity);
       }
    }
 }

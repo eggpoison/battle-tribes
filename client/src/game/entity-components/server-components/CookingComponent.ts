@@ -5,6 +5,7 @@ import { EntityComponentData } from "../../world";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface CookingComponentData {
    readonly heatingProgress: number;
@@ -19,40 +20,55 @@ export interface CookingComponent {
    light: Light | null;
 }
 
-export const CookingComponentArray = new ServerComponentArray<CookingComponent, CookingComponentData, never>(ServerComponentType.cooking, true, createComponent, getMaxRenderParts, decodeData);
-CookingComponentArray.onLoad = onLoad;
-CookingComponentArray.onTick = onTick;
-CookingComponentArray.updateFromData = updateFromData;
+class _CookingComponentArray extends ServerComponentArray<CookingComponent, CookingComponentData> {
+   public decodeData(reader: PacketReader): CookingComponentData {
+      const heatingProgress = reader.readNumber();
+      const isCooking = reader.readBool();
+      return {
+         heatingProgress: heatingProgress,
+         isCooking: isCooking
+      };
+   }
+
+   public createComponent(entityComponentData: EntityComponentData): CookingComponent {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const cookingComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cooking);
+      
+      return {
+         heatingProgress: cookingComponentData.heatingProgress,
+         isCooking: cookingComponentData.isCooking,
+         light: null
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 0;
+   }
+
+   public onLoad(entity: Entity): void {
+      const cookingComponent = CookingComponentArray.getComponent(entity);
+      updateLight(cookingComponent, entity);
+   }
+
+   public onTick(entity: Entity): void {
+      const cookingComponent = CookingComponentArray.getComponent(entity);
+      updateLight(cookingComponent, entity);
+   }
+
+   public updateFromData(data: CookingComponentData, entity: Entity): void {
+      const cookingComponent = CookingComponentArray.getComponent(entity);
+      cookingComponent.heatingProgress = data.heatingProgress;
+      cookingComponent.isCooking = data.isCooking;
+   }
+}
+
+export const CookingComponentArray = registerServerComponentArray(ServerComponentType.cooking, _CookingComponentArray, true);
 
 export function createCookingComponentData(): CookingComponentData {
    return {
       heatingProgress: 0,
       isCooking: false
    };
-}
-
-function decodeData(reader: PacketReader): CookingComponentData {
-   const heatingProgress = reader.readNumber();
-   const isCooking = reader.readBool();
-   return {
-      heatingProgress: heatingProgress,
-      isCooking: isCooking
-   };
-}
-
-function createComponent(entityComponentData: EntityComponentData): CookingComponent {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const cookingComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cooking);
-   
-   return {
-      heatingProgress: cookingComponentData.heatingProgress,
-      isCooking: cookingComponentData.isCooking,
-      light: null
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 0;
 }
 
 const updateLight = (cookingComponent: CookingComponent, entity: Entity): void => {
@@ -82,20 +98,4 @@ const updateLight = (cookingComponent: CookingComponent, entity: Entity): void =
       removeLight(cookingComponent.light);
       cookingComponent.light = null;
    }
-}
-
-function onLoad(entity: Entity): void {
-   const cookingComponent = CookingComponentArray.getComponent(entity);
-   updateLight(cookingComponent, entity);
-}
-
-function onTick(entity: Entity): void {
-   const cookingComponent = CookingComponentArray.getComponent(entity);
-   updateLight(cookingComponent, entity);
-}
-
-function updateFromData(data: CookingComponentData, entity: Entity): void {
-   const cookingComponent = CookingComponentArray.getComponent(entity);
-   cookingComponent.heatingProgress = data.heatingProgress;
-   cookingComponent.isCooking = data.isCooking;
 }

@@ -8,57 +8,51 @@ import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface DesertBushLivelyComponentData {}
 
-interface IntermediateInfo {}
-
 export interface DesertBushLivelyComponent {}
 
-export const DesertBushLivelyComponentArray = new ServerComponentArray<DesertBushLivelyComponent, DesertBushLivelyComponentData, IntermediateInfo>(ServerComponentType.desertBushLively, true, createComponent, getMaxRenderParts, decodeData);
-DesertBushLivelyComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-DesertBushLivelyComponentArray.onHit = onHit;
-DesertBushLivelyComponentArray.onDie = onDie;
+class _DesertBushLivelyComponentArray extends ServerComponentArray<DesertBushLivelyComponent, DesertBushLivelyComponentData> {
+   public decodeData(): DesertBushLivelyComponentData {
+      return {};
+   }
 
-function decodeData(): DesertBushLivelyComponentData {
-   return {};
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         getTextureArrayIndex("entities/desert-bush-lively/desert-bush-lively.png")
+      );
+      renderPart.tintR = randFloat(-0.03, 0.03);
+      renderPart.tintG = randFloat(-0.03, 0.03);
+      renderPart.tintB = randFloat(-0.03, 0.03);
+      renderObject.attachRenderPart(renderPart)
+   }
+
+   public createComponent(): DesertBushLivelyComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public onHit(entity: Entity, hitbox: Hitbox): void {
+      playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
+   }
+
+   public onDie(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
+   }
 }
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      getTextureArrayIndex("entities/desert-bush-lively/desert-bush-lively.png")
-   );
-   renderPart.tintR = randFloat(-0.03, 0.03);
-   renderPart.tintG = randFloat(-0.03, 0.03);
-   renderPart.tintB = randFloat(-0.03, 0.03);
-   renderObject.attachRenderPart(renderPart)
-
-   return {
-      renderPart: renderPart
-   };
-}
-
-function createComponent(): DesertBushLivelyComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function onHit(entity: Entity, hitbox: Hitbox): void {
-   playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
-}
-
-function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
-}
+export const DesertBushLivelyComponentArray = registerServerComponentArray(ServerComponentType.desertBushLively, _DesertBushLivelyComponentArray, true);

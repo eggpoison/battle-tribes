@@ -10,48 +10,41 @@ import { TransformComponentArray } from "./TransformComponent";
 import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface PalmTreeComponentData {}
 
-interface IntermediateInfo {}
-
 export interface PalmTreeComponent {}
 
-export const PalmTreeComponentArray = new ServerComponentArray<PalmTreeComponent, PalmTreeComponentData, IntermediateInfo>(ServerComponentType.palmTree, true, createComponent, getMaxRenderParts, decodeData);
-PalmTreeComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-PalmTreeComponentArray.onHit = onHit;
-PalmTreeComponentArray.onDie = onDie;
+class _PalmTreeComponentArray extends ServerComponentArray<PalmTreeComponent, PalmTreeComponentData> {
+   public decodeData(): PalmTreeComponentData {
+      return {};
+   }
 
-function decodeData(): PalmTreeComponentData {
-   return {};
-}
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            0,
+            0,
+            0, 0,
+            getTextureArrayIndex("entities/palm-tree/palm-tree.png")
+         )
+      );
+   }
 
-   renderObject.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         getTextureArrayIndex("entities/palm-tree/palm-tree.png")
-      )
-   );
+   public createComponent(): PalmTreeComponent {
+      return {};
+   }
 
-   return {};
-}
-
-function createComponent(): PalmTreeComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-   
-function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point, hitFlags: number): void {
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+      
+   public onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point, hitFlags: number): void {
       const radius = (hitbox.box as CircularBox).radius;
    
       // @Cleanup: copy and paste
@@ -87,9 +80,9 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point, hitFlags: num
          // @Temporary
          playSoundOnHitbox("berry-bush-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, entity, hitbox, false);
       }
-}
+   }
 
-function onDie(entity: Entity): void {
+   public onDie(entity: Entity): void {
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
    
@@ -116,4 +109,7 @@ function onDie(entity: Entity): void {
       }
    
       playSoundOnHitbox(randItem(TREE_DESTROY_SOUNDS), 0.5, 1, entity, hitbox, false);
+   }
 }
+
+export const PalmTreeComponentArray = registerServerComponentArray(ServerComponentType.palmTree, _PalmTreeComponentArray, true);

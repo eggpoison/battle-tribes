@@ -14,12 +14,11 @@ import { TransformComponentArray } from "../server-components/TransformComponent
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
+import { registerClientComponentArray } from "../component-register";
 
 // @Speed: Could make damage render part an overlay instead of a whole render part
 
 export interface WallComponentData {}
-
-interface IntermediateInfo {}
 
 export interface WallComponent {
    damageRenderPart: TexturedRenderPart | null;
@@ -27,46 +26,42 @@ export interface WallComponent {
 
 const NUM_DAMAGE_STAGES = 6;
 
-export const WallComponentArray = new ClientComponentArray<WallComponent, IntermediateInfo>(ClientComponentType.wall, true, createComponent, getMaxRenderParts);
-WallComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-WallComponentArray.onTick = onTick;
-WallComponentArray.onHit = onHit;
-WallComponentArray.onDie = onDie;
+class _WallComponentArray extends ClientComponentArray<WallComponent> {
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
+      
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponentData.material])
+      );
+      addRenderPartTag(renderPart, "buildingMaterialComponent:material");
+
+      renderObject.attachRenderPart(renderPart);
+   }
+
+   public createComponent(): WallComponent {
+      return {
+         damageRenderPart: null
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      // wall material and damage render part
+      return 2;
+   }
+}
+
+export const WallComponentArray = registerClientComponentArray(ClientComponentType.wall, _WallComponentArray, true);
 
 export function createWallComponentData(): WallComponentData {
    return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
-   
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponentData.material])
-   );
-   addRenderPartTag(renderPart, "buildingMaterialComponent:material");
-
-   renderObject.attachRenderPart(renderPart);
-
-   return {};
-}
-
-function createComponent(): WallComponent {
-   return {
-      damageRenderPart: null
-   };
-}
-
-function getMaxRenderParts(): number {
-   // wall material and damage render part
-   return 2;
 }
 
 const updateDamageRenderPart = (entity: Entity, health: number, maxHealth: number): void => {

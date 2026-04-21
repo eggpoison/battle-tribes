@@ -1,20 +1,23 @@
 import { ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-register";
 
 export interface ThrowingProjectileComponentData {}
 
 export interface ThrowingProjectileComponent {}
 
-export const ThrowingProjectileComponentArray = new ServerComponentArray<ThrowingProjectileComponent, ThrowingProjectileComponentData, never>(ServerComponentType.throwingProjectile, true, createComponent, getMaxRenderParts, decodeData);
+class _ThrowingProjectileComponentArray extends ServerComponentArray<ThrowingProjectileComponent, ThrowingProjectileComponentData> {
+   public decodeData(): ThrowingProjectileComponentData {
+      return {};
+   }
 
-function decodeData(): ThrowingProjectileComponentData {
-   return {};
+   public createComponent(): ThrowingProjectileComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 0;
+   }
 }
 
-function createComponent(): ThrowingProjectileComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 0;
-}
+export const ThrowingProjectileComponentArray = registerServerComponentArray(ServerComponentType.throwingProjectile, _ThrowingProjectileComponentArray, true);

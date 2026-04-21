@@ -6,41 +6,39 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerClientComponentArray } from "../component-register";
 
 export interface ThrownBattleaxeComponentData {}
 
-interface IntermediateInfo {}
-
 export interface ThrownBattleaxeComponent {}
 
-export const ThrownBattleaxeComponentArray = new ClientComponentArray<ThrownBattleaxeComponent, IntermediateInfo>(ClientComponentType.thrownBattleaxe, true, createComponent, getMaxRenderParts);
-ThrownBattleaxeComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+class _ThrownBattleaxeComponentArray extends ClientComponentArray<ThrownBattleaxeComponent> {
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            0,
+            0,
+            0, 0,
+            getTextureArrayIndex("items/large/stone-battleaxe.png")
+         )
+      );
+   }
+
+   public createComponent(): ThrownBattleaxeComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+}
+
+export const ThrownBattleaxeComponentArray = registerClientComponentArray(ClientComponentType.thrownBattleaxe, _ThrownBattleaxeComponentArray, true);
 
 export function createThrownBattleaxeComponentData(): ThrownBattleaxeComponentData {
    return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   renderObject.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         getTextureArrayIndex("items/large/stone-battleaxe.png")
-      )
-   );
-
-   return {};
-}
-
-function createComponent(): ThrownBattleaxeComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
 }

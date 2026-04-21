@@ -11,6 +11,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
+import { registerServerComponentArray } from "../component-register";
 
 export interface SlimeComponentData {
    readonly size: SlimeSize;
@@ -69,131 +70,207 @@ const getBodyShakeAmount = (spitProgress: number): number => {
    return lerp(0, 5, spitProgress);
 }
 
-export const SlimeComponentArray = new ServerComponentArray<SlimeComponent, SlimeComponentData, IntermediateInfo>(ServerComponentType.slime, true, createComponent, getMaxRenderParts, decodeData);
-SlimeComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-SlimeComponentArray.onTick = onTick;
-SlimeComponentArray.updateFromData = updateFromData;
-SlimeComponentArray.onHit = onHit;
-SlimeComponentArray.onDie = onDie;
+class _SlimeComponentArray extends ServerComponentArray<SlimeComponent, SlimeComponentData, IntermediateInfo> {
+   public decodeData(reader: PacketReader): SlimeComponentData {
+      const size = reader.readNumber() as SlimeSize;
+      const eyeRotation = reader.readNumber();
+      const anger = reader.readNumber();
+      const spitChargeProgress = reader.readNumber();
 
-function decodeData(reader: PacketReader): SlimeComponentData {
-   const size = reader.readNumber() as SlimeSize;
-   const eyeRotation = reader.readNumber();
-   const anger = reader.readNumber();
-   const spitChargeProgress = reader.readNumber();
-
-   const orbSizes: Array<SlimeSize> = [];
-   const numOrbs = reader.readNumber();
-   for (let i = 0; i < numOrbs; i++) {
-      const orbSize = reader.readNumber() as SlimeSize;
-      orbSizes.push(orbSize);
-   }
-
-   return {
-      size: size,
-      eyeRotation: eyeRotation,
-      anger: anger,
-      spitChargeProgress: spitChargeProgress,
-      orbSizes: orbSizes
-   };
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const slimeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.slime);
-   const sizeString = SIZE_STRINGS[slimeComponentData.size];
-
-   // Body
-   const bodyRenderPart = new TexturedRenderPart(
-      hitbox,
-      2,
-      0,
-      0, 0,
-      getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
-   );
-   renderObject.attachRenderPart(bodyRenderPart);
-
-   // Shading
-   renderObject.attachRenderPart(new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`)
-   ));
-
-   // Eye
-   const eyeRenderPart = new TexturedRenderPart(
-      hitbox,
-      3,
-      0,
-      0, 0,
-      getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
-   );
-   eyeRenderPart.inheritParentRotation = false;
-   renderObject.attachRenderPart(eyeRenderPart);
-
-   return {
-      bodyRenderPart: bodyRenderPart,
-      eyeRenderPart: eyeRenderPart
-   };
-}
-
-function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): SlimeComponent {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const slimeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.slime);
-   return {
-      bodyRenderPart: intermediateInfo.bodyRenderPart,
-      eyeRenderPart: intermediateInfo.eyeRenderPart,
-      orbRenderParts: [],
-      size: slimeComponentData.size,
-      orbs: [],
-      internalTickCounter: 0
-   };
-}
-
-function getMaxRenderParts(): number {
-   // 3 plus 10 max orbs
-   return 13;
-}
-
-function onTick(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   
-   if (Math.random() < 0.2 * Settings.DT_S) {
-      playSoundOnHitbox("slime-ambient-" + randInt(1, 4) + ".mp3", 0.4, 1, entity, hitbox, false);
-   }
-
-   const slimeComponent = SlimeComponentArray.getComponent(entity);
-   for (let i = 0; i < slimeComponent.orbs.length; i++) {
-      const orb = slimeComponent.orbs[i];
-
-      // Randomly move around the orbs
-      if (Math.random() < 0.3 * Settings.DT_S) {
-         orb.angularVelocity = randFloat(-3, 3);
+      const orbSizes: Array<SlimeSize> = [];
+      const numOrbs = reader.readNumber();
+      for (let i = 0; i < numOrbs; i++) {
+         const orbSize = reader.readNumber() as SlimeSize;
+         orbSizes.push(orbSize);
       }
 
-      // Update orb angular velocity & rotation
-      orb.rotation += orb.angularVelocity * Settings.DT_S;
+      return {
+         size: size,
+         eyeRotation: eyeRotation,
+         anger: anger,
+         spitChargeProgress: spitChargeProgress,
+         orbSizes: orbSizes
+      };
+   }
 
-      // Update the orb's rotation
-      if (orb.angularVelocity !== 0) {
-         const spriteSize = SLIME_SIZES[slimeComponent.size];
-         const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orb.offset);
-         slimeComponent.orbRenderParts[i].offsetX = offsetMagnitude * Math.sin(orb.rotation);
-         slimeComponent.orbRenderParts[i].offsetY = offsetMagnitude * Math.cos(orb.rotation);
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const slimeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.slime);
+      const sizeString = SIZE_STRINGS[slimeComponentData.size];
+
+      // Body
+      const bodyRenderPart = new TexturedRenderPart(
+         hitbox,
+         2,
+         0,
+         0, 0,
+         getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
+      );
+      renderObject.attachRenderPart(bodyRenderPart);
+
+      // Shading
+      renderObject.attachRenderPart(new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`)
+      ));
+
+      // Eye
+      const eyeRenderPart = new TexturedRenderPart(
+         hitbox,
+         3,
+         0,
+         0, 0,
+         getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
+      );
+      eyeRenderPart.inheritParentRotation = false;
+      renderObject.attachRenderPart(eyeRenderPart);
+
+      return {
+         bodyRenderPart: bodyRenderPart,
+         eyeRenderPart: eyeRenderPart
+      };
+   }
+
+   public createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): SlimeComponent {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const slimeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.slime);
+      return {
+         bodyRenderPart: intermediateInfo.bodyRenderPart,
+         eyeRenderPart: intermediateInfo.eyeRenderPart,
+         orbRenderParts: [],
+         size: slimeComponentData.size,
+         orbs: [],
+         internalTickCounter: 0
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      // 3 plus 10 max orbs
+      return 13;
+   }
+
+   public onTick(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      
+      if (Math.random() < 0.2 * Settings.DT_S) {
+         playSoundOnHitbox("slime-ambient-" + randInt(1, 4) + ".mp3", 0.4, 1, entity, hitbox, false);
       }
 
-      orb.angularVelocity -= 3 * Settings.DT_S;
-      if (orb.angularVelocity < 0) {
-         orb.angularVelocity = 0;
+      const slimeComponent = SlimeComponentArray.getComponent(entity);
+      for (let i = 0; i < slimeComponent.orbs.length; i++) {
+         const orb = slimeComponent.orbs[i];
+
+         // Randomly move around the orbs
+         if (Math.random() < 0.3 * Settings.DT_S) {
+            orb.angularVelocity = randFloat(-3, 3);
+         }
+
+         // Update orb angular velocity & rotation
+         orb.rotation += orb.angularVelocity * Settings.DT_S;
+
+         // Update the orb's rotation
+         if (orb.angularVelocity !== 0) {
+            const spriteSize = SLIME_SIZES[slimeComponent.size];
+            const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orb.offset);
+            slimeComponent.orbRenderParts[i].offsetX = offsetMagnitude * Math.sin(orb.rotation);
+            slimeComponent.orbRenderParts[i].offsetY = offsetMagnitude * Math.cos(orb.rotation);
+         }
+
+         orb.angularVelocity -= 3 * Settings.DT_S;
+         if (orb.angularVelocity < 0) {
+            orb.angularVelocity = 0;
+         }
       }
    }
+
+   public updateFromData(data: SlimeComponentData, entity: Entity): void {
+      const slimeComponent = SlimeComponentArray.getComponent(entity);
+      
+      // @Incomplete: change render parts when this happens?
+      slimeComponent.size = data.size;
+      const eyeRotation = data.eyeRotation;
+      const anger = data.anger;
+      const spitChargeProgress = data.spitChargeProgress;
+
+      // 
+      // Update the eye's rotation
+      // 
+
+      slimeComponent.eyeRenderPart.angle = eyeRotation;
+      if (anger >= 0) {
+         const frequency = lerp(EYE_SHAKE_START_FREQUENCY, EYE_SHAKE_END_FREQUENCY, anger);
+         slimeComponent.internalTickCounter += frequency;
+
+         let amplitude = lerp(EYE_SHAKE_START_AMPLITUDE, EYE_SHAKE_END_AMPLITUDE, anger) * 100;
+         amplitude /= Math.PI * SLIME_SIZES[slimeComponent.size];
+         slimeComponent.eyeRenderPart.angle += amplitude * Math.sin(slimeComponent.internalTickCounter * 3);
+      } else {
+         slimeComponent.internalTickCounter = 0;
+      }
+
+      slimeComponent.eyeRenderPart.offsetX = EYE_OFFSETS[slimeComponent.size] * Math.sin(slimeComponent.eyeRenderPart.angle);
+      slimeComponent.eyeRenderPart.offsetY = EYE_OFFSETS[slimeComponent.size] * Math.cos(slimeComponent.eyeRenderPart.angle);
+
+      if (anger === -1) {
+         setRenderPartShakeAmount(slimeComponent.bodyRenderPart, 0);
+      } else {
+         setRenderPartShakeAmount(slimeComponent.bodyRenderPart, getBodyShakeAmount(spitChargeProgress));
+      }
+
+      // Add any new orbs
+      for (let i = slimeComponent.orbs.length; i < data.orbSizes.length; i++) {
+         const size = data.orbSizes[i];
+         createOrb(slimeComponent, entity, size);
+      }
+   }
+
+   public onHit(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0]!;
+      
+      const slimeComponent = SlimeComponentArray.getComponent(entity);
+
+      const radius = SLIME_SIZES[slimeComponent.size] / 2;
+      
+      for (let i = 0; i < NUM_PUDDLE_PARTICLES_ON_HIT[slimeComponent.size]; i++) {
+         createSlimePoolParticle(hitbox.box.position.x, hitbox.box.position.y, radius);
+      }
+
+      for (let i = 0; i < NUM_SPECK_PARTICLES_ON_HIT[slimeComponent.size]; i++) {
+         createSlimeSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random());
+      }
+
+      playSoundOnHitbox("slime-hit-" + randInt(1, 2) + ".mp3", 0.4, 1, entity, hitbox, false);
+   }
+
+   public onDie(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      
+      const slimeComponent = SlimeComponentArray.getComponent(entity);
+
+      const radius = SLIME_SIZES[slimeComponent.size] / 2;
+
+      for (let i = 0; i < NUM_PUDDLE_PARTICLES_ON_DEATH[slimeComponent.size]; i++) {
+         createSlimePoolParticle(hitbox.box.position.x, hitbox.box.position.y, radius);
+      }
+
+      for (let i = 0; i < NUM_SPECK_PARTICLES_ON_DEATH[slimeComponent.size]; i++) {
+         createSlimeSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random());
+      }
+
+      playSoundOnHitbox("slime-death.mp3", 0.4, 1, entity, hitbox, false);
+   }
 }
+
+export const SlimeComponentArray = registerServerComponentArray(ServerComponentType.slime, _SlimeComponentArray, true);
 
 const createOrb = (slimeComponent: SlimeComponent, entity: Entity, size: SlimeSize): void => {
    const orbInfo: SlimeOrbInfo = {
@@ -224,83 +301,4 @@ const createOrb = (slimeComponent: SlimeComponent, entity: Entity, size: SlimeSi
 
    const renderObject = getEntityRenderObject(entity);
    renderObject.attachRenderPart(renderPart);
-}
-
-function updateFromData(data: SlimeComponentData, entity: Entity): void {
-   const slimeComponent = SlimeComponentArray.getComponent(entity);
-   
-   // @Incomplete: change render parts when this happens?
-   slimeComponent.size = data.size;
-   const eyeRotation = data.eyeRotation;
-   const anger = data.anger;
-   const spitChargeProgress = data.spitChargeProgress;
-
-   // 
-   // Update the eye's rotation
-   // 
-
-   slimeComponent.eyeRenderPart.angle = eyeRotation;
-   if (anger >= 0) {
-      const frequency = lerp(EYE_SHAKE_START_FREQUENCY, EYE_SHAKE_END_FREQUENCY, anger);
-      slimeComponent.internalTickCounter += frequency;
-
-      let amplitude = lerp(EYE_SHAKE_START_AMPLITUDE, EYE_SHAKE_END_AMPLITUDE, anger) * 100;
-      amplitude /= Math.PI * SLIME_SIZES[slimeComponent.size];
-      slimeComponent.eyeRenderPart.angle += amplitude * Math.sin(slimeComponent.internalTickCounter * 3);
-   } else {
-      slimeComponent.internalTickCounter = 0;
-   }
-
-   slimeComponent.eyeRenderPart.offsetX = EYE_OFFSETS[slimeComponent.size] * Math.sin(slimeComponent.eyeRenderPart.angle);
-   slimeComponent.eyeRenderPart.offsetY = EYE_OFFSETS[slimeComponent.size] * Math.cos(slimeComponent.eyeRenderPart.angle);
-
-   if (anger === -1) {
-      setRenderPartShakeAmount(slimeComponent.bodyRenderPart, 0);
-   } else {
-      setRenderPartShakeAmount(slimeComponent.bodyRenderPart, getBodyShakeAmount(spitChargeProgress));
-   }
-
-   // Add any new orbs
-   for (let i = slimeComponent.orbs.length; i < data.orbSizes.length; i++) {
-      const size = data.orbSizes[i];
-      createOrb(slimeComponent, entity, size);
-   }
-}
-
-function onHit(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0]!;
-   
-   const slimeComponent = SlimeComponentArray.getComponent(entity);
-
-   const radius = SLIME_SIZES[slimeComponent.size] / 2;
-   
-   for (let i = 0; i < NUM_PUDDLE_PARTICLES_ON_HIT[slimeComponent.size]; i++) {
-      createSlimePoolParticle(hitbox.box.position.x, hitbox.box.position.y, radius);
-   }
-
-   for (let i = 0; i < NUM_SPECK_PARTICLES_ON_HIT[slimeComponent.size]; i++) {
-      createSlimeSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random());
-   }
-
-   playSoundOnHitbox("slime-hit-" + randInt(1, 2) + ".mp3", 0.4, 1, entity, hitbox, false);
-}
-
-function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   
-   const slimeComponent = SlimeComponentArray.getComponent(entity);
-
-   const radius = SLIME_SIZES[slimeComponent.size] / 2;
-
-   for (let i = 0; i < NUM_PUDDLE_PARTICLES_ON_DEATH[slimeComponent.size]; i++) {
-      createSlimePoolParticle(hitbox.box.position.x, hitbox.box.position.y, radius);
-   }
-
-   for (let i = 0; i < NUM_SPECK_PARTICLES_ON_DEATH[slimeComponent.size]; i++) {
-      createSlimeSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random());
-   }
-
-   playSoundOnHitbox("slime-death.mp3", 0.4, 1, entity, hitbox, false);
 }

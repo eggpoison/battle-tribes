@@ -7,6 +7,7 @@ import { createSlurbParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 const enum Var {
    MIN_PARTICLE_CREATION_INTERVAL_SECONDS = 0.45,
@@ -15,70 +16,66 @@ const enum Var {
 
 export interface SlurbTorchComponentData {}
 
-interface IntermediateInfo {}
-
 export interface SlurbTorchComponent {
    particleCreationTimer: number;
 }
 
-export const SlurbTorchComponentArray = new ServerComponentArray<SlurbTorchComponent, SlurbTorchComponentData, IntermediateInfo>(ServerComponentType.slurbTorch, true, createComponent, getMaxRenderParts, decodeData);
-SlurbTorchComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-SlurbTorchComponentArray.onTick = onTick;
+class _SlurbTorchComponentArray extends ServerComponentArray<SlurbTorchComponent, SlurbTorchComponentData> {
+   public decodeData(): SlurbTorchComponentData {
+      return {};
+   }
+
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         getTextureArrayIndex("entities/slurb-torch/slurb-torch.png")
+      );
+      renderObject.attachRenderPart(renderPart);
+   }
+
+   public createComponent(): SlurbTorchComponent {
+      return {
+         particleCreationTimer: randFloat(Var.MIN_PARTICLE_CREATION_INTERVAL_SECONDS, Var.MAX_PARTICLE_CREATION_INTERVAL_SECONDS)
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public onTick(entity: Entity): void {
+      // @Copynpaste: all of these effects from InventoryUseComponent
+      
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      
+      // Slurb particles
+      const slurbTorchComponent = SlurbTorchComponentArray.getComponent(entity);
+      slurbTorchComponent.particleCreationTimer -= Settings.DT_S;
+      if (slurbTorchComponent.particleCreationTimer <= 0) {
+         slurbTorchComponent.particleCreationTimer += randFloat(Var.MIN_PARTICLE_CREATION_INTERVAL_SECONDS, Var.MAX_PARTICLE_CREATION_INTERVAL_SECONDS);
+
+         let spawnPositionX = hitbox.box.position.x;
+         let spawnPositionY = hitbox.box.position.y;
+
+         const spawnOffsetMagnitude = 7 * Math.random();
+         const spawnOffsetDirection = randAngle();
+         spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+
+         createSlurbParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 120), 0, 0);
+      }
+   }
+}
+
+export const SlurbTorchComponentArray = registerServerComponentArray(ServerComponentType.slurbTorch, _SlurbTorchComponentArray, true);
 
 export function createSlurbTorchComponentData(): SlurbTorchComponentData {
    return {};
-}
-
-function decodeData(): SlurbTorchComponentData {
-   return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      getTextureArrayIndex("entities/slurb-torch/slurb-torch.png")
-   );
-   renderObject.attachRenderPart(renderPart);
-
-   return {};
-}
-
-function createComponent(): SlurbTorchComponent {
-   return {
-      particleCreationTimer: randFloat(Var.MIN_PARTICLE_CREATION_INTERVAL_SECONDS, Var.MAX_PARTICLE_CREATION_INTERVAL_SECONDS)
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function onTick(entity: Entity): void {
-   // @Copynpaste: all of these effects from InventoryUseComponent
-   
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   
-   // Slurb particles
-   const slurbTorchComponent = SlurbTorchComponentArray.getComponent(entity);
-   slurbTorchComponent.particleCreationTimer -= Settings.DT_S;
-   if (slurbTorchComponent.particleCreationTimer <= 0) {
-      slurbTorchComponent.particleCreationTimer += randFloat(Var.MIN_PARTICLE_CREATION_INTERVAL_SECONDS, Var.MAX_PARTICLE_CREATION_INTERVAL_SECONDS);
-
-      let spawnPositionX = hitbox.box.position.x;
-      let spawnPositionY = hitbox.box.position.y;
-
-      const spawnOffsetMagnitude = 7 * Math.random();
-      const spawnOffsetDirection = randAngle();
-      spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-      spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-
-      createSlurbParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 120), 0, 0);
-   }
 }

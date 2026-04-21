@@ -7,10 +7,9 @@ import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface GuardianGemQuakeComponentData {}
-
-interface IntermediateInfo {}
 
 export interface GuardianGemQuakeComponent {}
 
@@ -20,42 +19,40 @@ const TEXTURE_SOURCES: ReadonlyArray<string> = [
    "entities/guardian-gem-quake/gem-3.png"
 ];
 
-export const GuardianGemQuakeComponentArray = new ServerComponentArray<GuardianGemQuakeComponent, GuardianGemQuakeComponentData, IntermediateInfo>(ServerComponentType.guardianGemQuake, true, createComponent, getMaxRenderParts, decodeData);
-GuardianGemQuakeComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-GuardianGemQuakeComponentArray.onLoad = onLoad;
+class _GuardianGemQuakeComponentArray extends ServerComponentArray<GuardianGemQuakeComponent, GuardianGemQuakeComponentData> {
+   public decodeData(reader: PacketReader): GuardianGemQuakeComponentData {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      return {};
+   }
 
-function decodeData(reader: PacketReader): GuardianGemQuakeComponentData {
-   reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
-   return {};
-}
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         getTextureArrayIndex(randItem(TEXTURE_SOURCES))
+      );
+      renderObject.attachRenderPart(renderPart);
+   }
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      getTextureArrayIndex(randItem(TEXTURE_SOURCES))
-   );
-   renderObject.attachRenderPart(renderPart);
+   public createComponent(): GuardianGemQuakeComponent {
+      return {};
+   }
 
-   return {};
-}
+   public getMaxRenderParts(): number {
+      return 1;
+   }
 
-function createComponent(): GuardianGemQuakeComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function onLoad(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   for (let i = 0; i < 2; i++) {
-      createGemQuakeProjectile(transformComponent);
+   public onLoad(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      for (let i = 0; i < 2; i++) {
+         createGemQuakeProjectile(transformComponent);
+      }
    }
 }
+
+export const GuardianGemQuakeComponentArray = registerServerComponentArray(ServerComponentType.guardianGemQuake, _GuardianGemQuakeComponentArray, true);

@@ -9,53 +9,50 @@ import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerClientComponentArray } from "../component-register";
 
 export interface WoodenArrowComponentData {}
 
-interface IntermediateInfo {}
-
 export interface WoodenArrowComponent {}
 
-export const WoodenArrowComponentArray = new ClientComponentArray<WoodenArrowComponent, IntermediateInfo>(ClientComponentType.woodenArrow, true, createComponent, getMaxRenderParts);
-WoodenArrowComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-WoodenArrowComponentArray.onDie = onDie;
+class _WoodenArrowComponentArray extends ClientComponentArray<WoodenArrowComponent> {
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            0,
+            0,
+            0, 0,
+            getTextureArrayIndex("projectiles/wooden-arrow.png")
+         )
+      );
+   }
+
+   public createComponent(): WoodenArrowComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public onDie(entity: Entity): void {
+      // Create arrow break particles
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      getHitboxVelocity(hitbox);
+      const velocity = _point;
+      for (let i = 0; i < 6; i++) {
+         createArrowDestroyParticle(hitbox.box.position.x, hitbox.box.position.y, velocity.x, velocity.y);
+      }
+   }
+}
+
+export const WoodenArrowComponentArray = registerClientComponentArray(ClientComponentType.woodenArrow, _WoodenArrowComponentArray, true);
 
 export function createWoodenArrowComponentData(): WoodenArrowComponentData {
    return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   renderObject.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         getTextureArrayIndex("projectiles/wooden-arrow.png")
-      )
-   );
-
-   return {};
-}
-
-function createComponent(): WoodenArrowComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function onDie(entity: Entity): void {
-   // Create arrow break particles
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   getHitboxVelocity(hitbox);
-   const velocity = _point;
-   for (let i = 0; i < 6; i++) {
-      createArrowDestroyParticle(hitbox.box.position.x, hitbox.box.position.y, velocity.x, velocity.y);
-   }
 }

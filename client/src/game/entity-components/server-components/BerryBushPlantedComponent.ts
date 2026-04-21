@@ -10,6 +10,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH } from "../../particles";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface BerryBushPlantedComponentData {
    readonly growthProgress: number;
@@ -34,11 +35,98 @@ const FULLY_GROWN_TEXTURE_SOURCES: ReadonlyArray<string> = [
    "entities/plant/berry-bush-plant-5.png"
 ];
 
-export const BerryBushPlantedComponentArray = new ServerComponentArray<BerryBushPlantedComponent, BerryBushPlantedComponentData, IntermediateInfo>(ServerComponentType.berryBushPlanted, true, createComponent, getMaxRenderParts, decodeData);
-BerryBushPlantedComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-BerryBushPlantedComponentArray.updateFromData = updateFromData;
-BerryBushPlantedComponentArray.onHit = onHit;
-BerryBushPlantedComponentArray.onDie = onDie;
+class _BerryBushPlantedComponentArray extends ServerComponentArray<BerryBushPlantedComponent, BerryBushPlantedComponentData, IntermediateInfo> {
+   public decodeData(reader: PacketReader): BerryBushPlantedComponentData {
+      const growthProgress = reader.readNumber();
+      const numFruits = reader.readNumber();
+      return {
+         growthProgress: growthProgress,
+         numFruits: numFruits
+      };
+   }
+
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const berryBushPlantedComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.berryBushPlanted);
+      
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         // @Cleanup: why is this 9 instead of 0?
+         9,
+         0,
+         0, 0,
+         getTextureArrayIndex(getTextureSource(berryBushPlantedComponentData.growthProgress, berryBushPlantedComponentData.numFruits))
+      );
+      renderObject.attachRenderPart(renderPart);
+
+      return {
+         renderPart: renderPart
+      };
+   }
+
+   public createComponent(_entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): BerryBushPlantedComponent {
+      return {
+         renderPart: intermediateInfo.renderPart
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public updateFromData(data: BerryBushPlantedComponentData, entity: Entity): void {
+      const berryBushPlantedComponent = BerryBushPlantedComponentArray.getComponent(entity);
+      berryBushPlantedComponent.renderPart.switchTextureSource(getTextureSource(data.growthProgress, data.numFruits));
+   }
+
+   public onHit(entity: Entity, hitbox: Hitbox): void {
+      const radius = (hitbox.box as CircularBox).radius;
+
+      // @Copynpaste from BerryBushComponent
+
+      const moveDirection = randAngle();
+      
+      const spawnPositionX = hitbox.box.position.x + radius * Math.sin(moveDirection);
+      const spawnPositionY = hitbox.box.position.y + radius * Math.cos(moveDirection);
+
+      createLeafParticle(spawnPositionX, spawnPositionY, moveDirection + randFloat(-1, 1), LeafParticleSize.small);
+      
+      // Create leaf specks
+      for (let i = 0; i < 5; i++) {
+         createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
+      }
+
+      // @Incomplete: particles?
+      playSoundOnHitbox("berry-bush-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, entity, hitbox, false);
+   }
+
+   public onDie(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      const radius = (hitbox.box as CircularBox).radius;
+
+      for (let i = 0; i < 6; i++) {
+         const offsetMagnitude = radius * Math.random();
+         const spawnOffsetDirection = randAngle();
+         const spawnPositionX = hitbox.box.position.x + offsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.position.y + offsetMagnitude * Math.cos(spawnOffsetDirection);
+
+         createLeafParticle(spawnPositionX, spawnPositionY, randAngle(), LeafParticleSize.small);
+      }
+      
+      // Create leaf specks
+      for (let i = 0; i < 9; i++) {
+         createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random(), LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
+      }
+      
+      playSoundOnHitbox("berry-bush-destroy-1.mp3", 0.4, 1, entity, hitbox, false);
+   }
+}
+
+export const BerryBushPlantedComponentArray = registerServerComponentArray(ServerComponentType.berryBushPlanted, _BerryBushPlantedComponentArray, true);
 
 const getTextureSource = (growthProgress: number, numFruits: number): string => {
    if (growthProgress < 1) {
@@ -52,93 +140,4 @@ const getTextureSource = (growthProgress: number, numFruits: number): string => 
       const idx = Math.floor(progress * (FULLY_GROWN_TEXTURE_SOURCES.length - 1))
       return FULLY_GROWN_TEXTURE_SOURCES[idx];
    }
-}
-
-function decodeData(reader: PacketReader): BerryBushPlantedComponentData {
-   const growthProgress = reader.readNumber();
-   const numFruits = reader.readNumber();
-   return {
-      growthProgress: growthProgress,
-      numFruits: numFruits
-   };
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const berryBushPlantedComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.berryBushPlanted);
-   
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      // @Cleanup: why is this 9 instead of 0?
-      9,
-      0,
-      0, 0,
-      getTextureArrayIndex(getTextureSource(berryBushPlantedComponentData.growthProgress, berryBushPlantedComponentData.numFruits))
-   );
-   renderObject.attachRenderPart(renderPart);
-
-   return {
-      renderPart: renderPart
-   };
-}
-
-function createComponent(_entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): BerryBushPlantedComponent {
-   return {
-      renderPart: intermediateInfo.renderPart
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function updateFromData(data: BerryBushPlantedComponentData, entity: Entity): void {
-   const berryBushPlantedComponent = BerryBushPlantedComponentArray.getComponent(entity);
-   berryBushPlantedComponent.renderPart.switchTextureSource(getTextureSource(data.growthProgress, data.numFruits));
-}
-
-function onHit(entity: Entity, hitbox: Hitbox): void {
-   const radius = (hitbox.box as CircularBox).radius;
-
-   // @Copynpaste from BerryBushComponent
-
-   const moveDirection = randAngle();
-   
-   const spawnPositionX = hitbox.box.position.x + radius * Math.sin(moveDirection);
-   const spawnPositionY = hitbox.box.position.y + radius * Math.cos(moveDirection);
-
-   createLeafParticle(spawnPositionX, spawnPositionY, moveDirection + randFloat(-1, 1), LeafParticleSize.small);
-   
-   // Create leaf specks
-   for (let i = 0; i < 5; i++) {
-      createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
-   }
-
-   // @Incomplete: particles?
-   playSoundOnHitbox("berry-bush-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, entity, hitbox, false);
-}
-
-function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   const radius = (hitbox.box as CircularBox).radius;
-
-   for (let i = 0; i < 6; i++) {
-      const offsetMagnitude = radius * Math.random();
-      const spawnOffsetDirection = randAngle();
-      const spawnPositionX = hitbox.box.position.x + offsetMagnitude * Math.sin(spawnOffsetDirection);
-      const spawnPositionY = hitbox.box.position.y + offsetMagnitude * Math.cos(spawnOffsetDirection);
-
-      createLeafParticle(spawnPositionX, spawnPositionY, randAngle(), LeafParticleSize.small);
-   }
-   
-   // Create leaf specks
-   for (let i = 0; i < 9; i++) {
-      createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random(), LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
-   }
-   
-   playSoundOnHitbox("berry-bush-destroy-1.mp3", 0.4, 1, entity, hitbox, false);
 }

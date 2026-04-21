@@ -7,51 +7,48 @@ import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface InguYetukLaserComponentData {}
 
-interface IntermediateInfo {}
-
 export interface InguYetukLaserComponent {}
 
-export const InguYetukLaserComponentArray = new ServerComponentArray<InguYetukLaserComponent, InguYetukLaserComponentData, IntermediateInfo>(ServerComponentType.inguYetukLaser, true, createComponent, getMaxRenderParts, decodeData);
-InguYetukLaserComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-InguYetukLaserComponentArray.onSpawn = onSpawn;
+class _InguYetukLaserComponentArray extends ServerComponentArray<InguYetukLaserComponent, InguYetukLaserComponentData> {
+   public decodeData(): InguYetukLaserComponentData {
+      return {};
+   }
+
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         getTextureArrayIndex("entities/ingu-yetuk-laser/laser.png")
+      );
+      renderObject.attachRenderPart(renderPart);
+   }
+
+   public createComponent(): InguYetukLaserComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 50;
+   }
+
+   public onSpawn(laser: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(laser);
+      const hitbox = transformComponent.hitboxes[0];
+      playSoundOnHitbox("lazur.mp3", 0.4, randFloat(0.8, 1.2), laser, hitbox, false);
+   }
+}
+
+export const InguYetukLaserComponentArray = registerServerComponentArray(ServerComponentType.inguYetukLaser, _InguYetukLaserComponentArray, true);
 
 export function createInguYetukLaserComponentData(): InguYetukLaserComponentData {
    return {};
-}
-
-function decodeData(): InguYetukLaserComponentData {
-   return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      getTextureArrayIndex("entities/ingu-yetuk-laser/laser.png")
-   );
-   renderObject.attachRenderPart(renderPart);
-
-   return {};
-}
-
-function createComponent(): InguYetukLaserComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 50;
-}
-
-function onSpawn(laser: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(laser);
-   const hitbox = transformComponent.hitboxes[0];
-   playSoundOnHitbox("lazur.mp3", 0.4, randFloat(0.8, 1.2), laser, hitbox, false);
 }

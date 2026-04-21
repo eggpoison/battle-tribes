@@ -6,56 +6,53 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import ClientComponentArray from "../ClientComponentArray";
-import { TransformComponentArray, TransformComponentData } from "../server-components/TransformComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerClientComponentArray } from "../component-register";
+import ClientComponentArray from "../ClientComponentArray";
 
 export interface BallistaRockComponentData {}
 
-interface IntermediateInfo {}
-
 export interface BallistaRockComponent {}
 
-export const BallistaRockComponentArray = new ClientComponentArray<BallistaRockComponent, IntermediateInfo>(ClientComponentType.ballistaRock, true, createComponent, getMaxRenderParts);
-BallistaRockComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-BallistaRockComponentArray.onDie = onDie;
+class _BallistaRockComponentArray extends ClientComponentArray<BallistaRockComponent> {
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            0,
+            0,
+            0, 0,
+            getTextureArrayIndex("projectiles/ballista-rock.png")
+         )
+      );
+   }
+
+   public createComponent(): BallistaRockComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public onDie(entity: Entity): void {
+      // Create arrow break particles
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      getHitboxVelocity(hitbox);
+      const velocity = _point;
+      for (let i = 0; i < 6; i++) {
+         createArrowDestroyParticle(hitbox.box.position.x, hitbox.box.position.y, velocity.x, velocity.y);
+      }
+   }
+}
+
+export const BallistaRockComponentArray = registerClientComponentArray(ClientComponentType.ballistaRock, _BallistaRockComponentArray, true);
 
 export function createBallistaRockComponentData(): BallistaRockComponentData {
    return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-
-   renderObject.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         getTextureArrayIndex("projectiles/ballista-rock.png")
-      )
-   );
-
-   return {};
-}
-
-function createComponent(): BallistaRockComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function onDie(entity: Entity): void {
-   // Create arrow break particles
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   getHitboxVelocity(hitbox);
-   const velocity = _point;
-   for (let i = 0; i < 6; i++) {
-      createArrowDestroyParticle(hitbox.box.position.x, hitbox.box.position.y, velocity.x, velocity.y);
-   }
 }

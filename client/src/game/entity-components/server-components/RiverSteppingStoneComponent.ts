@@ -5,54 +5,50 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface RiverSteppingStoneComponentData {}
 
-interface IntermediateInfo {}
-
 export interface RiverSteppingStoneComponent {}
 
-export const RiverSteppingStoneComponentArray = new ServerComponentArray<RiverSteppingStoneComponent, RiverSteppingStoneComponentData, IntermediateInfo>(ServerComponentType.riverSteppingStone, true, createComponent, getMaxRenderParts, decodeData);
-RiverSteppingStoneComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-
-function decodeData(): RiverSteppingStoneComponentData {
-   return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   let textureSource: string;
-   if (hitbox.flags.includes(HitboxFlag.RIVER_STEPPING_STONE_SMALL)) {
-      textureSource = "entities/river-stepping-stone/stone-small.png";
-   } else if (hitbox.flags.includes(HitboxFlag.RIVER_STEPPING_STONE_MEDIUM)) {
-      textureSource = "entities/river-stepping-stone/stone-medium.png";
-   } else {
-      textureSource = "entities/river-stepping-stone/stone-large.png";
+class _RiverSteppingStoneComponentArray extends ServerComponentArray<RiverSteppingStoneComponent, RiverSteppingStoneComponentData> {
+   public decodeData(): RiverSteppingStoneComponentData {
+      return {};
    }
-   
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      getTextureArrayIndex(textureSource)
-   );
-   renderPart.tintR = randFloat(-0.03, 0.03);
-   renderPart.tintG = randFloat(-0.03, 0.03);
-   renderPart.tintB = randFloat(-0.03, 0.03);
-   renderObject.attachRenderPart(renderPart)
 
-   return {
-      renderPart: renderPart
-   };
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      let textureSource: string;
+      if (hitbox.flags.includes(HitboxFlag.RIVER_STEPPING_STONE_SMALL)) {
+         textureSource = "entities/river-stepping-stone/stone-small.png";
+      } else if (hitbox.flags.includes(HitboxFlag.RIVER_STEPPING_STONE_MEDIUM)) {
+         textureSource = "entities/river-stepping-stone/stone-medium.png";
+      } else {
+         textureSource = "entities/river-stepping-stone/stone-large.png";
+      }
+      
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         getTextureArrayIndex(textureSource)
+      );
+      renderPart.tintR = randFloat(-0.03, 0.03);
+      renderPart.tintG = randFloat(-0.03, 0.03);
+      renderPart.tintB = randFloat(-0.03, 0.03);
+      renderObject.attachRenderPart(renderPart)
+   }
+
+   public createComponent(): RiverSteppingStoneComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
 }
 
-function createComponent(): RiverSteppingStoneComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
+export const RiverSteppingStoneComponentArray = registerServerComponentArray(ServerComponentType.riverSteppingStone, _RiverSteppingStoneComponentArray, true);

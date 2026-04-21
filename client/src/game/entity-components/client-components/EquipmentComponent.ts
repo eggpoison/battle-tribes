@@ -8,6 +8,7 @@ import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { TribeComponentArray } from "../server-components/TribeComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
+import { registerClientComponentArray } from "../component-register";
 
 const enum ArmourPixelSize {
    _12x12,
@@ -82,30 +83,36 @@ const getGloveTextureSource = (gloveType: ItemType): string => {
    return GLOVES_TEXTURE_SOURCE_RECORD[gloveType as GloveItemType];
 }
 
-export const EquipmentComponentArray = new ClientComponentArray<EquipmentComponent>(ClientComponentType.equipment, true, createComponent, getMaxRenderParts);
-EquipmentComponentArray.onLoad = onLoad;
-EquipmentComponentArray.onTick = onTick;
+class _EquipmentComponentArray extends ClientComponentArray<EquipmentComponent> {
+   public createComponent(): EquipmentComponent {
+      return {
+         armourRenderPart: null,
+         gloveRenderParts: []
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      // 1 armour, 2 gloves
+      return 3;
+   }
+
+   public onLoad(entity: Entity): void {
+      const equipmentComponent = EquipmentComponentArray.getComponent(entity);
+      updateArmourRenderPart(equipmentComponent, entity);
+      updateGloveRenderParts(equipmentComponent, entity);
+   }
+
+   public onTick(entity: Entity): void {
+      const equipmentComponent = EquipmentComponentArray.getComponent(entity);
+      updateArmourRenderPart(equipmentComponent, entity);
+      updateGloveRenderParts(equipmentComponent, entity);
+   }
+}
+
+export const EquipmentComponentArray = registerClientComponentArray(ClientComponentType.equipment, _EquipmentComponentArray, true);
 
 export function createEquipmentComponentData(): EquipmentComponentData {
    return {};
-}
-
-function createComponent(): EquipmentComponent {
-   return {
-      armourRenderPart: null,
-      gloveRenderParts: []
-   };
-}
-
-function getMaxRenderParts(): number {
-   // 1 armour, 2 gloves
-   return 3;
-}
-
-function onLoad(entity: Entity): void {
-   const equipmentComponent = EquipmentComponentArray.getComponent(entity);
-   updateArmourRenderPart(equipmentComponent, entity);
-   updateGloveRenderParts(equipmentComponent, entity);
 }
 
 /** Updates the current armour render part based on the entity's inventory component */
@@ -179,10 +186,4 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent, entity: 
          equipmentComponent.gloveRenderParts.splice(0, 1);
       }
    }
-}
-
-function onTick(entity: Entity): void {
-   const equipmentComponent = EquipmentComponentArray.getComponent(entity);
-   updateArmourRenderPart(equipmentComponent, entity);
-   updateGloveRenderParts(equipmentComponent, entity);
 }

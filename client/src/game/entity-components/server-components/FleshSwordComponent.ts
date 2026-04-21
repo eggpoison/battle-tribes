@@ -1,20 +1,23 @@
 import { ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-register";
 
 export interface FleshSwordComponentData {}
 
 export interface FleshSwordComponent {}
 
-export const FleshSwordComponentArray = new ServerComponentArray<FleshSwordComponent, FleshSwordComponentData>(ServerComponentType.fleshSwordItem, true, createComponent, getMaxRenderParts, decodeData);
+class _FleshSwordComponentArray extends ServerComponentArray<FleshSwordComponent, FleshSwordComponentData> {
+   public decodeData(): FleshSwordComponentData {
+      return {};
+   }
 
-function decodeData(): FleshSwordComponentData {
-   return {};
+   public createComponent(): FleshSwordComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 0;
+   }
 }
 
-function createComponent(): FleshSwordComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 0;
-}
+export const FleshSwordComponentArray = registerServerComponentArray(ServerComponentType.fleshSwordItem, _FleshSwordComponentArray, true);

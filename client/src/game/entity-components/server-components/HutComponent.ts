@@ -12,6 +12,7 @@ import { getServerComponentData, getTransformComponentData } from "../../entity-
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { currentSnapshot } from "../../networking/snapshots";
+import { registerServerComponentArray } from "../component-register";
 
 type HutType = EntityType.workerHut | EntityType.warriorHut;
 
@@ -77,23 +78,91 @@ const getDoorXOffset = (hutType: HutType, i: number): number => {
    }
 }
 
-export const HutComponentArray = new ServerComponentArray<HutComponent, HutComponentData, IntermediateInfo>(ServerComponentType.hut, true, createComponent, getMaxRenderParts, decodeData);
-HutComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-HutComponentArray.updateFromData = updateFromData;
+class _HutComponentArray extends ServerComponentArray<HutComponent, HutComponentData, IntermediateInfo> {
+   public decodeData(reader: PacketReader): HutComponentData {
+      const doorSwingTicks = reader.readNumber();
+      const isRecalling = reader.readBool();
+      return {
+         doorSwingAmount: doorSwingTicks,
+         isRecalling: isRecalling
+      };
+   }
+
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const hutComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.hut);
+      
+      return {
+         doorRenderParts: getRenderThingsByTag(renderObject, "hutComponent:door") as Array<VisualRenderPart>,
+         recallMarker: hutComponentData.isRecalling ? createRecallMarker(hitbox) : null
+      };
+   }
+
+   public createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): HutComponent {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const hutComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.hut);
+      
+      return {
+         doorRenderParts: intermediateInfo.doorRenderParts,
+         doorSwingAmount: hutComponentData.doorSwingAmount,
+         isRecalling: hutComponentData.isRecalling,
+         recallMarker: intermediateInfo.recallMarker
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public updateFromData(data: HutComponentData, entity: Entity): void {
+      const hutComponent = HutComponentArray.getComponent(entity);
+      
+      const lastDoorSwingTicks = data.doorSwingAmount;
+      const isRecalling = data.isRecalling;
+
+      // @Incomplete: What if this packet is skipped?
+      if (lastDoorSwingTicks === currentSnapshot.tick) {
+         const transformComponent = TransformComponentArray.getComponent(entity);
+         const hitbox = transformComponent.hitboxes[0];
+         playSoundOnHitbox("door-open.mp3", 0.4, 1, entity, hitbox, false);
+      }
+      
+      hutComponent.isRecalling = isRecalling;
+      hutComponent.doorSwingAmount = calculateDoorSwingAmount(lastDoorSwingTicks);
+      updateDoors(hutComponent, entity);
+
+      if (hutComponent.isRecalling) {
+         if (hutComponent.recallMarker === null) {
+            const transformComponent = TransformComponentArray.getComponent(entity);
+            const hitbox = transformComponent.hitboxes[0];
+            
+            hutComponent.recallMarker = createRecallMarker(hitbox);
+            const renderObject = getEntityRenderObject(entity);
+            renderObject.attachRenderPart(hutComponent.recallMarker);
+         }
+
+         let opacity = Math.sin(getEntityAgeTicks(entity) * Settings.DT_S * 5) * 0.5 + 0.5;
+         opacity = lerp(0.3, 1, opacity);
+         hutComponent.recallMarker.opacity = lerp(0.3, 0.8, opacity);
+      } else {
+         if (hutComponent.recallMarker !== null) {
+            const renderObject = getEntityRenderObject(entity);
+            renderObject.removeRenderPart(hutComponent.recallMarker);
+            hutComponent.recallMarker = null;
+         }
+      }
+   }
+}
+
+export const HutComponentArray = registerServerComponentArray(ServerComponentType.hut, _HutComponentArray, true);
 
 export function createHutComponentData(): HutComponentData {
    return {
       doorSwingAmount: 0,
       isRecalling: false
-   };
-}
-
-function decodeData(reader: PacketReader): HutComponentData {
-   const doorSwingTicks = reader.readNumber();
-   const isRecalling = reader.readBool();
-   return {
-      doorSwingAmount: doorSwingTicks,
-      isRecalling: isRecalling
    };
 }
 
@@ -108,35 +177,6 @@ const createRecallMarker = (parentHitbox: Hitbox): TexturedRenderPart => {
    recallMarker.inheritParentRotation = false;
 
    return recallMarker;
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const hutComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.hut);
-   
-   return {
-      doorRenderParts: getRenderThingsByTag(renderObject, "hutComponent:door") as Array<VisualRenderPart>,
-      recallMarker: hutComponentData.isRecalling ? createRecallMarker(hitbox) : null
-   };
-}
-
-function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): HutComponent {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const hutComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.hut);
-   
-   return {
-      doorRenderParts: intermediateInfo.doorRenderParts,
-      doorSwingAmount: hutComponentData.doorSwingAmount,
-      isRecalling: hutComponentData.isRecalling,
-      recallMarker: intermediateInfo.recallMarker
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 1;
 }
 
 function updateDoors(hutComponent: HutComponent, entity: Entity): void {
@@ -161,44 +201,5 @@ function updateDoors(hutComponent: HutComponent, entity: Entity): void {
       renderPart.offsetY = offset.y;
 
       renderPart.angle = lerp(Math.PI/2, 0, hutComponent.doorSwingAmount) * (i === 0 ? 1 : -1);
-   }
-}
-
-function updateFromData(data: HutComponentData, entity: Entity): void {
-   const hutComponent = HutComponentArray.getComponent(entity);
-   
-   const lastDoorSwingTicks = data.doorSwingAmount;
-   const isRecalling = data.isRecalling;
-
-   // @Incomplete: What if this packet is skipped?
-   if (lastDoorSwingTicks === currentSnapshot.tick) {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("door-open.mp3", 0.4, 1, entity, hitbox, false);
-   }
-   
-   hutComponent.isRecalling = isRecalling;
-   hutComponent.doorSwingAmount = calculateDoorSwingAmount(lastDoorSwingTicks);
-   updateDoors(hutComponent, entity);
-
-   if (hutComponent.isRecalling) {
-      if (hutComponent.recallMarker === null) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
-         const hitbox = transformComponent.hitboxes[0];
-         
-         hutComponent.recallMarker = createRecallMarker(hitbox);
-         const renderObject = getEntityRenderObject(entity);
-         renderObject.attachRenderPart(hutComponent.recallMarker);
-      }
-
-      let opacity = Math.sin(getEntityAgeTicks(entity) * Settings.DT_S * 5) * 0.5 + 0.5;
-      opacity = lerp(0.3, 1, opacity);
-      hutComponent.recallMarker.opacity = lerp(0.3, 0.8, opacity);
-   } else {
-      if (hutComponent.recallMarker !== null) {
-         const renderObject = getEntityRenderObject(entity);
-         renderObject.removeRenderPart(hutComponent.recallMarker);
-         hutComponent.recallMarker = null;
-      }
    }
 }

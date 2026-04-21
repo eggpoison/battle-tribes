@@ -14,6 +14,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
+import { registerServerComponentArray } from "../component-register";
 
 enum GolemRockSize {
    massive,
@@ -99,174 +100,172 @@ const getZIndex = (size: GolemRockSize): number => {
    }
 }
 
-export const GolemComponentArray = new ServerComponentArray<GolemComponent, GolemComponentData, IntermediateInfo>(ServerComponentType.golem, true, createComponent, getMaxRenderParts, decodeData);
-GolemComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-GolemComponentArray.onTick = onTick;
-GolemComponentArray.updateFromData = updateFromData;
-GolemComponentArray.onHit = onHit;
+class _GolemComponentArray extends ServerComponentArray<GolemComponent, GolemComponentData, IntermediateInfo> {
+   public decodeData(reader: PacketReader): GolemComponentData {
+      const wakeProgress = reader.readNumber();
 
-function decodeData(reader: PacketReader): GolemComponentData {
-   const wakeProgress = reader.readNumber();
+      const ticksAwake = reader.readNumber();
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
 
-   const ticksAwake = reader.readNumber();
-   reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+      const isAwake = reader.readBool();
 
-   const isAwake = reader.readBool();
+      return {
+         wakeProgress: wakeProgress,
+         ticksAwake: ticksAwake,
+         isAwake: isAwake
+      };
+   }
 
-   return {
-      wakeProgress: wakeProgress,
-      ticksAwake: ticksAwake,
-      isAwake: isAwake
-   };
-}
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      
+      const rockRenderParts: Array<VisualRenderPart> = [];
+      const eyeRenderParts: Array<VisualRenderPart> = [];
+      const eyeLights: Array<Light> = [];
+      
+      // Add new rocks
+      for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
+         const hitbox = transformComponentData.hitboxes[i];
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   
-   const rockRenderParts: Array<VisualRenderPart> = [];
-   const eyeRenderParts: Array<VisualRenderPart> = [];
-   const eyeLights: Array<Light> = [];
-   
-   // Add new rocks
-   for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
-      const hitbox = transformComponentData.hitboxes[i];
+         const box = hitbox.box as CircularBox;
+         const size = getHitboxSize(box);
 
-      const box = hitbox.box as CircularBox;
-      const size = getHitboxSize(box);
+         const renderPart = new TexturedRenderPart(
+            hitbox,
+            getZIndex(size),
+            randAngle(),
+            0, 0,
+            getTextureArrayIndex(getTextureSource(size))
+         );
+         renderObject.attachRenderPart(renderPart);
+         rockRenderParts.push(renderPart);
 
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         getZIndex(size),
-         randAngle(),
-         0, 0,
-         getTextureArrayIndex(getTextureSource(size))
-      );
-      renderObject.attachRenderPart(renderPart);
-      rockRenderParts.push(renderPart);
+         if (size === GolemRockSize.large) {
+            for (let i = 0; i < 2; i++) {
+               const eyeRenderPart = new TexturedRenderPart(
+                  renderPart,
+                  6,
+                  0,
+                  20 * (i === 0 ? -1 : 1), 17,
+                  getTextureArrayIndex("entities/golem/eye.png")
+               );
+               eyeRenderPart.opacity = 0;
+               eyeRenderPart.inheritParentRotation = false;
+               renderObject.attachRenderPart(eyeRenderPart);
+               eyeRenderParts.push(eyeRenderPart);
+            }
+         }
+      }
 
-      if (size === GolemRockSize.large) {
-         for (let i = 0; i < 2; i++) {
-            const eyeRenderPart = new TexturedRenderPart(
-               renderPart,
-               6,
-               0,
-               20 * (i === 0 ? -1 : 1), 17,
-               getTextureArrayIndex("entities/golem/eye.png")
-            );
-            eyeRenderPart.opacity = 0;
-            eyeRenderPart.inheritParentRotation = false;
-            renderObject.attachRenderPart(eyeRenderPart);
-            eyeRenderParts.push(eyeRenderPart);
+      return {
+         rockRenderParts: rockRenderParts,
+         eyeRenderParts: eyeRenderParts,
+         eyeLights: eyeLights
+      };
+   }
+
+   public createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GolemComponent {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const golemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.golem);
+      return {
+         wakeProgress: golemComponentData.wakeProgress,
+         rockRenderParts: intermediateInfo.rockRenderParts,
+         eyeRenderParts: intermediateInfo.eyeRenderParts,
+         eyeLights: intermediateInfo.eyeLights
+      };
+   }
+
+   public getMaxRenderParts(entityComponentData: EntityComponentData): number {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      
+      let maxRenderParts = 0;
+      for (const hitbox of transformComponentData.hitboxes) {
+         
+         maxRenderParts++;
+
+         const size = getHitboxSize(hitbox.box as CircularBox);
+         if (size === GolemRockSize.large) {
+            maxRenderParts += 2;
+         }
+      }
+      
+      return maxRenderParts;
+   }
+
+   public onTick(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const golemComponent = GolemComponentArray.getComponent(entity);
+
+      if (golemComponent.wakeProgress > 0 && golemComponent.wakeProgress < 1) {
+         for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+            const hitbox = transformComponent.hitboxes[i];
+            
+            const box = hitbox.box as CircularBox;
+            getHitboxVelocity(hitbox);
+            const velocity = _point;
+
+            const offsetDirection = randAngle();
+            const x = box.position.x + box.radius * Math.sin(offsetDirection);
+            const y = box.position.y + box.radius * Math.cos(offsetDirection);
+            createRockSpeckParticle(x, y, 0, velocity.x, velocity.y, ParticleRenderLayer.low);
+         }
+      } else if (golemComponent.wakeProgress === 1) {
+         for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+            if (Math.random() >= 6 * Settings.DT_S) {
+               continue;
+            }
+
+            const hitbox = transformComponent.hitboxes[i];
+            const box = hitbox.box as CircularBox;
+            getHitboxVelocity(hitbox);
+            const velocity = _point;
+
+            const offsetDirection = randAngle();
+            const x = box.position.x + box.radius * Math.sin(offsetDirection);
+            const y = box.position.y + box.radius * Math.cos(offsetDirection);
+            createRockSpeckParticle(x, y, 0, velocity.x, velocity.y, ParticleRenderLayer.low);
          }
       }
    }
-
-   return {
-      rockRenderParts: rockRenderParts,
-      eyeRenderParts: eyeRenderParts,
-      eyeLights: eyeLights
-   };
-}
-
-function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GolemComponent {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const golemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.golem);
-   return {
-      wakeProgress: golemComponentData.wakeProgress,
-      rockRenderParts: intermediateInfo.rockRenderParts,
-      eyeRenderParts: intermediateInfo.eyeRenderParts,
-      eyeLights: intermediateInfo.eyeLights
-   };
-}
-
-function getMaxRenderParts(entityComponentData: EntityComponentData): number {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   
-   let maxRenderParts = 0;
-   for (const hitbox of transformComponentData.hitboxes) {
       
-      maxRenderParts++;
+   public updateFromData(data: GolemComponentData, entity: Entity): void {
+      const golemComponent = GolemComponentArray.getComponent(entity);
+      
+      const wakeProgress = data.wakeProgress;
+      const ticksAwake = data.ticksAwake;
+      const isAwake = data.isAwake;
 
-      const size = getHitboxSize(hitbox.box as CircularBox);
-      if (size === GolemRockSize.large) {
-         maxRenderParts += 2;
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      
+      if (isAwake && ticksAwake % ANGRY_SOUND_INTERVAL_TICKS === 0) {
+         const hitbox = transformComponent.hitboxes[0];
+         playSoundOnHitbox("golem-angry.mp3", 0.4, 1, entity, hitbox, true);
       }
-   }
-   
-   return maxRenderParts;
-}
+      
+      golemComponent.wakeProgress = wakeProgress;
 
-function onTick(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const golemComponent = GolemComponentArray.getComponent(entity);
-
-   if (golemComponent.wakeProgress > 0 && golemComponent.wakeProgress < 1) {
+      // @CLEANUP
+      const shakeAmount = golemComponent.wakeProgress > 0 && golemComponent.wakeProgress < 1 ? 1 : 0;
       for (let i = 0; i < transformComponent.hitboxes.length; i++) {
          const hitbox = transformComponent.hitboxes[i];
          
-         const box = hitbox.box as CircularBox;
-         getHitboxVelocity(hitbox);
-         const velocity = _point;
+         const box = hitbox.box;
+         const renderPart = golemComponent.rockRenderParts[i];
 
-         const offsetDirection = randAngle();
-         const x = box.position.x + box.radius * Math.sin(offsetDirection);
-         const y = box.position.y + box.radius * Math.cos(offsetDirection);
-         createRockSpeckParticle(x, y, 0, velocity.x, velocity.y, ParticleRenderLayer.low);
+         // renderPart.offset.x = box.offset.x;
+         // renderPart.offset.y = box.offset.y;
+         setRenderPartShakeAmount(renderPart, shakeAmount);
       }
-   } else if (golemComponent.wakeProgress === 1) {
-      for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-         if (Math.random() >= 6 * Settings.DT_S) {
-            continue;
-         }
 
-         const hitbox = transformComponent.hitboxes[i];
-         const box = hitbox.box as CircularBox;
-         getHitboxVelocity(hitbox);
-         const velocity = _point;
-
-         const offsetDirection = randAngle();
-         const x = box.position.x + box.radius * Math.sin(offsetDirection);
-         const y = box.position.y + box.radius * Math.cos(offsetDirection);
-         createRockSpeckParticle(x, y, 0, velocity.x, velocity.y, ParticleRenderLayer.low);
+      for (let i = 0; i < 2; i++) {
+         golemComponent.eyeRenderParts[i].opacity = golemComponent.wakeProgress;
+         golemComponent.eyeLights[i].intensity = golemComponent.wakeProgress;
       }
    }
-}
-   
-function updateFromData(data: GolemComponentData, entity: Entity): void {
-   const golemComponent = GolemComponentArray.getComponent(entity);
-   
-   const wakeProgress = data.wakeProgress;
-   const ticksAwake = data.ticksAwake;
-   const isAwake = data.isAwake;
 
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   
-   if (isAwake && ticksAwake % ANGRY_SOUND_INTERVAL_TICKS === 0) {
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("golem-angry.mp3", 0.4, 1, entity, hitbox, true);
-   }
-   
-   golemComponent.wakeProgress = wakeProgress;
-
-   // @CLEANUP
-   const shakeAmount = golemComponent.wakeProgress > 0 && golemComponent.wakeProgress < 1 ? 1 : 0;
-   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-      const hitbox = transformComponent.hitboxes[i];
-      
-      const box = hitbox.box;
-      const renderPart = golemComponent.rockRenderParts[i];
-
-      // renderPart.offset.x = box.offset.x;
-      // renderPart.offset.y = box.offset.y;
-      setRenderPartShakeAmount(renderPart, shakeAmount);
-   }
-
-   for (let i = 0; i < 2; i++) {
-      golemComponent.eyeRenderParts[i].opacity = golemComponent.wakeProgress;
-      golemComponent.eyeLights[i].intensity = golemComponent.wakeProgress;
+   public onHit(entity: Entity, hitbox: Hitbox): void {
+      playSoundOnHitbox(randItem(ROCK_HIT_SOUNDS), 0.3, 1, entity, hitbox, false);
    }
 }
 
-function onHit(entity: Entity, hitbox: Hitbox): void {
-   playSoundOnHitbox(randItem(ROCK_HIT_SOUNDS), 0.3, 1, entity, hitbox, false);
-}
+export const GolemComponentArray = registerServerComponentArray(ServerComponentType.golem, _GolemComponentArray, true);

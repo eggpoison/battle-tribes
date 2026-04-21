@@ -6,57 +6,54 @@ import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface FloorSignComponentData {
    readonly message: string;
 }
 
-interface IntermediateInfo {}
-
 export interface FloorSignComponent {
    message: string;
 }
 
-export const FloorSignComponentArray = new ServerComponentArray<FloorSignComponent, FloorSignComponentData, IntermediateInfo>(ServerComponentType.floorSign, true, createComponent, getMaxRenderParts, decodeData);
-FloorSignComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-FloorSignComponentArray.updateFromData = updateFromData;
+class _FloorSignComponentArray extends ServerComponentArray<FloorSignComponent, FloorSignComponentData> {
+   public decodeData(reader: PacketReader): FloorSignComponentData {
+      const message = reader.readString();
+      return {
+         message: message
+      };
+   }
 
-function decodeData(reader: PacketReader): FloorSignComponentData {
-   const message = reader.readString();
-   return {
-      message: message
-   };
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         getTextureArrayIndex("entities/floor-sign/floor-sign.png")
+      );
+      renderObject.attachRenderPart(renderPart);
+   }
+
+   public createComponent(entityComponentData: EntityComponentData): FloorSignComponentData {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const floorSignComponent = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.floorSign);
+      return {
+         message: floorSignComponent.message
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public updateFromData(data: FloorSignComponent, entity: Entity): void {
+      const floorSignComponent = FloorSignComponentArray.getComponent(entity);
+      floorSignComponent.message = data.message;
+   }
 }
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      getTextureArrayIndex("entities/floor-sign/floor-sign.png")
-   );
-   renderObject.attachRenderPart(renderPart);
-   
-   return {};
-}
-
-function createComponent(entityComponentData: EntityComponentData): FloorSignComponentData {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const floorSignComponent = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.floorSign);
-   return {
-      message: floorSignComponent.message
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function updateFromData(data: FloorSignComponent, entity: Entity): void {
-   const floorSignComponent = FloorSignComponentArray.getComponent(entity);
-   floorSignComponent.message = data.message;
-}
+export const FloorSignComponentArray = registerServerComponentArray(ServerComponentType.floorSign, _FloorSignComponentArray, true);

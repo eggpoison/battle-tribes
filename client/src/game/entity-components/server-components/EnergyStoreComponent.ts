@@ -1,20 +1,23 @@
 import { ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-register";
 
 export interface EnergyStoreComponentData {}
 
 export interface EnergyStoreComponent {}
 
-export const EnergyStoreComponentArray = new ServerComponentArray<EnergyStoreComponent, EnergyStoreComponentData, never>(ServerComponentType.energyStore, true, createComponent, getMaxRenderParts, decodeData);
+class _EnergyStoreComponentArray extends ServerComponentArray<EnergyStoreComponent, EnergyStoreComponentData, never> {
+   public decodeData(): EnergyStoreComponentData {
+      return {};
+   }
 
-function decodeData(): EnergyStoreComponentData {
-   return {};
+   public createComponent(): EnergyStoreComponentData {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 0;
+   }
 }
 
-function createComponent(): EnergyStoreComponentData {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 0;
-}
+export const EnergyStoreComponentArray = registerServerComponentArray(ServerComponentType.energyStore, _EnergyStoreComponentArray, true);

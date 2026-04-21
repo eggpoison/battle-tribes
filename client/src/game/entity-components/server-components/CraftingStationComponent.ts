@@ -1,24 +1,27 @@
 import { ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-register";
 
 export interface CraftingStationComponentData {}
 
 export interface CraftingStationComponent {}
 
-export const CraftingStationComponentArray = new ServerComponentArray<CraftingStationComponent>(ServerComponentType.craftingStation, true, createComponent, getMaxRenderParts, decodeData);
+class _CraftingStationComponentArray extends ServerComponentArray<CraftingStationComponent> {
+   public decodeData(): CraftingStationComponentData {
+      return {};
+   }
+
+   public createComponent(): CraftingStationComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 0;
+   }
+}
+
+export const CraftingStationComponentArray = registerServerComponentArray(ServerComponentType.craftingStation, _CraftingStationComponentArray, true);
 
 export function createCraftingStationComponentData(): CraftingStationComponentData {
    return {};
-}
-
-function decodeData(): CraftingStationComponentData {
-   return {};
-}
-
-function createComponent(): CraftingStationComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 0;
 }

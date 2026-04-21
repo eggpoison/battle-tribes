@@ -10,56 +10,53 @@ import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerClientComponentArray } from "../component-register";
 
 export interface BallistaFrostcicleComponentData {}
 
-interface IntermediateInfo {}
-
 export interface BallistaFrostcicleComponent {}
 
-export const BallistaFrostcicleComponentArray = new ClientComponentArray<BallistaFrostcicleComponent, IntermediateInfo>(ClientComponentType.ballistaFrostcicle, true, createComponent, getMaxRenderParts);
-BallistaFrostcicleComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-BallistaFrostcicleComponentArray.onDie = onDie;
+class _BallistaFrostcicleComponentArray extends ClientComponentArray<BallistaFrostcicleComponent> {
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            0,
+            0,
+            0, 0,
+            getTextureArrayIndex("projectiles/ballista-frostcicle.png")
+         )
+      );
+   }
+
+   public createComponent(): BallistaFrostcicleComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public onDie(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      getHitboxVelocity(hitbox);
+      const velocity = _point;
+
+      // Create arrow break particles
+      for (let i = 0; i < 6; i++) {
+         createArrowDestroyParticle(hitbox.box.position.x, hitbox.box.position.y, velocity.x, velocity.y);
+      }
+
+      playSoundOnHitbox("ice-break.mp3", 0.4, 1, entity, hitbox, false);
+   }
+}
+
+export const BallistaFrostcicleComponentArray = registerClientComponentArray(ClientComponentType.ballistaFrostcicle, _BallistaFrostcicleComponentArray, true);
 
 export function createBallistaFrostcicleComponentData(): BallistaFrostcicleComponentData {
    return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-
-   renderObject.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         getTextureArrayIndex("projectiles/ballista-frostcicle.png")
-      )
-   );
-
-   return {};
-}
-
-function createComponent(): BallistaFrostcicleComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   getHitboxVelocity(hitbox);
-   const velocity = _point;
-
-   // Create arrow break particles
-   for (let i = 0; i < 6; i++) {
-      createArrowDestroyParticle(hitbox.box.position.x, hitbox.box.position.y, velocity.x, velocity.y);
-   }
-
-   playSoundOnHitbox("ice-break.mp3", 0.4, 1, entity, hitbox, false);
 }

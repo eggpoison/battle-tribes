@@ -7,56 +7,52 @@ import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface SpearProjectileComponentData {}
 
-interface IntermediateInfo {}
-
 export interface SpearProjectileComponent {}
 
-export const SpearProjectileComponentArray = new ServerComponentArray<SpearProjectileComponent, SpearProjectileComponentData, IntermediateInfo>(ServerComponentType.spearProjectile, true, createComponent, getMaxRenderParts, decodeData);
-SpearProjectileComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-SpearProjectileComponentArray.onSpawn = onSpawn;
-SpearProjectileComponentArray.onDie = onDie;
+class _SpearProjectileComponentArray extends ServerComponentArray<SpearProjectileComponent, SpearProjectileComponentData> {
+   public decodeData(): SpearProjectileComponentData {
+      return {};
+   }
 
-function decodeData(): SpearProjectileComponentData {
-   return {};
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponent.hitboxes[0];
+      
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            0,
+            0,
+            0, 0,
+            // @HACK
+            getTextureArrayIndex("items/misc/ivory-spear.png")
+         )
+      );
+   }
+
+   public createComponent(): SpearProjectileComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public onSpawn(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      playSoundOnHitbox("spear-throw.mp3", 0.4, 1, entity, hitbox, false);
+   }
+
+   public onDie(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      playSoundOnHitbox("spear-hit.mp3", 0.4, 1, entity, hitbox, false);
+   }
 }
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponent.hitboxes[0];
-   
-   renderObject.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         // @HACK
-         getTextureArrayIndex("items/misc/ivory-spear.png")
-      )
-   );
-
-   return {};
-}
-
-function createComponent(): SpearProjectileComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function onSpawn(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   playSoundOnHitbox("spear-throw.mp3", 0.4, 1, entity, hitbox, false);
-}
-
-function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   playSoundOnHitbox("spear-hit.mp3", 0.4, 1, entity, hitbox, false);
-}
+export const SpearProjectileComponentArray = registerServerComponentArray(ServerComponentType.spearProjectile, _SpearProjectileComponentArray, true);

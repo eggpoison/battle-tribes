@@ -12,65 +12,61 @@ import { TransformComponentArray } from "../server-components/TransformComponent
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
+import { registerClientComponentArray } from "../component-register";
 
 export interface RegularSpikesComponentData {}
 
-interface IntermediateInfo {}
-
 export interface RegularSpikesComponent {}
 
-export const RegularSpikesComponentArray = new ClientComponentArray<RegularSpikesComponent, IntermediateInfo>(ClientComponentType.regularSpikes, true, createComponent, getMaxRenderParts);
-RegularSpikesComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-RegularSpikesComponentArray.onHit = onHit;
-RegularSpikesComponentArray.onDie = onDie;
+class _RegularSpikesComponentArray extends ClientComponentArray<RegularSpikesComponent> {
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const materialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
+
+      const isAttachedToWall = entityComponentData.entityType === EntityType.wallSpikes;
+      let textureArrayIndex: number;
+      if (isAttachedToWall) {
+         textureArrayIndex = getTextureArrayIndex(WALL_SPIKE_TEXTURE_SOURCES[materialComponentData.material]);
+      } else {
+         textureArrayIndex = getTextureArrayIndex(FLOOR_SPIKE_TEXTURE_SOURCES[materialComponentData.material]);
+      }
+
+      const mainRenderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         textureArrayIndex
+      )
+      addRenderPartTag(mainRenderPart, "buildingMaterialComponent:material");
+
+      renderObject.attachRenderPart(mainRenderPart);
+   }
+
+   public createComponent(): RegularSpikesComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public onHit(entity: Entity, hitbox: Hitbox): void {
+      playSoundOnHitbox("wooden-spikes-hit.mp3", 0.2, 1, entity, hitbox, false);
+   }
+
+   public onDie(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      playSoundOnHitbox("wooden-spikes-destroy.mp3", 0.4, 1, entity, hitbox, false);
+   }
+}
+
+export const RegularSpikesComponentArray = registerClientComponentArray(ClientComponentType.regularSpikes, _RegularSpikesComponentArray, true);
 
 export function createRegularSpikesComponentData(): RegularSpikesComponentData {
    return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const materialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
-
-   const isAttachedToWall = entityComponentData.entityType === EntityType.wallSpikes;
-   let textureArrayIndex: number;
-   if (isAttachedToWall) {
-      textureArrayIndex = getTextureArrayIndex(WALL_SPIKE_TEXTURE_SOURCES[materialComponentData.material]);
-   } else {
-      textureArrayIndex = getTextureArrayIndex(FLOOR_SPIKE_TEXTURE_SOURCES[materialComponentData.material]);
-   }
-
-   const mainRenderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      textureArrayIndex
-   )
-   addRenderPartTag(mainRenderPart, "buildingMaterialComponent:material");
-
-   renderObject.attachRenderPart(mainRenderPart);
-
-   return {};
-}
-
-function createComponent(): RegularSpikesComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function onHit(entity: Entity, hitbox: Hitbox): void {
-   playSoundOnHitbox("wooden-spikes-hit.mp3", 0.2, 1, entity, hitbox, false);
-}
-
-function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   playSoundOnHitbox("wooden-spikes-destroy.mp3", 0.4, 1, entity, hitbox, false);
 }

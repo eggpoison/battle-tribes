@@ -5,51 +5,49 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface PebblumComponentData {}
 
-interface IntermediateInfo {}
-
 export interface PebblumComponent {}
 
-export const PebblumComponentArray = new ServerComponentArray<PebblumComponent, PebblumComponentData, IntermediateInfo>(ServerComponentType.pebblum, true, createComponent, getMaxRenderParts, decodeData);
-PebblumComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+class _PebblumComponentArray extends ServerComponentArray<PebblumComponent, PebblumComponentData> {
+   public decodeData(): PebblumComponentData {
+      return {};
+   }
 
-function decodeData(): PebblumComponentData {
-   return {};
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+
+      // Nose
+      const nose = new TexturedRenderPart(
+         hitbox,
+         0,
+         randAngle(),
+         0, 12,
+         getTextureArrayIndex("entities/pebblum/pebblum-nose.png")
+      )
+      renderObject.attachRenderPart(nose);
+
+      // Body
+      const body = new TexturedRenderPart(
+         hitbox,
+         1,
+         randAngle(),
+         0, -8,
+         getTextureArrayIndex("entities/pebblum/pebblum-body.png")
+      )
+      renderObject.attachRenderPart(body);
+   }
+
+   public createComponent(): PebblumComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 2;
+   }
 }
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-
-   // Nose
-   const nose = new TexturedRenderPart(
-      hitbox,
-      0,
-      randAngle(),
-      0, 12,
-      getTextureArrayIndex("entities/pebblum/pebblum-nose.png")
-   )
-   renderObject.attachRenderPart(nose);
-
-   // Body
-   const body = new TexturedRenderPart(
-      hitbox,
-      1,
-      randAngle(),
-      0, -8,
-      getTextureArrayIndex("entities/pebblum/pebblum-body.png")
-   )
-   renderObject.attachRenderPart(body);
-
-   return {};
-}
-
-function createComponent(): PebblumComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 2;
-}
+export const PebblumComponentArray = registerServerComponentArray(ServerComponentType.pebblum, _PebblumComponentArray, true);

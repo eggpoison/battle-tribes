@@ -7,10 +7,11 @@ import { coatSlimeTrails } from "../../rendering/webgl/slime-trail-rendering";
 import { playSound, playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityLayer, getEntityRenderObject } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
 import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
+import ServerComponentArray from "../ServerComponentArray";
 
 export interface GlurbSegmentComponentData {
    readonly mossBallCompleteness: number;
@@ -24,19 +25,108 @@ export interface GlurbSegmentComponent {
    mossBallRenderPart: TexturedRenderPart | null;
 }
 
-export const GlurbSegmentComponentArray = new ServerComponentArray<GlurbSegmentComponent, GlurbSegmentComponentData, IntermediateInfo>(ServerComponentType.glurbSegment, true, createComponent, getMaxRenderParts, decodeData);
-GlurbSegmentComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-GlurbSegmentComponentArray.updateFromData = updateFromData;
-GlurbSegmentComponentArray.onTick = onTick;
-GlurbSegmentComponentArray.onHit = onHit;
-GlurbSegmentComponentArray.onDie = onDie;
+class _GlurbSegmentComponentArray extends ServerComponentArray<GlurbSegmentComponent, GlurbSegmentComponentData, IntermediateInfo> {
+   public decodeData(reader: PacketReader): GlurbSegmentComponentData {
+      const mossBallCompleteness = reader.readNumber();
+      return {
+         mossBallCompleteness: mossBallCompleteness
+      };
+   }
 
-function decodeData(reader: PacketReader): GlurbSegmentComponentData {
-   const mossBallCompleteness = reader.readNumber();
-   return {
-      mossBallCompleteness: mossBallCompleteness
-   };
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const glurbSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.glurbSegment);
+
+      let renderPart: TexturedRenderPart | null;
+      if (glurbSegmentComponentData.mossBallCompleteness > 0) {
+         const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+         const hitbox = transformComponentData.hitboxes[0];
+      
+         renderPart = createMossBallRenderPart(glurbSegmentComponentData.mossBallCompleteness, hitbox);
+         renderObject.attachRenderPart(renderPart);
+      } else {
+         renderPart = null;
+      }
+
+      return {
+         mossBallRenderPart: renderPart
+      };
+   }
+
+   public createComponent(_entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GlurbSegmentComponent {
+      return {
+         mossBallRenderPart: intermediateInfo.mossBallRenderPart
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public updateFromData(data: GlurbSegmentComponentData, glurbSegment: Entity): void {
+      const glurbSegmentComponent = GlurbSegmentComponentArray.getComponent(glurbSegment);
+
+      const mossBallCompleteness = data.mossBallCompleteness;
+
+      if (mossBallCompleteness === 0) {
+         if (glurbSegmentComponent.mossBallRenderPart !== null) {
+            const renderObject = getEntityRenderObject(glurbSegment);
+            renderObject.removeRenderPart(glurbSegmentComponent.mossBallRenderPart);
+            glurbSegmentComponent.mossBallRenderPart = null;
+         }
+      } else {
+         if (glurbSegmentComponent.mossBallRenderPart === null) {
+            const transformComponent = TransformComponentArray.getComponent(glurbSegment);
+            const hitbox = transformComponent.hitboxes[0];
+            
+            glurbSegmentComponent.mossBallRenderPart = createMossBallRenderPart(mossBallCompleteness, hitbox);
+            const renderObject = getEntityRenderObject(glurbSegment);
+            renderObject.attachRenderPart(glurbSegmentComponent.mossBallRenderPart);
+         } else {
+            glurbSegmentComponent.mossBallRenderPart.switchTextureSource(getMossBallTextureSource(mossBallCompleteness));
+         }
+      }
+   }
+
+   public onTick(glurb: Entity): void {
+      // @Hack
+      if (entityIsVisibleToCamera(glurb)) {
+         const layer = getEntityLayer(glurb);
+         const transformComponent = TransformComponentArray.getComponent(glurb);
+         for (const hitbox of transformComponent.hitboxes) {
+            coatSlimeTrails(layer, hitbox.box);
+         }
+      }
+
+      const glurbSegmentComponent = GlurbSegmentComponentArray.getComponent(glurb);
+      if (glurbSegmentComponent.mossBallRenderPart !== null) {
+         // @Hack ! this will be better once the moss ball is its own entity
+         glurbSegmentComponent.mossBallRenderPart.angle += Math.PI * 0.25 * Settings.DT_S;
+      }
+   }
+
+   public onHit(entity: Entity, _hitbox: Hitbox, hitPosition: Point): void {
+      for (let i = 0; i < 10; i++) {
+         createSlurbParticle(hitPosition.x, hitPosition.y, randAngle(), randFloat(80, 120), 0, 0);
+      }
+
+      playSound("glurb-hit.mp3", 0.4, randFloat(0.9, 1.2), hitPosition, getEntityLayer(entity));
+   }
+
+   public onDie(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+
+      for (let i = 0; i < 3; i++) {
+         const pos = getRandomPositionInBox(hitbox.box);
+         createSlurbParticle(pos.x, pos.y, randAngle(), randFloat(80, 120), 0, 0);
+      }
+
+      playSoundOnHitbox("glurb-death.mp3", 0.2, 1, entity, hitbox, false);
+   }
 }
+
+export const GlurbSegmentComponentArray = registerServerComponentArray(ServerComponentType.glurbSegment, _GlurbSegmentComponentArray, true);
 
 const getMossBallTextureSource = (mossBallCompleteness: number): string => {
    switch (mossBallCompleteness) {
@@ -59,96 +149,4 @@ const createMossBallRenderPart = (mossBallCompleteness: number, parentHitbox: Hi
       getTextureArrayIndex(getMossBallTextureSource(mossBallCompleteness))
    );
    return renderPart;
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const glurbSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.glurbSegment);
-
-   let renderPart: TexturedRenderPart | null;
-   if (glurbSegmentComponentData.mossBallCompleteness > 0) {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-   
-      renderPart = createMossBallRenderPart(glurbSegmentComponentData.mossBallCompleteness, hitbox);
-      renderObject.attachRenderPart(renderPart);
-   } else {
-      renderPart = null;
-   }
-
-   return {
-      mossBallRenderPart: renderPart
-   };
-}
-
-function createComponent(_entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GlurbSegmentComponent {
-   return {
-      mossBallRenderPart: intermediateInfo.mossBallRenderPart
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function updateFromData(data: GlurbSegmentComponentData, glurbSegment: Entity): void {
-   const glurbSegmentComponent = GlurbSegmentComponentArray.getComponent(glurbSegment);
-
-   const mossBallCompleteness = data.mossBallCompleteness;
-
-   if (mossBallCompleteness === 0) {
-      if (glurbSegmentComponent.mossBallRenderPart !== null) {
-         const renderObject = getEntityRenderObject(glurbSegment);
-         renderObject.removeRenderPart(glurbSegmentComponent.mossBallRenderPart);
-         glurbSegmentComponent.mossBallRenderPart = null;
-      }
-   } else {
-      if (glurbSegmentComponent.mossBallRenderPart === null) {
-         const transformComponent = TransformComponentArray.getComponent(glurbSegment);
-         const hitbox = transformComponent.hitboxes[0];
-         
-         glurbSegmentComponent.mossBallRenderPart = createMossBallRenderPart(mossBallCompleteness, hitbox);
-         const renderObject = getEntityRenderObject(glurbSegment);
-         renderObject.attachRenderPart(glurbSegmentComponent.mossBallRenderPart);
-      } else {
-         glurbSegmentComponent.mossBallRenderPart.switchTextureSource(getMossBallTextureSource(mossBallCompleteness));
-      }
-   }
-}
-
-function onTick(glurb: Entity): void {
-   // @Hack
-   if (entityIsVisibleToCamera(glurb)) {
-      const layer = getEntityLayer(glurb);
-      const transformComponent = TransformComponentArray.getComponent(glurb);
-      for (const hitbox of transformComponent.hitboxes) {
-         coatSlimeTrails(layer, hitbox.box);
-      }
-   }
-
-   const glurbSegmentComponent = GlurbSegmentComponentArray.getComponent(glurb);
-   if (glurbSegmentComponent.mossBallRenderPart !== null) {
-      // @Hack ! this will be better once the moss ball is its own entity
-      glurbSegmentComponent.mossBallRenderPart.angle += Math.PI * 0.25 * Settings.DT_S;
-   }
-}
-
-function onHit(entity: Entity, _hitbox: Hitbox, hitPosition: Point): void {
-   for (let i = 0; i < 10; i++) {
-      createSlurbParticle(hitPosition.x, hitPosition.y, randAngle(), randFloat(80, 120), 0, 0);
-   }
-
-   playSound("glurb-hit.mp3", 0.4, randFloat(0.9, 1.2), hitPosition, getEntityLayer(entity));
-}
-
-function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-
-   for (let i = 0; i < 3; i++) {
-      const pos = getRandomPositionInBox(hitbox.box);
-      createSlurbParticle(pos.x, pos.y, randAngle(), randFloat(80, 120), 0, 0);
-   }
-
-   playSoundOnHitbox("glurb-death.mp3", 0.2, 1, entity, hitbox, false);
 }

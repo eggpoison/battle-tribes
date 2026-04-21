@@ -10,10 +10,9 @@ import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface IceSpikesComponentData {}
-
-interface IntermediateInfo {}
 
 export interface IceSpikesComponent {}
 
@@ -21,39 +20,56 @@ const ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];
 
 const SIZE = 80;
 
-export const IceSpikesComponentArray = new ServerComponentArray<IceSpikesComponent, IceSpikesComponentData, IntermediateInfo>(ServerComponentType.iceSpikes, true, createComponent, getMaxRenderParts, decodeData);
-IceSpikesComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-IceSpikesComponentArray.onHit = onHit;
-IceSpikesComponentArray.onDie = onDie;
+class _IceSpikesComponentArray extends ServerComponentArray<IceSpikesComponent, IceSpikesComponentData> {
+   public decodeData(): IceSpikesComponentData {
+      return {};
+   }
 
-function decodeData(): IceSpikesComponentData {
-   return {};
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            0,
+            0,
+            0, 0,
+            getTextureArrayIndex(`entities/ice-spikes/ice-spikes.png`)
+         )
+      );
+   }
+
+   public createComponent(): IceSpikesComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public onHit(entity: Entity, hitbox: Hitbox): void {
+      // Create ice particles on hit
+      for (let i = 0; i < 10; i++) {
+         createIceSpeckProjectile(hitbox);
+      }
+      
+      playSoundOnHitbox("ice-spikes-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, entity, hitbox, false);
+   }
+
+   public onDie(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+
+      for (let i = 0; i < 15; i++) {
+         createIceSpeckProjectile(hitbox);
+      }
+      
+      playSoundOnHitbox("ice-spikes-destroy.mp3", 0.4, 1, entity, hitbox, false);
+   }
 }
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   renderObject.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         getTextureArrayIndex(`entities/ice-spikes/ice-spikes.png`)
-      )
-   );
-
-   return {};
-}
-
-function createComponent(): IceSpikesComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
+export const IceSpikesComponentArray = registerServerComponentArray(ServerComponentType.iceSpikes, _IceSpikesComponentArray, true);
 
 const createIceSpeckProjectile = (hitbox: Hitbox): void => {
    const spawnOffsetDirection = randAngle();
@@ -88,24 +104,4 @@ const createIceSpeckProjectile = (hitbox: Hitbox): void => {
       ICE_SPECK_COLOUR[0], ICE_SPECK_COLOUR[1], ICE_SPECK_COLOUR[2]
    );
    lowMonocolourParticles.push(particle);
-}
-
-function onHit(entity: Entity, hitbox: Hitbox): void {
-   // Create ice particles on hit
-   for (let i = 0; i < 10; i++) {
-      createIceSpeckProjectile(hitbox);
-   }
-   
-   playSoundOnHitbox("ice-spikes-hit-" + randInt(1, 3) + ".mp3", 0.4, 1, entity, hitbox, false);
-}
-
-function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-
-   for (let i = 0; i < 15; i++) {
-      createIceSpeckProjectile(hitbox);
-   }
-   
-   playSoundOnHitbox("ice-spikes-destroy.mp3", 0.4, 1, entity, hitbox, false);
 }

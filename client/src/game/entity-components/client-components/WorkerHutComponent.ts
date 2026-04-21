@@ -10,64 +10,60 @@ import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
+import { registerClientComponentArray } from "../component-register";
 
 export interface WorkerHutComponentData {}
 
-interface IntermediateInfo {}
-
 export interface WorkerHutComponent {}
 
-export const WorkerHutComponentArray = new ClientComponentArray<WorkerHutComponent, IntermediateInfo>(ClientComponentType.workerHut, true, createComponent, getMaxRenderParts);
-WorkerHutComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-WorkerHutComponentArray.onHit = onHit;
-WorkerHutComponentArray.onDie = onDie;
+class _WorkerHutComponentArray extends ClientComponentArray<WorkerHutComponent> {
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      // Hut
+      const hutRenderPart = new TexturedRenderPart(
+         hitbox,
+         2,
+         0,
+         0, 0,
+         getTextureArrayIndex("entities/worker-hut/worker-hut.png")
+      );
+      renderObject.attachRenderPart(hutRenderPart);
+
+      // Door
+      const doorRenderPart = new TexturedRenderPart(
+         hutRenderPart,
+         1,
+         0,
+         0, 0,
+         getTextureArrayIndex("entities/worker-hut/worker-hut-door.png")
+      );
+      addRenderPartTag(doorRenderPart, "hutComponent:door");
+      renderObject.attachRenderPart(doorRenderPart);
+   }
+
+   public createComponent(): WorkerHutComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 2;
+   }
+
+   public onHit(entity: Entity, hitbox: Hitbox): void {
+      playBuildingHitSound(entity, hitbox);
+   }
+
+   public onDie(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      playSoundOnHitbox("building-destroy-1.mp3", 0.4, 1, entity, hitbox, false);
+   }
+}
+
+export const WorkerHutComponentArray = registerClientComponentArray(ClientComponentType.workerHut, _WorkerHutComponentArray, true);
 
 export function createWorkerHutComponentData(): WorkerHutComponentData {
    return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   // Hut
-   const hutRenderPart = new TexturedRenderPart(
-      hitbox,
-      2,
-      0,
-      0, 0,
-      getTextureArrayIndex("entities/worker-hut/worker-hut.png")
-   );
-   renderObject.attachRenderPart(hutRenderPart);
-
-   // Door
-   const doorRenderPart = new TexturedRenderPart(
-      hutRenderPart,
-      1,
-      0,
-      0, 0,
-      getTextureArrayIndex("entities/worker-hut/worker-hut-door.png")
-   );
-   addRenderPartTag(doorRenderPart, "hutComponent:door");
-   renderObject.attachRenderPart(doorRenderPart);
-
-   return {};
-}
-
-function createComponent(): WorkerHutComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 2;
-}
-
-function onHit(entity: Entity, hitbox: Hitbox): void {
-   playBuildingHitSound(entity, hitbox);
-}
-
-function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   playSoundOnHitbox("building-destroy-1.mp3", 0.4, 1, entity, hitbox, false);
 }

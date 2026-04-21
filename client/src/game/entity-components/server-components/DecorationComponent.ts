@@ -6,12 +6,11 @@ import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface DecorationComponentData {
    readonly decorationType: DecorationType;
 }
-
-interface IntermediateInfo {}
 
 export interface DecorationComponent {
    readonly decorationType: DecorationType;
@@ -32,46 +31,45 @@ const DECORATION_RENDER_INFO: Record<DecorationType, string> = {
    [DecorationType.flower4]: "decorations/flower4.png"
 };
 
-export const DecorationComponentArray = new ServerComponentArray<DecorationComponent, DecorationComponentData, IntermediateInfo>(ServerComponentType.decoration, true, createComponent, getMaxRenderParts, decodeData);
-DecorationComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+class _DecorationComponentArray extends ServerComponentArray<DecorationComponent, DecorationComponentData> {
+   public decodeData(reader: PacketReader): DecorationComponentData {
+      const decorationType = reader.readNumber();
 
-function decodeData(reader: PacketReader): DecorationComponentData {
-   const decorationType = reader.readNumber();
+      return {
+         decorationType: decorationType
+      };
+   }
 
-   return {
-      decorationType: decorationType
-   };
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
+      
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            0,
+            0,
+            0, 0,
+            getTextureArrayIndex(DECORATION_RENDER_INFO[decorationComponentData.decorationType])
+         )
+      );
+   }
+
+   public createComponent(entityComponentData: EntityComponentData): DecorationComponent {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
+
+      return {
+         decorationType: decorationComponentData.decorationType
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
 }
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
-   
-   renderObject.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         getTextureArrayIndex(DECORATION_RENDER_INFO[decorationComponentData.decorationType])
-      )
-   );
-
-   return {};
-}
-
-function createComponent(entityComponentData: EntityComponentData): DecorationComponent {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
-
-   return {
-      decorationType: decorationComponentData.decorationType
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
+export const DecorationComponentArray = registerServerComponentArray(ServerComponentType.decoration, _DecorationComponentArray, true);

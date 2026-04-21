@@ -5,41 +5,39 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface IceShardComponentData {}
 
-interface IntermediateInfo {}
-
 export interface IceShardComponent {}
 
-export const IceShardComponentArray = new ServerComponentArray<IceShardComponent, IceShardComponentData, IntermediateInfo>(ServerComponentType.iceShard, true, createComponent, getMaxRenderParts, decodeData);
-IceShardComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+class _IceShardComponentArray extends ServerComponentArray<IceShardComponent, IceShardComponentData> {
+   public decodeData(): IceShardComponentData {
+      return {};
+   }
 
-function decodeData(): IceShardComponentData {
-   return {};
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponent.hitboxes[0];
+      
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            0,
+            0,
+            0, 0,
+            getTextureArrayIndex("projectiles/ice-shard.png")
+         )
+      );
+   }
+
+   public createComponent() {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
 }
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IceShardComponent {
-   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponent.hitboxes[0];
-   
-   renderObject.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         getTextureArrayIndex("projectiles/ice-shard.png")
-      )
-   );
-
-   return {};
-}
-
-function createComponent() {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
+export const IceShardComponentArray = registerServerComponentArray(ServerComponentType.iceShard, _IceShardComponentArray, true);

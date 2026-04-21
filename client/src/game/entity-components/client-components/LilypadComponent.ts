@@ -6,41 +6,39 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerClientComponentArray } from "../component-register";
 
 export interface LilypadComponentData {}
 
-interface IntermediateInfo {}
-
 export interface LilypadComponent {}
 
-export const LilypadComponentArray = new ClientComponentArray<LilypadComponent, IntermediateInfo>(ClientComponentType.lilypad, true, createComponent, getMaxRenderParts);
-LilypadComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+class _LilypadComponentArray extends ClientComponentArray<LilypadComponent> {
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            0,
+            0,
+            0, 0,
+            getTextureArrayIndex("entities/lilypad/lilypad.png")
+         )
+      );
+   }
+
+   public createComponent(): LilypadComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+}
+
+export const LilypadComponentArray = registerClientComponentArray(ClientComponentType.lilypad, _LilypadComponentArray, true);
 
 export function createLilypadComponentData(): LilypadComponentData {
    return {};
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-   
-   renderObject.attachRenderPart(
-      new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         getTextureArrayIndex("entities/lilypad/lilypad.png")
-      )
-   );
-
-   return {};
-}
-
-function createComponent(): LilypadComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 1;
 }

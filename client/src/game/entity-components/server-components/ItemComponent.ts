@@ -9,67 +9,64 @@ import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface ItemComponentData {
    readonly itemType: ItemType;
 }
 
-interface IntermediateInfo {}
-
 export interface ItemComponent {
    readonly itemType: ItemType;
 }
 
-export const ItemComponentArray = new ServerComponentArray<ItemComponent, ItemComponentData, IntermediateInfo>(ServerComponentType.item, true, createComponent, getMaxRenderParts, decodeData);
-ItemComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-ItemComponentArray.onTick = onTick;
+class _ItemComponentArray extends ServerComponentArray<ItemComponent, ItemComponentData> {
+   public decodeData(reader: PacketReader): ItemComponentData {
+      const itemType = reader.readNumber();
+      return {
+         itemType: itemType
+      };
+   }
 
-function decodeData(reader: PacketReader): ItemComponentData {
-   const itemType = reader.readNumber();
-   return {
-      itemType: itemType
-   };
-}
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const itemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.item);
+         
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[itemComponentData.itemType].entityTextureSource)
+      )
+      renderObject.attachRenderPart(renderPart);
+   }
 
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const itemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.item);
+   public createComponent(entityComponentData: EntityComponentData): ItemComponent {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const itemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.item);
+
+      return {
+         itemType: itemComponentData.itemType
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+
+   public onTick(entity: Entity): void {
+      const itemComponent = ItemComponentArray.getComponent(entity);
       
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[itemComponentData.itemType].entityTextureSource)
-   )
-   renderObject.attachRenderPart(renderPart);
-
-   return {};
-}
-
-function createComponent(entityComponentData: EntityComponentData): ItemComponent {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const itemComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.item);
-
-   return {
-      itemType: itemComponentData.itemType
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-
-function onTick(entity: Entity): void {
-   const itemComponent = ItemComponentArray.getComponent(entity);
-   
-   // Make the deep frost heart item spew blue blood particles
-   if (itemComponent.itemType === ItemType.deepfrost_heart) {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      createDeepFrostHeartBloodParticles(hitbox.box.position.x, hitbox.box.position.y, 0, 0);
+      // Make the deep frost heart item spew blue blood particles
+      if (itemComponent.itemType === ItemType.deepfrost_heart) {
+         const transformComponent = TransformComponentArray.getComponent(entity);
+         const hitbox = transformComponent.hitboxes[0];
+         createDeepFrostHeartBloodParticles(hitbox.box.position.x, hitbox.box.position.y, 0, 0);
+      }
    }
 }
+
+export const ItemComponentArray = registerServerComponentArray(ServerComponentType.item, _ItemComponentArray, true);

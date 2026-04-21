@@ -5,6 +5,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
 import { getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
+import { registerServerComponentArray } from "../component-register";
 
 export interface BuildingMaterialComponentData {
    readonly material: BuildingMaterial;
@@ -36,62 +37,63 @@ const getMaterialTextureSources = (entityType: EntityType): ReadonlyArray<string
    }
 }
 
-export const BuildingMaterialComponentArray = new ServerComponentArray<BuildingMaterialComponent, BuildingMaterialComponentData, never>(ServerComponentType.buildingMaterial, true, createComponent, getMaxRenderParts, decodeData);
-BuildingMaterialComponentArray.updateFromData = updateFromData;
+class _BuildingMaterialComponentArray extends ServerComponentArray<BuildingMaterialComponent, BuildingMaterialComponentData> {
+   public decodeData(reader: PacketReader): BuildingMaterialComponentData {
+      const material = reader.readNumber();
+      return {
+         material: material
+      };
+   }
+
+   public createComponent(entityComponentData: EntityComponentData): BuildingMaterialComponent {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
+
+      return {
+         material: buildingMaterialComponentData.material
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 0;
+   }
+
+   public updateFromData(data: BuildingMaterialComponentData, entity: Entity): void {
+      const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(entity);
+      
+      const material = data.material;
+      
+      if (material !== buildingMaterialComponent.material) {
+         const renderObject = getEntityRenderObject(entity);
+
+         // @Hack: this fucking sucks. Instead each entity which uses the building material component should define its own function to do this
+         const entityType = getEntityType(entity);
+         if (entityType !== EntityType.bracings) {
+            const textureSources = getMaterialTextureSources(entityType);
+      
+            const textureSource = textureSources[material];
+      
+            const materialRenderPart = getRenderThingByTag(renderObject, "buildingMaterialComponent:material") as TexturedRenderPart;
+            materialRenderPart.switchTextureSource(textureSource);
+         } else {
+            const verticals = getRenderThingsByTag(renderObject, "bracingsComponent:vertical", 2) as Array<TexturedRenderPart>;
+            for (const renderPart of verticals) {
+               renderPart.switchTextureSource("entities/bracings/stone-vertical-post.png");
+            }
+
+            const horizontal = getRenderThingByTag(renderObject, "bracingsComponent:horizontal") as TexturedRenderPart;
+            horizontal.switchTextureSource("entities/bracings/stone-horizontal-post.png");
+         }
+      }
+      
+      buildingMaterialComponent.material = material;
+   }
+}
+
+export const BuildingMaterialComponentArray = registerServerComponentArray(ServerComponentType.buildingMaterial, _BuildingMaterialComponentArray, true);
 
 export function createBuildingMaterialComponentData(material: BuildingMaterial): BuildingMaterialComponentData {
    return {
       material: material
    };
-}
-
-function decodeData(reader: PacketReader): BuildingMaterialComponentData {
-   const material = reader.readNumber();
-   return {
-      material: material
-   };
-}
-
-function createComponent(entityComponentData: EntityComponentData): BuildingMaterialComponent {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
-
-   return {
-      material: buildingMaterialComponentData.material
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 0;
-}
-
-function updateFromData(data: BuildingMaterialComponentData, entity: Entity): void {
-   const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(entity);
-   
-   const material = data.material;
-   
-   if (material !== buildingMaterialComponent.material) {
-      const renderObject = getEntityRenderObject(entity);
-
-      // @Hack: this fucking sucks. Instead each entity which uses the building material component should define its own function to do this
-      const entityType = getEntityType(entity);
-      if (entityType !== EntityType.bracings) {
-         const textureSources = getMaterialTextureSources(entityType);
-   
-         const textureSource = textureSources[material];
-   
-         const materialRenderPart = getRenderThingByTag(renderObject, "buildingMaterialComponent:material") as TexturedRenderPart;
-         materialRenderPart.switchTextureSource(textureSource);
-      } else {
-         const verticals = getRenderThingsByTag(renderObject, "bracingsComponent:vertical", 2) as Array<TexturedRenderPart>;
-         for (const renderPart of verticals) {
-            renderPart.switchTextureSource("entities/bracings/stone-vertical-post.png");
-         }
-
-         const horizontal = getRenderThingByTag(renderObject, "bracingsComponent:horizontal") as TexturedRenderPart;
-         horizontal.switchTextureSource("entities/bracings/stone-horizontal-post.png");
-      }
-   }
-   
-   buildingMaterialComponent.material = material;
 }

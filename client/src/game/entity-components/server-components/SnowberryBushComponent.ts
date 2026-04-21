@@ -6,6 +6,7 @@ import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface SnowberryBushComponentData {
    readonly numBerries: number;
@@ -19,55 +20,56 @@ export interface SnowberryBushComponent {
    readonly renderPart: TexturedRenderPart;
 }
 
-export const SnowberryBushComponentArray = new ServerComponentArray<SnowberryBushComponent, SnowberryBushComponentData, IntermediateInfo>(ServerComponentType.snowberryBush, true, createComponent, getMaxRenderParts, decodeData);
-SnowberryBushComponentArray.populateIntermediateInfo = populateIntermediateInfo;
-SnowberryBushComponentArray.updateFromData = updateFromData;
+class _SnowberryBushComponentArray extends ServerComponentArray<SnowberryBushComponent, SnowberryBushComponentData, IntermediateInfo> {
+   public decodeData(reader: PacketReader): SnowberryBushComponentData {
+      const numBerries = reader.readNumber();
+      return {
+         numBerries: numBerries
+      };
+   }
 
-function decodeData(reader: PacketReader): SnowberryBushComponentData {
-   const numBerries = reader.readNumber();
-   return {
-      numBerries: numBerries
-   };
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const snowberryBushComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.snowberryBush);
+
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         getTextureArrayIndex(getTextureSource(snowberryBushComponentData.numBerries))
+      )
+      renderObject.attachRenderPart(renderPart);
+
+      return {
+         renderPart: renderPart
+      };
+   }
+
+   public createComponent(_entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): SnowberryBushComponent {
+      return {
+         renderPart: intermediateInfo.renderPart
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 1;
+   }
+      
+   public updateFromData(data: SnowberryBushComponentData, snowberryBush: Entity): void {
+      const snowberryBushComponent = SnowberryBushComponentArray.getComponent(snowberryBush);
+
+      const numBerries = data.numBerries;
+      snowberryBushComponent.renderPart.switchTextureSource(getTextureSource(numBerries));
+   }
 }
+
+export const SnowberryBushComponentArray = registerServerComponentArray(ServerComponentType.snowberryBush, _SnowberryBushComponentArray, true);
+
 
 const getTextureSource = (numBerries: number): string => {
    return "entities/snowberry-bush/stage-" + numBerries + ".png";
-}
-
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
-
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const snowberryBushComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.snowberryBush);
-
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      0,
-      0, 0,
-      getTextureArrayIndex(getTextureSource(snowberryBushComponentData.numBerries))
-   )
-   renderObject.attachRenderPart(renderPart);
-
-   return {
-      renderPart: renderPart
-   };
-}
-
-function createComponent(_entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): SnowberryBushComponent {
-   return {
-      renderPart: intermediateInfo.renderPart
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 1;
-}
-   
-function updateFromData(data: SnowberryBushComponentData, snowberryBush: Entity): void {
-   const snowberryBushComponent = SnowberryBushComponentArray.getComponent(snowberryBush);
-
-   const numBerries = data.numBerries;
-   snowberryBushComponent.renderPart.switchTextureSource(getTextureSource(numBerries));
 }

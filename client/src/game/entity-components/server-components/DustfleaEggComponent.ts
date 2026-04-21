@@ -5,54 +5,52 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface DustfleaEggComponentData {}
 
-interface IntermediateInfo {}
-
 export interface DustfleaEggComponent {}
 
-export const DustfleaEggComponentArray = new ServerComponentArray<DustfleaEggComponent, DustfleaEggComponentData, IntermediateInfo>(ServerComponentType.dustfleaEgg, true, createComponent, getMaxRenderParts, decodeData);
-DustfleaEggComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+class _DustfleaEggComponentArray extends ServerComponentArray<DustfleaEggComponent, DustfleaEggComponentData> {
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
 
-function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   const hitbox = transformComponentData.hitboxes[0];
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         1,
+         0,
+         0, 0,
+         getTextureArrayIndex("entities/dustflea-egg/dustflea-egg.png")
+      );
+      renderObject.attachRenderPart(renderPart);
 
-   const renderPart = new TexturedRenderPart(
-      hitbox,
-      1,
-      0,
-      0, 0,
-      getTextureArrayIndex("entities/dustflea-egg/dustflea-egg.png")
-   );
-   renderObject.attachRenderPart(renderPart);
+      const dustfleaRenderPart = new TexturedRenderPart(
+         hitbox,
+         0,
+         randAngle(), // @Sync
+         0, 0,
+         getTextureArrayIndex("entities/dustflea/dustflea.png")
+      );
+      dustfleaRenderPart.inheritParentRotation = false;
+      renderObject.attachRenderPart(dustfleaRenderPart);
+   }
 
-   const dustfleaRenderPart = new TexturedRenderPart(
-      hitbox,
-      0,
-      randAngle(), // @Sync
-      0, 0,
-      getTextureArrayIndex("entities/dustflea/dustflea.png")
-   );
-   dustfleaRenderPart.inheritParentRotation = false;
-   renderObject.attachRenderPart(dustfleaRenderPart);
+   public decodeData(): DustfleaEggComponentData {
+      return createDustfleaEggComponentData();
+   }
 
-   return {};
+   public createComponent(): DustfleaEggComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 2;
+   }
 }
+
+export const DustfleaEggComponentArray = registerServerComponentArray(ServerComponentType.dustfleaEgg, _DustfleaEggComponentArray, true);
 
 export function createDustfleaEggComponentData(): DustfleaEggComponentData {
    return {};
-}
-
-function decodeData(): DustfleaEggComponentData {
-   return createDustfleaEggComponentData();
-}
-
-function createComponent(): DustfleaEggComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 2;
 }

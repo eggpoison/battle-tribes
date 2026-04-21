@@ -3,6 +3,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
+import { registerServerComponentArray } from "../component-register";
 
 export interface PlayerComponentData {
    readonly username: string;
@@ -12,23 +13,25 @@ export interface PlayerComponent {
    readonly username: string;
 }
 
-export const PlayerComponentArray = new ServerComponentArray<PlayerComponent, PlayerComponentData, never>(ServerComponentType.player, true, createComponent, getMaxRenderParts, decodeData);
+class _PlayerComponentArray extends ServerComponentArray<PlayerComponent, PlayerComponentData> {
+   public decodeData(reader: PacketReader): PlayerComponentData {
+      const username = reader.readString();
+      return {
+         username: username
+      };
+   }
 
-function decodeData(reader: PacketReader): PlayerComponentData {
-   const username = reader.readString();
-   return {
-      username: username
-   };
+   public createComponent(entityComponentData: EntityComponentData): PlayerComponent {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const playerComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.player);
+      return {
+         username: playerComponentData.username
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 0;
+   }
 }
 
-function createComponent(entityComponentData: EntityComponentData): PlayerComponent {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const playerComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.player);
-   return {
-      username: playerComponentData.username
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 0;
-}
+export const PlayerComponentArray = registerServerComponentArray(ServerComponentType.player, _PlayerComponentArray, true);

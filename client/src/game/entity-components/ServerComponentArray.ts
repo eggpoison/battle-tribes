@@ -9,6 +9,5 @@ export default abstract class ServerComponentArray<
    public abstract decodeData(reader: PacketReader): ComponentData;
    // Note: data is before entity as every function will need the data, but not all are guaranteed to need the entity
    public updateFromData?(data: ComponentData, entity: Entity): void;
-   /** Updates the player instance from server data */
    public updatePlayerFromData?(data: ComponentData, isInitialData: boolean): void;
 }

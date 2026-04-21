@@ -1,3 +1,4 @@
+import { scrollHotbarSelectedItemSlot } from "../../game/event-handling";
 import { isSpectating } from "../../game/player";
 import { onGameMouseDown, onGameMouseUp } from "../../game/player-action-handling";
 import { GameInteractState, gameUIState } from "../../ui-state/game-ui-state";
@@ -38,6 +39,7 @@ export function openGameInteractableLayer(): void {
    gameInteractableLayerElem.addEventListener("mousedown", onGameMouseDown);
    gameInteractableLayerElem.addEventListener("mouseup", onGameMouseUp);
    gameInteractableLayerElem.addEventListener("contextmenu", preventDefault);
+   gameInteractableLayerElem.addEventListener("wheel", scrollHotbarSelectedItemSlot, { passive: true });
    document.body.appendChild(gameInteractableLayerElem);
 }
 

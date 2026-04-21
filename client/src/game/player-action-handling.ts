@@ -40,7 +40,7 @@ import { HeldItemComponentArray } from "./entity-components/server-components/He
 import { ServerComponentData } from "./entity-components/components";
 import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
 import { hotbarFuncs } from "../ui-state/hotbar-funcs";
-import { getPlayerMoveDirection, playerIsLightspeed } from "./event-handling";
+import { getPlayerInputVector, playerIsLightspeed } from "./event-handling";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -95,12 +95,6 @@ const hotbarCrossbowLoadProgressRecord: Partial<Record<number, number>> = {};
 let carrier: Entity = 0;
 export function setShittyCarrier(entity: Entity): void {
    carrier = entity;
-}
-
-let playerMoveIntention = -999;
-
-export function getPlayerMoveIntention(): number {
-   return playerMoveIntention;
 }
 
 export function getSpectatorSpeed(): number {
@@ -798,7 +792,7 @@ const isCollidingWithCoveredSpikes = (): boolean => {
    // return false;
 }
 
-const getPlayerMoveSpeedMultiplier = (moveDirection: number): number => {
+const getPlayerMoveSpeedMultiplier = (moveDirection: Point): number => {
    if (playerInstance === null) {
       return 1;
    }
@@ -824,7 +818,8 @@ const getPlayerMoveSpeedMultiplier = (moveDirection: number): number => {
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
    // Get how aligned the intended movement direction and the player's rotation are
-   const directionAlignmentDot = Math.sin(moveDirection) * Math.sin(playerHitbox.box.angle) + Math.cos(moveDirection) * Math.cos(playerHitbox.box.angle);
+   // @SPEED trig
+   const directionAlignmentDot = moveDirection.x * Math.sin(playerHitbox.box.angle) + moveDirection.y * Math.cos(playerHitbox.box.angle);
    // Move 15% slower if you're accelerating away from where you're moving
    if (directionAlignmentDot < 0) {
       const reductionMultiplier = -directionAlignmentDot;
@@ -834,66 +829,61 @@ const getPlayerMoveSpeedMultiplier = (moveDirection: number): number => {
    return moveSpeedMultiplier;
 }
 
-const updateSpectatorMovement = (moveDirection: number | null): void => {
-   if (moveDirection !== null) {
-      setCameraVelocity(polarVec2(spectatorSpeed, moveDirection));
-   } else {
-      setCameraVelocity(new Point(0, 0));
-   }
+const updateSpectatorMovement = (moveDirection: Point): void => {
+   // @Garbage
+   const velocity = moveDirection.copy();
+   velocity.x *= spectatorSpeed;
+   velocity.y *= spectatorSpeed;
+   setCameraVelocity(velocity);
 }
 
-const updateNonSpectatorMovement = (moveDirection: number | null): void => {
+const updateNonSpectatorMovement = (moveDirection: Point): void => {
    if (playerInstance === null) {
       return;
    }
 
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
 
-   if (moveDirection !== null) {
-      playerMoveIntention = moveDirection;
-
-      const playerAction = getInstancePlayerAction(InventoryName.hotbar);
-      
-      let acceleration: number;
-      if (playerIsLightspeed) {
-         acceleration = PLAYER_LIGHTSPEED_ACCELERATION;
-      // @Bug: doesn't account for offhand
-      } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.chargeSpear || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || playerAction === LimbAction.windShieldBash || playerAction === LimbAction.pushShieldBash || playerAction === LimbAction.returnShieldBashToRest || playerIsPlacingEntity()) {
-         acceleration = PLAYER_SLOW_ACCELERATION;
-      } else {
-         acceleration = PLAYER_ACCELERATION;
-      }
-
-      // If discombobulated, limit the acceleration to the discombobulated acceleration
-      if (discombobulationTimer > 0 && acceleration > PLAYER_DISCOMBOBULATED_ACCELERATION) {
-         acceleration = PLAYER_DISCOMBOBULATED_ACCELERATION;
-      }
-
-      acceleration *= getPlayerMoveSpeedMultiplier(moveDirection);
-
-      // @INCOMPLETE i reworked lastPlantCollisionTicks out of existence
-      // if (latencyGameState.lastPlantCollisionTicks >= currentSnapshot.tick - 1) {
-      //    acceleration *= 0.5;
-      // }
-      
-      const playerHitbox = transformComponent.hitboxes[0];
-      
-      const accelerationX = acceleration * Math.sin(moveDirection);
-      const accelerationY = acceleration * Math.cos(moveDirection);
-
-      applyAccelerationFromGround(playerHitbox, accelerationX, accelerationY);
+   const playerAction = getInstancePlayerAction(InventoryName.hotbar);
+   
+   let acceleration: number;
+   if (playerIsLightspeed) {
+      acceleration = PLAYER_LIGHTSPEED_ACCELERATION;
+   // @Bug: doesn't account for offhand
+   } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.chargeSpear || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || playerAction === LimbAction.windShieldBash || playerAction === LimbAction.pushShieldBash || playerAction === LimbAction.returnShieldBashToRest || playerIsPlacingEntity()) {
+      acceleration = PLAYER_SLOW_ACCELERATION;
    } else {
-      playerMoveIntention = -999;
+      acceleration = PLAYER_ACCELERATION;
    }
+
+   // If discombobulated, limit the acceleration to the discombobulated acceleration
+   if (discombobulationTimer > 0 && acceleration > PLAYER_DISCOMBOBULATED_ACCELERATION) {
+      acceleration = PLAYER_DISCOMBOBULATED_ACCELERATION;
+   }
+
+   acceleration *= getPlayerMoveSpeedMultiplier(moveDirection);
+
+   // @INCOMPLETE i reworked lastPlantCollisionTicks out of existence
+   // if (latencyGameState.lastPlantCollisionTicks >= currentSnapshot.tick - 1) {
+   //    acceleration *= 0.5;
+   // }
+   
+   const playerHitbox = transformComponent.hitboxes[0];
+   
+   const accelerationX = acceleration * moveDirection.x;
+   const accelerationY = acceleration * moveDirection.y;
+   applyAccelerationFromGround(playerHitbox, accelerationX, accelerationY);
 }
 
 /** Updates the player's movement to match what keys are being pressed. */
 export function updatePlayerMovement(): void {
-   const moveDirection = getPlayerMoveDirection();
-   if (isSpectating) {
-      updateSpectatorMovement(moveDirection);
-   } else {
-      updateNonSpectatorMovement(moveDirection);
+   const moveDirection = getPlayerInputVector();
+   if (moveDirection.isNonZero()) {
+      if (isSpectating) {
+         updateSpectatorMovement(moveDirection);
+      } else {
+         updateNonSpectatorMovement(moveDirection);
+      }
    }
 }
 

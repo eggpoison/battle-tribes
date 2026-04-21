@@ -1,4 +1,4 @@
-import { Settings } from "../../../shared/src";
+import { Point, Settings } from "../../../shared/src";
 import { gameUIState } from "../ui-state/game-ui-state";
 import { nerdVision } from "../ui-state/nerd-vision-funcs";
 import { openChatMessageInput } from "../ui/game/Chat";
@@ -65,35 +65,53 @@ export let gameIsFocused = true;
 export let shiftIsPressed = false;
 export let playerIsLightspeed = false;
 
-let wasdBitfield = 0;
-let arrowBitfield = 0;
+let movementBitfield = 0;
+let moveInputVec = new Point(0, 0);
+let moveInputDir = -999;
 
-export function getPlayerMoveDirection(): number | null {
-   const bitfield = wasdBitfield | arrowBitfield;
-   switch (bitfield) {
-      case 0:  return null;
-      case 1:  return 0;
-      case 2:  return Math.PI * 3/2;
-      case 3:  return Math.PI * 7/4;
-      case 4:  return Math.PI;
-      case 5:  return null;
-      case 6:  return Math.PI * 5/4;
-      case 7:  return Math.PI * 3/2;
-      case 8:  return Math.PI / 2;
-      case 9:  return Math.PI / 4;
-      case 10: return null;
-      case 11: return 0;
-      case 12: return Math.PI * 3/4;
-      case 13: return Math.PI / 2;
-      case 14: return Math.PI;
-      case 15: return null;
-      default: {
-         if (__DEV__) {
-            console.warn("Unknown player movement input!");
-         }
-         return null;
-      }
+function updatePlayerInputInfo(bit: number, isStart: boolean): void {
+   if (isStart) {
+      movementBitfield |= bit;
+   } else {
+      movementBitfield &= ~bit;
    }
+   
+   const xBits = movementBitfield & 0b0101;
+   const yBits = (movementBitfield & 0b1010) >> 1;
+
+   let xMov = (xBits >> 2) - (xBits & 1);
+   let yMov = (yBits >> 2) - (yBits & 1);
+
+   let dir = xMov * 2;
+
+   // Diagonals
+   if (xMov !== 0 && yMov !== 0) {
+      dir -= yMov * xMov;
+
+      // Normalise diagonal movement
+      xMov *= Math.SQRT1_2;
+      yMov *= Math.SQRT1_2;
+   } else {
+      dir += yMov === -1 ? 4 : 0;
+   }
+
+   moveInputVec.x = xMov;
+   moveInputVec.y = yMov;
+   
+   if (xMov !== 0 || yMov !== 0) {
+      dir *= Math.PI / 4;
+      moveInputDir = dir;
+   } else {
+      moveInputDir = -999;
+   }
+}
+
+export function getPlayerInputVector(): Readonly<Point> {
+   return moveInputVec;
+}
+
+export function getPlayerInputDirection(): number {
+   return moveInputDir;
 }
 
 function onMouseMove(e: MouseEvent): void {
@@ -149,24 +167,20 @@ function openTerminal(): void {
    nerdVision.setTerminalIsVisible(true);
 }
 
-function scrollHotbarSelectedItemSlot(e: WheelEvent): void {
-   // Don't scroll hotbar if element is being scrolled instead
-   // @SPEED there MUST be a faster way. attaching it to a different DOM element or something.
-   const elemPath = e.composedPath() as Array<HTMLElement>;
-   for (const elem of elemPath) {
-      // @Hack
-      if (elem.style !== undefined) {
-         const overflowY = getComputedStyle(elem).getPropertyValue("overflow-y");
-         if (overflowY === "scroll") {
-            return;
-         }
+export function scrollHotbarSelectedItemSlot(e: WheelEvent): void {
+   let itemSlot = getHotbarSelectedItemSlot();
+   if (e.deltaY > 0) {
+      itemSlot++;
+      if (itemSlot > Settings.INITIAL_PLAYER_HOTBAR_SIZE) {
+         itemSlot -= Settings.INITIAL_PLAYER_HOTBAR_SIZE;
+      }
+   } else if (e.deltaY < 0) {
+      itemSlot--;
+      if (itemSlot < 1) {
+         itemSlot += Settings.INITIAL_PLAYER_HOTBAR_SIZE;
       }
    }
-   
-   const scrollDirection = Math.sign(e.deltaY);
-   const newSlot = getHotbarSelectedItemSlot() + scrollDirection;
-   const newSlotWrapped = (newSlot + Settings.INITIAL_PLAYER_HOTBAR_SIZE) % Settings.INITIAL_PLAYER_HOTBAR_SIZE;
-   selectItemSlot(newSlotWrapped);
+   selectItemSlot(itemSlot);
 }
 
 function onVisibilityChange(): void {
@@ -206,70 +220,6 @@ function onLEnd(): void {
    playerIsLightspeed = false;
 }
 
-function onWStart(): void {
-   wasdBitfield |= 1;
-}
-
-function onWEnd(): void {
-   wasdBitfield &= ~1;
-}
-
-function onAStart(): void {
-   wasdBitfield |= 2;
-}
-
-function onAEnd(): void {
-   wasdBitfield &= ~2;
-}
-
-function onSStart(): void {
-   wasdBitfield |= 4;
-}
-
-function onSEnd(): void {
-   wasdBitfield &= ~4;
-}
-
-function onDStart(): void {
-   wasdBitfield |= 8;
-}
-
-function onDEnd(): void {
-   wasdBitfield &= ~8;
-}
-
-function onArrowUpStart(): void {
-   arrowBitfield |= 1;
-}
-
-function onArrowUpEnd(): void {
-   arrowBitfield &= ~1;
-}
-
-function onArrowLeftStart(): void {
-   arrowBitfield |= 2;
-}
-
-function onArrowLeftEnd(): void {
-   arrowBitfield &= ~2;
-}
-
-function onArrowDownStart(): void {
-   arrowBitfield |= 4;
-}
-
-function onArrowDownEnd(): void {
-   arrowBitfield &= ~4;
-}
-
-function onArrowRightStart(): void {
-   arrowBitfield |= 8;
-}
-
-function onArrowRightEnd(): void {
-   arrowBitfield &= ~8;
-}
-
 export function onKeyDown(e: KeyboardEvent): void {
    if (e.repeat) {
       return;
@@ -279,10 +229,6 @@ export function onKeyDown(e: KeyboardEvent): void {
       case ASCIICode.SHIFT:  onShiftStart(); break;
       case ASCIICode.ESCAPE: closeCurrentMenu(); break;
       case ASCIICode.SPACE: ascendLayer(); break;
-      case ASCIICode.ARROW_LEFT: onArrowLeftStart(); break;
-      case ASCIICode.ARROW_UP: onArrowUpStart(); break;
-      case ASCIICode.ARROW_RIGHT: onArrowRightStart(); break;
-      case ASCIICode.ARROW_DOWN: onArrowDownStart(); break;
       case ASCIICode.ONE: selectItemSlot(1); break;
       case ASCIICode.TWO: selectItemSlot(2); break;
       case ASCIICode.THREE: selectItemSlot(3); break;
@@ -290,16 +236,16 @@ export function onKeyDown(e: KeyboardEvent): void {
       case ASCIICode.FIVE: selectItemSlot(5); break;
       case ASCIICode.SIX: selectItemSlot(6); break;
       case ASCIICode.SEVEN: selectItemSlot(7); break;
-      case ASCIICode.A: onAStart(); break;
-      case ASCIICode.D: onDStart(); break;
+      case ASCIICode.A: updatePlayerInputInfo(1, true); break;
+      case ASCIICode.D: updatePlayerInputInfo(4, true); break;
       case ASCIICode.E: openCraftingMenu(); break;
       case ASCIICode.L: if (__DEV__) { onLStart(); } break;
       case ASCIICode.O: if (__DEV__) { toggleCinematicMode(); } break;
       case ASCIICode.P: toggleTechTree(); break;
       case ASCIICode.Q: dropItem(); break;
-      case ASCIICode.S: onSStart(); break;
+      case ASCIICode.S: updatePlayerInputInfo(2, true); break;
       case ASCIICode.T: openChatMessageInput(e); break;
-      case ASCIICode.W: onWStart(); break;
+      case ASCIICode.W: updatePlayerInputInfo(8, true); break;
       case ASCIICode.TILDE: if (__DEV__) { openTerminal(); } break;
       case ASCIICode.GRAVE: if (__DEV__) { toggleNerdVision(); } break;
    }
@@ -308,15 +254,11 @@ export function onKeyDown(e: KeyboardEvent): void {
 export function onKeyUp(e: KeyboardEvent): void {
    switch (e.keyCode) {
       case ASCIICode.SHIFT: onShiftEnd(); break;
-      case ASCIICode.ARROW_LEFT: onArrowLeftEnd(); break;
-      case ASCIICode.ARROW_UP: onArrowUpEnd(); break;
-      case ASCIICode.ARROW_RIGHT: onArrowRightEnd(); break;
-      case ASCIICode.ARROW_DOWN: onArrowDownEnd(); break;
-      case ASCIICode.A: onAEnd(); break;
-      case ASCIICode.D: onDEnd(); break;
+      case ASCIICode.A: updatePlayerInputInfo(1, false); break;
+      case ASCIICode.D: updatePlayerInputInfo(4, false); break;
       case ASCIICode.L: if (__DEV__) { onLEnd(); } break;
-      case ASCIICode.S: onSEnd(); break;
-      case ASCIICode.W: onWEnd(); break;
+      case ASCIICode.S: updatePlayerInputInfo(2, false); break;
+      case ASCIICode.W: updatePlayerInputInfo(8, false); break;
    }
 }
 
@@ -338,10 +280,9 @@ export function setupEvents(): void {
    document.onkeydown = onKeyDown;
    document.onkeyup = onKeyUp;
    document.onmousemove = onMouseMove;
-   document.onvisibilitychange = e => { console.log(e); onVisibilityChange() };
+   document.onvisibilitychange = onVisibilityChange;
    window.onresize = onWindowResize;
-   // These three are outcasts :(
-   document.body.addEventListener("wheel", scrollHotbarSelectedItemSlot, { passive: true });
+   // These two are outcasts :(
    document.addEventListener("focusin", onDocumentFocusIn);
    document.addEventListener("focusout", onDocumentFocusOut);
   

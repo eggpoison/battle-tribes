@@ -2,8 +2,9 @@ import { Packet, ClientPacketType, Point, InventoryName, GameDataPacketOptions }
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
 import { cameraPosition } from "../../camera";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { getPlayerInputDirection, getPlayerInputVector } from "../../event-handling";
 import { playerInstance, isSpectating } from "../../player";
-import { getPlayerMoveIntention, getHotbarSelectedItemSlot, getInstancePlayerAction } from "../../player-action-handling";
+import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../../player-action-handling";
 import { sendData } from "../socket";
 
 // ====================================
@@ -60,7 +61,7 @@ export function sendPlayerDataPacket(): void {
       return;
    }
 
-   const movementIntention = getPlayerMoveIntention();
+   const moveInputDirection = getPlayerInputDirection();
    const hotbarSelectedItemSlot = getHotbarSelectedItemSlot();
    const hotbarAction = getInstancePlayerAction(InventoryName.hotbar);
    const offhandAction = getInstancePlayerAction(InventoryName.offhand);
@@ -72,7 +73,7 @@ export function sendPlayerDataPacket(): void {
        playerDataPacket.checkNumber(angle) &&
        playerDataPacket.checkPoint(previousPosition) &&
        playerDataPacket.checkPoint(acceleration) &&
-       playerDataPacket.checkNumber(movementIntention) &&
+       playerDataPacket.checkNumber(moveInputDirection) &&
        playerDataPacket.checkNumber(previousRelativeAngle) &&
        playerDataPacket.checkNumber(angularAcceleration) &&
        playerDataPacket.checkNumber(hotbarSelectedItemSlot) &&
@@ -90,7 +91,7 @@ export function sendPlayerDataPacket(): void {
    playerDataPacket.writePoint(previousPosition);
    playerDataPacket.writePoint(acceleration);
 
-   playerDataPacket.writeNumber(movementIntention);
+   playerDataPacket.writeNumber(moveInputDirection);
 
    playerDataPacket.writeNumber(previousRelativeAngle);
    playerDataPacket.writeNumber(angularAcceleration);

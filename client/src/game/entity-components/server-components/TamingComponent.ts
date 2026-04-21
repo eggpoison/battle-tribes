@@ -4,7 +4,7 @@ import { Hitbox } from "../../hitboxes";
 import { getPlayerSelectedItem } from "../../player-action-handling";
 import { RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { playerTribe } from "../../tribes";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";

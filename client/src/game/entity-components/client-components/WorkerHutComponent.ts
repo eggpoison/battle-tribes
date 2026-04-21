@@ -3,7 +3,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import ClientComponentArray from "../ClientComponentArray";

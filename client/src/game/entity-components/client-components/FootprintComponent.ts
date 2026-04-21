@@ -6,7 +6,7 @@ import { TransformComponentArray } from "../server-components/TransformComponent
 import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { getHitboxTile, getHitboxVelocity } from "../../hitboxes";
-import { tickIntervalHasPassed } from "../../game";
+import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getEntityClientComponentTypes } from "../../entity-component-types";
 import { getClientComponentData } from "../../entity-component-types";
 import { hitboxIsInWater } from "../../collision";

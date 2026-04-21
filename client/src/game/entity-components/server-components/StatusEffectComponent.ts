@@ -10,7 +10,7 @@ import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
 import { playerInstance } from "../../player";
 import { getHitboxVelocity } from "../../hitboxes";
-import { tickIntervalHasPassed } from "../../game";
+import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
 

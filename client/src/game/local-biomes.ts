@@ -1,5 +1,5 @@
-import { assert, TileIndex, PacketReader, EntityType } from "webgl-test-shared";
-import { currentSnapshot } from "./game";
+import { TileIndex, PacketReader, EntityType } from "webgl-test-shared";
+import { currentSnapshot } from "./networking/snapshots";
 
 interface LocalEntityCensusInfo {
    count: number;

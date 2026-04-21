@@ -2,7 +2,7 @@ import { PacketReader, customTickIntervalHasPassed, ServerComponentType, Entity 
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { createPaperParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityAgeTicks } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";

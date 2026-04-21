@@ -1,5 +1,5 @@
 import { createWebGLProgram, gl } from "../../webgl";
-import { getEntityTextureAtlas } from "../../../texture-atlases";
+import { getEntityTextureAtlas } from "../../texture-atlases";
 import { bindUBOToProgram, getEntityTextureAtlasUBO, UBOBindingIndex } from "../ubos";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { VisualRenderPart, renderPartIsTextured, thingIsVisualRenderPart } from "../../render-parts/render-parts";

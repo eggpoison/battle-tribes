@@ -1,5 +1,5 @@
 import { PacketReader, TribeType, Entity, TribeTotemBanner, ServerComponentType } from "webgl-test-shared";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject } from "../../world";

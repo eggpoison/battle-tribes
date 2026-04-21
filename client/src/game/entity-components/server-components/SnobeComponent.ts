@@ -1,7 +1,7 @@
 import { PacketReader, Settings, Point, randAngle, randFloat, randInt, Entity, HitboxFlag, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { TransformComponentArray } from "./TransformComponent";

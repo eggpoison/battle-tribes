@@ -1,4 +1,4 @@
-import { TickSnapshot } from "../../../game/networking/packet-snapshots";
+import { TickSnapshot } from "../../../game/networking/snapshot-processing";
 
 export const debugInfoDisplay = {
    updateCurrentSnapshot: (() => {}) as (snapshot: TickSnapshot) => void,

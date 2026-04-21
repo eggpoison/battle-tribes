@@ -1,4 +1,4 @@
-import { gl } from "./game/webgl";
+import { gl } from "./webgl";
 
 export interface TextureAtlas {
    readonly atlasSize: number;

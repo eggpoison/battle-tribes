@@ -1,7 +1,7 @@
 import { randAngle, randFloat, randInt, Entity, ServerComponentType } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import Particle from "../../Particle";
 import { playSoundOnHitbox } from "../../sound";

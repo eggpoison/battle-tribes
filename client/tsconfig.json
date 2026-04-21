@@ -13,11 +13,11 @@
       "forceConsistentCasingInFileNames": true,
       "noFallthroughCasesInSwitch": true,
       "module": "esnext",
-      "resolveJsonModule": true,
-      "noEmit": false,
       "sourceMap": true,
+      "moduleResolution": "bundler",
       "declaration": true,
       "isolatedModules": true,
+      "baseUrl": ".",
       "paths": {
          "webgl-test-shared": ["../shared/src"]
       }

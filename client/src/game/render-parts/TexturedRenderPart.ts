@@ -1,4 +1,4 @@
-import { getTextureArrayIndex } from "../../texture-atlases";
+import { getTextureArrayIndex } from "../texture-atlases";
 import { RenderPartParent } from "./render-parts";
 import VisualRenderPart from "./VisualRenderPart";
 

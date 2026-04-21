@@ -2,7 +2,7 @@ import { Light, removeLight } from "../../lights";
 import { Entity, ServerComponentType, PacketReader, Settings } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
-import { tickIntervalHasPassed } from "../../game";
+import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
 

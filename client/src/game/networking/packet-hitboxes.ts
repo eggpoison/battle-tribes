@@ -1,5 +1,5 @@
 import { Point, PacketReader, Box, CircularBox, RectangularBox, PivotPointType, assert, Entity, boxIsCircular, assertBoxIsCircular, assertBoxIsRectangular, updateSideAxes, HitboxCollisionType, HitboxFlag, cloneBox } from "webgl-test-shared";
-import { currentSnapshot } from "../game";
+import { currentSnapshot } from "../networking/snapshots";
 import { Hitbox, HitboxTether, createHitbox, getHitboxByLocalID } from "../hitboxes";
 import { findEntityHitbox } from "../entity-components/server-components/TransformComponent";
 

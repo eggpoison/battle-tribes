@@ -1,7 +1,7 @@
 import { randFloat, angle, randAngle, Entity, ServerComponentType, Settings } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { TransformComponentArray } from "./TransformComponent";
@@ -9,7 +9,7 @@ import { CookingComponentArray } from "./CookingComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { tickIntervalHasPassed } from "../../game";
+import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../../entity-component-types";
 
 export interface FurnaceComponentData {}

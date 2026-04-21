@@ -7,8 +7,8 @@ import { entityExists, getEntityRenderObject } from "../world";
 import { getHitboxVelocity, Hitbox } from "../hitboxes";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { playerInstance } from "../player";
-import { EntitySnapshot } from "../networking/packet-snapshots";
-import { currentSnapshot, nextSnapshot } from "../game";
+import { EntitySnapshot } from "../networking/snapshot-processing";
+import { currentSnapshot, nextSnapshot } from "../networking/snapshots";
 import { EntityServerComponentData, getEntityServerComponentTypes, getServerComponentData, getTransformComponentData } from "../entity-component-types";
 import { getRenderPartShakeAmount } from "../render-parts/render-part-shake-amounts";
 

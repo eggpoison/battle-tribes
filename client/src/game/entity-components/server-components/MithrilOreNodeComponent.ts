@@ -4,7 +4,7 @@ import { getRandomPositionInBox, Hitbox } from "../../hitboxes";
 import { createColouredParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent";

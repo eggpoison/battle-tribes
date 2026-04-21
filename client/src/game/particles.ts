@@ -3,12 +3,13 @@ import Particle from "./Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, highMonocolourParticles, highTexturedParticles, lowMonocolourParticles, lowTexturedParticles } from "./rendering/webgl/particle-rendering";
 import { TransformComponent, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getHitboxVelocity, Hitbox } from "./hitboxes";
-import { addTickCallback, tickIntervalHasPassed } from "./game";
+import { addTickCallback } from "./tick-callbacks";
 import { playerInstance } from "./player";
 import { InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
 import { createTranslationMatrix, matrixMultiplyInPlace } from "./rendering/matrices";
 import { getMatrixPosition } from "./rendering/render-part-matrices";
 import { playHeadSound } from "./sound";
+import { tickIntervalHasPassed } from "./networking/snapshots";
 
 // @Cleanup: Standardise all these functions to just take the stuff necessary to create them, then have the places which call them modify the returned particle
 

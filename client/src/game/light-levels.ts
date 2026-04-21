@@ -1,5 +1,5 @@
 import { PacketReader, LightLevelNode } from "webgl-test-shared";
-import { currentSnapshot } from "./game";
+import { currentSnapshot } from "./networking/snapshots";
 import { getLightLevelRenderingChunkIndex, LightLevelBGUpdateInfo, updateLightLevelRenderingChunks } from "./rendering/webgl/light-levels-bg-rendering";
 
 interface LightLevelNodeInfo {

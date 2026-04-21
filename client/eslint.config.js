@@ -32,7 +32,7 @@ export default defineConfig([
          "@typescript-eslint/restrict-plus-operands": "off", // Turn this off because ( number + string ) is often useful and optimal
          "@typescript-eslint/prefer-literal-enum-member": "off", // Let me do my const enum shenanigans!!!
          "@typescript-eslint/prefer-includes": "off", // indexOf is faster than includes!
-         "@typescript-eslint/array-type": ["error", {default: "generic", readonly: "generic"}], // Use ReadonlyArray<T> instead of readonly T[], and Array<T> instead of T[]
+         "@typescript-eslint/array-type": ["off"], // Regular code should use Array<T>, while type code should use T[]
          "@typescript-eslint/no-non-null-assertion": "off", // This is extrememly useful everywhere, e.g. "ComponentArray.getComponent(entity)!"
          "@typescript-eslint/restrict-template-expressions": "off", // Let me use numbers inside string templates!!
          "semi": "off", // Semicolons don't belong on the end of arrow functions.

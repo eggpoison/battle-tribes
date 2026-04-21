@@ -1,5 +1,5 @@
 import { Entity, PacketReader, ServerComponentType, randAngle, randFloat } from "webgl-test-shared";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../../particles";
 import { VisualRenderPart } from "../../render-parts/render-parts";

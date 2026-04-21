@@ -1,5 +1,5 @@
 import { Entity, EntityType, PlantedEntityType, assert, distance, Point, rotatePointAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID, _point } from "webgl-test-shared";
-import { currentSnapshot } from "./game";
+import { currentSnapshot } from "./networking/snapshots";
 import { entityExists, getCurrentLayer, getEntityRenderObject, getEntityType } from "./world";
 import { TombstoneComponentArray } from "./entity-components/server-components/TombstoneComponent";
 import { TunnelComponentArray } from "./entity-components/server-components/TunnelComponent";
@@ -11,7 +11,7 @@ import { sendMountCarrySlotPacket, sendPickUpEntityPacket, sendStructureInteract
 import { EntityRenderObject } from "./EntityRenderObject";
 import { RideableComponentArray } from "./entity-components/server-components/RideableComponent";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../texture-atlases";
+import { getTextureArrayIndex } from "./texture-atlases";
 import { playerInstance } from "./player";
 import { HealthComponentArray } from "./entity-components/server-components/HealthComponent";
 import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "./entity-components/server-components/TamingComponent";

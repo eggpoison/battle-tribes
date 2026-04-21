@@ -9,12 +9,13 @@ import { createWaterSplashParticle } from "../../particles";
 import { addTexturedParticleToBufferContainer, lowTexturedParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { playSoundOnHitbox } from "../../sound";
 import { hitboxIsInWater, resolveWallCollisions } from "../../collision";
-import { currentSnapshot } from "../../game";
+import { currentSnapshot } from "../../networking/snapshots";
 import { gameUIState } from "../../../ui-state/game-ui-state";
 import { getTransformComponentData } from "../../entity-component-types";
 import Layer from "../../Layer";
 import { readHitboxFromData, updateHitboxFromData, updatePlayerHitboxFromData } from "../../networking/packet-hitboxes";
 import { playerIsLightspeed } from "../../event-handling";
+import { registerServerComponentArray } from "../component-register";
 
 export interface TransformComponentData {
    readonly traction: number;
@@ -47,24 +48,6 @@ const EMPTY_IGNORED_TILE_SPEED_MULTIPLIERS: Array<TileType> = [];
 export function createTransformComponentData(hitboxes: Array<Hitbox>): TransformComponentData {
    return {
       traction: 1,
-      hitboxes: hitboxes
-   };
-}
-
-function decodeData(reader: PacketReader): TransformComponentData {
-   const traction = reader.readNumber();
-
-   const hitboxes: Array<Hitbox> = [];
-   
-   const numHitboxes = reader.readNumber();
-   for (let i = 0; i < numHitboxes; i++) {
-      const localID = reader.readNumber();
-      const hitboxData = readHitboxFromData(reader, localID, hitboxes);
-      hitboxes.push(hitboxData);
-   }
-
-   return {
-      traction: traction,
       hitboxes: hitboxes
    };
 }
@@ -437,147 +420,267 @@ const tickHitboxPhysics = (hitbox: Hitbox): void => {
    }
 }
 
-export const TransformComponentArray = new ServerComponentArray<TransformComponent, TransformComponentData, never>(ServerComponentType.transform, false, createComponent, getMaxRenderParts, decodeData);
-TransformComponentArray.onLoad = onLoad;
-TransformComponentArray.updateFromData = updateFromData;
-TransformComponentArray.onTick = onTick;
-TransformComponentArray.onUpdate = onUpdate;
-TransformComponentArray.onRemove = onRemove;
-TransformComponentArray.updatePlayerFromData = updatePlayerFromData;
-TransformComponentArray.updateSelectedEntityState = updateSelectedEntityState;
+class _TransformComponentArray extends ServerComponentArray<TransformComponent> {
+   public decodeData(reader: PacketReader): TransformComponentData {
+      const traction = reader.readNumber();
 
-function createComponent(entityComponentData: EntityComponentData): TransformComponent {
-   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-   
-   const hitboxes: Array<Hitbox> = [];
-   const rootHitboxes: Array<Hitbox> = [];
-   const hitboxMap = new Map<number, Hitbox>();
-   for (const hitbox of transformComponentData.hitboxes) {
-      // Set all the hitboxes' last update ticks, since they default to 0 and it has to be done here.
-      hitbox.lastUpdateTicks = currentSnapshot.tick;
+      const hitboxes: Array<Hitbox> = [];
       
-      hitboxes.push(hitbox);
-      hitboxMap.set(hitbox.localID, hitbox);
-      if (hitbox.parent === null) {
-         rootHitboxes.push(hitbox);
+      const numHitboxes = reader.readNumber();
+      for (let i = 0; i < numHitboxes; i++) {
+         const localID = reader.readNumber();
+         const hitboxData = readHitboxFromData(reader, localID, hitboxes);
+         hitboxes.push(hitboxData);
       }
+
+      return {
+         traction: traction,
+         hitboxes: hitboxes
+      };
    }
 
-   return {
-      chunks: new Set(),
-      hitboxes: hitboxes,
-      hitboxMap: hitboxMap,
-      rootHitboxes: rootHitboxes,
-      boundingAreaMinX: Number.MAX_SAFE_INTEGER,
-      boundingAreaMaxX: Number.MIN_SAFE_INTEGER,
-      boundingAreaMinY: Number.MAX_SAFE_INTEGER,
-      boundingAreaMaxY: Number.MIN_SAFE_INTEGER,
-      traction: transformComponentData.traction,
-      ignoredTileSpeedMultipliers: EMPTY_IGNORED_TILE_SPEED_MULTIPLIERS.slice()
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 0;
-}
-
-function onLoad(entity: Entity): void {
-   cleanEntityTransform(entity);
-}
-
-function onTick(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-   if (hitboxIsInWater(hitbox)) {
-      // Water droplet particles
-      // @Hack @Cleanup: Don't hardcode fish condition
-      if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.05) && getEntityType(entity) !== EntityType.fish) {
-         createWaterSplashParticle(hitbox.box.position.x, hitbox.box.position.y);
+   public createComponent(entityComponentData: EntityComponentData): TransformComponent {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      
+      const hitboxes: Array<Hitbox> = [];
+      const rootHitboxes: Array<Hitbox> = [];
+      const hitboxMap = new Map<number, Hitbox>();
+      for (const hitbox of transformComponentData.hitboxes) {
+         // Set all the hitboxes' last update ticks, since they default to 0 and it has to be done here.
+         hitbox.lastUpdateTicks = currentSnapshot.tick;
+         
+         hitboxes.push(hitbox);
+         hitboxMap.set(hitbox.localID, hitbox);
+         if (hitbox.parent === null) {
+            rootHitboxes.push(hitbox);
+         }
       }
 
-      // Water splash particles
-      // @Cleanup: Move to particles file
-      if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.15)) {
-         getHitboxVelocity(hitbox);
-         if (_point.isNonZero() && getEntityType(entity) !== EntityType.fish) {
-            const lifetime = 2.5;
+      return {
+         chunks: new Set(),
+         hitboxes: hitboxes,
+         hitboxMap: hitboxMap,
+         rootHitboxes: rootHitboxes,
+         boundingAreaMinX: Number.MAX_SAFE_INTEGER,
+         boundingAreaMaxX: Number.MIN_SAFE_INTEGER,
+         boundingAreaMinY: Number.MAX_SAFE_INTEGER,
+         boundingAreaMaxY: Number.MIN_SAFE_INTEGER,
+         traction: transformComponentData.traction,
+         ignoredTileSpeedMultipliers: EMPTY_IGNORED_TILE_SPEED_MULTIPLIERS.slice()
+      };
+   }
 
-            const particle = new Particle(lifetime);
-            particle.getOpacity = (): number => {
-               return lerp(0.75, 0, Math.sqrt(particle.age / lifetime));
+   public getMaxRenderParts(): number {
+      return 0;
+   }
+
+   public onLoad(entity: Entity): void {
+      cleanEntityTransform(entity);
+   }
+
+   public onTick(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      if (hitboxIsInWater(hitbox)) {
+         // Water droplet particles
+         // @Hack @Cleanup: Don't hardcode fish condition
+         if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.05) && getEntityType(entity) !== EntityType.fish) {
+            createWaterSplashParticle(hitbox.box.position.x, hitbox.box.position.y);
+         }
+
+         // Water splash particles
+         // @Cleanup: Move to particles file
+         if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.15)) {
+            getHitboxVelocity(hitbox);
+            if (_point.isNonZero() && getEntityType(entity) !== EntityType.fish) {
+               const lifetime = 2.5;
+
+               const particle = new Particle(lifetime);
+               particle.getOpacity = (): number => {
+                  return lerp(0.75, 0, Math.sqrt(particle.age / lifetime));
+               }
+               particle.getScale = (): number => {
+                  return 1 + particle.age / lifetime * 1.4;
+               }
+
+               addTexturedParticleToBufferContainer(
+                  particle,
+                  ParticleRenderLayer.low,
+                  64, 64,
+                  hitbox.box.position.x, hitbox.box.position.y,
+                  0, 0, 
+                  0, 0,
+                  0,
+                  randAngle(),
+                  0,
+                  0,
+                  0,
+                  8 * 1 + 5,
+                  0, 0, 0
+               );
+               lowTexturedParticles.push(particle);
+
+               playSoundOnHitbox("water-splash-" + randInt(1, 3) + ".mp3", 0.25, 1, entity, hitbox, false);
             }
-            particle.getScale = (): number => {
-               return 1 + particle.age / lifetime * 1.4;
-            }
-
-            addTexturedParticleToBufferContainer(
-               particle,
-               ParticleRenderLayer.low,
-               64, 64,
-               hitbox.box.position.x, hitbox.box.position.y,
-               0, 0, 
-               0, 0,
-               0,
-               randAngle(),
-               0,
-               0,
-               0,
-               8 * 1 + 5,
-               0, 0, 0
-            );
-            lowTexturedParticles.push(particle);
-
-            playSoundOnHitbox("water-splash-" + randInt(1, 3) + ".mp3", 0.25, 1, entity, hitbox, false);
          }
       }
    }
-}
 
-function onUpdate(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   if (transformComponent.boundingAreaMinX < 0 || transformComponent.boundingAreaMaxX >= Settings.WORLD_UNITS || transformComponent.boundingAreaMinY < 0 || transformComponent.boundingAreaMaxY >= Settings.WORLD_UNITS) {
-      // @BUG @HACK: This warning should not be a thing. This can occur if I mistakenly set the player spawn position to be outside of the world, then this runs on the player.
+   public onUpdate(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      if (transformComponent.boundingAreaMinX < 0 || transformComponent.boundingAreaMaxX >= Settings.WORLD_UNITS || transformComponent.boundingAreaMinY < 0 || transformComponent.boundingAreaMaxY >= Settings.WORLD_UNITS) {
+         // @BUG @HACK: This warning should not be a thing. This can occur if I mistakenly set the player spawn position to be outside of the world, then this runs on the player.
+         
+         console.warn("wat")
+         return;
+      }
+
+      for (const child of transformComponent.hitboxes) {
+         const hitbox = child;
+         applyHitboxTethers(hitbox);
+      }
       
-      console.warn("wat")
-      return;
-   }
+      for (const rootHitbox of transformComponent.rootHitboxes) {
+         tickHitboxPhysics(rootHitbox);
+      }
 
-   for (const child of transformComponent.hitboxes) {
-      const hitbox = child;
-      applyHitboxTethers(hitbox);
-   }
-   
-   for (const rootHitbox of transformComponent.rootHitboxes) {
-      tickHitboxPhysics(rootHitbox);
-   }
+      // @Speed: only do if the kinematics moved the entity
+      cleanEntityTransform(entity);
+      
+      // Don't resolve wall tile collisions in lightspeed mode
+      // @SPEED
+      if (!(entity === playerInstance && playerIsLightspeed)) { 
+         const hasMoved = resolveWallCollisions(entity);
 
-   // @Speed: only do if the kinematics moved the entity
-   cleanEntityTransform(entity);
-   
-   // Don't resolve wall tile collisions in lightspeed mode
-   // @SPEED
-   if (!(entity === playerInstance && playerIsLightspeed)) { 
-      const hasMoved = resolveWallCollisions(entity);
+         if (hasMoved) {
+            cleanEntityTransform(entity);
+         }
+      }
 
-      if (hasMoved) {
-         cleanEntityTransform(entity);
+      resolveAndCleanBorderCollisions(entity, transformComponent);
+
+      if (transformComponent.boundingAreaMinX < 0 || transformComponent.boundingAreaMaxX >= Settings.WORLD_UNITS || transformComponent.boundingAreaMinY < 0 || transformComponent.boundingAreaMaxY >= Settings.WORLD_UNITS) {
+         throw new Error();
       }
    }
 
-   resolveAndCleanBorderCollisions(entity, transformComponent);
+   public onRemove(entity: Entity): void {
+      const layer = getEntityLayer(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      for (const chunk of transformComponent.chunks) {
+         removeFromChunk(entity, chunk, layer);
+      }
+   }
 
-   if (transformComponent.boundingAreaMinX < 0 || transformComponent.boundingAreaMaxX >= Settings.WORLD_UNITS || transformComponent.boundingAreaMinY < 0 || transformComponent.boundingAreaMaxY >= Settings.WORLD_UNITS) {
-      throw new Error();
+   public updateFromData(data: TransformComponentData, entity: Entity): void {
+      // @SPEED: What we could do is explicitly send which hitboxes have been created, and removed, from the server. (When using carmack networking)
+      
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      
+      let anyHitboxHasVelocity = false;
+      
+      // Update hitboxes
+      for (const hitboxData of data.hitboxes) {
+         let hitbox = transformComponent.hitboxMap.get(hitboxData.localID);
+         if (hitbox === undefined) {
+            addHitbox(transformComponent, hitboxData);
+            hitbox = hitboxData;
+         } else {
+            updateHitboxFromData(hitbox, hitboxData);
+            // @SQUEAM
+            // if (getEntityType(entity) === EntityType.heldItem) {
+            //    console.log(hitbox.box.angle);
+            // }
+         }
+
+         getHitboxVelocity(hitbox);
+         if (_point.isNonZero()) {
+            anyHitboxHasVelocity = true;
+            // @Temporary @Squeam for optimisation
+            const entityType = getEntityType(entity);
+            if (entityType === EntityType.decoration || entityType === EntityType.lilypad || entityType === EntityType.reed) {
+               console.log(hitbox);
+               throw new Error();
+            }
+         }
+      }
+
+      if (anyHitboxHasVelocity) {
+         TransformComponentArray.activateComponent(transformComponent, entity);
+      } else if (TransformComponentArray.componentIsActive(entity)) {
+         TransformComponentArray.queueComponentDeactivate(entity);
+      }
+
+      transformComponent.traction = data.traction;
+
+      // Remove hitboxes which no longer exist
+      for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+         const hitbox = transformComponent.hitboxes[i];
+         if (hitbox.lastUpdateTicks !== currentSnapshot.tick) {
+            // Hitbox is removed!
+            removeHitboxFromEntity(transformComponent, hitbox, i);
+            i--;
+         }
+      }
+
+      cleanEntityTransform(entity);
+   }
+
+   public updatePlayerFromData(data: TransformComponentData, isInitialData: boolean): void {
+      if (isInitialData) {
+         this.updateFromData(data, playerInstance!);
+         return;
+      }
+
+      // @Copynpaste
+      let anyHitboxHasVelocity = false;
+
+      const transformComponent = TransformComponentArray.getComponent(playerInstance!);
+      for (const hitboxData of data.hitboxes) {
+         const hitbox = transformComponent.hitboxMap.get(hitboxData.localID);
+         assert(hitbox !== undefined);
+         updatePlayerHitboxFromData(hitbox, hitboxData);
+
+         // @Copynpaste
+         getHitboxVelocity(hitbox);
+         if (_point.isNonZero()) {
+            anyHitboxHasVelocity = true;
+         }
+      }
+
+      // @Copynpaste
+      if (anyHitboxHasVelocity) {
+         TransformComponentArray.activateComponent(transformComponent, playerInstance!);
+      } else if (TransformComponentArray.componentIsActive(playerInstance!)) {
+         TransformComponentArray.queueComponentDeactivate(playerInstance!);
+      }
+
+      let canAscendLayer = false;
+      if (getCurrentLayer() === undergroundLayer) {
+         const hitbox = transformComponent.hitboxes[0];
+         const tile = getHitboxTile(hitbox);
+         const tileIndex = getTileIndexIncludingEdges(tile.x, tile.y);
+         const tileAbove = surfaceLayer.getTile(tileIndex);
+         if (tileAbove.type === TileType.dropdown) {
+            canAscendLayer = true;
+         }
+      }
+      gameUIState.setCanAscendLayer(canAscendLayer);
+   }
+
+   public updateSelectedEntityState(entity: Entity): void {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+
+      // @Incomplete @SQUEAM: do this camera logic with the entity-selection-funcs
+
+      // const screenPos = worldToScreenPos(hitbox.box.position);
+      // entitySelectionState.setSelectedEntityScreenPosX(screenPos.x);
+      // entitySelectionState.setSelectedEntityScreenPosY(screenPos.y);
    }
 }
 
-function onRemove(entity: Entity): void {
-   const layer = getEntityLayer(entity);
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   for (const chunk of transformComponent.chunks) {
-      removeFromChunk(entity, chunk, layer);
-   }
-}
+export const TransformComponentArray = registerServerComponentArray(ServerComponentType.transform, _TransformComponentArray, false);
 
 const entityShouldInterpolate = (newTransformData: TransformComponentData, previousTransformData: TransformComponentData): boolean => {
    // If any hitboxes' positions or angles have changed
@@ -601,113 +704,6 @@ const entityShouldInterpolate = (newTransformData: TransformComponentData, previ
    }
 
    return false;
-}
-
-function updateFromData(data: TransformComponentData, entity: Entity): void {
-   // @SPEED: What we could do is explicitly send which hitboxes have been created, and removed, from the server. (When using carmack networking)
-   
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   
-   let anyHitboxHasVelocity = false;
-   
-   // Update hitboxes
-   for (const hitboxData of data.hitboxes) {
-      let hitbox = transformComponent.hitboxMap.get(hitboxData.localID);
-      if (hitbox === undefined) {
-         addHitbox(transformComponent, hitboxData);
-         hitbox = hitboxData;
-      } else {
-         updateHitboxFromData(hitbox, hitboxData);
-         // @SQUEAM
-         // if (getEntityType(entity) === EntityType.heldItem) {
-         //    console.log(hitbox.box.angle);
-         // }
-      }
-
-      getHitboxVelocity(hitbox);
-      if (_point.isNonZero()) {
-         anyHitboxHasVelocity = true;
-         // @Temporary @Squeam for optimisation
-         const entityType = getEntityType(entity);
-         if (entityType === EntityType.decoration || entityType === EntityType.lilypad || entityType === EntityType.reed) {
-            console.log(hitbox);
-            throw new Error();
-         }
-      }
-   }
-
-   if (anyHitboxHasVelocity) {
-      TransformComponentArray.activateComponent(transformComponent, entity);
-   } else if (TransformComponentArray.componentIsActive(entity)) {
-      TransformComponentArray.queueComponentDeactivate(entity);
-   }
-
-   transformComponent.traction = data.traction;
-
-   // Remove hitboxes which no longer exist
-   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-      const hitbox = transformComponent.hitboxes[i];
-      if (hitbox.lastUpdateTicks !== currentSnapshot.tick) {
-         // Hitbox is removed!
-         removeHitboxFromEntity(transformComponent, hitbox, i);
-         i--;
-      }
-   }
-
-   cleanEntityTransform(entity);
-}
-
-function updatePlayerFromData(data: TransformComponentData, isInitialData: boolean): void {
-   if (isInitialData) {
-      updateFromData(data, playerInstance!);
-      return;
-   }
-
-   // @Copynpaste
-   let anyHitboxHasVelocity = false;
-
-   const transformComponent = TransformComponentArray.getComponent(playerInstance!);
-   for (const hitboxData of data.hitboxes) {
-      const hitbox = transformComponent.hitboxMap.get(hitboxData.localID);
-      assert(hitbox !== undefined);
-      updatePlayerHitboxFromData(hitbox, hitboxData);
-
-      // @Copynpaste
-      getHitboxVelocity(hitbox);
-      if (_point.isNonZero()) {
-         anyHitboxHasVelocity = true;
-      }
-   }
-
-   // @Copynpaste
-   if (anyHitboxHasVelocity) {
-      TransformComponentArray.activateComponent(transformComponent, playerInstance!);
-   } else if (TransformComponentArray.componentIsActive(playerInstance!)) {
-      TransformComponentArray.queueComponentDeactivate(playerInstance!);
-   }
-
-   let canAscendLayer = false;
-   if (getCurrentLayer() === undergroundLayer) {
-      const hitbox = transformComponent.hitboxes[0];
-      const tile = getHitboxTile(hitbox);
-      const tileIndex = getTileIndexIncludingEdges(tile.x, tile.y);
-      const tileAbove = surfaceLayer.getTile(tileIndex);
-      if (tileAbove.type === TileType.dropdown) {
-         canAscendLayer = true;
-      }
-   }
-   gameUIState.setCanAscendLayer(canAscendLayer);
-}
-
-function updateSelectedEntityState(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const hitbox = transformComponent.hitboxes[0];
-
-   // @Incomplete @SQUEAM: do this camera logic with the entity-selection-funcs
-
-   // const screenPos = worldToScreenPos(hitbox.box.position);
-   // entitySelectionState.setSelectedEntityScreenPosX(screenPos.x);
-   // entitySelectionState.setSelectedEntityScreenPosY(screenPos.y);
 }
 
 const countHitboxesIncludingChildren = (hitbox: Hitbox): number => {

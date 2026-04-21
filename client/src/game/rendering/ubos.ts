@@ -1,4 +1,4 @@
-import { getEntityTextureAtlasInfo } from "../../texture-atlases";
+import { getEntityTextureAtlasInfo } from "../texture-atlases";
 import { gl, halfWindowHeight, halfWindowWidth } from "../webgl";
 import { getTechTreeGL } from "./webgl/tech-tree-rendering";
 import { cameraPosition, cameraZoom } from "../camera";

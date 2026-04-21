@@ -1,6 +1,6 @@
 import { CircularBox, randAngle, randFloat, randItem, Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
 import ServerComponentArray from "../ServerComponentArray";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createRockParticle, createRockSpeckParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";

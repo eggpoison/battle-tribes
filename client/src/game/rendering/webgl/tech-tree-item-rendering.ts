@@ -1,6 +1,6 @@
 import { ItemType, Settings, Point, polarVec2, randAngle, randFloat, randSign, rotatePointAroundPoint, _point } from "webgl-test-shared";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth } from "../../webgl";
-import { getEntityTextureAtlasInfo, getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../../texture-atlases";
+import { getEntityTextureAtlasInfo, getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import { getTechTreeGL } from "./tech-tree-rendering";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";

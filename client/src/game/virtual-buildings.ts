@@ -15,7 +15,7 @@ import { createStructureComponentData } from "./entity-components/server-compone
 import { createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
 import { EntityRenderObject, recalculateRenderObjectVertexData } from "./EntityRenderObject";
-import { currentSnapshot } from "./game";
+import { currentSnapshot } from "./networking/snapshots";
 import Layer from "./Layer";
 import { thingIsVisualRenderPart } from "./render-parts/render-parts";
 import { removeGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";

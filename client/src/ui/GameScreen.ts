@@ -1,4 +1,5 @@
 import { assert } from "../../../shared/src";
+import { InventoryComponentArray } from "../game/entity-components/server-components/InventoryComponent";
 import { playerInstance } from "../game/player";
 import { createChat, destroyChat } from "./game/Chat";
 import { createFrameGraph, destroyFrameGraph } from "./game/dev/FrameGraph";
@@ -12,7 +13,8 @@ export function openGameScreen(): void {
    canvas!.hidden = false;
 
    if (playerInstance !== null) {
-      createHotbar();
+      const inventoryComponent = InventoryComponentArray.getComponent(playerInstance);
+      createHotbar(inventoryComponent, playerInstance);
       createHealthBar();
    }
    openGameInteractableLayer();

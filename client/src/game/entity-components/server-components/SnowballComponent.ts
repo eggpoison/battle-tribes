@@ -3,13 +3,13 @@ import { createSnowParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import Particle from "../../Particle";
 import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { tickIntervalHasPassed } from "../../game";
+import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 

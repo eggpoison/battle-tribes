@@ -2,40 +2,41 @@ import { Entity, ServerComponentType, Settings } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { tickIntervalHasPassed } from "../../game";
+import { tickIntervalHasPassed } from "../../networking/snapshots";
+import { registerServerComponentArray } from "../component-register";
 
 export interface BattleaxeProjectileComponentData {}
 
 export interface BattleaxeProjectileComponent {}
 
-export const BattleaxeProjectileComponentArray = new ServerComponentArray<BattleaxeProjectileComponent, BattleaxeProjectileComponentData, never>(ServerComponentType.battleaxeProjectile, true, createComponent, getMaxRenderParts, decodeData);
-BattleaxeProjectileComponentArray.onLoad = onLoad;
-BattleaxeProjectileComponentArray.onTick = onTick;
+class _BattleaxeProjectileComponentArray extends ServerComponentArray<BattleaxeProjectileComponent, BattleaxeProjectileComponentData, never> {
+   public decodeData(): BattleaxeProjectileComponentData {
+      return {};
+   }
 
-function decodeData(): BattleaxeProjectileComponentData {
-   return {};
+   public createComponent(): BattleaxeProjectileComponent {
+      return {};
+   }
+
+   public getMaxRenderParts(): number {
+      return 0;
+   }
+
+   public onLoad(entity: Entity): void {
+      playWhoosh(entity);
+   }
+
+   public onTick(entity: Entity): void {
+      if (tickIntervalHasPassed(0.25 * Settings.TICK_RATE)) {
+         playWhoosh(entity);
+      }
+   }
 }
 
-function createComponent(): BattleaxeProjectileComponent {
-   return {};
-}
-
-function getMaxRenderParts(): number {
-   return 0;
-}
+export const BattleaxeProjectileComponentArray = registerServerComponentArray(ServerComponentType.battleaxeProjectile, _BattleaxeProjectileComponentArray, true);
 
 const playWhoosh = (entity: Entity): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    playSoundOnHitbox("air-whoosh.mp3", 0.25, 1, entity, hitbox, true);
-}
-
-function onLoad(entity: Entity): void {
-   playWhoosh(entity);
-}
-
-function onTick(entity: Entity): void {
-   if (tickIntervalHasPassed(0.25 * Settings.TICK_RATE)) {
-      playWhoosh(entity);
-   }
 }

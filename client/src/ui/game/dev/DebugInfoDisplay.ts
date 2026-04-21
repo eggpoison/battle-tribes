@@ -3,7 +3,7 @@ import { getCurrentLayer } from "../../../game/world";
 import { setCameraZoom } from "../../../game/camera";
 import { GameInteractState, gameUIState } from "../../../ui-state/game-ui-state";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
-import { TickSnapshot } from "../../../game/networking/packet-snapshots";
+import { TickSnapshot } from "../../../game/networking/snapshot-processing";
 import { lowMonocolourParticles, lowTexturedParticles, highMonocolourParticles, highTexturedParticles } from "../../../game/rendering/webgl/particle-rendering";
 import { getNumSounds } from "../../../game/sound";
 import { debugInfoDisplay } from "./debug-info-display-funcs";

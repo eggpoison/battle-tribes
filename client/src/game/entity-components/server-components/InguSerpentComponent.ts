@@ -5,7 +5,7 @@ import Particle from "../../Particle";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { addMonocolourParticleToBufferContainer, highMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";

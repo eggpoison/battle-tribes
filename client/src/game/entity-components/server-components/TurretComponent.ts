@@ -1,6 +1,6 @@
 import { PacketReader, ItemType, lerp, randAngle, ServerComponentType, TurretAmmoType, Entity, EntityType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";

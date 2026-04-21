@@ -4,7 +4,7 @@ import { getLightPositionMatrix } from "../../lights";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import Layer from "../../Layer";
 import { surfaceLayer } from "../../world";
-import { currentSnapshot } from "../../game";
+import { currentSnapshot } from "../../networking/snapshots";
 import { cameraPosition } from "../../camera";
 import { gameFramebufferTexture } from "../render";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";

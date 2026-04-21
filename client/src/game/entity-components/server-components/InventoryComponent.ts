@@ -6,8 +6,9 @@ import ServerComponentArray from "../ServerComponentArray";
 import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
-import { hotbarFuncs } from "../../../ui-state/hotbar-funcs";
 import { updateCraftableRecipes } from "../../../ui/game/menus/CraftingMenu";
+import { Hotbar_addItem, Hotbar_removeItem, Hotbar_updateItem } from "../../../ui/game/inventories/Hotbar";
+import { registerServerComponentArray } from "../component-register";
 
 export interface InventoryComponentData {
    readonly inventories: ReadonlyArray<Inventory>;
@@ -84,7 +85,6 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
    if (inventory.width !== inventoryData.width || inventory.height !== inventoryData.height) {
       inventory.width = inventoryData.width;
       inventory.height = inventoryData.height;
-      hotbarFuncs.resizeInventory(inventory);
    }
 
    // Remove any items which have been removed from the inventory
@@ -96,11 +96,11 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
       
       // If it doesn't exist in the server data, remove it
       const itemData = inventoryData.itemSlots[itemSlot];
-      if (itemData !== undefined && itemData.id !== item.id) {
+      if (itemData === undefined || itemData.id !== item.id) {
          inventory.removeItem(itemSlot);
 
          if (isPlayer) {
-            hotbarFuncs.removeItem(inventory, itemSlot);
+            Hotbar_removeItem(inventory, itemSlot);
             itemsHaveChanged = true;
 
             if (itemSlot === getPlayerSelectedItemSlot(inventory.name)) {
@@ -125,16 +125,12 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
       
       // If there is a new item in the slot, add it
       const item = inventory.itemSlots[itemSlot];
-      if (item === undefined) {
-         continue;
-      }
-
-      if (item.id !== itemData.id) {
+      if (item === undefined || item.id !== itemData.id) {
          const item = new Item(itemData.type, itemData.count, itemData.id, itemData.nickname, itemData.namer);
          inventory.addItem(item, itemSlot);
 
          if (isPlayer) {
-            hotbarFuncs.addItem(inventory, itemSlot, item);
+            Hotbar_addItem(inventory, itemSlot, item);
             itemsHaveChanged = true;
 
             if (itemSlot === getPlayerSelectedItemSlot(inventory.name)) {
@@ -151,7 +147,7 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
          item.namer = itemData.namer;
 
          if (isPlayer) {
-            hotbarFuncs.updateItem(inventory, itemSlot, item);
+            Hotbar_updateItem(inventory, itemSlot, item);
             itemsHaveChanged = true;
          }
       }
@@ -184,40 +180,61 @@ export function getInventory(inventoryComponent: InventoryComponent, inventoryNa
    return null;
 }
 
-export const InventoryComponentArray = new ServerComponentArray<InventoryComponent, InventoryComponentData, never>(ServerComponentType.inventory, true, createComponent, getMaxRenderParts, decodeData);
-InventoryComponentArray.updateFromData = updateFromData;
-InventoryComponentArray.updatePlayerFromData = updatePlayerFromData;
-InventoryComponentArray.updateSelectedEntityState = updateSelectedEntityState;
+class _InventoryComponentArray extends ServerComponentArray<InventoryComponent, InventoryComponentData> {
+   public decodeData(reader: PacketReader): InventoryComponentData {
+      const inventories: Array<Inventory> = [];
+      const numInventories = reader.readNumber();
+      for (let i = 0; i < numInventories; i++) {
+         const inventory = readInventory(reader);
+         inventories.push(inventory);
+      }
+
+      return {
+         inventories: inventories
+      };
+   }
+
+   public createComponent(entityComponentData: EntityComponentData): InventoryComponent {
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const inventoryComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventory);
+      return {
+         inventories: inventoryComponentData.inventories
+      };
+   }
+
+   public getMaxRenderParts(): number {
+      return 0;
+   }
+
+   public updateFromData(data: InventoryComponentData, entity: Entity): void {
+      const inventoryComponent = InventoryComponentArray.getComponent(entity);
+      updateInventories(inventoryComponent, data, false);
+   }
+
+   public updatePlayerFromData(data: InventoryComponentData): void {
+      const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
+      const itemsHaveChanged = updateInventories(inventoryComponent, data, true);
+      if (itemsHaveChanged) {
+         updateCraftableRecipes(inventoryComponent.inventories);
+      }
+   }
+
+   public updateSelectedEntityState(entity: Entity): void {
+      // @Speed: this is happening every tick for some reason, causing refreshes every tick. baad!!
+      
+      // @INCOMPLETE
+      // const inventoryComponent = InventoryComponentArray.getComponent(entity);
+      // // @Garbage: extra bad cuz it has to be a semi-deep copy of the inventories to actually register!!
+      // selectedEntityInventoryState.setInventories(inventoryComponent.inventories.map(copyInventoryDeep));
+   }
+}
+
+export const InventoryComponentArray = registerServerComponentArray(ServerComponentType.inventory, _InventoryComponentArray, true);
 
 export function createInventoryComponentData(inventories: ReadonlyArray<Inventory>): InventoryComponentData {
    return {
       inventories: inventories
    };
-}
-
-function decodeData(reader: PacketReader): InventoryComponentData {
-   const inventories: Array<Inventory> = [];
-   const numInventories = reader.readNumber();
-   for (let i = 0; i < numInventories; i++) {
-      const inventory = readInventory(reader);
-      inventories.push(inventory);
-   }
-
-   return {
-      inventories: inventories
-   };
-}
-
-function createComponent(entityComponentData: EntityComponentData): InventoryComponent {
-   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-   const inventoryComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventory);
-   return {
-      inventories: inventoryComponentData.inventories
-   };
-}
-
-function getMaxRenderParts(): number {
-   return 0;
 }
 
 function updateInventories(inventoryComponent: InventoryComponent, data: InventoryComponentData, isPlayer: boolean): boolean {
@@ -233,26 +250,4 @@ function updateInventories(inventoryComponent: InventoryComponent, data: Invento
    }
 
    return itemsHaveChanged;
-}
-
-function updateFromData(data: InventoryComponentData, entity: Entity): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(entity);
-   updateInventories(inventoryComponent, data, false);
-}
-
-function updatePlayerFromData(data: InventoryComponentData): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
-   const itemsHaveChanged = updateInventories(inventoryComponent, data, true);
-   if (itemsHaveChanged) {
-      updateCraftableRecipes(inventoryComponent.inventories);
-   }
-}
-
-function updateSelectedEntityState(entity: Entity): void {
-   // @Speed: this is happening every tick for some reason, causing refreshes every tick. baad!!
-   
-   // @INCOMPLETE
-   // const inventoryComponent = InventoryComponentArray.getComponent(entity);
-   // // @Garbage: extra bad cuz it has to be a semi-deep copy of the inventories to actually register!!
-   // selectedEntityInventoryState.setInventories(inventoryComponent.inventories.map(copyInventoryDeep));
 }

@@ -3,17 +3,14 @@ import { EntityComponentData } from "../world";
 import { Hitbox } from "../hitboxes";
 import { ComponentTint, EntityRenderObject } from "../EntityRenderObject";
 
-// @Cleanup @Location ...
-export const COMPONENT_ARRAYS: Array<ComponentArray> = [];
-
 export abstract class ComponentArray<
-   T extends object = object,
-   ComponentIntermediateInfo extends object | never = object | never
+   Component extends object = object,
+   ComponentIntermediateInfo = void
 > {
    private readonly isActiveByDefault: boolean;
    
    public entities: Array<Entity> = [];
-   public components: Array<T> = [];
+   public components: Array<Component> = [];
 
    /** Maps entity IDs to component indexes */
    private entityToIndexMap: Partial<Record<Entity, number>> = {};
@@ -21,29 +18,29 @@ export abstract class ComponentArray<
    private indexToEntityMap: Partial<Record<number, Entity>> = {};
    
    public activeEntities: Array<Entity> = [];
-   public activeComponents: Array<T> = [];
+   public activeComponents: Array<Component> = [];
 
    /** Maps entity IDs to component indexes */
    private activeEntityToIndexMap: Partial<Record<Entity, number>> = {};
    /** Maps component indexes to entity IDs */
    private activeIndexToEntityMap: Record<number, Entity> = {};
 
-   private deactivateBuffer: Array<Entity> = [];
-   private removeBuffer: Array<Entity> = [];
+   private readonly deactivateBuffer: Array<Entity> = [];
+   private readonly removeBuffer: Array<Entity> = [];
 
    // In reality this is just all information beyond its config which the component wishes to expose to other components
    // This is a separate layer so that, for example, components can immediately get render parts without having to wait for onLoad (introducing polymorphism)
-   public populateIntermediateInfo?(renderObject: EntityRenderObject, entityComponentData: Readonly<EntityComponentData>): ComponentIntermediateInfo;
-   public readonly createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject) => T;
-   public readonly getMaxRenderParts: (entityComponentData: EntityComponentData) => number;
+   public populateIntermediateInfo?(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): ComponentIntermediateInfo;
+   public abstract createComponent(entityComponentData: EntityComponentData, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject): Component;
+   public abstract getMaxRenderParts(entityComponentData: EntityComponentData): number;
    /** Called once when the entity is being created, just after all the components are created from their data */
    public onLoad?(entity: Entity): void;
    public onJoin?(entity: Entity): void;
    /** Called when the entity is spawned in, not when the client first becomes aware of the entity's existence. After the load function */
    public onSpawn?(entity: Entity): void;
-   public onTick?: (entity: Entity) => void;
+   public onTick?(entity: Entity): void;
    /** Called when a packet is skipped and there is no data to update from, so we must extrapolate all the game logic */
-   public onUpdate?: (entity: Entity) => void;
+   public onUpdate?(entity: Entity): void;
    public onCollision?(entity: Entity, collidingEntity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
    public onHit?(entity: Entity, hitHitbox: Hitbox, hitPosition: Point, hitFlags: number): void;
    /** Called when the entity dies, not when the entity leaves the player's vision. */
@@ -53,14 +50,8 @@ export abstract class ComponentArray<
    public updateSelectedEntityState?(entity: Entity): void;
    public calculateTint?(entity: Entity): ComponentTint;
 
-   constructor(isActiveByDefault: boolean, createComponent: (entityComponentData: Readonly<EntityComponentData>, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject) => T, getMaxRenderParts: (entityComponentData: EntityComponentData) => number) {
+   constructor(isActiveByDefault: boolean) {
       this.isActiveByDefault = isActiveByDefault;
-      
-      this.createComponent = createComponent;
-      this.getMaxRenderParts = getMaxRenderParts;
-
-      // @Cleanup: cast
-      COMPONENT_ARRAYS.push(this as unknown as ComponentArray);
    }
 
    public addComponentToRemoveBuffer(entity: Entity): void {
@@ -68,7 +59,7 @@ export abstract class ComponentArray<
       this.removeBuffer.push(entity);
    }
 
-   public addComponent(entity: Entity, component: T): void {
+   public addComponent(entity: Entity, component: Component): void {
       // Put new entry at end and update the maps
       const newIndex = this.components.length;
       this.entityToIndexMap[entity] = newIndex;
@@ -77,11 +68,7 @@ export abstract class ComponentArray<
       this.entities.push(entity);
 
       if (this.isActiveByDefault) {
-         // @INCOMPLETE @SQUEAM
-         // @Hack so that tickEntities doesn't kill everything with slow
-         // if (!(this.componentType === ServerComponentType.transform && entityType === EntityType.grassStrand)) {
-            this.activateComponent(component, entity);
-         // }
+         this.activateComponent(component, entity);
       }
    }
 
@@ -113,6 +100,7 @@ export abstract class ComponentArray<
          delete this.indexToEntityMap[indexOfLastEntity];
 
          // Batched component deactivation
+         // @Cleanup @Copynpaste
          if (this.activeEntityToIndexMap[entity] !== undefined) {
             const indexOfRemovedEntity = this.activeEntityToIndexMap[entity];
             const indexOfLastEntity = this.activeEntities.length - 1 - numDeactivated;
@@ -146,12 +134,12 @@ export abstract class ComponentArray<
       this.removeBuffer.length = 0;
    }
 
-   public getComponent(entity: Entity): T {
+   public getComponent(entity: Entity): Component {
       const idx = this.entityToIndexMap[entity]!;
       return this.components[idx];
    }
 
-   public tryGetComponent(entity: Entity): T | null {
+   public tryGetComponent(entity: Entity): Component | null {
       const idx = this.entityToIndexMap[entity];
       if (idx === undefined) {
          return null;
@@ -167,7 +155,7 @@ export abstract class ComponentArray<
       return this.activeEntityToIndexMap[entity] !== undefined;
    }
 
-   public activateComponent(component: T, entity: Entity): void {
+   public activateComponent(component: Component, entity: Entity): void {
       // Don't activate if already active
       if (this.componentIsActive(entity)) {
          return;
@@ -208,6 +196,6 @@ export abstract class ComponentArray<
       for (const entity of this.deactivateBuffer) {
          this.deactivateComponent(entity);
       }
-      this.deactivateBuffer = [];
+      this.deactivateBuffer.length = 0;
    }
 }

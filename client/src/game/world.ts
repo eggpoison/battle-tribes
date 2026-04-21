@@ -4,7 +4,7 @@ import Layer from "./Layer";
 import { cleanEntityRenderParts, entityDataUsesClientInterp, undirtyRenderObject } from "./rendering/render-part-matrices";
 import { calculateRenderDepthFromLayer, getEntityRenderLayer } from "./render-layers";
 import { removeEntitySounds } from "./sound";
-import { currentSnapshot } from "./game";
+import { currentSnapshot } from "./networking/snapshots";
 import { ENTITY_INTERMEDIATE_INFOS, EntityClientComponentData, EntityServerComponentData, getEntityComponentArrays, hasIntermediateInfo } from "./entity-component-types";
 import { deleteEntityRenderData } from "./rendering/webgl/entity-rendering";
 

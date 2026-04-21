@@ -1,6 +1,6 @@
 import { EntityTickEventType, TribesmanTitle, SubtileType, TileType, STRUCTURE_TYPES, HitFlags, AttackEffectiveness, assert, Point, randAngle, randFloat, PacketReader, Entity, EntityType, ServerComponentType, _point } from "webgl-test-shared";
 import { setCameraSubject } from "../camera";
-import { currentSnapshot, setCurrentSnapshot, setNextSnapshot } from "../game";
+import { currentSnapshot, setCurrentSnapshot, setNextSnapshot } from "../networking/snapshots";
 import Layer from "../Layer";
 import { playerInstance, setPlayerInstance } from "../player";
 import { playHeadSound, playSound } from "../sound";
@@ -23,7 +23,7 @@ import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
 import { updateParticles } from "../rendering/webgl/particle-rendering";
 import { EntityServerComponentData, getEntityComponentArrays, getEntityServerComponentArrays, getEntityServerComponentTypes, getServerComponentData } from "../entity-component-types";
 import { getSelectedEntity } from "../entity-selection";
-import { COMPONENT_ARRAYS } from "../entity-components/ComponentArray";
+import { COMPONENT_ARRAYS } from "../entity-components/component-register";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 

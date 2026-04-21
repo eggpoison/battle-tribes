@@ -1,5 +1,5 @@
 import { assert, randAngle, randInt, PacketReader, ServerComponentType, CactusFlowerSize, Entity } from "webgl-test-shared";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { createCactusSpineParticle, createFlowerParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";

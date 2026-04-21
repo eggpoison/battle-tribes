@@ -1,5 +1,5 @@
 import { PacketReader, ServerComponentType, Settings, Point, lerp, secondsToTicks, Entity, EntityType } from "webgl-test-shared";
-import { getTextureArrayIndex } from "../../../texture-atlases";
+import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -8,10 +8,10 @@ import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { currentSnapshot } from "../../game";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getRenderThingsByTag } from "../../render-parts/render-part-tags";
+import { currentSnapshot } from "../../networking/snapshots";
 
 type HutType = EntityType.workerHut | EntityType.warriorHut;
 

@@ -21,29 +21,29 @@ import { createWorkbenchComponentData, WorkbenchComponentData } from "./client-c
 import { createWorkerHutComponentData, WorkerHutComponentData } from "./client-components/WorkerHutComponent";
 import { EntityClientComponentData } from "../entity-component-types";
 
-const ClientComponentDataRecord = {
-   [ClientComponentType.equipment]: (): EquipmentComponentData => 0 as any,
-   [ClientComponentType.footprint]: (): FootprintComponentData => 0 as any,
-   [ClientComponentType.randomSound]: (): RandomSoundComponentData => 0 as any,
-   [ClientComponentType.embrasure]: (): EmbrasureComponentData => 0 as any,
-   [ClientComponentType.frostshaper]: (): FrostshaperComponentData => 0 as any,
-   [ClientComponentType.lilypad]: (): LilypadComponentData => 0 as any,
-   [ClientComponentType.regularSpikes]: (): RegularSpikesComponentData => 0 as any,
-   [ClientComponentType.stonecarvingTable]: (): StonecarvingTableComponentData => 0 as any,
-   [ClientComponentType.wall]: (): WallComponentData => 0 as any,
-   [ClientComponentType.warriorHut]: (): WarriorHutComponentData => 0 as any,
-   [ClientComponentType.workbench]: (): WorkbenchComponentData => 0 as any,
-   [ClientComponentType.workerHut]: (): WorkerHutComponentData => 0 as any,
-   [ClientComponentType.ballistaFrostcicle]: (): BallistaFrostcicleComponentData => 0 as any,
-   [ClientComponentType.ballistaRock]: (): BallistaRockComponentData => 0 as any,
-   [ClientComponentType.ballistaSlimeball]: (): BallistaSlimeballComponentData => 0 as any,
-   [ClientComponentType.ballistaWoodenBolt]: (): BallistaWoodenBoltComponentData => 0 as any,
-   [ClientComponentType.thrownBattleaxe]: (): ThrownBattleaxeComponentData => 0 as any,
-   [ClientComponentType.woodenArrow]: (): WoodenArrowComponentData => 0 as any,
-   [ClientComponentType.glurbTailSegment]: (): GlurbTailSegmentComponentData => 0 as any,
-} satisfies Record<ClientComponentType, () => object>;
+interface ClientComponentDataRecord {
+   [ClientComponentType.equipment]: EquipmentComponentData,
+   [ClientComponentType.footprint]: FootprintComponentData,
+   [ClientComponentType.randomSound]: RandomSoundComponentData,
+   [ClientComponentType.embrasure]: EmbrasureComponentData,
+   [ClientComponentType.frostshaper]: FrostshaperComponentData,
+   [ClientComponentType.lilypad]: LilypadComponentData,
+   [ClientComponentType.regularSpikes]: RegularSpikesComponentData,
+   [ClientComponentType.stonecarvingTable]: StonecarvingTableComponentData,
+   [ClientComponentType.wall]: WallComponentData,
+   [ClientComponentType.warriorHut]: WarriorHutComponentData,
+   [ClientComponentType.workbench]: WorkbenchComponentData,
+   [ClientComponentType.workerHut]: WorkerHutComponentData,
+   [ClientComponentType.ballistaFrostcicle]: BallistaFrostcicleComponentData,
+   [ClientComponentType.ballistaRock]: BallistaRockComponentData,
+   [ClientComponentType.ballistaSlimeball]: BallistaSlimeballComponentData,
+   [ClientComponentType.ballistaWoodenBolt]: BallistaWoodenBoltComponentData,
+   [ClientComponentType.thrownBattleaxe]: ThrownBattleaxeComponentData,
+   [ClientComponentType.woodenArrow]: WoodenArrowComponentData,
+   [ClientComponentType.glurbTailSegment]: GlurbTailSegmentComponentData
+}
 
-export type ClientComponentData<T extends ClientComponentType> = ReturnType<typeof ClientComponentDataRecord[T]>;
+export type ClientComponentData<T extends ClientComponentType> = ClientComponentDataRecord[T];
 
 // @Cleanup: if this gets too large/unwieldy i should rework this
 export function getEntityClientComponentConfigs(entityType: EntityType): EntityClientComponentData {
@@ -152,10 +152,10 @@ export function getEntityClientComponentConfigs(entityType: EntityType): EntityC
          break;
       }
       // @Cleanup: doubled. i think this is supposed to be a different entity??
-      case EntityType.snobe: {
-         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
-         break;
-      }
+      // case EntityType.snobe: {
+      //    clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
+      //    break;
+      // }
    }
 
    return clientComponentData;

@@ -6,7 +6,7 @@ import { updatePlayerDirection } from "../player";
 import { RenderLayer, MAX_RENDER_LAYER } from "../render-layers";
 import { beginLoadingSounds } from "../sound";
 import { createTextCanvasContext, renderText } from "../text-canvas";
-import { loadTextureAtlas } from "../../texture-atlases";
+import { loadTextureAtlas } from "../texture-atlases";
 import { preloadTextureImages, loadTextures } from "../textures";
 import { gl, windowWidth, windowHeight, createTexture, setupWebGL } from "../webgl";
 import { layers, getCurrentLayer, entityExists, getEntityRenderObject } from "../world";

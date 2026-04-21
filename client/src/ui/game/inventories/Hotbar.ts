@@ -1,13 +1,11 @@
-import { assert, Inventory, InventoryName, Item, TribeType } from "webgl-test-shared";
-import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
-import { playerInstance } from "../../../game/player";
+import { assert, Entity, Inventory, InventoryName, Item, TribeType } from "webgl-test-shared";
+import { getInventory, InventoryComponent } from "../../../game/entity-components/server-components/InventoryComponent";
 import { playerTribe } from "../../../game/tribes";
 import BackpackWireframe from "../../../images/miscellaneous/backpack-wireframe.png";
 import ArmourWireframe from "../../../images/miscellaneous/armour-wireframe.png";
 import GloveWireframe from "../../../images/miscellaneous/glove-wireframe.png";
 import { createInventory, createInventoryContainer } from "./Inventory";
 import { addItemSlotPlaceholderImage, addItemSlotSelection, addItemToItemSlot, createItemSlot, makeItemSlotInteractable, removeItemFromItemSlot, removeItemSlotSelection, updateItemSlot } from "./ItemSlot";
-import { hotbarFuncs } from "../../../ui-state/hotbar-funcs";
 
 let hotbarElem: HTMLElement | null = null;
 let hotbarInventoryElem: HTMLElement | null = null;
@@ -34,7 +32,7 @@ const getItemSlotElem = (inventory: Inventory, itemSlot: number): HTMLElement | 
    return inventoryElem.children[itemSlot - 1] as HTMLElement;
 }
 
-hotbarFuncs.addItem = (inventory: Inventory, itemSlot: number, item: Item): void => {
+export function Hotbar_addItem(inventory: Inventory, itemSlot: number, item: Item): void {
    const itemSlotElem = getItemSlotElem(inventory, itemSlot);
    // @Hack: shouldn't try to add non-hotbar item to hotbar anyway
    if (itemSlotElem !== null) {
@@ -42,7 +40,7 @@ hotbarFuncs.addItem = (inventory: Inventory, itemSlot: number, item: Item): void
    }
 }
 
-hotbarFuncs.updateItem = (inventory: Inventory, itemSlot: number, item: Item): void => {
+export function Hotbar_updateItem(inventory: Inventory, itemSlot: number, item: Item): void {
    const itemSlotElem = getItemSlotElem(inventory, itemSlot);
    // @Hack: shouldn't try to add non-hotbar item to hotbar anyway
    if (itemSlotElem !== null) {
@@ -50,7 +48,7 @@ hotbarFuncs.updateItem = (inventory: Inventory, itemSlot: number, item: Item): v
    }
 }
 
-hotbarFuncs.removeItem = (inventory: Inventory, itemSlot: number): void => {
+export function Hotbar_removeItem(inventory: Inventory, itemSlot: number): void {
    const itemSlotElem = getItemSlotElem(inventory, itemSlot);
    // @Hack: shouldn't try to add non-hotbar item to hotbar anyway
    if (itemSlotElem !== null) {
@@ -58,7 +56,7 @@ hotbarFuncs.removeItem = (inventory: Inventory, itemSlot: number): void => {
    }
 }
 
-hotbarFuncs.selectItemSlot = (inventory: Inventory, itemSlot: number): void => {
+export function Hotbar_updateSelectedItemSlot(inventory: Inventory, itemSlot: number): void {
    assert(hotbarElem !== null);
 
    // Remove previous selection
@@ -75,9 +73,7 @@ hotbarFuncs.selectItemSlot = (inventory: Inventory, itemSlot: number): void => {
    }
 }
 
-export function createHotbar(): void {
-   assert(playerInstance !== null);
-   const inventoryComponent = InventoryComponentArray.getComponent(playerInstance);
+export function createHotbar(inventoryComponent: InventoryComponent, playerInstance: Entity): void {
    const offhandInventory = getInventory(inventoryComponent, InventoryName.offhand);
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
    const backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
@@ -169,18 +165,4 @@ export function destroyHotbar(): void {
    hotbarElem.remove();
    hotbarElem = null;
    hotbarInventoryElem = null;
-}
-
-if (import.meta.hot) {
-   if (playerInstance !== null) {
-      createHotbar();
-   }
-
-   import.meta.hot.dispose(() => {
-      if (hotbarElem !== null) {
-         destroyHotbar();
-      }
-   });
-   
-   import.meta.hot.accept();
 }

@@ -1,4 +1,4 @@
-import { currentSnapshot } from "../game";
+import { currentSnapshot } from "../networking/snapshots";
 import { RenderPart } from "./render-parts";
 
 const creationTicksMap = new WeakMap<RenderPart, number>();

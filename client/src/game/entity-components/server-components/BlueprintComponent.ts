@@ -1,7 +1,7 @@
 import { Entity, PacketReader, assertUnreachable, randAngle, randFloat, rotatePointAroundOrigin, BlueprintType, ServerComponentType, _point } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../../particles";
-import { getEntityTextureAtlasInfo, getTextureArrayIndex } from "../../../texture-atlases";
+import { getEntityTextureAtlasInfo, getTextureArrayIndex } from "../../texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";

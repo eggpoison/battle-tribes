@@ -3,7 +3,7 @@ import { getEntityLayer, layers } from "./world";
 import { createTranslationMatrix, Matrix3x2 } from "./rendering/matrices";
 import { getHitboxByLocalID, Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { currentSnapshot } from "./game";
+import { currentSnapshot } from "./networking/snapshots";
 
 export type LightID = number;
 

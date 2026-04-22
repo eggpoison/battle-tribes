@@ -7,11 +7,11 @@ import { addMonocolourParticleToBufferContainer, highMonocolourParticles, Partic
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 const ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];
 const SIZE = 80;
@@ -20,7 +20,11 @@ export interface InguSerpentComponentData {}
 
 export interface InguSerpentComponent {}
 
-class _InguSerpentComponentArray extends ServerComponentArray<InguSerpentComponent, InguSerpentComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguSerpent, _InguSerpentComponentArray, InguSerpentComponentData> {}
+}
+
+class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentComponent, InguSerpentComponentData> {
    public decodeData(): InguSerpentComponentData {
       return {};
    }

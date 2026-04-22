@@ -1,11 +1,11 @@
 import { PacketReader, Entity, EntityType, BuildingMaterial, ServerComponentType } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
 import { getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface BuildingMaterialComponentData {
    readonly material: BuildingMaterial;
@@ -13,6 +13,10 @@ export interface BuildingMaterialComponentData {
 
 export interface BuildingMaterialComponent {
    material: BuildingMaterial;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.buildingMaterial, _BuildingMaterialComponentArray, BuildingMaterialComponentData> {}
 }
 
 export const WALL_TEXTURE_SOURCES = ["entities/wall/wooden-wall.png", "entities/wall/stone-wall.png"];
@@ -37,7 +41,7 @@ const getMaterialTextureSources = (entityType: EntityType): ReadonlyArray<string
    }
 }
 
-class _BuildingMaterialComponentArray extends ServerComponentArray<BuildingMaterialComponent, BuildingMaterialComponentData> {
+class _BuildingMaterialComponentArray extends _ServerComponentArray<BuildingMaterialComponent, BuildingMaterialComponentData> {
    public decodeData(reader: PacketReader): BuildingMaterialComponentData {
       const material = reader.readNumber();
       return {

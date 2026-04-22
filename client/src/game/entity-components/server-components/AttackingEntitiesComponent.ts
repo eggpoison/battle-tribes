@@ -1,12 +1,16 @@
 import { PacketReader, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
-import { registerServerComponentArray } from "../component-register";
+import _ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface AttackingEntitiesComponentData {}
 
 export interface AttackingEntitiesComponent {}
 
-class _AttackingEntitiesComponentArray extends ServerComponentArray<AttackingEntitiesComponent, AttackingEntitiesComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.attackingEntities, _AttackingEntitiesComponentArray, AttackingEntitiesComponentData> {}
+}
+
+class _AttackingEntitiesComponentArray extends _ServerComponentArray<AttackingEntitiesComponent, AttackingEntitiesComponentData> {
    public decodeData(reader: PacketReader): AttackingEntitiesComponentData {
       const numAttackingEntities = reader.readNumber();
       reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT * numAttackingEntities);

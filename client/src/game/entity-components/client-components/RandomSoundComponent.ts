@@ -1,9 +1,9 @@
 import { randFloat, randItem, Entity } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { ClientComponentType } from "../client-component-types";
-import ClientComponentArray from "../ClientComponentArray";
+import _ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { registerClientComponentArray } from "../component-register";
+import { registerClientComponentArray } from "../component-registry";
 
 export interface RandomSoundComponentData {}
 
@@ -16,6 +16,10 @@ export interface RandomSoundComponent {
    soundTimerTicks: number;
 
    sounds: ReadonlyArray<string>;
+}
+
+declare module "../component-registry" {
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.randomSound, _RandomSoundComponentArray, RandomSoundComponentData> {}
 }
 
 // @Cleanup this system is so shit
@@ -37,7 +41,7 @@ export function updateRandomSoundComponentSounds(randomSoundComponent: RandomSou
    }
 }
 
-class _RandomSoundComponentArray extends ClientComponentArray<RandomSoundComponent> {
+class _RandomSoundComponentArray extends _ClientComponentArray<RandomSoundComponent> {
    public createComponent(): RandomSoundComponent {
       return {
          minSoundIntervalTicks: 0,

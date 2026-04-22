@@ -3,11 +3,11 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { OkrenAgeStage } from "./OkrenComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface OkrenClawComponentData {
    readonly size: OkrenAgeStage;
@@ -29,7 +29,11 @@ export interface OkrenClawComponent {
    readonly slashingArmSegment: TexturedRenderPart;
 }
 
-class _OkrenClawComponentArray extends ServerComponentArray<OkrenClawComponent, OkrenClawComponentData, IntermediateInfo> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.okrenClaw, _OkrenClawComponentArray, OkrenClawComponentData> {}
+}
+
+class _OkrenClawComponentArray extends _ServerComponentArray<OkrenClawComponent, OkrenClawComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): OkrenClawComponentData {
       const size = reader.readNumber();
       const growthStage = reader.readNumber();

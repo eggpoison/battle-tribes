@@ -4,10 +4,10 @@ import { createGemQuakeProjectile } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface GuardianGemQuakeComponentData {}
 
@@ -19,7 +19,11 @@ const TEXTURE_SOURCES: ReadonlyArray<string> = [
    "entities/guardian-gem-quake/gem-3.png"
 ];
 
-class _GuardianGemQuakeComponentArray extends ServerComponentArray<GuardianGemQuakeComponent, GuardianGemQuakeComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianGemQuake, _GuardianGemQuakeComponentArray, GuardianGemQuakeComponentData> {}
+}
+
+class _GuardianGemQuakeComponentArray extends _ServerComponentArray<GuardianGemQuakeComponent, GuardianGemQuakeComponentData> {
    public decodeData(reader: PacketReader): GuardianGemQuakeComponentData {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
       return {};

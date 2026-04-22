@@ -3,14 +3,14 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { createCactusSpineParticle, createFlowerParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxByLocalID } from "../../hitboxes";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface CactusFlower {
    readonly parentHitboxLocalID: number;
@@ -30,6 +30,10 @@ export interface CactusComponent {
    readonly flowers: ReadonlyArray<CactusFlower>;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cactus, _CactusComponentArray, CactusComponentData> {}
+}
+
 export const CACTUS_RADIUS = 40;
 
 const getFlowerTextureSource = (type: number, size: CactusFlowerSize): string => {
@@ -40,7 +44,7 @@ const getFlowerTextureSource = (type: number, size: CactusFlowerSize): string =>
    }
 }
 
-class _CactusComponentArray extends ServerComponentArray<CactusComponent, CactusComponentData> {
+class _CactusComponentArray extends _ServerComponentArray<CactusComponent, CactusComponentData> {
    public decodeData(reader: PacketReader): CactusComponentData {
       const flowers: Array<CactusFlower> = [];
       const numFlowers = reader.readNumber();

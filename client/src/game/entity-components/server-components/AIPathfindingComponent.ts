@@ -1,12 +1,16 @@
 import { ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
-import { registerServerComponentArray } from "../component-register";
+import _ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface AIPathfindingComponentData {}
 
 export class AIPathfindingComponent {}
 
-class _AIPathfindingComponentArray extends ServerComponentArray<AIPathfindingComponent, AIPathfindingComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiPathfinding, _AIPathfindingComponentArray, AIPathfindingComponentData> {}
+}
+
+class _AIPathfindingComponentArray extends _ServerComponentArray<AIPathfindingComponent, AIPathfindingComponentData> {
    public decodeData(): AIPathfindingComponentData {
       return {};
    }

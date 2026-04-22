@@ -1,12 +1,16 @@
 import { ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
-import { registerServerComponentArray } from "../component-register";
+import _ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface ProjectileComponentData {}
 
 export interface ProjectileComponent {}
 
-class _ProjectileComponentArray extends ServerComponentArray<ProjectileComponent, ProjectileComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.projectile, _ProjectileComponentArray, ProjectileComponentData> {}
+}
+
+class _ProjectileComponentArray extends _ServerComponentArray<ProjectileComponent, ProjectileComponentData> {
    public decodeData(): ProjectileComponentData {
       return {};
    }

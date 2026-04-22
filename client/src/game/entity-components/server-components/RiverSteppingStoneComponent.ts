@@ -3,15 +3,19 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface RiverSteppingStoneComponentData {}
 
 export interface RiverSteppingStoneComponent {}
 
-class _RiverSteppingStoneComponentArray extends ServerComponentArray<RiverSteppingStoneComponent, RiverSteppingStoneComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.riverSteppingStone, _RiverSteppingStoneComponentArray, RiverSteppingStoneComponentData> {}
+}
+
+class _RiverSteppingStoneComponentArray extends _ServerComponentArray<RiverSteppingStoneComponent, RiverSteppingStoneComponentData> {
    public decodeData(): RiverSteppingStoneComponentData {
       return {};
    }

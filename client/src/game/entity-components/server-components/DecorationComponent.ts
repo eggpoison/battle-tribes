@@ -1,12 +1,12 @@
 import { ServerComponentType, DecorationType, PacketReader } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface DecorationComponentData {
    readonly decorationType: DecorationType;
@@ -14,6 +14,10 @@ export interface DecorationComponentData {
 
 export interface DecorationComponent {
    readonly decorationType: DecorationType;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.decoration, _DecorationComponentArray, DecorationComponentData> {}
 }
 
 const DECORATION_RENDER_INFO: Record<DecorationType, string> = {
@@ -31,7 +35,7 @@ const DECORATION_RENDER_INFO: Record<DecorationType, string> = {
    [DecorationType.flower4]: "decorations/flower4.png"
 };
 
-class _DecorationComponentArray extends ServerComponentArray<DecorationComponent, DecorationComponentData> {
+class _DecorationComponentArray extends _ServerComponentArray<DecorationComponent, DecorationComponentData> {
    public decodeData(reader: PacketReader): DecorationComponentData {
       const decorationType = reader.readNumber();
 

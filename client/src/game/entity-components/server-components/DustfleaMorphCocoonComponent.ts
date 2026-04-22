@@ -1,5 +1,5 @@
 import { randAngle, randFloat, Settings, CircularBox, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
@@ -9,7 +9,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface DustfleaMorphCocoonComponentData {
    readonly stage: number;
@@ -24,7 +24,11 @@ export interface DustfleaMorphCocoonComponent {
    readonly renderPart: TexturedRenderPart;
 }
 
-class _DustfleaMorphCocoonComponentArray extends ServerComponentArray<DustfleaMorphCocoonComponent, DustfleaMorphCocoonComponentData, IntermediateInfo> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustfleaMorphCocoon, _DustfleaMorphCocoonComponentArray, DustfleaMorphCocoonComponentData> {}
+}
+
+class _DustfleaMorphCocoonComponentArray extends _ServerComponentArray<DustfleaMorphCocoonComponent, DustfleaMorphCocoonComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): DustfleaMorphCocoonComponentData {
       const stage = reader.readNumber();
       

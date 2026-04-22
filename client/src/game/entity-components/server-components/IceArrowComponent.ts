@@ -1,14 +1,18 @@
 import { Entity, Settings, ServerComponentType } from "webgl-test-shared";
 import { createIceSpeckProjectile, createSnowflakeParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
-import { registerServerComponentArray } from "../component-register";
+import _ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface IceArrowComponentData {}
 
 export interface IceArrowComponent {}
 
-class _IceArrowComponentArray extends ServerComponentArray<IceArrowComponent, IceArrowComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceArrow, _IceArrowComponentArray, IceArrowComponentData> {}
+}
+
+class _IceArrowComponentArray extends _ServerComponentArray<IceArrowComponent, IceArrowComponentData> {
    public decodeData(): IceArrowComponentData {
       return {};
    }

@@ -1,5 +1,5 @@
 import { LimbConfiguration, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
@@ -8,13 +8,17 @@ import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface CogwalkerComponentData {}
 
 export interface CogwalkerComponent {}
 
-class _CogwalkerComponentArray extends ServerComponentArray<CogwalkerComponent, CogwalkerComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cogwalker, _CogwalkerComponentArray, CogwalkerComponentData> {}
+}
+
+class _CogwalkerComponentArray extends _ServerComponentArray<CogwalkerComponent, CogwalkerComponentData> {
    public decodeData(): CogwalkerComponentData {
       return {};
    }

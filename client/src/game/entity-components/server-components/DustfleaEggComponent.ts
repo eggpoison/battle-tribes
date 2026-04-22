@@ -1,17 +1,21 @@
 import { randAngle, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface DustfleaEggComponentData {}
 
 export interface DustfleaEggComponent {}
 
-class _DustfleaEggComponentArray extends ServerComponentArray<DustfleaEggComponent, DustfleaEggComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustfleaEgg, _DustfleaEggComponentArray, DustfleaEggComponentData> {}
+}
+
+class _DustfleaEggComponentArray extends _ServerComponentArray<DustfleaEggComponent, DustfleaEggComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

@@ -3,15 +3,19 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface MithrilAnvilComponentData {}
 
 export interface MithrilAnvilComponent {}
 
-class _MithrilAnvilComponentArray extends ServerComponentArray<MithrilAnvilComponent, MithrilAnvilComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.mithrilAnvil, _MithrilAnvilComponentArray, MithrilAnvilComponentData> {}
+}
+
+class _MithrilAnvilComponentArray extends _ServerComponentArray<MithrilAnvilComponent, MithrilAnvilComponentData> {
    public decodeData(): MithrilAnvilComponentData {
       return {};
    }

@@ -5,11 +5,11 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface DesertBushSandyComponentData {
    readonly size: number;
@@ -17,7 +17,11 @@ export interface DesertBushSandyComponentData {
 
 export interface DesertBushSandyComponent {}
 
-class _DesertBushSandyComponentArray extends ServerComponentArray<DesertBushSandyComponent, DesertBushSandyComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertBushSandy, _DesertBushSandyComponentArray, DesertBushSandyComponentData> {}
+}
+
+class _DesertBushSandyComponentArray extends _ServerComponentArray<DesertBushSandyComponent, DesertBushSandyComponentData> {
    public decodeData(reader: PacketReader): DesertBushSandyComponentData {
       const size = reader.readNumber();
       return {

@@ -1,5 +1,5 @@
 import { randInt, Entity, PacketReader, ServerComponentType, randAngle, CircularBox, randFloat } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
@@ -10,7 +10,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH } from "../../particles";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface BerryBushPlantedComponentData {
    readonly growthProgress: number;
@@ -25,6 +25,10 @@ export interface BerryBushPlantedComponent {
    readonly renderPart: TexturedRenderPart;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.berryBushPlanted, _BerryBushPlantedComponentArray, BerryBushPlantedComponentData> {}
+}
+
 const TEXTURE_SOURCES = ["entities/plant/berry-bush-sapling-1.png", "entities/plant/berry-bush-sapling-2.png", "entities/plant/berry-bush-sapling-3.png", "entities/plant/berry-bush-sapling-4.png", "entities/plant/berry-bush-sapling-5.png", "entities/plant/berry-bush-sapling-6.png", "entities/plant/berry-bush-sapling-7.png", "entities/plant/berry-bush-sapling-8.png", "entities/plant/berry-bush-sapling-9.png", ""];
 
 const FULLY_GROWN_TEXTURE_SOURCES: ReadonlyArray<string> = [
@@ -35,7 +39,7 @@ const FULLY_GROWN_TEXTURE_SOURCES: ReadonlyArray<string> = [
    "entities/plant/berry-bush-plant-5.png"
 ];
 
-class _BerryBushPlantedComponentArray extends ServerComponentArray<BerryBushPlantedComponent, BerryBushPlantedComponentData, IntermediateInfo> {
+class _BerryBushPlantedComponentArray extends _ServerComponentArray<BerryBushPlantedComponent, BerryBushPlantedComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): BerryBushPlantedComponentData {
       const growthProgress = reader.readNumber();
       const numFruits = reader.readNumber();

@@ -1,15 +1,19 @@
 import { Entity, ServerComponentType, Settings } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface BattleaxeProjectileComponentData {}
 
 export interface BattleaxeProjectileComponent {}
 
-class _BattleaxeProjectileComponentArray extends ServerComponentArray<BattleaxeProjectileComponent, BattleaxeProjectileComponentData, never> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.battleaxeProjectile, _BattleaxeProjectileComponentArray, BattleaxeProjectileComponentData> {}
+}
+
+class _BattleaxeProjectileComponentArray extends _ServerComponentArray<BattleaxeProjectileComponent, BattleaxeProjectileComponentData, never> {
    public decodeData(): BattleaxeProjectileComponentData {
       return {};
    }

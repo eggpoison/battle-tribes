@@ -2,12 +2,12 @@ import { PacketReader, Entity, EntityType, ServerComponentType } from "webgl-tes
 import { playSoundOnHitbox } from "../../sound";
 import { createStructureConnection, StructureConnection } from "../../structure-placement";
 import { EntityComponentData, getEntityType } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { addFenceConnection, FenceComponentArray, removeFenceConnection } from "./FenceComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface StructureComponentData {
    readonly hasActiveBlueprint: boolean;
@@ -19,7 +19,11 @@ export interface StructureComponent {
    readonly connections: Array<StructureConnection>;
 }
 
-class _StructureComponentArray extends ServerComponentArray<StructureComponent, StructureComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.structure, _StructureComponentArray, StructureComponentData> {}
+}
+
+class _StructureComponentArray extends _ServerComponentArray<StructureComponent, StructureComponentData> {
    public decodeData(reader: PacketReader): StructureComponentData {
       const hasActiveBlueprint = reader.readBool();
 

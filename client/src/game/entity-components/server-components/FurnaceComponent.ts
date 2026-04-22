@@ -1,5 +1,5 @@
 import { randFloat, angle, randAngle, Entity, ServerComponentType, Settings, RectangularBox } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../../particles";
@@ -11,13 +11,17 @@ import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface FurnaceComponentData {}
 
 export interface FurnaceComponent {}
 
-class _FurnaceComponentArray extends ServerComponentArray<FurnaceComponent, FurnaceComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.furnace, _FurnaceComponentArray, FurnaceComponentData> {}
+}
+
+class _FurnaceComponentArray extends _ServerComponentArray<FurnaceComponent, FurnaceComponentData> {
    public decodeData(): FurnaceComponentData {
       return {};
    }

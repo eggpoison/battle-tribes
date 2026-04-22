@@ -3,10 +3,10 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface FloorSignComponentData {
    readonly message: string;
@@ -16,7 +16,11 @@ export interface FloorSignComponent {
    message: string;
 }
 
-class _FloorSignComponentArray extends ServerComponentArray<FloorSignComponent, FloorSignComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.floorSign, _FloorSignComponentArray, FloorSignComponentData> {}
+}
+
+class _FloorSignComponentArray extends _ServerComponentArray<FloorSignComponent, FloorSignComponentData> {
    public decodeData(reader: PacketReader): FloorSignComponentData {
       const message = reader.readString();
       return {

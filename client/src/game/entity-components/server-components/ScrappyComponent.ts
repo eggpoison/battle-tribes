@@ -1,5 +1,5 @@
 import { LimbConfiguration, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
@@ -8,13 +8,17 @@ import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface ScrappyComponentData {}
 
 export interface ScrappyComponent {}
 
-class _ScrappyComponentArray extends ServerComponentArray<ScrappyComponent, ScrappyComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.scrappy, _ScrappyComponentArray, ScrappyComponentData> {}
+}
+
+class _ScrappyComponentArray extends _ServerComponentArray<ScrappyComponent, ScrappyComponentData> {
    public decodeData(): ScrappyComponentData {
       return {};
    }

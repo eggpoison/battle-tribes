@@ -5,16 +5,20 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface DesertBushLivelyComponentData {}
 
 export interface DesertBushLivelyComponent {}
 
-class _DesertBushLivelyComponentArray extends ServerComponentArray<DesertBushLivelyComponent, DesertBushLivelyComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertBushLively, _DesertBushLivelyComponentArray, DesertBushLivelyComponentData> {}
+}
+
+class _DesertBushLivelyComponentArray extends _ServerComponentArray<DesertBushLivelyComponent, DesertBushLivelyComponentData> {
    public decodeData(): DesertBushLivelyComponentData {
       return {};
    }

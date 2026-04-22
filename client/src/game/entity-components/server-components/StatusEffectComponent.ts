@@ -5,7 +5,7 @@ import { createPoisonBubble, createBloodParticle, BloodParticleSize, createHeatP
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour, lowTexturedParticles, highMonocolourParticles, highTexturedParticles } from "../../rendering/webgl/particle-rendering";
 import { Light, removeLight } from "../../lights";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
 import { playerInstance } from "../../player";
@@ -13,7 +13,7 @@ import { getHitboxVelocity } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface StatusEffectComponentData {
    readonly statusEffects: Array<StatusEffectData>;
@@ -24,6 +24,10 @@ export interface StatusEffectComponent {
    
    // @Cleanup: should be readonly!
    statusEffects: Array<StatusEffectData>;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.statusEffect, _StatusEffectComponentArray, StatusEffectComponentData> {}
 }
 
 const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [
@@ -51,7 +55,7 @@ const getStatusEffect = (statusEffectComponent: StatusEffectComponent, type: Sta
    return null;
 }
 
-class _StatusEffectComponentArray extends ServerComponentArray<StatusEffectComponent, StatusEffectComponentData> {
+class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComponent, StatusEffectComponentData> {
    public decodeData(reader: PacketReader): StatusEffectComponentData {
       const statusEffects: Array<StatusEffectData> = [];
       const numStatusEffects = reader.readNumber();

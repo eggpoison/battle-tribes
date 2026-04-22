@@ -1,5 +1,5 @@
 import { randAngle, randFloat, Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
@@ -9,7 +9,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface PricklyPearFragmentProjectileComponentData {
    readonly variant: number;
@@ -17,7 +17,11 @@ export interface PricklyPearFragmentProjectileComponentData {
 
 export interface PricklyPearFragmentProjectileComponent {}
 
-class _PricklyPearFragmentProjectileComponentArray extends ServerComponentArray<PricklyPearFragmentProjectileComponent, PricklyPearFragmentProjectileComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pricklyPearFragmentProjectile, _PricklyPearFragmentProjectileComponentArray, PricklyPearFragmentProjectileComponentData> {}
+}
+
+class _PricklyPearFragmentProjectileComponentArray extends _ServerComponentArray<PricklyPearFragmentProjectileComponent, PricklyPearFragmentProjectileComponentData> {
    public decodeData(reader: PacketReader): PricklyPearFragmentProjectileComponentData {
       const variant = reader.readNumber();
       return {

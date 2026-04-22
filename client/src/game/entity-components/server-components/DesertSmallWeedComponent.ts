@@ -5,16 +5,20 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface DesertSmallWeedComponentData {}
 
 export interface DesertSmallWeedComponent {}
 
-class _DesertSmallWeedComponentArray extends ServerComponentArray<DesertSmallWeedComponent, DesertSmallWeedComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertSmallWeed, _DesertSmallWeedComponentArray, DesertSmallWeedComponentData> {}
+}
+
+class _DesertSmallWeedComponentArray extends _ServerComponentArray<DesertSmallWeedComponent, DesertSmallWeedComponentData> {
    public decodeData(): DesertSmallWeedComponentData {
       return {};
    }

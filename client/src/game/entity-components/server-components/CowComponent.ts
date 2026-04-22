@@ -4,7 +4,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { RenderPart } from "../../render-parts/render-parts";
@@ -14,7 +14,7 @@ import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface CowComponentData {
    readonly species: CowSpecies;
@@ -38,7 +38,11 @@ export interface CowComponent {
    stamina: number;
 }
 
-class _CowComponentArray extends ServerComponentArray<CowComponent, CowComponentData, IntermediateInfo> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cow, _CowComponentArray, CowComponentData> {}
+}
+
+class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): CowComponentData {
       const species = reader.readNumber();
       const grazeProgress = reader.readNumber();

@@ -1,12 +1,12 @@
 import { ServerComponentType, PacketReader } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SandstoneRockComponentData {
    readonly size: number;
@@ -14,7 +14,11 @@ export interface SandstoneRockComponentData {
 
 export interface SandstoneRockComponent {}
 
-class _SandstoneRockComponentArray extends ServerComponentArray<SandstoneRockComponent, SandstoneRockComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.sandstoneRock, _SandstoneRockComponentArray, SandstoneRockComponentData> {}
+}
+
+class _SandstoneRockComponentArray extends _ServerComponentArray<SandstoneRockComponent, SandstoneRockComponentData> {
    public decodeData(reader: PacketReader): SandstoneRockComponentData {
       const size = reader.readNumber();
       return {

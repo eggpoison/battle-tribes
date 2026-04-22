@@ -1,5 +1,5 @@
 import { HitboxFlag, Point, randAngle, randFloat, randInt, Entity, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain, createKrumblidChitinParticle } from "../../particles";
@@ -10,13 +10,17 @@ import { Hitbox } from "../../hitboxes";
 import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface KrumblidComponentData {}
 
 export interface KrumblidComponent {}
 
-class _KrumblidComponentArray extends ServerComponentArray<KrumblidComponent, KrumblidComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.krumblid, _KrumblidComponentArray, KrumblidComponentData> {}
+}
+
+class _KrumblidComponentArray extends _ServerComponentArray<KrumblidComponent, KrumblidComponentData> {
    public decodeData(): KrumblidComponentData {
       return {};
    }

@@ -6,11 +6,11 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface GuardianGemFragmentProjectileComponentData {
    readonly fragmentShape: number;
@@ -32,7 +32,11 @@ const TEXTURE_SOURCES = [
    "entities/guardian-gem-fragment-projectile/fragment-3.png"
 ];
 
-class _GuardianGemFragmentProjectileComponentArray extends ServerComponentArray<GuardianGemFragmentProjectileComponent, GuardianGemFragmentProjectileComponentData, IntermediateInfo> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianGemFragmentProjectile, _GuardianGemFragmentProjectileComponentArray, GuardianGemFragmentProjectileComponentData> {}
+}
+
+class _GuardianGemFragmentProjectileComponentArray extends _ServerComponentArray<GuardianGemFragmentProjectileComponent, GuardianGemFragmentProjectileComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): GuardianGemFragmentProjectileComponentData {
       const fragmentShape = reader.readNumber();
       const gemType = reader.readNumber();

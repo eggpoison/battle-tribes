@@ -1,7 +1,7 @@
 import { Entity, EntityType, updateBox, ServerComponentType, PacketReader, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, getTileIndexIncludingEdges, _bounds, _point, getEntityCollisionGroup } from "webgl-test-shared";
 import Chunk from "../../Chunk";
 import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityRenderObject, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { playerInstance } from "../../player";
 import { getDistanceFromPointToHitboxIncludingChildren, getHitboxByLocalID, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../../hitboxes";
 import Particle from "../../Particle";
@@ -15,7 +15,7 @@ import { getTransformComponentData } from "../../entity-component-types";
 import Layer from "../../Layer";
 import { readHitboxFromData, updateHitboxFromData, updatePlayerHitboxFromData } from "../../networking/packet-hitboxes";
 import { playerIsLightspeed } from "../../event-handling";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TransformComponentData {
    readonly traction: number;
@@ -37,8 +37,12 @@ export interface TransformComponent {
 
    traction: number;
 
-   // @Garbage: used by extremely few entities.
+   // @Garbage @Memory: used by extremely few entities.
    ignoredTileSpeedMultipliers: ReadonlyArray<TileType>;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.transform, _TransformComponentArray, TransformComponentData> {}
 }
 
 // We use this so that a component tries to override the empty array with the same empty
@@ -420,7 +424,7 @@ const tickHitboxPhysics = (hitbox: Hitbox): void => {
    }
 }
 
-class _TransformComponentArray extends ServerComponentArray<TransformComponent> {
+class _TransformComponentArray extends _ServerComponentArray<TransformComponent> {
    public decodeData(reader: PacketReader): TransformComponentData {
       const traction = reader.readNumber();
 

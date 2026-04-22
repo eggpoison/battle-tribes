@@ -1,5 +1,5 @@
 import { randItem, Entity, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../../utils";
@@ -11,13 +11,17 @@ import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface BallistaComponentData {}
 
 export interface BallistaComponent {}
 
-class _BallistaComponentArray extends ServerComponentArray<BallistaComponent, BallistaComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ballista, _BallistaComponentArray, BallistaComponentData> {}
+}
+
+class _BallistaComponentArray extends _ServerComponentArray<BallistaComponent, BallistaComponentData> {
    public decodeData(): BallistaComponentData {
       return {};
    }

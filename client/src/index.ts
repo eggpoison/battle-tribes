@@ -6,6 +6,11 @@ import "./ui/game/dev/NerdVision";
 // @HACK
 import "./ui/game/DeathScreen";
 
+// There are many components which are never imported anywhere
+import.meta.glob("./game/entity-components/**/*Component.ts", {
+   eager: true
+});
+
 if (import.meta.hot) {
    import.meta.hot.accept();
 }

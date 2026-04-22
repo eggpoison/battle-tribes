@@ -1,5 +1,5 @@
 import { randFloat, Entity, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -7,13 +7,17 @@ import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface InguYetukLaserComponentData {}
 
 export interface InguYetukLaserComponent {}
 
-class _InguYetukLaserComponentArray extends ServerComponentArray<InguYetukLaserComponent, InguYetukLaserComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetukLaser, _InguYetukLaserComponentArray, InguYetukLaserComponentData> {}
+}
+
+class _InguYetukLaserComponentArray extends _ServerComponentArray<InguYetukLaserComponent, InguYetukLaserComponentData> {
    public decodeData(): InguYetukLaserComponentData {
       return {};
    }

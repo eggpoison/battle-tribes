@@ -1,5 +1,5 @@
 import { randFloat, randItem, randInt, Point, randAngle, ServerComponentType, CircularBox, HitFlags, Entity } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
@@ -10,13 +10,17 @@ import { TransformComponentArray } from "./TransformComponent";
 import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface PalmTreeComponentData {}
 
 export interface PalmTreeComponent {}
 
-class _PalmTreeComponentArray extends ServerComponentArray<PalmTreeComponent, PalmTreeComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.palmTree, _PalmTreeComponentArray, PalmTreeComponentData> {}
+}
+
+class _PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, PalmTreeComponentData> {
    public decodeData(): PalmTreeComponentData {
       return {};
    }

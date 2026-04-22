@@ -7,12 +7,12 @@ import { registerDirtyRenderObject } from "../../rendering/render-part-matrices"
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface GuardianComponentData {
    readonly rubyGemActivation: number;
@@ -65,11 +65,15 @@ export interface GuardianComponent {
    attackStage: number;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardian, _GuardianComponentArray, GuardianComponentData> {}
+}
+
 const enum Var {
    SPIKY_BALL_SUMMON_SHAKE_AMOUNT = 2
 }
 
-class _GuardianComponentArray extends ServerComponentArray<GuardianComponent, GuardianComponentData, IntermediateInfo> {
+class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, GuardianComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): GuardianComponentData {
       const rubyGemActivation = reader.readNumber();
       const emeraldGemActivation = reader.readNumber();

@@ -1,12 +1,16 @@
 import { ServerComponentType, PacketReader } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
-import { registerServerComponentArray } from "../component-register";
+import _ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface AIHelperComponentData {}
 
 export interface AIHelperComponent {}
 
-class _AIHelperComponentArray extends ServerComponentArray<AIHelperComponent, AIHelperComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiHelper, _AIHelperComponentArray, AIHelperComponentData> {}
+}
+
+class _AIHelperComponentArray extends _ServerComponentArray<AIHelperComponent, AIHelperComponentData> {
    public decodeData(reader: PacketReader): AIHelperComponentData {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
       return {};

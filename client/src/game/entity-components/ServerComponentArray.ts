@@ -1,7 +1,7 @@
 import { PacketReader, Entity } from "webgl-test-shared";
 import { ComponentArray } from "./ComponentArray";
 
-export default abstract class ServerComponentArray<
+export default abstract class _ServerComponentArray<
    Component extends object = never,
    ComponentData extends object = object,
    ComponentIntermediateInfo = void

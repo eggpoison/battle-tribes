@@ -2,7 +2,7 @@ import { randAngle, randFloat, randInt, Entity, ServerComponentType, PacketReade
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
@@ -11,7 +11,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface BerryBushComponentData {
    readonly numBerries: number;
@@ -26,6 +26,10 @@ export interface BerryBushComponent {
    readonly renderPart: TexturedRenderPart;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.berryBush, _BerryBushComponentArray, BerryBushComponentData> {}
+}
+
 const BERRY_BUSH_TEXTURE_SOURCES = [
    "entities/berry-bush1.png",
    "entities/berry-bush2.png",
@@ -38,7 +42,7 @@ const BERRY_BUSH_TEXTURE_SOURCES = [
 const LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
 const LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
 
-class _BerryBushComponentArray extends ServerComponentArray<BerryBushComponent, BerryBushComponentData, IntermediateInfo> {
+class _BerryBushComponentArray extends _ServerComponentArray<BerryBushComponent, BerryBushComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): BerryBushComponentData {
       const numBerries = reader.readNumber();
       return {

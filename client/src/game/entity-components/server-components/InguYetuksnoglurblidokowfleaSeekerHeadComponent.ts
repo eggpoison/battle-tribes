@@ -1,17 +1,21 @@
 import { HitboxFlag, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface InguYetuksnoglurblidokowfleaSeekerHeadComponentData {}
 
 export interface InguYetuksnoglurblidokowfleaSeekerHeadComponent {}
 
-class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends ServerComponentArray<InguYetuksnoglurblidokowfleaSeekerHeadComponent, InguYetuksnoglurblidokowfleaSeekerHeadComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetuksnoglurblidokowfleaSeekerHead, _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray, InguYetuksnoglurblidokowfleaSeekerHeadComponentData> {}
+}
+
+class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerComponentArray<InguYetuksnoglurblidokowfleaSeekerHeadComponent, InguYetuksnoglurblidokowfleaSeekerHeadComponentData> {
    public decodeData(): InguYetuksnoglurblidokowfleaSeekerHeadComponentData {
       return {};
    }

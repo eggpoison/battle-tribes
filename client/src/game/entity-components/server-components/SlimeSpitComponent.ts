@@ -1,7 +1,7 @@
 import { ServerComponentType, Entity, Settings, PacketReader } from "webgl-test-shared";
 import { createPoisonParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
@@ -9,13 +9,17 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SlimeSpitComponentData {}
 
 export interface SlimeSpitComponent {}
 
-class _SlimeSpitComponentArray extends ServerComponentArray<SlimeSpitComponent, SlimeSpitComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimeSpit, _SlimeSpitComponentArray, SlimeSpitComponentData> {}
+}
+
+class _SlimeSpitComponentArray extends _ServerComponentArray<SlimeSpitComponent, SlimeSpitComponentData> {
    public decodeData(reader: PacketReader): SlimeSpitComponentData {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
       return {};

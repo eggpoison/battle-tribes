@@ -1,6 +1,6 @@
 import { PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 
 // export interface BlockAttackComponentData {
 //    readonly hasBlocked: boolean;

@@ -7,13 +7,13 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { playerTribe } from "../../tribes";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { tamingMenuState } from "../../../ui-state/taming-menu-state";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getRenderThingByTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TamingSkillLearning {
    readonly skill: TamingSkill;
@@ -52,6 +52,10 @@ export interface TamingComponent {
    followHalo: RenderPart | null;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.taming, _TamingComponentArray, TamingComponentData> {}
+}
+
 const TAMING_TIER_TEXTURE_SOURCES: Record<number, string> = {
    1: "entities/miscellaneous/taming-tier-1.png",
    2: "entities/miscellaneous/taming-tier-2.png",
@@ -62,7 +66,7 @@ const TAMING_TIER_TEXTURE_SOURCES: Record<number, string> = {
 const TAMING_TIER_RENDER_PART_Z_INDEX = 19;
 const HALO_RENDER_PART_Z_INDEX = 20;
 
-class _TamingComponentArray extends ServerComponentArray<TamingComponent, TamingComponentData, IntermediateInfo> {
+class _TamingComponentArray extends _ServerComponentArray<TamingComponent, TamingComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): TamingComponentData {
       const tamingTier = reader.readNumber();
       const berriesEatenInTier = reader.readNumber();

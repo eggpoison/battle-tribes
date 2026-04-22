@@ -4,11 +4,11 @@ import { createPaperParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityAgeTicks } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface ResearchBenchComponentData {
    readonly isOccupied: boolean;
@@ -18,7 +18,11 @@ export interface ResearchBenchComponent {
    isOccupied: boolean;
 }
 
-class _ResearchBenchComponentArray extends ServerComponentArray<ResearchBenchComponent, ResearchBenchComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.researchBench, _ResearchBenchComponentArray, ResearchBenchComponentData> {}
+}
+
+class _ResearchBenchComponentArray extends _ServerComponentArray<ResearchBenchComponent, ResearchBenchComponentData> {
    public decodeData(reader: PacketReader): ResearchBenchComponentData {
       const isOccupied = reader.readBool();
       return {

@@ -1,12 +1,12 @@
 import { ItemType, Entity, PacketReader, randInt, randItem, TribeType, Settings, ServerComponentType, TribesmanAIType } from "webgl-test-shared";
 import { TribeComponentArray } from "./TribeComponent";
 import { playSoundOnHitbox } from "../../sound";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TribesmanAIComponentData {
    readonly aiType: TribesmanAIType;
@@ -23,11 +23,15 @@ export interface TribesmanAIComponent {
    craftingProgress: number;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesmanAI, _TribesmanAIComponentArray, TribesmanAIComponentData> {}
+}
+
 const GOBLIN_ANGRY_SOUNDS: ReadonlyArray<string> = ["goblin-angry-1.mp3", "goblin-angry-2.mp3", "goblin-angry-3.mp3", "goblin-angry-4.mp3"];
 const GOBLIN_ESCAPE_SOUNDS: ReadonlyArray<string> = ["goblin-escape-1.mp3", "goblin-escape-2.mp3", "goblin-escape-3.mp3"];
 const GOBLIN_AMBIENT_SOUNDS: ReadonlyArray<string> = ["goblin-ambient-1.mp3", "goblin-ambient-2.mp3", "goblin-ambient-3.mp3", "goblin-ambient-4.mp3", "goblin-ambient-5.mp3"];
 
-class _TribesmanAIComponentArray extends ServerComponentArray<TribesmanAIComponent, TribesmanAIComponentData> {
+class _TribesmanAIComponentArray extends _ServerComponentArray<TribesmanAIComponent, TribesmanAIComponentData> {
    public decodeData(reader: PacketReader): TribesmanAIComponentData {
       const aiType = reader.readNumber();
       const relationsWithPlayer = reader.readNumber();

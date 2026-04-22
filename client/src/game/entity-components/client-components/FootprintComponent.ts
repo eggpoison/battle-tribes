@@ -9,8 +9,8 @@ import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getEntityClientComponentTypes } from "../../entity-component-types";
 import { getClientComponentData } from "../../entity-component-types";
 import { hitboxIsInWater } from "../../collision";
-import { registerClientComponentArray } from "../component-register";
-import ClientComponentArray from "../ClientComponentArray";
+import { registerClientComponentArray } from "../component-registry";
+import _ClientComponentArray from "../ClientComponentArray";
 
 export interface FootprintComponentData {
    readonly footstepParticleIntervalSeconds: number;
@@ -33,7 +33,11 @@ export interface FootprintComponent {
    distanceTracker: number;
 }
 
-class _FootprintComponentArray extends ClientComponentArray<FootprintComponent> {
+declare module "../component-registry" {
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.footprint, _FootprintComponentArray, FootprintComponentData> {}
+}
+
+class _FootprintComponentArray extends _ClientComponentArray<FootprintComponent> {
    public createComponent(entityComponentData: EntityComponentData): FootprintComponent {
       const clientComponentTypes = getEntityClientComponentTypes(entityComponentData.entityType);
       const footprintComponentData = getClientComponentData(entityComponentData.clientComponentData, clientComponentTypes, ClientComponentType.footprint);

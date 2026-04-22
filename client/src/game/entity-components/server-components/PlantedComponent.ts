@@ -2,14 +2,18 @@ import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-sh
 import { createDirtParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { TransformComponentArray } from "./TransformComponent";
-import { registerServerComponentArray } from "../component-register";
-import ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
+import _ServerComponentArray from "../ServerComponentArray";
 
 export interface PlantedComponentData {}
 
 export interface PlantedComponent {}
 
-class _PlantedComponentArray extends ServerComponentArray<PlantedComponent, PlantedComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.planted, _PlantedComponentArray, PlantedComponentData> {}
+}
+
+class _PlantedComponentArray extends _ServerComponentArray<PlantedComponent, PlantedComponentData> {
    public decodeData(): PlantedComponentData {
       return {};
    }

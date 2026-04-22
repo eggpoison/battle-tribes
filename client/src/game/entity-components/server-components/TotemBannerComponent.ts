@@ -3,7 +3,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { TribeComponentArray } from "./TribeComponent";
@@ -11,7 +11,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TotemBannerComponentData {
    readonly banners: Record<number, TribeTotemBanner>;
@@ -26,9 +26,13 @@ export interface TotemBannerComponent {
    readonly bannerRenderParts: Record<number, VisualRenderPart>;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.totemBanner, _TotemBannerComponentArray, TotemBannerComponentData> {}
+}
+
 const BANNER_LAYER_DISTANCES = [34, 52, 65];
 
-class _TotemBannerComponentArray extends ServerComponentArray<TotemBannerComponent, TotemBannerComponentData, IntermediateInfo> {
+class _TotemBannerComponentArray extends _ServerComponentArray<TotemBannerComponent, TotemBannerComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): TotemBannerComponentData {
       const banners: Array<TribeTotemBanner> = [];
       const numBanners = reader.readNumber();

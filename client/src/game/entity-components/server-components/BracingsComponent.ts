@@ -3,16 +3,20 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface BracingsComponentData {}
 
 export interface BracingsComponent {}
 
-class _BracingsComponentArray extends ServerComponentArray<BracingsComponent, BracingsComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.bracings, _BracingsComponentArray, BracingsComponentData> {}
+}
+
+class _BracingsComponentArray extends _ServerComponentArray<BracingsComponent, BracingsComponentData> {
    public decodeData(): BracingsComponentData {
       return {};
    }

@@ -6,7 +6,7 @@ import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { BALLISTA_GEAR_X, BALLISTA_GEAR_Y, BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../../utils";
 import { WARRIOR_HUT_SIZE } from "./HutComponent";
 import { TribeComponentArray } from "./TribeComponent";
@@ -14,7 +14,7 @@ import { playerTribe } from "../../tribes";
 import { Hitbox } from "../../hitboxes";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface BlueprintComponentData {
    readonly blueprintType: BlueprintType;
@@ -39,6 +39,11 @@ interface ProgressTextureInfo {
    readonly rotation: number;
    readonly zIndex: number;
 }
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.blueprint, _BlueprintComponentArray, BlueprintComponentData> {}
+}
+
 // @Cleanup: Some of these are duplicates
 // @Robustness: Do something better than hand-writing 'blueprint-1', 'blueprint-2', etc. in an array.
 export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyArray<ProgressTextureInfo>> = {
@@ -411,7 +416,7 @@ const createStoneBlueprintWorkParticleEffects = (originX: number, originY: numbe
    }
 }
 
-class _BlueprintComponentArray extends ServerComponentArray<BlueprintComponent, BlueprintComponentData> {
+class _BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent, BlueprintComponentData> {
    public decodeData(reader: PacketReader): BlueprintComponentData {
       const blueprintType = reader.readNumber() as BlueprintType;
       const blueprintProgress = reader.readNumber();

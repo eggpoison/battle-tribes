@@ -1,9 +1,9 @@
 import { ServerComponentType, PacketReader } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface PlayerComponentData {
    readonly username: string;
@@ -13,7 +13,11 @@ export interface PlayerComponent {
    readonly username: string;
 }
 
-class _PlayerComponentArray extends ServerComponentArray<PlayerComponent, PlayerComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.player, _PlayerComponentArray, PlayerComponentData> {}
+}
+
+class _PlayerComponentArray extends _ServerComponentArray<PlayerComponent, PlayerComponentData> {
    public decodeData(reader: PacketReader): PlayerComponentData {
       const username = reader.readString();
       return {

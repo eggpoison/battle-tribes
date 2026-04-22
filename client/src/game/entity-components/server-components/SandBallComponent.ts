@@ -5,11 +5,11 @@ import { createSandParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SandBallComponentData {
    readonly size: number;
@@ -24,7 +24,11 @@ export interface SandBallComponent {
    readonly renderPart: TexturedRenderPart;
 }
 
-class _SandBallComponentArray extends ServerComponentArray<SandBallComponent, SandBallComponentData, IntermediateInfo> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.sandBall, _SandBallComponentArray, SandBallComponentData> {}
+}
+
+class _SandBallComponentArray extends _ServerComponentArray<SandBallComponent, SandBallComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): SandBallComponentData {
       const size = reader.readNumber();
       

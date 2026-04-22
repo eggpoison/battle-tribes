@@ -3,13 +3,13 @@ import { playSoundOnHitbox } from "../../sound";
 import { getHumanoidRadius, TribesmanComponentArray } from "./TribesmanComponent";
 import { createConversionParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { Tribe, tribeExists } from "../../tribes";
 import { playerInstance } from "../../player";
 import { EntityComponentData } from "../../world";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TribeComponentData {
    readonly tribeID: number;
@@ -21,7 +21,11 @@ export interface TribeComponent {
    tribeType: TribeType;
 }
 
-class _TribeComponentArray extends ServerComponentArray<TribeComponent, TribeComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribe, _TribeComponentArray, TribeComponentData> {}
+}
+
+class _TribeComponentArray extends _ServerComponentArray<TribeComponent, TribeComponentData> {
    public decodeData(reader: PacketReader): TribeComponentData {
       const tribeID = reader.readNumber();
       const tribeType = reader.readNumber() as TribeType;

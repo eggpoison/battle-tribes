@@ -3,14 +3,14 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { currentSnapshot } from "../../networking/snapshots";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface AmmoBoxComponentData {
    readonly ammoType: TurretAmmoType | null;
@@ -26,6 +26,10 @@ export interface AmmoBoxComponent {
    ammoRemaining: number;
 
    ammoWarningRenderPart: VisualRenderPart | null;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ammoBox, _AmmoBoxComponentArray, AmmoBoxComponentData> {}
 }
 
 const createAmmoWarningRenderPart = (parentHitbox: Hitbox): VisualRenderPart => {
@@ -45,7 +49,7 @@ const createAmmoWarningRenderPart = (parentHitbox: Hitbox): VisualRenderPart => 
    return renderPart;
 }
 
-class _AmmoBoxComponentArray extends ServerComponentArray<AmmoBoxComponent, AmmoBoxComponentData, IntermediateInfo> {
+class _AmmoBoxComponentArray extends _ServerComponentArray<AmmoBoxComponent, AmmoBoxComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): AmmoBoxComponentData {
       const ammoType = reader.readNumber();
       const ammoRemaining = reader.readNumber();

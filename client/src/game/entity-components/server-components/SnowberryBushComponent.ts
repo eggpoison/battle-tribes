@@ -1,12 +1,12 @@
 import { Entity, PacketReader, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SnowberryBushComponentData {
    readonly numBerries: number;
@@ -20,7 +20,11 @@ export interface SnowberryBushComponent {
    readonly renderPart: TexturedRenderPart;
 }
 
-class _SnowberryBushComponentArray extends ServerComponentArray<SnowberryBushComponent, SnowberryBushComponentData, IntermediateInfo> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snowberryBush, _SnowberryBushComponentArray, SnowberryBushComponentData> {}
+}
+
+class _SnowberryBushComponentArray extends _ServerComponentArray<SnowberryBushComponent, SnowberryBushComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): SnowberryBushComponentData {
       const numBerries = reader.readNumber();
       return {

@@ -5,12 +5,12 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TUNNEL_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TunnelComponentData {
    readonly doorBitset: number;
@@ -24,6 +24,10 @@ export interface TunnelComponent {
    bottomDoorOpenProgress: number;
    
    readonly doorRenderParts: Record<number, VisualRenderPart>;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tunnel, _TunnelComponentArray, TunnelComponentData> {}
 }
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 48 * 48) / 2;
@@ -53,7 +57,7 @@ const getTunnelDoorInfo = (doorBit: number, openProgress: number): TunnelDoorInf
    };
 }
 
-class _TunnelComponentArray extends ServerComponentArray<TunnelComponent, TunnelComponentData> {
+class _TunnelComponentArray extends _ServerComponentArray<TunnelComponent, TunnelComponentData> {
    public decodeData(reader: PacketReader): TunnelComponentData {
       const doorBitset = reader.readNumber();
       const topDoorOpenProgress = reader.readNumber();

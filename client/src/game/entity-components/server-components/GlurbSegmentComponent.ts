@@ -10,8 +10,8 @@ import { EntityComponentData, getEntityLayer, getEntityRenderObject } from "../.
 import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
-import ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
+import _ServerComponentArray from "../ServerComponentArray";
 
 export interface GlurbSegmentComponentData {
    readonly mossBallCompleteness: number;
@@ -25,7 +25,11 @@ export interface GlurbSegmentComponent {
    mossBallRenderPart: TexturedRenderPart | null;
 }
 
-class _GlurbSegmentComponentArray extends ServerComponentArray<GlurbSegmentComponent, GlurbSegmentComponentData, IntermediateInfo> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbSegment, _GlurbSegmentComponentArray, GlurbSegmentComponentData> {}
+}
+
+class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComponent, GlurbSegmentComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): GlurbSegmentComponentData {
       const mossBallCompleteness = reader.readNumber();
       return {

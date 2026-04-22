@@ -1,5 +1,5 @@
 import { randFloat, randInt, Settings, Entity, HitboxFlag, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -7,13 +7,17 @@ import { EntityComponentData, getCurrentLayer } from "../../world";
 import { playSound } from "../../sound";
 import { cameraPosition } from "../../camera";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface InguYetuksnoglurblidokowfleaComponentData {}
 
 export interface InguYetuksnoglurblidokowfleaComponent {}
 
-class _InguYetuksnoglurblidokowfleaComponentArray extends ServerComponentArray<InguYetuksnoglurblidokowfleaComponent, InguYetuksnoglurblidokowfleaComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetuksnoglurblidokowflea, _InguYetuksnoglurblidokowfleaComponentArray, InguYetuksnoglurblidokowfleaComponentData> {}
+}
+
+class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<InguYetuksnoglurblidokowfleaComponent, InguYetuksnoglurblidokowfleaComponentData> {
    public decodeData(): InguYetuksnoglurblidokowfleaComponentData {
       return {};
    }

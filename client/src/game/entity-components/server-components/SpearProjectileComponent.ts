@@ -4,16 +4,20 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SpearProjectileComponentData {}
 
 export interface SpearProjectileComponent {}
 
-class _SpearProjectileComponentArray extends ServerComponentArray<SpearProjectileComponent, SpearProjectileComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spearProjectile, _SpearProjectileComponentArray, SpearProjectileComponentData> {}
+}
+
+class _SpearProjectileComponentArray extends _ServerComponentArray<SpearProjectileComponent, SpearProjectileComponentData> {
    public decodeData(): SpearProjectileComponentData {
       return {};
    }

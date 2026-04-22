@@ -2,7 +2,7 @@ import { TileType, ServerComponentType, PacketReader, Entity, FishColour, randAn
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
@@ -11,7 +11,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface FishComponentData {
    readonly colour: FishColour;
@@ -22,6 +22,10 @@ export interface FishComponent {
    readonly waterOpacityMultiplier: number;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fish, _FishComponentArray, FishComponentData> {}
+}
+
 const TEXTURE_SOURCES: Record<FishColour, string> = {
    [FishColour.blue]: "entities/fish/fish-blue.png",
    [FishColour.gold]: "entities/fish/fish-gold.png",
@@ -29,7 +33,7 @@ const TEXTURE_SOURCES: Record<FishColour, string> = {
    [FishColour.lime]: "entities/fish/fish-lime.png"
 };
 
-class _FishComponentArray extends ServerComponentArray<FishComponent, FishComponentData> {
+class _FishComponentArray extends _ServerComponentArray<FishComponent, FishComponentData> {
    public decodeData(reader: PacketReader): FishComponentData {
       const colour = reader.readNumber();
       return {

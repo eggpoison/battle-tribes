@@ -2,7 +2,7 @@ import { assert, Entity, ServerComponentType } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { RenderPart } from "../../render-parts/render-parts";
 import { StructureConnection } from "../../structure-placement";
 import { Hitbox } from "../../hitboxes";
@@ -10,7 +10,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface FenceComponentData {}
 
@@ -23,7 +23,11 @@ export interface FenceComponent {
    readonly connectingRenderParts: Partial<Record<Entity, RenderPart>>;
 }
 
-class _FenceComponentArray extends ServerComponentArray<FenceComponent, FenceComponentData, IntermediateInfo> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fence, _FenceComponentArray, FenceComponentData> {}
+}
+
+class _FenceComponentArray extends _ServerComponentArray<FenceComponent, FenceComponentData, IntermediateInfo> {
    public decodeData(): FenceComponentData {
       return {};
    }

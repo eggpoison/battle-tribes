@@ -1,5 +1,5 @@
 import { CircularBox, Entity, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
@@ -8,13 +8,17 @@ import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SlimewispComponentData {}
 
 export interface SlimewispComponent {}
 
-class _SlimewispComponentArray extends ServerComponentArray<SlimewispComponent, SlimewispComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimewisp, _SlimewispComponentArray, SlimewispComponentData> {}
+}
+
+class _SlimewispComponentArray extends _ServerComponentArray<SlimewispComponent, SlimewispComponentData> {
    public decodeData(): SlimewispComponentData {
       return {};
    }

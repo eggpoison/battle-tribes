@@ -7,11 +7,11 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { getEntityRenderObject, getEntityAgeTicks, EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponent, TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface PlanterBoxComponentData {
    readonly plantedEntityType: PlantedEntityType | -1;
@@ -29,6 +29,10 @@ export interface PlanterBoxComponent {
    isFertilised: boolean;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.planterBox, _PlanterBoxComponentArray, PlanterBoxComponentData> {}
+}
+
 const createMoundRenderPart = (plantedEntityType: PlantedEntityType, parentHitbox: Hitbox): TexturedRenderPart => {
    const textureSource = plantedEntityType === EntityType.iceSpikesPlanted ? "entities/plant/snow-clump.png" : "entities/plant/dirt-clump.png";
    return new TexturedRenderPart(
@@ -40,7 +44,7 @@ const createMoundRenderPart = (plantedEntityType: PlantedEntityType, parentHitbo
    );
 }
 
-class _PlanterBoxComponentArray extends ServerComponentArray<PlanterBoxComponent, PlanterBoxComponentData, IntermediateInfo> {
+class _PlanterBoxComponentArray extends _ServerComponentArray<PlanterBoxComponent, PlanterBoxComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): PlanterBoxComponentData {
       const plantedEntityType = reader.readNumber();
       const isFertilised = reader.readBool();

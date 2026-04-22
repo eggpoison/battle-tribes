@@ -1,5 +1,5 @@
 import { Entity, PacketReader, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
@@ -9,7 +9,7 @@ import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface BarrelComponentData {
    readonly isOpened: boolean;
@@ -23,7 +23,11 @@ export interface BarrelComponent {
    readonly renderPart: TexturedRenderPart;
 }
 
-class _BarrelComponentArray extends ServerComponentArray<BarrelComponent, BarrelComponentData, IntermediateInfo> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.barrel, _BarrelComponentArray, BarrelComponentData> {}
+}
+
+class _BarrelComponentArray extends _ServerComponentArray<BarrelComponent, BarrelComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): BarrelComponentData {
       const isOpened = reader.readBool();
       

@@ -4,7 +4,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityAgeTicks, getEntityRenderObject, getEntityType } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -12,7 +12,7 @@ import { getServerComponentData, getTransformComponentData } from "../../entity-
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { currentSnapshot } from "../../networking/snapshots";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 type HutType = EntityType.workerHut | EntityType.warriorHut;
 
@@ -35,6 +35,10 @@ export interface HutComponent {
    isRecalling: boolean;
 
    recallMarker: VisualRenderPart | null;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.hut, _HutComponentArray, HutComponentData> {}
 }
 
 export const WORKER_HUT_SIZE = 88;
@@ -78,7 +82,7 @@ const getDoorXOffset = (hutType: HutType, i: number): number => {
    }
 }
 
-class _HutComponentArray extends ServerComponentArray<HutComponent, HutComponentData, IntermediateInfo> {
+class _HutComponentArray extends _ServerComponentArray<HutComponent, HutComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): HutComponentData {
       const doorSwingTicks = reader.readNumber();
       const isRecalling = reader.readBool();

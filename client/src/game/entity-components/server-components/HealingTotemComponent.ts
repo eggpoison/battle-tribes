@@ -2,14 +2,14 @@ import { Entity, PacketReader, Point, angle, distance, lerp, randInt, Settings, 
 import { createHealingParticle } from "../../particles";
 import { Light, removeLight } from "../../lights";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface HealingTotemComponentData {
    readonly healingTargetsData: ReadonlyArray<HealingTotemTargetData>;
@@ -23,10 +23,14 @@ export interface HealingTotemComponent {
    readonly eyeLights: Array<Light>;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.healingTotem, _HealingTotemComponentArray, HealingTotemComponentData> {}
+}
+
 const EYE_LIGHTS_TRANSFORM_TICKS = Math.floor(0.5 * Settings.DT_S);
 const BASELINE_EYE_LIGHT_INTENSITY = 0.5;
 
-class _HealingTotemComponentArray extends ServerComponentArray<HealingTotemComponent, HealingTotemComponentData> {
+class _HealingTotemComponentArray extends _ServerComponentArray<HealingTotemComponent, HealingTotemComponentData> {
    public decodeData(reader: PacketReader): HealingTotemComponentData {
       const healTargets: Array<HealingTotemTargetData> = [];
       const numTargets = reader.readNumber();

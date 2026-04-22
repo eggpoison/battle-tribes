@@ -1,9 +1,9 @@
 import { PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getServerComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TribeMemberComponentData {
    readonly name: string;
@@ -13,7 +13,11 @@ export interface TribeMemberComponent {
    name: string;
 }
 
-class _TribeMemberComponentArray extends ServerComponentArray<TribeMemberComponent, TribeMemberComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribeMember, _TribeMemberComponentArray, TribeMemberComponentData> {}
+}
+
+class _TribeMemberComponentArray extends _ServerComponentArray<TribeMemberComponent, TribeMemberComponentData> {
    public decodeData(reader: PacketReader): TribeMemberComponentData {
       const name = reader.readString();
       return {

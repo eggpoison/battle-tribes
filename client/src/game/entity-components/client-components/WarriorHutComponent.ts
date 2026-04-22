@@ -6,18 +6,22 @@ import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import ClientComponentArray from "../ClientComponentArray";
+import _ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerClientComponentArray } from "../component-register";
+import { registerClientComponentArray } from "../component-registry";
 
 export interface WarriorHutComponentData {}
 
 export interface WarriorHutComponent {}
 
-class _WarriorHutComponentArray extends ClientComponentArray<WarriorHutComponent> {
+declare module "../component-registry" {
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.warriorHut, _WarriorHutComponentArray, WarriorHutComponentData> {}
+}
+
+class _WarriorHutComponentArray extends _ClientComponentArray<WarriorHutComponent> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

@@ -6,16 +6,20 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TreeRootBaseComponentData {}
 
 export interface TreeRootBaseComponent {}
 
-class _TreeRootBaseComponentArray extends ServerComponentArray<TreeRootBaseComponent, TreeRootBaseComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootBase, _TreeRootBaseComponentArray, TreeRootBaseComponentData> {}
+}
+
+class _TreeRootBaseComponentArray extends _ServerComponentArray<TreeRootBaseComponent, TreeRootBaseComponentData> {
    public decodeData(): TreeRootBaseComponentData {
       return {};
    }

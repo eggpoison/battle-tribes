@@ -1,11 +1,9 @@
 import { EntityType, PacketReader, ServerComponentType } from "../../../shared/src";
 import { ClientComponentType } from "./entity-components/client-component-types";
 import { ClientComponentData } from "./entity-components/client-components";
-import { getClientComponentArray, getServerComponentArray } from "./entity-components/component-register";
-import { ComponentArray } from "./entity-components/ComponentArray";
+import { ComponentArray, getClientComponentArray, getServerComponentArray, ServerComponentArray } from "./entity-components/component-registry";
 import { ServerComponentData } from "./entity-components/components";
 import { TransformComponentData } from "./entity-components/server-components/TransformComponent";
-import ServerComponentArray from "./entity-components/ServerComponentArray";
 
 export type EntityServerComponentData<T extends ServerComponentType = ServerComponentType> = ReadonlyArray<ServerComponentData<T>>;
 export type EntityClientComponentData<T extends ClientComponentType = ClientComponentType> = ReadonlyArray<ClientComponentData<T>>;

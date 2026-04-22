@@ -10,7 +10,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { Light, removeLight } from "../../lights";
 import { getRenderPartRenderPosition } from "../../rendering/render-part-matrices";
 import { getHumanoidRadius } from "./TribesmanComponent";
@@ -24,7 +24,7 @@ import { getServerComponentData } from "../../entity-component-types";
 import { getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 import { currentSnapshot } from "../../networking/snapshots";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -84,6 +84,10 @@ export interface InventoryUseComponent {
 
    customItemRenderPart: TexturedRenderPart | null;
    readonly bandageRenderParts: Array<VisualRenderPart>;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inventoryUse, _InventoryUseComponentArray, InventoryUseComponentData> {}
 }
 
 /** Decimal percentage of total attack animation time spent doing the lunge part of the animation */
@@ -566,7 +570,7 @@ export function getLimbConfiguration(inventoryUseComponent: InventoryUseComponen
    // }
 }
 
-class _InventoryUseComponentArray extends ServerComponentArray<InventoryUseComponent, InventoryUseComponentData> {
+class _InventoryUseComponentArray extends _ServerComponentArray<InventoryUseComponent, InventoryUseComponentData> {
    public decodeData(reader: PacketReader): InventoryUseComponentData {
       const limbInfos: Array<LimbInfo> = [];
 

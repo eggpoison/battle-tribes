@@ -1,12 +1,16 @@
 import { ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
-import { registerServerComponentArray } from "../component-register";
+import _ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface EnergyStomachComponentData {}
 
 export interface EnergyStomachComponent {}
 
-class _EnergyStomachComponentArray extends ServerComponentArray<EnergyStomachComponent, EnergyStomachComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.energyStomach, _EnergyStomachComponentArray, EnergyStomachComponentData> {}
+}
+
+class _EnergyStomachComponentArray extends _ServerComponentArray<EnergyStomachComponent, EnergyStomachComponentData> {
    public decodeData(): EnergyStomachComponentData {
       return {};
    }

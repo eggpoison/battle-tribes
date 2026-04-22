@@ -1,12 +1,16 @@
 import { ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
-import { registerServerComponentArray } from "../component-register";
+import _ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface CraftingStationComponentData {}
 
 export interface CraftingStationComponent {}
 
-class _CraftingStationComponentArray extends ServerComponentArray<CraftingStationComponent> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.craftingStation, _CraftingStationComponentArray, CraftingStationComponentData> {}
+}
+
+class _CraftingStationComponentArray extends _ServerComponentArray<CraftingStationComponent> {
    public decodeData(): CraftingStationComponentData {
       return {};
    }

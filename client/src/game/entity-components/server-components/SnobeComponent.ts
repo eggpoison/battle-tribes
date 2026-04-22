@@ -1,5 +1,5 @@
 import { PacketReader, Settings, Point, randAngle, randFloat, randInt, Entity, HitboxFlag, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
@@ -13,7 +13,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 const AMBIENT_SOUNDS: ReadonlyArray<string> = ["snobe-ambient-1.mp3", "snobe-ambient-2.mp3", "snobe-ambient-3.mp3", "snobe-ambient-4.mp3"];
 
@@ -27,7 +27,11 @@ export interface SnobeComponent {
    diggingProgress: number;
 }
 
-class _SnobeComponentArray extends ServerComponentArray<SnobeComponent, SnobeComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snobe, _SnobeComponentArray, SnobeComponentData> {}
+}
+
+class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeComponentData> {
    public decodeData(reader: PacketReader): SnobeComponentData {
       const isDigging = reader.readBool();
       const diggingProgress = reader.readNumber();

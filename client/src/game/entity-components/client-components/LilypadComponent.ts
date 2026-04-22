@@ -1,18 +1,21 @@
-import { ServerComponentType } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import ClientComponentArray from "../ClientComponentArray";
+import _ClientComponentArray from "../ClientComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerClientComponentArray } from "../component-register";
+import { registerClientComponentArray } from "../component-registry";
 
 export interface LilypadComponentData {}
 
 export interface LilypadComponent {}
 
-class _LilypadComponentArray extends ClientComponentArray<LilypadComponent> {
+declare module "../component-registry" {
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.lilypad, _LilypadComponentArray, LilypadComponentData> {}
+}
+
+class _LilypadComponentArray extends _ClientComponentArray<LilypadComponent> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

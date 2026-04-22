@@ -8,7 +8,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { resetIgnoredTileSpeedMultipliers, TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { playSoundOnHitbox } from "../../sound";
 import { InventoryComponentArray, getInventory } from "./InventoryComponent";
@@ -21,7 +21,7 @@ import { tabSelectorState } from "../../../ui-state/tab-selector-state";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { addRenderPartTag, getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TribesmanComponentData {
    readonly warpaintType: number | null;
@@ -43,6 +43,10 @@ export interface TribesmanComponent {
    titles: ReadonlyArray<TitleGenerationInfo>;
 
    readonly deathbringerEyeLights: Array<Light>;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesman, _TribesmanComponentArray, TribesmanComponentData> {}
 }
 
 // @Memory
@@ -222,7 +226,7 @@ export function tribesmanHasTitle(tribesmanComponent: TribesmanComponent, title:
    return false;
 }
 
-class _TribesmanComponentArray extends ServerComponentArray<TribesmanComponent, TribesmanComponentData, IntermediateInfo> {
+class _TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, TribesmanComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): TribesmanComponentData {
       const warpaintType = readWarpaint(reader);
       

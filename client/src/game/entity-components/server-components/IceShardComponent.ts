@@ -1,17 +1,21 @@
 import { ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface IceShardComponentData {}
 
 export interface IceShardComponent {}
 
-class _IceShardComponentArray extends ServerComponentArray<IceShardComponent, IceShardComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceShard, _IceShardComponentArray, IceShardComponentData> {}
+}
+
+class _IceShardComponentArray extends _ServerComponentArray<IceShardComponent, IceShardComponentData> {
    public decodeData(): IceShardComponentData {
       return {};
    }

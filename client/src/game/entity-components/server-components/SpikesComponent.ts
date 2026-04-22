@@ -5,13 +5,13 @@ import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from ".
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SpikesComponentData {
    readonly isCovered: boolean;
@@ -27,6 +27,10 @@ export interface SpikesComponent {
    readonly leafRenderParts: ReadonlyArray<VisualRenderPart>;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spikes, _SpikesComponentArray, SpikesComponentData> {}
+}
+
 export const NUM_SMALL_COVER_LEAVES = 8;
 export const NUM_LARGE_COVER_LEAVES = 3;
 
@@ -34,7 +38,7 @@ export const NUM_LARGE_COVER_LEAVES = 3;
 const LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
 const LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
 
-class _SpikesComponentArray extends ServerComponentArray<SpikesComponent, SpikesComponentData, IntermediateInfo> {
+class _SpikesComponentArray extends _ServerComponentArray<SpikesComponent, SpikesComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): SpikesComponentData {
       const isCovered = reader.readBool();
       return {

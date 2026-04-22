@@ -1,5 +1,5 @@
 import { randAngle, randFloat, Entity, ServerComponentType, Settings } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { TransformComponentArray } from "./TransformComponent";
@@ -8,13 +8,17 @@ import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface FireTorchComponentData {}
 
 export interface FireTorchComponent {}
 
-class _FireTorchComponentArray extends ServerComponentArray<FireTorchComponent, FireTorchComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fireTorch, _FireTorchComponentArray, FireTorchComponentData> {}
+}
+
+class _FireTorchComponentArray extends _ServerComponentArray<FireTorchComponent, FireTorchComponentData> {
    public decodeData(): FireTorchComponentData {
       return {};
    }

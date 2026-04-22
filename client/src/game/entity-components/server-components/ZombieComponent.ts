@@ -1,7 +1,7 @@
 import { Entity, PacketReader, Point, randAngle, randFloat, randInt, Settings, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -13,7 +13,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface ZombieComponentData {
    readonly zombieType: number;
@@ -23,12 +23,16 @@ export interface ZombieComponent {
    readonly zombieType: number;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.zombie, _ZombieComponentArray, ZombieComponentData> {}
+}
+
 const RADIUS = 32;
 
 const ZOMBIE_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/zombie1.png", "entities/zombie/zombie2.png", "entities/zombie/zombie3.png", "entities/zombie/zombie-golden.png"];
 const ZOMBIE_HAND_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/fist-1.png", "entities/zombie/fist-2.png", "entities/zombie/fist-3.png", "entities/zombie/fist-4.png"];
 
-class _ZombieComponentArray extends ServerComponentArray<ZombieComponent, ZombieComponentData> {
+class _ZombieComponentArray extends _ServerComponentArray<ZombieComponent, ZombieComponentData> {
    public decodeData(reader: PacketReader): ZombieComponentData {
       const zombieType = reader.readNumber();
       return {

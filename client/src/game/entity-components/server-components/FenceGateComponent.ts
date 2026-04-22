@@ -1,17 +1,21 @@
 import { HitboxFlag, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface FenceGateComponentData {}
 
 export interface FenceGateComponent {}
 
-class _FenceGateComponentArray extends ServerComponentArray<FenceGateComponent, FenceGateComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fenceGate, _FenceGateComponentArray, FenceGateComponentData> {}
+}
+
+class _FenceGateComponentArray extends _ServerComponentArray<FenceGateComponent, FenceGateComponentData> {
    public decodeData(): FenceGateComponentData {
       return {};
    }

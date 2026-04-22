@@ -3,15 +3,19 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TukmokTailClubComponentData {}
 
 export interface TukmokTailClubComponent {}
 
-class _TukmokTailClubComponentArray extends ServerComponentArray<TukmokTailClubComponent, TukmokTailClubComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmokTailClub, _TukmokTailClubComponentArray, TukmokTailClubComponentData> {}
+}
+
+class _TukmokTailClubComponentArray extends _ServerComponentArray<TukmokTailClubComponent, TukmokTailClubComponentData> {
    public decodeData(): TukmokTailClubComponentData {
       return {};
    }

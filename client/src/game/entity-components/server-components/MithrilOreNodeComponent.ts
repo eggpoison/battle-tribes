@@ -6,11 +6,11 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface MithrilOreNodeComponentData {
    readonly size: number;
@@ -20,7 +20,11 @@ export interface MithrilOreNodeComponentData {
 
 export interface MithrilOreNodeComponent {}
 
-class _MithrilOreNodeComponentArray extends ServerComponentArray<MithrilOreNodeComponent, MithrilOreNodeComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.mithrilOreNode, _MithrilOreNodeComponentArray, MithrilOreNodeComponentData> {}
+}
+
+class _MithrilOreNodeComponentArray extends _ServerComponentArray<MithrilOreNodeComponent, MithrilOreNodeComponentData> {
    public decodeData(reader: PacketReader): MithrilOreNodeComponentData {
       const size = reader.readNumber();
       const variant = reader.readNumber();

@@ -1,7 +1,7 @@
 import { randAngle, PacketReader, DoorToggleType, Entity, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { DOOR_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
@@ -12,7 +12,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface DoorComponentData {
    readonly toggleType: DoorToggleType;
@@ -24,7 +24,11 @@ export interface DoorComponent {
    openProgress: number;
 }
 
-class _DoorComponentArray extends ServerComponentArray<DoorComponent, DoorComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.door, _DoorComponentArray, DoorComponentData> {}
+}
+
+class _DoorComponentArray extends _ServerComponentArray<DoorComponent, DoorComponentData> {
    public decodeData(reader: PacketReader): DoorComponentData {
       const toggleType = reader.readNumber();
       const openProgress = reader.readNumber();

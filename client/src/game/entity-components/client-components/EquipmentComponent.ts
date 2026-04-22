@@ -4,11 +4,11 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getInventory, InventoryComponentArray } from "../server-components/InventoryComponent";
 import { getEntityRenderObject, getEntityType } from "../../world";
 import { InventoryUseComponentArray } from "../server-components/InventoryUseComponent";
-import ClientComponentArray from "../ClientComponentArray";
+import _ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { TribeComponentArray } from "../server-components/TribeComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { registerClientComponentArray } from "../component-register";
+import { registerClientComponentArray } from "../component-registry";
 
 const enum ArmourPixelSize {
    _12x12,
@@ -23,6 +23,10 @@ export interface EquipmentComponentData {}
 export interface EquipmentComponent {
    armourRenderPart: TexturedRenderPart | null;
    gloveRenderParts: Array<TexturedRenderPart>;
+}
+
+declare module "../component-registry" {
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.equipment, _EquipmentComponentArray, EquipmentComponentData> {}
 }
 
 // @Cleanup: copy the file name frmo the client item info thing
@@ -83,7 +87,7 @@ const getGloveTextureSource = (gloveType: ItemType): string => {
    return GLOVES_TEXTURE_SOURCE_RECORD[gloveType as GloveItemType];
 }
 
-class _EquipmentComponentArray extends ClientComponentArray<EquipmentComponent> {
+class _EquipmentComponentArray extends _ClientComponentArray<EquipmentComponent> {
    public createComponent(): EquipmentComponent {
       return {
          armourRenderPart: null,

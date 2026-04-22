@@ -5,16 +5,20 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TumbleweedLiveComponentData {}
 
 export interface TumbleweedLiveComponent {}
 
-class _TumbleweedLiveComponentArray extends ServerComponentArray<TumbleweedLiveComponent, TumbleweedLiveComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tumbleweedLive, _TumbleweedLiveComponentArray, TumbleweedLiveComponentData> {}
+}
+
+class _TumbleweedLiveComponentArray extends _ServerComponentArray<TumbleweedLiveComponent, TumbleweedLiveComponentData> {
    public decodeData(): TumbleweedLiveComponentData {
       return {};
    }

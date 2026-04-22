@@ -1,12 +1,12 @@
 import { ServerComponentType, PacketReader } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TundraRockComponentData {
    readonly variant: number;
@@ -16,7 +16,11 @@ export interface TundraRockComponent {
    readonly variant: number;
 }
 
-class _TundraRockComponentArray extends ServerComponentArray<TundraRockComponent, TundraRockComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tundraRock, _TundraRockComponentArray, TundraRockComponentData> {}
+}
+
+class _TundraRockComponentArray extends _ServerComponentArray<TundraRockComponent, TundraRockComponentData> {
    public decodeData(reader: PacketReader): TundraRockComponentData {
       const variant = reader.readNumber();
       return {

@@ -7,14 +7,14 @@ import { playSoundOnHitbox, ROCK_HIT_SOUNDS } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 enum GolemRockSize {
    massive,
@@ -42,6 +42,10 @@ export interface GolemComponent {
    rockRenderParts: Array<VisualRenderPart>;
    readonly eyeRenderParts: Array<VisualRenderPart>;
    readonly eyeLights: Array<Light>;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.golem, _GolemComponentArray, GolemComponentData> {}
 }
 
 const ANGRY_SOUND_INTERVAL_TICKS = Settings.TICK_RATE * 3;
@@ -100,7 +104,7 @@ const getZIndex = (size: GolemRockSize): number => {
    }
 }
 
-class _GolemComponentArray extends ServerComponentArray<GolemComponent, GolemComponentData, IntermediateInfo> {
+class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): GolemComponentData {
       const wakeProgress = reader.readNumber();
 

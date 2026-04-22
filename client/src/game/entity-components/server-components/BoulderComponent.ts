@@ -1,5 +1,5 @@
 import { CircularBox, randAngle, randFloat, randItem, Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createRockParticle, createRockSpeckParticle } from "../../particles";
@@ -11,7 +11,7 @@ import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface BoulderComponentData {
    readonly boulderType: number;
@@ -26,7 +26,11 @@ const TEXTURE_SOURCES = [
    "entities/boulder/boulder2.png"
 ];
 
-class _BoulderComponentArray extends ServerComponentArray<BoulderComponent, BoulderComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.boulder, _BoulderComponentArray, BoulderComponentData> {}
+}
+
+class _BoulderComponentArray extends _ServerComponentArray<BoulderComponent, BoulderComponentData> {
    public decodeData(reader: PacketReader): BoulderComponentData {
       const boulderType = reader.readNumber();
       return {

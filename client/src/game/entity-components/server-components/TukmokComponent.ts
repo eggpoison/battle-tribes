@@ -6,17 +6,21 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TukmokComponentData {}
 
 export interface TukmokComponent {}
 
-class _TukmokComponentArray extends ServerComponentArray<TukmokComponent, TukmokComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmok, _TukmokComponentArray, TukmokComponentData> {}
+}
+
+class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, TukmokComponentData> {
    public decodeData(): TukmokComponentData {
       return {};
    }

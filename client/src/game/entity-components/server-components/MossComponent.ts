@@ -3,10 +3,10 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface MossComponentData {
    readonly size: number;
@@ -15,7 +15,11 @@ export interface MossComponentData {
 
 export interface MossComponent {}
 
-class _MossComponentArray extends ServerComponentArray<MossComponent, MossComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.moss, _MossComponentArray, MossComponentData> {}
+}
+
+class _MossComponentArray extends _ServerComponentArray<MossComponent, MossComponentData> {
    public decodeData(reader: PacketReader): MossComponentData {
       const size = reader.readNumber();
       const colour = reader.readNumber();

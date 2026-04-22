@@ -1,5 +1,5 @@
 import { Point, HitFlags, Entity, ServerComponentType, PacketReader, Settings } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { playerInstance } from "../../player";
@@ -8,7 +8,7 @@ import { discombobulate } from "../../player-action-handling";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
 import { HealthBar_setHealth } from "../../../ui/game/HealthBar";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface HealthComponentData {
    readonly health: number;
@@ -22,11 +22,15 @@ export interface HealthComponent {
    secondsSinceLastHit: number;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.health, _HealthComponentArray, HealthComponentData> {}
+}
+
 /** Amount of seconds that the hit flash occurs for */
 const ATTACK_HIT_FLASH_DURATION = 0.4;
 const MAX_REDNESS = 0.85;
 
-class _HealthComponentArray extends ServerComponentArray<HealthComponent, HealthComponentData> {
+class _HealthComponentArray extends _ServerComponentArray<HealthComponent, HealthComponentData> {
    public decodeData(reader: PacketReader): HealthComponentData {
       const health = reader.readNumber();
       const maxHealth = reader.readNumber();

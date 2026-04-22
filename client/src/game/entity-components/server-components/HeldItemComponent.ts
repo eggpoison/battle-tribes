@@ -1,9 +1,9 @@
 import { PacketReader, Entity, ServerComponentType, ItemType } from "webgl-test-shared";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface HeldItemComponentData {
    readonly itemType: ItemType;
@@ -14,7 +14,11 @@ export interface HeldItemComponent {
    hasBlocked: boolean;
 }
 
-class _HeldItemComponentArray extends ServerComponentArray<HeldItemComponent, HeldItemComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.heldItem, _HeldItemComponentArray, HeldItemComponentData> {}
+}
+
+class _HeldItemComponentArray extends _ServerComponentArray<HeldItemComponent, HeldItemComponentData> {
    public decodeData(reader: PacketReader): HeldItemComponentData {
       const itemType: ItemType = reader.readNumber();
       const hasBlocked = reader.readBool();

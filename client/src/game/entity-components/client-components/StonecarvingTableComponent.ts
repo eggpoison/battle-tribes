@@ -3,15 +3,19 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import ClientComponentArray from "../ClientComponentArray";
+import _ClientComponentArray from "../ClientComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerClientComponentArray } from "../component-register";
+import { registerClientComponentArray } from "../component-registry";
 
 export interface StonecarvingTableComponentData {}
 
 export interface StonecarvingTableComponent {}
 
-class _StonecarvingTableComponentArray extends ClientComponentArray<StonecarvingTableComponent> {
+declare module "../component-registry" {
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.stonecarvingTable, _StonecarvingTableComponentArray, StonecarvingTableComponentData> {}
+}
+
+class _StonecarvingTableComponentArray extends _ClientComponentArray<StonecarvingTableComponent> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponent.hitboxes[0];

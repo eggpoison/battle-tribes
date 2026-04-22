@@ -2,8 +2,8 @@ import { Entity, CircularBox, lerp, randAngle, Settings, ServerComponentType } f
 import { playSoundOnHitbox, SoundInfo } from "../../sound";
 import { createAcidParticle, createPoisonBubble } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
-import { registerServerComponentArray } from "../component-register";
+import _ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
 
 const enum Var {
    MAX_RANGE = 55
@@ -15,7 +15,11 @@ export interface SpitPoisonAreaComponent {
    soundInfo: SoundInfo | null;
 }
 
-class _SpitPoisonAreaComponentArray extends ServerComponentArray<SpitPoisonAreaComponent, SpitPoisonAreaComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spitPoisonArea, _SpitPoisonAreaComponentArray, SpitPoisonAreaComponentData> {}
+}
+
+class _SpitPoisonAreaComponentArray extends _ServerComponentArray<SpitPoisonAreaComponent, SpitPoisonAreaComponentData> {
    public decodeData(): SpitPoisonAreaComponentData {
       return {};
    }

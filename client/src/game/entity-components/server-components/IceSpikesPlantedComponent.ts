@@ -1,5 +1,5 @@
 import { randInt, Entity, PacketReader, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
@@ -9,7 +9,7 @@ import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface IceSpikesPlantedComponentData {
    readonly growthProgress: number;
@@ -23,9 +23,13 @@ export interface IceSpikesPlantedComponent {
    readonly renderPart: TexturedRenderPart;
 }
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceSpikesPlanted, _IceSpikesPlantedComponentArray, IceSpikesPlantedComponentData> {}
+}
+
 const TEXTURE_SOURCES = ["entities/plant/ice-spikes-sapling-1.png", "entities/plant/ice-spikes-sapling-2.png", "entities/plant/ice-spikes-sapling-3.png", "entities/plant/ice-spikes-sapling-4.png", "entities/plant/ice-spikes-sapling-5.png", "entities/plant/ice-spikes-sapling-6.png", "entities/plant/ice-spikes-sapling-7.png", "entities/plant/ice-spikes-sapling-8.png", "entities/plant/ice-spikes-sapling-9.png"];
 
-class _IceSpikesPlantedComponentArray extends ServerComponentArray<IceSpikesPlantedComponent, IceSpikesPlantedComponentData, IntermediateInfo> {
+class _IceSpikesPlantedComponentArray extends _ServerComponentArray<IceSpikesPlantedComponent, IceSpikesPlantedComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): IceSpikesPlantedComponentData {
       const growthProgress = reader.readNumber();
       return {

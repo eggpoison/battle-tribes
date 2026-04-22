@@ -3,15 +3,19 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TukmokTrunkComponentData {}
 
 export interface TukmokTrunkComponent {}
 
-class _TukmokTrunkComponentArray extends ServerComponentArray<TukmokTrunkComponent, TukmokTrunkComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmokTrunk, _TukmokTrunkComponentArray, TukmokTrunkComponentData> {}
+}
+
+class _TukmokTrunkComponentArray extends _ServerComponentArray<TukmokTrunkComponent, TukmokTrunkComponentData> {
    public decodeData(): TukmokTrunkComponentData {
       return {};
    }

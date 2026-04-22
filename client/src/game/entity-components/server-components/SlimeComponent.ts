@@ -5,13 +5,13 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SlimeComponentData {
    readonly size: SlimeSize;
@@ -35,6 +35,10 @@ export interface SlimeComponent {
    readonly orbs: Array<SlimeOrbInfo>;
 
    internalTickCounter: number;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slime, _SlimeComponentArray, SlimeComponent> {}
 }
 
 export const SLIME_SIZES: ReadonlyArray<number> = [
@@ -70,7 +74,7 @@ const getBodyShakeAmount = (spitProgress: number): number => {
    return lerp(0, 5, spitProgress);
 }
 
-class _SlimeComponentArray extends ServerComponentArray<SlimeComponent, SlimeComponentData, IntermediateInfo> {
+class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): SlimeComponentData {
       const size = reader.readNumber() as SlimeSize;
       const eyeRotation = reader.readNumber();

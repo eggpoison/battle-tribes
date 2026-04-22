@@ -1,5 +1,5 @@
 import { Settings, Entity, randAngle, randFloat, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { TransformComponentArray } from "./TransformComponent";
@@ -7,7 +7,7 @@ import { createSlurbParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 const enum Var {
    MIN_PARTICLE_CREATION_INTERVAL_SECONDS = 0.45,
@@ -20,7 +20,11 @@ export interface SlurbTorchComponent {
    particleCreationTimer: number;
 }
 
-class _SlurbTorchComponentArray extends ServerComponentArray<SlurbTorchComponent, SlurbTorchComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slurbTorch, _SlurbTorchComponentArray, SlurbTorchComponentData> {}
+}
+
+class _SlurbTorchComponentArray extends _ServerComponentArray<SlurbTorchComponent, SlurbTorchComponentData> {
    public decodeData(): SlurbTorchComponentData {
       return {};
    }

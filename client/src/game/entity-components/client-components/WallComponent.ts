@@ -7,14 +7,14 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import ClientComponentArray from "../ClientComponentArray";
+import _ClientComponentArray from "../ClientComponentArray";
 import { WALL_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
 import { HealthComponentArray } from "../server-components/HealthComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerClientComponentArray } from "../component-register";
+import { registerClientComponentArray } from "../component-registry";
 
 // @Speed: Could make damage render part an overlay instead of a whole render part
 
@@ -26,7 +26,11 @@ export interface WallComponent {
 
 const NUM_DAMAGE_STAGES = 6;
 
-class _WallComponentArray extends ClientComponentArray<WallComponent> {
+declare module "../component-registry" {
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.wall, _WallComponentArray, WallComponentData> {}
+}
+
+class _WallComponentArray extends _ClientComponentArray<WallComponent> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

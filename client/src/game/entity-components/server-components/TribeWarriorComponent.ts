@@ -1,12 +1,12 @@
 import { Entity, ServerComponentType, PacketReader, ScarInfo } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TribeWarriorComponentData {
    readonly scars: Array<ScarInfo>;
@@ -16,7 +16,11 @@ export interface TribeWarriorComponent {
    readonly scars: Array<ScarInfo>;
 }
 
-class _TribeWarriorComponentArray extends ServerComponentArray<TribeWarriorComponent, TribeWarriorComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribeWarrior, _TribeWarriorComponentArray, TribeWarriorComponentData> {}
+}
+
+class _TribeWarriorComponentArray extends _ServerComponentArray<TribeWarriorComponent, TribeWarriorComponentData> {
    public decodeData(reader: PacketReader): TribeWarriorComponentData {
       const scars: Array<ScarInfo> = [];
       const numScars = reader.readNumber();

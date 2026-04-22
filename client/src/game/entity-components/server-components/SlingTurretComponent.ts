@@ -1,18 +1,22 @@
 import { ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SlingTurretComponentData {}
 
 export interface SlingTurretComponent {}
 
-class _SlingTurretComponentArray extends ServerComponentArray<SlingTurretComponent, SlingTurretComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slingTurret, _SlingTurretComponentArray, SlingTurretComponentData> {}
+}
+
+class _SlingTurretComponentArray extends _ServerComponentArray<SlingTurretComponent, SlingTurretComponentData> {
    public decodeData(): SlingTurretComponentData {
       return {};
    }

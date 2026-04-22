@@ -1,5 +1,5 @@
 import { randAngle, randFloat, Entity, ServerComponentType, Settings } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createSmokeParticle, createEmberParticle } from "../../particles";
@@ -9,13 +9,17 @@ import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface CampfireComponentData {}
 
 export interface CampfireComponent {}
 
-class _CampfireComponentArray extends ServerComponentArray<CampfireComponent, CampfireComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.campfire, _CampfireComponentArray, CampfireComponentData> {}
+}
+
+class _CampfireComponentArray extends _ServerComponentArray<CampfireComponent, CampfireComponentData> {
    public decodeData(): CampfireComponentData {
       return {};
    }

@@ -1,14 +1,14 @@
 import { TileType, Entity, EntityType, PacketReader, Colour, getTileIndexIncludingEdges, lerp, Settings, ServerComponentType } from "webgl-test-shared";
 import ColouredRenderPart from "../../render-parts/ColouredRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType, surfaceLayer } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { hueShift, multiColourLerp } from "../../render-parts/VisualRenderPart";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 const enum Var {
    SPRING_BACK_RATE = 8 * Settings.DT_S
@@ -31,6 +31,10 @@ export interface LayeredRodComponent {
    
    bendX: number;
    bendY: number;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.layeredRod, _LayeredRodComponentArray, LayeredRodComponentData> {}
 }
 
 const MAX_BEND = 6;
@@ -132,7 +136,7 @@ const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: Ent
    }
 }
 
-class _LayeredRodComponentArray extends ServerComponentArray<LayeredRodComponent, LayeredRodComponentData> {
+class _LayeredRodComponentArray extends _ServerComponentArray<LayeredRodComponent, LayeredRodComponentData> {
    public decodeData(reader: PacketReader): LayeredRodComponentData {
       const numLayers = reader.readNumber();
       const naturalBendX = reader.readNumber();

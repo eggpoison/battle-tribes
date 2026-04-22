@@ -3,11 +3,11 @@ import { translateHitbox } from "../../hitboxes";
 import { playerInstance } from "../../player";
 import { playSound } from "../../sound";
 import { entityExists, EntityComponentData, getEntityLayer, getEntityType } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 interface CarrySlot {
    occupiedEntity: Entity;
@@ -26,7 +26,11 @@ export interface RideableComponent {
    readonly carrySlots: ReadonlyArray<CarrySlot>;
 }
 
-class _RideableComponentArray extends ServerComponentArray<RideableComponent, RideableComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.rideable, _RideableComponentArray, RideableComponentData> {}
+}
+
+class _RideableComponentArray extends _ServerComponentArray<RideableComponent, RideableComponentData> {
    public decodeData(reader: PacketReader): RideableComponentData {
       const carrySlots: Array<CarrySlot> = [];
       

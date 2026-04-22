@@ -1,5 +1,5 @@
 import { randAngle, randFloat, randInt, Entity, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -10,17 +10,21 @@ import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface IceSpikesComponentData {}
 
 export interface IceSpikesComponent {}
 
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceSpikes, _IceSpikesComponentArray, IceSpikesComponentData> {}
+}
+
 const ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];
 
 const SIZE = 80;
 
-class _IceSpikesComponentArray extends ServerComponentArray<IceSpikesComponent, IceSpikesComponentData> {
+class _IceSpikesComponentArray extends _ServerComponentArray<IceSpikesComponent, IceSpikesComponentData> {
    public decodeData(): IceSpikesComponentData {
       return {};
    }

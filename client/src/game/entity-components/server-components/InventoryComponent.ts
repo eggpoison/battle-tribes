@@ -2,13 +2,13 @@ import { PacketReader, InventoryName, Item, ITEM_TYPE_RECORD, Inventory, ItemTyp
 import { playerInstance } from "../../player";
 import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../player-action-handling";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
 import { updateCraftableRecipes } from "../../../ui/game/menus/CraftingMenu";
 import { Hotbar_addItem, Hotbar_removeItem, Hotbar_updateItem } from "../../../ui/game/inventories/Hotbar";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface InventoryComponentData {
    readonly inventories: ReadonlyArray<Inventory>;
@@ -16,6 +16,10 @@ export interface InventoryComponentData {
 
 export interface InventoryComponent {
    readonly inventories: ReadonlyArray<Inventory>;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inventory, _InventoryComponentArray, InventoryComponentData> {}
 }
 
 /** Checks if the player is doing a legal action for a given item. */
@@ -180,7 +184,7 @@ export function getInventory(inventoryComponent: InventoryComponent, inventoryNa
    return null;
 }
 
-class _InventoryComponentArray extends ServerComponentArray<InventoryComponent, InventoryComponentData> {
+class _InventoryComponentArray extends _ServerComponentArray<InventoryComponent, InventoryComponentData> {
    public decodeData(reader: PacketReader): InventoryComponentData {
       const inventories: Array<Inventory> = [];
       const numInventories = reader.readNumber();

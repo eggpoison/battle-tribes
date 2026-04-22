@@ -3,15 +3,19 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SnobeMoundComponentData {}
 
 export interface SnobeMoundComponent {}
 
-class _SnobeMoundComponentArray extends ServerComponentArray<SnobeMoundComponent, SnobeMoundComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snobeMound, _SnobeMoundComponentArray, SnobeMoundComponentData> {}
+}
+
+class _SnobeMoundComponentArray extends _ServerComponentArray<SnobeMoundComponent, SnobeMoundComponentData> {
    public decodeData(): SnobeMoundComponentData {
       return {};
    }

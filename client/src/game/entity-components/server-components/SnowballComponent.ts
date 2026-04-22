@@ -1,7 +1,7 @@
 import { CircularBox, randAngle, randFloat, ServerComponentType, PacketReader, Entity, randInt, _point, Settings } from "webgl-test-shared";
 import { createSnowParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import Particle from "../../Particle";
@@ -12,7 +12,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SnowballComponentData {
    readonly size: number;
@@ -20,7 +20,11 @@ export interface SnowballComponentData {
 
 export interface SnowballComponent {}
 
-class _SnowballComponentArray extends ServerComponentArray<SnowballComponent, SnowballComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snowball, _SnowballComponentArray, SnowballComponentData> {}
+}
+
+class _SnowballComponentArray extends _ServerComponentArray<SnowballComponent, SnowballComponentData> {
    public decodeData(reader: PacketReader): SnowballComponentData {
       const size = reader.readNumber();
       return {

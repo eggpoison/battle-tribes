@@ -5,13 +5,13 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
 import { getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 // @Cleanup: can make this a whole lot better by having the projectile not be a render part, but the actual projectile pre-created, and then just un-carried from the turret once fired.
 
@@ -33,6 +33,10 @@ export interface TurretComponent {
    readonly pivotingRenderPart: VisualRenderPart;
    readonly gearRenderParts: ReadonlyArray<VisualRenderPart>;
    projectileRenderPart: TexturedRenderPart | null;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.turret, _TurretComponentArray, TurretComponentData> {}
 }
 
 const NUM_SLING_TURRET_CHARGE_TEXTURES = 5;
@@ -138,7 +142,7 @@ const getProjectileZIndex = (entityType: TurretType): number => {
    }
 }
 
-class _TurretComponentArray extends ServerComponentArray<TurretComponent, TurretComponentData> {
+class _TurretComponentArray extends _ServerComponentArray<TurretComponent, TurretComponentData> {
    public decodeData(reader: PacketReader): TurretComponentData {
       const aimDirection = reader.readNumber();
       const chargeProgress = reader.readNumber();

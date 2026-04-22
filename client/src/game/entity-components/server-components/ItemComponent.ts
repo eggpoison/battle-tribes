@@ -1,7 +1,7 @@
 import { Entity, PacketReader, ItemType, ServerComponentType } from "webgl-test-shared";
 import { createDeepFrostHeartBloodParticles } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -9,7 +9,7 @@ import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface ItemComponentData {
    readonly itemType: ItemType;
@@ -19,7 +19,11 @@ export interface ItemComponent {
    readonly itemType: ItemType;
 }
 
-class _ItemComponentArray extends ServerComponentArray<ItemComponent, ItemComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.item, _ItemComponentArray, ItemComponentData> {}
+}
+
+class _ItemComponentArray extends _ServerComponentArray<ItemComponent, ItemComponentData> {
    public decodeData(reader: PacketReader): ItemComponentData {
       const itemType = reader.readNumber();
       return {

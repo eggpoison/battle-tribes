@@ -1,12 +1,16 @@
 import { ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
-import { registerServerComponentArray } from "../component-register";
+import _ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface FleshSwordComponentData {}
 
 export interface FleshSwordComponent {}
 
-class _FleshSwordComponentArray extends ServerComponentArray<FleshSwordComponent, FleshSwordComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fleshSwordItem, _FleshSwordComponentArray, FleshSwordComponentData> {}
+}
+
+class _FleshSwordComponentArray extends _ServerComponentArray<FleshSwordComponent, FleshSwordComponentData> {
    public decodeData(): FleshSwordComponentData {
       return {};
    }

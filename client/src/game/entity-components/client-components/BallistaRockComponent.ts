@@ -8,14 +8,18 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerClientComponentArray } from "../component-register";
-import ClientComponentArray from "../ClientComponentArray";
+import { registerClientComponentArray } from "../component-registry";
+import _ClientComponentArray from "../ClientComponentArray";
 
 export interface BallistaRockComponentData {}
 
 export interface BallistaRockComponent {}
 
-class _BallistaRockComponentArray extends ClientComponentArray<BallistaRockComponent> {
+declare module "../component-registry" {
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaRock, _BallistaRockComponentArray, BallistaRockComponentData> {}
+}
+
+class _BallistaRockComponentArray extends _ClientComponentArray<BallistaRockComponent> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

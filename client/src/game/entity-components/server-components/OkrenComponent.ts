@@ -1,5 +1,5 @@
 import { Point, randAngle, randFloat, Entity, HitboxFlag, ServerComponentType, PacketReader } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
@@ -10,7 +10,7 @@ import { renderParentIsHitbox } from "../../render-parts/render-parts";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 // @Copynpaste from server
 export const enum OkrenAgeStage {
@@ -31,7 +31,11 @@ export interface OkrenComponent {
    size: OkrenAgeStage;
 }
 
-class _OkrenComponentArray extends ServerComponentArray<OkrenComponent, OkrenComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.okren, _OkrenComponentArray, OkrenComponentData> {}
+}
+
+class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenComponentData> {
    public decodeData(reader: PacketReader): OkrenComponentData {
       const size = reader.readNumber();
       const rightEyeHardenTimer = reader.readNumber();

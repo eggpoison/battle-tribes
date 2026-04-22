@@ -6,16 +6,20 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SlingTurretRockComponentData {}
 
 export interface SlingTurretRockComponent {}
 
-class _SlingTurretRockComponentArray extends ServerComponentArray<SlingTurretRockComponent, SlingTurretRockComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slingTurretRock, _SlingTurretRockComponentArray, SlingTurretRockComponentData> {}
+}
+
+class _SlingTurretRockComponentArray extends _ServerComponentArray<SlingTurretRockComponent, SlingTurretRockComponentData> {
    public decodeData(): SlingTurretRockComponentData {
       return createSlingTurretRockComponentData();
    }

@@ -1,4 +1,4 @@
-import { _point, Entity, ServerComponentType } from "webgl-test-shared";
+import { _point, Entity } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle } from "../../particles";
@@ -6,16 +6,20 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import ClientComponentArray from "../ClientComponentArray";
+import _ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerClientComponentArray } from "../component-register";
+import { registerClientComponentArray } from "../component-registry";
 
 export interface BallistaSlimeballComponentData {}
 
 export interface BallistaSlimeballComponent {}
 
-class _BallistaSlimeballComponentArray extends ClientComponentArray<BallistaSlimeballComponent> {
+declare module "../component-registry" {
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaSlimeball, _BallistaSlimeballComponentArray, BallistaSlimeballComponentData> {}
+}
+
+class _BallistaSlimeballComponentArray extends _ClientComponentArray<BallistaSlimeballComponent> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

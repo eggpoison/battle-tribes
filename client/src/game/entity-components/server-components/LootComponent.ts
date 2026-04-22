@@ -1,12 +1,16 @@
 import { ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
-import { registerServerComponentArray } from "../component-register";
+import _ServerComponentArray from "../ServerComponentArray";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface LootComponentData {}
 
 export interface LootComponent {}
 
-class _LootComponentArray extends ServerComponentArray<LootComponent, LootComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.loot, _LootComponentArray, LootComponentData> {}
+}
+
+class _LootComponentArray extends _ServerComponentArray<LootComponent, LootComponentData> {
    public decodeData(): LootComponentData {
       return {};
    }

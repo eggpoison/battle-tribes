@@ -6,11 +6,11 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TreeRootSegmentComponentData {
    readonly variant: number;
@@ -20,7 +20,11 @@ export interface TreeRootSegmentComponent {
    readonly variant: number;
 }
 
-class _TreeRootSegmentComponentArray extends ServerComponentArray<TreeRootSegmentComponent, TreeRootSegmentComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootSegment, _TreeRootSegmentComponentArray, TreeRootSegmentComponentData> {}
+}
+
+class _TreeRootSegmentComponentArray extends _ServerComponentArray<TreeRootSegmentComponent, TreeRootSegmentComponentData> {
    public decodeData(reader: PacketReader): TreeRootSegmentComponentData {
       const variant = reader.readNumber();
       return {

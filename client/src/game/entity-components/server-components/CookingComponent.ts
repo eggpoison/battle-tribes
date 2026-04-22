@@ -1,11 +1,11 @@
 import { Light, removeLight } from "../../lights";
 import { Entity, ServerComponentType, PacketReader, Settings } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
 import { getServerComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface CookingComponentData {
    readonly heatingProgress: number;
@@ -20,7 +20,11 @@ export interface CookingComponent {
    light: Light | null;
 }
 
-class _CookingComponentArray extends ServerComponentArray<CookingComponent, CookingComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cooking, _CookingComponentArray, CookingComponentData> {}
+}
+
+class _CookingComponentArray extends _ServerComponentArray<CookingComponent, CookingComponentData> {
    public decodeData(reader: PacketReader): CookingComponentData {
       const heatingProgress = reader.readNumber();
       const isCooking = reader.readBool();

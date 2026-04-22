@@ -3,7 +3,7 @@ import { createDirtParticle, createRockParticle, createRockSpeckParticle } from 
 import { playSound, playSoundOnHitbox, ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData, getEntityAgeTicks, getEntityLayer } from "../../world";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { TransformComponentArray } from "./TransformComponent";
@@ -11,7 +11,7 @@ import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface TombstoneComponentData {
    readonly tombstoneType: number;
@@ -29,7 +29,11 @@ export interface TombstoneComponent {
    readonly deathInfo: DeathInfo | null;
 }
 
-class _TombstoneComponentArray extends ServerComponentArray<TombstoneComponent> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tombstone, _TombstoneComponentArray, TombstoneComponentData> {}
+}
+
+class _TombstoneComponentArray extends _ServerComponentArray<TombstoneComponent, TombstoneComponentData> {
    public decodeData(reader: PacketReader): TombstoneComponentData {
       const tombstoneType = reader.readNumber();
       const zombieSpawnProgress = reader.readNumber();

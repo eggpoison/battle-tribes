@@ -1,5 +1,5 @@
 import { randFloat, randItem, randInt, Point, randAngle, HitFlags, ServerComponentType, PacketReader, Entity, TreeSize } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, createWoodSpeckParticle, LEAF_SPECK_COLOUR_HIGH, LEAF_SPECK_COLOUR_LOW } from "../../particles";
@@ -10,7 +10,7 @@ import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
 import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface SpruceTreeComponentData {
    readonly treeSize: TreeSize;
@@ -19,6 +19,10 @@ export interface SpruceTreeComponentData {
 
 export interface SpruceTreeComponent {
    readonly treeSize: TreeSize;
+}
+
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spruceTree, _SpruceTreeComponentArray, SpruceTreeComponentData> {}
 }
 
 const treeTextures: { [T in TreeSize]: string } = {
@@ -33,7 +37,7 @@ const getRadius = (treeSize: TreeSize): number => {
    return 40 + treeSize * 10;
 }
 
-class _SpruceTreeComponentArray extends ServerComponentArray<SpruceTreeComponent, SpruceTreeComponentData> {
+class _SpruceTreeComponentArray extends _ServerComponentArray<SpruceTreeComponent, SpruceTreeComponentData> {
    public decodeData(reader: PacketReader): SpruceTreeComponentData {
       const treeSize = reader.readNumber();
       const snowVariant = reader.readNumber();

@@ -20,7 +20,7 @@ import { getEntityType, } from "./world";
 import { cleanupEvents, setupEvents } from "./event-handling";
 import { updateSnapshots } from "./networking/snapshots";
 import { updateTickCallbacks } from "./tick-callbacks";
-import { COMPONENT_ARRAYS } from "./entity-components/component-register";
+import { COMPONENT_ARRAYS } from "./entity-components/component-registry";
 
 let lastFrameTime = 0;
 

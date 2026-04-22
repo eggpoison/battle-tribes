@@ -23,7 +23,7 @@ import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
 import { updateParticles } from "../rendering/webgl/particle-rendering";
 import { EntityServerComponentData, getEntityComponentArrays, getEntityServerComponentArrays, getEntityServerComponentTypes, getServerComponentData } from "../entity-component-types";
 import { getSelectedEntity } from "../entity-selection";
-import { COMPONENT_ARRAYS } from "../entity-components/component-register";
+import { COMPONENT_ARRAYS } from "../entity-components/component-registry";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
@@ -400,13 +400,16 @@ const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {
    }
 
    const entityType = getEntityType(entity);
+
    const componentTypes = getEntityServerComponentTypes(entityType);
+   const componentArrays = getEntityServerComponentArrays(entityType);
    
    // Update server components from data
-   const componentArrays = getEntityServerComponentArrays(entityType);
-   for (const componentArray of componentArrays) {
+   for (let i = 0; i < componentArrays.length; i++) {
+      const componentArray = componentArrays[i];
       if (componentArray.updateFromData !== undefined) {
-         const componentData = getServerComponentData(data.componentData, componentTypes, componentArray.componentType);
+         const componentType = componentTypes[i];
+         const componentData = getServerComponentData(data.componentData, componentTypes, componentType);
          componentArray.updateFromData(componentData, entity);
       }
    }
@@ -429,9 +432,12 @@ const updatePlayerFromData = (playerInstance: number, data: EntitySnapshot): voi
 
    const componentTypes = getEntityServerComponentTypes(EntityType.player);
    const componentArrays = getEntityServerComponentArrays(EntityType.player);
-   for (const componentArray of componentArrays) {
+
+   for (let i = 0; i < componentArrays.length; i++) {
+      const componentArray = componentArrays[i];
       if (componentArray.updatePlayerFromData !== undefined) {
-         const componentData = getServerComponentData(data.componentData, componentTypes, componentArray.componentType);
+         const componentType = componentTypes[i];
+         const componentData = getServerComponentData(data.componentData, componentTypes, componentType);
          // @INCOMPLETE: is never true??
          componentArray.updatePlayerFromData(componentData, false);
       }

@@ -1,5 +1,5 @@
 import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-shared";
-import ServerComponentArray from "../ServerComponentArray";
+import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
@@ -9,13 +9,17 @@ import { createPricklyPearParticle } from "../../particles";
 import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../../entity-component-types";
-import { registerServerComponentArray } from "../component-register";
+import { registerServerComponentArray } from "../component-registry";
 
 export interface PricklyPearComponentData {}
 
 export interface PricklyPearComponent {}
 
-class _PricklyPearComponentArray extends ServerComponentArray<PricklyPearComponent, PricklyPearComponentData> {
+declare module "../component-registry" {
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pricklyPear, _PricklyPearComponentArray, PricklyPearComponentData> {}
+}
+
+class _PricklyPearComponentArray extends _ServerComponentArray<PricklyPearComponent, PricklyPearComponentData> {
    public decodeData(): PricklyPearComponentData {
       return {};
    }

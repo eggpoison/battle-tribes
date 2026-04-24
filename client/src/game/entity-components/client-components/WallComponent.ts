@@ -11,8 +11,8 @@ import _ClientComponentArray from "../ClientComponentArray";
 import { WALL_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
 import { HealthComponentArray } from "../server-components/HealthComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerClientComponentArray } from "../component-registry";
 
@@ -27,10 +27,10 @@ export interface WallComponent {
 const NUM_DAMAGE_STAGES = 6;
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.wall, _WallComponentArray, WallComponentData> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.wall, _WallComponentArray> {}
 }
 
-class _WallComponentArray extends _ClientComponentArray<WallComponent> {
+class _WallComponentArray extends _ClientComponentArray<WallComponent, WallComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

@@ -7,7 +7,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface TumbleweedLiveComponentData {}
@@ -15,7 +15,7 @@ export interface TumbleweedLiveComponentData {}
 export interface TumbleweedLiveComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tumbleweedLive, _TumbleweedLiveComponentArray, TumbleweedLiveComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tumbleweedLive, _TumbleweedLiveComponentArray> {}
 }
 
 class _TumbleweedLiveComponentArray extends _ServerComponentArray<TumbleweedLiveComponent, TumbleweedLiveComponentData> {

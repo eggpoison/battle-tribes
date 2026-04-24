@@ -4,7 +4,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface AutomatonAssemblerComponentData {}
@@ -12,7 +12,7 @@ export interface AutomatonAssemblerComponentData {}
 export interface AutomatonAssemblerComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.automatonAssembler, _AutomatonAssemblerComponentArray, AutomatonAssemblerComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.automatonAssembler, _AutomatonAssemblerComponentArray> {}
 }
 
 class _AutomatonAssemblerComponentArray extends _ServerComponentArray<AutomatonAssemblerComponent, AutomatonAssemblerComponentData> {

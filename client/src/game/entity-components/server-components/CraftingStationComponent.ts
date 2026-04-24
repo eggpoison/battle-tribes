@@ -7,10 +7,10 @@ export interface CraftingStationComponentData {}
 export interface CraftingStationComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.craftingStation, _CraftingStationComponentArray, CraftingStationComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.craftingStation, _CraftingStationComponentArray> {}
 }
 
-class _CraftingStationComponentArray extends _ServerComponentArray<CraftingStationComponent> {
+class _CraftingStationComponentArray extends _ServerComponentArray<CraftingStationComponent, CraftingStationComponentData> {
    public decodeData(): CraftingStationComponentData {
       return {};
    }

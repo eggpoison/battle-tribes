@@ -26,7 +26,7 @@ export function createBarrelConfig(position: Point, rotation: number, tribe: Tri
          createStatusEffectComponentData(),
          createStructureComponentData(),
          createTribeComponentData(tribe),
-         createInventoryComponentData({}),
+         createInventoryComponentData([]),
          createBarrelComponentData()
       ],
       clientComponentData: []

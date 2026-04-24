@@ -7,7 +7,7 @@ export interface EnergyStomachComponentData {}
 export interface EnergyStomachComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.energyStomach, _EnergyStomachComponentArray, EnergyStomachComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.energyStomach, _EnergyStomachComponentArray> {}
 }
 
 class _EnergyStomachComponentArray extends _ServerComponentArray<EnergyStomachComponent, EnergyStomachComponentData> {

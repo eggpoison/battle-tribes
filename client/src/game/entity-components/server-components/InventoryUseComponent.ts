@@ -19,8 +19,8 @@ import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { tickPlayerItems } from "../../player-action-handling";
 import { playSoundOnHitbox } from "../../sound";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 import { currentSnapshot } from "../../networking/snapshots";
@@ -87,7 +87,7 @@ export interface InventoryUseComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inventoryUse, _InventoryUseComponentArray, InventoryUseComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inventoryUse, _InventoryUseComponentArray> {}
 }
 
 /** Decimal percentage of total attack animation time spent doing the lunge part of the animation */

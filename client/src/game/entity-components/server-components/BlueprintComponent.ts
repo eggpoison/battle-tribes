@@ -12,8 +12,8 @@ import { WARRIOR_HUT_SIZE } from "./HutComponent";
 import { TribeComponentArray } from "./TribeComponent";
 import { playerTribe } from "../../tribes";
 import { Hitbox } from "../../hitboxes";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface BlueprintComponentData {
@@ -41,7 +41,7 @@ interface ProgressTextureInfo {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.blueprint, _BlueprintComponentArray, BlueprintComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.blueprint, _BlueprintComponentArray> {}
 }
 
 // @Cleanup: Some of these are duplicates

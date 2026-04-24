@@ -7,8 +7,8 @@ import _ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { currentSnapshot } from "../../networking/snapshots";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -29,7 +29,7 @@ export interface AmmoBoxComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ammoBox, _AmmoBoxComponentArray, AmmoBoxComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ammoBox, _AmmoBoxComponentArray> {}
 }
 
 const createAmmoWarningRenderPart = (parentHitbox: Hitbox): VisualRenderPart => {

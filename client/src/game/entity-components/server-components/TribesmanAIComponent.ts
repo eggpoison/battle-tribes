@@ -4,8 +4,8 @@ import { playSoundOnHitbox } from "../../sound";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface TribesmanAIComponentData {
@@ -24,7 +24,7 @@ export interface TribesmanAIComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesmanAI, _TribesmanAIComponentArray, TribesmanAIComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesmanAI, _TribesmanAIComponentArray> {}
 }
 
 const GOBLIN_ANGRY_SOUNDS: ReadonlyArray<string> = ["goblin-angry-1.mp3", "goblin-angry-2.mp3", "goblin-angry-3.mp3", "goblin-angry-4.mp3"];

@@ -8,7 +8,7 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
 
 export interface WoodenArrowComponentData {}
@@ -16,10 +16,10 @@ export interface WoodenArrowComponentData {}
 export interface WoodenArrowComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.woodenArrow, _WoodenArrowComponentArray, WoodenArrowComponentData> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.woodenArrow, _WoodenArrowComponentArray> {}
 }
 
-class _WoodenArrowComponentArray extends _ClientComponentArray<WoodenArrowComponent> {
+class _WoodenArrowComponentArray extends _ClientComponentArray<WoodenArrowComponent, WoodenArrowComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

@@ -4,7 +4,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
 
 export interface FrostshaperComponentData {}
@@ -12,10 +12,10 @@ export interface FrostshaperComponentData {}
 export interface FrostshaperComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.frostshaper, _FrostshaperComponentArray, FrostshaperComponentData> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.frostshaper, _FrostshaperComponentArray> {}
 }
 
-class _FrostshaperComponentArray extends _ClientComponentArray<FrostshaperComponent> {
+class _FrostshaperComponentArray extends _ClientComponentArray<FrostshaperComponent, FrostshaperComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

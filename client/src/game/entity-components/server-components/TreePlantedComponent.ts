@@ -9,8 +9,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface TreePlantedComponentData {
@@ -27,7 +27,7 @@ export interface TreePlantedComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treePlanted, _TreePlantedComponentArray, TreePlantedComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treePlanted, _TreePlantedComponentArray> {}
 }
 
 const TEXTURE_SOURCES = ["entities/plant/tree-sapling-1.png", "entities/plant/tree-sapling-2.png", "entities/plant/tree-sapling-3.png", "entities/plant/tree-sapling-4.png", "entities/plant/tree-sapling-5.png", "entities/plant/tree-sapling-6.png", "entities/plant/tree-sapling-7.png", "entities/plant/tree-sapling-8.png", "entities/plant/tree-sapling-9.png", "entities/plant/tree-sapling-10.png", "entities/plant/tree-sapling-11.png"];

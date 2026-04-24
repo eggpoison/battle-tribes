@@ -7,7 +7,7 @@ export interface EnergyStoreComponentData {}
 export interface EnergyStoreComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.energyStore, _EnergyStoreComponentArray, EnergyStoreComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.energyStore, _EnergyStoreComponentArray> {}
 }
 
 class _EnergyStoreComponentArray extends _ServerComponentArray<EnergyStoreComponent, EnergyStoreComponentData, never> {

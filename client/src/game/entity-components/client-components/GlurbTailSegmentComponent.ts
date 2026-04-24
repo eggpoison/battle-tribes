@@ -4,7 +4,7 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
 
 export interface GlurbTailSegmentComponentData {}
@@ -12,10 +12,10 @@ export interface GlurbTailSegmentComponentData {}
 export interface GlurbTailSegmentComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.glurbTailSegment, _GlurbTailSegmentComponentArray, GlurbTailSegmentComponentData> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.glurbTailSegment, _GlurbTailSegmentComponentArray> {}
 }
 
-class _GlurbTailSegmentComponentArray extends _ClientComponentArray<GlurbTailSegmentComponent> {
+class _GlurbTailSegmentComponentArray extends _ClientComponentArray<GlurbTailSegmentComponent, GlurbTailSegmentComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

@@ -36,7 +36,7 @@ import { createWorkerHutConfig } from "./entities/worker-hut";
 import { createFrostshaperConfig } from "./entities/frostshaper";
 import { getEntitiesInRange, getHitboxesCollidingEntities } from "./collision";
 import { createFloorSignConfig } from "./entities/floor-sign";
-import { getTransformComponentData } from "./entity-component-types";
+import { getTransformComponentData } from "./entity-components/component-types";
 import { minVisibleTileX, maxVisibleTileX, minVisibleTileY, maxVisibleTileY } from "./camera";
 
 const enum Var {

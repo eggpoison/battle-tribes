@@ -38,7 +38,7 @@ import { getEntityLayer, getCurrentLayer, EntityComponentData, createEntityCreat
 import { cursorWorldPos, setCameraVelocity } from "./camera";
 import { HeldItemComponentArray } from "./entity-components/server-components/HeldItemComponent";
 import { ServerComponentData } from "./entity-components/components";
-import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
+import { getEntityServerComponentTypes, getServerComponentData } from "./entity-components/component-types";
 import { getPlayerInputVector, playerIsLightspeed } from "./event-handling";
 import { Hotbar_updateSelectedItemSlot } from "../ui/game/inventories/Hotbar";
 

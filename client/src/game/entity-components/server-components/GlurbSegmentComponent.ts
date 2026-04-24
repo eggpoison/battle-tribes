@@ -8,8 +8,8 @@ import { playSound, playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityLayer, getEntityRenderObject } from "../../world";
 import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformComponent";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import _ServerComponentArray from "../ServerComponentArray";
 
@@ -26,7 +26,7 @@ export interface GlurbSegmentComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbSegment, _GlurbSegmentComponentArray, GlurbSegmentComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbSegment, _GlurbSegmentComponentArray> {}
 }
 
 class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComponent, GlurbSegmentComponentData, IntermediateInfo> {

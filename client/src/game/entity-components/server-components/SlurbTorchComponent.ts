@@ -6,7 +6,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { createSlurbParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 const enum Var {
@@ -21,7 +21,7 @@ export interface SlurbTorchComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slurbTorch, _SlurbTorchComponentArray, SlurbTorchComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slurbTorch, _SlurbTorchComponentArray> {}
 }
 
 class _SlurbTorchComponentArray extends _ServerComponentArray<SlurbTorchComponent, SlurbTorchComponentData> {

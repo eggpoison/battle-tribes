@@ -9,7 +9,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -18,7 +18,7 @@ export interface BallistaComponentData {}
 export interface BallistaComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ballista, _BallistaComponentArray, BallistaComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ballista, _BallistaComponentArray> {}
 }
 
 class _BallistaComponentArray extends _ServerComponentArray<BallistaComponent, BallistaComponentData> {

@@ -8,8 +8,8 @@ import { StructureConnection } from "../../structure-placement";
 import { Hitbox } from "../../hitboxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface FenceComponentData {}
@@ -24,7 +24,7 @@ export interface FenceComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fence, _FenceComponentArray, FenceComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fence, _FenceComponentArray> {}
 }
 
 class _FenceComponentArray extends _ServerComponentArray<FenceComponent, FenceComponentData, IntermediateInfo> {

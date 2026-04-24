@@ -7,7 +7,7 @@ export interface FleshSwordComponentData {}
 export interface FleshSwordComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fleshSwordItem, _FleshSwordComponentArray, FleshSwordComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fleshSwordItem, _FleshSwordComponentArray> {}
 }
 
 class _FleshSwordComponentArray extends _ServerComponentArray<FleshSwordComponent, FleshSwordComponentData> {

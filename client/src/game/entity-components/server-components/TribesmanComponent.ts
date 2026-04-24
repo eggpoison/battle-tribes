@@ -18,8 +18,8 @@ import { getHitboxTile, getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { currentSnapshot } from "../../networking/snapshots";
 import { tabSelectorState } from "../../../ui-state/tab-selector-state";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag, getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -46,7 +46,7 @@ export interface TribesmanComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesman, _TribesmanComponentArray, TribesmanComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesman, _TribesmanComponentArray> {}
 }
 
 // @Memory

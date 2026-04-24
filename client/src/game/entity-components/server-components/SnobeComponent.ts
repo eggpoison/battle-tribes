@@ -10,8 +10,8 @@ import { playSoundOnHitbox } from "../../sound";
 import { HealthComponentArray } from "./HealthComponent";
 import { RandomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -28,7 +28,7 @@ export interface SnobeComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snobe, _SnobeComponentArray, SnobeComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snobe, _SnobeComponentArray> {}
 }
 
 class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeComponentData> {

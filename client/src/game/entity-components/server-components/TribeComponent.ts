@@ -7,8 +7,8 @@ import _ServerComponentArray from "../ServerComponentArray";
 import { Tribe, tribeExists } from "../../tribes";
 import { playerInstance } from "../../player";
 import { EntityComponentData } from "../../world";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface TribeComponentData {
@@ -22,7 +22,7 @@ export interface TribeComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribe, _TribeComponentArray, TribeComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribe, _TribeComponentArray> {}
 }
 
 class _TribeComponentArray extends _ServerComponentArray<TribeComponent, TribeComponentData> {

@@ -11,8 +11,8 @@ import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -45,7 +45,7 @@ export interface GolemComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.golem, _GolemComponentArray, GolemComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.golem, _GolemComponentArray> {}
 }
 
 const ANGRY_SOUND_INTERVAL_TICKS = Settings.TICK_RATE * 3;

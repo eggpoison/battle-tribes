@@ -7,8 +7,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface BarrelComponentData {
@@ -24,7 +24,7 @@ export interface BarrelComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.barrel, _BarrelComponentArray, BarrelComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.barrel, _BarrelComponentArray> {}
 }
 
 class _BarrelComponentArray extends _ServerComponentArray<BarrelComponent, BarrelComponentData, IntermediateInfo> {

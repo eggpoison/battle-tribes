@@ -19,7 +19,7 @@ export interface RandomSoundComponent {
 }
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.randomSound, _RandomSoundComponentArray, RandomSoundComponentData> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.randomSound, _RandomSoundComponentArray> {}
 }
 
 // @Cleanup this system is so shit
@@ -41,7 +41,7 @@ export function updateRandomSoundComponentSounds(randomSoundComponent: RandomSou
    }
 }
 
-class _RandomSoundComponentArray extends _ClientComponentArray<RandomSoundComponent> {
+class _RandomSoundComponentArray extends _ClientComponentArray<RandomSoundComponent, RandomSoundComponentData> {
    public createComponent(): RandomSoundComponent {
       return {
          minSoundIntervalTicks: 0,

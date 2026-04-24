@@ -7,7 +7,7 @@ export interface AIPathfindingComponentData {}
 export class AIPathfindingComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiPathfinding, _AIPathfindingComponentArray, AIPathfindingComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiPathfinding, _AIPathfindingComponentArray> {}
 }
 
 class _AIPathfindingComponentArray extends _ServerComponentArray<AIPathfindingComponent, AIPathfindingComponentData> {

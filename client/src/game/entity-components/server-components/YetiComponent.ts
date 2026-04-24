@@ -10,8 +10,8 @@ import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -36,7 +36,7 @@ export interface YetiComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.yeti, _YetiComponentArray, YetiComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.yeti, _YetiComponentArray> {}
 }
 
 export const YETI_SIZE = 128;

@@ -8,7 +8,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface TreeRootBaseComponentData {}
@@ -16,7 +16,7 @@ export interface TreeRootBaseComponentData {}
 export interface TreeRootBaseComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootBase, _TreeRootBaseComponentArray, TreeRootBaseComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootBase, _TreeRootBaseComponentArray> {}
 }
 
 class _TreeRootBaseComponentArray extends _ServerComponentArray<TreeRootBaseComponent, TreeRootBaseComponentData> {

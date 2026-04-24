@@ -10,8 +10,8 @@ import { EntityComponentData, getEntityRenderObject, getEntityType } from "../..
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { tamingMenuState } from "../../../ui-state/taming-menu-state";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { getRenderThingByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -53,7 +53,7 @@ export interface TamingComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.taming, _TamingComponentArray, TamingComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.taming, _TamingComponentArray> {}
 }
 
 const TAMING_TIER_TEXTURE_SOURCES: Record<number, string> = {

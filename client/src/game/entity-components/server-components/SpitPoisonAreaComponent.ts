@@ -16,7 +16,7 @@ export interface SpitPoisonAreaComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spitPoisonArea, _SpitPoisonAreaComponentArray, SpitPoisonAreaComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spitPoisonArea, _SpitPoisonAreaComponentArray> {}
 }
 
 class _SpitPoisonAreaComponentArray extends _ServerComponentArray<SpitPoisonAreaComponent, SpitPoisonAreaComponentData> {

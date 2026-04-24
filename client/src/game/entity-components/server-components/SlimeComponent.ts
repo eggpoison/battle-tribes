@@ -8,8 +8,8 @@ import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -38,7 +38,7 @@ export interface SlimeComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slime, _SlimeComponentArray, SlimeComponent> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slime, _SlimeComponentArray> {}
 }
 
 export const SLIME_SIZES: ReadonlyArray<number> = [

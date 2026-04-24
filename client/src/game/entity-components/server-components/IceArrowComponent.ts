@@ -9,7 +9,7 @@ export interface IceArrowComponentData {}
 export interface IceArrowComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceArrow, _IceArrowComponentArray, IceArrowComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceArrow, _IceArrowComponentArray> {}
 }
 
 class _IceArrowComponentArray extends _ServerComponentArray<IceArrowComponent, IceArrowComponentData> {

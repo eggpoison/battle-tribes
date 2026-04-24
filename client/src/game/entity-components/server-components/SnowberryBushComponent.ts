@@ -4,8 +4,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface SnowberryBushComponentData {
@@ -21,7 +21,7 @@ export interface SnowberryBushComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snowberryBush, _SnowberryBushComponentArray, SnowberryBushComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snowberryBush, _SnowberryBushComponentArray> {}
 }
 
 class _SnowberryBushComponentArray extends _ServerComponentArray<SnowberryBushComponent, SnowberryBushComponentData, IntermediateInfo> {

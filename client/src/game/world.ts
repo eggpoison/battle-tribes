@@ -5,7 +5,7 @@ import { cleanEntityRenderParts, entityDataUsesClientInterp, undirtyRenderObject
 import { calculateRenderDepthFromLayer, getEntityRenderLayer } from "./render-layers";
 import { removeEntitySounds } from "./sound";
 import { currentSnapshot } from "./networking/snapshots";
-import { ENTITY_INTERMEDIATE_INFOS, EntityClientComponentData, EntityServerComponentData, getEntityComponentArrays, hasIntermediateInfo } from "./entity-component-types";
+import { ENTITY_INTERMEDIATE_INFOS, EntityClientComponentData, EntityServerComponentData, getEntityComponentArrays, hasIntermediateInfo } from "./entity-components/component-types";
 import { deleteEntityRenderData } from "./rendering/webgl/entity-rendering";
 
 // @Cleanup: location

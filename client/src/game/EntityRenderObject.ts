@@ -8,7 +8,7 @@ import { gl } from "./webgl";
 import { createEntityRenderData, setRenderObjectInVertexData } from "./rendering/webgl/entity-rendering";
 import { registerDirtyRenderObject } from "./rendering/render-part-matrices";
 import { renderLayerIsChunkRendered } from "./rendering/webgl/chunked-entity-rendering";
-import { getEntityComponentArrays } from "./entity-component-types";
+import { getEntityComponentArrays } from "./entity-components/component-types";
 
 export interface ComponentTint {
    readonly tintR: number;

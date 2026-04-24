@@ -4,8 +4,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface MossComponentData {
@@ -16,7 +16,7 @@ export interface MossComponentData {
 export interface MossComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.moss, _MossComponentArray, MossComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.moss, _MossComponentArray> {}
 }
 
 class _MossComponentArray extends _ServerComponentArray<MossComponent, MossComponentData> {

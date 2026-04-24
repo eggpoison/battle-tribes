@@ -7,7 +7,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface SlimewispComponentData {}
@@ -15,7 +15,7 @@ export interface SlimewispComponentData {}
 export interface SlimewispComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimewisp, _SlimewispComponentArray, SlimewispComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimewisp, _SlimewispComponentArray> {}
 }
 
 class _SlimewispComponentArray extends _ServerComponentArray<SlimewispComponent, SlimewispComponentData> {

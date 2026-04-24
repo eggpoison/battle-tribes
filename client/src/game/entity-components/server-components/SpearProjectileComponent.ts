@@ -6,7 +6,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface SpearProjectileComponentData {}
@@ -14,7 +14,7 @@ export interface SpearProjectileComponentData {}
 export interface SpearProjectileComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spearProjectile, _SpearProjectileComponentArray, SpearProjectileComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spearProjectile, _SpearProjectileComponentArray> {}
 }
 
 class _SpearProjectileComponentArray extends _ServerComponentArray<SpearProjectileComponent, SpearProjectileComponentData> {

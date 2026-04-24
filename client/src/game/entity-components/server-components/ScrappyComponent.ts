@@ -6,7 +6,7 @@ import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { updateLimb_TEMP } from "./InventoryUseComponent";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -15,7 +15,7 @@ export interface ScrappyComponentData {}
 export interface ScrappyComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.scrappy, _ScrappyComponentArray, ScrappyComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.scrappy, _ScrappyComponentArray> {}
 }
 
 class _ScrappyComponentArray extends _ServerComponentArray<ScrappyComponent, ScrappyComponentData> {

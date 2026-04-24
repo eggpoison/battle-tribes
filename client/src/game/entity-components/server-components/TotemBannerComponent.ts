@@ -9,8 +9,8 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { TribeComponentArray } from "./TribeComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface TotemBannerComponentData {
@@ -27,7 +27,7 @@ export interface TotemBannerComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.totemBanner, _TotemBannerComponentArray, TotemBannerComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.totemBanner, _TotemBannerComponentArray> {}
 }
 
 const BANNER_LAYER_DISTANCES = [34, 52, 65];

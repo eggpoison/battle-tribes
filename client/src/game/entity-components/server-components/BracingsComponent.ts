@@ -4,7 +4,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -13,7 +13,7 @@ export interface BracingsComponentData {}
 export interface BracingsComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.bracings, _BracingsComponentArray, BracingsComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.bracings, _BracingsComponentArray> {}
 }
 
 class _BracingsComponentArray extends _ServerComponentArray<BracingsComponent, BracingsComponentData> {

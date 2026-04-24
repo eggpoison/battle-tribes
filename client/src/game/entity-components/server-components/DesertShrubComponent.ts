@@ -7,7 +7,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface DesertShrubComponentData {}
@@ -15,7 +15,7 @@ export interface DesertShrubComponentData {}
 export interface DesertShrubComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertShrub, _DesertShrubComponentArray, DesertShrubComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertShrub, _DesertShrubComponentArray> {}
 }
 
 class _DesertShrubComponentArray extends _ServerComponentArray<DesertShrubComponent, DesertShrubComponentData> {

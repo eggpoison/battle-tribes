@@ -25,7 +25,7 @@ import { padBoxData, readBoxFromData } from "./networking/packet-hitboxes";
 import { createBarrelComponentData } from "./entity-components/server-components/BarrelComponent";
 import { cursorWorldPos } from "./camera";
 import { ServerComponentData } from "./entity-components/components";
-import { getEntityServerComponentTypes } from "./entity-component-types";
+import { getEntityServerComponentTypes } from "./entity-components/component-types";
 
 export interface VirtualBuilding {
    readonly entityType: StructureType;

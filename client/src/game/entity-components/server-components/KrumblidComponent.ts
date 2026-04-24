@@ -9,7 +9,7 @@ import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface KrumblidComponentData {}
@@ -17,7 +17,7 @@ export interface KrumblidComponentData {}
 export interface KrumblidComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.krumblid, _KrumblidComponentArray, KrumblidComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.krumblid, _KrumblidComponentArray> {}
 }
 
 class _KrumblidComponentArray extends _ServerComponentArray<KrumblidComponent, KrumblidComponentData> {

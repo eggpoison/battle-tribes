@@ -4,8 +4,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface FloorSignComponentData {
@@ -17,7 +17,7 @@ export interface FloorSignComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.floorSign, _FloorSignComponentArray, FloorSignComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.floorSign, _FloorSignComponentArray> {}
 }
 
 class _FloorSignComponentArray extends _ServerComponentArray<FloorSignComponent, FloorSignComponentData> {

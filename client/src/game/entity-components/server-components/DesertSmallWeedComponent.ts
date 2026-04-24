@@ -7,7 +7,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface DesertSmallWeedComponentData {}
@@ -15,7 +15,7 @@ export interface DesertSmallWeedComponentData {}
 export interface DesertSmallWeedComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertSmallWeed, _DesertSmallWeedComponentArray, DesertSmallWeedComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertSmallWeed, _DesertSmallWeedComponentArray> {}
 }
 
 class _DesertSmallWeedComponentArray extends _ServerComponentArray<DesertSmallWeedComponent, DesertSmallWeedComponentData> {

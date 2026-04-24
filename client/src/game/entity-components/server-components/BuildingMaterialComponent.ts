@@ -2,8 +2,8 @@ import { PacketReader, Entity, EntityType, BuildingMaterial, ServerComponentType
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -16,7 +16,7 @@ export interface BuildingMaterialComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.buildingMaterial, _BuildingMaterialComponentArray, BuildingMaterialComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.buildingMaterial, _BuildingMaterialComponentArray> {}
 }
 
 export const WALL_TEXTURE_SOURCES = ["entities/wall/wooden-wall.png", "entities/wall/stone-wall.png"];

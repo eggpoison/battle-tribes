@@ -7,7 +7,7 @@ export interface LootComponentData {}
 export interface LootComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.loot, _LootComponentArray, LootComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.loot, _LootComponentArray> {}
 }
 
 class _LootComponentArray extends _ServerComponentArray<LootComponent, LootComponentData> {

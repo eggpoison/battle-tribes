@@ -8,8 +8,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface SpruceTreeComponentData {
@@ -22,7 +22,7 @@ export interface SpruceTreeComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spruceTree, _SpruceTreeComponentArray, SpruceTreeComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spruceTree, _SpruceTreeComponentArray> {}
 }
 
 const treeTextures: { [T in TreeSize]: string } = {

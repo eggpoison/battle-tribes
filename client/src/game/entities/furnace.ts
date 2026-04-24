@@ -27,7 +27,7 @@ export function createFurnaceConfig(position: Point, rotation: number, tribe: Tr
          createStatusEffectComponentData(),
          createStructureComponentData(),
          createTribeComponentData(tribe),
-         createInventoryComponentData({}),
+         createInventoryComponentData([]),
          createCookingComponentData(),
          createFurnaceComponentData()
       ],

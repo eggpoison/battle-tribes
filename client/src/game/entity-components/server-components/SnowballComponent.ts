@@ -10,8 +10,8 @@ import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface SnowballComponentData {
@@ -21,7 +21,7 @@ export interface SnowballComponentData {
 export interface SnowballComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snowball, _SnowballComponentArray, SnowballComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snowball, _SnowballComponentArray> {}
 }
 
 class _SnowballComponentArray extends _ServerComponentArray<SnowballComponent, SnowballComponentData> {

@@ -8,8 +8,8 @@ import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -36,7 +36,7 @@ export interface TurretComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.turret, _TurretComponentArray, TurretComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.turret, _TurretComponentArray> {}
 }
 
 const NUM_SLING_TURRET_CHARGE_TEXTURES = 5;

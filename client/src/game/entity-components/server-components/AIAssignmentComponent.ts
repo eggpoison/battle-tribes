@@ -7,7 +7,7 @@ export interface AIAssignmentComponentData {}
 export interface AIAssignmentComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiAssignment, _AIAssignmentComponentArray, AIAssignmentComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiAssignment, _AIAssignmentComponentArray> {}
 }
 
 class _AIAssignmentComponentArray extends _ServerComponentArray<AIAssignmentComponent, AIAssignmentComponentData> {

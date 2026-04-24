@@ -7,7 +7,7 @@ import { Hitbox } from "../../hitboxes";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface DustfleaComponentData {}
@@ -15,7 +15,7 @@ export interface DustfleaComponentData {}
 export interface DustfleaComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustflea, _DustfleaComponentArray, DustfleaComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustflea, _DustfleaComponentArray> {}
 }
 
 class _DustfleaComponentArray extends _ServerComponentArray<DustfleaComponent, DustfleaComponentData> {

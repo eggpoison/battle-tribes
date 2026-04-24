@@ -32,7 +32,7 @@ export function createBallistaConfig(position: Point, rotation: number, tribe: T
          createTurretComponentData(),
          createAIHelperComponentData(),
          createAmmoBoxComponentData(),
-         createInventoryComponentData({}),
+         createInventoryComponentData([]),
          createBallistaComponentData()
       ],
       clientComponentData: []

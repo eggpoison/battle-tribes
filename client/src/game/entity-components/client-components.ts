@@ -1,162 +1,160 @@
 import { EntityType } from "webgl-test-shared";
-import { ClientComponentType } from "./client-component-types";
-import { BallistaFrostcicleComponentData, createBallistaFrostcicleComponentData } from "./client-components/BallistaFrostcicleComponent";
-import { BallistaRockComponentData, createBallistaRockComponentData } from "./client-components/BallistaRockComponent";
-import { BallistaSlimeballComponentData, createBallistaSlimeballComponentData } from "./client-components/BallistaSlimeballComponent";
-import { BallistaWoodenBoltComponentData, createBallistaWoodenBoltComponentData } from "./client-components/BallistaWoodenBoltComponent";
-import { createEmbrasureComponentData, EmbrasureComponentData } from "./client-components/EmbrasureComponent";
-import { createEquipmentComponentData, EquipmentComponentData } from "./client-components/EquipmentComponent";
-import { createFootprintComponentData, FootprintComponentData } from "./client-components/FootprintComponent";
-import { createFrostshaperComponentData, FrostshaperComponentData } from "./client-components/FrostshaperComponent";
-import { GlurbTailSegmentComponentData } from "./client-components/GlurbTailSegmentComponent";
-import { createLilypadComponentData, LilypadComponentData } from "./client-components/LilypadComponent";
-import { createRandomSoundComponentData, RandomSoundComponentData } from "./client-components/RandomSoundComponent";
-import { createRegularSpikesComponentData, RegularSpikesComponentData } from "./client-components/RegularSpikesComponent";
-import { createStonecarvingTableComponentData, StonecarvingTableComponentData } from "./client-components/StonecarvingTableComponent";
-import { createThrownBattleaxeComponentData, ThrownBattleaxeComponentData } from "./client-components/ThrownBattleaxeComponent";
-import { createWallComponentData, WallComponentData } from "./client-components/WallComponent";
-import { createWarriorHutComponentData, WarriorHutComponentData } from "./client-components/WarriorHutComponent";
-import { createWoodenArrowComponentData, WoodenArrowComponentData } from "./client-components/WoodenArrowComponent";
-import { createWorkbenchComponentData, WorkbenchComponentData } from "./client-components/WorkbenchComponent";
-import { createWorkerHutComponentData, WorkerHutComponentData } from "./client-components/WorkerHutComponent";
-import { EntityClientComponentData } from "../entity-component-types";
+import { createBallistaFrostcicleComponentData } from "./client-components/BallistaFrostcicleComponent";
+import { createBallistaRockComponentData } from "./client-components/BallistaRockComponent";
+import { createBallistaSlimeballComponentData } from "./client-components/BallistaSlimeballComponent";
+import { createBallistaWoodenBoltComponentData } from "./client-components/BallistaWoodenBoltComponent";
+import { createEmbrasureComponentData } from "./client-components/EmbrasureComponent";
+import { createEquipmentComponentData } from "./client-components/EquipmentComponent";
+import { createFootprintComponentData } from "./client-components/FootprintComponent";
+import { createFrostshaperComponentData } from "./client-components/FrostshaperComponent";
+import { createLilypadComponentData } from "./client-components/LilypadComponent";
+import { createRandomSoundComponentData } from "./client-components/RandomSoundComponent";
+import { createRegularSpikesComponentData } from "./client-components/RegularSpikesComponent";
+import { createStonecarvingTableComponentData } from "./client-components/StonecarvingTableComponent";
+import { createThrownBattleaxeComponentData } from "./client-components/ThrownBattleaxeComponent";
+import { createWallComponentData } from "./client-components/WallComponent";
+import { createWarriorHutComponentData } from "./client-components/WarriorHutComponent";
+import { createWoodenArrowComponentData } from "./client-components/WoodenArrowComponent";
+import { createWorkbenchComponentData } from "./client-components/WorkbenchComponent";
+import { createWorkerHutComponentData } from "./client-components/WorkerHutComponent";
+import { ClientComponentDataMap } from "./component-types";
 
-interface ClientComponentDataRecord {
-   [ClientComponentType.equipment]: EquipmentComponentData,
-   [ClientComponentType.footprint]: FootprintComponentData,
-   [ClientComponentType.randomSound]: RandomSoundComponentData,
-   [ClientComponentType.embrasure]: EmbrasureComponentData,
-   [ClientComponentType.frostshaper]: FrostshaperComponentData,
-   [ClientComponentType.lilypad]: LilypadComponentData,
-   [ClientComponentType.regularSpikes]: RegularSpikesComponentData,
-   [ClientComponentType.stonecarvingTable]: StonecarvingTableComponentData,
-   [ClientComponentType.wall]: WallComponentData,
-   [ClientComponentType.warriorHut]: WarriorHutComponentData,
-   [ClientComponentType.workbench]: WorkbenchComponentData,
-   [ClientComponentType.workerHut]: WorkerHutComponentData,
-   [ClientComponentType.ballistaFrostcicle]: BallistaFrostcicleComponentData,
-   [ClientComponentType.ballistaRock]: BallistaRockComponentData,
-   [ClientComponentType.ballistaSlimeball]: BallistaSlimeballComponentData,
-   [ClientComponentType.ballistaWoodenBolt]: BallistaWoodenBoltComponentData,
-   [ClientComponentType.thrownBattleaxe]: ThrownBattleaxeComponentData,
-   [ClientComponentType.woodenArrow]: WoodenArrowComponentData,
-   [ClientComponentType.glurbTailSegment]: GlurbTailSegmentComponentData
-}
-
-export type ClientComponentData<T extends ClientComponentType> = ClientComponentDataRecord[T];
-
-// @Cleanup: if this gets too large/unwieldy i should rework this
-export function getEntityClientComponentConfigs(entityType: EntityType): EntityClientComponentData {
-   const clientComponentData: Array<ClientComponentData<ClientComponentType>> = [];
+export function getEntityClientComponentConfigs<T extends EntityType>(entityType: T): ClientComponentDataMap[T] {
+   // @CLEANUP typescript lacks return type narrowing for now so there are nasty any casts strewn aboudst
    
    switch (entityType) {
       case EntityType.cow: {
-         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
-         break;
+         return [
+            createFootprintComponentData(0.3, 20, 64, 5, 40, false)
+         ] as any;
       }
       case EntityType.player: {
-         clientComponentData.push(createFootprintComponentData(0.2, 20, 64, 4, 64, false));
-         clientComponentData.push(createEquipmentComponentData());
-         break;
+         return [
+            createFootprintComponentData(0.2, 20, 64, 4, 64, false),
+            createEquipmentComponentData()
+         ] as any;
       }
       case EntityType.tribeWorker: {
-         clientComponentData.push(createFootprintComponentData(0.15, 20, 64, 4, 50, false));
-         clientComponentData.push(createEquipmentComponentData());
-         break;
+         return [
+            createFootprintComponentData(0.15, 20, 64, 4, 50, false),
+            createEquipmentComponentData()
+         ] as any;
       }
       case EntityType.tribeWarrior: {
-         clientComponentData.push(createFootprintComponentData(0.15, 20, 64, 4, 64, false));
-         clientComponentData.push(createEquipmentComponentData());
-         break;
+         return [
+            createFootprintComponentData(0.15, 20, 64, 4, 64, false),
+            createEquipmentComponentData()
+         ] as any;
       }
       case EntityType.krumblid: {
-         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 50, false));
-         break;
+         return [
+            createFootprintComponentData(0.3, 20, 64, 5, 50, false)
+         ] as any;
       }
       case EntityType.lilypad: {
-         clientComponentData.push(createLilypadComponentData());
-         break;
+         return [
+            createLilypadComponentData()
+         ] as any;
       }
       case EntityType.frostshaper: {
-         clientComponentData.push(createFrostshaperComponentData());
-         break;
+         return [
+            createFrostshaperComponentData()
+         ] as any;
       }
       case EntityType.embrasure: {
-         clientComponentData.push(createEmbrasureComponentData());
-         break;
+         return [
+            createEmbrasureComponentData()
+         ] as any;
       }
       case EntityType.pebblum: {
-         clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
-         break;
+         return [
+            createFootprintComponentData(0.3, 20, 64, 5, 40, false)
+         ] as any;
       }
       case EntityType.wallSpikes:
       case EntityType.floorSpikes: {
-         clientComponentData.push(createRegularSpikesComponentData());
-         break;
+         return [
+            createRegularSpikesComponentData()
+         ] as any;
       }
       case EntityType.stonecarvingTable: {
-         clientComponentData.push(createStonecarvingTableComponentData());
-         break;
+         return [
+            createStonecarvingTableComponentData()
+         ] as any;
       }
       case EntityType.wall: {
-         clientComponentData.push(createWallComponentData());
-         break;
+         return [
+            createWallComponentData()
+         ] as any;
       }
       case EntityType.warriorHut: {
-         clientComponentData.push(createWarriorHutComponentData());
-         break;
+         return [
+            createWarriorHutComponentData()
+         ] as any;
       }
       case EntityType.workbench: {
-         clientComponentData.push(createWorkbenchComponentData());
-         break;
+         return [
+            createWorkbenchComponentData()
+         ] as any;
       }
       case EntityType.workerHut: {
-         clientComponentData.push(createWorkerHutComponentData());
-         break;
+         return [
+            createWorkerHutComponentData()
+         ] as any;
       }
       case EntityType.yeti: {
-         clientComponentData.push(createRandomSoundComponentData());
-         break;
+         return [
+            createRandomSoundComponentData()
+         ] as any;
       }
       case EntityType.ballistaFrostcicle: {
-         clientComponentData.push(createBallistaFrostcicleComponentData());
-         break;
+         return [
+            createBallistaFrostcicleComponentData()
+         ] as any;
       }
       case EntityType.ballistaRock: {
-         clientComponentData.push(createBallistaRockComponentData());
-         break;
+         return [
+            createBallistaRockComponentData()
+         ] as any;
       }
       case EntityType.ballistaSlimeball: {
-         clientComponentData.push(createBallistaSlimeballComponentData());
-         break;
+         return [
+            createBallistaSlimeballComponentData()
+         ] as any;
       }
       case EntityType.ballistaWoodenBolt: {
-         clientComponentData.push(createBallistaWoodenBoltComponentData());
-         break;
+         return [
+            createBallistaWoodenBoltComponentData()
+         ] as any;
       }
       case EntityType.battleaxeProjectile: {
-         clientComponentData.push(createThrownBattleaxeComponentData());
-         break;
+         return [
+            createThrownBattleaxeComponentData()
+         ] as any;
       }
       case EntityType.woodenArrow: {
-         clientComponentData.push(createWoodenArrowComponentData());
-         break;
+         return [
+            createWoodenArrowComponentData()
+         ] as any;
       }
       case EntityType.glurbTailSegment: {
-         clientComponentData.push({});
-         break;
+         return [
+            {}
+         ] as any;
       }
       case EntityType.snobe: {
-         clientComponentData.push(createFootprintComponentData(0.3, 20, 48, 5, 40, true));
-         clientComponentData.push(createRandomSoundComponentData());
-         break;
+         return [
+            createFootprintComponentData(0.3, 20, 48, 5, 40, true),
+            createRandomSoundComponentData()
+         ] as any;
       }
       // @Cleanup: doubled. i think this is supposed to be a different entity??
       // case EntityType.snobe: {
       //    clientComponentData.push(createFootprintComponentData(0.3, 20, 64, 5, 40, false));
       //    break;
       // }
+      default: {
+         return [] as any;
+      }
    }
-
-   return clientComponentData;
 }

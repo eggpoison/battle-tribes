@@ -7,8 +7,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface ItemComponentData {
@@ -20,7 +20,7 @@ export interface ItemComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.item, _ItemComponentArray, ItemComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.item, _ItemComponentArray> {}
 }
 
 class _ItemComponentArray extends _ServerComponentArray<ItemComponent, ItemComponentData> {

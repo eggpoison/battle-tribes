@@ -15,7 +15,7 @@ import { updateFrameMetrics } from "./rendering/webgl/frame-graph-rendering";
 import { updatePlayerMovement } from "./player-action-handling";
 import { sendPlayerDataPacket } from "./networking/packet-sending/player-data-packet";
 import { updateParticles } from "./rendering/webgl/particle-rendering";
-import { getEntityComponentArrays } from "./entity-component-types";
+import { getEntityComponentArrays } from "./entity-components/component-types";
 import { getEntityType, } from "./world";
 import { cleanupEvents, setupEvents } from "./event-handling";
 import { updateSnapshots } from "./networking/snapshots";

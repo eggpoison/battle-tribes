@@ -9,8 +9,8 @@ import { playSoundOnHitbox } from "../../sound";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface FishComponentData {
@@ -23,7 +23,7 @@ export interface FishComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fish, _FishComponentArray, FishComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fish, _FishComponentArray> {}
 }
 
 const TEXTURE_SOURCES: Record<FishColour, string> = {

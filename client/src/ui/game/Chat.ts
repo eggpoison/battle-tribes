@@ -37,7 +37,7 @@ export function addMessageToChat(username: string, message: string): void {
 
    // Make the chat reappear
    historyElem!.classList.remove("message-history");
-   historyElem!.offsetHeight;
+   historyElem!.offsetHeight; // Force reflow to play the animation again
    historyElem!.classList.add("message-history");
 }
 
@@ -104,7 +104,11 @@ function onInputKeydown(e: KeyboardEvent): void {
             const oldest = spamFilterTimestamps[spamFilterHead];
             if (currentTime - oldest > Var.SPAM_FILTER_MESSAGE_DURATION_MS) {
                spamFilterTimestamps[spamFilterHead] = currentTime;
-               spamFilterHead = (spamFilterHead + 1) % Var.SPAM_FILTER_MAX_MESSAGES;
+               
+               spamFilterHead++;
+               if (spamFilterHead >= Var.SPAM_FILTER_MAX_MESSAGES) {
+                  spamFilterHead -= Var.SPAM_FILTER_MAX_MESSAGES;
+               }
 
                sendChatMessagePacket(message);
                inputElem!.value = "";

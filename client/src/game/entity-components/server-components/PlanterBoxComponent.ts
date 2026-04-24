@@ -9,8 +9,8 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { getEntityRenderObject, getEntityAgeTicks, EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponent, TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface PlanterBoxComponentData {
@@ -30,7 +30,7 @@ export interface PlanterBoxComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.planterBox, _PlanterBoxComponentArray, PlanterBoxComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.planterBox, _PlanterBoxComponentArray> {}
 }
 
 const createMoundRenderPart = (plantedEntityType: PlantedEntityType, parentHitbox: Hitbox): TexturedRenderPart => {

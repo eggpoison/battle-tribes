@@ -1,6 +1,6 @@
 import { assert, BlueprintType, DecorationType, ServerComponentType, EntityType } from "webgl-test-shared";
 import { EntityComponentData } from "./world";
-import { getEntityServerComponentTypes, getServerComponentData } from "./entity-component-types";
+import { getEntityServerComponentTypes, getServerComponentData } from "./entity-components/component-types";
 
 export enum RenderLayer {
    lowDecorations,

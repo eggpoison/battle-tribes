@@ -5,8 +5,8 @@ import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { playerInstance } from "../../player";
 import { Hitbox } from "../../hitboxes";
 import { discombobulate } from "../../player-action-handling";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { HealthBar_setHealth } from "../../../ui/game/HealthBar";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -23,7 +23,7 @@ export interface HealthComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.health, _HealthComponentArray, HealthComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.health, _HealthComponentArray> {}
 }
 
 /** Amount of seconds that the hit flash occurs for */

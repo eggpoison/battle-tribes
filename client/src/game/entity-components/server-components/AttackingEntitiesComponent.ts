@@ -7,7 +7,7 @@ export interface AttackingEntitiesComponentData {}
 export interface AttackingEntitiesComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.attackingEntities, _AttackingEntitiesComponentArray, AttackingEntitiesComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.attackingEntities, _AttackingEntitiesComponentArray> {}
 }
 
 class _AttackingEntitiesComponentArray extends _ServerComponentArray<AttackingEntitiesComponent, AttackingEntitiesComponentData> {

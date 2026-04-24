@@ -6,7 +6,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getCurrentLayer } from "../../world";
 import { playSound } from "../../sound";
 import { cameraPosition } from "../../camera";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface InguYetuksnoglurblidokowfleaComponentData {}
@@ -14,7 +14,7 @@ export interface InguYetuksnoglurblidokowfleaComponentData {}
 export interface InguYetuksnoglurblidokowfleaComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetuksnoglurblidokowflea, _InguYetuksnoglurblidokowfleaComponentArray, InguYetuksnoglurblidokowfleaComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetuksnoglurblidokowflea, _InguYetuksnoglurblidokowfleaComponentArray> {}
 }
 
 class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<InguYetuksnoglurblidokowfleaComponent, InguYetuksnoglurblidokowfleaComponentData> {

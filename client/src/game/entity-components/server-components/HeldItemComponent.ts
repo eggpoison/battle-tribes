@@ -1,8 +1,8 @@
 import { PacketReader, Entity, ServerComponentType, ItemType } from "webgl-test-shared";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface HeldItemComponentData {
@@ -15,7 +15,7 @@ export interface HeldItemComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.heldItem, _HeldItemComponentArray, HeldItemComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.heldItem, _HeldItemComponentArray> {}
 }
 
 class _HeldItemComponentArray extends _ServerComponentArray<HeldItemComponent, HeldItemComponentData> {

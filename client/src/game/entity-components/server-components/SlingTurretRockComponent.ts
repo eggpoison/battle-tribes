@@ -8,7 +8,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface SlingTurretRockComponentData {}
@@ -16,7 +16,7 @@ export interface SlingTurretRockComponentData {}
 export interface SlingTurretRockComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slingTurretRock, _SlingTurretRockComponentArray, SlingTurretRockComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slingTurretRock, _SlingTurretRockComponentArray> {}
 }
 
 class _SlingTurretRockComponentArray extends _ServerComponentArray<SlingTurretRockComponent, SlingTurretRockComponentData> {

@@ -4,9 +4,13 @@ import { Hitbox } from "../hitboxes";
 import { ComponentTint, EntityRenderObject } from "../EntityRenderObject";
 
 export abstract class ComponentArray<
-   Component extends object = object,
+   Component extends object,
+   ComponentData extends object,
    ComponentIntermediateInfo = void
 > {
+   // @HACKK cuz otherwise ClientComponentArrays don't use ComponentData at all and so using infer P breaks.
+   declare private __useless: ComponentData;
+   
    private readonly isActiveByDefault: boolean;
    
    public entities: Array<Entity> = [];

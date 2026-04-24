@@ -10,7 +10,7 @@ import { registerTamingSpecsFromData } from "../taming-specs";
 import { gameUIState } from "../../ui-state/game-ui-state";
 import { getSelectedItemInfo } from "../player-action-handling";
 import { playerActionState } from "../../ui-state/player-action-state";
-import { registerEntityComponentTypesFromData } from "../entity-component-types";
+import { registerEntityComponentTypesFromData } from "../entity-components/component-types";
 import { addMessageToChat } from "../../ui/game/Chat";
 
 const NEIGHBOUR_OFFSETS = [

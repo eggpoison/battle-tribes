@@ -6,8 +6,8 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityAgeTicks } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface ResearchBenchComponentData {
@@ -19,7 +19,7 @@ export interface ResearchBenchComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.researchBench, _ResearchBenchComponentArray, ResearchBenchComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.researchBench, _ResearchBenchComponentArray> {}
 }
 
 class _ResearchBenchComponentArray extends _ServerComponentArray<ResearchBenchComponent, ResearchBenchComponentData> {

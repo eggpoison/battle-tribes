@@ -9,7 +9,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -21,7 +21,7 @@ export interface InguSerpentComponentData {}
 export interface InguSerpentComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguSerpent, _InguSerpentComponentArray, InguSerpentComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguSerpent, _InguSerpentComponentArray> {}
 }
 
 class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentComponent, InguSerpentComponentData> {

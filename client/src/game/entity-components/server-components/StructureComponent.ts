@@ -5,8 +5,8 @@ import { EntityComponentData, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { addFenceConnection, FenceComponentArray, removeFenceConnection } from "./FenceComponent";
 import { TransformComponentArray } from "./TransformComponent";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface StructureComponentData {
@@ -20,7 +20,7 @@ export interface StructureComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.structure, _StructureComponentArray, StructureComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.structure, _StructureComponentArray> {}
 }
 
 class _StructureComponentArray extends _ServerComponentArray<StructureComponent, StructureComponentData> {

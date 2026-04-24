@@ -4,8 +4,8 @@ import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../p
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { updateCraftableRecipes } from "../../../ui/game/menus/CraftingMenu";
 import { Hotbar_addItem, Hotbar_removeItem, Hotbar_updateItem } from "../../../ui/game/inventories/Hotbar";
 import { registerServerComponentArray } from "../component-registry";
@@ -19,7 +19,7 @@ export interface InventoryComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inventory, _InventoryComponentArray, InventoryComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inventory, _InventoryComponentArray> {}
 }
 
 /** Checks if the player is doing a legal action for a given item. */

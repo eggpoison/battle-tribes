@@ -6,7 +6,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface TukmokSpurComponentData {}
@@ -14,7 +14,7 @@ export interface TukmokSpurComponentData {}
 export interface TukmokSpurComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmokSpur, _TukmokSpurComponentArray, TukmokSpurComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmokSpur, _TukmokSpurComponentArray> {}
 }
 
 class _TukmokSpurComponentArray extends _ServerComponentArray<TukmokSpurComponent, TukmokSpurComponentData> {

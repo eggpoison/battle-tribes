@@ -6,7 +6,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface InguYetukLaserComponentData {}
@@ -14,7 +14,7 @@ export interface InguYetukLaserComponentData {}
 export interface InguYetukLaserComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetukLaser, _InguYetukLaserComponentArray, InguYetukLaserComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetukLaser, _InguYetukLaserComponentArray> {}
 }
 
 class _InguYetukLaserComponentArray extends _ServerComponentArray<InguYetukLaserComponent, InguYetukLaserComponentData> {

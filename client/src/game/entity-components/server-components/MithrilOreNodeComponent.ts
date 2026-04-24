@@ -8,8 +8,8 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface MithrilOreNodeComponentData {
@@ -21,7 +21,7 @@ export interface MithrilOreNodeComponentData {
 export interface MithrilOreNodeComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.mithrilOreNode, _MithrilOreNodeComponentArray, MithrilOreNodeComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.mithrilOreNode, _MithrilOreNodeComponentArray> {}
 }
 
 class _MithrilOreNodeComponentArray extends _ServerComponentArray<MithrilOreNodeComponent, MithrilOreNodeComponentData> {

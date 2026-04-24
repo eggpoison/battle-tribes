@@ -8,7 +8,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { createPricklyPearParticle } from "../../particles";
 import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface PricklyPearComponentData {}
@@ -16,7 +16,7 @@ export interface PricklyPearComponentData {}
 export interface PricklyPearComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pricklyPear, _PricklyPearComponentArray, PricklyPearComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pricklyPear, _PricklyPearComponentArray> {}
 }
 
 class _PricklyPearComponentArray extends _ServerComponentArray<PricklyPearComponent, PricklyPearComponentData> {

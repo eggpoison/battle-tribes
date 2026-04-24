@@ -10,7 +10,7 @@ export interface BattleaxeProjectileComponentData {}
 export interface BattleaxeProjectileComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.battleaxeProjectile, _BattleaxeProjectileComponentArray, BattleaxeProjectileComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.battleaxeProjectile, _BattleaxeProjectileComponentArray> {}
 }
 
 class _BattleaxeProjectileComponentArray extends _ServerComponentArray<BattleaxeProjectileComponent, BattleaxeProjectileComponentData, never> {

@@ -8,8 +8,8 @@ import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle } from ".
 import { playSoundOnHitbox } from "../../sound";
 import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -27,7 +27,7 @@ export interface BerryBushComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.berryBush, _BerryBushComponentArray, BerryBushComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.berryBush, _BerryBushComponentArray> {}
 }
 
 const BERRY_BUSH_TEXTURE_SOURCES = [

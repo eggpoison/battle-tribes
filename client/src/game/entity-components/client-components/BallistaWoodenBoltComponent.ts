@@ -8,7 +8,7 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
 
 export interface BallistaWoodenBoltComponentData {}
@@ -16,10 +16,10 @@ export interface BallistaWoodenBoltComponentData {}
 export interface BallistaWoodenBoltComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaWoodenBolt, _BallistaWoodenBoltComponentArray, BallistaWoodenBoltComponent> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaWoodenBolt, _BallistaWoodenBoltComponentArray> {}
 }
 
-class _BallistaWoodenBoltComponentArray extends _ClientComponentArray<BallistaWoodenBoltComponent> {
+class _BallistaWoodenBoltComponentArray extends _ClientComponentArray<BallistaWoodenBoltComponent, BallistaWoodenBoltComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

@@ -8,7 +8,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface CampfireComponentData {}
@@ -16,7 +16,7 @@ export interface CampfireComponentData {}
 export interface CampfireComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.campfire, _CampfireComponentArray, CampfireComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.campfire, _CampfireComponentArray> {}
 }
 
 class _CampfireComponentArray extends _ServerComponentArray<CampfireComponent, CampfireComponentData> {

@@ -11,7 +11,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { hitboxIsInWater, resolveWallCollisions } from "../../collision";
 import { currentSnapshot } from "../../networking/snapshots";
 import { gameUIState } from "../../../ui-state/game-ui-state";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import Layer from "../../Layer";
 import { readHitboxFromData, updateHitboxFromData, updatePlayerHitboxFromData } from "../../networking/packet-hitboxes";
 import { playerIsLightspeed } from "../../event-handling";
@@ -42,7 +42,7 @@ export interface TransformComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.transform, _TransformComponentArray, TransformComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.transform, _TransformComponentArray> {}
 }
 
 // We use this so that a component tries to override the empty array with the same empty
@@ -257,10 +257,6 @@ const applyHitboxKinematics = (hitbox: Hitbox): void => {
    const layer = getEntityLayer(hitbox.entity);
    const tile = getHitboxTile(hitbox);
 
-   if (isNaN(hitbox.box.position.x)) {
-      throw new Error("Position was NaN.");
-   }
-
    // @Incomplete: here goes fish suit exception
    // Apply river flow to external velocity
    if (hitboxIsInWater(hitbox)) {
@@ -424,7 +420,7 @@ const tickHitboxPhysics = (hitbox: Hitbox): void => {
    }
 }
 
-class _TransformComponentArray extends _ServerComponentArray<TransformComponent> {
+class _TransformComponentArray extends _ServerComponentArray<TransformComponent, TransformComponentData> {
    public decodeData(reader: PacketReader): TransformComponentData {
       const traction = reader.readNumber();
 

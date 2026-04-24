@@ -4,7 +4,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface PebblumComponentData {}
@@ -12,7 +12,7 @@ export interface PebblumComponentData {}
 export interface PebblumComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pebblum, _PebblumComponentArray, PebblumComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pebblum, _PebblumComponentArray> {}
 }
 
 class _PebblumComponentArray extends _ServerComponentArray<PebblumComponent, PebblumComponentData> {

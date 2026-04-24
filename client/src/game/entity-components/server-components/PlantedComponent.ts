@@ -10,7 +10,7 @@ export interface PlantedComponentData {}
 export interface PlantedComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.planted, _PlantedComponentArray, PlantedComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.planted, _PlantedComponentArray> {}
 }
 
 class _PlantedComponentArray extends _ServerComponentArray<PlantedComponent, PlantedComponentData> {

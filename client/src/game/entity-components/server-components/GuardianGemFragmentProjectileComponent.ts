@@ -8,8 +8,8 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface GuardianGemFragmentProjectileComponentData {
@@ -33,7 +33,7 @@ const TEXTURE_SOURCES = [
 ];
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianGemFragmentProjectile, _GuardianGemFragmentProjectileComponentArray, GuardianGemFragmentProjectileComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianGemFragmentProjectile, _GuardianGemFragmentProjectileComponentArray> {}
 }
 
 class _GuardianGemFragmentProjectileComponentArray extends _ServerComponentArray<GuardianGemFragmentProjectileComponent, GuardianGemFragmentProjectileComponentData, IntermediateInfo> {

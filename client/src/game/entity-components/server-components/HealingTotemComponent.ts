@@ -7,8 +7,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface HealingTotemComponentData {
@@ -24,7 +24,7 @@ export interface HealingTotemComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.healingTotem, _HealingTotemComponentArray, HealingTotemComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.healingTotem, _HealingTotemComponentArray> {}
 }
 
 const EYE_LIGHTS_TRANSFORM_TICKS = Math.floor(0.5 * Settings.DT_S);

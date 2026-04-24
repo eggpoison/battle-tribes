@@ -7,7 +7,7 @@ export interface ThrowingProjectileComponentData {}
 export interface ThrowingProjectileComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.throwingProjectile, _ThrowingProjectileComponentArray, ThrowingProjectileComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.throwingProjectile, _ThrowingProjectileComponentArray> {}
 }
 
 class _ThrowingProjectileComponentArray extends _ServerComponentArray<ThrowingProjectileComponent, ThrowingProjectileComponentData> {

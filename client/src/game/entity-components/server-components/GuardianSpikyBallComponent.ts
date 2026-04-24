@@ -7,7 +7,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface GuardianSpikyBallComponentData {}
@@ -15,7 +15,7 @@ export interface GuardianSpikyBallComponentData {}
 export interface GuardianSpikyBallComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianSpikyBall, _GuardianSpikyBallComponentArray, GuardianSpikyBallComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianSpikyBall, _GuardianSpikyBallComponentArray> {}
 }
 
 class _GuardianSpikyBallComponentArray extends _ServerComponentArray<GuardianSpikyBallComponent, GuardianSpikyBallComponentData> {

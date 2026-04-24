@@ -8,8 +8,8 @@ import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { currentSnapshot } from "../../networking/snapshots";
 import { registerServerComponentArray } from "../component-registry";
@@ -38,7 +38,7 @@ export interface HutComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.hut, _HutComponentArray, HutComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.hut, _HutComponentArray> {}
 }
 
 export const WORKER_HUT_SIZE = 88;

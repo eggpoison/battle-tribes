@@ -5,8 +5,8 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { OkrenAgeStage } from "./OkrenComponent";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface OkrenClawComponentData {
@@ -30,7 +30,7 @@ export interface OkrenClawComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.okrenClaw, _OkrenClawComponentArray, OkrenClawComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.okrenClaw, _OkrenClawComponentArray> {}
 }
 
 class _OkrenClawComponentArray extends _ServerComponentArray<OkrenClawComponent, OkrenClawComponentData, IntermediateInfo> {

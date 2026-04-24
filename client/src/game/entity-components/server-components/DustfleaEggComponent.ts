@@ -4,7 +4,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface DustfleaEggComponentData {}
@@ -12,7 +12,7 @@ export interface DustfleaEggComponentData {}
 export interface DustfleaEggComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustfleaEgg, _DustfleaEggComponentArray, DustfleaEggComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustfleaEgg, _DustfleaEggComponentArray> {}
 }
 
 class _DustfleaEggComponentArray extends _ServerComponentArray<DustfleaEggComponent, DustfleaEggComponentData> {

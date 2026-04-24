@@ -8,8 +8,8 @@ import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxByLocalID } from "../../hitboxes";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface CactusFlower {
@@ -31,7 +31,7 @@ export interface CactusComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cactus, _CactusComponentArray, CactusComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cactus, _CactusComponentArray> {}
 }
 
 export const CACTUS_RADIUS = 40;

@@ -4,7 +4,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface GlurbBodySegmentComponentData {}
@@ -12,7 +12,7 @@ export interface GlurbBodySegmentComponentData {}
 export interface GlurbBodySegmentComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbBodySegment, _GlurbBodySegmentComponentArray, GlurbBodySegmentComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbBodySegment, _GlurbBodySegmentComponentArray> {}
 }
 
 class _GlurbBodySegmentComponentArray extends _ServerComponentArray<GlurbBodySegmentComponent, GlurbBodySegmentComponentData> {

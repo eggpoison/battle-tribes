@@ -5,8 +5,8 @@ import _ServerComponentArray from "../ServerComponentArray";
 import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { hueShift, multiColourLerp } from "../../render-parts/VisualRenderPart";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -34,7 +34,7 @@ export interface LayeredRodComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.layeredRod, _LayeredRodComponentArray, LayeredRodComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.layeredRod, _LayeredRodComponentArray> {}
 }
 
 const MAX_BEND = 6;

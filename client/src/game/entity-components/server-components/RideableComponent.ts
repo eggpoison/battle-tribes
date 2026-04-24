@@ -5,8 +5,8 @@ import { playSound } from "../../sound";
 import { entityExists, EntityComponentData, getEntityLayer, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 interface CarrySlot {
@@ -27,7 +27,7 @@ export interface RideableComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.rideable, _RideableComponentArray, RideableComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.rideable, _RideableComponentArray> {}
 }
 
 class _RideableComponentArray extends _ServerComponentArray<RideableComponent, RideableComponentData> {

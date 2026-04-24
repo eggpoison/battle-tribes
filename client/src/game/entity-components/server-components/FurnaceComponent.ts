@@ -10,7 +10,7 @@ import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface FurnaceComponentData {}
@@ -18,7 +18,7 @@ export interface FurnaceComponentData {}
 export interface FurnaceComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.furnace, _FurnaceComponentArray, FurnaceComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.furnace, _FurnaceComponentArray> {}
 }
 
 class _FurnaceComponentArray extends _ServerComponentArray<FurnaceComponent, FurnaceComponentData> {

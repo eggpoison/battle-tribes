@@ -9,7 +9,7 @@ import { TransformComponentArray } from "../entity-components/server-components/
 import { playerInstance } from "../player";
 import { EntitySnapshot } from "../networking/snapshot-processing";
 import { currentSnapshot, nextSnapshot } from "../networking/snapshots";
-import { EntityServerComponentData, getEntityServerComponentTypes, getServerComponentData, getTransformComponentData } from "../entity-component-types";
+import { EntityServerComponentData, getEntityServerComponentTypes, getServerComponentData, getTransformComponentData } from "../entity-components/component-types";
 import { getRenderPartShakeAmount } from "../render-parts/render-part-shake-amounts";
 
 // @HACK i've only kept this dirty array around for hacky reasons. when i make the rework where the client works off sent render parts this should go away.

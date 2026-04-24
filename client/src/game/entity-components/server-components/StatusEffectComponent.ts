@@ -11,8 +11,8 @@ import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
 import { playerInstance } from "../../player";
 import { getHitboxVelocity } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface StatusEffectComponentData {
@@ -27,7 +27,7 @@ export interface StatusEffectComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.statusEffect, _StatusEffectComponentArray, StatusEffectComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.statusEffect, _StatusEffectComponentArray> {}
 }
 
 const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [

@@ -4,7 +4,7 @@ import { getEntityLayer, getEntityType, layers } from "./world";
 import Layer from "./Layer";
 import { playerInstance } from "./player";
 import { applyForce, getHitboxTile, getHitboxVelocity, Hitbox, setHitboxVelocity, translateHitbox } from "./hitboxes";
-import { getEntityComponentArrays } from "./entity-component-types";
+import { getEntityComponentArrays } from "./entity-components/component-types";
 import { entityUsesClientInterp } from "./rendering/render-part-matrices";
 
 type EntityCollisionPair = [affectedEntity: Entity, collidingEntity: Entity];

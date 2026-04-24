@@ -7,8 +7,8 @@ import { TransformComponentArray } from "./TransformComponent";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface KrumblidMorphCocoonComponentData {
@@ -25,7 +25,7 @@ export interface KrumblidMorphCocoonComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.krumblidMorphCocoon, _KrumblidMorphCocoonComponentArray, KrumblidMorphCocoonComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.krumblidMorphCocoon, _KrumblidMorphCocoonComponentArray> {}
 }
 
 class _KrumblidMorphCocoonComponentArray extends _ServerComponentArray<KrumblidMorphCocoonComponent, KrumblidMorphCocoonComponentData, IntermediateInfo> {

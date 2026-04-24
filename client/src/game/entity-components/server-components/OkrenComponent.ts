@@ -7,8 +7,8 @@ import { Hitbox } from "../../hitboxes";
 import { createOkrenEyeParticle } from "../../particles";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { renderParentIsHitbox } from "../../render-parts/render-parts";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -32,7 +32,7 @@ export interface OkrenComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.okren, _OkrenComponentArray, OkrenComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.okren, _OkrenComponentArray> {}
 }
 
 class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenComponentData> {

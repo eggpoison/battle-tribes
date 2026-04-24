@@ -1,16 +1,15 @@
-import { EntityType, PacketReader, ServerComponentType } from "../../../shared/src";
-import { ClientComponentType } from "./entity-components/client-component-types";
-import { ClientComponentData } from "./entity-components/client-components";
-import { ComponentArray, getClientComponentArray, getServerComponentArray, ServerComponentArray } from "./entity-components/component-registry";
-import { ServerComponentData } from "./entity-components/components";
-import { TransformComponentData } from "./entity-components/server-components/TransformComponent";
+import { EntityType, PacketReader, ServerComponentType } from "../../../../shared/src";
+import { ClientComponentType } from "./client-component-types";
+import { ClientComponentData, ComponentArray, getClientComponentArray, getServerComponentArray, ServerComponentArray, ServerComponentData } from "./component-registry";
+import { TransformComponentData } from "./server-components/TransformComponent";
+import _ServerComponentArray from "./ServerComponentArray";
 
 export type EntityServerComponentData<T extends ServerComponentType = ServerComponentType> = ReadonlyArray<ServerComponentData<T>>;
 export type EntityClientComponentData<T extends ClientComponentType = ClientComponentType> = ReadonlyArray<ClientComponentData<T>>;
 
 const ENTITY_SERVER_COMPONENT_TYPES: Array<Array<ServerComponentType>> = [];
 
-const ENTITY_CLIENT_COMPONENT_TYPES: ReadonlyArray<ReadonlyArray<ClientComponentType>> = [
+const ENTITY_CLIENT_COMPONENT_TYPES = [
    // cow
    [ClientComponentType.footprint],
    // zombie
@@ -251,7 +250,16 @@ const ENTITY_CLIENT_COMPONENT_TYPES: ReadonlyArray<ReadonlyArray<ClientComponent
    [],
    // inguYetukLaser
    [],
-];
+] as const satisfies ReadonlyArray<ReadonlyArray<ClientComponentType>>;
+
+// @Cleanup: name
+type LesserMap<T extends readonly ClientComponentType[]> = {
+   [K in keyof T]: ClientComponentData<T[K]>;
+}
+
+export type ClientComponentDataMap = {
+   [E in EntityType]: LesserMap<typeof ENTITY_CLIENT_COMPONENT_TYPES[E]>;
+}
 
 const COMPONENT_ARRAYS: Array<Array<ComponentArray>> = [];
 const SERVER_COMPONENT_ARRAYS: Array<Array<ServerComponentArray>> = [];
@@ -316,7 +324,7 @@ export function getEntityClientComponentTypes(entityType: EntityType): ReadonlyA
    return ENTITY_CLIENT_COMPONENT_TYPES[entityType];
 }
 
-export function getEntityServerComponentArrays(entityType: EntityType): ReadonlyArray<ServerComponentArray> {
+export function getEntityServerComponentArrays(entityType: EntityType): ReadonlyArray<_ServerComponentArray<object, object, unknown>> {
    return SERVER_COMPONENT_ARRAYS[entityType];
 }
 

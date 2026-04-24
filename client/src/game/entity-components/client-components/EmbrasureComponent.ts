@@ -10,8 +10,8 @@ import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { EMBRASURE_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerClientComponentArray } from "../component-registry";
 
@@ -20,10 +20,10 @@ export interface EmbrasureComponentData {}
 export interface EmbrasureComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.embrasure, _EmbrasureComponentArray, EmbrasureComponentData> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.embrasure, _EmbrasureComponentArray> {}
 }
 
-class _EmbrasureComponentArray extends _ClientComponentArray<EmbrasureComponent> {
+class _EmbrasureComponentArray extends _ClientComponentArray<EmbrasureComponent, EmbrasureComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

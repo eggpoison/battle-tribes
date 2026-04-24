@@ -10,37 +10,25 @@ export interface ServerComponentRegistry {
    // To be extended
 }
 
-export type RegisterClientComponent<Type extends ClientComponentType, Array extends _ClientComponentArray<object, unknown>, Data extends object> = {
-   [K in Type]: {
-      array: Array;
-      data: Data;
-   };
+export type RegisterClientComponent<Type extends ClientComponentType, Array extends _ClientComponentArray<object, object, unknown>> = {
+   [K in Type]: Array;
 }
-export type RegisterServerComponent<Type extends ServerComponentType, Array extends _ServerComponentArray<object, object, unknown>, Data extends object> = {
-   [K in Type]: {
-      array: Array;
-      data: Data;
-   };
+export type RegisterServerComponent<Type extends ServerComponentType, Array extends _ServerComponentArray<object, object, unknown>> = {
+   [K in Type]: Array;
 }
 
-// Use a conditional type to force distribution (wtf) (minor @Hack)
-export type ClientComponentArray<T extends ClientComponentType = ClientComponentType> = ClientComponentRegistry[T]["array"];
-export type ServerComponentArray<T extends ServerComponentType = ServerComponentType> = T extends ServerComponentType ? ServerComponentRegistry[T]["array"] : never;
+export type ClientComponentArray<T extends ClientComponentType = ClientComponentType> = ClientComponentRegistry[T];
+export type ServerComponentArray<T extends ServerComponentType = ServerComponentType> = ServerComponentRegistry[T];
 export type ComponentArray = ClientComponentArray | ServerComponentArray;
 
-const B: ClientComponentRegistry[ClientComponentType]["array"] = 1;
+// @HACK: "T extends any" so the things work for multiple component types
+export type ClientComponentData<T extends ClientComponentType = ClientComponentType> = T extends any ? ClientComponentRegistry[T] extends _ClientComponentArray<any, infer Data, any> ? Data : never : never;
+export type ServerComponentData<T extends ServerComponentType = ServerComponentType> = T extends any ? ServerComponentRegistry[T] extends _ServerComponentArray<any, infer Data, any> ? Data : never : never;
 
 const clientComponentRegistry = {} as { [T in ClientComponentType]: ClientComponentArray<T> };
 const serverComponentRegistry = {} as { [T in ServerComponentType]: ServerComponentArray<T> };
 
-// export type ClientComponentArray<T extends ClientComponentType = ClientComponentType> = typeof clientComponentRegistry[T];
-// export type ServerComponentArray<T extends ServerComponentType = ServerComponentType> = typeof serverComponentRegistry[T];
-// export type ComponentArray = ClientComponentArray | ServerComponentArray;
-
 export const COMPONENT_ARRAYS: Array<ComponentArray> = [];
-
-// @CLEANUP: fix clientcomponentarray and servercomponentarray being based on runtime values
-// @CLEANUP: Use InstanceType instead of throwing away information
 
 export function registerClientComponentArray<T extends ClientComponentType, C extends new (...args: any[]) => ClientComponentArray<T>>(componentType: T, prototype: C, ...args: ConstructorParameters<C>): ClientComponentArray<T> {
    let componentArray = clientComponentRegistry[componentType];

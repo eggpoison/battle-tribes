@@ -7,8 +7,8 @@ import { createPricklyPearParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface PricklyPearFragmentProjectileComponentData {
@@ -18,7 +18,7 @@ export interface PricklyPearFragmentProjectileComponentData {
 export interface PricklyPearFragmentProjectileComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pricklyPearFragmentProjectile, _PricklyPearFragmentProjectileComponentArray, PricklyPearFragmentProjectileComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pricklyPearFragmentProjectile, _PricklyPearFragmentProjectileComponentArray> {}
 }
 
 class _PricklyPearFragmentProjectileComponentArray extends _ServerComponentArray<PricklyPearFragmentProjectileComponent, PricklyPearFragmentProjectileComponentData> {

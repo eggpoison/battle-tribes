@@ -2,7 +2,7 @@ import { Entity } from "webgl-test-shared";
 import { entityExists, getEntityType } from "../game/world";
 import { sendStructureUninteractPacket } from "../game/networking/packet-sending/packet-sending";
 import { updateHighlightedEntityRenderObject } from "../game/entity-selection";
-import { getEntityComponentArrays } from "../game/entity-component-types";
+import { getEntityComponentArrays } from "../game/entity-components/component-types";
 
 let selectedEntityScreenPosX = 0;
 let selectedEntityScreenPosY = 0;

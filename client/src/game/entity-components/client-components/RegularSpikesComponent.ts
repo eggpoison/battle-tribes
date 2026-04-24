@@ -9,8 +9,8 @@ import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { WALL_SPIKE_TEXTURE_SOURCES, FLOOR_SPIKE_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { getServerComponentData, getTransformComponentData } from "../../entity-component-types";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
+import { getServerComponentData, getTransformComponentData } from "../component-types";
+import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerClientComponentArray } from "../component-registry";
 
@@ -19,10 +19,10 @@ export interface RegularSpikesComponentData {}
 export interface RegularSpikesComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.regularSpikes, _RegularSpikesComponentArray, RegularSpikesComponentData> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.regularSpikes, _RegularSpikesComponentArray> {}
 }
 
-class _RegularSpikesComponentArray extends _ClientComponentArray<RegularSpikesComponent> {
+class _RegularSpikesComponentArray extends _ClientComponentArray<RegularSpikesComponent, RegularSpikesComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

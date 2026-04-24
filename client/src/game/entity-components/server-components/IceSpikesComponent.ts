@@ -9,7 +9,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface IceSpikesComponentData {}
@@ -17,7 +17,7 @@ export interface IceSpikesComponentData {}
 export interface IceSpikesComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceSpikes, _IceSpikesComponentArray, IceSpikesComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceSpikes, _IceSpikesComponentArray> {}
 }
 
 const ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];

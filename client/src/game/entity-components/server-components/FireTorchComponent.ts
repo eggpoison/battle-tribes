@@ -7,7 +7,7 @@ import { createEmberParticle, createSmokeParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface FireTorchComponentData {}
@@ -15,7 +15,7 @@ export interface FireTorchComponentData {}
 export interface FireTorchComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fireTorch, _FireTorchComponentArray, FireTorchComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fireTorch, _FireTorchComponentArray> {}
 }
 
 class _FireTorchComponentArray extends _ServerComponentArray<FireTorchComponent, FireTorchComponentData> {

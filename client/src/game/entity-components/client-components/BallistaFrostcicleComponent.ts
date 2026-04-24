@@ -9,7 +9,7 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
 
 export interface BallistaFrostcicleComponentData {}
@@ -17,10 +17,10 @@ export interface BallistaFrostcicleComponentData {}
 export interface BallistaFrostcicleComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaFrostcicle, _BallistaFrostcicleComponentArray, BallistaFrostcicleComponentData> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaFrostcicle, _BallistaFrostcicleComponentArray> {}
 }
 
-class _BallistaFrostcicleComponentArray extends _ClientComponentArray<BallistaFrostcicleComponent> {
+class _BallistaFrostcicleComponentArray extends _ClientComponentArray<BallistaFrostcicleComponent, BallistaFrostcicleComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

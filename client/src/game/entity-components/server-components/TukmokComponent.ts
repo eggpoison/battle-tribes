@@ -8,7 +8,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -17,7 +17,7 @@ export interface TukmokComponentData {}
 export interface TukmokComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmok, _TukmokComponentArray, TukmokComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmok, _TukmokComponentArray> {}
 }
 
 class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, TukmokComponentData> {

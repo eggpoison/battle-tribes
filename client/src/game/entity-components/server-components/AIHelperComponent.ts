@@ -7,7 +7,7 @@ export interface AIHelperComponentData {}
 export interface AIHelperComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiHelper, _AIHelperComponentArray, AIHelperComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiHelper, _AIHelperComponentArray> {}
 }
 
 class _AIHelperComponentArray extends _ServerComponentArray<AIHelperComponent, AIHelperComponentData> {

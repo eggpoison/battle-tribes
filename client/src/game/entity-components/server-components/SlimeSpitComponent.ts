@@ -8,7 +8,7 @@ import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface SlimeSpitComponentData {}
@@ -16,7 +16,7 @@ export interface SlimeSpitComponentData {}
 export interface SlimeSpitComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimeSpit, _SlimeSpitComponentArray, SlimeSpitComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimeSpit, _SlimeSpitComponentArray> {}
 }
 
 class _SlimeSpitComponentArray extends _ServerComponentArray<SlimeSpitComponent, SlimeSpitComponentData> {

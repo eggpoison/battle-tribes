@@ -26,7 +26,7 @@ export interface EquipmentComponent {
 }
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.equipment, _EquipmentComponentArray, EquipmentComponentData> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.equipment, _EquipmentComponentArray> {}
 }
 
 // @Cleanup: copy the file name frmo the client item info thing
@@ -87,7 +87,7 @@ const getGloveTextureSource = (gloveType: ItemType): string => {
    return GLOVES_TEXTURE_SOURCE_RECORD[gloveType as GloveItemType];
 }
 
-class _EquipmentComponentArray extends _ClientComponentArray<EquipmentComponent> {
+class _EquipmentComponentArray extends _ClientComponentArray<EquipmentComponent, EquipmentComponentData> {
    public createComponent(): EquipmentComponent {
       return {
          armourRenderPart: null,

@@ -9,7 +9,7 @@ import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerClientComponentArray } from "../component-registry";
 
@@ -18,10 +18,10 @@ export interface WarriorHutComponentData {}
 export interface WarriorHutComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.warriorHut, _WarriorHutComponentArray, WarriorHutComponentData> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.warriorHut, _WarriorHutComponentArray> {}
 }
 
-class _WarriorHutComponentArray extends _ClientComponentArray<WarriorHutComponent> {
+class _WarriorHutComponentArray extends _ClientComponentArray<WarriorHutComponent, WarriorHutComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

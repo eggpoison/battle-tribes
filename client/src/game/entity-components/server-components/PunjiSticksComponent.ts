@@ -7,7 +7,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getTransformComponentData } from "../../entity-component-types";
+import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface PunjiSticksComponentData {}
@@ -18,7 +18,7 @@ export interface PunjiSticksComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.punjiSticks, _PunjiSticksComponentArray, PunjiSticksComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.punjiSticks, _PunjiSticksComponentArray> {}
 }
 
 class _PunjiSticksComponentArray extends _ServerComponentArray<PunjiSticksComponent, PunjiSticksComponentData> {

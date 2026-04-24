@@ -24,7 +24,7 @@ import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
 import { BuildMenuOption, buildMenuState, getBuildMenuOptions } from "../ui-state/build-menu-state";
 import { setActiveResearchBench } from "./research";
-import { getEntityComponentArrays } from "./entity-component-types";
+import { getEntityComponentArrays } from "./entity-components/component-types";
 
 const enum InteractActionType {
    openBuildMenu,

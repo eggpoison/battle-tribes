@@ -1,8 +1,8 @@
 import { ServerComponentType, PacketReader } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
-import { getEntityServerComponentTypes } from "../../entity-component-types";
-import { getServerComponentData } from "../../entity-component-types";
+import { getEntityServerComponentTypes } from "../component-types";
+import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface PlayerComponentData {
@@ -14,7 +14,7 @@ export interface PlayerComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.player, _PlayerComponentArray, PlayerComponentData> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.player, _PlayerComponentArray> {}
 }
 
 class _PlayerComponentArray extends _ServerComponentArray<PlayerComponent, PlayerComponentData> {

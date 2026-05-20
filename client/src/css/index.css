@@ -68,6 +68,10 @@ canvas {
    left: 0; */
 }
 
+#text-canvas {
+   z-index: 1;
+}
+
 #game-interactable-layer {
    position: absolute;
    top: 0;

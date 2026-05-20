@@ -75,6 +75,9 @@ export function setSpawnDistributionBlocks(newSpawnDistributionBlocks: Array<Spa
 export function createTextCanvasContext(): void {
    const textCanvas = document.createElement("canvas");
    textCanvas.id = "text-canvas";
+   // Initial sizing
+   textCanvas.width = windowWidth;
+   textCanvas.height = windowHeight;
    document.body.appendChild(textCanvas);
 
    ctx = textCanvas.getContext("2d")!;

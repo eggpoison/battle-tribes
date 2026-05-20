@@ -37,10 +37,10 @@ import { playerTribe } from "./tribes";
 import { getEntityLayer, getCurrentLayer, EntityComponentData, createEntityCreationInfo } from "./world";
 import { cursorWorldPos, setCameraVelocity } from "./camera";
 import { HeldItemComponentArray } from "./entity-components/server-components/HeldItemComponent";
-import { ServerComponentData } from "./entity-components/components";
 import { getEntityServerComponentTypes, getServerComponentData } from "./entity-components/component-types";
 import { getPlayerInputVector, playerIsLightspeed } from "./event-handling";
 import { Hotbar_updateSelectedItemSlot } from "../ui/game/inventories/Hotbar";
+import { ServerComponentData } from "./entity-components/component-registry";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -1350,16 +1350,11 @@ const tickItem = (itemType: ItemType): void => {
             switch (componentType) {
                case ServerComponentType.transform: {
                   const hitboxes: Array<Hitbox> = [];
-                  const staticHitboxes: Array<Hitbox> = [];
                   for (const hitbox of placeInfo.hitboxes) {
                      hitboxes.push(hitbox);
-                     // @Hack
-                     staticHitboxes.push(hitbox);
                   }
 
-                  const transformComponentData = createTransformComponentData(
-                     hitboxes
-                  );
+                  const transformComponentData = createTransformComponentData(hitboxes);
 
                   components.push(transformComponentData);
                   break;

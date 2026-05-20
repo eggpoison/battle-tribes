@@ -14,6 +14,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { getRenderThingByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { ClientComponentType } from "../client-component-types";
 
 export interface TamingSkillLearning {
    readonly skill: TamingSkill;
@@ -75,7 +76,7 @@ class _TamingComponentArray extends _ServerComponentArray<TamingComponent, Tamin
       const numAcquiredSkills = reader.readNumber();
       const acquiredSkills: Array<TamingSkill> = [];
       for (let i = 0; i < numAcquiredSkills; i++) {
-         const skillID = reader.readNumber() as TamingSkillID;
+         const skillID: TamingSkillID = reader.readNumber();
          const skill = getTamingSkill(skillID);
          acquiredSkills.push(skill);
       }
@@ -83,7 +84,7 @@ class _TamingComponentArray extends _ServerComponentArray<TamingComponent, Tamin
       const numSkillLearnings = reader.readNumber();
       const skillLearningArray: Array<TamingSkillLearning> = [];
       for (let i = 0; i < numSkillLearnings; i++) {
-         const skillID = reader.readNumber() as TamingSkillID;
+         const skillID: TamingSkillID = reader.readNumber();
          const skill = getTamingSkill(skillID);
 
          const requirementProgressArray: Array<number> = [];
@@ -110,6 +111,54 @@ class _TamingComponentArray extends _ServerComponentArray<TamingComponent, Tamin
          skillLearningArray: skillLearningArray,
          isAttacking: isAttacking,
          isFollowing: isFollowing
+      };
+   }
+
+   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+
+      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+      const tamingComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.taming);
+      const tamingTier = tamingComponentData.tamingTier;
+
+      // @HACK @TEMPORARY: the entity intermediate info's render object is the wrong one to use for glurbs, sooo... we don't set it and let the updateFromData figure it out.
+      const tamingTierRenderPart = null;
+      if (1+1===3) {
+         const tamingTierRenderPart = tamingTier > 0 ? createTamingTierRenderPart(tamingTier, hitbox) : null;
+         // @Speed: 2nd comparison
+         if (tamingTierRenderPart !== null) {
+            renderObject.attachRenderPart(tamingTierRenderPart);
+         }
+      }
+      
+      // Attack halo
+      let attackHalo: RenderPart | null;
+      // if (tamingComponentData.isAttacking) {
+      //    // @Copynpaste
+      //    const headRenderPart = renderObject.getRenderThing("tamingComponent:head");
+      //    attackHalo = createAttackHalo(headRenderPart);
+      //    renderObject.attachRenderPart(attackHalo);
+      // } else {
+      //    attackHalo = null;
+      // } 
+      attackHalo = null;
+      
+      // Follow halo
+      let followHalo: RenderPart | null;
+      // if (tamingComponentData.isFollowing) {
+      //    const headRenderPart = renderObject.getRenderThing("tamingComponent:head");
+      //    followHalo = createFollowHalo(headRenderPart);
+      //    renderObject.attachRenderPart(followHalo);
+      // } else {
+      //    followHalo = null;
+      // }
+      followHalo = null;
+      
+      return {
+         tamingTierRenderPart: tamingTierRenderPart,
+         attackHalo: attackHalo,
+         followHalo: followHalo
       };
    }
 

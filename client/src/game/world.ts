@@ -105,6 +105,7 @@ export function createEntityCreationInfo(entity: Entity, entityComponentData: En
    // Populate render object
    if (hasIntermediateInfo(entityType)) { // @Hacky optimization for grass pretty much
       const intermediateInfos = ENTITY_INTERMEDIATE_INFOS[entityType];
+      
       for (let i = 0, len = componentArrays.length; i < len; i++) {
          const componentArray = componentArrays[i];
          if (componentArray.populateIntermediateInfo !== undefined) {

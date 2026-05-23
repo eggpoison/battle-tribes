@@ -767,16 +767,19 @@ export function updateEntityPathfindingNodeOccupance(entity: Entity, transformCo
    const pathfindingGroupID = getEntityPathfindingGroupID(entity);
    const layer = getEntityLayer(entity);
 
-   for (const node of transformComponent.occupiedPathfindingNodes) {
+   const occupiedNodes = transformComponent.occupiedPathfindingNodes;
+
+   for (const node of occupiedNodes) {
       markPathfindingNodeClearance(layer, node, pathfindingGroupID);
    }
-   transformComponent.occupiedPathfindingNodes = new Set();
+   occupiedNodes.clear();
 
-   const occupiedPathfindingNodes = transformComponent.occupiedPathfindingNodes;
    const entityType = getEntityType(entity);
    
-   for (const hitbox of transformComponent.hitboxes) {
-      addHitboxOccupiedNodes(layer, occupiedPathfindingNodes, pathfindingGroupID, hitbox, entityType);
+   const hitboxes = transformComponent.hitboxes;
+   for (let i = 0, len = hitboxes.length; i < len; i++) {
+      const hitbox = hitboxes[i];
+      addHitboxOccupiedNodes(layer, occupiedNodes, pathfindingGroupID, hitbox, entityType);
    }
 }
 

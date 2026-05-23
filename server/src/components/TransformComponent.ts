@@ -40,7 +40,7 @@ export class TransformComponent {
    
    public lastValidLayer = surfaceLayer;
 
-   public occupiedPathfindingNodes = new Set<PathfindingNodeIndex>();
+   public readonly occupiedPathfindingNodes = new Set<PathfindingNodeIndex>();
 
    public nextHitboxLocalID = 1;
 
@@ -677,11 +677,6 @@ const tickHitboxPhysics = (hitbox: Hitbox): void => {
    const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
 
    tickHitboxAngularPhysics(hitbox, transformComponent);
-
-   if (hitbox.parent === null) {
-      applyHitboxKinematics(hitbox, transformComponent);
-   }
-   
    applyHitboxTethers(hitbox, transformComponent);
 
    updatePosition(hitbox.entity, transformComponent);
@@ -695,6 +690,9 @@ const tickHitboxPhysics = (hitbox: Hitbox): void => {
 const tickEntityPhysics = (entity: Entity): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
    for (const rootHitbox of transformComponent.rootHitboxes) {
+      // Apply kinematics to only the root hitboxes
+      applyHitboxKinematics(rootHitbox, transformComponent);
+      
       tickHitboxPhysics(rootHitbox);
    }
 

@@ -1,29 +1,21 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity, EntityType, DamageSource } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
-import { InventoryName, ItemType } from "battletribes-shared/items/items";
-import { Settings } from "battletribes-shared/settings";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point, polarVec2, randFloat, UtilVar } from "battletribes-shared/utils";
-import { moveEntityToPosition, runHerdAI } from "../ai-shared";
-import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent";
-import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity, healEntity, HealthComponentArray } from "./HealthComponent";
-import { ItemComponentArray } from "./ItemComponent";
-import { StatusEffectComponentArray, hasStatusEffect, applyStatusEffect } from "./StatusEffectComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { calculateRadialAttackTargets } from "../entities/tribes/tribe-member";
-import { InventoryComponentArray, getInventory, pickupItemEntity } from "./InventoryComponent";
-import { InventoryUseComponentArray } from "./InventoryUseComponent";
-import { TribeMemberComponentArray } from "./TribeMemberComponent";
-import { ZombieVars } from "../entities/mobs/zombie";
-import { beginSwing } from "../entities/tribes/limb-use";
-import { destroyEntity, entityExists, getEntityType, getGameTicks, isNight } from "../world";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { TombstoneComponentArray } from "./TombstoneComponent";
-import { entityIsStructure } from "../../../shared/src/structures";
-import { applyAbsoluteKnockback, applyAccelerationFromGround, applyKnockback, Hitbox } from "../hitboxes";
-import { entitiesAreColliding, CollisionVars } from "../collision-detection";
+import { ServerComponentType, Entity, EntityType, DamageSource, Packet, Settings, StatusEffect, InventoryName, ItemType, Point, polarVec2, randFloat, UtilVar, AttackEffectiveness, entityIsStructure } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { moveEntityToPosition, runHerdAI } from "../ai-shared.js";
+import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent.js";
+import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity, healEntity, HealthComponentArray } from "./HealthComponent.js";
+import { ItemComponentArray } from "./ItemComponent.js";
+import { StatusEffectComponentArray, hasStatusEffect, applyStatusEffect } from "./StatusEffectComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { calculateRadialAttackTargets } from "../entities/tribes/tribe-member.js";
+import { InventoryComponentArray, getInventory, pickupItemEntity } from "./InventoryComponent.js";
+import { InventoryUseComponentArray } from "./InventoryUseComponent.js";
+import { TribeMemberComponentArray } from "./TribeMemberComponent.js";
+import { ZombieVars } from "../entities/mobs/zombie.js";
+import { beginSwing } from "../entities/tribes/limb-use.js";
+import { destroyEntity, entityExists, getEntityType, getGameTicks, isNight } from "../world.js";
+import { TombstoneComponentArray } from "./TombstoneComponent.js";
+import { applyAbsoluteKnockback, applyAccelerationFromGround, applyKnockback, Hitbox } from "../hitboxes.js";
+import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
 
 const enum Vars {
    TURN_SPEED = 3 * UtilVar.PI,

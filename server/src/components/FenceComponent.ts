@@ -1,7 +1,7 @@
-// @Incomplete: why do we have this component?
+import { ServerComponentType } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
+// @Incomplete: why do we have this component?
 
 export class FenceComponent {}
 

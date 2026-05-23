@@ -1,13 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, DamageSource } from "battletribes-shared/entities";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { Packet } from "battletribes-shared/packets";
-import { Settings } from "battletribes-shared/settings";
-import { angle, Point, polarVec2, randFloat, randInt } from "battletribes-shared/utils";
-import { getEntityAgeTicks, destroyEntity } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes";
+import { ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, angle, Point, polarVec2, randFloat, randInt } from "battletribes-shared";
+import { getEntityAgeTicks, destroyEntity } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes.js";
 
 export class GuardianGemFragmentProjectileComponent {
    public readonly fragmentShape = randInt(0, 2);

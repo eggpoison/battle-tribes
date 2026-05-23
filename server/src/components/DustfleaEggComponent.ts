@@ -1,13 +1,10 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { randFloat, randInt, randSign } from "../../../shared/src/utils";
-import { createDustfleaConfig } from "../entities/desert/dustflea";
-import { addHitboxAngularVelocity, Hitbox } from "../hitboxes";
-import { tetherHitboxes } from "../tethers";
-import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, getEntityType, ticksToGameHours } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { ServerComponentType, Entity, EntityType, Settings, randFloat, randInt, randSign } from "battletribes-shared";
+import { createDustfleaConfig } from "../entities/desert/dustflea.js";
+import { addHitboxAngularVelocity, Hitbox } from "../hitboxes.js";
+import { tetherHitboxes } from "../tethers.js";
+import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, getEntityType, ticksToGameHours } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 // @Incomplete: make dustflea eggs stick to walls as well
 

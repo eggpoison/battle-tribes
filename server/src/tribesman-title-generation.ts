@@ -1,5 +1,4 @@
-import { TribesmanTitle, TitleGenerationInfo } from "battletribes-shared/titles";
-import { randInt } from "battletribes-shared/utils";
+import { TribesmanTitle, TitleGenerationInfo, randInt } from "battletribes-shared";
 
 // @Incomplete: no way to get packrat
 export const enum TITLE_REWARD_CHANCES {

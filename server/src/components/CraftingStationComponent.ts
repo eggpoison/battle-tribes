@@ -1,5 +1,5 @@
-import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 // @Cleanup: is this component necessary/used at all.
 

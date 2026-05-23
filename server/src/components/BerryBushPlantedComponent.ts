@@ -1,10 +1,7 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { Settings } from "../../../shared/src/settings";
-import { registerDirtyEntity } from "../server/player-clients";
-import { ComponentArray } from "./ComponentArray";
-import { getPlantGrowthSpeed, plantIsFertilised } from "./PlanterBoxComponent";
+import { ServerComponentType, Entity, Packet, Settings } from "battletribes-shared";
+import { registerDirtyEntity } from "../server/player-clients.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { getPlantGrowthSpeed, plantIsFertilised } from "./PlanterBoxComponent.js";
 
 const enum Vars {
    // @SQUEAM for da shot

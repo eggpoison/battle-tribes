@@ -1,24 +1,18 @@
-import { ServerComponentTypeString } from "battletribes-shared/components";
-import { Entity, EntityTypeString } from "battletribes-shared/entities";
-import Layer from "../Layer";
-import { getComponentArrayRecord } from "../components/ComponentArray";
-import { Settings } from "battletribes-shared/settings";
-import PlayerClient from "./PlayerClient";
-import { PlayerComponentArray } from "../components/PlayerComponent";
-import { Inventory } from "battletribes-shared/items/items";
-import { TransformComponentArray } from "../components/TransformComponent";
-import { alignLengthBytes, getStringLengthBytes, Packet, ServerPacketType } from "battletribes-shared/packets";
-import { entityExists, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes } from "../world";
-import { getPlayerNearbyCollapses, getSubtileSupport, subtileIsCollapsing } from "../collapses";
-import { getSubtileIndex } from "../../../shared/src/subtiles";
-import { layers } from "../layers";
-import { addExtendedTribeData, addShortTribeData, getExtendedTribeDataLength, getShortTribeDataLength, shouldAddTribeExtendedData } from "../Tribe";
-import { addGrassBlockerToData, getGrassBlockerLengthBytes, GrassBlocker } from "../grass-blockers";
-import { addTamingSpecToData, getTamingSpecDataLength, getTamingSpecsMap } from "../taming-specs";
-import { Point } from "../../../shared/src/utils";
-import { addLightData, getEntityHitboxLights, getLightDataLength } from "../lights";
-import { getPlayerClients } from "./player-clients";
-import { ENTITY_COMPONENT_TYPES, getEntityComponentTypes } from "../entity-component-types";
+import { ServerComponentTypeString, Settings, Inventory, alignLengthBytes, getStringLengthBytes, Packet, ServerPacketType, getSubtileIndex, Point, Entity, EntityTypeString } from "battletribes-shared";
+import Layer from "../Layer.js";
+import { getComponentArrayRecord } from "../components/ComponentArray.js";
+import PlayerClient from "./PlayerClient.js";
+import { PlayerComponentArray } from "../components/PlayerComponent.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import { entityExists, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes } from "../world.js";
+import { getPlayerNearbyCollapses, getSubtileSupport, subtileIsCollapsing } from "../collapses.js";
+import { layers } from "../layers.js";
+import { addExtendedTribeData, addShortTribeData, getExtendedTribeDataLength, getShortTribeDataLength, shouldAddTribeExtendedData } from "../Tribe.js";
+import { addGrassBlockerToData, getGrassBlockerLengthBytes, GrassBlocker } from "../grass-blockers.js";
+import { addTamingSpecToData, getTamingSpecDataLength, getTamingSpecsMap } from "../taming-specs.js";
+import { addLightData, getEntityHitboxLights, getLightDataLength } from "../lights.js";
+import { getPlayerClients } from "./player-clients.js";
+import { ENTITY_COMPONENT_TYPES, getEntityComponentTypes } from "../entity-component-types.js";
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -143,8 +137,6 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    const player = entityExists(playerClient.instance) ? playerClient.instance : null;
    const layer = playerClient.lastLayer;
    
-   const tileUpdates = layer.popTileUpdates();
-
    const tribes = getTribes();
 
    const titleOffer = player !== null ? PlayerComponentArray.getComponent(player).titleOffer : null;
@@ -204,7 +196,9 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    // Orb completes
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * playerClient.orbCompletes.length;
    // Tile updates
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * tileUpdates.length;
+   for (const layer of layers) {
+      lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * layer.tileUpdateCoordinates.size;
+   }
 
    // Wall subtile updates
    for (const layer of layers) {
@@ -335,11 +329,22 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    }
    
    // Tile updates
-   packet.writeNumber(tileUpdates.length);
-   for (let i = 0; i < tileUpdates.length; i++) {
-      const tileUpdate = tileUpdates[i];
-      packet.writeNumber(tileUpdate.tileIndex);
-      packet.writeNumber(tileUpdate.type);
+   for (const layer of layers) {
+      const tileUpdates = layer.tileUpdateCoordinates;
+
+      const layerIdx = layer.depth;
+
+      packet.writeNumber(tileUpdates.size);
+      for (const tileIndex of tileUpdates) {
+         const tileType = layer.getTileType(tileIndex);
+         
+         packet.writeNumber(layerIdx);
+         packet.writeNumber(tileIndex);
+         packet.writeNumber(tileType);
+      }
+      
+      // reset the tile update coordiantes
+      layer.tileUpdateCoordinates.clear();
    }
 
    // Wall subtile updates

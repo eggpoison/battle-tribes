@@ -1,8 +1,7 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { entityExists } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { PlanterBoxComponentArray } from "./PlanterBoxComponent";
+import { ServerComponentType, Entity } from "battletribes-shared";
+import { entityExists } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { PlanterBoxComponentArray } from "./PlanterBoxComponent.js";
 
 export class PlantedComponent {
    public readonly planterBox: Entity;

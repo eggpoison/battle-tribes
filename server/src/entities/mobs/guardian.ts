@@ -1,23 +1,18 @@
-import { HitboxCollisionType, HitboxFlag } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Point, TileIndex } from "battletribes-shared/utils";
-import GuardianAI from "../../ai/GuardianAI";
-import GuardianCrystalBurstAI from "../../ai/GuardianCrystalBurstAI";
-import GuardianCrystalSlamAI from "../../ai/GuardianCrystalSlamAI";
-import GuardianSpikyBallSummonAI from "../../ai/GuardianSpikyBallSummonAI";
-import WanderAI from "../../ai/WanderAI";
-import { EntityConfig, LightCreationInfo } from "../../components";
-import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { getGuardianLimbOrbitRadius, GuardianComponent, GuardianComponentArray } from "../../components/GuardianComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import Layer from "../../Layer";
-import { Hitbox } from "../../hitboxes";
-import { createLight } from "../../lights";
+import { HitboxCollisionType, HitboxFlag, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Point, TileIndex } from "battletribes-shared";
+import GuardianAI from "../../ai/GuardianAI.js";
+import GuardianCrystalBurstAI from "../../ai/GuardianCrystalBurstAI.js";
+import GuardianCrystalSlamAI from "../../ai/GuardianCrystalSlamAI.js";
+import GuardianSpikyBallSummonAI from "../../ai/GuardianSpikyBallSummonAI.js";
+import WanderAI from "../../ai/WanderAI.js";
+import { EntityConfig, LightCreationInfo } from "../../components.js";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
+import { getGuardianLimbOrbitRadius, GuardianComponent, GuardianComponentArray } from "../../components/GuardianComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import Layer from "../../Layer.js";
+import { Hitbox } from "../../hitboxes.js";
+import { createLight } from "../../lights.js";
 
 function tileIsValidCallback(entity: Entity, _layer: Layer, tileIndex: TileIndex): boolean {
    const guardianComponent = GuardianComponentArray.getComponent(entity);

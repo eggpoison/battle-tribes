@@ -1,15 +1,10 @@
-import { EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { SubtileType, TileType } from "battletribes-shared/tiles";
-import { getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randAngle, randItem, TileIndex, tileIsInWorldIncludingEdges } from "battletribes-shared/utils";
-import { getEntitiesInRange } from "../ai-shared";
-import { createGuardianConfig } from "../entities/mobs/guardian";
-import { createEntity, getEntityType } from "../world";
-import { getTileDist } from "./surface-layer-generation";
-import { tileHasWallSubtile, setWallInSubtiles } from "./terrain-generation-utils";
-import { Biome } from "../../../shared/src/biomes";
-import { surfaceLayer } from "../layers";
-import Layer from "../Layer";
+import { EntityType, Settings, SubtileType, TileType, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randAngle, randItem, TileIndex, tileIsInWorldIncludingEdges, Biome } from "battletribes-shared";
+import { getEntitiesInRange } from "../ai-shared.js";
+import { createGuardianConfig } from "../entities/mobs/guardian.js";
+import { createEntity, getEntityType } from "../world.js";
+import { tileHasWallSubtile, setWallInSubtiles } from "./terrain-generation-utils.js";
+import { surfaceLayer } from "../layers.js";
+import Layer from "../Layer.js";
 
 const enum Vars {
    /** Minimum number of tiles in a mountain biome that will allow a cave to be generated */
@@ -19,7 +14,7 @@ const enum Vars {
 
 const guardianSpawnZones = new Array<Array<TileIndex>>();
 
-export function generateCaveEntrances(surfaceLayer: Layer): void {
+export function generateCaveEntrances(surfaceLayer: Layer, biomeDists: Uint8Array): void {
    // @Temporary
    let first = true;
    for (let i = 0; i < surfaceLayer.localBiomes.length; i++) {
@@ -36,10 +31,8 @@ export function generateCaveEntrances(surfaceLayer: Layer): void {
          const idx = Math.floor(Math.random() * localBiome.tiles.length);
          const tileIndex = localBiome.tiles[idx];
 
-         const tileX = getTileX(tileIndex);
-         const tileY = getTileY(tileIndex);
-         const tileDist = getTileDist(surfaceLayer.tileBiomes, tileX, tileY, Vars.CAVE_ORIGIN_DIST);
-         if (tileDist >= Vars.CAVE_ORIGIN_DIST) {
+         const biomeDist = biomeDists[tileIndex];
+         if (biomeDist >= Vars.CAVE_ORIGIN_DIST) {
             originTile = tileIndex;
             break;
          }

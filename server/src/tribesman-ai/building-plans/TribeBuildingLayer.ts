@@ -1,20 +1,13 @@
-import { Box, cloneBox } from "../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { Entity, EntityType, NUM_ENTITY_TYPES } from "../../../../shared/src/entities";
-import { Packet } from "../../../../shared/src/packets";
-import { Settings } from "../../../../shared/src/settings";
-import { STRUCTURE_TYPES, StructureType } from "../../../../shared/src/structures";
-import { angle, clampAngleA, Point } from "../../../../shared/src/utils";
-import { getConfigTransformComponent } from "../../components";
-import { Hitbox } from "../../hitboxes";
-import Layer from "../../Layer";
-import { addBoxDataToPacket, getBoxDataLength } from "../../server/packet-hitboxes";
-import { createStructureConfig } from "../../structure-placement";
-import Tribe from "../../Tribe";
-import { getTribes } from "../../world";
-import { addBoxesOccupiedNodes, getSafetyNode, SafetyNode } from "../ai-building";
-import { TribeRoom } from "../ai-building-areas";
+import { Box, cloneBox, RectangularBox, Entity, EntityType, NUM_ENTITY_TYPES, Packet, Settings, STRUCTURE_TYPES, StructureType, angle, clampAngleA, Point } from "battletribes-shared";
+import { getConfigTransformComponent } from "../../components.js";
+import { Hitbox } from "../../hitboxes.js";
+import Layer from "../../Layer.js";
+import { addBoxDataToPacket, getBoxDataLength } from "../../server/packet-hitboxes.js";
+import { createStructureConfig } from "../../structure-placement.js";
+import Tribe from "../../Tribe.js";
+import { getTribes } from "../../world.js";
+import { addBoxesOccupiedNodes, getSafetyNode, SafetyNode } from "../ai-building.js";
+import { TribeRoom } from "../ai-building-areas.js";
 
 /** The 4 lines of nodes directly outside a wall. */
 type WallNodeSides = [Array<SafetyNode>, Array<SafetyNode>, Array<SafetyNode>, Array<SafetyNode>];

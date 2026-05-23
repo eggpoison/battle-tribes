@@ -1,18 +1,13 @@
-import { assertBoxIsCircular } from "../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { Point, polarVec2, randInt } from "../../../shared/src/utils";
-import { createEntityConfigAttachInfoWithTether, getConfigTransformComponent } from "../components";
-import { AIHelperComponent, AIType } from "../components/AIHelperComponent";
-import { HealthComponentArray } from "../components/HealthComponent";
-import { getOkrenMandibleHitbox, OKREN_SIDES } from "../components/OkrenComponent";
-import { SandBallComponentArray } from "../components/SandBallComponent";
-import { detachHitbox, TransformComponent, TransformComponentArray } from "../components/TransformComponent";
-import { createSandBallConfig } from "../entities/desert/sand-ball";
-import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle, HitboxAngularTether, addHitboxAngularAcceleration } from "../hitboxes";
-import { createEntity, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
+import { assertBoxIsCircular, CircularBox, Entity, EntityType, Settings, Point, polarVec2, randInt } from "battletribes-shared";
+import { createEntityConfigAttachInfoWithTether, getConfigTransformComponent } from "../components.js";
+import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";
+import { HealthComponentArray } from "../components/HealthComponent.js";
+import { getOkrenMandibleHitbox, OKREN_SIDES } from "../components/OkrenComponent.js";
+import { SandBallComponentArray } from "../components/SandBallComponent.js";
+import { detachHitbox, TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
+import { createSandBallConfig } from "../entities/desert/sand-ball.js";
+import { applyAccelerationFromGround, turnHitboxToAngle, HitboxAngularTether, addHitboxAngularAcceleration } from "../hitboxes.js";
+import { createEntity, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world.js";
 
 const MIN_BALLING_COOLDOWN_TICKS = 30 * Settings.TICK_RATE;
 const MAX_BALLING_COOLDOWN_TICKS = 40 * Settings.TICK_RATE;

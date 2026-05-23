@@ -1,11 +1,7 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Settings } from "../../../shared/src/settings";
-import { Hitbox } from "../hitboxes";
-import { ComponentArray } from "./ComponentArray";
-import { damageEntity } from "./HealthComponent";
-import { getRandomPositionInBox, TransformComponentArray } from "./TransformComponent";
+import { ServerComponentType, Entity, AttackEffectiveness, Settings } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { damageEntity } from "./HealthComponent.js";
+import { getRandomPositionInBox, TransformComponentArray } from "./TransformComponent.js";
 
 /** Interval between damage ticks */
 const DAMAGE_TICK_INTERVAL_TICKS = 2 * Settings.TICK_RATE;

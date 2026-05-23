@@ -1,19 +1,12 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { BerryBushComponent, BerryBushComponentArray } from "../../components/BerryBushComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { EntityConfig } from "../../components";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { LootComponent, registerEntityLootOnHit } from "../../components/LootComponent";
-import { ItemType } from "../../../../shared/src/items/items";
-import { registerDirtyEntity } from "../../server/player-clients";
-import { Hitbox } from "../../hitboxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, StatusEffect, CircularBox, HitboxCollisionType, ItemType } from "battletribes-shared";
+import { BerryBushComponent, BerryBushComponentArray } from "../../components/BerryBushComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { EntityConfig } from "../../components.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { LootComponent, registerEntityLootOnHit } from "../../components/LootComponent.js";
+import { registerDirtyEntity } from "../../server/player-clients.js";
+import { Hitbox } from "../../hitboxes.js";
 
 registerEntityLootOnHit(EntityType.berryBush, {
    itemType: ItemType.berry,

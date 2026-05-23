@@ -1,19 +1,15 @@
-import { TribesmanAIType } from "../../../../../shared/src/components";
-import { Entity, EntityType, LimbAction, PlantedEntityType } from "../../../../../shared/src/entities";
-import { Inventory, InventoryName, ItemType } from "../../../../../shared/src/items/items";
-import { PathfindingSettings } from "../../../../../shared/src/settings";
-import { getDistanceFromPointToEntity, willStopAtDesiredDistance } from "../../../ai-shared";
-import { AIHelperComponent } from "../../../components/AIHelperComponent";
-import { pathfindTribesman } from "../../../components/AIPathfindingComponent";
-import { getItemTypeSlot, InventoryComponentArray, getInventory, consumeItemFromSlot } from "../../../components/InventoryComponent";
-import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
-import { placePlantInPlanterBox, PlanterBoxComponentArray } from "../../../components/PlanterBoxComponent";
-import { TransformComponent, TransformComponentArray } from "../../../components/TransformComponent";
-import { TribesmanAIComponent, TribesmanPathType } from "../../../components/TribesmanAIComponent";
-import { Hitbox } from "../../../hitboxes";
-import { PathfindFailureDefault } from "../../../pathfinding";
-import { getEntityType, entityExists, getEntityLayer } from "../../../world";
-import { getTribesmanAttackRadius, getHumanoidRadius } from "./tribesman-ai-utils";
+import { TribesmanAIType, Entity, EntityType, LimbAction, PlantedEntityType, Inventory, InventoryName, ItemType, PathfindingSettings } from "battletribes-shared";
+import { getDistanceFromPointToEntity, willStopAtDesiredDistance } from "../../../ai-shared.js";
+import { AIHelperComponent } from "../../../components/AIHelperComponent.js";
+import { pathfindTribesman } from "../../../components/AIPathfindingComponent.js";
+import { getItemTypeSlot, InventoryComponentArray, getInventory, consumeItemFromSlot } from "../../../components/InventoryComponent.js";
+import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent.js";
+import { placePlantInPlanterBox, PlanterBoxComponentArray } from "../../../components/PlanterBoxComponent.js";
+import { TransformComponent, TransformComponentArray } from "../../../components/TransformComponent.js";
+import { TribesmanAIComponent, TribesmanPathType } from "../../../components/TribesmanAIComponent.js";
+import { PathfindFailureDefault } from "../../../pathfinding.js";
+import { getEntityType, entityExists, getEntityLayer } from "../../../world.js";
+import { getTribesmanAttackRadius, getHumanoidRadius } from "./tribesman-ai-utils.js";
 
 export const PLANT_TO_SEED_RECORD: Record<PlantedEntityType, ItemType> = {
    [EntityType.treePlanted]: ItemType.seed,

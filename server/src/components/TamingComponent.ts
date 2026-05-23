@@ -1,16 +1,12 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { getStringLengthBytes, Packet } from "../../../shared/src/packets";
-import { Point, polarVec2 } from "../../../shared/src/utils";
-import Tribe from "../Tribe";
-import { entityExists } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { getTamingSkill, TamingSkill, TamingSkillID, TamingTier } from "battletribes-shared/taming";
-import { PlayerComponentArray } from "./PlayerComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { TribesmanComponentArray } from "./TribesmanComponent";
-import PlayerClient from "../server/PlayerClient";
-import { getTamingSpec } from "../taming-specs";
+import { ServerComponentType, Entity, getStringLengthBytes, Packet, Point, polarVec2, getTamingSkill, TamingSkill, TamingSkillID, TamingTier } from "battletribes-shared";
+import Tribe from "../Tribe.js";
+import { entityExists } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { PlayerComponentArray } from "./PlayerComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { TribesmanComponentArray } from "./TribesmanComponent.js";
+import PlayerClient from "../server/PlayerClient.js";
+import { getTamingSpec } from "../taming-specs.js";
 
 interface TamingSkillLearning {
    readonly skill: TamingSkill;

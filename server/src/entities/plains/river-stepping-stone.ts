@@ -1,13 +1,8 @@
-import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { Point } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { RiverSteppingStoneComponent } from "../../components/RiverSteppingStoneComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType, HitboxFlag, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { RiverSteppingStoneComponent } from "../../components/RiverSteppingStoneComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export const enum RiverSteppingStoneSize {
    small,

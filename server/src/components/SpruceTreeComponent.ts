@@ -1,13 +1,8 @@
-import { Entity, TreeSize } from "battletribes-shared/entities";
-import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType } from "battletribes-shared/components";
-import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "battletribes-shared/packets";
-import { getEntityLayer } from "../world";
-import { createGrassBlocker } from "../grass-blockers";
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { Point, randInt } from "../../../shared/src/utils";
-import { Hitbox } from "../hitboxes";
+import { Entity, TreeSize, ServerComponentType, Packet, CircularBox, Point, randInt } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { getEntityLayer } from "../world.js";
+import { createGrassBlocker } from "../grass-blockers.js";
 
 const TREE_TRUNK_RADII: Record<TreeSize, number> = {
    [TreeSize.small]: 15,

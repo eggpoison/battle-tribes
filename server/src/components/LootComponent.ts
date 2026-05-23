@@ -1,14 +1,10 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { ITEM_TYPE_RECORD, ItemType } from "../../../shared/src/items/items";
-import { Settings } from "../../../shared/src/settings";
-import { assert } from "../../../shared/src/utils";
-import { createItemsOverEntity } from "../entities/item-entity";
-import { getHitboxTile } from "../hitboxes";
-import { getEntityLayer, getEntityType } from "../world";
-import { LocalBiome } from "../world-generation/terrain-generation-utils";
-import { ComponentArray } from "./ComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { ServerComponentType, Entity, EntityType, ITEM_TYPE_RECORD, ItemType, Settings, assert } from "battletribes-shared";
+import { getHitboxTile } from "../hitboxes.js";
+import { getEntityLayer, getEntityType } from "../world.js";
+import { LocalBiome } from "../world-generation/terrain-generation-utils.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { createItemsOverEntity } from "../entities/item-entity.js";
 
 // @ROBUSTNESS: The game really should crash or show a warning or something when an entity register loot on hit/death but the entity doesn't have a loot component because i've forgotten to add it.
 

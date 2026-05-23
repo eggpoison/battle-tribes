@@ -1,21 +1,14 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { EntityRelationship, getEntityRelationship, TribeComponent } from "../../components/TribeComponent";
-import { EntityConfig } from "../../components";
-import { ServerComponentType } from "battletribes-shared/components";
-import { HealthComponentArray } from "../../components/HealthComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { destroyEntity } from "../../world";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import Tribe from "../../Tribe";
-import { ProjectileComponent } from "../../components/ProjectileComponent";
-import { IceArrowComponent } from "../../components/IceArrowComponent";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Settings, StatusEffect, Point, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
+import { EntityRelationship, getEntityRelationship, TribeComponent } from "../../components/TribeComponent.js";
+import { EntityConfig } from "../../components.js";
+import { HealthComponentArray } from "../../components/HealthComponent.js";
+import { destroyEntity } from "../../world.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import Tribe from "../../Tribe.js";
+import { ProjectileComponent } from "../../components/ProjectileComponent.js";
+import { IceArrowComponent } from "../../components/IceArrowComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createIceArrowConfig(position: Point, rotation: number, tribe: Tribe, creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

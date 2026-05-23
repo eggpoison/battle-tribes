@@ -18,11 +18,11 @@ import { setMinedSubtiles, tickCollapse } from "../collapses";
 import { GrassBlockerData, readGrassBlockers, updateGrassBlockersFromData } from "../grass-blockers";
 import { tribesTabState } from "../../ui-state/tribes-tab-state";
 import { infocardsState } from "../../ui-state/infocards-state";
-import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
 import { updateParticles } from "../rendering/webgl/particle-rendering";
 import { EntityServerComponentData, getEntityComponentArrays, getEntityServerComponentArrays, getEntityServerComponentTypes, getServerComponentData } from "../entity-components/component-types";
 import { getSelectedEntity } from "../entity-selection";
 import { COMPONENT_ARRAYS, ServerComponentData } from "../entity-components/component-registry";
+import { processTileUpdates } from "../rendering/webgl/solid-tile-rendering";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
@@ -65,7 +65,7 @@ interface ResearchOrbCompleteData {
    readonly amount: number;
 }
 
-interface TileUpdateData {
+export interface TileUpdateData {
    readonly layer: Layer;
    readonly tileIndex: number;
    readonly tileType: TileType;
@@ -111,7 +111,7 @@ export interface TickSnapshot {
    readonly playerKnockbacks: ReadonlyArray<PlayerKnockbackData>;
    readonly heals: ReadonlyArray<EntityHealData>;
    readonly researchOrbCompletes: ReadonlyArray<ResearchOrbCompleteData>;
-   readonly tileUpdates: ReadonlyArray<TileUpdateData>;
+   readonly tileUpdates: ReadonlyArray<ReadonlyArray<TileUpdateData>>;
    readonly wallSubtileUpdates: Map<Layer, ReadonlyArray<WallSubtileUpdateData>>;
    readonly hasPickedUpItem: boolean;
    readonly titleOffer: TribesmanTitle | null;
@@ -265,20 +265,24 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       });
    }
 
-   const tileUpdates: Array<TileUpdateData> = [];
-   const numTileUpdates = reader.readNumber();
-   for (let i = 0; i < numTileUpdates; i++) {
-      const layerIdx = reader.readNumber();
-      const layer = layers[layerIdx];
-
-      const tileIndex = reader.readNumber();
-      const tileType: TileType = reader.readNumber();
-
-      tileUpdates.push({
-         layer: layer,
-         tileIndex: tileIndex,
-         tileType: tileType
-      });
+   const tileUpdates: Array<Array<TileUpdateData>> = [];
+   for (let i = 0; i < layers.length; i++) {
+      const layerTileUpdates: Array<TileUpdateData> = [];
+      const numTileUpdates = reader.readNumber();
+      for (let i = 0; i < numTileUpdates; i++) {
+         const layerIdx = reader.readNumber();
+         const layer = layers[layerIdx];
+         
+         const tileIndex = reader.readNumber();
+         const tileType: TileType = reader.readNumber();
+         
+         layerTileUpdates.push({
+            layer: layer,
+            tileIndex: tileIndex,
+            tileType: tileType
+         });
+      }
+      tileUpdates.push(layerTileUpdates);
    }
    
    const wallSubtileUpdates = new Map<Layer, ReadonlyArray<WallSubtileUpdateData>>();
@@ -288,7 +292,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       const numUpdates = reader.readNumber();
       for (let i = 0; i < numUpdates; i++) {
          const subtileIndex = reader.readNumber();
-         const subtileType = reader.readNumber() as SubtileType;
+         const subtileType: SubtileType = reader.readNumber();
          const damageTaken = reader.readNumber();
 
          layerSubtileUpdates.push({
@@ -313,7 +317,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
    const numEntityTickEvents = reader.readNumber();
    for (let i = 0; i < numEntityTickEvents; i++) {
       const entity: Entity = reader.readNumber();
-      const type = reader.readNumber() as EntityTickEventType;
+      const type: EntityTickEventType = reader.readNumber();
       const data = reader.readNumber();
 
       entityTickEvents.push({
@@ -327,7 +331,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
    const numMinedSubtiles = reader.readNumber();
    for (let i = 0; i < numMinedSubtiles; i++) {
       const subtile = reader.readNumber();
-      const subtileType = reader.readNumber() as SubtileType;
+      const subtileType: SubtileType = reader.readNumber();
       const support = reader.readNumber();
       const isCollapsing = reader.readBool();
 
@@ -622,10 +626,8 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
       createResearchNumber(orbCompleteData.position.x, orbCompleteData.position.y, orbCompleteData.amount);
    }
 
-   for (const tileUpdate of snapshot.tileUpdates) {
-      const tile = tileUpdate.layer.getTile(tileUpdate.tileIndex);
-      tile.type = tileUpdate.tileType;
-      updateRenderChunkFromTileUpdate(tileUpdate.tileIndex, tileUpdate.layer);
+   for (let i = 0; i < layers.length; i++) {
+      processTileUpdates(layers[i], snapshot.tileUpdates[i]);
    }
 
    for (const layer of layers) {

@@ -1,19 +1,16 @@
-import { GameDataPacketOptions } from "../../../shared/src/client-server-types";
-import { Packet, ServerPacketType } from "../../../shared/src/packets";
-import { Settings } from "../../../shared/src/settings";
-import { AIPlanType, clamp, clampToBoardDimensions, getTileIndexIncludingEdges, TileIndex } from "../../../shared/src/utils";
-import { getSubtileSupport, getVisibleSubtileSupports } from "../collapses";
-import { addEntityDebugDataToPacket, createEntityDebugData, getEntityDebugDataLength } from "../entity-debug-data";
-import {getSpawnInfoForEntityType, SpawnDistribution } from "../entity-spawn-info";
-import { addPlayerLightLevelsData, getPlayerLightLevelsDataLength } from "../lights";
-import { getVisiblePathfindingNodeOccupances } from "../pathfinding";
-import { addTribeAssignmentData, addTribeBuildingSafetyData, getTribeAssignmentDataLength, getTribeBuildingSafetyDataLength, getVisibleSafetyNodesData } from "../tribesman-ai/building-plans/ai-building-client-data";
-import { addVirtualBuildingData, getVirtualBuildingDataLength } from "../tribesman-ai/building-plans/TribeBuildingLayer";
-import { AIPlanAssignment } from "../tribesman-ai/tribesman-ai-planning";
-import { getTribes } from "../world";
-import { LocalBiome } from "../world-generation/terrain-generation-utils";
-import PlayerClient from "./PlayerClient";
-import { SERVER } from "./server";
+import { GameDataPacketOptions, Packet, ServerPacketType, Settings, AIPlanType, clamp, clampToBoardDimensions, getTileIndexIncludingEdges, TileIndex } from "battletribes-shared";
+import { getSubtileSupport, getVisibleSubtileSupports } from "../collapses.js";
+import { addEntityDebugDataToPacket, createEntityDebugData, getEntityDebugDataLength } from "../entity-debug-data.js";
+import {getSpawnInfoForEntityType, SpawnDistribution } from "../entity-spawn-info.js";
+import { addPlayerLightLevelsData, getPlayerLightLevelsDataLength } from "../lights.js";
+import { getVisiblePathfindingNodeOccupances } from "../pathfinding.js";
+import { addTribeAssignmentData, addTribeBuildingSafetyData, getTribeAssignmentDataLength, getTribeBuildingSafetyDataLength, getVisibleSafetyNodesData } from "../tribesman-ai/building-plans/ai-building-client-data.js";
+import { addVirtualBuildingData, getVirtualBuildingDataLength } from "../tribesman-ai/building-plans/TribeBuildingLayer.js";
+import { AIPlanAssignment } from "../tribesman-ai/tribesman-ai-planning.js";
+import { getTribes } from "../world.js";
+import { LocalBiome } from "../world-generation/terrain-generation-utils.js";
+import PlayerClient from "./PlayerClient.js";
+import { SERVER } from "./server.js";
 
 interface VisibleLocalBiomeInfo {
    readonly visibleLocalBiomes: ReadonlyArray<LocalBiome>;

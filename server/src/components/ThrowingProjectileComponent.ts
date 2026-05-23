@@ -1,8 +1,7 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity } from "battletribes-shared/entities";
-import { InventoryComponentArray } from "./InventoryComponent";
-import { entityExists } from "../world";
+import { ServerComponentType, Entity } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { InventoryComponentArray } from "./InventoryComponent.js";
+import { entityExists } from "../world.js";
 
 export class ThrowingProjectileComponent {
    readonly tribeMember: Entity;

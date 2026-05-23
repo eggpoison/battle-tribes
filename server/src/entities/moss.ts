@@ -1,12 +1,8 @@
-import { HitboxCollisionType } from "../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../shared/src/boxes/RectangularBox";
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../shared/src/collision";
-import { EntityType } from "../../../shared/src/entities";
-import { Point } from "../../../shared/src/utils";
-import { EntityConfig } from "../components";
-import { MossComponent } from "../components/MossComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
-import { Hitbox } from "../hitboxes";
+import { HitboxCollisionType, RectangularBox, DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Point } from "battletribes-shared";
+import { EntityConfig } from "../components.js";
+import { MossComponent } from "../components/MossComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
+import { Hitbox } from "../hitboxes.js";
 
 export function createMossConfig(position: Point, angle: number, size: number, colour: number): EntityConfig {
    const transformComponent = new TransformComponent();

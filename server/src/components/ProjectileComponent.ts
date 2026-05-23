@@ -1,11 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world";
-import { onWoodenArrowHitboxCollision } from "../entities/projectiles/wooden-arrow";
-import { Point } from "../../../shared/src/utils";
-import { Hitbox } from "../hitboxes";
+import { ServerComponentType, Entity, EntityType, Settings, Point } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world.js";
+import { onWoodenArrowHitboxCollision } from "../entities/projectiles/wooden-arrow.js";
+import { Hitbox } from "../hitboxes.js";
 
 const ARROW_WIDTH = 12;
 const ARROW_HEIGHT = 64;

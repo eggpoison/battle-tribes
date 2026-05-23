@@ -1,11 +1,8 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { DamageSource } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point, polarVec2 } from "../../../shared/src/utils";
-import { applyKnockback, Hitbox } from "../hitboxes";
-import { ComponentArray } from "./ComponentArray";
-import { GlurbSegmentComponentArray } from "./GlurbSegmentComponent";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
+import { ServerComponentType, DamageSource, AttackEffectiveness, Point, polarVec2 } from "battletribes-shared";
+import { applyKnockback, Hitbox } from "../hitboxes.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { GlurbSegmentComponentArray } from "./GlurbSegmentComponent.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
 
 export class SpikyBastardComponent {}
 

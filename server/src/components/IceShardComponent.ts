@@ -1,14 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Point, polarVec2, randFloat } from "battletribes-shared/utils";
-import { Entity, EntityType, DamageSource } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { HealthComponentArray, damageEntity, canDamageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
-import { applyKnockback, Hitbox } from "../hitboxes";
+import { ServerComponentType, Point, polarVec2, randFloat, Entity, EntityType, DamageSource, Settings, AttackEffectiveness, StatusEffect } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world.js";
+import { HealthComponentArray, damageEntity, canDamageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent.js";
+import { applyKnockback, Hitbox } from "../hitboxes.js";
 
 export class IceShardComponent {
    public readonly lifetime = randFloat(0.1, 0.2);

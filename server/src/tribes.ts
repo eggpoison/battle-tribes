@@ -1,7 +1,7 @@
-import { Settings } from "../../shared/src/settings";
-import { updateBuildingLayer } from "./tribesman-ai/ai-building";
-import { updateTribePlans } from "./tribesman-ai/tribesman-ai-planning";
-import { getGameTicks, getTribes } from "./world";
+import { Settings } from "battletribes-shared";
+import { updateBuildingLayer } from "./tribesman-ai/ai-building.js";
+import { updateTribePlans } from "./tribesman-ai/tribesman-ai-planning.js";
+import { getGameTicks, getTribes } from "./world.js";
 
 export function updateTribes(): void {
    const tribes = getTribes();

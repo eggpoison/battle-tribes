@@ -1,13 +1,9 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, DamageSource } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Packet } from "../../../shared/src/packets";
-import { Point, polarVec2, randInt } from "../../../shared/src/utils";
-import { Hitbox, applyKnockback, getHitboxVelocity } from "../hitboxes";
-import { destroyEntity } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { addLocalInvulnerabilityHash, canDamageEntity, HealthComponentArray, damageEntity } from "./HealthComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Point, polarVec2, randInt } from "battletribes-shared";
+import { Hitbox, applyKnockback, getHitboxVelocity } from "../hitboxes.js";
+import { destroyEntity } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { addLocalInvulnerabilityHash, canDamageEntity, HealthComponentArray, damageEntity } from "./HealthComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 export class PricklyPearFragmentProjectileComponent {
    public readonly variant = randInt(0, 1);

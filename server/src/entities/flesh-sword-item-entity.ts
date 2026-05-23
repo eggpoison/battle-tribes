@@ -1,16 +1,10 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { ItemComponent } from "../components/ItemComponent";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../components";
-import { Item } from "battletribes-shared/items/items";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
-import { FleshSwordItemComponent } from "../components/FleshSwordItemComponent";
-import { AIHelperComponent } from "../components/AIHelperComponent";
-import { Hitbox } from "../hitboxes";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
+import { Entity, EntityType, Point, Item, HitboxCollisionType, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { ItemComponent } from "../components/ItemComponent.js";
+import { EntityConfig } from "../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
+import { FleshSwordItemComponent } from "../components/FleshSwordItemComponent.js";
+import { AIHelperComponent } from "../components/AIHelperComponent.js";
+import { Hitbox } from "../hitboxes.js";
 
 const moveFunc = () => {
    throw new Error();

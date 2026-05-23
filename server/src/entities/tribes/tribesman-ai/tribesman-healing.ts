@@ -1,9 +1,7 @@
-import { TribesmanAIType } from "battletribes-shared/components";
-import { Entity, LimbAction } from "battletribes-shared/entities";
-import { InventoryUseComponentArray } from "../../../components/InventoryUseComponent";
-import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
-import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
-import { Inventory, InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory } from "battletribes-shared/items/items";
+import { TribesmanAIType, Entity, LimbAction, Inventory, InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory } from "battletribes-shared";
+import { InventoryUseComponentArray } from "../../../components/InventoryUseComponent.js";
+import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent.js";
+import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent.js";
 
 export interface HealingItemUseInfo {
    readonly itemSlot: number;

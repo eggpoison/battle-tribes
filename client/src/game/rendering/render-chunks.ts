@@ -1,5 +1,5 @@
 import { assert, Settings, WaterRockData } from "webgl-test-shared";
-import { createTileRenderChunks, recalculateSolidTileRenderChunkData } from "./webgl/solid-tile-rendering";
+import { createTileRenderChunks } from "./webgl/solid-tile-rendering";
 import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
 import { calculateShadowInfo, TileShadowType } from "./webgl/tile-shadow-rendering";
 import { calculateWallBorderInfo } from "./webgl/wall-border-rendering";
@@ -51,9 +51,19 @@ const tileShadowInfoArrays: Array<Record<TileShadowType, Array<RenderChunkTileSh
 const wallBorderInfoArrays: Array<Array<RenderChunkWallBorderInfo | null>> = [];
 
 export function getRenderChunkIndex(renderChunkX: number, renderChunkY: number): number {
-   const x = renderChunkX + RENDER_CHUNK_EDGE_GENERATION;
-   const y = renderChunkY + RENDER_CHUNK_EDGE_GENERATION;
-   return y * (WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION * 2) + x;
+   return (renderChunkY + RENDER_CHUNK_EDGE_GENERATION) * (WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION * 2) + renderChunkX + RENDER_CHUNK_EDGE_GENERATION;
+}
+
+export function getRenderChunkX(renderChunkIdx: number): number {
+   const renderChunkX = renderChunkIdx % (WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION * 2) - RENDER_CHUNK_EDGE_GENERATION;
+   assert(renderChunkX >= -RENDER_CHUNK_EDGE_GENERATION && renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION);
+   return renderChunkX;
+}
+
+export function getRenderChunkY(renderChunkIdx: number): number {
+   const renderChunkY = Math.floor(renderChunkIdx / (WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION * 2)) - RENDER_CHUNK_EDGE_GENERATION;
+   assert(renderChunkY >= -RENDER_CHUNK_EDGE_GENERATION && renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION);
+   return renderChunkY;
 }
 
 export function getRenderChunkRiverInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkRiverInfo | null {
@@ -169,16 +179,6 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    wallBorderInfoArrays[layerIdx] = wallBorderInfoArray;
 }
 
-export function updateRenderChunkFromTileUpdate(tileIndex: number, layer: Layer): void {
-   const tileX = tileIndex % Settings.WORLD_SIZE_TILES;
-   const tileY = Math.floor(tileIndex / Settings.WORLD_SIZE_TILES);
-   
-   const renderChunkX = Math.floor(tileX / RENDER_CHUNK_SIZE);
-   const renderChunkY = Math.floor(tileY / RENDER_CHUNK_SIZE);
-
-   recalculateSolidTileRenderChunkData(layer, renderChunkX, renderChunkY);
-}
-
 export function getRenderChunkMinTileX(renderChunkX: number): number {
    let tileMinX = renderChunkX * RENDER_CHUNK_SIZE;
    if (tileMinX < -Settings.EDGE_GENERATION_DISTANCE) {
@@ -189,8 +189,8 @@ export function getRenderChunkMinTileX(renderChunkX: number): number {
 
 export function getRenderChunkMaxTileX(renderChunkX: number): number {
    let tileMaxX = (renderChunkX + 1) * RENDER_CHUNK_SIZE - 1;
-   if (tileMaxX > Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
-      tileMaxX = Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE;
+   if (tileMaxX >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
+      tileMaxX = Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE - 1;
    }
    return tileMaxX;
 }
@@ -205,8 +205,8 @@ export function getRenderChunkMinTileY(renderChunkY: number): number {
 
 export function getRenderChunkMaxTileY(renderChunkY: number): number {
    let tileMaxY = (renderChunkY + 1) * RENDER_CHUNK_SIZE - 1;
-   if (tileMaxY > Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
-      tileMaxY = Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE;
+   if (tileMaxY >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
+      tileMaxY = Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE - 1;
    }
    return tileMaxY;
 }

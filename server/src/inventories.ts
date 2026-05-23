@@ -1,9 +1,7 @@
-import { EntityType } from "../../shared/src/entities";
-import { Inventory, InventoryName, ItemType } from "../../shared/src/items/items";
-import { Settings } from "../../shared/src/settings";
-import { addInventoryToInventoryComponent, InventoryComponent } from "./components/InventoryComponent";
-import { InventoryUseComponent } from "./components/InventoryUseComponent";
-import { createItem } from "./items";
+import { EntityType, Inventory, InventoryName, ItemType, Settings } from "battletribes-shared";
+import { addInventoryToInventoryComponent, InventoryComponent } from "./components/InventoryComponent.js";
+import { InventoryUseComponent } from "./components/InventoryUseComponent.js";
+import { createItem } from "./items.js";
 
 const getTribesmanHotbarSize = (entityType: EntityType): number => {
    switch (entityType) {

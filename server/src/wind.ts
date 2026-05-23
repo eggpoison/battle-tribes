@@ -1,7 +1,6 @@
-import { Settings } from "../../shared/src/settings";
-import { Point } from "../../shared/src/utils";
-import { generatePointPerlinNoise } from "./perlin-noise";
-import { getGameTicks } from "./world";
+import { Settings, Point } from "battletribes-shared";
+import { generatePointPerlinNoise } from "./perlin-noise.js";
+import { getGameTicks } from "./world.js";
 
 const enum Vars {
    MAX_WIND_SPEED = 240,

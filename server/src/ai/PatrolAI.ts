@@ -1,15 +1,12 @@
-import { TribesmanAIType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { distance, getTileX, getTileY, Point, TileIndex } from "../../../shared/src/utils";
-import { getHumanoidRadius } from "../entities/tribes/tribesman-ai/tribesman-ai-utils";
-import { Hitbox } from "../hitboxes";
-import { getEntityFootprint, PathfindFailureDefault, runPathfindingSingleLayer, PathfindOptions } from "../pathfinding";
-import { getEntityLayer, getGameTicks } from "../world";
-import { TransformComponent, TransformComponentArray } from "../components/TransformComponent";
-import { TribeComponentArray } from "../components/TribeComponent";
-import { TribesmanAIComponentArray, TribesmanPathType } from "../components/TribesmanAIComponent";
-import { clearPathfinding, pathfindTribesman } from "../components/AIPathfindingComponent";
+import { TribesmanAIType, Entity, Settings, distance, getTileX, getTileY, Point, TileIndex } from "battletribes-shared";
+import { getHumanoidRadius } from "../entities/tribes/tribesman-ai/tribesman-ai-utils.js";
+import { Hitbox } from "../hitboxes.js";
+import { getEntityFootprint, PathfindFailureDefault, runPathfindingSingleLayer, PathfindOptions } from "../pathfinding.js";
+import { getEntityLayer, getGameTicks } from "../world.js";
+import { TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
+import { TribeComponentArray } from "../components/TribeComponent.js";
+import { TribesmanAIComponentArray, TribesmanPathType } from "../components/TribesmanAIComponent.js";
+import { clearPathfinding, pathfindTribesman } from "../components/AIPathfindingComponent.js";
 
 export class PatrolAI {
    public targetPatrolPosition: Readonly<Point> | null = null;

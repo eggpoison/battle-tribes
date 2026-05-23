@@ -1,10 +1,7 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { assert, randInt } from "../../../shared/src/utils";
-import { entityExists } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { TreeRootBaseComponentArray } from "./TreeRootBaseComponent";
+import { ServerComponentType, Entity, Packet, assert, randInt } from "battletribes-shared";
+import { entityExists } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TreeRootBaseComponentArray } from "./TreeRootBaseComponent.js";
 
 export class TreeRootSegmentComponent {
    readonly root: Entity;

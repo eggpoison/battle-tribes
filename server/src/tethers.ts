@@ -1,6 +1,6 @@
-import { Point } from "../../shared/src/utils";
-import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import { applyForce, getHitboxVelocity, Hitbox } from "./hitboxes";
+import { Point } from "battletribes-shared";
+import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
+import { applyForce, getHitboxVelocity, Hitbox } from "./hitboxes.js";
 
 export class HitboxTether {
    public readonly hitbox1: Hitbox;

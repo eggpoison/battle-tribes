@@ -1,13 +1,10 @@
-import { GuardianCrystalSlamStage } from "battletribes-shared/components";
-import { Entity } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { lerp, Point, polarVec2, randAngle, UtilVar } from "battletribes-shared/utils";
-import { moveEntityToPosition, turnToPosition } from "../ai-shared";
-import { GuardianComponent, GuardianComponentArray, GuardianVars } from "../components/GuardianComponent";
-import { TransformComponentArray } from "../components/TransformComponent";
-import { createGuardianGemQuakeConfig } from "../entities/guardian-gem-quake";
-import { createEntity, getEntityLayer } from "../world";
-import { applyAbsoluteKnockback } from "../hitboxes";
+import { GuardianCrystalSlamStage, Entity, Settings, lerp, Point, polarVec2, randAngle, UtilVar } from "battletribes-shared";
+import { moveEntityToPosition, turnToPosition } from "../ai-shared.js";
+import { GuardianComponent, GuardianComponentArray, GuardianVars } from "../components/GuardianComponent.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import { createGuardianGemQuakeConfig } from "../entities/guardian-gem-quake.js";
+import { createEntity, getEntityLayer } from "../world.js";
+import { applyAbsoluteKnockback } from "../hitboxes.js";
 
 const enum Vars {
    WINDUP_TIME_TICKS = (1.5 * Settings.TICK_RATE) | 0,

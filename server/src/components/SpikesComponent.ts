@@ -1,13 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
-import { getEntityType } from "../world";
-import { HealthComponentArray, canDamageEntity, addLocalInvulnerabilityHash, damageEntity } from "./HealthComponent";
-import { getEntityRelationship, EntityRelationship } from "./TribeComponent";
-import { Hitbox } from "../hitboxes";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point } from "../../../shared/src/utils";
+import { ServerComponentType, Entity, EntityType, Packet, AttackEffectiveness, Point } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { getEntityType } from "../world.js";
+import { HealthComponentArray, canDamageEntity, addLocalInvulnerabilityHash, damageEntity } from "./HealthComponent.js";
+import { getEntityRelationship, EntityRelationship } from "./TribeComponent.js";
+import { Hitbox } from "../hitboxes.js";
 
 export class SpikesComponent {
    public isCovered = false;

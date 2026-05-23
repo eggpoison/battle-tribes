@@ -1,14 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
-import { InventoryName, ItemType, ItemTypeString } from "battletribes-shared/items/items";
-import { InventoryComponentArray, getInventory, consumeItemTypeFromInventory, addItemToInventory } from "./InventoryComponent";
-import { CookingIngredientItemType, FuelSourceItemType } from "battletribes-shared/items/cooking-info";
-import { getEntityType } from "../world";
-import { registerDirtyEntity } from "../server/player-clients";
-import { Settings } from "../../../shared/src/settings";
-import { createItem } from "../items";
+import { ServerComponentType, Entity, EntityType, Settings, Packet, InventoryName, ItemType, ItemTypeString, CookingIngredientItemType, FuelSourceItemType } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { InventoryComponentArray, getInventory, consumeItemTypeFromInventory, addItemToInventory } from "./InventoryComponent.js";
+import { getEntityType } from "../world.js";
+import { registerDirtyEntity } from "../server/player-clients.js";
+import { createItem } from "../items.js";
 
 export interface HeatingRecipe {
    readonly ingredientType: CookingIngredientItemType;

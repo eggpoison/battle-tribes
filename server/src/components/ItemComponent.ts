@@ -1,10 +1,6 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { ComponentArray } from "./ComponentArray";
-import { Item } from "battletribes-shared/items/items";
-import { Entity } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
-import { destroyEntity, getEntityAgeTicks } from "../world";
+import { ServerComponentType, Settings, Item, Entity, Packet } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { destroyEntity, getEntityAgeTicks } from "../world.js";
 
 const enum Vars {
    TICKS_TO_DESPAWN = 300 * Settings.TICK_RATE,

@@ -1,5 +1,5 @@
 {
-   "name": "webgl-test-shared",
+   "name": "battletribes-shared",
    "version": "1.2.79",
    "description": "Shared files for webgl-test",
    "repository": "https://github.com/eggpoison/webgl-test-shared.git",
@@ -8,9 +8,10 @@
    "main": "dist/index.js",
    "module": "dist/index.js",
    "types": "dist/index.d.ts",
+   "type": "module",
    "scripts": {
-      "start": "rm -r ./dist && tsc -b -w",
-      "build": "rm -r ./dist && tsc --build"
+      "start": "rm -r ./dist; tsc -b -w --force",
+      "build": "rm -r ./dist; tsc -b --force"
    },
    "dependencies": {
       "@types/node": "^20.14.11"
@@ -21,7 +22,8 @@
    "exports": {
       ".": {
          "import": "./dist/index.js",
-         "types": "./dist/index.d.ts"
+         "types": "./dist/index.d.ts",
+         "default": "./dist/index.js"
       }
    }
 }

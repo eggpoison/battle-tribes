@@ -1,17 +1,11 @@
-import { assertBoxIsRectangular, HitboxFlag } from "../../../shared/src/boxes/boxes";
-import { ServerComponentType } from "../../../shared/src/components";
-import { DamageSource, Entity, EntityType } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Packet } from "../../../shared/src/packets";
-import { Settings } from "../../../shared/src/settings";
-import { Point, polarVec2 } from "../../../shared/src/utils";
-import { getOkrenClawBigArmSegmentOffset, getOkrenClawBigArmSegmentSize, getOkrenClawMediumArmSegmentOffset, getOkrenClawMediumArmSegmentSize, getOkrenClawSlashingArmSegmentOffset, getOkrenClawSlashingArmSegmentSize } from "../entities/desert/okren-claw";
-import { Hitbox, getHitboxVelocity, applyAbsoluteKnockback } from "../hitboxes";
-import { getEntityType } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { OkrenAgeStage } from "./OkrenComponent";
-import { TransformComponent, TransformComponentArray } from "./TransformComponent";
+import { assertBoxIsRectangular, HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Packet, Settings, Point, polarVec2 } from "battletribes-shared";
+import { getOkrenClawBigArmSegmentOffset, getOkrenClawBigArmSegmentSize, getOkrenClawMediumArmSegmentOffset, getOkrenClawMediumArmSegmentSize, getOkrenClawSlashingArmSegmentOffset, getOkrenClawSlashingArmSegmentSize } from "../entities/desert/okren-claw.js";
+import { Hitbox, getHitboxVelocity, applyAbsoluteKnockback } from "../hitboxes.js";
+import { getEntityType } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { OkrenAgeStage } from "./OkrenComponent.js";
+import { TransformComponent, TransformComponentArray } from "./TransformComponent.js";
 
 export const enum OkrenClawGrowthStage {
    ONE,

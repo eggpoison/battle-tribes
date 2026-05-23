@@ -1,10 +1,9 @@
-import { EntityType } from "battletribes-shared/entities";
-import Tribe from "../Tribe";
-import { updateBuildingLayer } from "./ai-building";
-import { getBuildingSafety, getTribeSafety } from "./ai-building-heuristics";
-import { createVirtualStructure, VirtualStructure } from "./building-plans/TribeBuildingLayer";
-import { getWallCandidates } from "./building-plans/ai-building-walls";
-import { PotentialPlanSafetyData } from "../../../shared/src/ai-building-types";
+import { EntityType } from "battletribes-shared";
+import Tribe from "../Tribe.js";
+import { updateBuildingLayer } from "./ai-building.js";
+import { getBuildingSafety, getTribeSafety } from "./ai-building-heuristics.js";
+import { createVirtualStructure, VirtualStructure } from "./building-plans/TribeBuildingLayer.js";
+import { getWallCandidates } from "./building-plans/ai-building-walls.js";
 
 export interface WallPlaceSearchResult {
    readonly virtualBuilding: VirtualStructure;

@@ -1,17 +1,15 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { ServerComponentType } from "battletribes-shared/components";
-import Tribe from "../Tribe";
-import { ComponentArray } from "./ComponentArray";
-import { TribesmanAIComponentArray, getTribesmanRelationship } from "./TribesmanAIComponent";
-import { TribeMemberComponentArray } from "./TribeMemberComponent";
-import { GolemComponentArray } from "./GolemComponent";
-import { StructureComponentArray } from "./StructureComponent";
-import { Packet } from "battletribes-shared/packets";
-import { getEntityType } from "../world";
-import { PlantedComponentArray } from "./PlantedComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { getHitboxTile, Hitbox } from "../hitboxes";
-import { PlayerComponentArray } from "./PlayerComponent";
+import { Entity, EntityType, ServerComponentType, Packet } from "battletribes-shared";
+import Tribe from "../Tribe.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TribesmanAIComponentArray, getTribesmanRelationship } from "./TribesmanAIComponent.js";
+import { TribeMemberComponentArray } from "./TribeMemberComponent.js";
+import { GolemComponentArray } from "./GolemComponent.js";
+import { StructureComponentArray } from "./StructureComponent.js";
+import { getEntityType } from "../world.js";
+import { PlantedComponentArray } from "./PlantedComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { getHitboxTile, Hitbox } from "../hitboxes.js";
+import { PlayerComponentArray } from "./PlayerComponent.js";
 
 /** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {

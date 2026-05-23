@@ -1,26 +1,17 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { Entity, EntityType, FishColour } from "battletribes-shared/entities";
-import { angle, customTickIntervalHasPassed, Point, polarVec2, UtilVar } from "battletribes-shared/utils";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { FishComponent, FishComponentArray } from "../../components/FishComponent";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../components";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import WanderAI from "../../ai/WanderAI";
-import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { TileType } from "battletribes-shared/tiles";
-import Layer from "../../Layer";
-import { Settings } from "battletribes-shared/settings";
-import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { EscapeAI } from "../../ai/EscapeAI";
-import { Biome } from "../../../../shared/src/biomes";
-import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent";
-import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
-import { ItemType } from "../../../../shared/src/items/items";
-import { applyAccelerationFromGround, getHitboxTile, Hitbox, addHitboxVelocity, turnHitboxToAngle } from "../../hitboxes";
-import { getEntityLayer } from "../../world";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, FishColour, customTickIntervalHasPassed, Point, polarVec2, UtilVar, HitboxCollisionType, RectangularBox, TileType, Settings, Biome, ItemType } from "battletribes-shared";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent.js";
+import { FishComponent, FishComponentArray } from "../../components/FishComponent.js";
+import { EntityConfig } from "../../components.js";
+import WanderAI from "../../ai/WanderAI.js";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
+import Layer from "../../Layer.js";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { EscapeAI } from "../../ai/EscapeAI.js";
+import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent.js";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
+import { applyAccelerationFromGround, getHitboxTile, Hitbox, addHitboxVelocity, turnHitboxToAngle } from "../../hitboxes.js";
+import { getEntityLayer } from "../../world.js";
 
 const enum Vars {
    TURN_SPEED = UtilVar.PI / 1.5,

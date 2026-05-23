@@ -1,10 +1,7 @@
-import { Entity } from "battletribes-shared/entities";
-import { AttackingEntitiesComponentArray } from "../components/AttackingEntitiesComponent";
-import { TransformComponentArray } from "../components/TransformComponent";
-import { AIHelperComponent, AIHelperComponentArray, AIType } from "../components/AIHelperComponent";
-import { Hitbox } from "../hitboxes";
-import { Point } from "../../../shared/src/utils";
-import { Settings } from "../../../shared/src/settings";
+import { Entity, Point, Settings } from "battletribes-shared";
+import { AttackingEntitiesComponentArray } from "../components/AttackingEntitiesComponent.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import { AIHelperComponent, AIHelperComponentArray, AIType } from "../components/AIHelperComponent.js";
 
 export type ExtraEscapeCondition = (entity: Entity, escapeTarget: Entity) => boolean;
 

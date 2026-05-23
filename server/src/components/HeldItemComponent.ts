@@ -1,16 +1,12 @@
-import { BlockType, ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { getItemAttackInfo, InventoryName, ITEM_TYPE_RECORD, ItemType } from "../../../shared/src/items/items";
-import { Packet } from "../../../shared/src/packets";
-import { Point } from "../../../shared/src/utils";
-import { applyKnockback, getHitboxMomentum, Hitbox } from "../hitboxes";
-import { createShieldKnockPacket } from "../server/packet-sending";
-import { getEntityType, getGameTicks } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { InventoryUseComponentArray, LimbInfo, onSwingEntityCollision } from "./InventoryUseComponent";
-import { PlayerComponentArray } from "./PlayerComponent";
-import { ProjectileComponentArray } from "./ProjectileComponent";
-import { TransformComponentArray, attachHitbox } from "./TransformComponent";
+import { BlockType, ServerComponentType, Entity, EntityType, getItemAttackInfo, InventoryName, ITEM_TYPE_RECORD, ItemType, Packet, Point } from "battletribes-shared";
+import { applyKnockback, getHitboxMomentum, Hitbox } from "../hitboxes.js";
+import { createShieldKnockPacket } from "../server/packet-sending.js";
+import { getEntityType, getGameTicks } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { InventoryUseComponentArray, LimbInfo, onSwingEntityCollision } from "./InventoryUseComponent.js";
+import { PlayerComponentArray } from "./PlayerComponent.js";
+import { ProjectileComponentArray } from "./ProjectileComponent.js";
+import { TransformComponentArray, attachHitbox } from "./TransformComponent.js";
 
 const getBlockType = (itemType: ItemType): BlockType | null => {
    const attackInfo = getItemAttackInfo(itemType);

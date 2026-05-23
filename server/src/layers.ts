@@ -1,7 +1,5 @@
-import Layer from "./Layer";
-import { Settings } from "../../shared/src/settings";
-import { TileType } from "../../shared/src/tiles";
-import { getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld } from "../../shared/src/utils";
+import { Settings, TileType, getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld } from "battletribes-shared";
+import Layer from "./Layer.js";
 
 export const surfaceLayer = new Layer(0);
 export const undergroundLayer = new Layer(1);

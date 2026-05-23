@@ -1,21 +1,15 @@
-import { ServerComponentType  } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { ComponentArray } from "./ComponentArray";
-import { getStringLengthBytes, Packet } from "battletribes-shared/packets";
-import { TransformComponentArray } from "./TransformComponent";
-import { getEntityLayer, getEntityType } from "../world";
-import { tribeMemberCanPickUpItem, VACUUM_RANGE } from "../entities/tribes/tribe-member";
-import { Settings } from "../../../shared/src/settings";
-import { lerp, polarVec2 } from "../../../shared/src/utils";
-import { itemEntityCanBePickedUp, ItemComponentArray } from "./ItemComponent";
-import { TribesmanComponentArray } from "./TribesmanComponent";
-import { registerPlayerDroppedItemPickup } from "../server/player-clients";
-import { getInventory, hasInventory, InventoryComponentArray, pickupItemEntity } from "./InventoryComponent";
-import { adjustTribesmanRelationsAfterGift } from "./TribesmanAIComponent";
-import { ArmourItemInfo, InventoryName, ITEM_INFO_RECORD, ItemType } from "../../../shared/src/items/items";
-import { addDefence, HealthComponentArray, removeDefence } from "./HealthComponent";
-import { CollisionBit } from "../../../shared/src/collision";
-import { addHitboxVelocity } from "../hitboxes";
+import { ServerComponentType, Entity, EntityType, getStringLengthBytes, Packet, Settings, lerp, polarVec2, ArmourItemInfo, InventoryName, ITEM_INFO_RECORD, ItemType, CollisionBit } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { getEntityLayer, getEntityType } from "../world.js";
+import { tribeMemberCanPickUpItem, VACUUM_RANGE } from "../entities/tribes/tribe-member.js";
+import { itemEntityCanBePickedUp, ItemComponentArray } from "./ItemComponent.js";
+import { TribesmanComponentArray } from "./TribesmanComponent.js";
+import { registerPlayerDroppedItemPickup } from "../server/player-clients.js";
+import { getInventory, hasInventory, InventoryComponentArray, pickupItemEntity } from "./InventoryComponent.js";
+import { adjustTribesmanRelationsAfterGift } from "./TribesmanAIComponent.js";
+import { addDefence, HealthComponentArray, removeDefence } from "./HealthComponent.js";
+import { addHitboxVelocity } from "../hitboxes.js";
 
 const enum Vars {
    VACUUM_STRENGTH = 25

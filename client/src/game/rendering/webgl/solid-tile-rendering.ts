@@ -1,10 +1,11 @@
-import { Settings, NUM_TILE_TYPES, SubtileType, TileType, TileTypeString, getSubtileIndex, getTileIndexIncludingEdges, assert } from "webgl-test-shared";
+import { Settings, NUM_TILE_TYPES, SubtileType, TileType, TileTypeString, getSubtileIndex, getTileIndexIncludingEdges, assert, getTileX, getTileY } from "webgl-test-shared";
 import { gl, createWebGLProgram, createTextureArray } from "../../webgl";
-import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
+import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkX, getRenderChunkY } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import Layer from "../../Layer";
 import { layers } from "../../world";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
+import { TileUpdateData } from "../../networking/snapshot-processing";
 
 const enum Var {
    ATTRIBUTES_PER_VERTEX = 6
@@ -12,6 +13,7 @@ const enum Var {
 
 interface RenderInfo {
    readonly buffer: WebGLBuffer;
+   readonly vertexData: Float32Array;
    vao: WebGLVertexArrayObject;
    numElements: number;
 }
@@ -271,12 +273,14 @@ const updateFloorVertexData = (data: Float32Array, layer: Layer, renderChunkX: n
             continue;
          }
 
-         let temperature = -1;
-         let humidity = -1;
+         let temperature: number;
+         let humidity: number;
          if (tile.type === TileType.grass) {
-            const grassInfo = layer.grassInfo[tileX]![tileY]!;
-            temperature = grassInfo.temperature;
-            humidity = grassInfo.humidity;
+            temperature = layer.tileTemperatures[tileIndex];
+            humidity = layer.tileHumidities[tileIndex];
+         } else {
+            temperature = -1;
+            humidity = -1;
          }
 
          const x = tileX * Settings.TILE_SIZE;
@@ -286,12 +290,6 @@ const updateFloorVertexData = (data: Float32Array, layer: Layer, renderChunkX: n
          dataOffset += Var.ATTRIBUTES_PER_VERTEX;
       }
    }
-}
-
-const clearWallVertexData = (data: Float32Array): void => {
-   // Clear any previous data
-   // @SPEED don't need to clear the whole thing!!!
-   data.fill(0);
 }
 
 const setWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: number, renderChunkY: number): void => {
@@ -392,6 +390,7 @@ const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, rend
 
    return {
       buffer: buffer,
+      vertexData: vertexData,
       vao: vao,
       numElements: numElements
    };
@@ -419,43 +418,45 @@ export function createTileRenderChunks(layer: Layer): void {
 }
 
 const recalculateChunkData = (info: RenderInfo, layer: Layer, renderChunkX: number, renderChunkY: number, isWallTiles: boolean): void => {
-   // @Memory @Garbage: Reuse previous array. then will not access ATTRIBUTES_PER_VERTEX too!! which is good
-   const vertexData = new Float32Array(info.numElements * Var.ATTRIBUTES_PER_VERTEX);
+   const vertexData = info.vertexData;
+   
+   // @SPEED don't need to clear the whole thing!!!
+   vertexData.fill(0);
+
    if (isWallTiles) {
-      clearWallVertexData(vertexData);
       setWallVertexData(vertexData, layer, renderChunkX, renderChunkY);
    } else {
       updateFloorVertexData(vertexData, layer, renderChunkX, renderChunkY);
+      let a = true;
+      for (let i = 0; i < vertexData.length; i++) {
+         if (vertexData[i] !== 0) {
+            a = false;
+            break;
+         }
+      }
+      if (a) {
+         throw new Error();
+      }
    }
 
-   gl.bindVertexArray(info.vao);
+   // Not binding a VAO is ok here, as long as before all the chunks are recalculated whatever VAO was there was unbound.
 
    gl.bindBuffer(gl.ARRAY_BUFFER, info.buffer);
    gl.bufferSubData(gl.ARRAY_BUFFER, 0, vertexData);
-
-   gl.bindVertexArray(null);
 }
 
-export function recalculateWallSubtileRenderData(layer: Layer, renderChunkX: number, renderChunkY: number): void {
-   const idx = getRenderChunkIndex(renderChunkX, renderChunkY);
-   recalculateChunkData(wallTileInfoArrays[layer.idx][idx], layer, renderChunkX, renderChunkY, true);
-}
-
-export function recalculateSolidTileRenderChunkData(layer: Layer, renderChunkX: number, renderChunkY: number): void {
-   // @Hack
-   const layerIdx = layers.indexOf(layer);
-   
-   const idx = getRenderChunkIndex(renderChunkX, renderChunkY);
-   recalculateChunkData(groundTileInfoArrays[layerIdx][idx], layer, renderChunkX, renderChunkX, false);
-   recalculateChunkData(wallTileInfoArrays[layerIdx][idx], layer, renderChunkX, renderChunkX, true);
+export function updateRenderChunkTileData(layer: Layer, renderChunkIdx: number, isWallTiles: boolean): void {
+   // @Speed already calc'd
+   const renderChunkX = getRenderChunkX(renderChunkIdx);
+   const renderChunkY = getRenderChunkY(renderChunkIdx);
+   recalculateChunkData(groundTileInfoArrays[layer.idx][renderChunkIdx], layer, renderChunkX, renderChunkY, isWallTiles);
 }
 
 export function renderSolidTiles(layer: Layer, isWallTiles: boolean): void {
    gl.useProgram(program);
 
    gl.activeTexture(gl.TEXTURE0);
-   const textureArray = isWallTiles ? wallTileTextureArray : floorTileTextureArray;
-   gl.bindTexture(gl.TEXTURE_2D_ARRAY, textureArray);
+   gl.bindTexture(gl.TEXTURE_2D_ARRAY, isWallTiles ? wallTileTextureArray : floorTileTextureArray);
 
    gl.uniform1f(sizeUniformLocation, isWallTiles ? Settings.SUBTILE_SIZE : Settings.TILE_SIZE);
    
@@ -472,6 +473,28 @@ export function renderSolidTiles(layer: Layer, isWallTiles: boolean): void {
          gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, tileInfo.numElements);
       }
    }
+}
 
+export function processTileUpdates(layer: Layer, tileUpdates: ReadonlyArray<TileUpdateData>): void {
+   const renderChunksToUpdate = new Set<number>();
+   
+   for (const tileUpdate of tileUpdates) {
+      const tileIndex = tileUpdate.tileIndex;
+      
+      const tile = tileUpdate.layer.getTile(tileIndex);
+      tile.type = tileUpdate.tileType;
+
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
+      
+      const renderChunkX = Math.floor(tileX / RENDER_CHUNK_SIZE);
+      const renderChunkY = Math.floor(tileY / RENDER_CHUNK_SIZE);
+      const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
+      renderChunksToUpdate.add(renderChunkIdx);
+   }
+   
    gl.bindVertexArray(null);
+   for (const idx of renderChunksToUpdate) {
+      updateRenderChunkTileData(layer, idx, false);
+   }
 }

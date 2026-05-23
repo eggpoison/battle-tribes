@@ -1,11 +1,8 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { EntityType, DamageSource } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point, polarVec2 } from "../../../shared/src/utils";
-import { Hitbox, applyAbsoluteKnockback } from "../hitboxes";
-import { getEntityType } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
+import { ServerComponentType, EntityType, DamageSource, AttackEffectiveness, Point, polarVec2 } from "battletribes-shared";
+import { Hitbox, applyAbsoluteKnockback } from "../hitboxes.js";
+import { getEntityType } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
 
 export class TukmokTrunkComponent {}
 

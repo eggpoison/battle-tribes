@@ -1,17 +1,11 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity, EntityType, DamageSource } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
-import { createEntity, destroyEntity, getEntityLayer, getEntityType } from "../world";
-import { TransformComponentArray } from "./TransformComponent";
-import { createSpitPoisonAreaConfig } from "../entities/projectiles/spit-poison-area";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Settings } from "../../../shared/src/settings";
-import { StatusEffect } from "../../../shared/src/status-effects";
-import { Point, polarVec2, randAngle } from "../../../shared/src/utils";
-import { HealthComponentArray, damageEntity } from "./HealthComponent";
-import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
-import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes";
+import { ServerComponentType, Entity, EntityType, DamageSource, Packet, AttackEffectiveness, Settings, StatusEffect, Point, polarVec2, randAngle } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { createEntity, destroyEntity, getEntityLayer, getEntityType } from "../world.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { createSpitPoisonAreaConfig } from "../entities/projectiles/spit-poison-area.js";
+import { HealthComponentArray, damageEntity } from "./HealthComponent.js";
+import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent.js";
+import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes.js";
 
 const enum Vars {
    BREAK_VELOCITY = 100

@@ -1,9 +1,6 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { Settings } from "../../../shared/src/settings";
-import { ComponentArray } from "./ComponentArray";
-import { getPlantGrowthSpeed } from "./PlanterBoxComponent";
+import { ServerComponentType, Entity, Packet, Settings } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { getPlantGrowthSpeed } from "./PlanterBoxComponent.js";
 
 const enum Vars {
    GROWTH_TIME_TICKS = 90 * Settings.TICK_RATE

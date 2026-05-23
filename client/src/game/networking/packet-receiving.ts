@@ -1,4 +1,4 @@
-import { Biome, TileType, Settings, PacketReader, WaterRockData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, InventoryName, AttackVar, getTileX, getTileY, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges } from "webgl-test-shared";
+import { Biome, TileType, Settings, PacketReader, WaterRockData, RiverFlowDirectionsRecord, WaterRockSize, InventoryName, AttackVar, getTileX, getTileY, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges } from "webgl-test-shared";
 import { refreshCameraView, setCameraPosition } from "../camera";
 import { Tile } from "../Tile";
 import { addLayer, layers, setCurrentLayer } from "../world";
@@ -34,10 +34,11 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
    for (let i = 0; i < numLayers; i++) {
       const tiles: Array<Tile> = [];
       const flowDirections: RiverFlowDirectionsRecord = {};
-      const grassInfoRecord: Partial<Record<number, Partial<Record<number, GrassTileInfo>>>> = {};
+      const tileTemperatures = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+      const tileHumidities = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
       for (let tileIndex = 0; tileIndex < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES; tileIndex++) {
-         const tileType = reader.readNumber() as TileType;
-         const tileBiome = reader.readNumber() as Biome;
+         const tileType: TileType = reader.readNumber();
+         const tileBiome: Biome = reader.readNumber();
          const flowDirection = reader.readNumber();
          const temperature = reader.readNumber();
          const humidity = reader.readNumber();
@@ -54,20 +55,12 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
          }
          flowDirections[tileX][tileY] = flowDirection;
    
-         const grassInfo: GrassTileInfo = {
-            tileX: tileX,
-            tileY: tileY,
-            temperature: temperature,
-            humidity: humidity
-         };
-         if (grassInfoRecord[tileX] === undefined) {
-            grassInfoRecord[tileX] = {};
-         }
-         grassInfoRecord[tileX][tileY] = grassInfo;
+         tileTemperatures[tileIndex] = temperature;
+         tileHumidities[tileIndex] = humidity;
       }
 
       // Read in subtiles
-      const wallSubtileTypes = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16);
+      const wallSubtileTypes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16);
       for (let i = 0; i < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16; i++) {
          const subtileType = reader.readNumber();
          wallSubtileTypes[i] = subtileType;
@@ -103,7 +96,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
          }
       }
 
-      const layer = new Layer(i, tiles, wallSubtileTypes, wallSubtileDamageTakenMap, flowDirections, [], grassInfoRecord);
+      const layer = new Layer(i, tiles, wallSubtileTypes, wallSubtileDamageTakenMap, flowDirections, [], tileTemperatures, tileHumidities);
       addLayer(layer);
    }
 
@@ -125,7 +118,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
       const x = reader.readNumber();
       const y = reader.readNumber();
       const rotation = reader.readNumber();
-      const size = reader.readNumber() as WaterRockSize;
+      const size: WaterRockSize = reader.readNumber();
       const opacity = reader.readNumber();
 
       const waterRock: WaterRockData = {

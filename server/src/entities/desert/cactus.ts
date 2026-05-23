@@ -1,19 +1,12 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
-import { CactusFlowerSize, EntityType } from "battletribes-shared/entities";
-import { randInt, randFloat, Point, polarVec2, randAngle } from "battletribes-shared/utils";
-import { HealthComponent } from "../../components/HealthComponent";
-import { ServerComponentType } from "battletribes-shared/components";
-import { ChildConfigAttachInfo, EntityConfig } from "../../components";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { CactusComponent, CactusFlower } from "../../components/CactusComponent";
-import { ItemType } from "../../../../shared/src/items/items";
-import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
-import { Hitbox } from "../../hitboxes";
-import { createPricklyPearConfig } from "./prickly-pear";
+import { CollisionBit, DEFAULT_COLLISION_MASK, CactusFlowerSize, EntityType, randInt, randFloat, Point, polarVec2, randAngle, StatusEffect, HitboxCollisionType, CircularBox, ItemType } from "battletribes-shared";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { ChildConfigAttachInfo, EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { CactusComponent, CactusFlower } from "../../components/CactusComponent.js";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import { createPricklyPearConfig } from "./prickly-pear.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 
 const RADIUS = 40;
 /** Amount the hitbox is brought in. */

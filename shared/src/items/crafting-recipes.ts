@@ -1,7 +1,7 @@
-import { ItemSlots, ItemType, ItemTypeString } from "./items";
-import { Settings } from "../settings";
-import { ItemTally2, createTallyFromRecord } from "./ItemTally";
-import { EntityType } from "../entities";
+import { ItemSlots, ItemType, ItemTypeString } from "./items.js";
+import { Settings } from "../settings.js";
+import { ItemTally2, createTallyFromRecord } from "./ItemTally.js";
+import { EntityType } from "../entities.js";
 
 enum Vars {
    FAST_CRAFT_TIME = (0.5 * Settings.TICK_RATE) | 0,

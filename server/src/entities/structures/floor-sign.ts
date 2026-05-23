@@ -1,21 +1,15 @@
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { StatusEffect } from "../../../../shared/src/status-effects";
-import { Point } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { FloorSignComponent } from "../../components/FloorSignComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StructureComponent } from "../../components/StructureComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { TribeComponent } from "../../components/TribeComponent";
-import { Hitbox } from "../../hitboxes";
-import { StructureConnection } from "../../structure-placement";
-import Tribe from "../../Tribe";
-import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { HitboxCollisionType, RectangularBox, DEFAULT_COLLISION_MASK, CollisionBit, EntityType, StatusEffect, Point } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { FloorSignComponent } from "../../components/FloorSignComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { StructureComponent } from "../../components/StructureComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { TribeComponent } from "../../components/TribeComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import { StructureConnection } from "../../structure-placement.js";
+import Tribe from "../../Tribe.js";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 
 export function createFloorSignConfig(position: Point, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructrue: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();

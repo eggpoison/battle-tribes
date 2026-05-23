@@ -1,19 +1,11 @@
-import { WaterRockData, ServerTileUpdateData } from "battletribes-shared/client-server-types";
-import { Entity } from "battletribes-shared/entities";
-import { PathfindingSettings, Settings } from "battletribes-shared/settings";
-import { NUM_TILE_TYPES, SubtileType, TileType } from "battletribes-shared/tiles";
-import { assert, distance, getTileIndexIncludingEdges, getTileX, getTileY, TileIndex } from "battletribes-shared/utils";
-import { Biome } from "battletribes-shared/biomes";
-import { CollisionGroup } from "battletribes-shared/collision-groups";
-import { getSubtileIndex } from "battletribes-shared/subtiles";
-import Chunk from "./Chunk";
-import CollisionChunk from "./CollisionChunk";
-import { EntityPairCollisionInfo, GlobalCollisionInfo } from "./collision-detection";
-import { MinedSubtileInfo } from "./collapses";
-import { getPathfindingNode, PathfindingServerVars } from "./pathfinding-utils";
-import { LocalBiome } from "./world-generation/terrain-generation-utils";
-import { LightLevelNode } from "../../shared/src/light-levels";
-import { LightID } from "./lights";
+import { WaterRockData, Entity, PathfindingSettings, Settings, NUM_TILE_TYPES, SubtileType, TileType, assert, distance, getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, Biome, CollisionGroup, getSubtileIndex, LightLevelNode } from "battletribes-shared";
+import Chunk from "./Chunk.js";
+import CollisionChunk from "./CollisionChunk.js";
+import { EntityPairCollisionInfo, GlobalCollisionInfo } from "./collision-detection.js";
+import { MinedSubtileInfo } from "./collapses.js";
+import { getPathfindingNode, PathfindingServerVars } from "./pathfinding-utils.js";
+import { LocalBiome } from "./world-generation/terrain-generation-utils.js";
+import { LightID } from "./lights.js";
 
 interface WallSubtileUpdate {
    readonly subtileIndex: number;
@@ -107,8 +99,8 @@ export default class Layer {
    /** The depth of the layer, also the layer's index in the layers array. Surface layer has depth 0, and each subsequently lower layer has 1 higher depth. */
    public readonly depth: number;
    
-   public readonly tileTypes = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
-   public readonly tileBiomes = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   public readonly tileTypes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   public readonly tileBiomes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    public readonly riverFlowDirections = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    public readonly tileTemperatures = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    public readonly tileHumidities = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
@@ -117,13 +109,13 @@ export default class Layer {
    public readonly tileCensus = createTileCensus();
    public readonly buildingBlockingTiles = new Set<TileIndex>();
 
-   public readonly wallSubtileTypes = new Float32Array(16 * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   public readonly wallSubtileTypes = new Uint8Array(16 * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
 
    public readonly wallSubtileDamageTakenMap = new Map<number, number>();
 
    public readonly waterRocks = new Array<WaterRockData>();
 
-   private tileUpdateCoordinates = new Set<number>();
+   public tileUpdateCoordinates = new Set<number>();
    public wallSubtileUpdates = new Array<WallSubtileUpdate>();
 
    /** Stores all entities collectively in each chunk */
@@ -291,30 +283,8 @@ export default class Layer {
    }
 
    /** Registers a tile update to be sent to the clients */
-   public registerNewTileUpdate(x: number, y: number): void {
-      const tileIndex = y * Settings.WORLD_SIZE_TILES + x;
+   public registerNewTileUpdate(tileIndex: number): void {
       this.tileUpdateCoordinates.add(tileIndex);
-   }
-
-   /** Get all tile updates and reset them */
-   public popTileUpdates(): ReadonlyArray<ServerTileUpdateData> {
-      // Generate the tile updates array
-      const tileUpdates = new Array<ServerTileUpdateData>();
-      for (const tileIndex of this.tileUpdateCoordinates) {
-         const tileX = tileIndex % Settings.WORLD_SIZE_TILES;
-         const tileY = Math.floor(tileIndex / Settings.WORLD_SIZE_TILES);
-         
-         tileUpdates.push({
-            layerIdx: this.depth,
-            tileIndex: tileIndex,
-            type: this.getTileXYType(tileX, tileY)
-         });
-      }
-
-      // reset the tile update coordiantes
-      this.tileUpdateCoordinates.clear();
-
-      return tileUpdates;
    }
 
    /** Returns false if any of the tiles in the raycast don't match the inputted tile types. */

@@ -1,29 +1,21 @@
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../../shared/src/collision";
-import { Entity, EntityType } from "../../../../shared/src/entities";
-import { ItemType } from "../../../../shared/src/items/items";
-import { Settings } from "../../../../shared/src/settings";
-import { lerp, Point, polarVec2 } from "../../../../shared/src/utils";
-import WanderAI from "../../ai/WanderAI";
-import { EntityConfig, LightCreationInfo } from "../../components";
-import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { FollowAI } from "../../ai/FollowAI";
-import { GlurbHeadSegmentComponent, GlurbHeadSegmentComponentArray } from "../../components/GlurbHeadSegmentComponent";
-import { GlurbSegmentComponent } from "../../components/GlurbSegmentComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
-import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
-import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../hitboxes";
-import Layer from "../../Layer";
-import { createLight } from "../../lights";
-import { getEntityAgeTicks } from "../../world";
-import { getTamingSkill, TamingSkillID } from "../../../../shared/src/taming";
-import { registerEntityTamingSpec } from "../../taming-specs";
-import { TamingComponent } from "../../components/TamingComponent";
-import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StatusEffect } from "../../../../shared/src/status-effects";
+import { HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, ItemType, Settings, lerp, Point, polarVec2, getTamingSkill, TamingSkillID, StatusEffect } from "battletribes-shared";
+import WanderAI from "../../ai/WanderAI.js";
+import { EntityConfig, LightCreationInfo } from "../../components.js";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
+import { FollowAI } from "../../ai/FollowAI.js";
+import { GlurbHeadSegmentComponent } from "../../components/GlurbHeadSegmentComponent.js";
+import { GlurbSegmentComponent } from "../../components/GlurbSegmentComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent.js";
+import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../hitboxes.js";
+import Layer from "../../Layer.js";
+import { createLight } from "../../lights.js";
+import { getEntityAgeTicks } from "../../world.js";
+import { registerEntityTamingSpec } from "../../taming-specs.js";
+import { TamingComponent } from "../../components/TamingComponent.js";
+import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 
 const enum Vars {
    MIN_FOLLOW_COOLDOWN = 10 * Settings.TICK_RATE,

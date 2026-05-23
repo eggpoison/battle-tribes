@@ -1,4 +1,4 @@
-import { EntityType } from "./entities";
+import { EntityType } from "./entities.js";
 
 // When to add a collision group:
 // - Adding collision groups can be expensive, the number of hash-matrix-pair checks

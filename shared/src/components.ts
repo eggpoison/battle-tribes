@@ -1,7 +1,7 @@
-import { Entity, EntityType } from "./entities";
-import { ItemType } from "./items/items";
-import { Settings } from "./settings";
-import { StatusEffect } from "./status-effects";
+import { Entity, EntityType } from "./entities.js";
+import { ItemType } from "./items/items.js";
+import { Settings } from "./settings.js";
+import { StatusEffect } from "./status-effects.js";
 
 /*
 data sent:

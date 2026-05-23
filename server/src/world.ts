@@ -1,23 +1,20 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import Layer from "./Layer";
-import { removeEntityFromCensus, runTileCensuses } from "./census";
-import { ComponentArray, ComponentArrays, getComponentArrayRecord } from "./components/ComponentArray";
-import { registerEntityDestruction } from "./server/player-clients";
-import Tribe from "./Tribe";
-import { ServerComponentType } from "battletribes-shared/components";
-import { assert } from "../../shared/src/utils";
-import { addLayerBuildingBlockingTiles, layers, surfaceLayer, undergroundLayer } from "./layers";
-import OPTIONS from "./options";
-import { tileHasWallSubtile } from "./world-generation/terrain-generation-utils";
-import { markWallTileInPathfinding } from "./pathfinding";
-import { generateSurfaceTerrain } from "./world-generation/surface-layer-generation";
-import { generateUndergroundTerrain } from "./world-generation/underground-layer-generation";
-import { EntityConfig, entityConfigAttachInfoIsTethered } from "./components";
-import { attachLightToHitbox } from "./lights";
-import { attachEntityWithTether, attachHitboxRaw } from "./components/TransformComponent";
-import { getEntityComponentTypes } from "./entity-component-types";
-import { removeEntityFromSpawnDistributions, SPAWN_INFOS } from "./entity-spawn-info";
+import { Entity, EntityType, Settings, assert, ServerComponentType } from "battletribes-shared";
+import Layer from "./Layer.js";
+import { removeEntityFromCensus, runTileCensuses } from "./census.js";
+import { ComponentArray, ComponentArrays, getComponentArrayRecord } from "./components/ComponentArray.js";
+import { registerEntityDestruction } from "./server/player-clients.js";
+import Tribe from "./Tribe.js";
+import { addLayerBuildingBlockingTiles, layers, surfaceLayer, undergroundLayer } from "./layers.js";
+import OPTIONS from "./options.js";
+import { tileHasWallSubtile } from "./world-generation/terrain-generation-utils.js";
+import { markWallTileInPathfinding } from "./pathfinding.js";
+import { generateSurfaceTerrain } from "./world-generation/surface-layer-generation.js";
+import { generateUndergroundTerrain } from "./world-generation/underground-layer-generation.js";
+import { EntityConfig, entityConfigAttachInfoIsTethered } from "./components.js";
+import { attachLightToHitbox } from "./lights.js";
+import { attachEntityWithTether, attachHitboxRaw } from "./components/TransformComponent.js";
+import { getEntityComponentTypes } from "./entity-component-types.js";
+import { removeEntityFromSpawnDistributions, SPAWN_INFOS } from "./entity-spawn-info.js";
 
 const enum Vars {
    START_TIME = 8

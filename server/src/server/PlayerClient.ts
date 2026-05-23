@@ -1,13 +1,8 @@
-import { PlayerKnockbackData, HealData, ResearchOrbCompleteData, GameDataPacketOptions } from "battletribes-shared/client-server-types";
-import Tribe from "../Tribe";
-import { EntityTickEvent } from "battletribes-shared/entity-events";
-import { Entity } from "battletribes-shared/entities";
+import { PlayerKnockbackData, HealData, ResearchOrbCompleteData, GameDataPacketOptions, EntityTickEvent, Entity, Settings, Point, AttackEffectiveness } from "battletribes-shared";
+import Tribe from "../Tribe.js";
 import WebSocket from "ws";
-import { Settings } from "battletribes-shared/settings";
-import { Point } from "battletribes-shared/utils";
-import Layer from "../Layer";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Hitbox } from "../hitboxes";
+import Layer from "../Layer.js";
+import { Hitbox } from "../hitboxes.js";
 
 export const enum PlayerClientVars {
    VIEW_PADDING = 128

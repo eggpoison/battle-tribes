@@ -1,26 +1,17 @@
-import { Settings } from "battletribes-shared/settings";
-import { SubtileType, TileType } from "battletribes-shared/tiles";
-import { assert, clampToBoardDimensions, distance, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randFloat, randInt, smoothstep, TileIndex } from "battletribes-shared/utils";
-import Layer from "../Layer";
-import { generateOctavePerlinNoise, generatePerlinNoise } from "../perlin-noise";
-import { groupLocalBiomes, setWallInSubtiles } from "./terrain-generation-utils";
-import { Biome } from "../../../shared/src/biomes";
-import { getSubtileIndex } from "../../../shared/src/subtiles";
-import { createTreeRootBaseConfig } from "../entities/resources/tree-root-base";
-import { getEntityType, createEntityImmediate } from "../world";
-import { generateSpikyBastards } from "./spiky-bastard-generation";
-import { getEntitiesInRange } from "../ai-shared";
-import { EntityType } from "../../../shared/src/entities";
-import { getLightLevelNode } from "../lights";
-import { LightLevelVar } from "../../../shared/src/light-levels";
-import { generateMithrilOre } from "./mithril-ore-generation";
-import { createRawSpawnDistribution, registerNewSpawnInfo, SpawnDistribution } from "../entity-spawn-info";
-import { EntityConfig, getConfigComponent } from "../components";
-import { createBoulderConfig } from "../entities/resources/boulder";
-import { createMossConfig } from "../entities/moss";
-import { ServerComponentType } from "../../../shared/src/components";
-import { createGlurbConfig } from "../entities/mobs/glurb";
-import { getEntityComponentTypes } from "../entity-component-types";
+import { Settings, SubtileType, TileType, assert, clampToBoardDimensions, distance, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randFloat, randInt, smoothstep, TileIndex, Biome, EntityType, LightLevelVar, ServerComponentType, getSubtileIndex } from "battletribes-shared";
+import Layer from "../Layer.js";
+import { generateOctavePerlinNoise, generatePerlinNoise } from "../perlin-noise.js";
+import { groupLocalBiomes, setWallInSubtiles } from "./terrain-generation-utils.js";
+import { createTreeRootBaseConfig } from "../entities/resources/tree-root-base.js";
+import { getEntityType, createEntityImmediate } from "../world.js";
+import { generateSpikyBastards } from "./spiky-bastard-generation.js";
+import { getEntitiesInRange } from "../ai-shared.js";
+import { getLightLevelNode } from "../lights.js";
+import { generateMithrilOre } from "./mithril-ore-generation.js";
+import { createRawSpawnDistribution, registerNewSpawnInfo, SpawnDistribution } from "../entity-spawn-info.js";
+import { EntityConfig, getConfigComponent } from "../components.js";
+import { createMossConfig } from "../entities/moss.js";
+import { getEntityComponentTypes } from "../entity-component-types.js";
 
 const enum Vars {
    DROPDOWN_TILE_WEIGHT_REDUCTION_RANGE = 9,
@@ -113,7 +104,8 @@ const generateDepths = (dropdowns: ReadonlyArray<TileIndex>): ReadonlyArray<numb
          // The further you travel from a dropdown, the more variation the weights have
          assert(distTiles + 1 > 0);
          const weightFactor = Math.log(distTiles + 1) * 0.07;
-         const weight = weightMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         const weight = weightMap[tileIndex];
          depth += weight * weightFactor;
          
          if (depth > 1) {
@@ -225,14 +217,15 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
    
    const depths = generateDepths(dropdowns);
 
-   const waterGenerationNoise = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 8);
-   const mithrilGenerationNoise = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 16);
+   const waterGenerationNoise = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 8, 0);
+   const mithrilGenerationNoise = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 16, 0);
    
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
-         let weight = weightMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
-         
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+
+         let weight = weightMap[tileIndex];
+         
          const dropdownCloseness = dropdownClosenessArray[tileIndex];
 
          weight *= 1 - dropdownCloseness;
@@ -240,7 +233,7 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
          undergroundLayer.tileBiomes[tileIndex] = Biome.caves;
 
          const depth = depths[tileIndex];
-         const mithrilGenerationWeight = mithrilGenerationNoise[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+         const mithrilGenerationWeight = mithrilGenerationNoise[tileIndex];
 
          let isMithrilRich = false;
          let richnessFactor = 0;
@@ -264,7 +257,7 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
                weightFactor = (weight - 0.54) / (0.57 - 0.54);
             }
 
-            let waterGenerationWeight = waterGenerationNoise[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+            let waterGenerationWeight = waterGenerationNoise[tileIndex];
             // Only generate water at low depths
             waterGenerationWeight *= lerp(0.5, 1, 1 - depth);
             if (weight > 0.44 && weight < 0.51 && waterGenerationWeight > 0.65) {

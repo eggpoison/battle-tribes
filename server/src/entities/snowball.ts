@@ -1,16 +1,10 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { EntityType, Entity } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point, randFloat, randSign } from "battletribes-shared/utils";
-import { HealthComponent } from "../components/HealthComponent";
-import { SnowballComponent } from "../components/SnowballComponent";
-import { EntityConfig } from "../components";
-import { ServerComponentType } from "battletribes-shared/components";
-import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { StatusEffectComponent } from "../components/StatusEffectComponent";
-import { addHitboxAngularVelocity, Hitbox } from "../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, StatusEffect, Point, randFloat, randSign, HitboxCollisionType, CircularBox } from "battletribes-shared";
+import { HealthComponent } from "../components/HealthComponent.js";
+import { SnowballComponent } from "../components/SnowballComponent.js";
+import { EntityConfig } from "../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
+import { StatusEffectComponent } from "../components/StatusEffectComponent.js";
+import { addHitboxAngularVelocity, Hitbox } from "../hitboxes.js";
 
 const MAX_HEALTHS: ReadonlyArray<number> = [1, 3, 5, 7];
 

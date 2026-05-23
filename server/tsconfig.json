@@ -1,15 +1,17 @@
 {
    "compilerOptions": {
       "target": "ESNext",
-      "moduleResolution": "node",
+      "module": "nodenext",
+      "moduleResolution": "nodenext",
       "esModuleInterop": true,
       "strict": true,
       "sourceMap": false,
       "removeComments": false,
       "baseUrl": "./",
+      "outDir": "./dist",
       "paths": {
-         "battletribes-shared/*": ["../shared/src/*"]
-       }
+         "battletribes-shared": ["../shared/dist/index.d.ts"]
+      }
    },
    "references": [
      { "path": "../shared" }

@@ -1,11 +1,8 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { _point, Point, rotatePoint, rotatePointAroundOrigin } from "../../../shared/src/utils";
-import { Hitbox, translateHitbox } from "../hitboxes";
-import { entityExists } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { attachHitbox, detachHitbox, TransformComponentArray } from "./TransformComponent";
+import { ServerComponentType, Entity, Packet, _point, Point, rotatePoint, rotatePointAroundOrigin } from "battletribes-shared";
+import { Hitbox, translateHitbox } from "../hitboxes.js";
+import { entityExists } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { attachHitbox, detachHitbox, TransformComponentArray } from "./TransformComponent.js";
 
 // @Cleanup: only exported cuz someone uses it in transformcomponent
 export interface CarrySlot {

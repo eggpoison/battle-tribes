@@ -1,14 +1,10 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity } from "battletribes-shared/entities";
-import { ComponentArray } from "./ComponentArray";
-import { getStringLengthBytes, Packet } from "battletribes-shared/packets";
-import { Settings } from "battletribes-shared/settings";
-import { Point, randAngle, randInt } from "battletribes-shared/utils";
-import { createZombieConfig } from "../entities/mobs/zombie";
-import { TransformComponentArray } from "./TransformComponent";
-import { createEntity, destroyEntity, getEntityLayer, getGameTime, isNight } from "../world";
-import TombstoneDeathManager from "../tombstone-deaths";
-import { Hitbox } from "../hitboxes";
+import { ServerComponentType, Entity, getStringLengthBytes, Packet, Settings, Point, randAngle, randInt } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { createZombieConfig } from "../entities/mobs/zombie.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { createEntity, destroyEntity, getEntityLayer, getGameTime, isNight } from "../world.js";
+import TombstoneDeathManager from "../tombstone-deaths.js";
+import { Hitbox } from "../hitboxes.js";
 
 const enum Vars {
    /** Average number of zombies that are created by the tombstone in a second */

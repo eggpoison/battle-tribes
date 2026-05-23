@@ -1,17 +1,12 @@
-import { Settings } from "battletribes-shared/settings";
-import Chunk from "./Chunk";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { TransformComponentArray } from "./components/TransformComponent";
-import { Box, boxIsCircular, cloneBox, HitboxFlag } from "battletribes-shared/boxes/boxes";
-import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "./world";
-import { surfaceLayer } from "./layers";
-import { Packet } from "../../shared/src/packets";
-import { Point, unitsToChunksClamped } from "../../shared/src/utils";
-import Layer from "./Layer";
-import { boxIsInRange } from "./ai-shared";
-import { addBoxDataToPacket, getBoxDataLength } from "./server/packet-hitboxes";
-import { createGrassStrandConfig } from "./entities/grass-strand";
-import { _bounds } from "../../shared/src/boxes/BaseBox";
+import { Box, boxIsCircular, cloneBox, HitboxFlag, Entity, EntityType, Settings, Packet, Point, unitsToChunksClamped, _bounds } from "battletribes-shared";
+import Chunk from "./Chunk.js";
+import { TransformComponentArray } from "./components/TransformComponent.js";
+import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "./world.js";
+import { surfaceLayer } from "./layers.js";
+import Layer from "./Layer.js";
+import { boxIsInRange } from "./ai-shared.js";
+import { addBoxDataToPacket, getBoxDataLength } from "./server/packet-hitboxes.js";
+import { createGrassStrandConfig } from "./entities/grass-strand.js";
 
 const enum Vars {
    GRASS_FULL_REGROW_TICKS = Settings.TICK_RATE * 120,

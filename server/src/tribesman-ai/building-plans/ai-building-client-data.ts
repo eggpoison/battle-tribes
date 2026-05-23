@@ -1,21 +1,14 @@
-import { SafetyNodeData, PotentialPlanSafetyData, WallSideNodeData, TribeWallData, WallConnectionData } from "battletribes-shared/ai-building-types";
-import { VisibleChunkBounds, RestrictedBuildingAreaData } from "battletribes-shared/client-server-types";
-import { EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { AIPlanType } from "battletribes-shared/utils";
-import Layer from "../../Layer";
-import Tribe from "../../Tribe";
-import { SafetyNode, getSafetyNode } from "../ai-building";
-import { buildingIsInfrastructure, getBuildingSafety } from "../ai-building-heuristics";
-import { TribeComponentArray } from "../../components/TribeComponent";
-import { VirtualStructure, VirtualWall } from "./TribeBuildingLayer";
-import { AICraftRecipePlan, AIGatherItemPlan, AIPlaceBuildingPlan, AITechCompletePlan, AITechItemPlan, AITechStudyPlan, AIUpgradeBuildingPlan, AIPlanAssignment } from "../tribesman-ai-planning";
-import { Packet } from "../../../../shared/src/packets";
-import { CRAFTING_RECIPES } from "../../../../shared/src/items/crafting-recipes";
-import PlayerClient from "../../server/PlayerClient";
-import { getTribes } from "../../world";
-import { AIAssignmentComponentArray } from "../../components/AIAssignmentComponent";
-import { _bounds } from "../../../../shared/src/boxes/BaseBox";
+import { SafetyNodeData, PotentialPlanSafetyData, WallSideNodeData, TribeWallData, WallConnectionData, VisibleChunkBounds, RestrictedBuildingAreaData, EntityType, Settings, AIPlanType, Packet, CRAFTING_RECIPES, _bounds } from "battletribes-shared";
+import Layer from "../../Layer.js";
+import Tribe from "../../Tribe.js";
+import { SafetyNode, getSafetyNode } from "../ai-building.js";
+import { buildingIsInfrastructure, getBuildingSafety } from "../ai-building-heuristics.js";
+import { TribeComponentArray } from "../../components/TribeComponent.js";
+import { VirtualStructure, VirtualWall } from "./TribeBuildingLayer.js";
+import { AICraftRecipePlan, AIGatherItemPlan, AIPlaceBuildingPlan, AITechCompletePlan, AITechItemPlan, AITechStudyPlan, AIUpgradeBuildingPlan, AIPlanAssignment } from "../tribesman-ai-planning.js";
+import PlayerClient from "../../server/PlayerClient.js";
+import { getTribes } from "../../world.js";
+import { AIAssignmentComponentArray } from "../../components/AIAssignmentComponent.js";
 
 // @Cleanup: should this be here?
 export function getVisibleTribes(playerLayer: Layer, chunkBounds: VisibleChunkBounds): ReadonlyArray<Tribe> {

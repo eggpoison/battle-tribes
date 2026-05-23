@@ -1,20 +1,13 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { AMMO_INFO_RECORD, ServerComponentType } from "battletribes-shared/components";
-import { EntityType, DamageSource, Entity } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
-import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
-import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { EntityConfig } from "../../components";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
-import { ItemType } from "battletribes-shared/items/items";
-import { ProjectileComponent, ProjectileComponentArray } from "../../components/ProjectileComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { destroyEntity, getEntityType, validateEntity } from "../../world";
-import Tribe from "../../Tribe";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, DamageSource, Entity, Point, ItemType, HitboxCollisionType, RectangularBox, AttackEffectiveness } from "battletribes-shared";
+import { HealthComponentArray, damageEntity } from "../../components/HealthComponent.js";
+import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent.js";
+import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent.js";
+import { ProjectileComponent, ProjectileComponentArray } from "../../components/ProjectileComponent.js";
+import { destroyEntity, getEntityType, validateEntity } from "../../world.js";
+import Tribe from "../../Tribe.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createBallistaRockConfig(position: Point, rotation: number, tribe: Tribe, creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

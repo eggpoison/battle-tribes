@@ -1,8 +1,6 @@
-import { TribesmanTitle } from "../../shared/src/titles";
-import { TribeType } from "../../shared/src/tribes";
-import { randItem } from "../../shared/src/utils";
-import { TribeMemberComponentArray } from "./components/TribeMemberComponent";
-import Tribe from "./Tribe";
+import { TribesmanTitle, TribeType, randItem } from "battletribes-shared";
+import { TribeMemberComponentArray } from "./components/TribeMemberComponent.js";
+import Tribe from "./Tribe.js";
 
 // @Incomplete: different names for workers and warriors
 

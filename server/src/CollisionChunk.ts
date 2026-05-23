@@ -1,4 +1,4 @@
-import { Entity } from "battletribes-shared/entities";
+import { Entity } from "battletribes-shared";
 
 export default class CollisionChunk {
    public readonly entities = new Array<Entity>();

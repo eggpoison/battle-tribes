@@ -1,18 +1,11 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { EntityConfig } from "../../components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { IceSpikesComponent } from "../../components/IceSpikesComponent";
-import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
-import { ItemType } from "../../../../shared/src/items/items";
-import { Hitbox } from "../../hitboxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, StatusEffect, Point, CircularBox, HitboxCollisionType, ItemType } from "battletribes-shared";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { IceSpikesComponent } from "../../components/IceSpikesComponent.js";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 registerEntityLootOnDeath(EntityType.iceSpikes, {
    itemType: ItemType.frostcicle,

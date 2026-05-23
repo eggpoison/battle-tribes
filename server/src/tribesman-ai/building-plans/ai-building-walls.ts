@@ -1,10 +1,8 @@
-import { EntityType } from "../../../../shared/src/entities";
-import { Settings } from "../../../../shared/src/settings";
-import { getAngleDiff, TileIndex } from "../../../../shared/src/utils";
-import Tribe from "../../Tribe";
-import { SafetyNode } from "../ai-building";
-import TribeBuildingLayer from "./TribeBuildingLayer";
-import { BuildingCandidate, buildingCandidateIsOnSafeNode, buildingCandidateIsValid, createBuildingCandidate } from "./ai-building-utils";
+import { EntityType, Settings, getAngleDiff, TileIndex } from "battletribes-shared";
+import Tribe from "../../Tribe.js";
+import { SafetyNode } from "../ai-building.js";
+import TribeBuildingLayer from "./TribeBuildingLayer.js";
+import { BuildingCandidate, buildingCandidateIsOnSafeNode, buildingCandidateIsValid, createBuildingCandidate } from "./ai-building-utils.js";
 
 /*
 This file is responsible for finding all potential wall candidates.

@@ -1,14 +1,11 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Hitbox } from "../hitboxes";
-import { getEntityType } from "../world";
-import { EntityType } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { StatusEffect } from "../../../shared/src/status-effects";
-import { HealthComponentArray, canDamageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { SpikesComponentArray } from "./SpikesComponent";
-import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
-import { getEntityRelationship, EntityRelationship } from "./TribeComponent";
+import { ServerComponentType, EntityType, Settings, StatusEffect } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { Hitbox } from "../hitboxes.js";
+import { getEntityType } from "../world.js";
+import { HealthComponentArray, canDamageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { SpikesComponentArray } from "./SpikesComponent.js";
+import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent.js";
+import { getEntityRelationship, EntityRelationship } from "./TribeComponent.js";
 
 export class PunjiSticksComponent {}
 

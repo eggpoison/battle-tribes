@@ -1,9 +1,5 @@
-import { BaseBox } from "../../../shared/src/boxes/BaseBox";
-import { Box, boxIsCircular } from "../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { RectangularBox } from "../../../shared/src/boxes/RectangularBox";
-import { Packet } from "../../../shared/src/packets";
-import { Hitbox } from "../hitboxes";
+import { BaseBox, Box, boxIsCircular, CircularBox, RectangularBox, Packet } from "battletribes-shared";
+import { Hitbox } from "../hitboxes.js";
 
 const addBaseBoxData = (packet: Packet, box: BaseBox): void => {
    packet.writeNumber(box.position.x);

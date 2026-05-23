@@ -1,4 +1,4 @@
-import { PathfindingSettings } from "../../shared/src/settings";
+import { PathfindingSettings } from "battletribes-shared";
 
 // @Cleanup: name. should just be pathfindingVars
 export const enum PathfindingServerVars {

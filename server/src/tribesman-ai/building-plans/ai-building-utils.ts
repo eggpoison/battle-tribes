@@ -1,18 +1,10 @@
-import { _bounds } from "../../../../shared/src/boxes/BaseBox";
-import { Box } from "../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { boxIsCollidingWithSubtile } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { Settings } from "../../../../shared/src/settings";
-import { StructureType } from "../../../../shared/src/structures";
-import { getSubtileIndex } from "../../../../shared/src/subtiles";
-import { getTileIndexIncludingEdges, Point, randAngle, randFloat } from "../../../../shared/src/utils";
-import { boxArraysAreColliding, boxHasCollisionWithBoxes } from "../../collision-detection";
-import { getConfigTransformComponent } from "../../components";
-import { createStructureConfig } from "../../structure-placement";
-import { getTribes } from "../../world";
-import { SafetyNode, addBoxesOccupiedNodes } from "../ai-building";
-import TribeBuildingLayer from "./TribeBuildingLayer";
+import { _bounds, Box, RectangularBox, boxIsCollidingWithSubtile, Settings, StructureType, getSubtileIndex, getTileIndexIncludingEdges, Point, randAngle, randFloat } from "battletribes-shared";
+import { boxArraysAreColliding, boxHasCollisionWithBoxes } from "../../collision-detection.js";
+import { getConfigTransformComponent } from "../../components.js";
+import { createStructureConfig } from "../../structure-placement.js";
+import { getTribes } from "../../world.js";
+import { SafetyNode, addBoxesOccupiedNodes } from "../ai-building.js";
+import TribeBuildingLayer from "./TribeBuildingLayer.js";
 
 const enum Vars {
    INITIAL_BUILDING_CANDIDATE_GENERATION_RANGE = 550

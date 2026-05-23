@@ -1,7 +1,5 @@
-import { ScarInfo, ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
+import { ScarInfo, ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class TribeWarriorComponent {
    public readonly scars: ReadonlyArray<ScarInfo>;

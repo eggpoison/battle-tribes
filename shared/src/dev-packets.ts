@@ -1,6 +1,6 @@
-import { ServerComponentType } from "./components";
-import { EntityType } from "./entities";
-import { InventoryName, ItemSlots } from "./items/items";
+import { ServerComponentType } from "./components.js";
+import { EntityType } from "./entities.js";
+import { InventoryName, ItemSlots } from "./items/items.js";
 
 // @Cleanup: KILL THIS
 const SUMMON_DATA_RECORD = {

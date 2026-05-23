@@ -1,13 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, DamageSource } from "battletribes-shared/entities";
-import { StatusEffect, STATUS_EFFECT_MODIFIERS } from "battletribes-shared/status-effects";
-import { customTickIntervalHasPassed } from "battletribes-shared/utils";
-import { ComponentArray } from "./ComponentArray";
-import { damageEntity } from "./HealthComponent";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent";
-import { Packet } from "battletribes-shared/packets";
-import { Hitbox, hitboxIsInRiver } from "../hitboxes";
+import { ServerComponentType, Entity, DamageSource, StatusEffect, STATUS_EFFECT_MODIFIERS, customTickIntervalHasPassed, AttackEffectiveness, Packet } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { damageEntity } from "./HealthComponent.js";
+import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent.js";
+import { Hitbox, hitboxIsInRiver } from "../hitboxes.js";
 
 export class StatusEffectComponent {
    public readonly activeStatusEffectTypes = new Array<StatusEffect>();

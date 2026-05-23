@@ -1,10 +1,8 @@
-import { Settings } from "battletribes-shared/settings";
-import { getDistanceFromPointToEntity } from "../ai-shared";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { TransformComponentArray } from "../components/TransformComponent";
-import { entityExists, getEntityType } from "../world";
-import { Point, randInt } from "../../../shared/src/utils";
-import { AIHelperComponentArray } from "../components/AIHelperComponent";
+import { Settings, Entity, EntityType, Point, randInt } from "battletribes-shared";
+import { getDistanceFromPointToEntity } from "../ai-shared.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import { entityExists, getEntityType } from "../world.js";
+import { AIHelperComponentArray } from "../components/AIHelperComponent.js";
 
 export class FollowAI {
    public readonly minFollowCooldownTicks: number;

@@ -1,26 +1,17 @@
-import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { PathfindingSettings, Settings } from "battletribes-shared/settings";
-import { distance, distBetweenPointAndRectangularBox, getTileX, getTileY, Point, TileIndex } from "battletribes-shared/utils";
-import PathfindingHeap from "./PathfindingHeap";
-import { TribeComponentArray } from "./components/TribeComponent";
-import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import { ProjectileComponentArray } from "./components/ProjectileComponent";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { boxIsCircular, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { getEntityLayer, getEntityType } from "./world";
-import PlayerClient, { PlayerClientVars } from "./server/PlayerClient";
-import { CollisionGroup, getEntityCollisionGroup } from "../../shared/src/collision-groups";
-import Layer from "./Layer";
-import { getPathfindingNode, PathfindingServerVars } from "./pathfinding-utils";
-import { TileType } from "../../shared/src/tiles";
-import { getTilesOfType } from "./census";
-import { surfaceLayer } from "./layers";
-import { TribeMemberComponentArray } from "./components/TribeMemberComponent";
-import { Hitbox } from "./hitboxes";
-import { getDistanceFromPointToEntity } from "./ai-shared";
-import { _bounds } from "../../shared/src/boxes/BaseBox";
+import { PathfindingNodeIndex, Entity, EntityType, PathfindingSettings, Settings, distance, distBetweenPointAndRectangularBox, getTileX, getTileY, Point, TileIndex, _bounds, TileType, CollisionGroup, getEntityCollisionGroup, CircularBox, boxIsCircular, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import PathfindingHeap from "./PathfindingHeap.js";
+import { TribeComponentArray } from "./components/TribeComponent.js";
+import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
+import { ProjectileComponentArray } from "./components/ProjectileComponent.js";
+import { getEntityLayer, getEntityType } from "./world.js";
+import PlayerClient, { PlayerClientVars } from "./server/PlayerClient.js";
+import Layer from "./Layer.js";
+import { getPathfindingNode, PathfindingServerVars } from "./pathfinding-utils.js";
+import { getTilesOfType } from "./census.js";
+import { surfaceLayer } from "./layers.js";
+import { TribeMemberComponentArray } from "./components/TribeMemberComponent.js";
+import { Hitbox } from "./hitboxes.js";
+import { getDistanceFromPointToEntity } from "./ai-shared.js";
 
 const enum Vars {
    NODE_ACCESSIBILITY_RESOLUTION = 3
@@ -772,11 +763,9 @@ export function getEntityPathfindingGroupID(entity: Entity): number {
    return 0;
 }
 
-export function updateEntityPathfindingNodeOccupance(entity: Entity): void {
+export function updateEntityPathfindingNodeOccupance(entity: Entity, transformComponent: TransformComponent): void {
    const pathfindingGroupID = getEntityPathfindingGroupID(entity);
    const layer = getEntityLayer(entity);
-
-   const transformComponent = TransformComponentArray.getComponent(entity);
 
    for (const node of transformComponent.occupiedPathfindingNodes) {
       markPathfindingNodeClearance(layer, node, pathfindingGroupID);
@@ -807,7 +796,7 @@ export function updateDynamicPathfindingNodes(): void {
       const transformComponent = activeComponents[i];
       if (transformComponent.pathfindingNodesAreDirty) {
          const entity = activeEntities[i];
-         updateEntityPathfindingNodeOccupance(entity);
+         updateEntityPathfindingNodeOccupance(entity, transformComponent);
    
          transformComponent.pathfindingNodesAreDirty = false;
       }

@@ -1,29 +1,19 @@
-import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { Entity, EntityType } from "../../../../shared/src/entities";
-import { ItemType } from "../../../../shared/src/items/items";
-import { Settings } from "../../../../shared/src/settings";
-import { StatusEffect } from "../../../../shared/src/status-effects";
-import { getTamingSkill, TamingSkillID } from "../../../../shared/src/taming";
-import { TileType } from "../../../../shared/src/tiles";
-import { getAbsAngleDiff, Point, polarVec2, rotatePoint } from "../../../../shared/src/utils";
-import WanderAI from "../../ai/WanderAI";
-import { EntityConfig, LightCreationInfo } from "../../components";
-import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { InguSerpentComponent } from "../../components/InguSerpentComponent";
-import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { TamingComponent } from "../../components/TamingComponent";
-import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
-import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../hitboxes";
-import Layer from "../../Layer";
-import { createLight } from "../../lights";
-import { registerEntityTamingSpec } from "../../taming-specs";
-import { tetherHitboxes } from "../../tethers";
-import { getEntityAgeTicks } from "../../world";
+import { HitboxCollisionType, HitboxFlag, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, ItemType, Settings, StatusEffect, getTamingSkill, TamingSkillID, TileType, getAbsAngleDiff, Point, polarVec2, rotatePoint } from "battletribes-shared";
+import WanderAI from "../../ai/WanderAI.js";
+import { EntityConfig, LightCreationInfo } from "../../components.js";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { InguSerpentComponent } from "../../components/InguSerpentComponent.js";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { TamingComponent } from "../../components/TamingComponent.js";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent.js";
+import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../hitboxes.js";
+import Layer from "../../Layer.js";
+import { createLight } from "../../lights.js";
+import { registerEntityTamingSpec } from "../../taming-specs.js";
+import { tetherHitboxes } from "../../tethers.js";
+import { getEntityAgeTicks } from "../../world.js";
 
 registerEntityLootOnDeath(EntityType.inguSerpent, {
    itemType: ItemType.inguSerpentTooth,

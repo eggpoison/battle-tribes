@@ -1,18 +1,15 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { InventoryName } from "../../../shared/src/items/items";
-import { AIPlanType, assert } from "../../../shared/src/utils";
-import { throwItem } from "../entities/tribes/tribe-member";
-import { goCraftItem, craftGoalIsComplete } from "../entities/tribes/tribesman-ai/tribesman-crafting";
-import { goResearchTech, techStudyIsComplete, useItemsInResearch } from "../entities/tribes/tribesman-ai/tribesman-researching";
-import { gatherItemPlanIsComplete, workOnGatherPlan } from "../entities/tribes/tribesman-ai/tribesman-gathering";
-import { goPlaceBuilding, goUpgradeBuilding } from "../entities/tribes/tribesman-ai/tribesman-structures";
-import Tribe from "../Tribe";
-import { checkForAvailableAssignment, AIPlanAssignment, createPersonalAssignment, getFirstAvailableAssignment, AIPlan } from "../tribesman-ai/tribesman-ai-planning";
-import { ComponentArray } from "./ComponentArray";
-import { getInventory, hasSpaceForRecipe, InventoryComponentArray } from "./InventoryComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { TribeComponentArray } from "./TribeComponent";
+import { ServerComponentType, Entity, InventoryName, AIPlanType, assert } from "battletribes-shared";
+import { throwItem } from "../entities/tribes/tribe-member.js";
+import { goCraftItem, craftGoalIsComplete } from "../entities/tribes/tribesman-ai/tribesman-crafting.js";
+import { goResearchTech, techStudyIsComplete, useItemsInResearch } from "../entities/tribes/tribesman-ai/tribesman-researching.js";
+import { gatherItemPlanIsComplete, workOnGatherPlan } from "../entities/tribes/tribesman-ai/tribesman-gathering.js";
+import { goPlaceBuilding, goUpgradeBuilding } from "../entities/tribes/tribesman-ai/tribesman-structures.js";
+import Tribe from "../Tribe.js";
+import { checkForAvailableAssignment, AIPlanAssignment, createPersonalAssignment, getFirstAvailableAssignment, AIPlan } from "../tribesman-ai/tribesman-ai-planning.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { getInventory, hasSpaceForRecipe, InventoryComponentArray } from "./InventoryComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { TribeComponentArray } from "./TribeComponent.js";
 
 export class AIAssignmentComponent {
    public wholeAssignment: AIPlanAssignment | null = null;

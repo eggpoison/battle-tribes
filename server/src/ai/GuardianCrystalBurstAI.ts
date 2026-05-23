@@ -1,14 +1,11 @@
-import { GuardianCrystalBurstStage } from "battletribes-shared/components";
-import { Entity } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { lerp, Point, polarVec2, randAngle, randFloat, randSign, UtilVar } from "battletribes-shared/utils";
-import { turnToPosition } from "../ai-shared";
-import { GuardianComponent, GuardianComponentArray, GuardianVars } from "../components/GuardianComponent";
-import { TransformComponentArray } from "../components/TransformComponent";
-import { createGuardianGemFragmentProjectileConfig } from "../entities/projectiles/guardian-gem-fragment-projectile";
-import { createEntity, getEntityLayer } from "../world";
-import { Hitbox, addHitboxAngularVelocity, addHitboxVelocity } from "../hitboxes";
-import { getConfigTransformComponent } from "../components";
+import { GuardianCrystalBurstStage, Entity, Settings, lerp, Point, polarVec2, randAngle, randFloat, randSign, UtilVar } from "battletribes-shared";
+import { turnToPosition } from "../ai-shared.js";
+import { GuardianComponent, GuardianComponentArray, GuardianVars } from "../components/GuardianComponent.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import { createGuardianGemFragmentProjectileConfig } from "../entities/projectiles/guardian-gem-fragment-projectile.js";
+import { createEntity, getEntityLayer } from "../world.js";
+import { Hitbox, addHitboxAngularVelocity, addHitboxVelocity } from "../hitboxes.js";
+import { getConfigTransformComponent } from "../components.js";
 
 const enum Vars {
    WINDUP_TIME_TICKS = (1.5 * Settings.TICK_RATE) | 0,

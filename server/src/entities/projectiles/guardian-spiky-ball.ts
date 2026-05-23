@@ -1,18 +1,12 @@
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { EntityConfig, LightCreationInfo } from "../../components";
-import { GuardianSpikyBallComponent } from "../../components/GuardianSpikyBallComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { ProjectileComponent } from "../../components/ProjectileComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
-import { createLight } from "../../lights";
+import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, StatusEffect } from "battletribes-shared";
+import { EntityConfig, LightCreationInfo } from "../../components.js";
+import { GuardianSpikyBallComponent } from "../../components/GuardianSpikyBallComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { ProjectileComponent } from "../../components/ProjectileComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import { createLight } from "../../lights.js";
 
 export function createGuardianSpikyBallConfig(position: Point, rotation: number,creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

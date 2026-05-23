@@ -1,19 +1,13 @@
-import { HitboxCollisionType, HitboxFlag } from "../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity-events";
-import { assert, customTickIntervalHasPassed, Point, polarVec2, randInt } from "../../../shared/src/utils";
-import { MIN_TONGUE_COOLDOWN_TICKS, MAX_TONGUE_COOLDOWN_TICKS } from "../ai/OkrenCombatAI";
-import { addHitboxVelocity, applyAcceleration, getHitboxTotalMassIncludingChildren, Hitbox, HitboxAngularTether, turnHitboxToAngle } from "../hitboxes";
-import { registerEntityTickEvent } from "../server/player-clients";
-import { destroyTether, tetherHitboxes } from "../tethers";
-import { entityExists, getEntityAgeTicks, getEntityType } from "../world";
-import { AIHelperComponentArray } from "./AIHelperComponent";
-import { ComponentArray } from "./ComponentArray";
-import { HealthComponentArray } from "./HealthComponent";
-import { addHitboxToEntity, TransformComponent, TransformComponentArray } from "./TransformComponent";
+import { HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType, assert, customTickIntervalHasPassed, Point, polarVec2, randInt } from "battletribes-shared";
+import { MIN_TONGUE_COOLDOWN_TICKS, MAX_TONGUE_COOLDOWN_TICKS } from "../ai/OkrenCombatAI.js";
+import { addHitboxVelocity, applyAcceleration, getHitboxTotalMassIncludingChildren, Hitbox, HitboxAngularTether, turnHitboxToAngle } from "../hitboxes.js";
+import { registerEntityTickEvent } from "../server/player-clients.js";
+import { destroyTether, tetherHitboxes } from "../tethers.js";
+import { entityExists, getEntityAgeTicks, getEntityType } from "../world.js";
+import { AIHelperComponentArray } from "./AIHelperComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray } from "./HealthComponent.js";
+import { addHitboxToEntity, TransformComponent, TransformComponentArray } from "./TransformComponent.js";
 
 export class OkrenTongueComponent {
    public target: Entity;

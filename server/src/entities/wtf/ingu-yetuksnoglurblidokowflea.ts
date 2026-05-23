@@ -1,26 +1,18 @@
-import { createNormalisedPivotPoint } from "../../../../shared/src/boxes/BaseBox";
-import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { Entity, EntityType } from "../../../../shared/src/entities";
-import { Settings } from "../../../../shared/src/settings";
-import { getAbsAngleDiff, lerp, Point, polarVec2, rotatePoint } from "../../../../shared/src/utils";
-import { ChildConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../../components";
-import { AIHelperComponent } from "../../components/AIHelperComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { InguYetuksnoglurblidokowfleaComponent } from "../../components/InguYetuksnoglurblidokowfleaComponent";
-import { OkrenClawGrowthStage } from "../../components/OkrenClawComponent";
-import { OkrenAgeStage } from "../../components/OkrenComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
-import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../hitboxes";
-import { tetherHitboxes } from "../../tethers";
-import { getEntityAgeTicks } from "../../world";
-import { createOkrenClawConfig } from "../desert/okren-claw";
-import { createTukmokTailClubConfig } from "../tundra/tukmok-tail-club";
-import { createInguYetuksnoglurblidokowfleaSeekerHeadConfig } from "./ingu-yetuksnoglurblidokowflea-seeker-head";
+import { createNormalisedPivotPoint, HitboxCollisionType, HitboxFlag, CircularBox, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, getAbsAngleDiff, lerp, Point, polarVec2, rotatePoint } from "battletribes-shared";
+import { ChildConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../../components.js";
+import { AIHelperComponent } from "../../components/AIHelperComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { InguYetuksnoglurblidokowfleaComponent } from "../../components/InguYetuksnoglurblidokowfleaComponent.js";
+import { OkrenClawGrowthStage } from "../../components/OkrenClawComponent.js";
+import { OkrenAgeStage } from "../../components/OkrenComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent.js";
+import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../hitboxes.js";
+import { tetherHitboxes } from "../../tethers.js";
+import { getEntityAgeTicks } from "../../world.js";
+import { createOkrenClawConfig } from "../desert/okren-claw.js";
+import { createTukmokTailClubConfig } from "../tundra/tukmok-tail-club.js";
+import { createInguYetuksnoglurblidokowfleaSeekerHeadConfig } from "./ingu-yetuksnoglurblidokowflea-seeker-head.js";
 
 const moveFunc = (inguYetu: Entity, pos: Point, accelerationMagnitude: number): void => {
    // @HACKKK!!!!

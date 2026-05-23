@@ -1,26 +1,21 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { ItemType } from "../../../shared/src/items/items";
-import { Settings } from "../../../shared/src/settings";
-import { assert, Point, randAngle } from "../../../shared/src/utils";
-import { CollisionVars, entitiesAreColliding } from "../collision-detection";
-import { Hitbox } from "../hitboxes";
-import { destroyEntity, entityExists, getEntityType } from "../world";
-import { AIHelperComponentArray } from "./AIHelperComponent";
-import { AttackingEntitiesComponentArray } from "./AttackingEntitiesComponent";
-import { ComponentArray } from "./ComponentArray";
-import { updateFollowAIComponent, followAISetFollowTarget, FollowAI, entityWantsToFollow } from "../ai/FollowAI";
-import { InventoryUseComponentArray } from "./InventoryUseComponent";
-import { ItemComponentArray } from "./ItemComponent";
-import { TamingComponentArray } from "./TamingComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity-events";
-import { EntityConfig, getConfigTransformComponent } from "../components";
-import { createGlurbBodySegmentConfig } from "../entities/mobs/glurb-body-segment";
-import { createGlurbTailSegmentConfig } from "../entities/mobs/glurb-tail-segment";
-import { registerEntityTickEvent } from "../server/player-clients";
-import { GlurbSegmentComponentArray } from "./GlurbSegmentComponent";
-import { tetherGlurbSegments } from "../entities/mobs/glurb";
+import { ServerComponentType, Entity, EntityType, ItemType, Settings, assert, Point, randAngle, EntityTickEvent, EntityTickEventType } from "battletribes-shared";
+import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
+import { Hitbox } from "../hitboxes.js";
+import { destroyEntity, entityExists, getEntityType } from "../world.js";
+import { AIHelperComponentArray } from "./AIHelperComponent.js";
+import { AttackingEntitiesComponentArray } from "./AttackingEntitiesComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { updateFollowAIComponent, followAISetFollowTarget, FollowAI, entityWantsToFollow } from "../ai/FollowAI.js";
+import { InventoryUseComponentArray } from "./InventoryUseComponent.js";
+import { ItemComponentArray } from "./ItemComponent.js";
+import { TamingComponentArray } from "./TamingComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { EntityConfig, getConfigTransformComponent } from "../components.js";
+import { createGlurbBodySegmentConfig } from "../entities/mobs/glurb-body-segment.js";
+import { createGlurbTailSegmentConfig } from "../entities/mobs/glurb-tail-segment.js";
+import { registerEntityTickEvent } from "../server/player-clients.js";
+import { GlurbSegmentComponentArray } from "./GlurbSegmentComponent.js";
+import { tetherGlurbSegments } from "../entities/mobs/glurb.js";
 
 const enum Vars {
    // @Temporary

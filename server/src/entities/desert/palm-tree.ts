@@ -1,18 +1,11 @@
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { ItemType } from "../../../../shared/src/items/items";
-import { StatusEffect } from "../../../../shared/src/status-effects";
-import { Point, randInt } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { HealthComponent } from "../../components/HealthComponent";
-import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
-import { PalmTreeComponent } from "../../components/PalmTreeComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, ItemType, StatusEffect, Point, randInt } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
+import { PalmTreeComponent } from "../../components/PalmTreeComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 registerEntityLootOnDeath(EntityType.palmTree, {
    itemType: ItemType.wood,

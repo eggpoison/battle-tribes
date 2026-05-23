@@ -1,18 +1,12 @@
-import { createAbsolutePivotPoint, createNormalisedPivotPoint } from "../../../../shared/src/boxes/BaseBox";
-import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { Point } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { EnergyStoreComponent } from "../../components/EnergyStoreComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { OkrenClawComponent, OkrenClawGrowthStage } from "../../components/OkrenClawComponent";
-import { OkrenAgeStage } from "../../components/OkrenComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
+import { createAbsolutePivotPoint, createNormalisedPivotPoint, HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { EnergyStoreComponent } from "../../components/EnergyStoreComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { OkrenClawComponent, OkrenClawGrowthStage } from "../../components/OkrenClawComponent.js";
+import { OkrenAgeStage } from "../../components/OkrenComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 const MAX_HEALTHS = [20, 25, 30, 35, 40];
 const ENERGIES = [400, 600, 800, 1000, 1200];

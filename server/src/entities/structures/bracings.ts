@@ -1,22 +1,15 @@
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { BuildingMaterial, ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { Settings } from "../../../../shared/src/settings";
-import { StatusEffect } from "../../../../shared/src/status-effects";
-import { Point } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { BracingsComponent } from "../../components/BracingsComponent";
-import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StructureComponent } from "../../components/StructureComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { TribeComponent } from "../../components/TribeComponent";
-import { Hitbox } from "../../hitboxes";
-import Tribe from "../../Tribe";
-import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { HitboxCollisionType, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, BuildingMaterial, EntityType, Settings, StatusEffect, Point } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { BracingsComponent } from "../../components/BracingsComponent.js";
+import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { StructureComponent } from "../../components/StructureComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { TribeComponent } from "../../components/TribeComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import Tribe from "../../Tribe.js";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 
 // @Memory
 const HEALTHS = [5, 20]; 

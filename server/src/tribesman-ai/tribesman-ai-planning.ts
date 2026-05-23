@@ -1,24 +1,18 @@
-import { BlueprintType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { CraftingRecipe, getItemRecipe } from "../../../shared/src/items/crafting-recipes";
-import { InventoryName, ITEM_INFO_RECORD, ItemType, NUM_ITEM_TYPES, PlaceableItemInfo, ToolType } from "../../../shared/src/items/items";
-import { StructureType } from "../../../shared/src/structures";
-import { getTechRequiredForItem, Tech } from "../../../shared/src/techs";
-import { AIPlanType, Point } from "../../../shared/src/utils";
-import { AIAssignmentComponentArray, clearAssignment } from "../components/AIAssignmentComponent";
-import { getInventory, InventoryComponentArray, inventoryHasItemType } from "../components/InventoryComponent";
-import { TribeComponentArray } from "../components/TribeComponent";
-import { entityHasWeapon } from "../entities/tribes/tribesman-ai/tribesman-combat-ai";
-import { getLightIntensityAtPos } from "../lights";
-import Tribe from "../Tribe";
-import { getEntityType } from "../world";
-import { updateBuildingLayer } from "./ai-building";
-import { areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-building-areas";
-import { tribeIsVulnerable } from "./ai-building-heuristics";
-import { findIdealWallPlacePosition, WallPlaceCandidate } from "./ai-building-plans";
-import { generateBuildingCandidate } from "./building-plans/ai-building-utils";
-import { generateLightPosition, structureLightLevelIsValid } from "./building-plans/ai-buildling-lights";
-import { createVirtualStructure, VirtualStructure, VirtualUnidentifiedBuilding } from "./building-plans/TribeBuildingLayer";
+import { BlueprintType, Entity, EntityType, CraftingRecipe, getItemRecipe, InventoryName, ITEM_INFO_RECORD, ItemType, NUM_ITEM_TYPES, PlaceableItemInfo, ToolType, StructureType, getTechRequiredForItem, Tech, AIPlanType, Point } from "battletribes-shared";
+import { AIAssignmentComponentArray, clearAssignment } from "../components/AIAssignmentComponent.js";
+import { getInventory, InventoryComponentArray, inventoryHasItemType } from "../components/InventoryComponent.js";
+import { TribeComponentArray } from "../components/TribeComponent.js";
+import { entityHasWeapon } from "../entities/tribes/tribesman-ai/tribesman-combat-ai.js";
+import { getLightIntensityAtPos } from "../lights.js";
+import Tribe from "../Tribe.js";
+import { getEntityType } from "../world.js";
+import { updateBuildingLayer } from "./ai-building.js";
+import { areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-building-areas.js";
+import { tribeIsVulnerable } from "./ai-building-heuristics.js";
+import { findIdealWallPlacePosition, WallPlaceCandidate } from "./ai-building-plans.js";
+import { generateBuildingCandidate } from "./building-plans/ai-building-utils.js";
+import { generateLightPosition, structureLightLevelIsValid } from "./building-plans/ai-buildling-lights.js";
+import { createVirtualStructure, VirtualStructure, VirtualUnidentifiedBuilding } from "./building-plans/TribeBuildingLayer.js";
 
 /*
 This file contains the logic for planning what AI tribes should do.

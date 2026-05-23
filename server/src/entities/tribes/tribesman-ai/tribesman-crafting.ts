@@ -1,21 +1,17 @@
-import { TribesmanAIType } from "battletribes-shared/components";
-import { Entity, EntityType, LimbAction } from "battletribes-shared/entities";
-import { Settings, PathfindingSettings } from "battletribes-shared/settings";
-import Tribe from "../../../Tribe";
-import { turnEntityToEntity } from "../../../ai-shared";
-import { InventoryComponentArray, craftRecipe, InventoryComponent, countItemType } from "../../../components/InventoryComponent";
-import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
-import { TribesmanPathType, TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
-import { PathfindFailureDefault } from "../../../pathfinding";
-import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
-import { CRAFTING_RECIPES } from "battletribes-shared/items/crafting-recipes";
-import { InventoryName } from "battletribes-shared/items/items";
-import { TransformComponentArray } from "../../../components/TransformComponent";
-import { getEntityLayer, getEntityType, getGameTicks } from "../../../world";
-import { AICraftRecipePlan, planToPlaceStructure } from "../../../tribesman-ai/tribesman-ai-planning";
-import { addAssignmentPart, AIAssignmentComponentArray } from "../../../components/AIAssignmentComponent";
-import { TribeComponentArray } from "../../../components/TribeComponent";
-import { clearPathfinding, pathfindTribesman } from "../../../components/AIPathfindingComponent";
+import { TribesmanAIType, Entity, EntityType, LimbAction, Settings, PathfindingSettings, CRAFTING_RECIPES, InventoryName } from "battletribes-shared";
+import Tribe from "../../../Tribe.js";
+import { turnEntityToEntity } from "../../../ai-shared.js";
+import { InventoryComponentArray, craftRecipe, InventoryComponent, countItemType } from "../../../components/InventoryComponent.js";
+import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent.js";
+import { TribesmanPathType, TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent.js";
+import { PathfindFailureDefault } from "../../../pathfinding.js";
+import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai.js";
+import { TransformComponentArray } from "../../../components/TransformComponent.js";
+import { getEntityLayer, getEntityType, getGameTicks } from "../../../world.js";
+import { AICraftRecipePlan, planToPlaceStructure } from "../../../tribesman-ai/tribesman-ai-planning.js";
+import { addAssignmentPart, AIAssignmentComponentArray } from "../../../components/AIAssignmentComponent.js";
+import { TribeComponentArray } from "../../../components/TribeComponent.js";
+import { clearPathfinding, pathfindTribesman } from "../../../components/AIPathfindingComponent.js";
 
 const getClosestCraftingStation = (tribesman: Entity, tribe: Tribe, craftingStation: EntityType): Entity | null => {
    // @Incomplete: Shouldn't just look for this tribe's crafting stations, if possible should check for visible non-tribe crafting stations.

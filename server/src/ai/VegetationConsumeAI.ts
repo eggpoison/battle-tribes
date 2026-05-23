@@ -1,18 +1,13 @@
-import { assertBoxIsCircular } from "../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { PathfindingSettings, Settings } from "../../../shared/src/settings";
-import { Point } from "../../../shared/src/utils";
-import { CollisionVars, entitiesAreColliding } from "../collision-detection";
-import { AIHelperComponent, AIType } from "../components/AIHelperComponent";
-import { EnergyStoreComponentArray } from "../components/EnergyStoreComponent";
-import { HealthComponentArray, damageEntity } from "../components/HealthComponent";
-import { addHungerEnergy } from "../components/EnergyStomachComponent";
-import { TransformComponentArray } from "../components/TransformComponent";
-import { turnHitboxToAngle } from "../hitboxes";
-import { convertEntityPathfindingGroupID, runPathfindingSingleLayer, getEntityFootprint, Path, PathfindOptions } from "../pathfinding";
-import { entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
+import { assertBoxIsCircular, CircularBox, Entity, EntityType, AttackEffectiveness, Point, PathfindingSettings, Settings } from "battletribes-shared";
+import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
+import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";
+import { EnergyStoreComponentArray } from "../components/EnergyStoreComponent.js";
+import { HealthComponentArray, damageEntity } from "../components/HealthComponent.js";
+import { addHungerEnergy } from "../components/EnergyStomachComponent.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import { turnHitboxToAngle } from "../hitboxes.js";
+import { convertEntityPathfindingGroupID, runPathfindingSingleLayer, getEntityFootprint, Path, PathfindOptions } from "../pathfinding.js";
+import { entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world.js";
 
 export class VegetationConsumeAI {
    public readonly acceleration: number;

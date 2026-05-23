@@ -1,14 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, DamageSource } from "battletribes-shared/entities";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { Packet } from "battletribes-shared/packets";
-import { Settings } from "battletribes-shared/settings";
-import { Point } from "battletribes-shared/utils";
-import { destroyEntity, getEntityAgeTicks } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { Hitbox } from "../hitboxes";
+import { ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, Point } from "battletribes-shared";
+import { destroyEntity, getEntityAgeTicks } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { Hitbox } from "../hitboxes.js";
 
 const enum Vars {
    TICKS_BEFORE_RECEED = (Settings.TICK_RATE * 0.2) | 0,

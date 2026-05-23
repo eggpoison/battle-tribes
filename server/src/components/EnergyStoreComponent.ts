@@ -1,5 +1,5 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { ComponentArray } from "./ComponentArray";
+import { ServerComponentType } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 /** Stores some intrinsic amount of energy that a creature has in their body. */
 export class EnergyStoreComponent {

@@ -1,14 +1,9 @@
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { Point } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { HealthComponent } from "../../components/HealthComponent";
-import { SnobeMoundComponent } from "../../components/SnobeMoundComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { SnobeMoundComponent } from "../../components/SnobeMoundComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createSnobeMoundConfig(position: Point, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();

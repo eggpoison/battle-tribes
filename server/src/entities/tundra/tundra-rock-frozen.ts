@@ -1,15 +1,10 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
-import { EntityType } from "battletribes-shared/entities";
-import { Point, randInt } from "battletribes-shared/utils";
-import { Box, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { EntityConfig } from "../../components";
-import { TransformComponent, addHitboxToTransformComponent } from "../../components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
-import { HealthComponent } from "../../components/HealthComponent";
-import { TundraRockFrozenComponent } from "../../components/TundraRockFrozenComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point, randInt, Box, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { TransformComponent, addHitboxToTransformComponent } from "../../components/TransformComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { TundraRockFrozenComponent } from "../../components/TundraRockFrozenComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 
 const HEALTHS = [15, 35, 55];
 const MASSES = [1, 2, 3];

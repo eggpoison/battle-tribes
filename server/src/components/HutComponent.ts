@@ -1,7 +1,5 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
+import { ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class HutComponent {
    public lastDoorSwingTicks = 0;

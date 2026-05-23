@@ -1,23 +1,16 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { EntityType, Entity } from "battletribes-shared/entities";
-import { getTileIndexIncludingEdges, Point, randInt, TileIndex } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
-import { HealthComponent } from "../../components/HealthComponent";
-import { YetiComponent, YetiComponentArray } from "../../components/YetiComponent";
-import Layer from "../../Layer";
-import { EntityConfig } from "../../components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HitboxCollisionType, HitboxFlag } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import WanderAI from "../../ai/WanderAI";
-import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { Biome } from "battletribes-shared/biomes";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent";
-import { ItemType } from "../../../../shared/src/items/items";
-import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
-import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, getTileIndexIncludingEdges, Point, randInt, TileIndex, Settings, ItemType, Biome, CircularBox, HitboxCollisionType, HitboxFlag } from "battletribes-shared";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { YetiComponent, YetiComponentArray } from "../../components/YetiComponent.js";
+import Layer from "../../Layer.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import WanderAI from "../../ai/WanderAI.js";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent.js";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
+import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export const YETI_SNOW_THROW_COOLDOWN = 7;
 

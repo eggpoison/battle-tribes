@@ -1,18 +1,13 @@
-import { HitboxFlag } from "../../../shared/src/boxes/boxes";
-import { ServerComponentType } from "../../../shared/src/components";
-import { DamageSource, Entity, EntityType } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Settings } from "../../../shared/src/settings";
-import { Point, polarVec2, randAngle } from "../../../shared/src/utils";
-import { createDustfleaConfig } from "../entities/desert/dustflea";
-import { Hitbox, applyAbsoluteKnockback } from "../hitboxes";
-import { createEntity, getEntityLayer, getEntityType } from "../world";
-import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent";
-import { ComponentArray } from "./ComponentArray";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { moveSeekerHeadToTarget } from "./InguYetuksnoglurblidokowfleaSeekerHeadComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { TribeMemberComponentArray } from "./TribeMemberComponent";
+import { HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randAngle } from "battletribes-shared";
+import { createDustfleaConfig } from "../entities/desert/dustflea.js";
+import { Hitbox, applyAbsoluteKnockback } from "../hitboxes.js";
+import { createEntity, getEntityLayer, getEntityType } from "../world.js";
+import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { moveSeekerHeadToTarget } from "./InguYetuksnoglurblidokowfleaSeekerHeadComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { TribeMemberComponentArray } from "./TribeMemberComponent.js";
 
 export class InguYetuksnoglurblidokowfleaComponent {}
 

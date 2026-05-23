@@ -1,10 +1,7 @@
-import { AMMO_INFO_RECORD, ServerComponentType, TURRET_AMMO_TYPES, TurretAmmoType, TurretEntityType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { InventoryName, ItemType } from "battletribes-shared/items/items";
-import { Packet } from "battletribes-shared/packets";
-import { Entity } from "../../../shared/src/entities";
-import { consumeItemTypeFromInventory, getFirstOccupiedItemSlotInInventory, getInventory, InventoryComponentArray } from "./InventoryComponent";
-import { getEntityType } from "../world";
+import { AMMO_INFO_RECORD, ServerComponentType, TURRET_AMMO_TYPES, TurretAmmoType, TurretEntityType, Entity, InventoryName, ItemType, Packet } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { consumeItemTypeFromInventory, getFirstOccupiedItemSlotInInventory, getInventory, InventoryComponentArray } from "./InventoryComponent.js";
+import { getEntityType } from "../world.js";
 
 export class AmmoBoxComponent {
    public ammoType: TurretAmmoType = ItemType.wood;

@@ -1,22 +1,16 @@
-import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { StatusEffect } from "../../../../shared/src/status-effects";
-import { Point } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { HealthComponent } from "../../components/HealthComponent";
-import { PunjiSticksComponent } from "../../components/PunjiSticksComponent";
-import { SpikesComponent } from "../../components/SpikesComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StructureComponent } from "../../components/StructureComponent";
-import { TransformComponent, addHitboxToTransformComponent } from "../../components/TransformComponent";
-import { TribeComponent } from "../../components/TribeComponent";
-import { Hitbox } from "../../hitboxes";
-import { StructureConnection } from "../../structure-placement";
-import Tribe from "../../Tribe";
-import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, StatusEffect, Point } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { PunjiSticksComponent } from "../../components/PunjiSticksComponent.js";
+import { SpikesComponent } from "../../components/SpikesComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { StructureComponent } from "../../components/StructureComponent.js";
+import { TransformComponent, addHitboxToTransformComponent } from "../../components/TransformComponent.js";
+import { TribeComponent } from "../../components/TribeComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import { StructureConnection } from "../../structure-placement.js";
+import Tribe from "../../Tribe.js";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 
 export function createWallPunjiSticksConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();

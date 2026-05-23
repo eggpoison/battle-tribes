@@ -1,27 +1,20 @@
-import { TribesmanAIType } from "battletribes-shared/components";
-import { Entity, EntityType, LimbAction } from "battletribes-shared/entities";
-import { Settings, PathfindingSettings } from "battletribes-shared/settings";
-import { Point, angleToPoint, assert, distance, polarVec2, secondsToTicks } from "battletribes-shared/utils";
-import { getDistanceFromPointToEntity, entityIsInLineOfSight, willStopAtDesiredDistance } from "../../../ai-shared";
-import { InventoryComponentArray, countItemType, getInventory } from "../../../components/InventoryComponent";
-import { getCurrentLimbState, getLimbConfiguration, InventoryUseComponentArray, limbHeldItemCanBeSwitched, setLimbActions } from "../../../components/InventoryUseComponent";
-import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
-import { PathfindFailureDefault } from "../../../pathfinding";
-import { calculateItemDamage, useItem } from "../tribe-member";
-import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
-import { EntityRelationship, getEntityRelationship, TribeComponentArray } from "../../../components/TribeComponent";
-import { calculateAttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { getBestHammerItemSlot, getTribesmanDesiredAttackRange, getHumanoidRadius, getTribesmanSlowAcceleration, getTribesmanAcceleration, clearTribesmanPath } from "./tribesman-ai-utils";
-import { attemptToRepairBuildings } from "./tribesman-structures";
-import { InventoryName, ITEM_TYPE_RECORD, getItemAttackInfo, Item, ITEM_INFO_RECORD, itemInfoIsBow, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, ARROW_RELEASE_WAIT_TIME_TICKS, ItemType, RETURN_FROM_BOW_USE_TIME_TICKS } from "battletribes-shared/items/items";
-import { TransformComponentArray } from "../../../components/TransformComponent";
-import { getEntityAgeTicks, getEntityLayer, getEntityType, getGameTicks } from "../../../world";
-import { beginSwing } from "../limb-use";
-import { TribeType } from "../../../../../shared/src/tribes";
-import { applyAccelerationFromGround, turnHitboxToAngle } from "../../../hitboxes";
-import { clearPathfinding, pathfindTribesman, pathToEntityExists } from "../../../components/AIPathfindingComponent";
-import { BLOCKING_LIMB_STATE, copyLimbState, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BLOCKING_LIMB_STATE } from "../../../../../shared/src/attack-patterns";
-import { AIHelperComponent, AIHelperComponentArray } from "../../../components/AIHelperComponent";
+import { TribesmanAIType, Entity, EntityType, LimbAction, Settings, PathfindingSettings, Point, angleToPoint, assert, distance, polarVec2, secondsToTicks, InventoryName, ITEM_TYPE_RECORD, getItemAttackInfo, Item, ITEM_INFO_RECORD, itemInfoIsBow, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, ARROW_RELEASE_WAIT_TIME_TICKS, ItemType, RETURN_FROM_BOW_USE_TIME_TICKS, BLOCKING_LIMB_STATE, copyLimbState, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BLOCKING_LIMB_STATE, TribeType, calculateAttackEffectiveness } from "battletribes-shared";
+import { getDistanceFromPointToEntity, entityIsInLineOfSight, willStopAtDesiredDistance } from "../../../ai-shared.js";
+import { InventoryComponentArray, countItemType, getInventory } from "../../../components/InventoryComponent.js";
+import { getCurrentLimbState, getLimbConfiguration, InventoryUseComponentArray, limbHeldItemCanBeSwitched, setLimbActions } from "../../../components/InventoryUseComponent.js";
+import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent.js";
+import { PathfindFailureDefault } from "../../../pathfinding.js";
+import { calculateItemDamage, useItem } from "../tribe-member.js";
+import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai.js";
+import { EntityRelationship, getEntityRelationship, TribeComponentArray } from "../../../components/TribeComponent.js";
+import { getBestHammerItemSlot, getTribesmanDesiredAttackRange, getHumanoidRadius, getTribesmanSlowAcceleration, getTribesmanAcceleration, clearTribesmanPath } from "./tribesman-ai-utils.js";
+import { attemptToRepairBuildings } from "./tribesman-structures.js";
+import { TransformComponentArray } from "../../../components/TransformComponent.js";
+import { getEntityAgeTicks, getEntityLayer, getEntityType, getGameTicks } from "../../../world.js";
+import { beginSwing } from "../limb-use.js";
+import { applyAccelerationFromGround, turnHitboxToAngle } from "../../../hitboxes.js";
+import { clearPathfinding, pathfindTribesman, pathToEntityExists } from "../../../components/AIPathfindingComponent.js";
+import { AIHelperComponent, AIHelperComponentArray } from "../../../components/AIHelperComponent.js";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TICK_RATE,

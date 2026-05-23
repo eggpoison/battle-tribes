@@ -1,9 +1,7 @@
-import { Entity, LimbAction } from "battletribes-shared/entities";
-import { getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ItemType } from "battletribes-shared/items/items";
-import { getHeldItem, getLimbConfiguration, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
-import { TransformComponentArray } from "../../components/TransformComponent";
-import { AttackVar, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES } from "battletribes-shared/attack-patterns";
-import { getHitboxVelocity } from "../../hitboxes";
+import { Entity, LimbAction, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ItemType, AttackVar, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES } from "battletribes-shared";
+import { getHeldItem, getLimbConfiguration, InventoryUseComponentArray } from "../../components/InventoryUseComponent.js";
+import { TransformComponentArray } from "../../components/TransformComponent.js";
+import { getHitboxVelocity } from "../../hitboxes.js";
 
 const enum Vars {
    DEFAULT_ATTACK_KNOCKBACK = 125

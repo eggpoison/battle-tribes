@@ -1,4 +1,4 @@
-import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
+import { PathfindingNodeIndex } from "battletribes-shared";
 
 interface HeapItem {
    readonly node: PathfindingNodeIndex;

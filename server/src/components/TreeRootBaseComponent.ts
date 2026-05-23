@@ -1,15 +1,11 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { getSubtileIndex } from "../../../shared/src/subtiles";
-import { getAbsAngleDiff, Point, randAngle, randFloat, randInt } from "../../../shared/src/utils";
-import { createTreeRootBaseConfig } from "../entities/resources/tree-root-base";
-import { createTreeRootSegmentConfig } from "../entities/resources/tree-root-segment";
-import { Hitbox } from "../hitboxes";
-import Layer from "../Layer";
-import { createEntity, destroyEntity, getEntityLayer } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { ServerComponentType, Entity, Settings, getSubtileIndex, getAbsAngleDiff, Point, randAngle, randFloat, randInt } from "battletribes-shared";
+import { createTreeRootBaseConfig } from "../entities/resources/tree-root-base.js";
+import { createTreeRootSegmentConfig } from "../entities/resources/tree-root-segment.js";
+import { Hitbox } from "../hitboxes.js";
+import Layer from "../Layer.js";
+import { createEntity, destroyEntity, getEntityLayer } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 export class TreeRootBaseComponent {
    readonly segments = new Array<Entity>();

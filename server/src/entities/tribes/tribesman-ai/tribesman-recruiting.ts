@@ -1,10 +1,9 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
-import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "../../../components/TribeComponent";
-import { TribeMemberComponentArray } from "../../../components/TribeMemberComponent";
-import { getItemGiftAppreciation, TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
-import { InventoryName } from "battletribes-shared/items/items";
-import { getEntityType } from "../../../world";
+import { Entity, EntityType, InventoryName } from "battletribes-shared";
+import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent.js";
+import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "../../../components/TribeComponent.js";
+import { TribeMemberComponentArray } from "../../../components/TribeMemberComponent.js";
+import { getItemGiftAppreciation, TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent.js";
+import { getEntityType } from "../../../world.js";
 
 export function getGiftableItemSlot(tribesman: Entity): number {
    // @Incomplete: don't gift items useful to the tribesman

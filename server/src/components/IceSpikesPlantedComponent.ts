@@ -1,14 +1,9 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { Settings } from "../../../shared/src/settings";
-import { randInt } from "../../../shared/src/utils";
-import { Hitbox } from "../hitboxes";
-import { getEntityLayer } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { createIceShardExplosion } from "./IceSpikesComponent";
-import { getPlantGrowthSpeed } from "./PlanterBoxComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { ServerComponentType, Entity, Packet, Settings, randInt } from "battletribes-shared";
+import { getEntityLayer } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { createIceShardExplosion } from "./IceSpikesComponent.js";
+import { getPlantGrowthSpeed } from "./PlanterBoxComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 const enum Vars {
    GROWTH_TIME_TICKS = 120 * Settings.TICK_RATE

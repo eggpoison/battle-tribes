@@ -1,7 +1,5 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { ComponentArray } from "./ComponentArray";
+import { ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class TundraRockFrozenComponent {
    public readonly variant: number;

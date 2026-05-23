@@ -1,4 +1,4 @@
-import { Inventory, ItemType } from "./items";
+import { Inventory, ItemType } from "./items.js";
 
 interface ItemTallyEntry {
    readonly itemType: ItemType;

@@ -1,13 +1,10 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { lerp } from "battletribes-shared/utils";
-import { ThrowingProjectileComponentArray } from "./ThrowingProjectileComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { destroyEntity, entityExists, getEntityAgeTicks } from "../world";
-import { CollisionVars, entitiesAreColliding } from "../collision-detection";
-import { addHitboxAngularAcceleration, Hitbox, turnHitboxToAngle } from "../hitboxes";
+import { lerp, Settings, Entity, ServerComponentType } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { ThrowingProjectileComponentArray } from "./ThrowingProjectileComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { destroyEntity, entityExists, getEntityAgeTicks } from "../world.js";
+import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
+import { addHitboxAngularAcceleration, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
 
 const enum Vars {
    RETURN_TIME_TICKS = 1 * Settings.TICK_RATE

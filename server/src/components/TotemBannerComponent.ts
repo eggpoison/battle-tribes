@@ -1,8 +1,5 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, TribeTotemBanner } from "battletribes-shared/entities";
-import { randInt } from "battletribes-shared/utils";
-import { ComponentArray } from "./ComponentArray";
-import { Packet } from "battletribes-shared/packets";
+import { ServerComponentType, Entity, TribeTotemBanner, randInt, Packet } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 export interface TotemBannerPosition {
    readonly layer: number;

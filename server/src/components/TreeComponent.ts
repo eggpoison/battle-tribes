@@ -1,10 +1,6 @@
-import { Entity, TreeSize } from "battletribes-shared/entities";
-import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType } from "battletribes-shared/components";
-import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "battletribes-shared/packets";
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { Point } from "../../../shared/src/utils";
+import { Entity, TreeSize, ServerComponentType, Packet, CircularBox, Point } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 const TREE_TRUNK_RADII: Record<TreeSize, number> = {
    [TreeSize.small]: 15,

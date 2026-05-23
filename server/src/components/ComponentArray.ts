@@ -1,12 +1,9 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { DamageSource, Entity, EntityType } from "battletribes-shared/entities";
-import { EntityConfig } from "../components";
-import { Packet } from "battletribes-shared/packets";
-import { assert, Point } from "battletribes-shared/utils";
-import Layer from "../Layer";
-import { HitboxCollisionPair } from "../collision-detection";
-import { Hitbox } from "../hitboxes";
-import { getEntityType } from "../world";
+import { ServerComponentType, DamageSource, Entity, EntityType, Packet, assert, Point } from "battletribes-shared";
+import { EntityConfig } from "../components.js";
+import Layer from "../Layer.js";
+import { HitboxCollisionPair } from "../collision-detection.js";
+import { Hitbox } from "../hitboxes.js";
+import { getEntityType } from "../world.js";
 
 const enum ComponentArrayPriority {
    low,

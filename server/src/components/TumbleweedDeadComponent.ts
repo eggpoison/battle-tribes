@@ -1,13 +1,9 @@
-import { Biome } from "../../../shared/src/biomes";
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { Point } from "../../../shared/src/utils";
-import { applyAccelerationFromGround, getHitboxTile, Hitbox } from "../hitboxes";
-import { getWindVector } from "../wind";
-import { destroyEntity, getEntityLayer, getEntityType } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { Biome, ServerComponentType, Entity, EntityType, Settings, Point } from "battletribes-shared";
+import { applyAccelerationFromGround, getHitboxTile, Hitbox } from "../hitboxes.js";
+import { getWindVector } from "../wind.js";
+import { destroyEntity, getEntityLayer, getEntityType } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 export class TumbleweedDeadComponent {
    public isRooted = true;

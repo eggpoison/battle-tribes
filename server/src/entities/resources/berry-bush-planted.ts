@@ -1,21 +1,13 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { PlantedComponent } from "../../components/PlantedComponent";
-import { EntityConfig } from "../../components";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { BerryBushPlantedComponent, BerryBushPlantedComponentArray } from "../../components/BerryBushPlantedComponent";
-import { LootComponent, registerEntityLootOnHit } from "../../components/LootComponent";
-import { ItemType } from "../../../../shared/src/items/items";
-import { registerDirtyEntity } from "../../server/player-clients";
-import { Hitbox } from "../../hitboxes";
-import { Settings } from "../../../../shared/src/settings";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, StatusEffect, HitboxCollisionType, CircularBox, ItemType, Settings } from "battletribes-shared";
+import { PlantedComponent } from "../../components/PlantedComponent.js";
+import { EntityConfig } from "../../components.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { BerryBushPlantedComponent, BerryBushPlantedComponentArray } from "../../components/BerryBushPlantedComponent.js";
+import { LootComponent, registerEntityLootOnHit } from "../../components/LootComponent.js";
+import { registerDirtyEntity } from "../../server/player-clients.js";
+import { Hitbox } from "../../hitboxes.js";
 
 registerEntityLootOnHit(EntityType.berryBushPlanted, {
    itemType: ItemType.berry,

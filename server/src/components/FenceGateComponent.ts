@@ -1,10 +1,7 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { DoorToggleType, Entity } from "battletribes-shared/entities";
-import { ComponentArray } from "./ComponentArray";
-import { getHitboxByFlag, TransformComponentArray } from "./TransformComponent";
-import { HitboxCollisionType, HitboxFlag } from "battletribes-shared/boxes/boxes";
-import { setHitboxRelativeAngle } from "../hitboxes";
-import { Settings } from "../../../shared/src/settings";
+import { ServerComponentType, DoorToggleType, Entity, HitboxCollisionType, HitboxFlag, Settings } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { getHitboxByFlag, TransformComponentArray } from "./TransformComponent.js";
+import { setHitboxRelativeAngle } from "../hitboxes.js";
 
 const enum Vars {
    DOOR_SWING_SPEED = 5 * Settings.DT_S

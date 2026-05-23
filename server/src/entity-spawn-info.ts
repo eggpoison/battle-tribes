@@ -1,10 +1,6 @@
-import { Biome } from "../../shared/src/biomes";
-import { Entity, EntityType } from "../../shared/src/entities";
-import { Settings } from "../../shared/src/settings";
-import { TileType } from "../../shared/src/tiles";
-import { assert, getTileIndexIncludingEdges, Point } from "../../shared/src/utils";
-import { EntityConfig } from "./components";
-import Layer from "./Layer";
+import { Biome, Entity, EntityType, Settings, TileType, assert, getTileIndexIncludingEdges, Point } from "battletribes-shared";
+import { EntityConfig } from "./components.js";
+import Layer from "./Layer.js";
 
 // @Cleanup: should probably combine this file with entity-spawning...
 

@@ -1,5 +1,5 @@
-import { Settings } from "./settings";
-import { lerp } from "./utils";
+import { Settings } from "./settings.js";
+import { lerp } from "./utils.js";
 
 export enum AttackVar {
    MAX_EXTRA_ATTACK_RANGE = 24,

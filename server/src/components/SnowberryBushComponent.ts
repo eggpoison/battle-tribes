@@ -1,7 +1,5 @@
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType } from "battletribes-shared/components";
+import { Entity, Packet, ServerComponentType } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class SnowberryBushComponent {
    public readonly isFertile: boolean;

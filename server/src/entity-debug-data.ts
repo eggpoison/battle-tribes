@@ -1,21 +1,16 @@
-import { CircleDebugData, EntityDebugData, LineDebugData, PathData, TileHighlightData } from "battletribes-shared/client-server-types";
-import { TribesmanAIType } from "battletribes-shared/components";
-import { Entity, EntityTypeString } from "battletribes-shared/entities";
-import { TRIBESMAN_COMMUNICATION_RANGE } from "./entities/tribes/tribesman-ai/tribesman-ai";
-import { TribeComponentArray } from "./components/TribeComponent";
-import { TribesmanAIComponentArray } from "./components/TribesmanAIComponent";
-import { ItemTypeString } from "battletribes-shared/items/items";
-import { getStringLengthBytes, Packet } from "battletribes-shared/packets";
-import { getEntityType } from "./world";
-import { AIHelperComponentArray } from "./components/AIHelperComponent";
-import { AIPlan } from "./tribesman-ai/tribesman-ai-planning";
-import { AIPlanType, getTileX, getTileY } from "../../shared/src/utils";
-import { AIAssignmentComponentArray } from "./components/AIAssignmentComponent";
-import { YetiComponentArray } from "./components/YetiComponent";
-import { EnergyStoreComponentArray } from "./components/EnergyStoreComponent";
-import { EnergyStomachComponentArray } from "./components/EnergyStomachComponent";
-import { OkrenComponentArray } from "./components/OkrenComponent";
-import { AIPathfindingComponentArray } from "./components/AIPathfindingComponent";
+import { CircleDebugData, EntityDebugData, LineDebugData, PathData, TileHighlightData, TribesmanAIType, Entity, EntityTypeString, ItemTypeString, getStringLengthBytes, Packet, AIPlanType, getTileX, getTileY } from "battletribes-shared";
+import { TRIBESMAN_COMMUNICATION_RANGE } from "./entities/tribes/tribesman-ai/tribesman-ai.js";
+import { TribeComponentArray } from "./components/TribeComponent.js";
+import { TribesmanAIComponentArray } from "./components/TribesmanAIComponent.js";
+import { getEntityType } from "./world.js";
+import { AIHelperComponentArray } from "./components/AIHelperComponent.js";
+import { AIPlan } from "./tribesman-ai/tribesman-ai-planning.js";
+import { AIAssignmentComponentArray } from "./components/AIAssignmentComponent.js";
+import { YetiComponentArray } from "./components/YetiComponent.js";
+import { EnergyStoreComponentArray } from "./components/EnergyStoreComponent.js";
+import { EnergyStomachComponentArray } from "./components/EnergyStomachComponent.js";
+import { OkrenComponentArray } from "./components/OkrenComponent.js";
+import { AIPathfindingComponentArray } from "./components/AIPathfindingComponent.js";
 
 const getPlanDebugString = (plan: AIPlan): string => {
    switch (plan.type) {

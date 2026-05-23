@@ -1,29 +1,19 @@
-import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
-import { Settings } from "battletribes-shared/settings";
-import { getEntityCollisionGroup } from "battletribes-shared/collision-groups";
-import { _point, angleToPoint, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin } from "battletribes-shared/utils";
-import Layer from "../Layer";
-import Chunk from "../Chunk";
-import { Entity, EntityType, EntityTypeString } from "battletribes-shared/entities";
-import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType } from "battletribes-shared/components";
-import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent";
-import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding";
-import { resolveWallCollision } from "../collision-resolution";
-import { Packet } from "battletribes-shared/packets";
-import { Box, boxIsCircular, getBoxArea, HitboxFlag, updateBox } from "battletribes-shared/boxes/boxes";
-import { destroyEntity, entityExists, getEntityLayer, getEntityType, setEntityLayer } from "../world";
-import { removeEntityLights, updateEntityLights } from "../lights";
-import { registerDirtyEntity } from "../server/player-clients";
-import { surfaceLayer, undergroundLayer } from "../layers";
-import { addHitboxDataToPacket, getHitboxDataLength } from "../server/packet-hitboxes";
-import { addHitboxAngularAcceleration, applyAcceleration, applyForce, getHitboxAngularVelocity, getHitboxTile, getHitboxTotalMassIncludingChildren, getHitboxVelocity, getRootHitbox, Hitbox, hitboxIsInRiver, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../hitboxes";
-import { EntityConfig, getConfigTransformComponent } from "../components";
-import { addEntityTethersToWorld, destroyTether as destroyTether } from "../tethers";
-import { TILE_PHYSICS_INFO_RECORD, TileType } from "../../../shared/src/tiles";
-import { getSubtileIndex } from "../../../shared/src/subtiles";
-import { CarrySlot, RideableComponentArray } from "./RideableComponent";
-import { _bounds } from "../../../shared/src/boxes/BaseBox";
+import { PathfindingNodeIndex, Settings, getEntityCollisionGroup, _point, angleToPoint, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin, Entity, EntityType, EntityTypeString, ServerComponentType, Packet, Box, boxIsCircular, getBoxArea, HitboxFlag, updateBox, TILE_PHYSICS_INFO_RECORD, TileType, getSubtileIndex, _bounds } from "battletribes-shared";
+import Layer from "../Layer.js";
+import Chunk from "../Chunk.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent.js";
+import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding.js";
+import { resolveWallCollision } from "../collision-resolution.js";
+import { destroyEntity, entityExists, getEntityLayer, getEntityType, setEntityLayer } from "../world.js";
+import { removeEntityLights, updateEntityLights } from "../lights.js";
+import { registerDirtyEntity } from "../server/player-clients.js";
+import { surfaceLayer, undergroundLayer } from "../layers.js";
+import { addHitboxDataToPacket, getHitboxDataLength } from "../server/packet-hitboxes.js";
+import { addHitboxAngularAcceleration, applyAcceleration, applyForce, getHitboxAngularVelocity, getHitboxTile, getHitboxTotalMassIncludingChildren, getHitboxVelocity, getRootHitbox, Hitbox, hitboxIsInRiver, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../hitboxes.js";
+import { EntityConfig, getConfigTransformComponent } from "../components.js";
+import { addEntityTethersToWorld, destroyTether as destroyTether } from "../tethers.js";
+import { CarrySlot, RideableComponentArray } from "./RideableComponent.js";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which could take advantage of that extraction?)
 
@@ -745,7 +735,7 @@ function onJoin(entity: Entity): void {
 
    // @Cleanup: should i make a separate PathfindingOccupancyComponent?
    if (entityCanBlockPathfinding(entity)) {
-      updateEntityPathfindingNodeOccupance(entity);
+      updateEntityPathfindingNodeOccupance(entity, transformComponent);
    }
 
    updateEntityLights(entity);

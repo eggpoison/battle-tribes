@@ -1,13 +1,8 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { EntityConfig } from "../../components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { IceShardComponent } from "../../components/IceShardComponent";
-import { Hitbox } from "../../hitboxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { IceShardComponent } from "../../components/IceShardComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createIceShardConfig(position: Point, rotation: number): EntityConfig {
    const transformComponent = new TransformComponent();

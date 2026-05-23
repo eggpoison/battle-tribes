@@ -1,11 +1,7 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { TransformComponentArray } from "./TransformComponent";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { destroyEntity } from "../world";
-import { Hitbox } from "../hitboxes";
+import { ServerComponentType, Entity, Settings, CircularBox } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { destroyEntity } from "../world.js";
 
 export class SpitPoisonAreaComponent {}
 

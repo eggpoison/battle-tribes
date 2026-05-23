@@ -1,21 +1,14 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { Tech } from "battletribes-shared/techs";
-import { TribesmanTitle } from "battletribes-shared/titles";
-import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "battletribes-shared/research";
-import { ComponentArray } from "./ComponentArray";
-import { InventoryUseComponentArray } from "./InventoryUseComponent";
-import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
-import { TribeMemberComponentArray } from "./TribeMemberComponent";
-import { TribeComponentArray } from "./TribeComponent";
-import { TribesmanAIComponentArray } from "./TribesmanAIComponent";
-import { InventoryName } from "battletribes-shared/items/items";
-import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "battletribes-shared/packets";
-import { getEntityType, getGameTicks } from "../world";
-import { hasTitle, awardTitle } from "./TribesmanComponent";
-import { Hitbox } from "../hitboxes";
+import { ServerComponentType, Entity, EntityType, Settings, Tech, TribesmanTitle, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize, InventoryName, Packet } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { InventoryUseComponentArray } from "./InventoryUseComponent.js";
+import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation.js";
+import { TribeMemberComponentArray } from "./TribeMemberComponent.js";
+import { TribeComponentArray } from "./TribeComponent.js";
+import { TribesmanAIComponentArray } from "./TribesmanAIComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { getEntityType, getGameTicks } from "../world.js";
+import { hasTitle, awardTitle } from "./TribesmanComponent.js";
+import { Hitbox } from "../hitboxes.js";
 
 const ORB_COMPLETE_TICKS = Math.floor(RESEARCH_ORB_COMPLETE_TIME * Settings.TICK_RATE);
 

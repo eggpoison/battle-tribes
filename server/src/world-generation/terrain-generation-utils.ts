@@ -1,10 +1,5 @@
-import { SubtileType, TileType } from "battletribes-shared/tiles";
-import { getSubtileIndex } from "../../../shared/src/subtiles";
-import { Biome } from "../../../shared/src/biomes";
-import { assert, getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, tileIsInWorld } from "../../../shared/src/utils";
-import Layer from "../Layer";
-import { Settings } from "../../../shared/src/settings";
-import { EntityType } from "../../../shared/src/entities";
+import { SubtileType, TileType, getSubtileIndex, Biome, getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, tileIsInWorld, Settings, EntityType } from "battletribes-shared";
+import Layer from "../Layer.js";
 
 export interface LocalBiome {
    readonly id: number;
@@ -33,19 +28,19 @@ let idCounter = 0;
 
 // @Cleanup: location? should these be in the layer file as it might be used outside of terrain generation (during the game loop)?
 
-export function setWallInSubtiles(subtileTypes: Float32Array, tileX: number, tileY: number, subtileType: SubtileType): void {
+export function setWallInSubtiles(subtileTypes: Uint8Array, tileX: number, tileY: number, subtileType: SubtileType): void {
    const startSubtileX = tileX * 4;
    const startSubtileY = tileY * 4;
    
-   for (let subtileX = startSubtileX; subtileX < startSubtileX + 4; subtileX++) {
-      for (let subtileY = startSubtileY; subtileY < startSubtileY + 4; subtileY++) {
+   for (let subtileY = startSubtileY; subtileY < startSubtileY + 4; subtileY++) {
+      for (let subtileX = startSubtileX; subtileX < startSubtileX + 4; subtileX++) {
          const idx = getSubtileIndex(subtileX, subtileY);
          subtileTypes[idx] = subtileType;
       }
    }
 }
 
-export function tileHasWallSubtile(subtileTypes: Float32Array, tileX: number, tileY: number): boolean {
+export function tileHasWallSubtile(subtileTypes: Uint8Array, tileX: number, tileY: number): boolean {
    const startSubtileX = tileX * 4;
    const startSubtileY = tileY * 4;
    

@@ -1,16 +1,11 @@
-import { ServerComponentType, TribesmanAIType } from "battletribes-shared/components";
-import { Settings } from "battletribes-shared/settings";
-import { ComponentArray } from "./ComponentArray";
-import Tribe from "../Tribe";
-import { EntityRelationship, TribeComponentArray } from "./TribeComponent";
-import { CRAFTING_RECIPES } from "battletribes-shared/items/crafting-recipes";
-import { ItemType } from "battletribes-shared/items/items";
-import { Entity } from "battletribes-shared/entities";
-import { tickTribesman } from "../entities/tribes/tribesman-ai/tribesman-ai";
-import { Packet } from "battletribes-shared/packets";
-import { entityExists, getGameTicks } from "../world";
-import { HutComponentArray } from "./HutComponent";
-import { TribesmanComponentArray } from "./TribesmanComponent";
+import { ServerComponentType, TribesmanAIType, Settings, CRAFTING_RECIPES, ItemType, Entity, Packet } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import Tribe from "../Tribe.js";
+import { EntityRelationship, TribeComponentArray } from "./TribeComponent.js";
+import { tickTribesman } from "../entities/tribes/tribesman-ai/tribesman-ai.js";
+import { entityExists, getGameTicks } from "../world.js";
+import { HutComponentArray } from "./HutComponent.js";
+import { TribesmanComponentArray } from "./TribesmanComponent.js";
 
 // @Incomplete: periodically remove dead entities from the relations object
 // @Incomplete: only keep track of tribesman relations

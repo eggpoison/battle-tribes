@@ -1,22 +1,15 @@
-import { EntityType } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../components";
-import Tribe from "../../Tribe";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StructureComponent } from "../../components/StructureComponent";
-import { TribeComponent } from "../../components/TribeComponent";
-import { FenceGateComponent } from "../../components/FenceGateComponent";
-import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
-import { Point, rotatePoint } from "../../../../shared/src/utils";
-import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { Hitbox } from "../../hitboxes";
-import { StructureConnection } from "../../structure-placement";
-import { createNormalisedPivotPoint } from "../../../../shared/src/boxes/BaseBox";
+import { EntityType, StatusEffect, Point, rotatePoint, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, createNormalisedPivotPoint, HitboxCollisionType, HitboxFlag } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import Tribe from "../../Tribe.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { StructureComponent } from "../../components/StructureComponent.js";
+import { TribeComponent } from "../../components/TribeComponent.js";
+import { FenceGateComponent } from "../../components/FenceGateComponent.js";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
+import { Hitbox } from "../../hitboxes.js";
+import { StructureConnection } from "../../structure-placement.js";
 
 export function createFenceGateConfig(position: Point, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();

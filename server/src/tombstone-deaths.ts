@@ -1,5 +1,5 @@
-import { DeathInfo, Entity, DamageSource } from "battletribes-shared/entities";
-import { PlayerComponentArray } from "./components/PlayerComponent";
+import { DeathInfo, Entity, DamageSource } from "battletribes-shared";
+import { PlayerComponentArray } from "./components/PlayerComponent.js";
 
 // @Cleanup: don't use singletons!
 abstract class TombstoneDeathManager {

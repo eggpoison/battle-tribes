@@ -1,18 +1,12 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { Entity, EntityType, DamageSource } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
-import { ThrowingProjectileComponent, ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
-import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../components";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { destroyEntity, entityExists } from "../../world";
-import { SpearProjectileComponent } from "../../components/SpearProjectileComponent";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, DamageSource, Point, AttackEffectiveness, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { HealthComponentArray, damageEntity } from "../../components/HealthComponent.js";
+import { ThrowingProjectileComponent, ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent.js";
+import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent.js";
+import { destroyEntity, entityExists } from "../../world.js";
+import { SpearProjectileComponent } from "../../components/SpearProjectileComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createSpearProjectileConfig(position: Point, rotation: number, tribeMember: Entity, itemID: number | null): EntityConfig {
    const transformComponent = new TransformComponent();

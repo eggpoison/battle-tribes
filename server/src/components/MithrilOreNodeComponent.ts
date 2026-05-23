@@ -1,8 +1,6 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { destroyEntity, entityExists } from "../world";
-import { ComponentArray } from "./ComponentArray";
+import { ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { destroyEntity, entityExists } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class MithrilOreNodeComponent {
    public readonly size: number;

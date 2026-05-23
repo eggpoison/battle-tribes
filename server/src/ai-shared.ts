@@ -1,16 +1,10 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
-import { angle, curveWeight, Point, lerp, rotatePointAroundPoint, distance, distBetweenPointAndRectangle, TileIndex, getTileIndexIncludingEdges, polarVec2, clamp, _point } from "battletribes-shared/utils";
-import Layer from "./Layer";
-import { getEntityPathfindingGroupID } from "./pathfinding";
-import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import { ProjectileComponentArray } from "./components/ProjectileComponent";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { Box, boxIsCircular } from "battletribes-shared/boxes/boxes";
-import { getEntityLayer, getEntityType } from "./world";
-import { addHitboxAngularAcceleration, applyAccelerationFromGround, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "./hitboxes";
+import { TileType, Settings, Entity, EntityType, CircularBox, RectangularBox, Box, boxIsCircular, angle, curveWeight, Point, lerp, rotatePointAroundPoint, distance, distBetweenPointAndRectangle, TileIndex, getTileIndexIncludingEdges, polarVec2, clamp, _point } from "battletribes-shared";
+import Layer from "./Layer.js";
+import { getEntityPathfindingGroupID } from "./pathfinding.js";
+import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
+import { ProjectileComponentArray } from "./components/ProjectileComponent.js";
+import { getEntityLayer, getEntityType } from "./world.js";
+import { addHitboxAngularAcceleration, applyAccelerationFromGround, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "./hitboxes.js";
 
 const TURN_CONSTANT = Math.PI * Settings.DT_S;
 const WALL_AVOIDANCE_MULTIPLIER = 1.5;

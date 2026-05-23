@@ -1,13 +1,8 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { EntityType } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { SlimeSpitComponent } from "../../components/SlimeSpitComponent";
-import { EntityConfig } from "../../components";
-import { ServerComponentType } from "battletribes-shared/components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Point, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { SlimeSpitComponent } from "../../components/SlimeSpitComponent.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createSlimeSpitConfig(position: Point, rotation: number, size: number): EntityConfig {
    const transformComponent = new TransformComponent();

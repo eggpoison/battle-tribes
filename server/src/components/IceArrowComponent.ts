@@ -1,5 +1,5 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
+import { ServerComponentType } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class IceArrowComponent {}
 

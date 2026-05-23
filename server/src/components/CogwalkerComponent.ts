@@ -1,14 +1,11 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity-events";
-import { Settings } from "../../../shared/src/settings";
-import { getHitboxVelocity, Hitbox, setHitboxVelocity } from "../hitboxes";
-import { registerEntityTickEvent } from "../server/player-clients";
-import { getEntityAgeTicks, getEntityType } from "../world";
-import { AIHelperComponentArray } from "./AIHelperComponent";
-import { ComponentArray } from "./ComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
-import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
+import { Settings, ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType } from "battletribes-shared";
+import { getHitboxVelocity, Hitbox, setHitboxVelocity } from "../hitboxes.js";
+import { registerEntityTickEvent } from "../server/player-clients.js";
+import { getEntityAgeTicks, getEntityType } from "../world.js";
+import { AIHelperComponentArray } from "./AIHelperComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { EntityRelationship, getEntityRelationship } from "./TribeComponent.js";
 
 export class CogwalkerComponent {}
 

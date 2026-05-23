@@ -1,18 +1,11 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity } from "../../components/HealthComponent";
-import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../components";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { getEntityType } from "../../world";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { SpitPoisonAreaComponent } from "../../components/SpitPoisonAreaComponent";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Settings, StatusEffect, Point, HitboxCollisionType, CircularBox } from "battletribes-shared";
+import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity } from "../../components/HealthComponent.js";
+import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
+import { EntityConfig } from "../../components.js";
+import { getEntityType } from "../../world.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { SpitPoisonAreaComponent } from "../../components/SpitPoisonAreaComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createSpitPoisonAreaConfig(position: Point, rotation: number): EntityConfig {
    const transformComponent = new TransformComponent();

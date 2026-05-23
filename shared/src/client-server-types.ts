@@ -1,12 +1,5 @@
-import { Entity, LimbAction } from "./entities";
-import { StatusEffect } from "./status-effects";
-import { TileType } from "./tiles";
-
-export type ServerTileUpdateData = {
-   readonly layerIdx: number;
-   readonly tileIndex: number;
-   readonly type: TileType;
-}
+import { Entity, LimbAction } from "./entities.js";
+import { StatusEffect } from "./status-effects.js";
 
 export interface StatusEffectData {
    readonly type: StatusEffect;
@@ -62,13 +55,6 @@ export interface WaterRockData {
    readonly rotation: number;
    readonly size: WaterRockSize;
    readonly opacity: number;
-}
-
-export interface GrassTileInfo {
-   readonly tileX: number;
-   readonly tileY: number;
-   readonly temperature: number;
-   readonly humidity: number;
 }
 
 export type VisibleChunkBounds = [minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number];

@@ -1,14 +1,10 @@
-import { Biome } from "../../../shared/src/biomes";
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { angle, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, polarVec2, randItem, TileIndex } from "../../../shared/src/utils";
-import { entityHasPassedPosition } from "../ai-shared";
-import { Hitbox, addHitboxVelocity } from "../hitboxes";
-import { getEntityType, getEntityLayer } from "../world";
-import { AIHelperComponentArray } from "./AIHelperComponent";
-import { ComponentArray } from "./ComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { Biome, ServerComponentType, Entity, EntityType, Settings, angle, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, polarVec2, randItem, TileIndex } from "battletribes-shared";
+import { entityHasPassedPosition } from "../ai-shared.js";
+import { Hitbox, addHitboxVelocity } from "../hitboxes.js";
+import { getEntityType, getEntityLayer } from "../world.js";
+import { AIHelperComponentArray } from "./AIHelperComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 export class FleshSwordItemComponent {
    public internalWiggleTicks = 0;

@@ -1,15 +1,11 @@
-import { WaterRockData } from "battletribes-shared/client-server-types";
-import { Settings } from "battletribes-shared/settings";
-import { Point, TileCoordinates, lerp, randAngle, randFloat, randInt, tileIsInWorld } from "battletribes-shared/utils";
-import { generateOctavePerlinNoise } from "../perlin-noise";
-import { Hitbox } from "../hitboxes";
-import { createRiverSteppingStoneConfig, RiverSteppingStoneSize } from "../entities/plains/river-stepping-stone";
-import { ServerComponentType } from "../../../shared/src/components";
-import { createEntityImmediate } from "../world";
-import Layer from "../Layer";
-import { getDistanceFromPointToHitbox } from "../ai-shared";
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { getConfigTransformComponent } from "../components";
+import { WaterRockData, Settings, Point, TileCoordinates, lerp, randAngle, randFloat, randInt, tileIsInWorld, CircularBox } from "battletribes-shared";
+import { generateOctavePerlinNoise } from "../perlin-noise.js";
+import { Hitbox } from "../hitboxes.js";
+import { createRiverSteppingStoneConfig, RiverSteppingStoneSize } from "../entities/plains/river-stepping-stone.js";
+import { createEntityImmediate } from "../world.js";
+import Layer from "../Layer.js";
+import { getDistanceFromPointToHitbox } from "../ai-shared.js";
+import { getConfigTransformComponent } from "../components.js";
 
 // Kinda hacky, used to be just set to 20, but that meant the density of rivers changed with the world size, no good.
 const NUM_RIVERS = 20 * ((Settings.WORLD_SIZE_CHUNKS / 64) ** 2);
@@ -67,21 +63,21 @@ const getFlowDirectionIdx = (flowDirection: number): number => {
 }
 
 export function generateRiverTiles(): RiverGenerationInfo {
-   const rootTiles = new Array<WaterTileGenerationInfo>();
+   const rootTiles: Array<WaterTileGenerationInfo> = [];
 
    for (let i = 0; i < NUM_RIVERS; i++) {
       const riverNoise = generateOctavePerlinNoise(Settings.WORLD_SIZE_TILES + BORDER_PADDING * 2, Settings.WORLD_SIZE_TILES + BORDER_PADDING * 2, 200, 5, 2, 0.5);
 
       let maxWeight = -1;
       let currentTileCoordinates: TileCoordinates | undefined;
-      for (let x = 0; x < Settings.WORLD_SIZE_TILES; x++) {
-         for (let y = 0; y < Settings.WORLD_SIZE_TILES; y++) {
-            const weight = riverNoise[x + BORDER_PADDING][y + BORDER_PADDING];
+      for (let tileY = 0; tileY < Settings.WORLD_SIZE_TILES; tileY++) {
+         for (let tileX = 0; tileX < Settings.WORLD_SIZE_TILES; tileX++) {
+            const weight = riverNoise[(tileY + BORDER_PADDING) * (Settings.WORLD_SIZE_TILES + BORDER_PADDING * 2) + tileX + BORDER_PADDING];
             if (weight > maxWeight) {
                maxWeight = weight;
                currentTileCoordinates = {
-                  x: x,
-                  y: y
+                  x: tileX,
+                  y: tileY
                };
             }
          }  
@@ -93,7 +89,7 @@ export function generateRiverTiles(): RiverGenerationInfo {
 
       for (;;) {
          // Move to neighbour tile with lowest weight
-         let minWeight = riverNoise[currentTileCoordinates.x + BORDER_PADDING][currentTileCoordinates.y + BORDER_PADDING];
+         let minWeight = riverNoise[(currentTileCoordinates.y + BORDER_PADDING) * (Settings.WORLD_SIZE_TILES + BORDER_PADDING * 2) + currentTileCoordinates.x + BORDER_PADDING];
          let minTileCoordinates: TileCoordinates | undefined;
          let secondMinTileCoordinates: TileCoordinates | undefined;
          for (const offset of NEIGHBOUR_TILE_OFFSETS) {
@@ -102,7 +98,7 @@ export function generateRiverTiles(): RiverGenerationInfo {
             if (tileX < -BORDER_PADDING || tileX >= Settings.WORLD_SIZE_TILES + BORDER_PADDING || tileY < -BORDER_PADDING || tileY >= Settings.WORLD_SIZE_TILES + BORDER_PADDING) {
                continue;
             }
-            const weight = riverNoise[tileX + BORDER_PADDING][tileY + BORDER_PADDING];
+            const weight = riverNoise[tileY * (Settings.WORLD_SIZE_TILES + BORDER_PADDING * 2) + tileX + BORDER_PADDING];
             if (weight < minWeight) {
                minWeight = weight;
                secondMinTileCoordinates = minTileCoordinates;

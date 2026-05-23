@@ -1,8 +1,8 @@
-import { getCircleCircleCollisionResult, getCircleRectangleCollisionResult } from "../collision";
-import { _point, Point, rotatePointAroundOrigin } from "../utils";
-import { PivotPointType } from "./BaseBox";
-import { CircularBox } from "./CircularBox";
-import { RectangularBox } from "./RectangularBox";
+import { getCircleCircleCollisionResult, getCircleRectangleCollisionResult } from "../collision.js";
+import { _point, Point, rotatePointAroundOrigin } from "../utils.js";
+import { PivotPointType } from "./BaseBox.js";
+import { CircularBox } from "./CircularBox.js";
+import { RectangularBox } from "./RectangularBox.js";
 
 export enum HitboxFlag {
    NON_GRASS_BLOCKING,

@@ -1,22 +1,15 @@
-import { Entity, EntityType, FishColour, DamageSource } from "battletribes-shared/entities";
-import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType } from "battletribes-shared/components";
-import { Packet } from "battletribes-shared/packets";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { InventoryName, ItemType } from "battletribes-shared/items/items";
-import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
-import { customTickIntervalHasPassed, Point, polarVec2, randAngle, randFloat, randSign, UtilVar } from "battletribes-shared/utils";
-import { runHerdAI } from "../ai-shared";
-import { AIHelperComponentArray } from "./AIHelperComponent";
-import { runEscapeAI } from "../ai/EscapeAI";
-import { damageEntity, HealthComponentArray, canDamageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { InventoryComponentArray, hasInventory, getInventory } from "./InventoryComponent";
-import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
-import { entityExists, getEntityLayer, getEntityType } from "../world";
-import { TribesmanComponentArray } from "./TribesmanComponent";
-import { CollisionVars, entitiesAreColliding } from "../collision-detection";
-import { applyAccelerationFromGround, applyKnockback, getHitboxTile, Hitbox, addHitboxVelocity, addHitboxAngularVelocity } from "../hitboxes";
+import { Entity, EntityType, FishColour, DamageSource, ServerComponentType, Packet, AttackEffectiveness, InventoryName, ItemType, Settings, TileType, customTickIntervalHasPassed, Point, polarVec2, randAngle, randFloat, randSign, UtilVar } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { runHerdAI } from "../ai-shared.js";
+import { AIHelperComponentArray } from "./AIHelperComponent.js";
+import { runEscapeAI } from "../ai/EscapeAI.js";
+import { damageEntity, HealthComponentArray, canDamageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { InventoryComponentArray, hasInventory, getInventory } from "./InventoryComponent.js";
+import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent.js";
+import { entityExists, getEntityLayer, getEntityType } from "../world.js";
+import { TribesmanComponentArray } from "./TribesmanComponent.js";
+import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
+import { applyAccelerationFromGround, applyKnockback, getHitboxTile, Hitbox, addHitboxVelocity, addHitboxAngularVelocity } from "../hitboxes.js";
 
 const enum Vars {
    TURN_SPEED = UtilVar.PI / 1.5,

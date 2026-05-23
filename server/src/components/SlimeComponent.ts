@@ -1,22 +1,15 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType, DamageSource, SlimeSize } from "battletribes-shared/entities";
-import { SLIME_MAX_MERGE_WANT, SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_SPEED_MULTIPLIERS, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger, createSlimeConfig } from "../entities/mobs/slime";
-import { ComponentArray } from "./ComponentArray";
-import { Packet } from "battletribes-shared/packets";
-import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
-import { lerp, Point, polarVec2, randAngle, UtilVar } from "battletribes-shared/utils";
-import { turnAngle, getEntitiesInRange, moveEntityToPosition } from "../ai-shared";
-import { createSlimeSpitConfig } from "../entities/projectiles/slime-spit";
-import { AIHelperComponentArray } from "./AIHelperComponent";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "./HealthComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType, getGameTicks, tickIntervalHasPassed } from "../world";
-import { Biome } from "../../../shared/src/biomes";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { applyAccelerationFromGround, getHitboxTile, Hitbox, turnHitboxToAngle, setHitboxVelocity } from "../hitboxes";
-import { getConfigComponent, getConfigTransformComponent } from "../components";
-import { getEntityComponentTypes } from "../entity-component-types";
+import { ServerComponentType, Entity, EntityType, DamageSource, SlimeSize, Packet, Settings, TileType, lerp, Point, polarVec2, randAngle, UtilVar, Biome, AttackEffectiveness } from "battletribes-shared";
+import { SLIME_MAX_MERGE_WANT, SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_SPEED_MULTIPLIERS, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger, createSlimeConfig } from "../entities/mobs/slime.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { turnAngle, getEntitiesInRange, moveEntityToPosition } from "../ai-shared.js";
+import { createSlimeSpitConfig } from "../entities/projectiles/slime-spit.js";
+import { AIHelperComponentArray } from "./AIHelperComponent.js";
+import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "./HealthComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType, getGameTicks, tickIntervalHasPassed } from "../world.js";
+import { applyAccelerationFromGround, getHitboxTile, Hitbox, turnHitboxToAngle, setHitboxVelocity } from "../hitboxes.js";
+import { getConfigComponent, getConfigTransformComponent } from "../components.js";
+import { getEntityComponentTypes } from "../entity-component-types.js";
 
 const enum Vars {
    TURN_SPEED = 2 * UtilVar.PI,

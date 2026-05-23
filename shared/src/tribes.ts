@@ -1,4 +1,4 @@
-import { Biome } from "./biomes";
+import { Biome } from "./biomes.js";
 
 export enum TribeType {
    plainspeople,

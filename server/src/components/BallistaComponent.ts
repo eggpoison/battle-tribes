@@ -1,5 +1,5 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { ComponentArray } from "./ComponentArray";
+import { ServerComponentType } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class BallistaComponent {}
 

@@ -1,4 +1,4 @@
-import { StructureType } from "./structures";
+import { StructureType } from "./structures.js";
 
 export interface SafetyNodeData {
    readonly index: number;

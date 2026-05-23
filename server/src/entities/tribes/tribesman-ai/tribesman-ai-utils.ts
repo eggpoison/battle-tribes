@@ -1,17 +1,12 @@
-import { EntityRelationship, getEntityRelationship, TribeComponentArray } from "../../../components/TribeComponent";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { TribesmanTitle } from "battletribes-shared/titles";
-import { TRIBE_INFO_RECORD } from "battletribes-shared/tribes";
-import { SpikesComponentArray } from "../../../components/SpikesComponent";
-import { Inventory, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, HammerItemInfo } from "battletribes-shared/items/items";
-import { TransformComponent, TransformComponentArray } from "../../../components/TransformComponent";
-import { getEntityLayer, getEntityType, getGameTicks } from "../../../world";
-import { CircularBox } from "../../../../../shared/src/boxes/CircularBox";
-import { tribeMemberHasTitle, TribesmanComponentArray } from "../../../components/TribesmanComponent";
-import { Settings, PathfindingSettings } from "../../../../../shared/src/settings";
-import { Path, entityCanBlockPathfinding, getEntityPathfindingGroupID, convertEntityPathfindingGroupID, getEntityFootprint, runPathfindingMultiLayer, positionIsAccessible, PathfindFailureDefault, PathfindOptions } from "../../../pathfinding";
-import Tribe from "../../../Tribe";
-import { AIPathfindingComponent, AIPathfindingComponentArray } from "../../../components/AIPathfindingComponent";
+import { Entity, EntityType, TribesmanTitle, TRIBE_INFO_RECORD, Inventory, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, HammerItemInfo, Settings, PathfindingSettings, CircularBox } from "battletribes-shared";
+import { EntityRelationship, getEntityRelationship, TribeComponentArray } from "../../../components/TribeComponent.js";
+import { SpikesComponentArray } from "../../../components/SpikesComponent.js";
+import { TransformComponent, TransformComponentArray } from "../../../components/TransformComponent.js";
+import { getEntityLayer, getEntityType, getGameTicks } from "../../../world.js";
+import { tribeMemberHasTitle, TribesmanComponentArray } from "../../../components/TribesmanComponent.js";
+import { Path, entityCanBlockPathfinding, getEntityPathfindingGroupID, convertEntityPathfindingGroupID, getEntityFootprint, runPathfindingMultiLayer, positionIsAccessible, PathfindFailureDefault, PathfindOptions } from "../../../pathfinding.js";
+import Tribe from "../../../Tribe.js";
+import { AIPathfindingComponent, AIPathfindingComponentArray } from "../../../components/AIPathfindingComponent.js";
 
 const enum Vars {
    BLOCKING_TRIBESMAN_DISTANCE = 80,

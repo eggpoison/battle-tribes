@@ -1,16 +1,12 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Settings } from "battletribes-shared/settings";
-import { Entity, EntityType, PlantedEntityType } from "battletribes-shared/entities";
-import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "battletribes-shared/packets";
-import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType } from "../world";
-import { PlantedComponentArray } from "./PlantedComponent";
-import { createEntityConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../components";
-import { createTreePlantedConfig } from "../entities/resources/tree-planted";
-import { createIceSpikesPlantedConfig } from "../entities/resources/ice-spikes-planted";
-import { createBerryBushPlantedConfig } from "../entities/resources/berry-bush-planted";
-import { randAngle } from "../../../shared/src/utils";
+import { ServerComponentType, Settings, Entity, EntityType, PlantedEntityType, Packet, randAngle } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType } from "../world.js";
+import { PlantedComponentArray } from "./PlantedComponent.js";
+import { createEntityConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../components.js";
+import { createTreePlantedConfig } from "../entities/resources/tree-planted.js";
+import { createIceSpikesPlantedConfig } from "../entities/resources/ice-spikes-planted.js";
+import { createBerryBushPlantedConfig } from "../entities/resources/berry-bush-planted.js";
 
 const enum Vars {
    FERTILISER_DURATION_TICKS = 300 * Settings.TICK_RATE

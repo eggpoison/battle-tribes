@@ -1,13 +1,10 @@
-import { Settings } from "battletribes-shared/settings";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
-import { HealthComponentArray, healEntity } from "./HealthComponent";
-import { ComponentArray } from "./ComponentArray";
-import { Entity } from "battletribes-shared/entities";
-import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "battletribes-shared/packets";
-import { entityExists } from "../world";
-import { AIHelperComponentArray } from "./AIHelperComponent";
+import { Settings, ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { EntityRelationship, getEntityRelationship } from "./TribeComponent.js";
+import { HealthComponentArray, healEntity } from "./HealthComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { entityExists } from "../world.js";
+import { AIHelperComponentArray } from "./AIHelperComponent.js";
 
 const enum Vars {
    HEALING_PER_SECOND = 1

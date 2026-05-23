@@ -1,17 +1,13 @@
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { ItemType } from "../../../shared/src/items/items";
-import { assert, Point, polarVec2, randAngle, randFloat, randSign } from "../../../shared/src/utils";
-import { getConfigTransformComponent } from "../components";
-import { createPricklyPearFragmentProjectileConfig } from "../entities/desert/prickly-pear-fragment-projectile";
-import { createItemEntityConfig } from "../entities/item-entity";
-import { addHitboxAngularVelocity, addHitboxVelocity } from "../hitboxes";
-import { createItem } from "../items";
-import { createEntity, destroyEntity, getEntityLayer } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { HealthComponentArray } from "./HealthComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { CircularBox, ServerComponentType, Entity, ItemType, assert, Point, polarVec2, randAngle, randFloat, randSign } from "battletribes-shared";
+import { getConfigTransformComponent } from "../components.js";
+import { createPricklyPearFragmentProjectileConfig } from "../entities/desert/prickly-pear-fragment-projectile.js";
+import { createItemEntityConfig } from "../entities/item-entity.js";
+import { addHitboxAngularVelocity, addHitboxVelocity } from "../hitboxes.js";
+import { createItem } from "../items.js";
+import { createEntity, destroyEntity, getEntityLayer } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray } from "./HealthComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 export class PricklyPearComponent {}
 

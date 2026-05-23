@@ -1,22 +1,16 @@
-import { Point, polarVec2, positionIsInWorld, randAngle, randInt } from "battletribes-shared/utils";
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity, EntityType, DamageSource } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { Biome } from "battletribes-shared/biomes";
-import Layer from "../Layer";
-import { createIceSpikesConfig } from "../entities/resources/ice-spikes";
-import { TransformComponentArray } from "./TransformComponent";
-import { createEntity, entityExists, getEntityLayer, getEntityType } from "../world";
-import { EntityConfig, getConfigComponent, getConfigTransformComponent } from "../components";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { createIceShardConfig } from "../entities/projectiles/ice-shard";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
-import { getDistanceToClosestEntity } from "../layer-utils";
-import { applyKnockback, Hitbox, addHitboxVelocity } from "../hitboxes";
-import { getEntityComponentTypes } from "../entity-component-types";
+import { Point, polarVec2, positionIsInWorld, randAngle, randInt, ServerComponentType, Entity, EntityType, DamageSource, Settings, Biome, AttackEffectiveness, StatusEffect } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import Layer from "../Layer.js";
+import { createIceSpikesConfig } from "../entities/resources/ice-spikes.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { createEntity, entityExists, getEntityLayer, getEntityType } from "../world.js";
+import { EntityConfig, getConfigComponent, getConfigTransformComponent } from "../components.js";
+import { createIceShardConfig } from "../entities/projectiles/ice-shard.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent.js";
+import { getDistanceToClosestEntity } from "../layer-utils.js";
+import { applyKnockback, Hitbox, addHitboxVelocity } from "../hitboxes.js";
+import { getEntityComponentTypes } from "../entity-component-types.js";
 
 const enum Vars {
    TICKS_TO_GROW = 1/5 * Settings.TICK_RATE,

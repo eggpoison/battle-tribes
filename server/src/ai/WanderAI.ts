@@ -1,12 +1,10 @@
-import { Entity } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { Point, randInt } from "battletribes-shared/utils";
-import { entityHasPassedPosition } from "../ai-shared";
-import { AIHelperComponentArray } from "../components/AIHelperComponent";
-import { TransformComponentArray } from "../components/TransformComponent";
-import Layer from "../Layer";
-import { getEntityAgeTicks, getEntityLayer } from "../world";
-import { getHitboxVelocity, Hitbox } from "../hitboxes";
+import { Entity, Settings, Point, randInt } from "battletribes-shared";
+import { entityHasPassedPosition } from "../ai-shared.js";
+import { AIHelperComponentArray } from "../components/AIHelperComponent.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import Layer from "../Layer.js";
+import { getEntityAgeTicks, getEntityLayer } from "../world.js";
+import { getHitboxVelocity, Hitbox } from "../hitboxes.js";
 
 const enum Vars {
    POSITION_RECORD_INTERVAL = Settings.TICK_RATE

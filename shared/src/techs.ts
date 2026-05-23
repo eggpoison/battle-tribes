@@ -1,9 +1,9 @@
-// @Cleanup: Move server-only stuff to the server and client-only stuff to the client
+import { ItemRequirements } from "./items/crafting-recipes.js";
+import { ItemType } from "./items/items.js";
+import { createTallyFromRecord, ItemTally2 } from "./items/ItemTally.js";
+import { TribeType } from "./tribes.js";
 
-import { ItemRequirements } from "./items/crafting-recipes";
-import { ItemType } from "./items/items";
-import { createTallyFromRecord, ItemTally2 } from "./items/ItemTally";
-import { TribeType } from "./tribes";
+// @Cleanup: Move server-only stuff to the server and client-only stuff to the client
 
 export enum TechID {
    fire,

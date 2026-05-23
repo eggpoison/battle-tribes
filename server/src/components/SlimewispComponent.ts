@@ -1,16 +1,12 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity, EntityType, SlimeSize } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
-import { Point, randAngle, UtilVar } from "battletribes-shared/utils";
-import { moveEntityToPosition } from "../ai-shared";
-import { createSlimeConfig } from "../entities/mobs/slime";
-import { AIHelperComponentArray } from "./AIHelperComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { createEntity, destroyEntity, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "../world";
-import { CollisionVars, entitiesAreColliding } from "../collision-detection";
-import { getHitboxTile } from "../hitboxes";
+import { ServerComponentType, Entity, EntityType, SlimeSize, Settings, TileType, Point, randAngle, UtilVar } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { moveEntityToPosition } from "../ai-shared.js";
+import { createSlimeConfig } from "../entities/mobs/slime.js";
+import { AIHelperComponentArray } from "./AIHelperComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { createEntity, destroyEntity, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "../world.js";
+import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
+import { getHitboxTile } from "../hitboxes.js";
 
 const enum Vars {
    ACCELERATION = 100,

@@ -1,11 +1,8 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { randFloat } from "../../../shared/src/utils";
-import { FIRE_TORCH_RADIUS } from "../entities/structures/fire-torch";
-import { Light } from "../lights";
-import { destroyEntity, getEntityAgeTicks, tickIntervalHasPassed } from "../world";
-import { ComponentArray } from "./ComponentArray";
+import { ServerComponentType, Entity, Settings, randFloat } from "battletribes-shared";
+import { FIRE_TORCH_RADIUS } from "../entities/structures/fire-torch.js";
+import { Light } from "../lights.js";
+import { destroyEntity, getEntityAgeTicks, tickIntervalHasPassed } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class FireTorchComponent {
    public readonly light: Light;

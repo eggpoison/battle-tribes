@@ -1,11 +1,7 @@
-import { Entity, EntityType, NUM_ENTITY_TYPES } from "battletribes-shared/entities";
-import { TileType } from "battletribes-shared/tiles";
-import { Biome } from "../../shared/src/biomes";
-import Layer from "./Layer";
-import { getTileX, getTileY, TileIndex, tileIsInWorldIncludingEdges } from "battletribes-shared/utils";
-import { getEntityType } from "./world";
-import { layers } from "./layers";
-import { Settings } from "../../shared/src/settings";
+import { getTileX, getTileY, TileIndex, tileIsInWorldIncludingEdges, TileType, Entity, EntityType, NUM_ENTITY_TYPES, Biome, Settings } from "battletribes-shared";
+import Layer from "./Layer.js";
+import { getEntityType } from "./world.js";
+import { layers } from "./layers.js";
 
 const entityCounts = new Array<EntityType>();
 for (let i = 0; i < NUM_ENTITY_TYPES; i++) {

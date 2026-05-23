@@ -1,12 +1,11 @@
-import { angle, polarVec2 } from "battletribes-shared/utils";
-import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
-import { getTribesmanAcceleration } from "./tribesman-ai-utils";
-import { Entity, EntityType, EntityTypeString } from "battletribes-shared/entities";
-import { HealthComponent } from "../../../components/HealthComponent";
-import { TransformComponentArray } from "../../../components/TransformComponent";
-import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
-import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../../hitboxes";
-import { clearPathfinding } from "../../../components/AIPathfindingComponent";
+import { angle, polarVec2, Entity, EntityType, EntityTypeString } from "battletribes-shared";
+import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai.js";
+import { getTribesmanAcceleration } from "./tribesman-ai-utils.js";
+import { HealthComponent } from "../../../components/HealthComponent.js";
+import { TransformComponentArray } from "../../../components/TransformComponent.js";
+import { AIHelperComponentArray } from "../../../components/AIHelperComponent.js";
+import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../../hitboxes.js";
+import { clearPathfinding } from "../../../components/AIPathfindingComponent.js";
 
 export function tribeMemberShouldEscape(entityType: EntityType, healthComponent: HealthComponent): boolean {
    const remainingHealthRatio = healthComponent.health / healthComponent.maxHealth;

@@ -1,21 +1,17 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity-events";
-import { Settings } from "../../../shared/src/settings";
-import { Point, polarVec2, randFloat, randInt } from "../../../shared/src/utils";
-import { getDistanceFromPointToEntity } from "../ai-shared";
-import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components";
-import { AIHelperComponent, AIType } from "../components/AIHelperComponent";
-import { getOkrenMandibleHitbox, OKREN_SIDES, OkrenComponentArray, okrenHitboxesHaveReachedIdealAngles, OkrenSide, OkrenSwingState, restingIdealAngles } from "../components/OkrenComponent";
-import { OkrenTongueComponentArray } from "../components/OkrenTongueComponent";
-import { TamingComponentArray } from "../components/TamingComponent";
-import { TransformComponent, TransformComponentArray } from "../components/TransformComponent";
-import { TribeComponentArray } from "../components/TribeComponent";
-import { TribeMemberComponentArray } from "../components/TribeMemberComponent"
-import { createOkrenTongueConfig } from "../entities/desert/okren-tongue";
-import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../hitboxes";
-import { registerEntityTickEvent } from "../server/player-clients";
-import { createEntity, entityExists, getEntityLayer, getEntityType } from "../world";
+import { Entity, EntityType, EntityTickEvent, EntityTickEventType, Settings, Point, polarVec2, randFloat, randInt } from "battletribes-shared";
+import { getDistanceFromPointToEntity } from "../ai-shared.js";
+import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components.js";
+import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";
+import { getOkrenMandibleHitbox, OKREN_SIDES, OkrenComponentArray, okrenHitboxesHaveReachedIdealAngles, OkrenSide, OkrenSwingState, restingIdealAngles } from "../components/OkrenComponent.js";
+import { OkrenTongueComponentArray } from "../components/OkrenTongueComponent.js";
+import { TamingComponentArray } from "../components/TamingComponent.js";
+import { TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
+import { TribeComponentArray } from "../components/TribeComponent.js";
+import { TribeMemberComponentArray } from "../components/TribeMemberComponent.js"
+import { createOkrenTongueConfig } from "../entities/desert/okren-tongue.js";
+import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
+import { registerEntityTickEvent } from "../server/player-clients.js";
+import { createEntity, entityExists, getEntityLayer, getEntityType } from "../world.js";
 
 export class OkrenCombatAI {
    public readonly acceleration: number;

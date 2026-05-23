@@ -79,7 +79,7 @@ export default function TextureAtlasStitchingPlugin(): Plugin {
          const outDir = path.resolve("public");
 
          const files = new Array<Dirent<string>>();
-         const includedSubdirs = ["entities", "items", "armour", "gloves", "decorations"];
+         const includedSubdirs = ["entities", "items", "armour", "gloves", "decorations", "projectiles"];
 
          for (const subdirectory of includedSubdirs) {
             const subdirFiles = fs.readdirSync(path.join(srcDir, subdirectory), { recursive: true, withFileTypes: true })

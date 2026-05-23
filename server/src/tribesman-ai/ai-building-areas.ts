@@ -1,10 +1,7 @@
-import { PotentialBuildingPlanData } from "battletribes-shared/ai-building-types";
-import { BlueprintType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { SafetyNode, getSafetyNode } from "./ai-building";
-import TribeBuildingLayer, { TribeDoorType, VirtualStructure, VirtualDoor, VirtualWall } from "./building-plans/TribeBuildingLayer";
-import { createUpgradeBuildingPlanAssignment, AIPlanAssignment, AIUpgradeBuildingPlan } from "./tribesman-ai-planning";
+import { PotentialBuildingPlanData, BlueprintType, EntityType, Settings } from "battletribes-shared";
+import { SafetyNode, getSafetyNode } from "./ai-building.js";
+import TribeBuildingLayer, { TribeDoorType, VirtualStructure, VirtualDoor, VirtualWall } from "./building-plans/TribeBuildingLayer.js";
+import { createUpgradeBuildingPlanAssignment, AIPlanAssignment, AIUpgradeBuildingPlan } from "./tribesman-ai-planning.js";
 
 export interface TribeRoom {
    readonly containedNodes: Set<SafetyNode>;

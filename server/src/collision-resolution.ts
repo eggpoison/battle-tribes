@@ -1,15 +1,10 @@
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { _point, Point, rotatePointAroundOrigin } from "battletribes-shared/utils";
-import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import { getComponentArrayRecord } from "./components/ComponentArray";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { getEntityType } from "./world";
-import { HitboxCollisionPair } from "./collision-detection";
-import { getHitboxVelocity, Hitbox, addHitboxVelocity, setHitboxVelocity, translateHitbox, applyForce } from "./hitboxes";
-import { CollisionResult } from "../../shared/src/collision";
-import { getEntityComponentTypes } from "./entity-component-types";
+import { Entity, EntityType, Settings, _point, Point, rotatePointAroundOrigin, HitboxCollisionType, RectangularBox, CollisionResult } from "battletribes-shared";
+import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
+import { getComponentArrayRecord } from "./components/ComponentArray.js";
+import { getEntityType } from "./world.js";
+import { HitboxCollisionPair } from "./collision-detection.js";
+import { getHitboxVelocity, Hitbox, addHitboxVelocity, setHitboxVelocity, translateHitbox, applyForce } from "./hitboxes.js";
+import { getEntityComponentTypes } from "./entity-component-types.js";
 
 const hitboxesAreTethered = (transformComponent: TransformComponent, hitbox1: Hitbox, hitbox2: Hitbox): boolean => {
    // @INCOMPLETE!

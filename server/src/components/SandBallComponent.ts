@@ -1,13 +1,9 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { Settings } from "../../../shared/src/settings";
-import { TileType } from "../../../shared/src/tiles";
-import { getHitboxTile } from "../hitboxes";
-import { destroyEntity, getEntityLayer } from "../world";
-import { AIHelperComponentArray, AIType } from "./AIHelperComponent";
-import { ComponentArray } from "./ComponentArray";
-import { detachHitbox, TransformComponentArray } from "./TransformComponent";
+import { ServerComponentType, Entity, Packet, Settings, TileType } from "battletribes-shared";
+import { destroyEntity, getEntityLayer } from "../world.js";
+import { AIHelperComponentArray, AIType } from "./AIHelperComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { detachHitbox, TransformComponentArray } from "./TransformComponent.js";
+import { getHitboxTile } from "../hitboxes.js";
 
 export class SandBallComponent {
    public size = 1;

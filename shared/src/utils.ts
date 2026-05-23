@@ -1,5 +1,5 @@
-import { RectangularBox } from "./boxes/RectangularBox";
-import { Settings } from "./settings";
+import { RectangularBox } from "./boxes/RectangularBox.js";
+import { Settings } from "./settings.js";
 
 export enum UtilVar {
    PI = 3.14159265358979

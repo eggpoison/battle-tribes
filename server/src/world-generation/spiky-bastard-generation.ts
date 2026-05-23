@@ -1,11 +1,8 @@
-import { Settings } from "../../../shared/src/settings";
-import { getSubtileIndex, subtileIsInWorldIncludingEdges } from "../../../shared/src/subtiles";
-import { SubtileType } from "../../../shared/src/tiles";
-import { angle, Point, randSign } from "../../../shared/src/utils";
-import { createSpikyBastardConfig } from "../entities/spiky-bastard";
-import Layer from "../Layer";
-import { generatePerlinNoise } from "../perlin-noise";
-import { createEntityImmediate } from "../world";
+import { Settings, getSubtileIndex, subtileIsInWorldIncludingEdges, SubtileType, angle, getTileIndexIncludingEdges, Point, randSign } from "battletribes-shared";
+import { createSpikyBastardConfig } from "../entities/spiky-bastard.js";
+import Layer from "../Layer.js";
+import { generatePerlinNoise } from "../perlin-noise.js";
+import { createEntityImmediate } from "../world.js";
 
 const enum Vars {
    /** Number of spiky bastards attempted to be generated per tile */
@@ -16,7 +13,7 @@ export function generateSpikyBastards(undergroundLayer: Layer): void {
    // @Incomplete: generate in edges
 
    const numBastards = Math.ceil(Settings.WORLD_SIZE_TILES * Settings.WORLD_SIZE_TILES * Vars.GENERATION_DENSITY);
-   const noise = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 8);
+   const noise = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 8, 0);
    
    for (let i = 0; i < numBastards; i++) {
       const attachedSubtileX = Math.floor(Settings.WORLD_SIZE_TILES * 4 * Math.random());
@@ -38,7 +35,7 @@ export function generateSpikyBastards(undergroundLayer: Layer): void {
       }
 
       // Factor in the noise spawn chance
-      let spawnChance = noise[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+      let spawnChance = noise[getTileIndexIncludingEdges(tileX, tileY)];
       spawnChance *= spawnChance;
       if (Math.random() >= spawnChance) {
          continue;

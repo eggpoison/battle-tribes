@@ -1,4 +1,4 @@
-import { ItemType } from "./items/items";
+import { ItemType } from "./items/items.js";
 
 // @Cleanup: rename to entity-tick-events
 

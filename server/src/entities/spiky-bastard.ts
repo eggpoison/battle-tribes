@@ -1,16 +1,10 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../components";
-import { Point } from "battletribes-shared/utils";
-import { EntityType } from "battletribes-shared/entities";
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
-import { HealthComponent } from "../components/HealthComponent";
-import { StatusEffectComponent } from "../components/StatusEffectComponent";
-import { StatusEffect } from "../../../shared/src/status-effects";
-import { SpikyBastardComponent } from "../components/SpikyBastardComponent";
-import { Hitbox } from "../hitboxes";
+import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, HitboxCollisionType, RectangularBox, StatusEffect } from "battletribes-shared";
+import { EntityConfig } from "../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
+import { HealthComponent } from "../components/HealthComponent.js";
+import { StatusEffectComponent } from "../components/StatusEffectComponent.js";
+import { SpikyBastardComponent } from "../components/SpikyBastardComponent.js";
+import { Hitbox } from "../hitboxes.js";
    
 export function createSpikyBastardConfig(position: Point, rotation: number): EntityConfig {
    const transformComponent = new TransformComponent();

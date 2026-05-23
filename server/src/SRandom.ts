@@ -9,7 +9,6 @@ abstract class SRandom {
    public static num = 0;
 
    public static seed(n: number): void {
-      console.log("seed: " + n);
       this.num = 0;
       this.state = n;
 
@@ -17,6 +16,10 @@ abstract class SRandom {
       for (let i = 0; i < 5; i++) {
          SRandom.next();
       }
+   }
+
+   public static logSeed(): void {
+      console.log("seed: " + this.state);
    }
 
    private static nextInt(): number {

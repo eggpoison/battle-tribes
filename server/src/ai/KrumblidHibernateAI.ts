@@ -1,17 +1,10 @@
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { RectangularBox } from "../../../shared/src/boxes/RectangularBox";
-import { CollisionGroup, getEntityCollisionGroup } from "../../../shared/src/collision-groups";
-import { Entity } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { getSubtileIndex } from "../../../shared/src/subtiles";
-import { TamingSkillID } from "../../../shared/src/taming";
-import { clampToSubtileBoardDimensions, distance, Point, positionIsInWorld, randAngle, randFloat } from "../../../shared/src/utils";
-import { getEntitiesInRange } from "../ai-shared";
-import { AIHelperComponent } from "../components/AIHelperComponent";
-import { hasTamingSkill, TamingComponentArray } from "../components/TamingComponent";
-import { detachHitbox, TransformComponentArray } from "../components/TransformComponent";
-import { createKrumblidMorphCocoonConfig } from "../entities/desert/krumblid-morph-cocoon";
-import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
+import { CircularBox, RectangularBox, CollisionGroup, getEntityCollisionGroup, Entity, Settings, getSubtileIndex, TamingSkillID, clampToSubtileBoardDimensions, distance, Point, positionIsInWorld, randAngle, randFloat } from "battletribes-shared";
+import { getEntitiesInRange } from "../ai-shared.js";
+import { AIHelperComponent } from "../components/AIHelperComponent.js";
+import { hasTamingSkill, TamingComponentArray } from "../components/TamingComponent.js";
+import { detachHitbox, TransformComponentArray } from "../components/TransformComponent.js";
+import { createKrumblidMorphCocoonConfig } from "../entities/desert/krumblid-morph-cocoon.js";
+import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world.js";
 
 export class KrumblidHibernateAI {
    public readonly acceleration: number;

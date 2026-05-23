@@ -1,16 +1,11 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { ThrowingProjectileComponent } from "../../components/ThrowingProjectileComponent";
-import { TribeComponent } from "../../components/TribeComponent";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import Tribe from "../../Tribe";
-import { BattleaxeProjectileComponent } from "../../components/BattleaxeProjectileComponent";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Point, HitboxCollisionType, CircularBox } from "battletribes-shared";
+import { ThrowingProjectileComponent } from "../../components/ThrowingProjectileComponent.js";
+import { TribeComponent } from "../../components/TribeComponent.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import Tribe from "../../Tribe.js";
+import { BattleaxeProjectileComponent } from "../../components/BattleaxeProjectileComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createBattleaxeProjectileConfig(position: Point, rotation: number, tribe: Tribe, tribeMember: Entity, itemID: number | null): EntityConfig {
    const transformComponent = new TransformComponent();

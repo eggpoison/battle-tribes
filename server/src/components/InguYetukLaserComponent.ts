@@ -1,12 +1,9 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { DamageSource, Entity, EntityType } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point, polarVec2 } from "../../../shared/src/utils";
-import { applyAbsoluteKnockback, getHitboxVelocity, Hitbox } from "../hitboxes";
-import { destroyEntity, getEntityType } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Point, polarVec2 } from "battletribes-shared";
+import { applyAbsoluteKnockback, getHitboxVelocity, Hitbox } from "../hitboxes.js";
+import { destroyEntity, getEntityType } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 export class InguYetukLaserComponent {}
 

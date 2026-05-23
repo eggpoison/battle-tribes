@@ -1,11 +1,11 @@
-import { Entity } from "battletribes-shared/entities";
-import { moveEntityToEntity } from "../ai-shared";
-import { AIHelperComponent, AIHelperComponentArray } from "../components/AIHelperComponent";
-import { GuardianComponent, GuardianComponentArray } from "../components/GuardianComponent";
-import { GuardianSpikyBallComponentArray } from "../components/GuardianSpikyBallComponent";
-import { HealthComponentArray } from "../components/HealthComponent";
-import { TransformComponent, TransformComponentArray } from "../components/TransformComponent";
-import { getHitboxTile, Hitbox } from "../hitboxes";
+import { Entity } from "battletribes-shared";
+import { moveEntityToEntity } from "../ai-shared.js";
+import { AIHelperComponent, AIHelperComponentArray } from "../components/AIHelperComponent.js";
+import { GuardianComponent, GuardianComponentArray } from "../components/GuardianComponent.js";
+import { GuardianSpikyBallComponentArray } from "../components/GuardianSpikyBallComponent.js";
+import { HealthComponentArray } from "../components/HealthComponent.js";
+import { TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
+import { getHitboxTile, Hitbox } from "../hitboxes.js";
 
 const entityIsTargetted = (guardianComponent: GuardianComponent, target: Entity, targetTransformComponent: TransformComponent): boolean => {
    if (!HealthComponentArray.hasComponent(target)) {

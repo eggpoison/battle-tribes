@@ -1,12 +1,9 @@
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { createKrumblidConfig } from "../entities/mobs/krumblid";
-import { Hitbox } from "../hitboxes";
-import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, ticksToGameHours } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { CircularBox, ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { createKrumblidConfig } from "../entities/mobs/krumblid.js";
+import { Hitbox } from "../hitboxes.js";
+import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, ticksToGameHours } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 export class DustfleaMorphCocoonComponent {
    public stage = 1;

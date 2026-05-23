@@ -1,17 +1,11 @@
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { StatusEffect } from "../../../../shared/src/status-effects";
-import { Point, randInt } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { DesertBushSandyComponent } from "../../components/DesertBushSandyComponent";
-import { EnergyStoreComponent } from "../../components/EnergyStoreComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
+import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, StatusEffect, Point, randInt } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { DesertBushSandyComponent } from "../../components/DesertBushSandyComponent.js";
+import { EnergyStoreComponent } from "../../components/EnergyStoreComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createDesertBushSandyConfig(position: Point, angle: number): EntityConfig {
    const size = randInt(0, 1);

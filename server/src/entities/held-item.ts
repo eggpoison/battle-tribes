@@ -1,15 +1,9 @@
-import { HitboxCollisionType } from "../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
-import { ServerComponentType } from "../../../shared/src/components";
-import { EntityType } from "../../../shared/src/entities";
-import { getItemAttackInfo, ItemType } from "../../../shared/src/items/items";
-import { Point, rotatePoint } from "../../../shared/src/utils";
-import { createEntityConfigAttachInfo, EntityConfig } from "../components";
-import { HeldItemComponent } from "../components/HeldItemComponent";
-import { StatusEffectComponent } from "../components/StatusEffectComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
-import { Hitbox } from "../hitboxes";
+import { HitboxCollisionType, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, getItemAttackInfo, ItemType, Point, rotatePoint } from "battletribes-shared";
+import { createEntityConfigAttachInfo, EntityConfig } from "../components.js";
+import { HeldItemComponent } from "../components/HeldItemComponent.js";
+import { StatusEffectComponent } from "../components/StatusEffectComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
+import { Hitbox } from "../hitboxes.js";
 
 export function createHeldItemConfig(limbHitbox: Hitbox, itemType: ItemType): EntityConfig {
    const transformComponent = new TransformComponent();

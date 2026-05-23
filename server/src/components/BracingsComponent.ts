@@ -1,8 +1,7 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { deregisterEntitySupports, registerEntitySupports } from "../collapses";
-import { ComponentArray } from "./ComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { Entity, ServerComponentType } from "battletribes-shared";
+import { deregisterEntitySupports, registerEntitySupports } from "../collapses.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 export class BracingsComponent {}
 

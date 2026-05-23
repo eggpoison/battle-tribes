@@ -1,14 +1,10 @@
-import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
-import { createReedConfig } from "../entities/reed";
-import { WaterTileGenerationInfo } from "./river-generation";
-import { distance, getTileIndexIncludingEdges, Point } from "battletribes-shared/utils";
-import { generateOctavePerlinNoise } from "../perlin-noise";
-import Layer from "../Layer";
-import { Biome } from "../../../shared/src/biomes";
-import { createEntityImmediate, getEntityType } from "../world";
-import { getEntitiesInRange } from "../ai-shared";
-import { EntityType } from "../../../shared/src/entities";
+import { Settings, TileType, distance, getTileIndexIncludingEdges, Point, Biome, EntityType } from "battletribes-shared";
+import { createReedConfig } from "../entities/reed.js";
+import { WaterTileGenerationInfo } from "./river-generation.js";
+import { generateOctavePerlinNoise } from "../perlin-noise.js";
+import Layer from "../Layer.js";
+import { createEntityImmediate, getEntityType } from "../world.js";
+import { getEntitiesInRange } from "../ai-shared.js";
 
 const enum Vars {
    MAX_DENSITY_PER_TILE = 35
@@ -67,7 +63,7 @@ export function generateReeds(surfaceLayer: Layer, riverMainTiles: ReadonlyArray
             let successProbability = (distanceTiles - 0.3) * 1;
             successProbability = successProbability * successProbability * successProbability;
 
-            let weight = probabilityWeightMap1[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+            let weight = probabilityWeightMap1[tileIndex];
             weight = weight * 2 - 1;
             if (weight <= 0) {
                continue;

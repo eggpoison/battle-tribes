@@ -1,13 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../components";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
-import { EntityType } from "battletribes-shared/entities";
-import { Colour, Point, randInt } from "battletribes-shared/utils";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
-import { LayeredRodComponent } from "../components/LayeredRodComponent";
-import { Hitbox } from "../hitboxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Colour, Point, randInt, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { EntityConfig } from "../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
+import { LayeredRodComponent } from "../components/LayeredRodComponent.js";
+import { Hitbox } from "../hitboxes.js";
 
 export function createReedConfig(position: Point, rotation: number): EntityConfig {
    const transformComponent = new TransformComponent();

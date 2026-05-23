@@ -1,21 +1,15 @@
-import { EntityType } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import Tribe from "../../Tribe";
-import { StructureComponent } from "../../components/StructureComponent";
-import { TribeComponent } from "../../components/TribeComponent";
-import { HutComponent } from "../../components/HutComponent";
-import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
-import { Point } from "../../../../shared/src/utils";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { Hitbox } from "../../hitboxes";
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { StructureConnection } from "../../structure-placement";
+import { EntityType, StatusEffect, Point, RectangularBox, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import Tribe from "../../Tribe.js";
+import { StructureComponent } from "../../components/StructureComponent.js";
+import { TribeComponent } from "../../components/TribeComponent.js";
+import { HutComponent } from "../../components/HutComponent.js";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
+import { Hitbox } from "../../hitboxes.js";
+import { StructureConnection } from "../../structure-placement.js";
 
 export function createWarriorHutConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();

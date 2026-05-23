@@ -1,13 +1,8 @@
-import { Entity, EntityType, DamageSource } from "battletribes-shared/entities";
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Point, polarVec2, randFloat, secondsToTicks } from "battletribes-shared/utils";
-import { Packet } from "battletribes-shared/packets";
-import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world";
-import { Settings } from "battletribes-shared/settings";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes";
+import { Entity, EntityType, DamageSource, ServerComponentType, Point, polarVec2, randFloat, secondsToTicks, Settings, AttackEffectiveness, Packet } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes.js";
 
 export class SnowballComponent {
    public readonly yeti: Entity;

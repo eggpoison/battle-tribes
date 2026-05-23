@@ -1,16 +1,10 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { EntityType } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../components";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { HealthComponent } from "../components/HealthComponent";
-import { StatusEffectComponent } from "../components/StatusEffectComponent";
-import { TombstoneComponent } from "../components/TombstoneComponent";
-import { Hitbox } from "../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, StatusEffect, Point, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
+import { EntityConfig } from "../components.js";
+import { HealthComponent } from "../components/HealthComponent.js";
+import { StatusEffectComponent } from "../components/StatusEffectComponent.js";
+import { TombstoneComponent } from "../components/TombstoneComponent.js";
+import { Hitbox } from "../hitboxes.js";
 
 export function createTombstoneConfig(position: Point, rotation: number): EntityConfig {
    const transformComponent = new TransformComponent();

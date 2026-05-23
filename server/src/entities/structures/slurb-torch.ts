@@ -1,22 +1,16 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { EntityConfig, LightCreationInfo } from "../../components";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StructureComponent } from "../../components/StructureComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { TribeComponent } from "../../components/TribeComponent";
-import Tribe from "../../Tribe";
-import { SlurbTorchComponent } from "../../components/SlurbTorchComponent";
-import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
-import { createLight } from "../../lights";
-import { Point } from "../../../../shared/src/utils";
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { Hitbox } from "../../hitboxes";
-import { StructureConnection } from "../../structure-placement";
+import { EntityType, StatusEffect, Point, HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { EntityConfig, LightCreationInfo } from "../../components.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { StructureComponent } from "../../components/StructureComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { TribeComponent } from "../../components/TribeComponent.js";
+import Tribe from "../../Tribe.js";
+import { SlurbTorchComponent } from "../../components/SlurbTorchComponent.js";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
+import { createLight } from "../../lights.js";
+import { Hitbox } from "../../hitboxes.js";
+import { StructureConnection } from "../../structure-placement.js";
 
 export function createSlurbTorchConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();

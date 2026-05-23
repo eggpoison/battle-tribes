@@ -1,13 +1,10 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { EntityType, DamageSource } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point, polarVec2 } from "../../../shared/src/utils";
-import { applyKnockback, Hitbox } from "../hitboxes";
-import { getEntityType, validateEntity, destroyEntity } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { HealthComponentArray, damageEntity } from "./HealthComponent";
-import { ProjectileComponentArray } from "./ProjectileComponent";
-import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "./TribeComponent";
+import { ServerComponentType, EntityType, DamageSource, AttackEffectiveness, Point, polarVec2 } from "battletribes-shared";
+import { applyKnockback, Hitbox } from "../hitboxes.js";
+import { getEntityType, validateEntity, destroyEntity } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray, damageEntity } from "./HealthComponent.js";
+import { ProjectileComponentArray } from "./ProjectileComponent.js";
+import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "./TribeComponent.js";
 
 export class SlingTurretRockComponent {}
 

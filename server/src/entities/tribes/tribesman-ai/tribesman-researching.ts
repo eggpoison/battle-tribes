@@ -1,23 +1,18 @@
-import { TribesmanAIType } from "battletribes-shared/components";
-import { Entity, EntityType, LimbAction } from "battletribes-shared/entities";
-import { Tech } from "battletribes-shared/techs";
-import { getDistanceFromPointToEntity } from "../../../ai-shared";
-import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
-import { continueResearching, markPreemptiveMoveToBench, attemptToOccupyResearchBench, canResearchAtBench, shouldMoveToResearchBench } from "../../../components/ResearchBenchComponent";
-import { TribeComponentArray } from "../../../components/TribeComponent";
-import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
-import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
-import { getTribesmanSlowAcceleration, getHumanoidRadius } from "./tribesman-ai-utils";
-import { TransformComponentArray } from "../../../components/TransformComponent";
-import { Inventory, ItemType } from "../../../../../shared/src/items/items";
-import { consumeItemFromSlot } from "../../../components/InventoryComponent";
-import Tribe from "../../../Tribe";
-import { assert, polarVec2 } from "../../../../../shared/src/utils";
-import { getEntityLayer } from "../../../world";
-import { PathfindingSettings } from "../../../../../shared/src/settings";
-import { PathfindFailureDefault } from "../../../pathfinding";
-import { applyAccelerationFromGround, turnHitboxToAngle } from "../../../hitboxes";
-import { pathfindTribesman } from "../../../components/AIPathfindingComponent";
+import { TribesmanAIType, Entity, EntityType, LimbAction, Tech, Inventory, ItemType, assert, polarVec2, PathfindingSettings } from "battletribes-shared";
+import { getDistanceFromPointToEntity } from "../../../ai-shared.js";
+import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent.js";
+import { continueResearching, markPreemptiveMoveToBench, attemptToOccupyResearchBench, canResearchAtBench, shouldMoveToResearchBench } from "../../../components/ResearchBenchComponent.js";
+import { TribeComponentArray } from "../../../components/TribeComponent.js";
+import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent.js";
+import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai.js";
+import { getTribesmanSlowAcceleration, getHumanoidRadius } from "./tribesman-ai-utils.js";
+import { TransformComponentArray } from "../../../components/TransformComponent.js";
+import { consumeItemFromSlot } from "../../../components/InventoryComponent.js";
+import Tribe from "../../../Tribe.js";
+import { getEntityLayer } from "../../../world.js";
+import { PathfindFailureDefault } from "../../../pathfinding.js";
+import { applyAccelerationFromGround, turnHitboxToAngle } from "../../../hitboxes.js";
+import { pathfindTribesman } from "../../../components/AIPathfindingComponent.js";
 
 const getOccupiedResearchBenchID = (tribesman: Entity, tribe: Tribe): Entity => {
    for (const bench of tribe.getEntitiesByType(EntityType.researchBench)) {

@@ -1,24 +1,17 @@
-import { EntityType } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { Inventory, InventoryName } from "battletribes-shared/items/items";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../../components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../../components/TransformComponent";
-import { HealthComponent } from "../../../components/HealthComponent";
-import { StatusEffectComponent } from "../../../components/StatusEffectComponent";
-import { StructureComponent } from "../../../components/StructureComponent";
-import Tribe from "../../../Tribe";
-import { TribeComponent } from "../../../components/TribeComponent";
-import { addInventoryToInventoryComponent, InventoryComponent } from "../../../components/InventoryComponent";
-import { CookingComponent } from "../../../components/CookingComponent";
-import { CampfireComponent } from "../../../components/CampfireComponent";
-import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuildingLayer";
-import { Point } from "../../../../../shared/src/utils";
-import { HitboxCollisionType, HitboxFlag } from "../../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../../shared/src/boxes/CircularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../../shared/src/collision";
-import { Hitbox } from "../../../hitboxes";
-import { StructureConnection } from "../../../structure-placement";
+import { EntityType, StatusEffect, Inventory, InventoryName, Point, HitboxCollisionType, HitboxFlag, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { EntityConfig } from "../../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../../components/TransformComponent.js";
+import { HealthComponent } from "../../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../../components/StatusEffectComponent.js";
+import { StructureComponent } from "../../../components/StructureComponent.js";
+import Tribe from "../../../Tribe.js";
+import { TribeComponent } from "../../../components/TribeComponent.js";
+import { addInventoryToInventoryComponent, InventoryComponent } from "../../../components/InventoryComponent.js";
+import { CookingComponent } from "../../../components/CookingComponent.js";
+import { CampfireComponent } from "../../../components/CampfireComponent.js";
+import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuildingLayer.js";
+import { Hitbox } from "../../../hitboxes.js";
+import { StructureConnection } from "../../../structure-placement.js";
 
 // @Incomplete: Destroy campfire when remaining heat reaches 0
 

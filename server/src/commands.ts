@@ -1,18 +1,12 @@
-import { DamageSource, Entity } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { parseCommand } from "battletribes-shared/commands";
-import { damageEntity, healEntity } from "./components/HealthComponent";
-import { InventoryComponentArray, addItem, getInventory } from "./components/InventoryComponent";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { getPlayerFromUsername } from "./server/player-clients";
-import { TribeComponentArray } from "./components/TribeComponent";
-import { InventoryName, ItemType, getItemTypeFromString } from "battletribes-shared/items/items";
-import { getRandomPositionInEntity, TransformComponentArray } from "./components/TransformComponent";
-import { Biome } from "../../shared/src/biomes";
-import { Hitbox } from "./hitboxes";
-import { getHeldItem, InventoryUseComponentArray } from "./components/InventoryUseComponent";
-import { createItem } from "./items";
-import PlayerClient from "./server/PlayerClient";
+import { DamageSource, Entity, parseCommand, AttackEffectiveness, InventoryName, ItemType, getItemTypeFromString, Biome } from "battletribes-shared";
+import { damageEntity, healEntity } from "./components/HealthComponent.js";
+import { InventoryComponentArray, addItem } from "./components/InventoryComponent.js";
+import { getPlayerFromUsername } from "./server/player-clients.js";
+import { TribeComponentArray } from "./components/TribeComponent.js";
+import { getRandomPositionInEntity, TransformComponentArray } from "./components/TransformComponent.js";
+import { getHeldItem, InventoryUseComponentArray } from "./components/InventoryUseComponent.js";
+import { createItem } from "./items.js";
+import PlayerClient from "./server/PlayerClient.js";
 
 const ENTITY_SPAWN_RANGE = 200;
 

@@ -1,16 +1,13 @@
-import { StructureType } from "battletribes-shared/structures";
-import { createStructureGrassBlockers } from "../grass-blockers";
-import { BlueprintComponentArray } from "./BlueprintComponent";
-import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity } from "battletribes-shared/entities";
-import { TribeComponentArray } from "./TribeComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "battletribes-shared/packets";
-import { destroyEntity, getEntityLayer, getEntityType } from "../world";
-import { createVirtualStructureFromHitboxes, VirtualStructure } from "../tribesman-ai/building-plans/TribeBuildingLayer";
-import { registerDirtyEntity } from "../server/player-clients";
-import { StructureConnection, calculateRelativeOffsetDirection, createStructureConnection } from "../structure-placement";
+import { StructureType, Entity, ServerComponentType, Packet } from "battletribes-shared";
+import { createStructureGrassBlockers } from "../grass-blockers.js";
+import { BlueprintComponentArray } from "./BlueprintComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { TribeComponentArray } from "./TribeComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { destroyEntity, getEntityLayer, getEntityType } from "../world.js";
+import { createVirtualStructureFromHitboxes, VirtualStructure } from "../tribesman-ai/building-plans/TribeBuildingLayer.js";
+import { registerDirtyEntity } from "../server/player-clients.js";
+import { StructureConnection, calculateRelativeOffsetDirection, createStructureConnection } from "../structure-placement.js";
 
 export class StructureComponent {
    /** The blueprint currently placed on the structure. 0 if none is present */

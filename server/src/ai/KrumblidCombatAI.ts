@@ -1,15 +1,11 @@
-import { assertBoxIsCircular } from "../../../shared/src/boxes/boxes";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Settings } from "../../../shared/src/settings";
-import { getAbsAngleDiff, Point } from "../../../shared/src/utils";
-import { getDistanceFromPointToHitbox } from "../ai-shared";
-import { entitiesAreColliding, CollisionVars } from "../collision-detection";
-import { AIHelperComponent, AIType } from "../components/AIHelperComponent";
-import { damageEntity } from "../components/HealthComponent";
-import { TransformComponentArray } from "../components/TransformComponent";
-import { turnHitboxToAngle } from "../hitboxes";
-import { getEntityType, getEntityAgeTicks } from "../world";
+import { assertBoxIsCircular, Entity, EntityType, AttackEffectiveness, getAbsAngleDiff, Point, Settings } from "battletribes-shared";
+import { getDistanceFromPointToHitbox } from "../ai-shared.js";
+import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
+import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";
+import { damageEntity } from "../components/HealthComponent.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import { turnHitboxToAngle } from "../hitboxes.js";
+import { getEntityType, getEntityAgeTicks } from "../world.js";
 
 export class KrumblidCombatAI {
    public readonly acceleration: number;

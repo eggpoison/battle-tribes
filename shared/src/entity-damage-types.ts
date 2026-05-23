@@ -1,5 +1,5 @@
-import { EntityType } from "./entities";
-import { ITEM_TYPE_RECORD as ITEM_CATEGORY_RECORD, Item, ItemType } from "./items/items";
+import { EntityType } from "./entities.js";
+import { ITEM_TYPE_RECORD as ITEM_CATEGORY_RECORD, Item, ItemType } from "./items/items.js";
 
 // @Cleanup KILL THISSS
 

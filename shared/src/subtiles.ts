@@ -1,4 +1,4 @@
-import { Settings } from "./settings";
+import { Settings } from "./settings.js";
 
 export function getSubtileIndex(subtileX: number, subtileY: number): number {
    return (subtileY + Settings.EDGE_GENERATION_DISTANCE * 4) * Settings.FULL_WORLD_SIZE_TILES * 4 + subtileX + Settings.EDGE_GENERATION_DISTANCE * 4;

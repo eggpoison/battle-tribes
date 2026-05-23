@@ -1,13 +1,10 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { DamageSource, Entity } from "battletribes-shared/entities";
-import { moveEntityToPosition } from "../ai-shared";
-import { TransformComponentArray } from "./TransformComponent";
-import { Point, polarVec2, UtilVar } from "battletribes-shared/utils";
-import { entityExists } from "../world";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { applyKnockback, Hitbox } from "../hitboxes";
+import { ServerComponentType, DamageSource, Entity, Point, polarVec2, UtilVar, AttackEffectiveness,  } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { moveEntityToPosition } from "../ai-shared.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { entityExists } from "../world.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { applyKnockback, Hitbox } from "../hitboxes.js";
 
 const enum Vars {
    TURN_SPEED = UtilVar.PI * 2

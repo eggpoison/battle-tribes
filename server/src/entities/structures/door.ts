@@ -1,22 +1,16 @@
-import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
-import { EntityConfig } from "../../components";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StructureComponent } from "../../components/StructureComponent";
-import Tribe from "../../Tribe";
-import { TribeComponent } from "../../components/TribeComponent";
-import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
-import { DoorComponent } from "../../components/DoorComponent";
-import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
-import { Point } from "../../../../shared/src/utils";
-import { Hitbox } from "../../hitboxes";
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { StructureConnection } from "../../structure-placement";
+import { BuildingMaterial, EntityType, StatusEffect, Point, HitboxCollisionType, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { StructureComponent } from "../../components/StructureComponent.js";
+import Tribe from "../../Tribe.js";
+import { TribeComponent } from "../../components/TribeComponent.js";
+import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent.js";
+import { DoorComponent } from "../../components/DoorComponent.js";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
+import { Hitbox } from "../../hitboxes.js";
+import { StructureConnection } from "../../structure-placement.js";
 
 const HEALTHS = [15, 45];
 

@@ -1,8 +1,9 @@
+import { assert } from "./utils.js";
+
 // @CLEANUP: Rename this to "config.ts"
 
-import { assert } from "./utils";
-
-export const enum Settings {
+// @SPEED: make back into const enum!!
+export enum Settings {
    SERVER_PORT = 8000,
    // @Incomplete was gunna bring these out of the settings enum but cuz this is typescript this messes up some other shit, wait until i can mark them as constexpr
    /** Server ticks per second. */
@@ -15,9 +16,8 @@ export const enum Settings {
    TILE_SIZE = 64,
    SUBTILE_SIZE = TILE_SIZE / 4,
    SUBTILES_IN_TILE = TILE_SIZE / SUBTILE_SIZE,
-   // @Temporary: for now the game uses too much memory to handle a world size of 64x64 chunks. thanks grass
    /** Number of chunks in the world's width and height */
-   WORLD_SIZE_CHUNKS = 16,
+   WORLD_SIZE_CHUNKS = 64,
    /** Number of tiles in a chunk's width and height */
    CHUNK_SIZE = 4,
    CHUNK_UNITS = CHUNK_SIZE * TILE_SIZE,

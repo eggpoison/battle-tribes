@@ -1,22 +1,16 @@
-import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { BuildingMaterial, ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { StatusEffect } from "../../../../shared/src/status-effects";
-import { Point } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { SpikesComponent } from "../../components/SpikesComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StructureComponent } from "../../components/StructureComponent";
-import { TransformComponent, addHitboxToTransformComponent } from "../../components/TransformComponent";
-import { TribeComponent } from "../../components/TribeComponent";
-import { Hitbox } from "../../hitboxes";
-import { StructureConnection } from "../../structure-placement";
-import Tribe from "../../Tribe";
-import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer";
+import { HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, BuildingMaterial, EntityType, StatusEffect, Point } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { SpikesComponent } from "../../components/SpikesComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { StructureComponent } from "../../components/StructureComponent.js";
+import { TransformComponent, addHitboxToTransformComponent } from "../../components/TransformComponent.js";
+import { TribeComponent } from "../../components/TribeComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import { StructureConnection } from "../../structure-placement.js";
+import Tribe from "../../Tribe.js";
+import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 
 // @HACK @MEMORY: COPYNPASTE BETWEEN FLOOR AND WALLS
 const HEALTHS = [15, 45];

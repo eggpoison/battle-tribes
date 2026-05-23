@@ -1,18 +1,12 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { createItemEntityConfig } from "../entities/item-entity";
-import { ComponentArray } from "./ComponentArray";
-import { createItem } from "../items";
-import { ItemComponentArray, itemEntityCanBePickedUp } from "./ItemComponent";
-import { CraftingRecipe } from "battletribes-shared/items/crafting-recipes";
-import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemTally";
-import { InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize } from "battletribes-shared/items/items";
-import { Entity } from "battletribes-shared/entities";
-import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent";
-import { Packet } from "battletribes-shared/packets";
-import { addInventoryDataToPacket, getInventoryDataLength } from "../server/packet-sending";
-import { createEntity, destroyEntity, getEntityLayer } from "../world";
-import { registerDirtyEntity } from "../server/player-clients";
-import { randAngle } from "../../../shared/src/utils";
+import { ServerComponentType, CraftingRecipe, ItemTally2, tallyInventoryItems, InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize, Entity, Packet, randAngle } from "battletribes-shared";
+import { createItemEntityConfig } from "../entities/item-entity.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { createItem } from "../items.js";
+import { ItemComponentArray, itemEntityCanBePickedUp } from "./ItemComponent.js";
+import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent.js";
+import { addInventoryDataToPacket, getInventoryDataLength } from "../server/packet-sending.js";
+import { createEntity, destroyEntity, getEntityLayer } from "../world.js";
+import { registerDirtyEntity } from "../server/player-clients.js";
 
 export interface InventoryOptions {
    readonly acceptsPickedUpItems: boolean;

@@ -1,20 +1,13 @@
-import { HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { ItemType } from "../../../../shared/src/items/items";
-import { StatusEffect } from "../../../../shared/src/status-effects";
-import { Point } from "../../../../shared/src/utils";
-import { EntityConfig, LightCreationInfo } from "../../components";
-import { GlurbBodySegmentComponent } from "../../components/GlurbBodySegmentComponent";
-import { GlurbSegmentComponent } from "../../components/GlurbSegmentComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
-import { createLight } from "../../lights";
+import { HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, EntityType, ItemType, StatusEffect, Point } from "battletribes-shared";
+import { EntityConfig, LightCreationInfo } from "../../components.js";
+import { GlurbBodySegmentComponent } from "../../components/GlurbBodySegmentComponent.js";
+import { GlurbSegmentComponent } from "../../components/GlurbSegmentComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import { createLight } from "../../lights.js";
 
 registerEntityLootOnDeath(EntityType.glurbBodySegment, {
    itemType: ItemType.slurb,

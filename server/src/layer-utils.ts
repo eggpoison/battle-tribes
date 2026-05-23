@@ -1,9 +1,6 @@
-import { boxIsWithinRange } from "../../shared/src/boxes/boxes";
-import { Entity } from "../../shared/src/entities";
-import { Settings } from "../../shared/src/settings";
-import { Point, positionIsInWorld } from "../../shared/src/utils";
-import { TransformComponentArray } from "./components/TransformComponent";
-import Layer from "./Layer";
+import { boxIsWithinRange, Entity, Settings, Point, positionIsInWorld } from "battletribes-shared";
+import { TransformComponentArray } from "./components/TransformComponent.js";
+import Layer from "./Layer.js";
 
 export function getDistanceToClosestEntity(layer: Layer, position: Point): number {
    let minDistance = 2000;

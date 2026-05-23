@@ -1,22 +1,16 @@
-import { EntityType } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../../components";
-import { CraftingStationComponent } from "../../../components/CraftingStationComponent";
-import { HealthComponent } from "../../../components/HealthComponent";
-import { StatusEffectComponent } from "../../../components/StatusEffectComponent";
-import { StructureComponent } from "../../../components/StructureComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../../components/TransformComponent";
-import { TribeComponent } from "../../../components/TribeComponent";
-import Tribe from "../../../Tribe";
-import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuildingLayer";
-import { MithrilAnvilComponent } from "../../../components/MithrilAnvilComponent";
-import { Point } from "../../../../../shared/src/utils";
-import { HitboxCollisionType, HitboxFlag } from "../../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../../shared/src/collision";
-import { Hitbox } from "../../../hitboxes";
-import { StructureConnection } from "../../../structure-placement";
+import { EntityType, StatusEffect, Point, HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { EntityConfig } from "../../../components.js";
+import { CraftingStationComponent } from "../../../components/CraftingStationComponent.js";
+import { HealthComponent } from "../../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../../components/StatusEffectComponent.js";
+import { StructureComponent } from "../../../components/StructureComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../../components/TransformComponent.js";
+import { TribeComponent } from "../../../components/TribeComponent.js";
+import Tribe from "../../../Tribe.js";
+import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuildingLayer.js";
+import { MithrilAnvilComponent } from "../../../components/MithrilAnvilComponent.js";
+import { Hitbox } from "../../../hitboxes.js";
+import { StructureConnection } from "../../../structure-placement.js";
 
 export function createMithrilAnvilConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();

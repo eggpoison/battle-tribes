@@ -1,13 +1,10 @@
-import { EntityType } from "../../../../shared/src/entities";
-import { LightLevelVar } from "../../../../shared/src/light-levels";
-import { Settings } from "../../../../shared/src/settings";
-import { assert, distance, Point } from "../../../../shared/src/utils";
-import { createSlurbTorchConfig } from "../../entities/structures/slurb-torch";
-import Layer from "../../Layer";
-import { calculateLightRangeNodes, getLightIntensityAtNode, getLightLevelNode } from "../../lights";
-import Tribe from "../../Tribe";
-import { BuildingCandidate, buildingCandidateIsValid, createBuildingCandidate } from "./ai-building-utils";
-import { createVirtualStructure, VirtualStructure } from "./TribeBuildingLayer";
+import { EntityType, LightLevelVar, Settings, assert, distance, Point } from "battletribes-shared";
+import { createSlurbTorchConfig } from "../../entities/structures/slurb-torch.js";
+import Layer from "../../Layer.js";
+import { calculateLightRangeNodes, getLightIntensityAtNode, getLightLevelNode } from "../../lights.js";
+import Tribe from "../../Tribe.js";
+import { BuildingCandidate, buildingCandidateIsValid, createBuildingCandidate } from "./ai-building-utils.js";
+import { createVirtualStructure, VirtualStructure } from "./TribeBuildingLayer.js";
 
 const enum Vars {
    MIN_PLACEABLE_LIGHT_LEVEL = 0.3

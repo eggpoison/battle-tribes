@@ -1,7 +1,7 @@
-import { getCircleCircleCollisionResult, getCircleRectangleCollisionResult, CollisionResult } from "../collision";
-import { Point } from "../utils";
-import { _bounds, BaseBox } from "./BaseBox";
-import { Box, boxIsCircular } from "./boxes";
+import { getCircleCircleCollisionResult, getCircleRectangleCollisionResult, CollisionResult } from "../collision.js";
+import { Point } from "../utils.js";
+import { _bounds, BaseBox } from "./BaseBox.js";
+import { Box, boxIsCircular } from "./boxes.js";
 
 export class CircularBox extends BaseBox {
    public radius: number;

@@ -1,15 +1,10 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityType, Entity } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { TribeComponent } from "../../components/TribeComponent";
-import { EntityConfig } from "../../components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { ProjectileComponent } from "../../components/ProjectileComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import Tribe from "../../Tribe";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, Point, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { TribeComponent } from "../../components/TribeComponent.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { ProjectileComponent } from "../../components/ProjectileComponent.js";
+import Tribe from "../../Tribe.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createBallistaWoodenBoltConfig(position: Point, rotation: number, tribe: Tribe, creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

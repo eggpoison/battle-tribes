@@ -1,27 +1,18 @@
-import { PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "battletribes-shared/client-server-types";
-import Layer from "../Layer";
-import { registerCommand } from "../commands";
-import PlayerClient, { HitData } from "./PlayerClient";
-import { createInitialGameDataPacket } from "./packet-sending";
-import { Entity } from "battletribes-shared/entities";
-import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
-import { InventoryComponentArray, addItemToInventory, getInventory } from "../components/InventoryComponent";
-import { TribeComponentArray } from "../components/TribeComponent";
-import { getTileX, getTileY, Point, randInt, randItem } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
-import { getTilesOfBiome } from "../census";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { TurretComponentArray } from "../components/TurretComponent";
-import { EntitySummonPacket } from "battletribes-shared/dev-packets";
-import { InventoryName, ItemType } from "battletribes-shared/items/items";
-import { EntityTickEvent } from "battletribes-shared/entity-events";
-import { TransformComponentArray } from "../components/TransformComponent";
-import { destroyEntity, entityExists } from "../world";
-import { surfaceLayer } from "../layers";
-import { Hitbox } from "../hitboxes";
-import { PlayerComponentArray } from "../components/PlayerComponent";
-import { PacketReader } from "../../../shared/src/packets";
-import { createItem } from "../items";
+import { PlayerKnockbackData, HealData, ResearchOrbCompleteData, Entity, TRIBE_INFO_RECORD, TribeType, getTileX, getTileY, Point, randInt, randItem, Settings, AttackEffectiveness, EntitySummonPacket, InventoryName, ItemType, EntityTickEvent, PacketReader } from "battletribes-shared";
+import Layer from "../Layer.js";
+import { registerCommand } from "../commands.js";
+import PlayerClient, { HitData } from "./PlayerClient.js";
+import { createInitialGameDataPacket } from "./packet-sending.js";
+import { InventoryComponentArray, addItemToInventory, getInventory } from "../components/InventoryComponent.js";
+import { TribeComponentArray } from "../components/TribeComponent.js";
+import { getTilesOfBiome } from "../census.js";
+import { TurretComponentArray } from "../components/TurretComponent.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import { destroyEntity, entityExists } from "../world.js";
+import { surfaceLayer } from "../layers.js";
+import { Hitbox } from "../hitboxes.js";
+import { PlayerComponentArray } from "../components/PlayerComponent.js";
+import { createItem } from "../items.js";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 

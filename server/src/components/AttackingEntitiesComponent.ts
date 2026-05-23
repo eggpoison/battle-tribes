@@ -1,9 +1,7 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { DamageSource, Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { Hitbox } from "../hitboxes";
-import { entityExists } from "../world";
-import { ComponentArray } from "./ComponentArray";
+import { ServerComponentType, DamageSource, Entity, Packet } from "battletribes-shared";
+import { Hitbox } from "../hitboxes.js";
+import { entityExists } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
 
 interface AttackerInfo {
    totalDamageFromEntity: number;

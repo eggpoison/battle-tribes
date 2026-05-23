@@ -1,12 +1,10 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Point, randInt } from "battletribes-shared/utils";
-import { EntityConfig, getConfigTransformComponent } from "../../components";
-import { createGlurbHeadSegmentConfig } from "./glurb-head-segment";
-import { createGlurbBodySegmentConfig } from "./glurb-body-segment";
-import { createGlurbTailSegmentConfig } from "./glurb-tail-segment";
-import { tetherHitboxes } from "../../tethers";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { Hitbox } from "../../hitboxes";
+import { Point, CircularBox } from "battletribes-shared";
+import { EntityConfig, getConfigTransformComponent } from "../../components.js";
+import { createGlurbHeadSegmentConfig } from "./glurb-head-segment.js";
+import { createGlurbBodySegmentConfig } from "./glurb-body-segment.js";
+import { createGlurbTailSegmentConfig } from "./glurb-tail-segment.js";
+import { tetherHitboxes } from "../../tethers.js";
+import { Hitbox } from "../../hitboxes.js";
 
 // @Cleanup: Shouldn't be globally exported!!!!
 export function tetherGlurbSegments(hitbox1: Hitbox, hitbox2: Hitbox): void {

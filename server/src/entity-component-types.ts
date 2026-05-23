@@ -1,6 +1,4 @@
-import { ServerComponentType } from "../../shared/src/components";
-import { EntityType, NUM_ENTITY_TYPES } from "../../shared/src/entities";
-import { assert } from "../../shared/src/utils";
+import { ServerComponentType, EntityType, NUM_ENTITY_TYPES, assert } from "battletribes-shared";
 
 // @ROBUSTNESS! doesn't show any compiler warnings when a new entity type is added. generally very unwieldy
 // @Speed: just assume that all entities have the transform component and handle that separately

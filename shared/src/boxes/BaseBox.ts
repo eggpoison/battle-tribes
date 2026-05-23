@@ -1,6 +1,6 @@
-import { CollisionResult } from "../collision";
-import { Point } from "../utils";
-import { Box } from "./boxes";
+import { CollisionResult } from "../collision.js";
+import { Point } from "../utils.js";
+import { Box } from "./boxes.js";
 
 export enum PivotPointType {
    // @Cleanup: normalised is the wrong kind of term I feel]

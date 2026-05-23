@@ -1,8 +1,7 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { destroyEntity } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { CookingComponentArray } from "./CookingComponent";
+import { ServerComponentType, Entity } from "battletribes-shared";
+import { destroyEntity } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { CookingComponentArray } from "./CookingComponent.js";
 
 export class CampfireComponent {}
 

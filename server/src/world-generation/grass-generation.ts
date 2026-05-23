@@ -1,10 +1,8 @@
-import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
-import Layer from "../Layer";
-import { createGrassStrandConfig } from "../entities/grass-strand";
-import { distance, getTileIndexIncludingEdges, Point, TileIndex, tileIsInWorldIncludingEdges } from "battletribes-shared/utils";
-import { surfaceLayer } from "../layers";
-import { createEntityImmediate } from "../world";
+import { Settings, TileType, distance, getTileIndexIncludingEdges, Point, TileIndex, tileIsInWorldIncludingEdges } from "battletribes-shared";
+import Layer from "../Layer.js";
+import { createGrassStrandConfig } from "../entities/grass-strand.js";
+import { surfaceLayer } from "../layers.js";
+import { createEntityImmediate } from "../world.js";
 
 const enum Vars {
    /** Average number of grass strands per tile in a fully humidified area. */

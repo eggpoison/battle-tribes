@@ -1,57 +1,53 @@
-import { TileType } from "battletribes-shared/tiles";
-import { getTileIndexIncludingEdges, lerp, Point, randInt, smoothstep } from "battletribes-shared/utils";
-import { Settings } from "battletribes-shared/settings";
-import { generateOctavePerlinNoise, generatePerlinNoise, generatePointPerlinNoise } from "../perlin-noise";
-import BIOME_GENERATION_INFO, { BiomeGenerationInfo, BiomeSpawnRequirements, TileGenerationInfo } from "./terrain-generation-info";
-import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } from "./river-generation";
-import OPTIONS from "../options";
-import Layer from "../Layer";
-import { generateCaveEntrances } from "./cave-entrance-generation";
-import { groupLocalBiomes, setWallInSubtiles } from "./terrain-generation-utils";
-import { Biome } from "../../../shared/src/biomes";
-import { createRawSpawnDistribution, EntitySpawnEvent, registerNewSpawnInfo } from "../entity-spawn-info";
-import { EntityType, TreeSize } from "../../../shared/src/entities";
-import { getEntitiesInRange } from "../ai-shared";
-import { getEntityType } from "../world";
-import { TransformComponentArray } from "../components/TransformComponent";
-import { entityIsTribesman } from "../entities/tribes/tribe-member";
-import { entityIsStructure } from "../structure-placement";
-import { EntityConfig, getConfigComponent } from "../components";
-import { ServerComponentType } from "../../../shared/src/components";
-import { createBerryBushConfig } from "../entities/resources/berry-bush";
-import { createTreeConfig } from "../entities/resources/tree";
-import { createBoulderConfig } from "../entities/resources/boulder";
-import { createCactusConfig } from "../entities/desert/cactus";
-import { createYetiConfig } from "../entities/mobs/yeti";
-import { generateYetiTerritoryTiles, yetiTerritoryIsValid } from "../components/YetiComponent";
-import { createIceSpikesConfig } from "../entities/resources/ice-spikes";
-import { createSlimewispConfig } from "../entities/mobs/slimewisp";
-import { createSlimeConfig } from "../entities/mobs/slime";
-import { createFishConfig } from "../entities/mobs/fish";
-import { createLilypadConfig } from "../entities/lilypad";
-import { createTribeWorkerConfig } from "../entities/tribes/tribe-worker";
-import Tribe from "../Tribe";
-import { TribeType } from "../../../shared/src/tribes";
-import { createDesertBushSandyConfig } from "../entities/desert/desert-bush-sandy";
-import { createDesertBushLivelyConfig } from "../entities/desert/desert-bush-lively";
-import { createDesertSmallWeedConfig } from "../entities/desert/desert-small-weed";
-import { createDesertShrubConfig } from "../entities/desert/desert-shrub";
-import { createTumbleweedLiveConfig } from "../entities/desert/tumbleweed-live";
-import { createTumbleweedDeadConfig } from "../entities/desert/tumbleweed-dead";
-import { createPalmTreeConfig } from "../entities/desert/palm-tree";
-import { createSandstoneRockConfig } from "../entities/desert/sandstone-rock";
-import { createSpruceTreeConfig } from "../entities/tundra/spruce-tree";
-import { createTundraRockConfig } from "../entities/tundra/tundra-rock";
-import { createSnowberryBushConfig } from "../entities/tundra/snowberry-bush";
-import { createSnobeConfig } from "../entities/tundra/snobe";
-import { createTundraRockFrozenConfig } from "../entities/tundra/tundra-rock-frozen";
-import { createInguSerpentConfig } from "../entities/tundra/ingu-serpent";
-import { createTukmokConfig } from "../entities/tundra/tukmok";
-import { createDustfleaConfig } from "../entities/desert/dustflea";
-import { createKrumblidConfig } from "../entities/mobs/krumblid";
-import { createOkrenConfig } from "../entities/desert/okren";
-import { createCowConfig } from "../entities/mobs/cow";
-import { getEntityComponentTypes } from "../entity-component-types";
+import { TileType, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randInt, smoothstep, Settings, TribeType, RectangularBox, ServerComponentType, Biome, EntityType, TreeSize, TileIndex, tileIsInWorldIncludingEdges } from "battletribes-shared";
+import { generateOctavePerlinNoise, generatePerlinNoise, generatePointPerlinNoise } from "../perlin-noise.js";
+import BIOME_GENERATION_INFO, { BiomeGenerationInfo, BiomeSpawnRequirements, TileGenerationInfo } from "./terrain-generation-info.js";
+import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } from "./river-generation.js";
+import OPTIONS from "../options.js";
+import Layer from "../Layer.js";
+import { generateCaveEntrances } from "./cave-entrance-generation.js";
+import { groupLocalBiomes, setWallInSubtiles } from "./terrain-generation-utils.js";
+import { createRawSpawnDistribution, EntitySpawnEvent, registerNewSpawnInfo } from "../entity-spawn-info.js";
+import { getEntitiesInRange } from "../ai-shared.js";
+import { destroyEntity, getEntityType, getGameTicks } from "../world.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import { entityIsTribesman } from "../entities/tribes/tribe-member.js";
+import { entityIsStructure } from "../structure-placement.js";
+import { EntityConfig, getConfigComponent } from "../components.js";
+import { createBerryBushConfig } from "../entities/resources/berry-bush.js";
+import { createTreeConfig } from "../entities/resources/tree.js";
+import { createBoulderConfig } from "../entities/resources/boulder.js";
+import { createCactusConfig } from "../entities/desert/cactus.js";
+import { createYetiConfig } from "../entities/mobs/yeti.js";
+import { generateYetiTerritoryTiles, yetiTerritoryIsValid } from "../components/YetiComponent.js";
+import { createIceSpikesConfig } from "../entities/resources/ice-spikes.js";
+import { createSlimewispConfig } from "../entities/mobs/slimewisp.js";
+import { createSlimeConfig } from "../entities/mobs/slime.js";
+import { createFishConfig } from "../entities/mobs/fish.js";
+import { createLilypadConfig } from "../entities/lilypad.js";
+import { createTribeWorkerConfig } from "../entities/tribes/tribe-worker.js";
+import Tribe from "../Tribe.js";
+import { createDesertBushSandyConfig } from "../entities/desert/desert-bush-sandy.js";
+import { createDesertBushLivelyConfig } from "../entities/desert/desert-bush-lively.js";
+import { createDesertSmallWeedConfig } from "../entities/desert/desert-small-weed.js";
+import { createDesertShrubConfig } from "../entities/desert/desert-shrub.js";
+import { createTumbleweedLiveConfig } from "../entities/desert/tumbleweed-live.js";
+import { createTumbleweedDeadConfig } from "../entities/desert/tumbleweed-dead.js";
+import { createPalmTreeConfig } from "../entities/desert/palm-tree.js";
+import { createSandstoneRockConfig } from "../entities/desert/sandstone-rock.js";
+import { createSpruceTreeConfig } from "../entities/tundra/spruce-tree.js";
+import { createTundraRockConfig } from "../entities/tundra/tundra-rock.js";
+import { createSnowberryBushConfig } from "../entities/tundra/snowberry-bush.js";
+import { createSnobeConfig } from "../entities/tundra/snobe.js";
+import { createTundraRockFrozenConfig } from "../entities/tundra/tundra-rock-frozen.js";
+import { createInguSerpentConfig } from "../entities/tundra/ingu-serpent.js";
+import { createTukmokConfig } from "../entities/tundra/tukmok.js";
+import { createDustfleaConfig } from "../entities/desert/dustflea.js";
+import { createKrumblidConfig } from "../entities/mobs/krumblid.js";
+import { createOkrenConfig } from "../entities/desert/okren.js";
+import { getEntityComponentTypes } from "../entity-component-types.js";
+import { surfaceLayer } from "../layers.js";
+import SRandom from "../SRandom.js";
+import { getBoxesCollidingEntities } from "../collision-detection.js";
 
 const enum Vars {
    TRIBESMAN_SPAWN_EXCLUSION_RANGE = 1200
@@ -139,7 +135,7 @@ const matchesBiomeRequirements = (generationInfo: BiomeSpawnRequirements, height
    return true;
 }
 
-const getBiome = (height: number, temperature: number, humidity: number): Biome => {
+const calculateMatchingBiome = (height: number, temperature: number, humidity: number): Biome => {
    for (const biomeGenerationInfo of BIOME_GENERATION_INFO) {
       if (matchesBiomeRequirements(biomeGenerationInfo.spawnRequirements, height, temperature, humidity)) {
          return biomeGenerationInfo.biome;
@@ -147,46 +143,6 @@ const getBiome = (height: number, temperature: number, humidity: number): Biome 
    }
    
    throw new Error(`Couldn't find a valid biome! Height: ${height}, temperature: ${temperature}, humidity: ${humidity}`);
-}
-
-export function getTileDist(tileBiomes: Float32Array, tileX: number, tileY: number, maxSearchDist: number): number {
-   const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-   const tileBiome = tileBiomes[tileIndex] as Biome;
-
-   for (let dist = 1; dist <= maxSearchDist; dist++) {
-      for (let i = 0; i <= dist; i++) {
-         // Top right
-         if (tileX + i >= -Settings.EDGE_GENERATION_DISTANCE && tileX + i < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE && tileY - dist + i >= -Settings.EDGE_GENERATION_DISTANCE && tileY - dist + i < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
-            const topRightBiome = tileBiomes[getTileIndexIncludingEdges(tileX + i, tileY - dist + i)];
-            if (topRightBiome !== tileBiome) {
-               return dist - 1;
-            }
-         }
-         // Bottom right
-         if (tileX + dist - i >= -Settings.EDGE_GENERATION_DISTANCE && tileX + dist - i < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE && tileY + i >= -Settings.EDGE_GENERATION_DISTANCE && tileY + i < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
-            const bottomRightBiome = tileBiomes[getTileIndexIncludingEdges(tileX + dist - i, tileY + i)];
-            if (bottomRightBiome !== tileBiome) {
-               return dist - 1;
-            }
-         }
-         // Bottom left
-         if (tileX - dist + i >= -Settings.EDGE_GENERATION_DISTANCE && tileX - dist + i < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE && tileY + i >= -Settings.EDGE_GENERATION_DISTANCE && tileY + i < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
-            const bottomLeftBiome = tileBiomes[getTileIndexIncludingEdges(tileX - dist + i, tileY + i)];
-            if (bottomLeftBiome !== tileBiome) {
-               return dist - 1;
-            }
-         }
-         // Top left
-         if (tileX - i >= -Settings.EDGE_GENERATION_DISTANCE && tileX - i < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE && tileY - dist + i >= -Settings.EDGE_GENERATION_DISTANCE && tileY - dist + i < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
-            const topLeftBiome = tileBiomes[getTileIndexIncludingEdges(tileX - i, tileY - dist + i)];
-            if (topLeftBiome !== tileBiome) {
-               return dist - 1;
-            }
-         }
-      }
-   }
-
-   return maxSearchDist;
 }
 
 const getBiomeGenerationInfo = (biome: Biome): BiomeGenerationInfo => {
@@ -243,25 +199,9 @@ const getMaxPossibleTemperature = (biome: Biome, tileGenerationInfo: TileGenerat
    return max;
 }
 
-const getTileGenerationInfo = <T extends TileGenerationInfo>(tileBiomes: Float32Array, biome: Biome, tileGenerationArray: ReadonlyArray<T>, tileX: number, tileY: number, height: number, temperature: number, humidity: number): T | undefined => {
-   // @Speed: Pre-calculate this for each biome
-   /** The maximum distance that the algorithm will search for */
-   let maxSearchDist = 0;
-   for (let i = 0; i < tileGenerationArray.length; i++) {
-      const tileGenerationInfo = tileGenerationArray[i];
-      const requirements = tileGenerationInfo.requirements;
-      if (typeof requirements !== "undefined") {
-         if (typeof requirements.minDist !== "undefined" && requirements.minDist > maxSearchDist) {
-            maxSearchDist = requirements.minDist;
-         }
-         if (typeof requirements.maxDist !== "undefined" && requirements.maxDist >= maxSearchDist) {
-            maxSearchDist = requirements.maxDist + 1;
-         }
-      }
-   }
-         
-   // @Speed: There are many tiles which don't need this information
-   const dist = getTileDist(tileBiomes, tileX, tileY, maxSearchDist);
+const getTileGenerationInfo = <T extends TileGenerationInfo>(tileBiomes: Uint8Array, biomeDists: Uint8Array, biome: Biome, tileGenerationArray: ReadonlyArray<T>, tileX: number, tileY: number, height: number, temperature: number, humidity: number): T | undefined => {
+   const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+   const dist = biomeDists[tileIndex];
    
    for (const tileGenerationInfo of tileGenerationArray) {
       const requirements = tileGenerationInfo.requirements;
@@ -347,25 +287,26 @@ const getTileGenerationInfo = <T extends TileGenerationInfo>(tileBiomes: Float32
 }
 
 /** Generate the tile array's tile types based on their biomes */
-const generateTileInfo = (tileBiomes: Float32Array, tileTypes: Float32Array, subtileTypes: Float32Array, heightMap: Array<Array<number>>, temperatureMap: Array<Array<number>>, humidityMap: Array<Array<number>>): void => {
+const generateTileTypes = (tileBiomes: Uint8Array, biomeDists: Uint8Array, tileTypes: Uint8Array, subtileTypes: Uint8Array, heightMap: Array<number>, temperatureMap: Array<number>, humidityMap: Array<number>): void => {
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          
-         const biome = tileBiomes[tileIndex] as Biome;
+         const biome: Biome = tileBiomes[tileIndex];
          const biomeGenerationInfo = getBiomeGenerationInfo(biome);
 
-         const height = heightMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
-         const temperature = temperatureMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
-         const humidity = humidityMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+         const height = heightMap[tileIndex];
+         const temperature = temperatureMap[tileIndex];
+         const humidity = humidityMap[tileIndex];
 
-         const floorTileGenerationInfo = getTileGenerationInfo(tileBiomes, biome, biomeGenerationInfo.floorTiles, tileX, tileY, height, temperature, humidity);
+         const floorTileGenerationInfo = getTileGenerationInfo(tileBiomes, biomeDists, biome, biomeGenerationInfo.floorTiles, tileX, tileY, height, temperature, humidity);
          if (typeof floorTileGenerationInfo === "undefined") {
             throw new Error(`Couldn't find a valid floor tile generation info! Biome: ${biome}`);
          }
+
          tileTypes[tileIndex] = floorTileGenerationInfo.tileType;
          
-         const wallTileGenerationInfo = getTileGenerationInfo(tileBiomes, biome, biomeGenerationInfo.wallTiles, tileX, tileY, height, temperature, humidity);
+         const wallTileGenerationInfo = getTileGenerationInfo(tileBiomes, biomeDists, biome, biomeGenerationInfo.wallTiles, tileX, tileY, height, temperature, humidity);
          if (OPTIONS.generateWalls && typeof wallTileGenerationInfo !== "undefined") {
             setWallInSubtiles(subtileTypes, tileX, tileY, wallTileGenerationInfo.subtileType)
          }
@@ -403,44 +344,104 @@ const getTribeType = (layer: Layer, x: number, y: number): TribeType => {
    }
 }
 
+const spreadBiomeDists = (biomeDists: Uint8Array, biomes: Uint8Array, biomeBorderTiles: Array<TileIndex>): void => {
+   // @Garbage
+   const ADJACENT_OFFSETS_X = [0, 0, 1, -1];
+   const ADJACENT_OFFSETS_Y = [1, -1, 0, 0];
+
+   while (biomeBorderTiles.length > 0) {
+      const tileIndex = biomeBorderTiles[0];
+
+      const biome = biomes[tileIndex];
+      const biomeDist = biomeDists[tileIndex];
+
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
+
+      for (let i = 0; i < 4; i++) {
+         const offsetX = ADJACENT_OFFSETS_X[i];
+         const offsetY = ADJACENT_OFFSETS_Y[i];
+         
+         const adjacentTileX = tileX + offsetX;
+         const adjacentTileY = tileY + offsetY;
+         if (tileIsInWorldIncludingEdges(adjacentTileX, adjacentTileY)) {
+            const adjacentTileIndex = getTileIndexIncludingEdges(adjacentTileX, adjacentTileY);
+            
+            const adjacentBiome = biomes[adjacentTileIndex];
+            const adjacentBiomeDist = biomeDists[adjacentTileIndex];
+            // Since biomeDist=1 will always be spread before biomeDist=2, etc, can elide the check for < adjacentBiomeDist
+            if (adjacentBiome === biome && adjacentBiomeDist === 0) {
+               // @Speed
+               if (!biomeBorderTiles.includes(adjacentTileIndex)) {
+                  biomeBorderTiles.push(adjacentTileIndex);
+                  biomeDists[adjacentTileIndex] = biomeDist + 1;
+               }
+            }
+         }
+      }
+
+      // @speed? chop em all at once?
+      biomeBorderTiles.splice(0, 1);
+   }
+}
+
 export function generateSurfaceTerrain(surfaceLayer: Layer): void {
+   // @SQUEAM
+   SRandom.seed(2845700342);
+   
    for (let i = 0; i < surfaceLayer.ambientLightFactors.length; i++) {
       surfaceLayer.ambientLightFactors[i] = 1;
    }
 
    // Generate the noise
    const heightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HEIGHT_NOISE_SCALE, 3, 1.5, 0.75);
-   const temperatureMap = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, TEMPERATURE_NOISE_SCALE);
-   const humidityMap = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HUMIDITY_NOISE_SCALE);
+   const temperatureMap = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, TEMPERATURE_NOISE_SCALE, 0);
+   const humidityMap = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HUMIDITY_NOISE_SCALE, 0);
 
-   // Fill temperature and humidity arrays
-   for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
-      for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
-         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-         
-         const rawTemperature = temperatureMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
-         surfaceLayer.tileTemperatures[tileIndex] = smoothstep(rawTemperature);
-         
-         const rawHumidity = humidityMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
-         surfaceLayer.tileHumidities[tileIndex] = smoothstep(rawHumidity);
+   const biomeDists = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+
+   const biomeBorderTiles: Array<TileIndex> = [];
+
+   // Fill temperature and humidity arrays, calculate biomes, and mark tiles with biomeDist=1.
+   let previousBiome = 0;
+   for (let tileIndex = 0; tileIndex < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES; tileIndex++) {
+      const rawTemperature = temperatureMap[tileIndex];
+      const rawHumidity = humidityMap[tileIndex];
+      const height = heightMap[tileIndex];
+      
+      // @Huh??
+      const temperature = smoothstep(rawTemperature)
+      const humidity = smoothstep(rawHumidity);
+
+      surfaceLayer.tileTemperatures[tileIndex] = temperature;
+      surfaceLayer.tileHumidities[tileIndex] = humidity;
+
+      const biome = calculateMatchingBiome(height, temperature, humidity);
+
+      surfaceLayer.tileBiomes[tileIndex] = biome;
+
+      // Left-right biome borders
+      const tileX = getTileX(tileIndex);
+      if (biome !== previousBiome && tileX > -Settings.EDGE_GENERATION_DISTANCE) {
+         biomeBorderTiles.push(tileIndex);
+         biomeBorderTiles.push(tileIndex - 1);
+         biomeDists[tileIndex] = 1;
+         biomeDists[tileIndex - 1] = 1;
       }
-   }
-   
-   // Fill tile biomes
-   for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
-      for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
-         const height = heightMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
-         const temperature = temperatureMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
-         const humidity = humidityMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
 
-         // @SQUEAM
-         let biome = getBiome(height, temperature, humidity);
-         if (biome === Biome.tundra || biome === Biome.desert) {
-            biome = Biome.grasslands;
+      previousBiome = biome;
+
+      // Top-down biome borders
+      const tileY = getTileY(tileIndex);
+      if (tileY > -Settings.EDGE_GENERATION_DISTANCE) {
+         const tileBelow = tileIndex - Settings.FULL_WORLD_SIZE_TILES;
+         const biomeBelow = surfaceLayer.tileBiomes[tileBelow];
+         if (biomeBelow !== biome) {
+            biomeBorderTiles.push(tileIndex);
+            biomeBorderTiles.push(tileBelow);
+            biomeDists[tileIndex] = 1;
+            biomeDists[tileBelow] = 1;
          }
-         
-         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-         surfaceLayer.tileBiomes[tileIndex] = biome;
       }
    }
 
@@ -455,8 +456,10 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
       riverMainTiles = [];
    }
 
+   spreadBiomeDists(biomeDists, surfaceLayer.tileBiomes, biomeBorderTiles);
+
    // Generate tiles
-   generateTileInfo(surfaceLayer.tileBiomes, surfaceLayer.tileTypes, surfaceLayer.wallSubtileTypes, heightMap, temperatureMap, humidityMap);
+   generateTileTypes(surfaceLayer.tileBiomes, biomeDists, surfaceLayer.tileTypes, surfaceLayer.wallSubtileTypes, heightMap, temperatureMap, humidityMap);
 
    // Create flow directions array and create ice rivers
    for (const tileInfo of riverTiles) {
@@ -478,7 +481,7 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
    groupLocalBiomes(surfaceLayer);
 
    if (OPTIONS.generateCaves) {
-      generateCaveEntrances(surfaceLayer);
+      generateCaveEntrances(surfaceLayer, biomeDists);
    }
 
    // @SQUEAM for clementus shot
@@ -659,7 +662,8 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
          // @Hack @Copynpaste
          const tileX = Math.floor(pos.x / Settings.TILE_SIZE);
          const tileY = Math.floor(pos.y / Settings.TILE_SIZE);
-         const temperature = temperatureMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         const temperature = temperatureMap[tileIndex];
          if (temperature > 0.25) {
             return null;
          }
@@ -687,7 +691,8 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
          // @Hack @Copynpaste
          const tileX = Math.floor(pos.x / Settings.TILE_SIZE);
          const tileY = Math.floor(pos.y / Settings.TILE_SIZE);
-         const temperature = temperatureMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         const temperature = temperatureMap[tileIndex];
          if (temperature > 0.25) {
             return null;
          }
@@ -1044,7 +1049,8 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
       createEntity: (pos: Point, angle: number): ReadonlyArray<EntityConfig> | null => {
          const tileX = Math.floor(pos.x / Settings.TILE_SIZE);
          const tileY = Math.floor(pos.y / Settings.TILE_SIZE);
-         const temperature = temperatureMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         const temperature = temperatureMap[tileIndex];
          if (temperature < 0.82) {
             return null;
          }
@@ -1220,4 +1226,101 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
          }
       });
    }
+}
+
+// @SQUEAM
+export function regenerateSurfaceTerrain(): void {
+   return;
+   SRandom.seed(2845700342);
+   
+   const builtinRandomFunc = Math.random;
+   Math.random = () => SRandom.next();
+   
+   const thung = getGameTicks() / Settings.TICK_RATE * 1;
+   
+   // Generate the noise
+   const heightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HEIGHT_NOISE_SCALE, 3, 1.5, 0.75, thung);
+   const temperatureMap = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, TEMPERATURE_NOISE_SCALE, thung);
+   const humidityMap = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HUMIDITY_NOISE_SCALE, thung);
+
+   const tileTypes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   const tileBiomes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   const riverFlowDirections = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   const tileTemperatures = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   const tileHumidities = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   // const tileMithrilRichnesses = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   const wallSubtileTypes = new Uint8Array(16 * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+
+   // Fill temperature and humidity arrays
+   for (let tileIndex = 0; tileIndex < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES; tileIndex++) {
+      const rawTemperature = temperatureMap[tileIndex];
+      const rawHumidity = humidityMap[tileIndex];
+      const height = heightMap[tileIndex];
+      
+      // @Huh??
+      const temperature = smoothstep(rawTemperature)
+      const humidity = smoothstep(rawHumidity);
+
+      tileTemperatures[tileIndex] = temperature;
+      tileHumidities[tileIndex] = humidity;
+      tileBiomes[tileIndex] = calculateMatchingBiome(height, temperature, humidity);
+   }
+
+   // Generate rivers
+   let riverTiles: ReadonlyArray<WaterTileGenerationInfo>;
+   if (OPTIONS.generateRivers) {
+      const riverGenerationInfo = generateRiverTiles();
+      riverTiles = riverGenerationInfo.waterTiles;
+      riverMainTiles = riverGenerationInfo.riverMainTiles;
+   } else {
+      riverTiles = [];
+      riverMainTiles = [];
+   }
+
+   // Generate tiles
+   generateTileTypes(tileBiomes, tileTypes, wallSubtileTypes, heightMap, temperatureMap, humidityMap);
+
+   // Create flow directions array and create ice rivers
+   for (const tileInfo of riverTiles) {
+      const tileIndex = getTileIndexIncludingEdges(tileInfo.tileX, tileInfo.tileY);
+      
+      // Make ice rivers
+      if (tileBiomes[tileIndex] === Biome.tundra) {
+         tileTypes[tileIndex] = TileType.ice;
+      } else {
+         tileBiomes[tileIndex] = Biome.river;
+         tileTypes[tileIndex] = TileType.water;
+      }
+      
+      riverFlowDirections[tileIndex] = tileInfo.flowDirectionIdx;
+   }
+
+   for (let tileIndex = 0; tileIndex < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES; tileIndex++) {
+      const type = tileTypes[tileIndex];
+      const biome = tileBiomes[tileIndex];
+
+      const prevType = surfaceLayer.getTileType(tileIndex);
+      const prevBiome = surfaceLayer.getTileBiome(tileIndex);
+      
+      if (type !== prevType || biome !== prevBiome) {
+         surfaceLayer.tileTypes[tileIndex] = type;
+         surfaceLayer.tileBiomes[tileIndex] = biome;
+         surfaceLayer.registerNewTileUpdate(tileIndex);
+
+         if (prevType === TileType.grass) {
+            const tileX = getTileX(tileIndex);
+            const tileY = getTileY(tileIndex);
+            const box = new RectangularBox(new Point((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE), new Point(0, 0), 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
+            const es = getBoxesCollidingEntities(surfaceLayer, [box]);
+            // console.log(es.length);
+            for (const e of es) {
+               if (getEntityType(e) === EntityType.grassStrand) {
+                  destroyEntity(e);
+               }
+            }
+         }
+      }
+   }
+
+   Math.random = builtinRandomFunc;
 }

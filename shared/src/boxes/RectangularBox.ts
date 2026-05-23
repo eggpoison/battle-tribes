@@ -1,7 +1,7 @@
-import { CollisionResult, getCircleRectangleCollisionResult, rectanglesAreColliding } from "../collision";
-import { Point } from "../utils";
-import { _bounds, BaseBox } from "./BaseBox";
-import { Box, boxIsCircular, updateSideAxes } from "./boxes";
+import { CollisionResult, getCircleRectangleCollisionResult, rectanglesAreColliding } from "../collision.js";
+import { Point } from "../utils.js";
+import { _bounds, BaseBox } from "./BaseBox.js";
+import { Box, boxIsCircular, updateSideAxes } from "./boxes.js";
 
 /*
    @Temporary

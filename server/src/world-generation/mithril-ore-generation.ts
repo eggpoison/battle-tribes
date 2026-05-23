@@ -1,12 +1,8 @@
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { Settings } from "../../../shared/src/settings";
-import { getSubtileIndex, subtileIsInWorldIncludingEdges } from "../../../shared/src/subtiles";
-import { SubtileType } from "../../../shared/src/tiles";
-import { angle, Point, randFloat, randInt, randSign } from "../../../shared/src/utils";
-import { getEntitiesInRange } from "../ai-shared";
-import { createMithrilOreNodeConfig } from "../entities/resources/mithril-ore-node";
-import Layer from "../Layer";
-import { createEntityImmediate, getEntityType } from "../world";
+import { Entity, EntityType, Settings, getSubtileIndex, subtileIsInWorldIncludingEdges, SubtileType, angle, Point, randFloat, randInt, randSign } from "battletribes-shared";
+import { getEntitiesInRange } from "../ai-shared.js";
+import { createMithrilOreNodeConfig } from "../entities/resources/mithril-ore-node.js";
+import Layer from "../Layer.js";
+import { createEntityImmediate, getEntityType } from "../world.js";
 
 const enum Vars {
    /** Number of spiky bastards attempted to be generated per subtile */

@@ -1,20 +1,13 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { AMMO_INFO_RECORD, ServerComponentType } from "battletribes-shared/components";
-import { EntityType, DamageSource, Entity, EntityTypeString } from "battletribes-shared/entities";
-import { angleToPoint, Point, polarVec2 } from "battletribes-shared/utils";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { EntityConfig } from "../../components";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { addHitboxToTransformComponent, attachHitbox, TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
-import { ProjectileComponent, ProjectileComponentArray } from "../../components/ProjectileComponent";
-import { ItemType } from "battletribes-shared/items/items";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { entityExists, getEntityType } from "../../world";
-import Tribe from "../../Tribe";
-import { applyKnockback, getHitboxVelocity, Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, AMMO_INFO_RECORD, EntityType, DamageSource, Entity, EntityTypeString, angleToPoint, Point, polarVec2, AttackEffectiveness, ItemType, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent.js";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent.js";
+import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, attachHitbox, TransformComponent, TransformComponentArray } from "../../components/TransformComponent.js";
+import { ProjectileComponent, ProjectileComponentArray } from "../../components/ProjectileComponent.js";
+import { entityExists, getEntityType } from "../../world.js";
+import Tribe from "../../Tribe.js";
+import { applyKnockback, getHitboxVelocity, Hitbox } from "../../hitboxes.js";
 
 export function createWoodenArrowConfig(position: Point, rotation: number, tribe: Tribe, owner: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

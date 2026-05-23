@@ -1,12 +1,8 @@
-import { Entity } from "../../shared/src/entities";
-import { LightLevelNode, LightLevelVar } from "../../shared/src/light-levels";
-import { Packet } from "../../shared/src/packets";
-import { Settings } from "../../shared/src/settings";
-import { assert, distance, lerp, Point } from "../../shared/src/utils";
-import { Hitbox } from "./hitboxes";
-import Layer from "./Layer";
-import PlayerClient from "./server/PlayerClient";
-import { getEntityLayer, getGameTime } from "./world";
+import { Entity, LightLevelNode, LightLevelVar, Packet, Settings, assert, distance, lerp, Point } from "battletribes-shared";
+import { Hitbox } from "./hitboxes.js";
+import Layer from "./Layer.js";
+import PlayerClient from "./server/PlayerClient.js";
+import { getEntityLayer, getGameTime } from "./world.js";
 
 const enum Vars {
    /** The minimum light intensity from which the range of the light in nodes will be decided. */

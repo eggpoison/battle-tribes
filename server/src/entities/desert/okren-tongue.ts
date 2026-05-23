@@ -1,13 +1,9 @@
-import { HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { Entity, EntityType } from "../../../../shared/src/entities";
-import { Point, polarVec2 } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { HealthComponent } from "../../components/HealthComponent";
-import { OkrenTongueComponent } from "../../components/OkrenTongueComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { addHitboxVelocity, Hitbox, HitboxAngularTether } from "../../hitboxes";
+import { HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, polarVec2 } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { OkrenTongueComponent } from "../../components/OkrenTongueComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { addHitboxVelocity, Hitbox, HitboxAngularTether } from "../../hitboxes.js";
 
 export function createOkrenTongueConfig(position: Point, angle: number, okrenHitbox: Hitbox, target: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

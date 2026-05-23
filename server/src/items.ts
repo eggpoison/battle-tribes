@@ -1,4 +1,4 @@
-import { ItemType, Item } from "battletribes-shared/items/items";
+import { ItemType, Item } from "battletribes-shared";
 
 let nextAvailableID = 0;
 const getUniqueID = (): number => {

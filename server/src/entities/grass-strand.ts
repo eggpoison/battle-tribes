@@ -1,14 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../components";
-import { Colour, Point, randFloat, randInt } from "battletribes-shared/utils";
-import { EntityType } from "battletribes-shared/entities";
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent";
-import { LayeredRodComponent } from "../components/LayeredRodComponent";
-import { Hitbox } from "../hitboxes";
-import { TileType } from "../../../shared/src/tiles";
+import { Colour, Point, randFloat, randInt, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, HitboxCollisionType, RectangularBox, TileType } from "battletribes-shared";
+import { EntityConfig } from "../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
+import { LayeredRodComponent } from "../components/LayeredRodComponent.js";
+import { Hitbox } from "../hitboxes.js";
    
 export function createGrassStrandConfig(position: Point, angle: number, tileType: TileType): EntityConfig {
    const transformComponent = new TransformComponent();

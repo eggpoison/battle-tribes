@@ -1,24 +1,16 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { Point, randInt } from "battletribes-shared/utils";
-import { HealthComponent } from "../../components/HealthComponent";
-import { ZombieComponent, ZombieComponentArray } from "../../components/ZombieComponent";
-import { addInventoryToInventoryComponent, InventoryComponent } from "../../components/InventoryComponent";
-import { Inventory, InventoryName, ItemType } from "battletribes-shared/items/items";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import WanderAI from "../../ai/WanderAI";
-import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import { Biome } from "battletribes-shared/biomes";
-import Layer from "../../Layer";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { InventoryUseComponent } from "../../components/InventoryUseComponent";
-import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Settings, Point, randInt, Inventory, InventoryName, ItemType, HitboxCollisionType, Biome, CircularBox } from "battletribes-shared";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { ZombieComponent, ZombieComponentArray } from "../../components/ZombieComponent.js";
+import { addInventoryToInventoryComponent, InventoryComponent } from "../../components/InventoryComponent.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import WanderAI from "../../ai/WanderAI.js";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
+import Layer from "../../Layer.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { InventoryUseComponent } from "../../components/InventoryUseComponent.js";
+import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export const enum ZombieVars {
    CHASE_PURSUE_TIME_TICKS = 5 * Settings.TICK_RATE,

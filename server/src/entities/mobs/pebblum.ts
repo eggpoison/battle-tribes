@@ -1,16 +1,10 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { EntityType } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { HealthComponent } from "../../components/HealthComponent";
-import { PebblumComponent } from "../../components/PebblumComponent";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, StatusEffect, Point, HitboxCollisionType, CircularBox } from "battletribes-shared";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { PebblumComponent } from "../../components/PebblumComponent.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createPebblumConfig(position: Point, rotation: number): EntityConfig {
    const transformComponent = new TransformComponent();

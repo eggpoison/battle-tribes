@@ -1,15 +1,10 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity-events";
-import { InventoryName } from "../../../shared/src/items/items";
-import { Settings } from "../../../shared/src/settings";
-import { randFloat } from "../../../shared/src/utils";
-import { throwItem } from "../entities/tribes/tribe-member";
-import { getHitboxVelocity, Hitbox, setHitboxVelocity } from "../hitboxes";
-import { registerEntityTickEvent } from "../server/player-clients";
-import { ComponentArray } from "./ComponentArray";
-import { getInventory, InventoryComponentArray } from "./InventoryComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { ServerComponentType, Entity, EntityTickEvent, EntityTickEventType, InventoryName, Settings, randFloat } from "battletribes-shared";
+import { throwItem } from "../entities/tribes/tribe-member.js";
+import { getHitboxVelocity, Hitbox, setHitboxVelocity } from "../hitboxes.js";
+import { registerEntityTickEvent } from "../server/player-clients.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { getInventory, InventoryComponentArray } from "./InventoryComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 const enum Vars {
    MIN_ACCIDENT_INTERVAL = 2 * Settings.TICK_RATE,

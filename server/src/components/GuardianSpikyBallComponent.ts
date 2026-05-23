@@ -1,13 +1,8 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity, EntityType, DamageSource } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { Point, polarVec2, randFloat } from "battletribes-shared/utils";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world";
-import { Settings } from "battletribes-shared/settings";
-import { applyKnockback, Hitbox } from "../hitboxes";
+import { ServerComponentType, Entity, EntityType, DamageSource, Packet, AttackEffectiveness, Point, polarVec2, randFloat, Settings } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world.js";
+import { applyKnockback, Hitbox } from "../hitboxes.js";
 
 export class GuardianSpikyBallComponent {
    public lifetime = Math.floor(Settings.TICK_RATE * randFloat(6.5, 8));

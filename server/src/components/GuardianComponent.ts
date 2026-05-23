@@ -1,18 +1,12 @@
-import { HitboxFlag } from "battletribes-shared/boxes/boxes";
-import { GuardianAttackType, ServerComponentType } from "battletribes-shared/components";
-import { Entity, DamageSource } from "battletribes-shared/entities";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { Packet } from "battletribes-shared/packets";
-import { Settings } from "battletribes-shared/settings";
-import { getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVar } from "battletribes-shared/utils";
-import { moveEntityToPosition } from "../ai-shared";
-import { registerDirtyEntity } from "../server/player-clients";
-import { AIHelperComponentArray, AIType } from "./AIHelperComponent";
-import { ComponentArray } from "./ComponentArray";
-import { GuardianSpikyBallComponentArray } from "./GuardianSpikyBallComponent";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { applyKnockback, Hitbox } from "../hitboxes";
+import { HitboxFlag, GuardianAttackType, ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVar } from "battletribes-shared";
+import { moveEntityToPosition } from "../ai-shared.js";
+import { registerDirtyEntity } from "../server/player-clients.js";
+import { AIHelperComponentArray, AIType } from "./AIHelperComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { GuardianSpikyBallComponentArray } from "./GuardianSpikyBallComponent.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { applyKnockback, Hitbox } from "../hitboxes.js";
 
 const enum Vars {
    VISION_RANGE = 250,

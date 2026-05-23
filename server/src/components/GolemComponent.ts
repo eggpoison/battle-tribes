@@ -1,20 +1,14 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS, GolemVars } from "../entities/mobs/golem";
-import { ComponentArray } from "./ComponentArray";
-import { DamageSource, Entity } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
-import { Settings } from "battletribes-shared/settings";
-import { randFloat, lerp, randInt, Point, polarVec2, randAngle } from "battletribes-shared/utils";
-import { createPebblumConfig } from "../entities/mobs/pebblum";
-import { PebblumComponentArray } from "./PebblumComponent";
-import { TransformComponentArray } from "./TransformComponent";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { createEntity, destroyEntity, entityExists, getEntityLayer, getGameTicks } from "../world";
-import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity, HealthComponentArray } from "./HealthComponent";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { applyAccelerationFromGround, applyKnockback, Hitbox, turnHitboxToAngle } from "../hitboxes";
-import { getEntityComponentTypes } from "../entity-component-types";
-import { getConfigComponent } from "../components";
+import { ServerComponentType, DamageSource, Entity, Packet, Settings, randFloat, lerp, randInt, Point, polarVec2, randAngle, CircularBox, AttackEffectiveness } from "battletribes-shared";
+import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS, GolemVars } from "../entities/mobs/golem.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { createPebblumConfig } from "../entities/mobs/pebblum.js";
+import { PebblumComponentArray } from "./PebblumComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { createEntity, destroyEntity, entityExists, getEntityLayer, getGameTicks } from "../world.js";
+import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity, HealthComponentArray } from "./HealthComponent.js";
+import { applyAccelerationFromGround, applyKnockback, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
+import { getEntityComponentTypes } from "../entity-component-types.js";
+import { getConfigComponent } from "../components.js";
 
 const enum Vars {
    TARGET_ENTITY_FORGET_TIME = 20,

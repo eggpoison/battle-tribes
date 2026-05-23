@@ -1,14 +1,7 @@
-import { EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { StructureType } from "battletribes-shared/structures";
-import { Point, assert, distBetweenPointAndRectangle } from "battletribes-shared/utils";
-import { TribeRoom, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas";
-import { Box, boxIsCircular } from "battletribes-shared/boxes/boxes";
-import Layer from "../Layer";
-import { getSubtileIndex } from "../../../shared/src/subtiles";
-import TribeBuildingLayer, { getNumWallConnections, updateTribeWalls } from "./building-plans/TribeBuildingLayer";
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { _bounds } from "../../../shared/src/boxes/BaseBox";
+import { EntityType, Settings, StructureType, Point, assert, distBetweenPointAndRectangle, Box, boxIsCircular, getSubtileIndex, CircularBox, _bounds } from "battletribes-shared";
+import { TribeRoom, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas.js";
+import Layer from "../Layer.js";
+import TribeBuildingLayer, { getNumWallConnections, updateTribeWalls } from "./building-plans/TribeBuildingLayer.js";
 
 const enum Vars {
    /** How much safety increases when moving in a node */

@@ -1,14 +1,9 @@
-import { Box, cloneBox, HitboxCollisionType, HitboxFlag } from "../../shared/src/boxes/boxes";
-import { CollisionBit } from "../../shared/src/collision";
-import { Entity, EntityType } from "../../shared/src/entities";
-import { Settings } from "../../shared/src/settings";
-import { TILE_PHYSICS_INFO_RECORD, TileType } from "../../shared/src/tiles";
-import { getAngleDiff, getTileIndexIncludingEdges, Point, polarVec2, TileIndex } from "../../shared/src/utils";
-import { CollisionVars, entitiesAreColliding } from "./collision-detection";
-import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import { registerPlayerKnockback } from "./server/player-clients";
-import { HitboxTether } from "./tethers";
-import { getEntityLayer, getEntityType } from "./world";
+import { Box, cloneBox, HitboxCollisionType, HitboxFlag, CollisionBit, Entity, EntityType, Settings, TILE_PHYSICS_INFO_RECORD, TileType, getAngleDiff, getTileIndexIncludingEdges, Point, TileIndex } from "battletribes-shared";
+import { CollisionVars, entitiesAreColliding } from "./collision-detection.js";
+import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
+import { registerPlayerKnockback } from "./server/player-clients.js";
+import { HitboxTether } from "./tethers.js";
+import { getEntityLayer, getEntityType } from "./world.js";
 
 export interface HitboxAngularTether {
    readonly originHitbox: Hitbox;

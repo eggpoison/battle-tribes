@@ -90,7 +90,8 @@ const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: Ent
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          const tileType = surfaceLayer.getTile(tileIndex).type;
    
-         const grassInfo = surfaceLayer.grassInfo[tileX]![tileY]!;
+         const grassTemperature = surfaceLayer.tileTemperatures[tileIndex];
+         const grassHumidity = surfaceLayer.tileHumidities[tileIndex];
 
          // Lower layers are darker
          // let brightnessMultiplier = layer / data.numLayers;
@@ -107,10 +108,11 @@ const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: Ent
          renderPart.tintG = g * brightnessMultiplier;
          renderPart.tintB = b * brightnessMultiplier;
          // @Hack: the temperature check seems pointless
-         if (grassInfo.temperature > 0 && tileType === TileType.grass) {
-            let humidity = grassInfo.humidity;
-            if (grassInfo.temperature <= 0.5) {
-               humidity = lerp(humidity, 0, 1 - grassInfo.temperature * 2);
+         if (grassTemperature > 0 && tileType === TileType.grass) {
+            let humidity = grassHumidity;
+            if (grassTemperature <= 0.5) {
+               // At low temperatures, the humidity should be low too.
+               humidity = lerp(humidity, 0, 1 - grassTemperature * 2);
             }
 
             const humidityMultiplier = (humidity - 0.5) * -0.7;
@@ -122,7 +124,7 @@ const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: Ent
                renderPart.tintB = lerp(renderPart.tintB, 0, -humidityMultiplier);
             }
    
-            const hueAdjust = (grassInfo.temperature - 0.5) * 0.8;
+            const hueAdjust = (grassTemperature - 0.5) * 0.8;
             hueShift(renderPart, hueAdjust);
          }
 

@@ -1,4 +1,4 @@
-import { ItemType } from "./items";
+import { ItemType } from "./items.js";
 
 export const COOKING_INGREDIENT_ITEM_TYPES = [ItemType.raw_beef, ItemType.meat_suit, ItemType.raw_fish, ItemType.mithrilOre] satisfies ReadonlyArray<ItemType>;
 export type CookingIngredientItemType = typeof COOKING_INGREDIENT_ITEM_TYPES[number];

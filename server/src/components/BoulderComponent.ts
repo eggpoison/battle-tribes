@@ -1,8 +1,5 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { randInt } from "battletribes-shared/utils";
-import { ComponentArray } from "./ComponentArray";
-import { Entity } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
+import { Packet, Entity, ServerComponentType, randInt } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class BoulderComponent {
    public readonly boulderType = randInt(0, 1);

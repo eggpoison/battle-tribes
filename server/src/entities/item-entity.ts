@@ -1,20 +1,12 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { Point, randAngle } from "battletribes-shared/utils";
-import { ItemComponent } from "../components/ItemComponent";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig, LightCreationInfo } from "../components";
-import { Item, ItemType } from "battletribes-shared/items/items";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { addHitboxToTransformComponent, getRandomPositionInBox, getRandomWeightedHitbox, TransformComponent, TransformComponentArray } from "../components/TransformComponent";
-import Layer from "../Layer";
-import { getSubtileIndex } from "../../../shared/src/subtiles";
-import { createEntity, getEntityLayer } from "../world";
-import { Hitbox } from "../hitboxes";
-import { createLight } from "../lights";
-import { createItem } from "../items";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, Point, randAngle, getSubtileIndex, Item, ItemType, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { ItemComponent } from "../components/ItemComponent.js";
+import { EntityConfig, LightCreationInfo } from "../components.js";
+import { addHitboxToTransformComponent, getRandomPositionInBox, getRandomWeightedHitbox, TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
+import Layer from "../Layer.js";
+import { createEntity, getEntityLayer } from "../world.js";
+import { Hitbox } from "../hitboxes.js";
+import { createLight } from "../lights.js";
+import { createItem } from "../items.js";
 
 export function createItemEntityConfig(position: Point, rotation: number, item: Item, throwingEntity: Entity | null): EntityConfig {
    const transformComponent = new TransformComponent();

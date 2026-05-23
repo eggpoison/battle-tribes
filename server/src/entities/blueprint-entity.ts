@@ -1,17 +1,14 @@
-import { BlueprintType } from "battletribes-shared/components";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { EntityConfig, getConfigTransformComponent } from "../components";
-import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../components/TransformComponent";
-import { HealthComponent } from "../components/HealthComponent";
-import { BlueprintComponent } from "../components/BlueprintComponent";
-import Tribe from "../Tribe";
-import { TribeComponent } from "../components/TribeComponent";
-import { HitboxCollisionType } from "../../../shared/src/boxes/boxes";
-import { StructureComponent } from "../components/StructureComponent";
-import { VirtualStructure } from "../tribesman-ai/building-plans/TribeBuildingLayer";
-import { Point } from "../../../shared/src/utils";
-import { cloneHitbox } from "../hitboxes";
-import { createStructureConfig, StructureConnection } from "../structure-placement";
+import { BlueprintType, Entity, EntityType, Point, HitboxCollisionType } from "battletribes-shared";
+import { EntityConfig, getConfigTransformComponent } from "../components.js";
+import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
+import { HealthComponent } from "../components/HealthComponent.js";
+import { BlueprintComponent } from "../components/BlueprintComponent.js";
+import Tribe from "../Tribe.js";
+import { TribeComponent } from "../components/TribeComponent.js";
+import { StructureComponent } from "../components/StructureComponent.js";
+import { VirtualStructure } from "../tribesman-ai/building-plans/TribeBuildingLayer.js";
+import { cloneHitbox } from "../hitboxes.js";
+import { createStructureConfig, StructureConnection } from "../structure-placement.js";
 
 // @Incomplete: Remove if the associated entity is removed
 

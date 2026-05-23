@@ -1,12 +1,9 @@
-import { Settings } from "../../shared/src/settings";
-import { getSubtileX, getSubtileY, subtileIsInWorldIncludingEdges, getSubtileIndex } from "../../shared/src/subtiles";
-import { SubtileType } from "../../shared/src/tiles";
-import { customTickIntervalHasPassed, distance } from "../../shared/src/utils";
-import { TransformComponent } from "./components/TransformComponent";
-import Layer from "./Layer";
-import { layers } from "./layers";
-import PlayerClient, { PlayerClientVars } from "./server/PlayerClient";
-import { getGameTicks } from "./world";
+import { customTickIntervalHasPassed, distance, SubtileType, getSubtileX, getSubtileY, subtileIsInWorldIncludingEdges, getSubtileIndex, Settings } from "battletribes-shared";
+import { TransformComponent } from "./components/TransformComponent.js";
+import Layer from "./Layer.js";
+import { layers } from "./layers.js";
+import PlayerClient, { PlayerClientVars } from "./server/PlayerClient.js";
+import { getGameTicks } from "./world.js";
 
 const enum Vars {
    MAX_SUPPORT = 100,

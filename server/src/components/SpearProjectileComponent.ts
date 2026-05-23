@@ -1,13 +1,10 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { DamageSource, Entity } from "battletribes-shared/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point, polarVec2 } from "../../../shared/src/utils";
-import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes";
-import { entityExists, destroyEntity } from "../world";
-import { HealthComponentArray, damageEntity } from "./HealthComponent";
-import { ThrowingProjectileComponentArray } from "./ThrowingProjectileComponent";
-import { getEntityRelationship, EntityRelationship } from "./TribeComponent";
+import { ServerComponentType, DamageSource, Entity, AttackEffectiveness, Point, polarVec2 } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes.js";
+import { entityExists, destroyEntity } from "../world.js";
+import { HealthComponentArray, damageEntity } from "./HealthComponent.js";
+import { ThrowingProjectileComponentArray } from "./ThrowingProjectileComponent.js";
+import { getEntityRelationship, EntityRelationship } from "./TribeComponent.js";
 
 const enum Vars {
    DROP_VELOCITY = 300

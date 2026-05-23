@@ -1,9 +1,7 @@
-import { PotentialPlanSafetyData } from "battletribes-shared/ai-building-types";
-import { EntityType, EntityTypeString } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import Tribe from "../Tribe";
-import { SafetyNode, getSafetyNode, safetyNodeIsInWall } from "./ai-building";
-import TribeBuildingLayer, { VirtualStructure } from "./building-plans/TribeBuildingLayer";
+import { PotentialPlanSafetyData, EntityType, EntityTypeString, Settings } from "battletribes-shared";
+import Tribe from "../Tribe.js";
+import { SafetyNode, getSafetyNode, safetyNodeIsInWall } from "./ai-building.js";
+import TribeBuildingLayer, { VirtualStructure } from "./building-plans/TribeBuildingLayer.js";
 
 const enum Vars {
    /** Minimum safety that buildings should have */

@@ -1,14 +1,8 @@
-import { CollisionGroup, collisionGroupsCanCollide } from "battletribes-shared/collision-groups";
-import { Entity } from "battletribes-shared/entities";
-import { collisionBitsAreCompatible } from "battletribes-shared/hitbox-collision";
-import { Settings } from "battletribes-shared/settings";
-import { collide } from "./collision-resolution";
-import { TransformComponentArray } from "./components/TransformComponent";
-import Layer from "./Layer";
-import { Hitbox } from "./hitboxes";
-import { Box } from "../../shared/src/boxes/boxes";
-import { CollisionResult } from "../../shared/src/collision";
-import { _bounds } from "../../shared/src/boxes/BaseBox";
+import { CollisionGroup, collisionGroupsCanCollide, Entity, collisionBitsAreCompatible, Settings, Box, CollisionResult, _bounds } from "battletribes-shared";
+import { collide } from "./collision-resolution.js";
+import { TransformComponentArray } from "./components/TransformComponent.js";
+import Layer from "./Layer.js";
+import { Hitbox } from "./hitboxes.js";
 
 export const enum CollisionVars {
    NO_COLLISION = 0xFFFF

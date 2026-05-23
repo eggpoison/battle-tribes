@@ -1,20 +1,12 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { distance, Point, randAngle, randInt } from "battletribes-shared/utils";
-import { HealthComponent } from "../../components/HealthComponent";
-import { GolemComponent } from "../../components/GolemComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig, LightCreationInfo } from "../../components";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { registerEntityLootOnDeath } from "../../components/LootComponent";
-import { ItemType } from "../../../../shared/src/items/items";
-import { Hitbox } from "../../hitboxes";
-import { createLight } from "../../lights";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Settings, StatusEffect, distance, Point, randAngle, randInt, HitboxCollisionType, CircularBox, ItemType } from "battletribes-shared";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { GolemComponent } from "../../components/GolemComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { EntityConfig, LightCreationInfo } from "../../components.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { registerEntityLootOnDeath } from "../../components/LootComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import { createLight } from "../../lights.js";
 
 export const enum GolemVars {
    PEBBLUM_SUMMON_COOLDOWN_TICKS = 10 * Settings.TICK_RATE

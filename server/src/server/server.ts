@@ -1,54 +1,40 @@
-import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
-import { Settings } from "battletribes-shared/settings";
-import { TribeType } from "battletribes-shared/tribes";
-import { Point } from "battletribes-shared/utils";
-import { ClientPacketType, PacketReader } from "battletribes-shared/packets";
-import WebSocket, { Server } from "ws";
-import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
-import Tribe from "../Tribe";
-import SRandom from "../SRandom";
-import { updateDynamicPathfindingNodes } from "../pathfinding";
-import { updateGrassBlockers } from "../grass-blockers";
-import { broadcastSimulationStatus, createGameDataPacket } from "./packet-sending";
-import PlayerClient, { PlayerClientVars } from "./PlayerClient";
-import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, processCommandPacket, resetDirtyEntities } from "./player-clients";
-import { createPlayerConfig } from "../entities/tribes/player";
-import { processAcquireTamingSkillPacket, processActivatePacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processEndEntityInteractionPacket, processCompleteTamingTierPacket, processDeactivatePacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processItemTransferPacket, processModifyBuildingPacket, processMountCarrySlotPacket, processStartEntityInteractionPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processScreenResizePacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetDebugEntityPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processSyncRequestPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving";
-import { CowSpecies, Entity } from "battletribes-shared/entities";
-import { SpikesComponentArray } from "../components/SpikesComponent";
-import { TribeComponentArray } from "../components/TribeComponent";
-import { TransformComponentArray } from "../components/TransformComponent";
-import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
-import { sortComponentArrays } from "../components/ComponentArray";
-import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, destroyEntity, getEntityType } from "../world";
-import { resolveEntityCollisions } from "../collision-detection";
-import { runCollapses } from "../collapses";
-import { updateTribes } from "../tribes";
-import { surfaceLayer, layers } from "../layers";
-import { generateReeds } from "../world-generation/reed-generation";
-import { riverMainTiles } from "../world-generation/surface-layer-generation";
-import { updateWind } from "../wind";
-import { applyTethers } from "../tethers";
-import { generateGrassStrands } from "../world-generation/grass-generation";
-import { Hitbox } from "../hitboxes";
-import { createCowConfig } from "../entities/mobs/cow";
-import { generateDecorations } from "../world-generation/decoration-generation";
-import { DecorationType } from "../../../shared/src/components";
-import { createDevGameDataPacket } from "./dev-packets";
-import { createTribeWorkerConfig } from "../entities/tribes/tribe-worker";
-import { InventoryName, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS } from "../../../shared/src/items/items";
-import { getCurrentLimbState, InventoryUseComponentArray } from "../components/InventoryUseComponent";
-import { QUIVER_PULL_LIMB_STATE } from "../../../shared/src/attack-patterns";
-import OPTIONS from "../options";
-import { createDecorationConfig } from "../entities/decoration";
-import { getEntitiesAtPosition } from "../layer-utils";
-import { createTreeConfig } from "../entities/resources/tree";
+import { VisibleChunkBounds, Settings, TribeType, Point, ClientPacketType, PacketReader, Entity } from "battletribes-shared";
+import WebSocket, { WebSocketServer } from "ws";
+import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning.js";
+import Tribe from "../Tribe.js";
+import SRandom from "../SRandom.js";
+import { updateDynamicPathfindingNodes } from "../pathfinding.js";
+import { updateGrassBlockers } from "../grass-blockers.js";
+import { broadcastSimulationStatus, createGameDataPacket } from "./packet-sending.js";
+import PlayerClient, { PlayerClientVars } from "./PlayerClient.js";
+import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, processCommandPacket, resetDirtyEntities } from "./player-clients.js";
+import { createPlayerConfig } from "../entities/tribes/player.js";
+import { processAcquireTamingSkillPacket, processActivatePacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processEndEntityInteractionPacket, processCompleteTamingTierPacket, processDeactivatePacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processItemTransferPacket, processModifyBuildingPacket, processMountCarrySlotPacket, processStartEntityInteractionPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processScreenResizePacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetDebugEntityPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processSyncRequestPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving.js";
+import { SpikesComponentArray } from "../components/SpikesComponent.js";
+import { TribeComponentArray } from "../components/TribeComponent.js";
+import { TransformComponentArray } from "../components/TransformComponent.js";
+import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent.js";
+import { sortComponentArrays } from "../components/ComponentArray.js";
+import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed } from "../world.js";
+import { resolveEntityCollisions } from "../collision-detection.js";
+import { runCollapses } from "../collapses.js";
+import { updateTribes } from "../tribes.js";
+import { surfaceLayer, layers } from "../layers.js";
+import { generateReeds } from "../world-generation/reed-generation.js";
+import { regenerateSurfaceTerrain, riverMainTiles } from "../world-generation/surface-layer-generation.js";
+import { updateWind } from "../wind.js";
+import { applyTethers } from "../tethers.js";
+import { generateGrassStrands } from "../world-generation/grass-generation.js";
+import { Hitbox } from "../hitboxes.js";
+import { generateDecorations } from "../world-generation/decoration-generation.js";
+import { createDevGameDataPacket } from "./dev-packets.js";
 
 /*
 
 Reference for future self:
 node --prof-process isolate-0xnnnnnnnnnnnn-v8.log > processed.txt
 
+NODE_OPTIONS="--cpu-prof --cpu-prof-dir=. --cpu-prof-name=gameserver.cpuprofile" npx tsx src/server/server.ts
 */
 
 const entityIsHiddenFromPlayer = (entity: Entity, playerTribe: Tribe): boolean => {
@@ -126,7 +112,7 @@ const estimateVisibleChunkBounds = (spawnPosition: Point, screenWidth: number, s
 // @Cleanup: Remove class, just have functions
 /** Communicates between the server and players */
 class GameServer {
-   private server: Server | null = null;
+   private server: WebSocketServer | null = null;
 
    private tickInterval: NodeJS.Timeout | undefined;
 
@@ -148,6 +134,7 @@ class GameServer {
       // }
 
       SRandom.seed(2845700342);
+      SRandom.logSeed();
 
       // Desert:
       // SRandom.seed(2767843904);
@@ -180,7 +167,7 @@ class GameServer {
 
       Math.random = builtinRandomFunc;
 
-      this.server = new Server({
+      this.server = new WebSocketServer({
          port: Settings.SERVER_PORT
       });
 
@@ -228,43 +215,43 @@ class GameServer {
                }
 
                // @SQUEAM
-               setTimeout(() => {
-                  if (username === "Clementus") {
-                     const config = createCowConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, CowSpecies.brown);
-                     createEntity(config, layer, 0);
-                  }
+               // setTimeout(() => {
+               //    if (username === "Clementus") {
+               //       const config = createCowConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, CowSpecies.brown);
+               //       createEntity(config, layer, 0);
+               //    }
 
-                  let ox = 1731.304931640625 + 10;
-                  let oy = 1931.582763671875;
-                  const fleur1 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.225, DecorationType.flower3);
-                  createEntity(fleur1, surfaceLayer, 0);
-                  ox += 40 * 1.5
-                  oy += 15
-                  const fleur2 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.355, DecorationType.flower3);
-                  createEntity(fleur2, surfaceLayer, 0);
-                  ox += 28 * 1.5
-                  oy += 12
-                  const fleur3 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.255, DecorationType.flower3);
-                  createEntity(fleur3, surfaceLayer, 0);
-                  ox += 28 * 1.5
-                  oy += 4
-                  const fleur4 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.425, DecorationType.flower3);
-                  createEntity(fleur4, surfaceLayer, 0);
+               //    let ox = 1731.304931640625 + 10;
+               //    let oy = 1931.582763671875;
+               //    const fleur1 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.225, DecorationType.flower3);
+               //    createEntity(fleur1, surfaceLayer, 0);
+               //    ox += 40 * 1.5
+               //    oy += 15
+               //    const fleur2 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.355, DecorationType.flower3);
+               //    createEntity(fleur2, surfaceLayer, 0);
+               //    ox += 28 * 1.5
+               //    oy += 12
+               //    const fleur3 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.255, DecorationType.flower3);
+               //    createEntity(fleur3, surfaceLayer, 0);
+               //    ox += 28 * 1.5
+               //    oy += 4
+               //    const fleur4 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.425, DecorationType.flower3);
+               //    createEntity(fleur4, surfaceLayer, 0);
                   
                   
-                  ox += 72;
-                  oy -= 5;
-                  const pebble1 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.225, DecorationType.rock);
-                  createEntity(pebble1, surfaceLayer, 0);
-                  ox += 96;
-                  oy -= 3;
-                  const pebble2 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.105, DecorationType.rock);
-                  createEntity(pebble2, surfaceLayer, 0);
-                  ox += 64;
-                  oy -= 76;
-                  const pebble3 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.055, DecorationType.rock);
-                  createEntity(pebble3, surfaceLayer, 0);
-               }, 1000);
+               //    ox += 72;
+               //    oy -= 5;
+               //    const pebble1 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.225, DecorationType.rock);
+               //    createEntity(pebble1, surfaceLayer, 0);
+               //    ox += 96;
+               //    oy -= 3;
+               //    const pebble2 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.105, DecorationType.rock);
+               //    createEntity(pebble2, surfaceLayer, 0);
+               //    ox += 64;
+               //    oy -= 76;
+               //    const pebble3 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.055, DecorationType.rock);
+               //    createEntity(pebble3, surfaceLayer, 0);
+               // }, 1000);
 
                // if (!isSpectating) {
                //    setTimeout(() => {
@@ -397,6 +384,9 @@ class GameServer {
             broadcastSimulationStatus(SERVER.isSimulating);
          }
       }
+
+      regenerateSurfaceTerrain();
+
       preDestroyFlaggedEntities();
 
       // @HACKKK @HACK only works for this specific network send rate!!
@@ -512,3 +502,9 @@ class GameServer {
 
 export const SERVER = new GameServer();
 SERVER.start();
+
+// Add this to the very bottom of your server entry file
+process.on("SIGINT", () => {
+    console.log("Shutting down game server gracefully...");
+    process.exit(0); // This triggers Node to save the CPU profile!
+});

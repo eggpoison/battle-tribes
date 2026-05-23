@@ -1,18 +1,11 @@
-import { createNormalisedPivotPoint } from "../../../../shared/src/boxes/BaseBox";
-import { HitboxFlag, HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
-import { CircularBox } from "../../../../shared/src/boxes/CircularBox";
-import { RectangularBox } from "../../../../shared/src/boxes/RectangularBox";
-import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
-import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { Point, polarVec2 } from "../../../../shared/src/utils";
-import { EntityConfig } from "../../components";
-import { HealthComponent } from "../../components/HealthComponent";
-import { InguYetuksnoglurblidokowfleaSeekerHeadComponent } from "../../components/InguYetuksnoglurblidokowfleaSeekerHeadComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { Hitbox } from "../../hitboxes";
-import { tetherHitboxes } from "../../tethers";
+import { createNormalisedPivotPoint, HitboxFlag, HitboxCollisionType, CircularBox, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point, polarVec2 } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { InguYetuksnoglurblidokowfleaSeekerHeadComponent } from "../../components/InguYetuksnoglurblidokowfleaSeekerHeadComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import { tetherHitboxes } from "../../tethers.js";
 
 export function createInguYetuksnoglurblidokowfleaSeekerHeadConfig(position: Point, angle: number, baseOffset: Point, isCow: boolean, numSegments: number): EntityConfig {
    const transformComponent = new TransformComponent();

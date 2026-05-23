@@ -1,16 +1,11 @@
-import { HitboxFlag } from "../../../shared/src/boxes/boxes";
-import { ServerComponentType } from "../../../shared/src/components";
-import { DamageSource, Entity, EntityType } from "../../../shared/src/entities";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Settings } from "../../../shared/src/settings";
-import { Point, polarVec2, randFloat } from "../../../shared/src/utils";
-import { getConfigTransformComponent } from "../components";
-import { createInguYetukLaserConfig } from "../entities/wtf/ingu-yetuk-laser";
-import { addHitboxVelocity, applyAbsoluteKnockback, applyAcceleration, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "../hitboxes";
-import { createEntity, getEntityLayer, getEntityType } from "../world";
-import { ComponentArray } from "./ComponentArray";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randFloat } from "battletribes-shared";
+import { getConfigTransformComponent } from "../components.js";
+import { createInguYetukLaserConfig } from "../entities/wtf/ingu-yetuk-laser.js";
+import { addHitboxVelocity, applyAbsoluteKnockback, applyAcceleration, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
+import { createEntity, getEntityLayer, getEntityType } from "../world.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { TransformComponentArray } from "./TransformComponent.js";
 
 export class InguYetuksnoglurblidokowfleaSeekerHeadComponent {
    readonly isCow: boolean;

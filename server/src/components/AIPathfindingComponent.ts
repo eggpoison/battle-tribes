@@ -1,26 +1,21 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { InventoryName } from "../../../shared/src/items/items";
-import { Settings, PathfindingSettings } from "../../../shared/src/settings";
-import { TileType } from "../../../shared/src/tiles";
-import { angleToPoint, assert, curveWeight, distance, Point, polarVec2, Vector } from "../../../shared/src/utils";
-import { getEntitiesInRange, getVelocityClosenessAdjustmentFactor } from "../ai-shared";
-import { TRIBESMAN_TURN_SPEED } from "../entities/tribes/tribesman-ai/tribesman-ai";
-import { getHumanoidRadius, getTribesmanAcceleration } from "../entities/tribes/tribesman-ai/tribesman-ai-utils";
-import { Hitbox, applyAccelerationFromGround, getHitboxTile, getHitboxVelocity, turnHitboxToAngle } from "../hitboxes";
-import Layer from "../Layer";
-import { surfaceLayer } from "../layers";
-import { convertEntityPathfindingGroupID, entityCanBlockPathfinding, entityHasReachedNode, runPathfindingMultiLayer, getAngleToNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, getPathfindingNodePos, Path, PathfindFailureDefault, PathfindOptions, positionIsAccessible } from "../pathfinding";
-import Tribe from "../Tribe";
-import { getEntityAgeTicks, getEntityLayer, getEntityType, getGameTicks } from "../world";
-import { AIHelperComponentArray } from "./AIHelperComponent";
-import { ComponentArray } from "./ComponentArray";
-import { doorIsClosed, toggleDoor } from "./DoorComponent";
-import { InventoryUseComponentArray } from "./InventoryUseComponent";
-import { changeEntityLayer, TransformComponentArray } from "./TransformComponent";
-import { EntityRelationship, getEntityRelationship, TribeComponentArray } from "./TribeComponent";
-import { TribesmanPathType } from "./TribesmanAIComponent";
-import { TribesmanComponentArray } from "./TribesmanComponent";
+import { ServerComponentType, Entity, EntityType, InventoryName, Settings, PathfindingSettings, TileType, angleToPoint, assert, curveWeight, distance, Point, polarVec2 } from "battletribes-shared";
+import { getEntitiesInRange, getVelocityClosenessAdjustmentFactor } from "../ai-shared.js";
+import { TRIBESMAN_TURN_SPEED } from "../entities/tribes/tribesman-ai/tribesman-ai.js";
+import { getHumanoidRadius, getTribesmanAcceleration } from "../entities/tribes/tribesman-ai/tribesman-ai-utils.js";
+import { Hitbox, applyAccelerationFromGround, getHitboxTile, getHitboxVelocity, turnHitboxToAngle } from "../hitboxes.js";
+import Layer from "../Layer.js";
+import { surfaceLayer } from "../layers.js";
+import { convertEntityPathfindingGroupID, entityCanBlockPathfinding, entityHasReachedNode, runPathfindingMultiLayer, getAngleToNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, Path, PathfindFailureDefault, PathfindOptions, positionIsAccessible } from "../pathfinding.js";
+import Tribe from "../Tribe.js";
+import { getEntityAgeTicks, getEntityLayer, getEntityType, getGameTicks } from "../world.js";
+import { AIHelperComponentArray } from "./AIHelperComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { doorIsClosed, toggleDoor } from "./DoorComponent.js";
+import { InventoryUseComponentArray } from "./InventoryUseComponent.js";
+import { changeEntityLayer, TransformComponentArray } from "./TransformComponent.js";
+import { EntityRelationship, getEntityRelationship, TribeComponentArray } from "./TribeComponent.js";
+import { TribesmanPathType } from "./TribesmanAIComponent.js";
+import { TribesmanComponentArray } from "./TribesmanComponent.js";
 
 const enum Vars {
    BLOCKING_TRIBESMAN_DISTANCE = 80,

@@ -1,15 +1,10 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import {ServerComponentType } from "battletribes-shared/components";
-import { EntityType, Entity } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { EntityConfig } from "../../components";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { ProjectileComponent } from "../../components/ProjectileComponent";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { RectangularBox } from "battletribes-shared/boxes/RectangularBox";
-import { SlingTurretRockComponent } from "../../components/SlingTurretRockComponent";
-import { Hitbox } from "../../hitboxes";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, Point, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent.js";
+import { EntityConfig } from "../../components.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { ProjectileComponent } from "../../components/ProjectileComponent.js";
+import { SlingTurretRockComponent } from "../../components/SlingTurretRockComponent.js";
+import { Hitbox } from "../../hitboxes.js";
 
 export function createSlingTurretRockConfig(position: Point, rotation: number, owner: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

@@ -1,7 +1,5 @@
-import { DecorationType, ServerComponentType } from "battletribes-shared/components";
-import { ComponentArray } from "./ComponentArray";
-import { Entity } from "battletribes-shared/entities";
-import { Packet } from "battletribes-shared/packets";
+import { Packet, Entity, DecorationType, ServerComponentType } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class DecorationComponent {
    public decorationType: DecorationType;

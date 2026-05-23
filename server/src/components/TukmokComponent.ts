@@ -1,28 +1,22 @@
-import { HitboxFlag } from "../../../shared/src/boxes/boxes";
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity, EntityType } from "../../../shared/src/entities";
-import { EntityTickEvent, EntityTickEventType } from "../../../shared/src/entity-events";
-import { ItemType } from "../../../shared/src/items/items";
-import { Settings } from "../../../shared/src/settings";
-import { customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randInt, secondsToTicks } from "../../../shared/src/utils";
-import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared";
-import { entitiesAreColliding, CollisionVars } from "../collision-detection";
-import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components";
-import { createItemEntityConfig } from "../entities/item-entity";
-import { applyAcceleration, applyForce, Hitbox } from "../hitboxes";
-import { createItem } from "../items";
-import { registerEntityTickEvent } from "../server/player-clients";
-import { createEntity, destroyEntity, entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
-import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent";
-import { AttackingEntitiesComponentArray } from "./AttackingEntitiesComponent";
-import { ComponentArray } from "./ComponentArray";
-import { addHungerEnergy, getEntityFullness } from "./EnergyStomachComponent";
-import { hitEntityWithoutDamage } from "./HealthComponent";
-import { ItemComponentArray } from "./ItemComponent";
-import { getAvailableCarrySlot, mountCarrySlot, RideableComponentArray } from "./RideableComponent";
-import { getRiderTargetPosition, TamingComponentArray } from "./TamingComponent";
-import { attachHitbox, detachHitbox, TransformComponent, TransformComponentArray } from "./TransformComponent";
-import { TribeComponentArray } from "./TribeComponent";
+import { HitboxFlag, ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType, ItemType, Settings, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randInt, secondsToTicks } from "battletribes-shared";
+import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared.js";
+import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
+import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components.js";
+import { createItemEntityConfig } from "../entities/item-entity.js";
+import { applyAcceleration, applyForce, Hitbox } from "../hitboxes.js";
+import { createItem } from "../items.js";
+import { registerEntityTickEvent } from "../server/player-clients.js";
+import { createEntity, destroyEntity, entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world.js";
+import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent.js";
+import { AttackingEntitiesComponentArray } from "./AttackingEntitiesComponent.js";
+import { ComponentArray } from "./ComponentArray.js";
+import { addHungerEnergy, getEntityFullness } from "./EnergyStomachComponent.js";
+import { hitEntityWithoutDamage } from "./HealthComponent.js";
+import { ItemComponentArray } from "./ItemComponent.js";
+import { getAvailableCarrySlot, mountCarrySlot, RideableComponentArray } from "./RideableComponent.js";
+import { getRiderTargetPosition, TamingComponentArray } from "./TamingComponent.js";
+import { attachHitbox, detachHitbox, TransformComponent, TransformComponentArray } from "./TransformComponent.js";
+import { TribeComponentArray } from "./TribeComponent.js";
 
 const enum TrunkCombatState {
    active,

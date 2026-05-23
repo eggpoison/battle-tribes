@@ -1,13 +1,13 @@
-import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings, getTileIndexIncludingEdges, getSubtileIndex, getSubtileX, getSubtileY, CollisionGroup, subtileIsInWorldIncludingEdges, subtileIsInWorld } from "webgl-test-shared";
+import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings, getTileIndexIncludingEdges, getSubtileIndex, getSubtileX, getSubtileY, CollisionGroup } from "webgl-test-shared";
 import Chunk from "./Chunk";
 import { Light } from "./lights";
 import Particle from "./Particle";
 import { NUM_RENDER_LAYERS, RenderLayer } from "./render-layers";
-import { RENDER_CHUNK_SIZE, RenderChunkRiverInfo } from "./rendering/render-chunks";
+import { getRenderChunkIndex, RENDER_CHUNK_SIZE, RenderChunkRiverInfo } from "./rendering/render-chunks";
 import { addRenderable, removeRenderable, RenderableType } from "./rendering/render-loop";
 import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity, RenderLayerModifyInfo, EntityChunkData, ChunkedRenderLayer, CHUNKED_RENDER_LAYERS, RenderLayerChunkDataRecord } from "./rendering/webgl/chunked-entity-rendering";
 import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, lowMonocolourParticles, lowTexturedParticles, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";
-import { recalculateWallSubtileRenderData } from "./rendering/webgl/solid-tile-rendering";
+import { updateRenderChunkTileData } from "./rendering/webgl/solid-tile-rendering";
 import { recalculateTileShadows, TileShadowType } from "./rendering/webgl/tile-shadow-rendering";
 import { recalculateWallBorders } from "./rendering/webgl/wall-border-rendering";
 import { playSound } from "./sound";
@@ -17,11 +17,12 @@ export default class Layer {
    public readonly idx: number;
    
    public readonly tiles: ReadonlyArray<Tile>;
-   public readonly wallSubtileTypes: Float32Array;
+   public readonly wallSubtileTypes: Uint8Array;
    public readonly wallSubtileDamageTakenMap: Map<number, number>;
    public readonly riverFlowDirections: RiverFlowDirectionsRecord;
    public readonly waterRocks: Array<WaterRockData>;
-   public readonly grassInfo: Partial<Record<number, Partial<Record<number, GrassTileInfo>>>>;
+   public readonly tileTemperatures: Float32Array;
+   public readonly tileHumidities: Float32Array;
 
    /** All dropdown tiles in the layer */
    public readonly dropdownTiles: ReadonlyArray<TileIndex>;
@@ -43,14 +44,15 @@ export default class Layer {
 
    public readonly slimeTrailPixels = new Map<number, number>();
    
-   constructor(idx: number, tiles: ReadonlyArray<Tile>, wallSubtileTypes: Float32Array, wallSubtileDamageTakenMap: Map<number, number>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, grassInfo: Partial<Record<number, Partial<Record<number, GrassTileInfo>>>>) {
+   constructor(idx: number, tiles: ReadonlyArray<Tile>, wallSubtileTypes: Uint8Array, wallSubtileDamageTakenMap: Map<number, number>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, tileTemperatures: Float32Array, tileHumidities: Float32Array) {
       this.idx = idx;
       this.wallSubtileTypes = wallSubtileTypes;
       this.wallSubtileDamageTakenMap = wallSubtileDamageTakenMap;
       this.tiles = tiles;
       this.riverFlowDirections = riverFlowDirections;
       this.waterRocks = waterRocks;
-      this.grassInfo = grassInfo;
+      this.tileTemperatures = tileTemperatures;
+      this.tileHumidities = tileHumidities;
 
       // Create the chunk array
       const chunks: Array<Chunk> = [];
@@ -116,7 +118,8 @@ export default class Layer {
    }
 
    private recalculateRenderChunkWalls(renderChunkX: number, renderChunkY: number): void {
-      recalculateWallSubtileRenderData(this, renderChunkX, renderChunkY);
+      const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
+      updateRenderChunkTileData(this, renderChunkIdx, true);
       recalculateTileShadows(this, renderChunkX, renderChunkY, TileShadowType.wallShadow);
       recalculateWallBorders(this, renderChunkX, renderChunkY);
    }

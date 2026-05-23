@@ -1,21 +1,14 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared/collision";
-import { Entity, EntityType } from "battletribes-shared/entities";
-import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityConfig } from "../../components";
-import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { CircularBox } from "battletribes-shared/boxes/CircularBox";
-import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
-import WanderAI from "../../ai/WanderAI";
-import { Biome } from "battletribes-shared/biomes";
-import Layer from "../../Layer";
-import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent";
-import { HealthComponent } from "../../components/HealthComponent";
-import { StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { SlimewispComponent } from "../../components/SlimewispComponent";
-import { Hitbox } from "../../hitboxes";
-import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, StatusEffect, Point, HitboxCollisionType, CircularBox, Biome } from "battletribes-shared";
+import { EntityConfig } from "../../components.js";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
+import WanderAI from "../../ai/WanderAI.js";
+import Layer from "../../Layer.js";
+import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
+import { HealthComponent } from "../../components/HealthComponent.js";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { SlimewispComponent } from "../../components/SlimewispComponent.js";
+import { Hitbox } from "../../hitboxes.js";
+import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared.js";
 
 function positionIsValidCallback(_entity: Entity, layer: Layer, x: number, y: number): boolean {
    return layer.getBiomeAtPosition(x, y) === Biome.swamp;

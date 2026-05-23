@@ -1,5 +1,4 @@
-import { Vector, Point, randAngle } from "battletribes-shared/utils";
-import SRandom from "./SRandom";
+import { Point, randAngle } from "battletribes-shared";
 
 const lerp = (start: number, end: number, amount: number): number => {
    return start * (1 - amount) + end * amount;
@@ -29,22 +28,24 @@ const calculateCornerDotProduct = (gridXCoordinates: number[][], gridYCoordinate
    return dotProduct;
 }
 
-const cosAngles = new Array<number>();
-const sinAngles = new Array<number>();
+const cosAngles: Array<number> = [];
+const sinAngles: Array<number> = [];
 
+// @HACK!!! Just remove this. Not worth the loss in terrain accuracy.
 for (let i = 0; i < 360; i++) {
    cosAngles.push(Math.cos(i / 180 * Math.PI));
    sinAngles.push(Math.sin(i / 180 * Math.PI));
 }
 
-export function generatePerlinNoise(width: number, height: number, scale: number): Array<Array<number>> {
-   const gridXCoordinates = new Array<Array<number>>();
-   const gridYCoordinates = new Array<Array<number>>();
+// @TEMPORARY: the thung
+export function generatePerlinNoise(width: number, height: number, scale: number, thung: number): Array<number> {
+   const gridXCoordinates: Array<Array<number>> = [];
+   const gridYCoordinates: Array<Array<number>> = [];
    for (let i = 0; i <= height / scale + 1; i++) {
-      const xCoordinates = new Array<number>();
-      const yCoordinates = new Array<number>();
+      const xCoordinates: Array<number> = [];
+      const yCoordinates: Array<number> = [];
       for (let j = 0; j <= width / scale + 1; j++) {
-         const degrees = Math.floor(360 * SRandom.next());
+         const degrees = Math.floor(360 * Math.random());
          const x = cosAngles[degrees];
          const y = sinAngles[degrees];
          xCoordinates.push(x);
@@ -54,11 +55,13 @@ export function generatePerlinNoise(width: number, height: number, scale: number
       gridYCoordinates.push(yCoordinates);
    }
 
-   const noise = new Array<Array<number>>();
+   const noise: Array<number> = [];
    for (let y = 0; y < height; y++) {
-      const row = new Array<number>();
       for (let x = 0; x < width; x++) {
-         const sampleX = x / scale;
+         // @Temporary
+         // @Speed
+         const sampleX = ((x + thung) % width) / scale;
+         // @Speed
          const sampleY = y / scale;
 
          const x0 = Math.floor(sampleX);
@@ -75,9 +78,8 @@ export function generatePerlinNoise(width: number, height: number, scale: number
          const v = fade(sampleY % 1);
          let val = interpolate(dotProduct1, dotProduct2, dotProduct3, dotProduct4, u, v);
          val = Math.min(Math.max(val, -0.5), 0.5);
-         row.push(val + 0.5);
+         noise.push(val + 0.5);
       }
-      noise.push(row);
    }
    return noise;
 }
@@ -88,38 +90,37 @@ export function generatePerlinNoise(width: number, height: number, scale: number
  * @param lacunarity Controls the decrease in scale between octaves (1+)
  * @param persistance Controls the decrease in weight between octaves (0-1)
  */
-export function generateOctavePerlinNoise(width: number, height: number, startingScale: number, octaves: number, lacunarity: number, persistance: number): Array<Array<number>> {
-   let totalNoise = new Array<Array<number>>();
+export function generateOctavePerlinNoise(width: number, height: number, startingScale: number, octaves: number, lacunarity: number, persistance: number, thung: number = 0): Array<number> {
+   const length = width * height;
+   
+   let totalNoise = new Array<number>();
    for (let i = 0; i < octaves; i++) {
       const scale = Math.pow(lacunarity, -i) * startingScale;
       const weightMultiplier = Math.pow(persistance, i);
 
-      const noise = generatePerlinNoise(width, height, scale);
+      const noise = generatePerlinNoise(width, height, scale, thung);
       if (i === 0) {
          totalNoise = noise;
       } else {
-         for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-               totalNoise[y][x] += noise[y][x] * weightMultiplier;
-            }
+         for (let i = 0; i < length; i++) {
+            totalNoise[i] += noise[i] * weightMultiplier;
          }
       }
    }
 
    // Ensure that all values stay below 1
-
+   // @SPEED!!?
    let maxWeight = 1;
-   for (const row of totalNoise) {
-      for (const weight of row) {
-         if (weight > maxWeight) maxWeight = weight;
+   for (let i = 0; i < length; i++) {
+      const weight = totalNoise[i];
+      if (weight > maxWeight) {
+         maxWeight = weight;
       }
    }
    if (maxWeight > 1) {
       // Adjust weights
-      for (let y = 0; y < height; y++) {
-         for (let x = 0; x < width; x++) {
-            totalNoise[y][x] /= maxWeight;
-         }
+      for (let i = 0; i < length; i++) {
+         totalNoise[i] /= maxWeight;
       }
    }
 

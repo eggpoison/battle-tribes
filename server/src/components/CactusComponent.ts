@@ -1,17 +1,11 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { Entity, EntityType, DamageSource, CactusFlowerSize } from "battletribes-shared/entities";
-import { ComponentArray } from "./ComponentArray";
-import { Packet } from "battletribes-shared/packets";
-import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
-import { Point, polarVec2, randAngle, randInt } from "../../../shared/src/utils";
-import { getEntityType, destroyEntity, getEntityLayer, createEntity } from "../world";
-import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
-import { applyAbsoluteKnockback, Hitbox } from "../hitboxes";
-import { Settings } from "../../../shared/src/settings";
-import { TransformComponent, TransformComponentArray } from "./TransformComponent";
-import { CircularBox } from "../../../shared/src/boxes/CircularBox";
-import { createPricklyPearConfig } from "../entities/desert/prickly-pear";
-import { createEntityConfigAttachInfo } from "../components";
+import { Settings, Point, polarVec2, randAngle, randInt, AttackEffectiveness, Packet, Entity, EntityType, DamageSource, CactusFlowerSize, ServerComponentType, CircularBox } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
+import { getEntityType, destroyEntity, getEntityLayer, createEntity } from "../world.js";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
+import { applyAbsoluteKnockback, Hitbox } from "../hitboxes.js";
+import { TransformComponent, TransformComponentArray } from "./TransformComponent.js";
+import { createPricklyPearConfig } from "../entities/desert/prickly-pear.js";
+import { createEntityConfigAttachInfo } from "../components.js";
 
 export interface CactusFlower {
    readonly parentHitboxLocalID: number;

@@ -1,7 +1,7 @@
-import { Box } from "./boxes/boxes";
-import { RectangularBox } from "./boxes/RectangularBox";
-import { Settings } from "./settings";
-import { Mutable, Point, _point, distance, polarVec2, rotatePointAroundPoint } from "./utils";
+import { Box } from "./boxes/boxes.js";
+import { RectangularBox } from "./boxes/RectangularBox.js";
+import { Settings } from "./settings.js";
+import { Mutable, Point, _point, distance, polarVec2, rotatePointAroundPoint } from "./utils.js";
 
 export enum CollisionBit {
    default = 1 << 0,

@@ -1,22 +1,15 @@
-import { EntityTypeString } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { randFloat, getTileIndexIncludingEdges, distance, randAngle, Point } from "battletribes-shared/utils";
-import Layer from "./Layer";
-import { addEntityToCensus, getEntityCount } from "./census";
-import OPTIONS from "./options";
-import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import { createEntityImmediate, getEntityType, isNight } from "./world";
-import { EntityConfig, getConfigTransformComponent } from "./components";
-import { addEntityToSpawnDistribution, EntitySpawnEvent, SPAWN_INFOS } from "./entity-spawn-info";
-import { HitboxFlag } from "../../shared/src/boxes/boxes";
-import { getSubtileIndex } from "../../shared/src/subtiles";
-import { undergroundLayer } from "./layers";
-import { generateMithrilOre } from "./world-generation/mithril-ore-generation";
-import { boxIsCollidingWithSubtile, boxIsCollidingWithTile } from "../../shared/src/collision";
-import { CollisionGroup, getEntityCollisionGroup } from "../../shared/src/collision-groups";
-import { Hitbox } from "./hitboxes";
-import { getHitboxesCollidingEntities } from "./collision-detection";
-import { _bounds } from "../../shared/src/boxes/BaseBox";
+import { EntityTypeString, Settings, randFloat, getTileIndexIncludingEdges, distance, randAngle, Point, HitboxFlag, getSubtileIndex, boxIsCollidingWithSubtile, boxIsCollidingWithTile, CollisionGroup, getEntityCollisionGroup, _bounds } from "battletribes-shared";
+import Layer from "./Layer.js";
+import { addEntityToCensus, getEntityCount } from "./census.js";
+import OPTIONS from "./options.js";
+import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
+import { createEntityImmediate, getEntityType, isNight } from "./world.js";
+import { EntityConfig, getConfigTransformComponent } from "./components.js";
+import { addEntityToSpawnDistribution, EntitySpawnEvent, SPAWN_INFOS } from "./entity-spawn-info.js";
+import { undergroundLayer } from "./layers.js";
+import { generateMithrilOre } from "./world-generation/mithril-ore-generation.js";
+import { Hitbox } from "./hitboxes.js";
+import { getHitboxesCollidingEntities } from "./collision-detection.js";
 
 const spawnConditionsAreMet = (spawnInfo: EntitySpawnEvent): boolean => {
    // Make sure there is a block which lacks density

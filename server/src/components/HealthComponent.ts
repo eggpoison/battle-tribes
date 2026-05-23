@@ -1,18 +1,12 @@
-import { ServerComponentType } from "battletribes-shared/components";
-import { DamageSource, EntityType, Entity } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { Point, clamp } from "battletribes-shared/utils";
-import { onZombieVisibleEntityHurt } from "../entities/mobs/zombie";
-import { AIHelperComponentArray } from "./AIHelperComponent";
-import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { registerDirtyEntity, registerEntityHeal, registerEntityHit } from "../server/player-clients";
-import { ComponentArray, getComponentArrayRecord } from "./ComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "battletribes-shared/packets";
-import { destroyEntity, getEntityType } from "../world";
-import { Hitbox } from "../hitboxes";
-import { HitFlags } from "../../../shared/src/client-server-types";
-import { getEntityComponentTypes } from "../entity-component-types";
+import { ServerComponentType, DamageSource, EntityType, Entity, Settings, Point, clamp, AttackEffectiveness, HitFlags, Packet } from "battletribes-shared";
+import { onZombieVisibleEntityHurt } from "../entities/mobs/zombie.js";
+import { AIHelperComponentArray } from "./AIHelperComponent.js";
+import { registerDirtyEntity, registerEntityHeal, registerEntityHit } from "../server/player-clients.js";
+import { ComponentArray, getComponentArrayRecord } from "./ComponentArray.js";
+import { TransformComponentArray } from "./TransformComponent.js";
+import { destroyEntity, getEntityType } from "../world.js";
+import { Hitbox } from "../hitboxes.js";
+import { getEntityComponentTypes } from "../entity-component-types.js";
 
 export class HealthComponent {
    public maxHealth: number;

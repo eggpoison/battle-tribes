@@ -1,8 +1,5 @@
-import { ServerComponentType } from "../../../shared/src/components";
-import { Entity } from "../../../shared/src/entities";
-import { Packet } from "../../../shared/src/packets";
-import { randInt } from "../../../shared/src/utils";
-import { ComponentArray } from "./ComponentArray";
+import { ServerComponentType, Entity, Packet, randInt } from "battletribes-shared";
+import { ComponentArray } from "./ComponentArray.js";
 
 export class MossComponent {
    public readonly size = randInt(0, 2);

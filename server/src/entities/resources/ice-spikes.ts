@@ -1,4 +1,4 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, StatusEffect, Point, CircularBox, HitboxCollisionType, ItemType } from "battletribes-shared";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, StatusEffect, CircularBox, HitboxCollisionType, ItemType } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -12,10 +12,10 @@ registerEntityLootOnDeath(EntityType.iceSpikes, {
    getAmount: () => Math.random() < 0.5 ? 1 : 0
 });
 
-export function createIceSpikesConfig(position: Point, rotation: number, rootIceSpikes: Entity): EntityConfig {
+export function createIceSpikesConfig(x: number, y: number, angle: number, rootIceSpikes: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 40), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.iceSpikes, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 40), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.iceSpikes, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
 

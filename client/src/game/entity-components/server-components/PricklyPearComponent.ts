@@ -58,8 +58,8 @@ class _PricklyPearComponentArray extends _ServerComponentArray<PricklyPearCompon
          for (let i = 0; i < 7; i++) {
             const offsetDirection = randAngle();
             const offsetMagnitude = randFloat(4, 8);
-            const x = hitbox.box.position.x + offsetMagnitude * Math.sin(offsetDirection);
-            const y = hitbox.box.position.y + offsetMagnitude * Math.cos(offsetDirection);
+            const x = hitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+            const y = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
             createPricklyPearParticle(x, y, randAngle());
          }
       } else {

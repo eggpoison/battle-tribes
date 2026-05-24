@@ -30,7 +30,7 @@ class _IceArrowComponentArray extends _ServerComponentArray<IceArrowComponent, I
       const hitbox = transformComponent.hitboxes[0];
 
       if (Math.random() < 30 * Settings.DT_S) {
-         createSnowflakeParticle(hitbox.box.position.x, hitbox.box.position.y);
+         createSnowflakeParticle(hitbox.box.posX, hitbox.box.posY);
       }
 
       if (Math.random() < 30 * Settings.DT_S) {

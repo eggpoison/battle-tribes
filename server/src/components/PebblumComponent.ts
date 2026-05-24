@@ -1,4 +1,4 @@
-import { ServerComponentType, DamageSource, Entity, Point, polarVec2, UtilVar, AttackEffectiveness,  } from "battletribes-shared";
+import { ServerComponentType, DamageSource, Entity, Point, polarVec2, UtilVar, AttackEffectiveness, angle,  } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { moveEntityToPosition } from "../ai-shared.js";
 import { TransformComponentArray } from "./TransformComponent.js";
@@ -33,7 +33,7 @@ function onTick(pebblum: Entity): void {
       const targetTransformComponent = TransformComponentArray.getComponent(target);
       const targetHitbox = targetTransformComponent.hitboxes[0];
 
-      moveEntityToPosition(pebblum, targetHitbox.box.position.x, targetHitbox.box.position.y, 850, Vars.TURN_SPEED, 1);
+      moveEntityToPosition(pebblum, targetHitbox.box.posX, targetHitbox.box.posY, 850, Vars.TURN_SPEED, 1);
    }
 }
 
@@ -57,7 +57,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       return;
    }
 
-   const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
+   const hitDirection = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    // @Incomplete: Cause of death
    damageEntity(collidingHitbox, pebblum, 1, DamageSource.yeti, AttackEffectiveness.effective, collisionPoint, 0);

@@ -8,12 +8,12 @@ import { destroyEntity, entityExists } from "../../world.js";
 import { SpearProjectileComponent } from "../../components/SpearProjectileComponent.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createSpearProjectileConfig(position: Point, rotation: number, tribeMember: Entity, itemID: number | null): EntityConfig {
+export function createSpearProjectileConfig(x: number, y: number, angle: number, tribeMember: Entity, itemID: number | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
    transformComponent.isAffectedByGroundFriction = false;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 12, 60), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 12, 60), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const throwingProjectileComponent = new ThrowingProjectileComponent(tribeMember, itemID);

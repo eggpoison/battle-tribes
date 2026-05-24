@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, EntityTypeString, LimbAction, PlantedEntityType, Point, rotatePoint, InventoryName, ItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, HitboxCollisionType, HitboxFlag, CircularBox, TRIBE_INFO_RECORD, TribeType, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, EntityTypeString, LimbAction, PlantedEntityType, Point, rotatePoint, InventoryName, ItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, HitboxCollisionType, HitboxFlag, CircularBox, TRIBE_INFO_RECORD, TribeType, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, angle } from "battletribes-shared";
 import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, InventoryComponentArray, InventoryComponent } from "../../components/InventoryComponent.js";
 import { getCurrentLimbState, getLimbConfiguration, getLimbStateOffset, InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent.js";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent.js";
@@ -41,12 +41,12 @@ const getHitboxRadius = (tribeType: TribeType): number => {
    }
 }
 
-export function createPlayerConfig(position: Point, angle: number, tribe: Tribe, playerClient: PlayerClient): EntityConfig {
+export function createPlayerConfig(x: number, y: number, angle: number, tribe: Tribe, playerClient: PlayerClient): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.traction = 1.4;
 
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, getHitboxRadius(tribe.tribeType)), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, getHitboxRadius(tribe.tribeType)), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
 
    const humanoidRadius = (bodyHitbox.box as CircularBox).radius;
@@ -60,11 +60,10 @@ export function createPlayerConfig(position: Point, angle: number, tribe: Tribe,
 
       const offset = getLimbStateOffset(limbState, humanoidRadius);
 
-      const handPosition = position.copy();
-      handPosition.add(rotatePoint(offset, angle));
+      const rotatedOffset = rotatePoint(offset, angle);
       
       // @HACK SQUEAM: the collision mask, so that the player can mine berries for a horse archer shot
-      const hitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(handPosition, offset, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, [HitboxFlag.HAND, HitboxFlag.IGNORES_WALL_COLLISIONS]);
+      const hitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(x + rotatedOffset.x, y + rotatedOffset.y, offset.x, offset.y, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, [HitboxFlag.HAND, HitboxFlag.IGNORES_WALL_COLLISIONS]);
       hitbox.box.flipX = isFlipped;
       // @Hack
       hitbox.box.totalFlipXMultiplier = isFlipped ? -1 : 1;
@@ -196,7 +195,7 @@ const modifyTunnel = (player: Entity, tunnel: Entity): void => {
          const tunnelHitbox = tunnelTransformComponent.hitboxes[0];
          
          // Place the door blueprint on whichever side is closest to the player
-         const dirToPlayer = tunnelHitbox.box.position.angleTo(playerHitbox.box.position);
+         const dirToPlayer = angle(playerHitbox.box.posX - tunnelHitbox.box.posX, playerHitbox.box.posY - tunnelHitbox.box.posY);
          const dot = Math.sin(tunnelHitbox.box.angle) * Math.sin(dirToPlayer) + Math.cos(tunnelHitbox.box.relativeAngle) * Math.cos(dirToPlayer);
 
          if (dot > 0) {

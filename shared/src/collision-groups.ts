@@ -7,7 +7,7 @@ import { EntityType } from "./entities.js";
 //   of collision checks which have to be done. Otherwise, for special two-entity relationships,
 //   just manually check the entity type in the onCollision or getSoftCollisionPushFactor event.
 
-export enum CollisionGroup {
+export const enum CollisionGroup {
    default,
    none,
    /** Static entities which don't have any collision events. */

@@ -45,17 +45,17 @@ function onTick(slimewisp: Entity): void {
          const mergingSlimewispTransformComponent = TransformComponentArray.getComponent(mergingSlimewisp);
          const mergingSlimewispHitbox = mergingSlimewispTransformComponent.hitboxes[0];
          
-         moveEntityToPosition(slimewisp, mergingSlimewispHitbox.box.position.x, mergingSlimewispHitbox.box.position.y, Vars.ACCELERATION, Vars.TURN_SPEED, 1);
+         moveEntityToPosition(slimewisp, mergingSlimewispHitbox.box.posX, mergingSlimewispHitbox.box.posY, Vars.ACCELERATION, Vars.TURN_SPEED, 1);
    
          // Continue merge
          if (entitiesAreColliding(slimewisp, mergingSlimewisp) !== CollisionVars.NO_COLLISION) {
             slimewispComponent.mergeTimer -= Settings.DT_S;
             if (slimewispComponent.mergeTimer <= 0 && !entityIsFlaggedForDestruction(mergingSlimewisp)) {
-               const x = (slimewispHitbox.box.position.x + mergingSlimewispHitbox.box.position.x) / 2;
-               const y = (slimewispHitbox.box.position.y + mergingSlimewispHitbox.box.position.y) / 2;
+               const x = (slimewispHitbox.box.posX + mergingSlimewispHitbox.box.posX) / 2;
+               const y = (slimewispHitbox.box.posY + mergingSlimewispHitbox.box.posY) / 2;
                
                // Create a slime between the two wisps
-               const config = createSlimeConfig(new Point(x, y), randAngle(), SlimeSize.small);
+               const config = createSlimeConfig(x, y, randAngle(), SlimeSize.small);
                createEntity(config, layer, 0);
             
                destroyEntity(slimewisp);

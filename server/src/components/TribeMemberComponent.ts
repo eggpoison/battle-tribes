@@ -1,4 +1,4 @@
-import { ServerComponentType, Entity, EntityType, getStringLengthBytes, Packet, Settings, lerp, polarVec2, ArmourItemInfo, InventoryName, ITEM_INFO_RECORD, ItemType, CollisionBit } from "battletribes-shared";
+import { ServerComponentType, Entity, EntityType, getStringLengthBytes, Packet, Settings, lerp, polarVec2, ArmourItemInfo, InventoryName, ITEM_INFO_RECORD, ItemType, CollisionBit, distance, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { getEntityLayer, getEntityType } from "../world.js";
@@ -40,10 +40,10 @@ function onTick(tribeMember: Entity): void {
    // Vacuum nearby items to the tribesman
    // @Incomplete: Don't vacuum items which the player doesn't have the inventory space for
    // @Bug: permits vacuuming the same item entity twice
-   const minChunkX = Math.max(Math.floor((tribeMemberHitbox.box.position.x - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((tribeMemberHitbox.box.position.x + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
-   const minChunkY = Math.max(Math.floor((tribeMemberHitbox.box.position.y - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((tribeMemberHitbox.box.position.y + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkX = Math.max(Math.floor((tribeMemberHitbox.box.posX - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((tribeMemberHitbox.box.posX + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkY = Math.max(Math.floor((tribeMemberHitbox.box.posY - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((tribeMemberHitbox.box.posY + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);
@@ -60,13 +60,13 @@ function onTick(tribeMember: Entity): void {
             const itemEntityTransformComponent = TransformComponentArray.getComponent(itemEntity);
             const itemEntityHitbox = itemEntityTransformComponent.hitboxes[0];
             
-            const distance = tribeMemberHitbox.box.position.distanceTo(itemEntityHitbox.box.position);
-            if (distance <= VACUUM_RANGE) {
+            const dist = distance(tribeMemberHitbox.box.posX, tribeMemberHitbox.box.posY, itemEntityHitbox.box.posX, itemEntityHitbox.box.posY);
+            if (dist <= VACUUM_RANGE) {
                // @Temporary
-               let forceMult = 1 - distance / VACUUM_RANGE;
+               let forceMult = 1 - dist / VACUUM_RANGE;
                forceMult = lerp(0.5, 1, forceMult);
 
-               const vacuumDirection = itemEntityHitbox.box.position.angleTo(tribeMemberHitbox.box.position);
+               const vacuumDirection = angle(tribeMemberHitbox.box.posX - itemEntityHitbox.box.posX, tribeMemberHitbox.box.posY - itemEntityHitbox.box.posY);
                addHitboxVelocity(itemEntityHitbox, polarVec2(Vars.VACUUM_STRENGTH * forceMult, vacuumDirection));
             }
          }

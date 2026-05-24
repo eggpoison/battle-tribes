@@ -1,4 +1,4 @@
-import { assertBoxIsCircular, CircularBox, Entity, EntityType, Settings, Point, polarVec2, randInt } from "battletribes-shared";
+import { assertBoxIsCircular, CircularBox, Entity, EntityType, Settings, polarVec2, randInt } from "battletribes-shared";
 import { createEntityConfigAttachInfoWithTether, getConfigTransformComponent } from "../components.js";
 import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";
 import { HealthComponentArray } from "../components/HealthComponent.js";
@@ -144,10 +144,10 @@ export function runSandBallingAI(entity: Entity, aiHelperComponent: AIHelperComp
       if (getEntityType(entity) === EntityType.okren) {
          offsetMagnitude += 20;
       }
-      const x = entityHitbox.box.position.x + offsetMagnitude * Math.sin(entityHitbox.box.angle);
-      const y = entityHitbox.box.position.y + offsetMagnitude * Math.cos(entityHitbox.box.angle);
+      const x = entityHitbox.box.posX + offsetMagnitude * Math.sin(entityHitbox.box.angle);
+      const y = entityHitbox.box.posY + offsetMagnitude * Math.cos(entityHitbox.box.angle);
       
-      const ballConfig = createSandBallConfig(new Point(x, y), entityHitbox.box.angle);
+      const ballConfig = createSandBallConfig(x, y, entityHitbox.box.angle);
 
       const ballHitbox = getConfigTransformComponent(ballConfig.components).hitboxes[0];
       const angularTether: HitboxAngularTether = {

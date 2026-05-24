@@ -73,15 +73,15 @@ export function placePlantInPlanterBox(planterBox: Entity, plantedEntityType: Pl
    let config: EntityConfig;
    switch (plantedEntityType) {
       case EntityType.treePlanted: {
-         config = createTreePlantedConfig(planterBoxHitbox.box.position.copy(), randAngle(), planterBox);
+         config = createTreePlantedConfig(planterBoxHitbox.box.posX, planterBoxHitbox.box.posY, randAngle(), planterBox);
          break;
       }
       case EntityType.berryBushPlanted: {
-         config = createBerryBushPlantedConfig(planterBoxHitbox.box.position.copy(), randAngle(), planterBox);
+         config = createBerryBushPlantedConfig(planterBoxHitbox.box.posX, planterBoxHitbox.box.posY, randAngle(), planterBox);
          break;
       }
       case EntityType.iceSpikesPlanted: {
-         config = createIceSpikesPlantedConfig(planterBoxHitbox.box.position.copy(), randAngle(), planterBox);
+         config = createIceSpikesPlantedConfig(planterBoxHitbox.box.posX, planterBoxHitbox.box.posY, randAngle(), planterBox);
          break;
       }
    }

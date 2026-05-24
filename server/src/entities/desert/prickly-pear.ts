@@ -7,10 +7,10 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createPricklyPearConfig(position: Point, offset: Point, angle: number): EntityConfig {
+export function createPricklyPearConfig(x: number, y: number, offsetX: number, offsetY: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, offset, angle, 10), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, offsetX, offsetY, angle, 10), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding);

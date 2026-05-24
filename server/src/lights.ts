@@ -87,7 +87,7 @@ const updateLight = (light: Light, nodeX: number, nodeY: number, layer: Layer) =
    
    // @Speed: only run this propagate function on the edge nodes of dropdown zones, and fill in the inside node with 1's
    
-   const litNodes = new Array<LightLevelNode>();
+   const litNodes: Array<LightLevelNode> = [];
 
    for (let currentNodeX = minNodeX; currentNodeX <= maxNodeX; currentNodeX++) {
       for (let currentNodeY = minNodeY; currentNodeY <= maxNodeY; currentNodeY++) {
@@ -127,8 +127,8 @@ export function updateEntityLights(entity: Entity): void {
       const hitbox = pair[0];
       const light = pair[1];
 
-      const nodeX = Math.floor(hitbox.box.position.x / LightLevelVar.LIGHT_NODE_SIZE);
-      const nodeY = Math.floor(hitbox.box.position.y / LightLevelVar.LIGHT_NODE_SIZE);
+      const nodeX = Math.floor(hitbox.box.posX / LightLevelVar.LIGHT_NODE_SIZE);
+      const nodeY = Math.floor(hitbox.box.posY / LightLevelVar.LIGHT_NODE_SIZE);
       updateLight(light, nodeX, nodeY, layer);
    }
 }

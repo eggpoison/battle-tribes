@@ -1,4 +1,4 @@
-import { ServerComponentType, Entity, EntityType, DamageSource, Packet, AttackEffectiveness, Settings, StatusEffect, Point, polarVec2, randAngle } from "battletribes-shared";
+import { ServerComponentType, Entity, EntityType, DamageSource, Packet, AttackEffectiveness, Settings, StatusEffect, Point, polarVec2, randAngle, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { createEntity, destroyEntity, getEntityLayer, getEntityType } from "../world.js";
 import { TransformComponentArray } from "./TransformComponent.js";
@@ -50,7 +50,7 @@ function preRemove(spit: Entity): void {
       const transformComponent = TransformComponentArray.getComponent(spit);
       const spitHitbox = transformComponent.hitboxes[0];
 
-      const config = createSpitPoisonAreaConfig(spitHitbox.box.position.copy(), randAngle());
+      const config = createSpitPoisonAreaConfig(spitHitbox.box.posX, spitHitbox.box.posY, randAngle());
       createEntity(config, getEntityLayer(spit), 0);
    }
 }
@@ -68,7 +68,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const spitComponent = SlimeSpitComponentArray.getComponent(spit);
    const damage = spitComponent.size === 0 ? 2 : 3;
 
-   const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
+   const hitDirection = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, spit, damage, DamageSource.poison, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingHitbox, polarVec2(150, hitDirection));

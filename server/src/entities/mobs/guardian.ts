@@ -23,17 +23,17 @@ const moveFunc = () => {
    throw new Error();
 }
 
-export function createGuardianConfig(position: Point, rotation: number, homeTiles: ReadonlyArray<TileIndex>): EntityConfig {
+export function createGuardianConfig(x: number, y: number, angle: number, homeTiles: ReadonlyArray<TileIndex>): EntityConfig {
    const transformComponent = new TransformComponent();
 
    // Head
-   const headHitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 40), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const headHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 40), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, headHitbox);
 
    // Limbs
    const limbOrbitRadius = getGuardianLimbOrbitRadius();
    for (let i = 0; i < 2; i++) {
-      const hitbox = new Hitbox(transformComponent, headHitbox, true, new CircularBox(new Point(0, 0), new Point(limbOrbitRadius * (i === 0 ? 1 : -1), 0), 0, 14), 0.7, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.GUARDIAN_LIMB_HITBOX, HitboxFlag.IGNORES_WALL_COLLISIONS]);
+      const hitbox = new Hitbox(transformComponent, headHitbox, true, new CircularBox(0, 0, limbOrbitRadius * (i === 0 ? 1 : -1), 0, 0, 14), 0.7, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.GUARDIAN_LIMB_HITBOX, HitboxFlag.IGNORES_WALL_COLLISIONS]);
       addHitboxToTransformComponent(transformComponent, hitbox);
    }
    
@@ -50,7 +50,7 @@ export function createGuardianConfig(position: Point, rotation: number, homeTile
    
    const guardianComponent = new GuardianComponent(homeTiles);
 
-   const lights = new Array<LightCreationInfo>();
+   const lights: Array<LightCreationInfo> = [];
    
    // Red lights
 

@@ -7,10 +7,10 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { SpitPoisonAreaComponent } from "../../components/SpitPoisonAreaComponent.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createSpitPoisonAreaConfig(position: Point, rotation: number): EntityConfig {
+export function createSpitPoisonAreaConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
    // @Hack mass
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 55), Number.EPSILON, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 55), Number.EPSILON, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const spitPoisonAreaComponent = new SpitPoisonAreaComponent();

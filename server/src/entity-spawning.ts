@@ -125,10 +125,10 @@ const entityTileTypesAreValid = (entityConfig: EntityConfig, spawnInfo: EntitySp
    return true;
 }
 
-const attemptToSpawnEntity = (spawnInfo: EntitySpawnEvent, pos: Point, firstEntity: ReadonlyArray<EntityConfig> | null): ReadonlyArray<EntityConfig> | null => {
+const attemptToSpawnEntity = (spawnInfo: EntitySpawnEvent, x: number, y: number, firstEntity: ReadonlyArray<EntityConfig> | null): ReadonlyArray<EntityConfig> | null => {
    // @Bug: If two yetis spawn at once after the server is running, they could potentially have overlapping territories
 
-   const configs = spawnInfo.createEntity(pos, randAngle(), firstEntity, spawnInfo.layer);
+   const configs = spawnInfo.createEntity(x, y, randAngle(), firstEntity, spawnInfo.layer);
    if (configs === null) {
       return null;
    }
@@ -169,14 +169,14 @@ const attemptToSpawnEntity = (spawnInfo: EntitySpawnEvent, pos: Point, firstEnti
 
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      addEntityToSpawnDistribution(spawnInfo.spawnDistribution, entity, hitbox.box.position.x, hitbox.box.position.y);
+      addEntityToSpawnDistribution(spawnInfo.spawnDistribution, entity, hitbox.box.posX, hitbox.box.posY);
    }
 
    return configs;
 }
 
-const spawnEntities = (spawnInfo: EntitySpawnEvent, spawnOrigin: Point): void => {
-   const firstEntityConfig = attemptToSpawnEntity(spawnInfo, spawnOrigin, null);
+const spawnEntities = (spawnInfo: EntitySpawnEvent, spawnOriginX: number, spawnOriginY: number): void => {
+   const firstEntityConfig = attemptToSpawnEntity(spawnInfo, spawnOriginX, spawnOriginY, null);
    if (firstEntityConfig === null) {
       return;
    }
@@ -184,18 +184,18 @@ const spawnEntities = (spawnInfo: EntitySpawnEvent, spawnOrigin: Point): void =>
    // Pack spawning
 
    if (typeof spawnInfo.packSpawning !== "undefined") {
-      const minX = Math.max(spawnOrigin.x - spawnInfo.packSpawning.spawnRange, 0);
-      const maxX = Math.min(spawnOrigin.x + spawnInfo.packSpawning.spawnRange, Settings.WORLD_SIZE_TILES * Settings.TILE_SIZE - 1);
-      const minY = Math.max(spawnOrigin.y - spawnInfo.packSpawning.spawnRange, 0);
-      const maxY = Math.min(spawnOrigin.y + spawnInfo.packSpawning.spawnRange, Settings.WORLD_SIZE_TILES * Settings.TILE_SIZE - 1);
+      const minX = Math.max(spawnOriginX - spawnInfo.packSpawning.spawnRange, 0);
+      const maxX = Math.min(spawnOriginX + spawnInfo.packSpawning.spawnRange, Settings.WORLD_SIZE_TILES * Settings.TILE_SIZE - 1);
+      const minY = Math.max(spawnOriginY - spawnInfo.packSpawning.spawnRange, 0);
+      const maxY = Math.min(spawnOriginY + spawnInfo.packSpawning.spawnRange, Settings.WORLD_SIZE_TILES * Settings.TILE_SIZE - 1);
    
-      const packSize = spawnInfo.packSpawning.getPackSize(spawnOrigin);
+      const packSize = spawnInfo.packSpawning.getPackSize(spawnOriginX, spawnOriginY);
       const additionalSpawnCount = packSize - 1;
    
       for (let numSpawned = 0, totalSpawnAttempts = 0; numSpawned < additionalSpawnCount && totalSpawnAttempts < 100; totalSpawnAttempts++) {
          const x = randFloat(minX, maxX);
          const y = randFloat(minY, maxY);
-         const dist = distance(x, y, spawnOrigin.x, spawnOrigin.y);
+         const dist = distance(x, y, spawnOriginX, spawnOriginY);
          if (dist > spawnInfo.packSpawning.spawnRange) {
             continue;
          }
@@ -208,8 +208,7 @@ const spawnEntities = (spawnInfo: EntitySpawnEvent, spawnOrigin: Point): void =>
          }
 
          if (spawnPositionIsClear(spawnInfo, x, y)) {
-            const pos = new Point(x, y);
-            attemptToSpawnEntity(spawnInfo, pos, firstEntityConfig);
+            attemptToSpawnEntity(spawnInfo, x, y, firstEntityConfig);
             numSpawned++;
          }
       }
@@ -239,7 +238,7 @@ export function spawnPositionIsClear(spawnInfo: EntitySpawnEvent, positionX: num
             // @Hack
             const entityHitbox = transformComponent.hitboxes[0];
             
-            const distanceSquared = Math.pow(positionX - entityHitbox.box.position.x, 2) + Math.pow(positionY - entityHitbox.box.position.y, 2);
+            const distanceSquared = Math.pow(positionX - entityHitbox.box.posX, 2) + Math.pow(positionY - entityHitbox.box.posY, 2);
             if (distanceSquared <= spawnInfo.minSpawnDistance * spawnInfo.minSpawnDistance) {
                return false;
             }
@@ -274,8 +273,7 @@ const runSpawnEvent = (spawnInfo: EntitySpawnEvent): void => {
    }
 
    if (spawnPositionIsClear(spawnInfo, x, y) && (typeof spawnInfo.customSpawnIsValidFunc === "undefined" || spawnInfo.customSpawnIsValidFunc(spawnInfo, x, y))) {
-      const pos = new Point(x, y);
-      spawnEntities(spawnInfo, pos);
+      spawnEntities(spawnInfo, x, y);
    }
 }
 

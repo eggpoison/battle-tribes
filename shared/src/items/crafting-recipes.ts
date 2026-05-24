@@ -627,8 +627,8 @@ export interface ProductInfo {
 export function getRecipeProductChain(recipe: CraftingRecipe, availableItemsTally: Readonly<ItemTally2>): ReadonlyArray<ProductInfo> {
    const currentAvailableItems = availableItemsTally.copy();
    
-   const productChain = new Array<ProductInfo>();
-   const itemsToCheck = new Array<ProductInfo>();
+   const productChain: Array<ProductInfo> = [];
+   const itemsToCheck: Array<ProductInfo> = [];
    itemsToCheck.push({
       type: recipe.product,
       amountRequired: recipe.yield 

@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, Point, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, HitboxCollisionType, RectangularBox } from "battletribes-shared";
 import { TribeComponent } from "../../components/TribeComponent.js";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
@@ -6,12 +6,12 @@ import { ProjectileComponent } from "../../components/ProjectileComponent.js";
 import Tribe from "../../Tribe.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createBallistaWoodenBoltConfig(position: Point, rotation: number, tribe: Tribe, creator: Entity): EntityConfig {
+export function createBallistaWoodenBoltConfig(x: number, y: number, angle: number, tribe: Tribe, creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.isAffectedByGroundFriction = false;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 12, 80), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 12, 80), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
 

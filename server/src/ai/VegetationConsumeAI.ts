@@ -1,4 +1,4 @@
-import { assertBoxIsCircular, CircularBox, Entity, EntityType, AttackEffectiveness, Point, PathfindingSettings, Settings } from "battletribes-shared";
+import { assertBoxIsCircular, CircularBox, Entity, EntityType, AttackEffectiveness, Point, PathfindingSettings, Settings, distance } from "battletribes-shared";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
 import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";
 import { EnergyStoreComponentArray } from "../components/EnergyStoreComponent.js";
@@ -54,10 +54,10 @@ const getVegetationConsumeAITarget = (krumblid: Entity, aiHelperComponent: AIHel
          failureDefault: 0,
          nodeBudget: 200
       }
-      const path = runPathfindingSingleLayer(layer, hitbox.box.position.x, hitbox.box.position.y, entityHitbox.box.position.x, entityHitbox.box.position.y, pathfindingGroupID, pathfindingEntityFootprint, options);
+      const path = runPathfindingSingleLayer(layer, hitbox.box.posX, hitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY, pathfindingGroupID, pathfindingEntityFootprint, options);
 
       if (!path.isFailed) {
-         const dist = hitbox.box.position.distanceTo(entityHitbox.box.position);
+         const dist = distance(hitbox.box.posX, hitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
          if (dist < minDist) {
             minDist = dist;
             target = entity;
@@ -99,8 +99,8 @@ export function runVegetationConsumeAI(krumblid: Entity, aiHelperComponent: AIHe
    const targetHitbox = targetTransformComponent.hitboxes[0];
    
    // @Incomplete: move using pathfinding!!!
-   aiHelperComponent.moveFunc(krumblid, targetHitbox.box.position, vegetationConsumeAI.acceleration);
-   aiHelperComponent.turnFunc(krumblid, targetHitbox.box.position, vegetationConsumeAI.turnSpeed, vegetationConsumeAI.turnDamping);
+   aiHelperComponent.moveFunc(krumblid, targetHitbox.box.posX, targetHitbox.box.posY, vegetationConsumeAI.acceleration);
+   aiHelperComponent.turnFunc(krumblid, targetHitbox.box.posX, targetHitbox.box.posY, vegetationConsumeAI.turnSpeed, vegetationConsumeAI.turnDamping);
 
    if (entitiesAreColliding(krumblid, target) !== CollisionVars.NO_COLLISION) {
       // @Copynpaste
@@ -112,7 +112,7 @@ export function runVegetationConsumeAI(krumblid: Entity, aiHelperComponent: AIHe
       }
 
       if (getEntityAgeTicks(krumblid) % Settings.TICK_RATE === 0) {
-         const hitPosition = new Point((targetHitbox.box.position.x + hitbox.box.position.x) / 2, (targetHitbox.box.position.y + hitbox.box.position.y) / 2);
+         const hitPosition = new Point((targetHitbox.box.posX + hitbox.box.posX) / 2, (targetHitbox.box.posY + hitbox.box.posY) / 2);
          damageEntity(targetHitbox, krumblid, 1, 0, AttackEffectiveness.effective, hitPosition, 0);
 
          const targetHealthComponent = HealthComponentArray.getComponent(target);

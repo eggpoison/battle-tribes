@@ -1,4 +1,4 @@
-import { Point, randAngle, randFloat, randInt, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
+import { Point, randAngle, randFloat, randInt, Entity, ServerComponentType, HitboxFlag, angle } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain } from "../../particles";
@@ -100,16 +100,16 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
 
       // Blood pool particles
       for (let i = 0; i < 2; i++) {
-         createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 60);
+         createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 60);
       }
       
       // Blood particles
       for (let i = 0; i < 10; i++) {
-         let offsetDirection = hitbox.box.position.angleTo(hitPosition);
+         let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = hitbox.box.position.x + 60 * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.position.y + 60 * Math.cos(offsetDirection);
+         const spawnPositionX = hitbox.box.posX + 60 * Math.sin(offsetDirection);
+         const spawnPositionY = hitbox.box.posY + 60 * Math.cos(offsetDirection);
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
       }
    }
@@ -119,7 +119,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
       const hitbox = transformComponent.hitboxes[0];
       
       for (let i = 0; i < 3; i++) {
-         createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 35);
+         createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 35);
       }
 
       createBloodParticleFountain(tukmok, 0.1, 1.1);

@@ -26,7 +26,7 @@ const getTargetTileHeuristic = (transformComponent: TransformComponent, tileInde
    const x = (tileX + 0.5) * Settings.TILE_SIZE;
    const y = (tileY + 0.5) * Settings.TILE_SIZE;
 
-   const dist = distance(hitbox.box.position.x, hitbox.box.position.y, x, y);
+   const dist = distance(hitbox.box.posX, hitbox.box.posY, x, y);
 
    const u = dist / IDEAL_DIST;
    return u * Math.exp(-u);
@@ -73,7 +73,7 @@ const generatePatrolTarget = (tribesman: Entity, patrolArea: ReadonlyArray<TileI
          failureDefault: 0,
          nodeBudget: 1000
       };
-      const path = runPathfindingSingleLayer(layer, tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, x, y, tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), options);
+      const path = runPathfindingSingleLayer(layer, tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, x, y, tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), options);
       if (!path.isFailed) {
          return new Point(x, y);
       }

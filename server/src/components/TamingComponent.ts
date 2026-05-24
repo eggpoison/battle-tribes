@@ -22,8 +22,8 @@ export class TamingComponent {
 
    public name = "";
 
-   public readonly acquiredSkills = new Array<TamingSkill>();
-   public readonly skillLearningArray = new Array<TamingSkillLearning>();
+   public readonly acquiredSkills: Array<TamingSkill> = [];
+   public readonly skillLearningArray: Array<TamingSkillLearning> = [];
 
    // @Temporary
    public attackTarget: Entity = 0;
@@ -161,8 +161,8 @@ export function getRiderTargetPosition(rider: Entity): Point | null {
          const playerHitbox = transformComponent.hitboxes[0];
    
          const moveIntention = polarVec2(400, tribesmanComponent.moveIntention);
-         const x = playerHitbox.box.position.x + moveIntention.x;
-         const y = playerHitbox.box.position.y + moveIntention.y;
+         const x = playerHitbox.box.posX + moveIntention.x;
+         const y = playerHitbox.box.posY + moveIntention.y;
          return new Point(x, y);
       }
    }

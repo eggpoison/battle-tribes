@@ -14,18 +14,18 @@ function positionIsValidCallback(_entity: Entity, layer: Layer, x: number, y: nu
    return layer.getBiomeAtPosition(x, y) === Biome.swamp;
 }
 
-const moveFunc = (slimewisp: Entity, pos: Point, acceleration: number): void => {
-   accelerateEntityToPosition(slimewisp, pos, acceleration);
+const moveFunc = (slimewisp: Entity, x: number, y: number, acceleration: number): void => {
+   accelerateEntityToPosition(slimewisp, x, y, acceleration);
 }
 
-const turnFunc = (slimewisp: Entity, pos: Point, turnSpeed: number, turnDamping: number): void => {
-   turnToPosition(slimewisp, pos, turnSpeed, turnDamping);
+const turnFunc = (slimewisp: Entity, x: number, y: number, turnSpeed: number, turnDamping: number): void => {
+   turnToPosition(slimewisp, x, y, turnSpeed, turnDamping);
 }
 
-export function createSlimewispConfig(position: Point, rotation: number): EntityConfig {
+export function createSlimewispConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 16), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 16), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(3);

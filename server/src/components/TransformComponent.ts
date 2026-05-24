@@ -1,4 +1,4 @@
-import { PathfindingNodeIndex, Settings, getEntityCollisionGroup, _point, angleToPoint, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin, Entity, EntityType, EntityTypeString, ServerComponentType, Packet, Box, boxIsCircular, getBoxArea, HitboxFlag, updateBox, TILE_PHYSICS_INFO_RECORD, TileType, getSubtileIndex, _bounds } from "battletribes-shared";
+import { PathfindingNodeIndex, Settings, getEntityCollisionGroup, _point, angleToPoint, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin, Entity, EntityType, EntityTypeString, ServerComponentType, Packet, Box, boxIsCircular, getBoxArea, HitboxFlag, updateBox, TILE_PHYSICS_INFO_RECORD, TileType, getSubtileIndex, _bounds, angle, distance } from "battletribes-shared";
 import Layer from "../Layer.js";
 import Chunk from "../Chunk.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -21,12 +21,12 @@ export class TransformComponent {
    // @Speed: may want to re-introduce the totalMass property
    
    /** All chunks the entity is contained in */
-   public readonly chunks = new Array<Chunk>();
+   public readonly chunks: Array<Chunk> = [];
    
    /** All hitboxes attached to the entity */
-   public readonly hitboxes = new Array<Hitbox>();
+   public readonly hitboxes: Array<Hitbox> = [];
    /** Hitboxes not attached to any hitbox interal to the same entity. Root hitboxes can either be hitboxes with no parent, or hitboxes with a different entity's hitbox as a parent. */
-   public readonly rootHitboxes = new Array<Hitbox>();
+   public readonly rootHitboxes: Array<Hitbox> = [];
    
    public boundingAreaMinX = Number.MAX_SAFE_INTEGER;
    public boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
@@ -134,7 +134,7 @@ export function getHitboxByFlag(transformComponent: TransformComponent, flag: Hi
 }
 
 export function getHitboxesByFlag(transformComponent: TransformComponent, flag: HitboxFlag): Array<Hitbox> {
-   const matchingHitboxes = new Array<Hitbox>();
+   const matchingHitboxes: Array<Hitbox> = [];
    for (const hitbox of transformComponent.hitboxes) {
       if (hitbox.flags.includes(flag)) {
          matchingHitboxes.push(hitbox);
@@ -214,7 +214,7 @@ const updateContainingChunks = (transformComponent: TransformComponent, entity: 
    const layer = getEntityLayer(entity);
    
    // Calculate containing chunks
-   const containingChunks = new Array<Chunk>();
+   const containingChunks: Array<Chunk> = [];
    for (const hitbox of transformComponent.hitboxes) {
       hitbox.box.calculateBounds();
       const minChunkX = Math.max(Math.min(Math.floor(_bounds.minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
@@ -252,7 +252,7 @@ const updateContainingChunks = (transformComponent: TransformComponent, entity: 
    }
 }
    
-/** Recalculates the miscellaneous transform-related info to match the hitbox's position and angle */
+/** Recalculates the dirty miscellaneous transform-related info to match the hitbox's position and angle */
 const cleanHitboxTransformIncludingChildren = (hitbox: Hitbox): void => {
    if (hitbox.parent === null) {
       hitbox.box.angle = hitbox.box.relativeAngle;
@@ -262,15 +262,22 @@ const cleanHitboxTransformIncludingChildren = (hitbox: Hitbox): void => {
       const parentVelocity = getHitboxVelocity(hitbox.parent);
       setHitboxVelocity(hitbox, parentVelocity.x, parentVelocity.y);
    }
-   
-   const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
 
-   // @SPEED: Pretty sure this is going to override itself many many times!! should only be done 1nce per entity
-   // @CLEANUP: Its kind of implied that the function doesn't do this, jsut does the hitbox stuff!!!!!
+   for (const childHitbox of hitbox.children) {
+      cleanHitboxTransformIncludingChildren(childHitbox);
+   }
+}
+
+const updateBoundsAndChunks = (entity: Entity, transformComponent: TransformComponent): void => {
+   const hitboxes = transformComponent.hitboxes;
    
-   // An object only changes their chunks if a hitboxes' bounds change chunks.
-   let hitboxChunkBoundsHaveChanged = false;
-   for (const hitbox of transformComponent.hitboxes) {
+   let boundingAreaMinX = Number.MAX_SAFE_INTEGER;
+   let boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
+   let boundingAreaMinY = Number.MAX_SAFE_INTEGER;
+   let boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
+   for (let i = 0, len = hitboxes.length; i < len; i++) {
+      const hitbox = hitboxes[i];
+      
       hitbox.box.calculateBounds();
       const minX = _bounds.minX;
       const maxX = _bounds.maxX;
@@ -278,49 +285,32 @@ const cleanHitboxTransformIncludingChildren = (hitbox: Hitbox): void => {
       const maxY = _bounds.maxY;
 
       // Update bounding area
-      if (minX < transformComponent.boundingAreaMinX) {
-         transformComponent.boundingAreaMinX = minX;
+      if (minX < boundingAreaMinX) {
+         boundingAreaMinX = minX;
       }
-      if (maxX > transformComponent.boundingAreaMaxX) {
-         transformComponent.boundingAreaMaxX = maxX;
+      if (maxX > boundingAreaMaxX) {
+         boundingAreaMaxX = maxX;
       }
-      if (minY < transformComponent.boundingAreaMinY) {
-         transformComponent.boundingAreaMinY = minY;
+      if (minY < boundingAreaMinY) {
+         boundingAreaMinY = minY;
       }
-      if (maxY > transformComponent.boundingAreaMaxY) {
-         transformComponent.boundingAreaMaxY = maxY;
+      if (maxY > boundingAreaMaxY) {
+         boundingAreaMaxY = maxY;
       }
-
-      // Check if the hitboxes' chunk bounds have changed
-      // @Speed
-      // @Speed
-      // @Speed
-      if (!hitboxChunkBoundsHaveChanged) {
-         if (Math.floor(minX / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMinX / Settings.CHUNK_UNITS) ||
-             Math.floor(maxX / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMaxX / Settings.CHUNK_UNITS) ||
-             Math.floor(minY / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMinY / Settings.CHUNK_UNITS) ||
-             Math.floor(maxY / Settings.CHUNK_UNITS) !== Math.floor(hitbox.boundsMaxY / Settings.CHUNK_UNITS)) {
-            hitboxChunkBoundsHaveChanged = true;
-         }
-      }
-
-      hitbox.boundsMinX = minX;
-      hitbox.boundsMaxX = maxX;
-      hitbox.boundsMinY = minY;
-      hitbox.boundsMaxY = maxY;
    }
 
-   transformComponent.isDirty = false;
-
-   if (hitboxChunkBoundsHaveChanged) {
-      updateContainingChunks(transformComponent, hitbox.entity);
+   // Check if the hitboxes' chunk bounds have changed
+   if (Math.floor(boundingAreaMinX / Settings.CHUNK_UNITS) !== Math.floor(transformComponent.boundingAreaMinX / Settings.CHUNK_UNITS) ||
+       Math.floor(boundingAreaMaxX / Settings.CHUNK_UNITS) !== Math.floor(transformComponent.boundingAreaMaxX / Settings.CHUNK_UNITS) ||
+       Math.floor(boundingAreaMinY / Settings.CHUNK_UNITS) !== Math.floor(transformComponent.boundingAreaMinY / Settings.CHUNK_UNITS) ||
+       Math.floor(boundingAreaMaxY / Settings.CHUNK_UNITS) !== Math.floor(transformComponent.boundingAreaMaxY / Settings.CHUNK_UNITS)) {
+      updateContainingChunks(transformComponent, entity);
    }
 
-   registerDirtyEntity(hitbox.entity);
-
-   for (const childHitbox of hitbox.children) {
-      cleanHitboxTransformIncludingChildren(childHitbox);
-   }
+   transformComponent.boundingAreaMinX = boundingAreaMinX;
+   transformComponent.boundingAreaMaxX = boundingAreaMaxX;
+   transformComponent.boundingAreaMinY = boundingAreaMinY;
+   transformComponent.boundingAreaMaxY = boundingAreaMaxY;
 }
 
 export function cleanEntityTransform(entity: Entity): void {
@@ -331,6 +321,11 @@ export function cleanEntityTransform(entity: Entity): void {
    for (const rootHitbox of transformComponent.rootHitboxes) {
       cleanHitboxTransformIncludingChildren(rootHitbox);
    }
+
+   updateBoundsAndChunks(entity, transformComponent);
+
+   transformComponent.isDirty = false;
+   registerDirtyEntity(entity);
 }
 
 export const TransformComponentArray = new ComponentArray<TransformComponent>(ServerComponentType.transform, true, getDataLength, addDataToPacket);
@@ -358,7 +353,10 @@ const collideWithHorizontalWorldBorder = (hitbox: Hitbox, ty: number): void => {
 export function resolveEntityBorderCollisions(transformComponent: TransformComponent): void {
    const EPSILON = 0.0001;
    
-   for (const hitbox of transformComponent.hitboxes) {
+   const hitboxes = transformComponent.hitboxes;
+   for (let i = 0, len = hitboxes.length; i < len; i++) {
+      const hitbox = hitboxes[i];
+      
       hitbox.box.calculateBounds();
       const minX = _bounds.minX;
       const maxX = _bounds.maxX;
@@ -406,7 +404,7 @@ export function resolveEntityBorderCollisions(transformComponent: TransformCompo
    // If the entity is outside the world border after resolving border collisions, throw an error
    // @Robustness this should be impossible to trigger, so i can remove it and sleep peacefully
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitbox.box.position.x < 0 || hitbox.box.position.x >= Settings.WORLD_UNITS || hitbox.box.position.y < 0 || hitbox.box.position.y >= Settings.WORLD_UNITS) {
+      if (hitbox.box.posX < 0 || hitbox.box.posX >= Settings.WORLD_UNITS || hitbox.box.posY < 0 || hitbox.box.posY >= Settings.WORLD_UNITS) {
          const entity = TransformComponentArray.getEntityFromComponentNONOSQUARE(transformComponent);
          throw new Error("Unable to properly resolve border collisions for " + EntityTypeString[getEntityType(entity)] + ".");
       }
@@ -434,7 +432,7 @@ const tickHitboxAngularPhysics = (hitbox: Hitbox, transformComponent: TransformC
 }
 
 const applyHitboxKinematics = (hitbox: Hitbox, transformComponent: TransformComponent): void => {
-   if (isNaN(hitbox.box.position.x) || isNaN(hitbox.box.position.y)) {
+   if (isNaN(hitbox.box.posX) || isNaN(hitbox.box.posY)) {
       throw new Error();
    }
    
@@ -449,15 +447,15 @@ const applyHitboxKinematics = (hitbox: Hitbox, transformComponent: TransformComp
    if (hitboxIsInRiver(hitbox) && !transformComponent.overrideMoveSpeedMultiplier && transformComponent.isAffectedByGroundFriction) {
       const flowDirectionIdx = layer.riverFlowDirections[tileIndex];
       // @HACK
-      applyAcceleration(hitbox, new Point(240 * Settings.DT_S * a[flowDirectionIdx], 240 * Settings.DT_S * b[flowDirectionIdx]));
+      applyAcceleration(hitbox, 240 * Settings.DT_S * a[flowDirectionIdx], 240 * Settings.DT_S * b[flowDirectionIdx]);
    }
 
    // @Cleanup: shouldn't be used by air friction.
    const tilePhysicsInfo = TILE_PHYSICS_INFO_RECORD[tileType];
    const friction = tilePhysicsInfo.friction;
    
-   let velX = hitbox.box.position.x - hitbox.previousPosition.x;
-   let velY = hitbox.box.position.y - hitbox.previousPosition.y;
+   let velX = hitbox.box.posX - hitbox.previousPosX;
+   let velY = hitbox.box.posY - hitbox.previousPosY;
 
    // Air friction
    if (transformComponent.isAffectedByAirFriction) {
@@ -478,17 +476,17 @@ const applyHitboxKinematics = (hitbox: Hitbox, transformComponent: TransformComp
    
    // Verlet integration update:
    // new position = current position + (damped implicit velocity) + acceleration * (dt^2)
-   const newX = hitbox.box.position.x + velX + hitbox.acceleration.x * Settings.DT_S * Settings.DT_S;
-   const newY = hitbox.box.position.y + velY + hitbox.acceleration.y * Settings.DT_S * Settings.DT_S;
+   const newX = hitbox.box.posX + velX + hitbox.accelX * Settings.DT_S * Settings.DT_S;
+   const newY = hitbox.box.posY + velY + hitbox.accelY * Settings.DT_S * Settings.DT_S;
 
-   hitbox.previousPosition.x = hitbox.box.position.x;
-   hitbox.previousPosition.y = hitbox.box.position.y;
+   hitbox.previousPosX = hitbox.box.posX;
+   hitbox.previousPosY = hitbox.box.posY;
 
-   hitbox.box.position.x = newX;
-   hitbox.box.position.y = newY;
+   hitbox.box.posX = newX;
+   hitbox.box.posY = newY;
 
-   hitbox.acceleration.x = 0;
-   hitbox.acceleration.y = 0;
+   hitbox.accelX = 0;
+   hitbox.accelY = 0;
 
    transformComponent.isDirty = true;
    registerDirtyEntity(entity);
@@ -592,7 +590,7 @@ const applyHitboxAngularTethers = (hitbox: Hitbox): void => {
    for (const angularTether of hitbox.angularTethers) {
       const originHitbox = angularTether.originHitbox;
 
-      const originToHitboxDirection = originHitbox.box.position.angleTo(hitbox.box.position);
+      const originToHitboxDirection = angle(hitbox.box.posX - originHitbox.box.posX, hitbox.box.posY - originHitbox.box.posY);
       const idealAngle = originHitbox.box.angle + angularTether.idealAngle;
       
       const directionDiff = getAngleDiff(originToHitboxDirection, idealAngle);
@@ -613,15 +611,15 @@ const applyHitboxAngularTethers = (hitbox: Hitbox): void => {
          let force = (rotationForce + dampingForce) * 0.1;
 
          if (angularTether.useLeverage) {
-            force *= originHitbox.box.position.distanceTo(hitbox.box.position);
+            force *= distance(originHitbox.box.posX, originHitbox.box.posY, hitbox.box.posX, hitbox.box.posY);
          }
 
          // @HACK: the * 4
-         applyForce(hitbox, polarVec2(force * 4, hitboxAccDir));
+         applyForce(hitbox, force * 4 * Math.sin(hitboxAccDir), force * 4 * Math.cos(hitboxAccDir));
 
          // @HACK: the * 4
          // @Speed: don't need to call 2nd polarVec2 cuz this is in the exact reverse direction
-         applyForce(originHitbox, polarVec2(force * 4, originHitboxAccDir));
+         applyForce(originHitbox, force * 4 * Math.sin(originHitboxAccDir), force * 4 * Math.cos(originHitboxAccDir));
       }
 
       // Restrict the hitboxes' angle to match its direction
@@ -729,8 +727,6 @@ function onJoin(entity: Entity): void {
       cleanEntityTransform(entity);
    }
 
-   updateContainingChunks(transformComponent, entity);
-
    // @Cleanup: should i make a separate PathfindingOccupancyComponent?
    if (entityCanBlockPathfinding(entity)) {
       updateEntityPathfindingNodeOccupance(entity, transformComponent);
@@ -742,6 +738,7 @@ function onJoin(entity: Entity): void {
 }
 
 function onTick(entity: Entity): void {
+   // @Speed: func call
    tickEntityPhysics(entity);
 }
 
@@ -853,19 +850,19 @@ export function attachHitbox(hitbox: Hitbox, parentHitbox: Hitbox, isPartOfParen
    hitbox.box.relativeAngle -= parentHitbox.box.angle;
    hitbox.previousRelativeAngle -= parentHitbox.box.angle;
 
-   const diffX = hitbox.box.position.x - parentHitbox.box.position.x;
-   const diffY = hitbox.box.position.y - parentHitbox.box.position.y;
+   const diffX = hitbox.box.posX - parentHitbox.box.posX;
+   const diffY = hitbox.box.posY - parentHitbox.box.posY;
 
    rotatePointAroundOrigin(diffX, diffY, -parentHitbox.box.angle);
-   hitbox.box.offset.x = _point.x;
-   hitbox.box.offset.y = _point.y;
+   hitbox.box.offsetX = _point.x;
+   hitbox.box.offsetY = _point.y;
 
    const parentVelocity = getHitboxVelocity(parentHitbox);
    setHitboxVelocity(hitbox, parentVelocity.x, parentVelocity.y);
 
    // Clear acceleration. From this point any acceleration applied to this hitbox should instead be applied to the root hitbox
-   hitbox.acceleration.x = 0;
-   hitbox.acceleration.y = 0;
+   hitbox.accelX = 0;
+   hitbox.accelY = 0;
 }
 
 // @Copynpaste !
@@ -939,7 +936,7 @@ export function detachHitbox(hitbox: Hitbox): void {
 
    // Make sure that the hitbox hasn't accumulated any acceleration before it's detached
    // becuase if it has then it'll appear glitchy in the clientside
-   assert(hitbox.acceleration.x === 0 && hitbox.acceleration.y === 0);
+   assert(hitbox.accelX === 0 && hitbox.accelY === 0);
 
    const idx = hitbox.parent.children.indexOf(hitbox);
    assert(idx !== -1);
@@ -967,7 +964,8 @@ export function detachHitbox(hitbox: Hitbox): void {
 
 export function getRandomPositionInBox(box: Box): Point {
    if (boxIsCircular(box)) {
-      return box.position.offset(box.radius * Math.random(), randAngle());
+      const offset = polarVec2(box.radius * Math.random(), randAngle());
+      return new Point(box.posX + offset.x, box.posY + offset.y);
    } else {
       const halfWidth = box.width / 2;
       const halfHeight = box.height / 2;
@@ -976,8 +974,8 @@ export function getRandomPositionInBox(box: Box): Point {
       const yOffset = randFloat(-halfHeight, halfHeight);
 
       rotatePointAroundOrigin(xOffset, yOffset, box.angle);
-      const x = box.position.x + _point.x;
-      const y = box.position.y + _point.y;
+      const x = box.posX + _point.x;
+      const y = box.posY + _point.y;
       return new Point(x, y);
    }
 }

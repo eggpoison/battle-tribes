@@ -1,4 +1,4 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, StatusEffect, HitboxCollisionType, CircularBox, ItemType, Settings } from "battletribes-shared";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, StatusEffect, HitboxCollisionType, CircularBox, ItemType, Settings } from "battletribes-shared";
 import { PlantedComponent } from "../../components/PlantedComponent.js";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -25,10 +25,10 @@ registerEntityLootOnHit(EntityType.berryBushPlanted, {
    }
 });
 
-export function createBerryBushPlantedConfig(position: Point, rotation: number, planterBox: Entity): EntityConfig {
+export function createBerryBushPlantedConfig(x: number, y: number, angle: number, planterBox: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 32), 0.3, HitboxCollisionType.soft, CollisionBit.plant, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 32), 0.3, HitboxCollisionType.soft, CollisionBit.plant, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
 

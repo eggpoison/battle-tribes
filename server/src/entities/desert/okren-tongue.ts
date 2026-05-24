@@ -5,11 +5,11 @@ import { OkrenTongueComponent } from "../../components/OkrenTongueComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { addHitboxVelocity, Hitbox, HitboxAngularTether } from "../../hitboxes.js";
 
-export function createOkrenTongueConfig(position: Point, angle: number, okrenHitbox: Hitbox, target: Entity): EntityConfig {
+export function createOkrenTongueConfig(x: number, y: number, angle: number, okrenHitbox: Hitbox, target: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
       
    // Only the tongue tip at first
-   const tongueTipHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), angle, 16, 24), 0.9, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_TONGUE_SEGMENT_TIP]);
+   const tongueTipHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 16, 24), 0.9, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_TONGUE_SEGMENT_TIP]);
    addHitboxToTransformComponent(transformComponent, tongueTipHitbox);
    
    // Restrict the new base entity to match the direction of the okren

@@ -53,8 +53,8 @@ export function getSafetyNode(nodeX: number, nodeY: number): SafetyNode {
 }
 
 const addCircularBoxNodePositions = (box: CircularBox, positions: Set<SafetyNode>): void => {
-   const centerX = box.position.x / Settings.SAFETY_NODE_SEPARATION;
-   const centerY = box.position.y / Settings.SAFETY_NODE_SEPARATION;
+   const centerX = box.posX / Settings.SAFETY_NODE_SEPARATION;
+   const centerY = box.posY / Settings.SAFETY_NODE_SEPARATION;
    
    box.calculateBounds();
    const minNodeX = Math.max(Math.floor(_bounds.minX / Settings.SAFETY_NODE_SEPARATION), 0);
@@ -78,7 +78,7 @@ const addCircularBoxNodePositions = (box: CircularBox, positions: Set<SafetyNode
 }
 
 // @Cleanup: Make this take a hitbox as params instead of all this shit
-export function addRectangularSafetyNodePositions(rectPosition: Point, rectWidth: number, rectHeight: number, rectRotation: number, rectMinX: number, rectMaxX: number, rectMinY: number, rectMaxY: number, positions: Set<SafetyNode>): void {
+export function addRectangularSafetyNodePositions(rectX: number, rectY: number, rectWidth: number, rectHeight: number, rectRotation: number, rectMinX: number, rectMaxX: number, rectMinY: number, rectMaxY: number, positions: Set<SafetyNode>): void {
    // @Speed: Math.round might also work
    const minNodeX = Math.max(Math.floor(rectMinX / Settings.SAFETY_NODE_SEPARATION), 0);
    const maxNodeX = Math.min(Math.ceil(rectMaxX / Settings.SAFETY_NODE_SEPARATION), Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1);
@@ -89,7 +89,7 @@ export function addRectangularSafetyNodePositions(rectPosition: Point, rectWidth
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
          const x = nodeX * Settings.SAFETY_NODE_SEPARATION;
          const y = nodeY * Settings.SAFETY_NODE_SEPARATION;
-         if (distBetweenPointAndRectangle(x, y, rectPosition, rectWidth, rectHeight, rectRotation) <= Settings.SAFETY_NODE_SEPARATION * 0.5) {
+         if (distBetweenPointAndRectangle(x, y, rectX, rectY, rectWidth, rectHeight, rectRotation) <= Settings.SAFETY_NODE_SEPARATION * 0.5) {
             const node = getSafetyNode(nodeX, nodeY);
             positions.add(node);
          }
@@ -106,7 +106,7 @@ export function addBoxesOccupiedNodes(boxes: ReadonlyArray<Box>, positions: Set<
          addCircularBoxNodePositions(box, positions);
       } else {
          box.calculateBounds();
-         addRectangularSafetyNodePositions(box.position, box.width, box.height, box.angle, _bounds.minX, _bounds.maxX, _bounds.minY, _bounds.maxY, positions);
+         addRectangularSafetyNodePositions(box.posX, box.posY, box.width, box.height, box.angle, _bounds.minX, _bounds.maxX, _bounds.minY, _bounds.maxY, positions);
       }
    }
 }
@@ -488,7 +488,7 @@ const createSafetyRecord = (buildingLayer: TribeBuildingLayer, outmostPaddingNod
    const safetyRecord: Record<SafetyNode, number> = {};
    
    // Calculate contained nodes' safety
-   const surroundingNodes = new Array<SafetyNode>();
+   const surroundingNodes: Array<SafetyNode> = [];
    for (const node of outmostPaddingNodes) {
       // Initialise with 0 safety
       safetyRecord[node] = 0;
@@ -562,7 +562,7 @@ export function updateBuildingLayer(buildingLayer: TribeBuildingLayer): void {
    updateTribeOccupiedNodesInfo(buildingLayer);
    
    // Find inside nodes and contained buildings
-   const rooms = new Array<TribeRoom>();
+   const rooms: Array<TribeRoom> = [];
    const nodeToRoomRecord: Record<SafetyNode, TribeRoom> = {};
    const insideNodes = new Set<SafetyNode>();
    createAreaInfo(buildingLayer, rooms, nodeToRoomRecord, insideNodes);

@@ -2,7 +2,7 @@
    "license": "UNLICENSED",
    "type": "module",
    "scripts": {
-      "start": "tsx watch ./src/server/server",
+      "start": "tsc; node dist/server/server.js",
       "perf": "NODE_OPTIONS='--cpu-prof --cpu-prof-interval=100' node dist/server/server.js",
       "gigaperf": "node -r ts-node/register -r tsconfig-paths/register --log-deopt --redirect-code-traces --redirect-code-traces-to=./NUL --log-ic --log-maps --log-maps-details --log-code --log-source-code --prof --log-internal-timer-events --detailed-line-info --logfile=v8.log --no-logfile-per-isolate src/server/server.ts",
       "debug": "nodemon --inspect",

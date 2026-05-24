@@ -1,4 +1,4 @@
-import { PathfindingNodeIndex, Entity, EntityType, PathfindingSettings, Settings, distance, distBetweenPointAndRectangularBox, getTileX, getTileY, Point, TileIndex, _bounds, TileType, CollisionGroup, getEntityCollisionGroup, CircularBox, boxIsCircular, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { PathfindingNodeIndex, Entity, EntityType, PathfindingSettings, Settings, distance, distBetweenPointAndRectangularBox, getTileX, getTileY, Point, TileIndex, _bounds, TileType, CollisionGroup, getEntityCollisionGroup, CircularBox, boxIsCircular, HitboxCollisionType, RectangularBox, angle } from "battletribes-shared";
 import PathfindingHeap from "./PathfindingHeap.js";
 import { TribeComponentArray } from "./components/TribeComponent.js";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
@@ -42,7 +42,7 @@ export interface PathfindOptions {
    readonly nodeBudget?: number;
 }
 
-const activeGroupIDs = new Array<number>();
+const activeGroupIDs: Array<number> = [];
 
 const markPathfindingNodeOccupance = (layer: Layer, node: PathfindingNodeIndex, groupID: number): void => {
    layer.nodeGroupIDs[node].push(groupID);
@@ -59,14 +59,14 @@ const markPathfindingNodeClearance = (layer: Layer, node: PathfindingNodeIndex, 
    }
 }
 
-const footprintNodeOffsets = new Array<Array<number>>();
+const footprintNodeOffsets: Array<Array<number>> = [];
 
 // Calculate footprint node offsets
 const MAX_FOOTPRINT = 3;
 for (let footprint = 1; footprint <= MAX_FOOTPRINT; footprint++) {
    const footprintSquared = footprint * footprint;
    
-   const offsets = new Array<number>();
+   const offsets: Array<number> = [];
    for (let offsetX = -footprint; offsetX <= footprint; offsetX++) {
       for (let offsetY = -footprint; offsetY <= footprint; offsetY++) {
          if (offsetX * offsetX + offsetY * offsetY > footprintSquared) {
@@ -194,8 +194,8 @@ const addCircularHitboxOccupiedNodes = (layer: Layer, occupiedPathfindingNodes: 
    const minY = _bounds.minY;
    const maxY = _bounds.maxY;
 
-   const centerX = box.position.x / PathfindingSettings.NODE_SEPARATION;
-   const centerY = box.position.y / PathfindingSettings.NODE_SEPARATION;
+   const centerX = box.posX / PathfindingSettings.NODE_SEPARATION;
+   const centerY = box.posY / PathfindingSettings.NODE_SEPARATION;
    
    let minNodeX = Math.floor(minX / PathfindingSettings.NODE_SEPARATION);
    let maxNodeX = Math.ceil(maxX / PathfindingSettings.NODE_SEPARATION);
@@ -361,13 +361,13 @@ export function getPathfindingNodePos(node: PathfindingNodeIndex): Point {
 
 export function getDistanceToNode(transformComponent: TransformComponent, node: PathfindingNodeIndex): number {
    const nodeWorldPos = getPathfindingNodePos(node);
-   return getDistanceFromPointToEntity(nodeWorldPos, transformComponent);
+   return getDistanceFromPointToEntity(nodeWorldPos.x, nodeWorldPos.y, transformComponent);
 }
 
 export function getAngleToNode(transformComponent: TransformComponent, node: PathfindingNodeIndex): number {
    const hitbox = transformComponent.hitboxes[0]; // @Hack
    const nodePos = getPathfindingNodePos(node);
-   return hitbox.box.position.angleTo(nodePos);
+   return angle(nodePos.x - hitbox.box.posX, nodePos.y - hitbox.box.posY);
 }
 
 export function entityHasReachedNode(transformComponent: TransformComponent, node: PathfindingNodeIndex): boolean {
@@ -432,7 +432,7 @@ const reconstructRawPath = (finalNode: PathfindingNodeIndex, cameFrom: Record<Pa
    let currentNode: PathfindingNodeIndex | undefined = finalNode;
    
    // Reconstruct the path
-   const path = new Array<PathfindingNodeIndex>();
+   const path: Array<PathfindingNodeIndex> = [];
    // @Speed: two accesses
    while (typeof currentNode !== "undefined") {
       path.splice(0, 0, currentNode);
@@ -584,7 +584,7 @@ export function runPathfindingSingleLayer(layer: Layer, startX: number, startY: 
 }
 
 export function runPathfindingMultiLayer(startLayer: Layer, endLayer: Layer, startX: number, startY: number, endX: number, endY: number, ignoredGroupID: number, pathfindingEntityFootprint: number, options: PathfindOptions): Array<Path> {
-   const paths = new Array<Path>();
+   const paths: Array<Path> = [];
    
    let x1: number;
    let y1: number;
@@ -683,7 +683,7 @@ const pathBetweenNodesIsClear = (layer: Layer, node1: PathfindingNodeIndex, node
 }
 
 export function smoothPath(layer: Layer, path: ReadonlyArray<PathfindingNodeIndex>, ignoredGroupID: number, pathfindingEntityFootprint: number): Array<PathfindingNodeIndex> {
-   const smoothedPath = new Array<PathfindingNodeIndex>();
+   const smoothedPath: Array<PathfindingNodeIndex> = [];
    let lastCheckpoint = path[0];
    let previousNode = path[1];
    for (let i = 2; i < path.length; i++) {
@@ -728,7 +728,7 @@ export function getVisiblePathfindingNodeOccupances(playerClient: PlayerClient):
    const minNodeY = clampPathfindingNodeXY(Math.floor(minVisibleY / PathfindingSettings.NODE_SEPARATION));
    const maxNodeY = clampPathfindingNodeXY(Math.floor(maxVisibleY / PathfindingSettings.NODE_SEPARATION));
 
-   const occupances = new Array<PathfindingNodeIndex>();
+   const occupances: Array<PathfindingNodeIndex> = [];
    for (let nodeX = minNodeX; nodeX <= maxNodeX; nodeX++) {
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
          const node = getPathfindingNode(nodeX, nodeY);

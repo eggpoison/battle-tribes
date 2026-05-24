@@ -22,8 +22,8 @@
    const transformComponent = $derived(TransformComponentArray.getComponent(entity));
    const hitbox = $derived(transformComponent.hitboxes[0]);
 
-   const displayX = $derived(roundNum(hitbox.box.position.x, 0));
-   const displayY = $derived(roundNum(hitbox.box.position.y, 0));
+   const displayX = $derived(roundNum(hitbox.box.posX, 0));
+   const displayY = $derived(roundNum(hitbox.box.posY, 0));
 
    const velocity = $derived(getHitboxVelocity(hitbox));
    const displayVelocityMagnitude = $derived(roundNum(velocity.magnitude(), 0));

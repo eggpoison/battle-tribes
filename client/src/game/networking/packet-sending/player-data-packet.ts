@@ -1,8 +1,8 @@
-import { Packet, ClientPacketType, Point, InventoryName, GameDataPacketOptions } from "../../../../../shared/src";
+import { Packet, ClientPacketType, InventoryName, GameDataPacketOptions } from "../../../../../shared/src";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
 import { cameraPosition } from "../../camera";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
-import { getPlayerInputDirection, getPlayerInputVector } from "../../event-handling";
+import { getPlayerInputDirection } from "../../event-handling";
 import { playerInstance, isSpectating } from "../../player";
 import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../../player-action-handling";
 import { sendData } from "../socket";
@@ -32,10 +32,10 @@ const playerDataPacketBuffer = new ArrayBuffer(64);
 const playerDataPacket = new Packet(ClientPacketType.playerData, 64, playerDataPacketBuffer);
 
 export function sendPlayerDataPacket(): void {
-   let position: Point;
+   let x: number, y: number;
    let angle: number;
-   let previousPosition: Point;
-   let acceleration: Point;
+   let previousX: number, previousY: number;
+   let accelX: number, accelY: number;
    let previousRelativeAngle: number;
    let angularAcceleration: number;
 
@@ -43,17 +43,23 @@ export function sendPlayerDataPacket(): void {
       const transformComponent = TransformComponentArray.getComponent(playerInstance);
       const playerHitbox = transformComponent.hitboxes[0];
 
-      position = playerHitbox.box.position;
+      x = playerHitbox.box.posX;
+      y = playerHitbox.box.posY;
       angle = playerHitbox.box.angle;
-      previousPosition = playerHitbox.previousPosition;
-      acceleration = playerHitbox.acceleration
+      previousX = playerHitbox.previousPosX;
+      previousY = playerHitbox.previousPosY;
+      accelX = playerHitbox.accelX;
+      accelY = playerHitbox.accelY;
       previousRelativeAngle = playerHitbox.previousRelativeAngle;
       angularAcceleration = playerHitbox.angularAcceleration;
    } else if (isSpectating) {
-      position = cameraPosition;
+      x = cameraPosition.x;
+      y = cameraPosition.y;
       angle = 0;
-      previousPosition = cameraPosition;
-      acceleration = new Point(0, 0);
+      previousX = cameraPosition.x;
+      previousY = cameraPosition.y;
+      accelX = 0;
+      accelY = 0;
       previousRelativeAngle = 0;
       angularAcceleration = 0;
    } else {
@@ -69,10 +75,13 @@ export function sendPlayerDataPacket(): void {
 
    // Don't send redundant data
    playerDataPacket.reset();
-   if (playerDataPacket.checkPoint(position) &&
+   if (playerDataPacket.checkNumber(x) &&
+       playerDataPacket.checkNumber(y) &&
        playerDataPacket.checkNumber(angle) &&
-       playerDataPacket.checkPoint(previousPosition) &&
-       playerDataPacket.checkPoint(acceleration) &&
+       playerDataPacket.checkNumber(previousX) &&
+       playerDataPacket.checkNumber(previousY) &&
+       playerDataPacket.checkNumber(accelX) &&
+       playerDataPacket.checkNumber(accelY) &&
        playerDataPacket.checkNumber(moveInputDirection) &&
        playerDataPacket.checkNumber(previousRelativeAngle) &&
        playerDataPacket.checkNumber(angularAcceleration) &&
@@ -85,11 +94,14 @@ export function sendPlayerDataPacket(): void {
    
    playerDataPacket.reset();
 
-   playerDataPacket.writePoint(position);
+   playerDataPacket.writeNumber(x);
+   playerDataPacket.writeNumber(y);
    playerDataPacket.writeNumber(angle);
 
-   playerDataPacket.writePoint(previousPosition);
-   playerDataPacket.writePoint(acceleration);
+   playerDataPacket.writeNumber(previousX);
+   playerDataPacket.writeNumber(previousY);
+   playerDataPacket.writeNumber(accelX);
+   playerDataPacket.writeNumber(accelY);
 
    playerDataPacket.writeNumber(moveInputDirection);
 

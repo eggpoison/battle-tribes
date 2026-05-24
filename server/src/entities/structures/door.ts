@@ -14,13 +14,13 @@ import { StructureConnection } from "../../structure-placement.js";
 
 const HEALTHS = [15, 45];
 
-export function createDoorConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createDoorConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
    transformComponent.isAffectedByAirFriction = false;
    transformComponent.isAffectedByGroundFriction = false;
 
-   const box = new RectangularBox(position, new Point(0, 0), rotation, 64, 16);
+   const box = new RectangularBox(x, y, 0, 0, angle, 64, 16);
    const hitbox = new Hitbox(transformComponent, null, true, box, 0.5, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);

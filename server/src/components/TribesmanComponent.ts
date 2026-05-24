@@ -19,10 +19,10 @@ import { TribesmanAIComponentArray, adjustTribesmanRelationsAfterKill, adjustTri
 export class TribesmanComponent {
    public warPaintType: number | null = null;
 
-   public readonly fishFollowerIDs = new Array<number>();
+   public readonly fishFollowerIDs: Array<number> = [];
 
    // @Speed: just have array of titles, and separate array of generation info
-   public readonly titles = new Array<TitleGenerationInfo>();
+   public readonly titles: Array<TitleGenerationInfo> = [];
 
    // Used to give movement penalty while wearing the leaf suit.
    // @Cleanup: would be great to not store a variable to do this.

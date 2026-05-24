@@ -443,7 +443,7 @@ export function findParameterSpecifications(commandSpecifications: CommandSpecif
 
 /** Parses a console command into its parts. */
 export function parseCommand(command: string): CommandParseQuery {
-   const parts = new Array<CommandPart>();
+   const parts: Array<CommandPart> = [];
    let isInString = false;
    let currentPartChars = "";
    

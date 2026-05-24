@@ -1,4 +1,4 @@
-import { BuildingMaterial, ServerComponentType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, SubtileType, getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, STRUCTURE_TYPES, StructureType, Settings, Entity, EntityType, getEntityCollisionGroup, CollisionGroup, boxIsCollidingWithSubtile, RectangularBox, boxIsCircular, _bounds, TileIndex, TileType, getTileX, getTileY, tileIsInWorld } from "webgl-test-shared";
+import { BuildingMaterial, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, SubtileType, getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, STRUCTURE_TYPES, StructureType, Settings, Entity, EntityType, getEntityCollisionGroup, CollisionGroup, boxIsCollidingWithSubtile, RectangularBox, boxIsCircular, _bounds, TileIndex, TileType, getTileX, getTileY, tileIsInWorld, angle } from "webgl-test-shared";
 import { Hitbox } from "./hitboxes";
 import { ItemComponentArray } from "./entity-components/server-components/ItemComponent";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
@@ -82,9 +82,9 @@ export function entityIsStructure(entityType: EntityType): entityType is Structu
    return STRUCTURE_TYPES.indexOf(entityType as StructureType) !== -1;
 }
 
-const calculateRelativeOffsetDirection = (entityPosition: Point, entityRotation: number, connectingEntityPosition: Point): number => {
+const calculateRelativeOffsetDirection = (entityX: number, entityY: number, entityRotation: number, connectingPosX: number, connectingPosY: number): number => {
    // Relative rotation of the offset (relative to the entity)
-   let relativeOffsetDirection = entityPosition.angleTo(connectingEntityPosition);
+   let relativeOffsetDirection = angle(connectingPosX - entityX, connectingPosY - entityY);
    // Account for the entity rotaiton
    relativeOffsetDirection -= entityRotation;
    return relativeOffsetDirection;
@@ -209,8 +209,7 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
             }
             
             // @Speed
-            const position = new Point((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE);
-            const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
+            const tileBox = new RectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
 
             if (box.getCollisionResult(tileBox).isColliding) {
                return true;
@@ -370,7 +369,7 @@ const getStructureSnapOrigin = (structure: Entity): Point => {
    const transformComponent = TransformComponentArray.getComponent(structure);
    const hitbox = transformComponent.hitboxes[0];
    
-   const snapOrigin = hitbox.box.position.copy();
+   const snapOrigin = new Point(hitbox.box.posX, hitbox.box.posY);
    if (getEntityType(structure) === EntityType.embrasure) {
       snapOrigin.x -= 22 * Math.sin(hitbox.box.angle);
       snapOrigin.y -= 22 * Math.cos(hitbox.box.angle);
@@ -624,7 +623,7 @@ const groupTransforms = (transforms: ReadonlyArray<SnapCandidate>, entityType: E
          const connectingEntityTransformComponent = TransformComponentArray.getComponent(transform.connectedEntity);
          const connectingEntityHitbox = connectingEntityTransformComponent.hitboxes[0];
          
-         const relativeOffsetDirection = calculateRelativeOffsetDirection(transform.position, transform.angle, connectingEntityHitbox.box.position);
+         const relativeOffsetDirection = calculateRelativeOffsetDirection(transform.position.x, transform.position.y, transform.angle, connectingEntityHitbox.box.posX, connectingEntityHitbox.box.posY);
          const connection = createStructureConnection(transform.connectedEntity, relativeOffsetDirection);
          connections.push(connection);
       }

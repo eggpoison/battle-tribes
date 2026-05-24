@@ -1,4 +1,4 @@
-import { randAngle, PacketReader, DoorToggleType, Entity, ServerComponentType } from "webgl-test-shared";
+import { randAngle, PacketReader, DoorToggleType, Entity, ServerComponentType, Point } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
@@ -93,11 +93,11 @@ class _DoorComponentArray extends _ServerComponentArray<DoorComponent, DoorCompo
       playSoundOnHitbox("wooden-wall-hit.mp3", 0.3, 1, entity, hitbox, false);
 
       for (let i = 0; i < 4; i++) {
-         createLightWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 20);
+         createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 20);
       }
 
       for (let i = 0; i < 7; i++) {
-         const position = hitbox.box.position.offset(20, randAngle());
+         const position = new Point(hitbox.box.posX, hitbox.box.posY).offset(20, randAngle());
          createLightWoodSpeckParticle(position.x, position.y, 5);
       }
    }
@@ -109,11 +109,11 @@ class _DoorComponentArray extends _ServerComponentArray<DoorComponent, DoorCompo
       playSoundOnHitbox("wooden-wall-break.mp3", 0.4, 1, entity, hitbox, false);
 
       for (let i = 0; i < 7; i++) {
-         createLightWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 32 * Math.random());
+         createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32 * Math.random());
       }
 
       for (let i = 0; i < 3; i++) {
-         createWoodShardParticle(hitbox.box.position.x, hitbox.box.position.y, 32);
+         createWoodShardParticle(hitbox.box.posX, hitbox.box.posY, 32);
       }
    }
 }

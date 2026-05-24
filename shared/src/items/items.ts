@@ -3,7 +3,7 @@ import { EntityType } from "../entities.js";
 import { Settings } from "../settings.js";
 import { StructureType } from "../structures.js";
 
-export enum ItemType {
+export const enum ItemType {
    wood,
    workbench,
    wooden_sword,
@@ -226,7 +226,7 @@ export const ItemTypeString: Record<ItemType, string> = {
 
 export const NUM_ITEM_TYPES = Object.keys(ItemTypeString).length;
 
-export const ALL_ITEM_TYPES = new Array<ItemType>();
+export const ALL_ITEM_TYPES: Array<ItemType> = [];
 for (let i = 0; i < NUM_ITEM_TYPES; i++) {
    ALL_ITEM_TYPES.push(i);
 }
@@ -1209,7 +1209,7 @@ export class Inventory {
    public readonly name: InventoryName;
 
    public readonly itemSlots: ItemSlots = {};
-   public readonly items = new Array<Item>;
+   public readonly items: Array<Item> = [];
 
    constructor(width: number, height: number, name: InventoryName) {
       this.width = width;
@@ -1267,7 +1267,7 @@ export class Inventory {
    }
 
    public getSlots(): Array<number> {
-      const slots = new Array<number>();
+      const slots: Array<number> = [];
       for (let itemSlot = 1; itemSlot <= this.width * this.height; itemSlot++) {
          slots.push(itemSlot);
       }

@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, FishColour, customTickIntervalHasPassed, Point, polarVec2, UtilVar, HitboxCollisionType, RectangularBox, TileType, Settings, Biome, ItemType } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, FishColour, customTickIntervalHasPassed, Point, polarVec2, UtilVar, HitboxCollisionType, RectangularBox, TileType, Settings, Biome, ItemType, angle } from "battletribes-shared";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent.js";
 import { FishComponent, FishComponentArray } from "../../components/FishComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -57,25 +57,25 @@ function wanderTargetIsValid(fish: Entity, layer: Layer, x: number, y: number): 
    const transformComponent = TransformComponentArray.getComponent(fish);
    const fishHitbox = transformComponent.hitboxes[0];
    
-   if (!layer.tileRaytraceMatchesTileTypes(fishHitbox.box.position.x, fishHitbox.box.position.y, x, y, [TileType.water])) {
+   if (!layer.tileRaytraceMatchesTileTypes(fishHitbox.box.posX, fishHitbox.box.posY, x, y, [TileType.water])) {
       return false;
    }
 
    return true;
 }
 
-const moveFunc = (fish: Entity, pos: Point, acceleration: number): void => {
+const moveFunc = (fish: Entity, x: number, y: number, acceleration: number): void => {
    const transformComponent = TransformComponentArray.getComponent(fish);
    const fishHitbox = transformComponent.hitboxes[0];
 
-   const direction = fishHitbox.box.position.angleTo(pos);
+   const moveDir = angle(x - fishHitbox.box.posX, y - fishHitbox.box.posY);
 
    const layer = getEntityLayer(fish);
    
    const tileIndex = getHitboxTile(fishHitbox);
    if (layer.tileTypes[tileIndex] === TileType.water) {
       // Swim on water
-      applyAccelerationFromGround(fishHitbox, polarVec2(acceleration, direction));
+      applyAccelerationFromGround(fishHitbox, polarVec2(acceleration, moveDir));
    } else {
       // 
       // Lunge on land
@@ -83,16 +83,16 @@ const moveFunc = (fish: Entity, pos: Point, acceleration: number): void => {
 
       const fishComponent = FishComponentArray.getComponent(fish);
       if (customTickIntervalHasPassed(fishComponent.secondsOutOfWater * Settings.TICK_RATE, Vars.LUNGE_INTERVAL)) {
-         addHitboxVelocity(fishHitbox, polarVec2(Vars.LUNGE_FORCE, direction));
+         addHitboxVelocity(fishHitbox, polarVec2(Vars.LUNGE_FORCE, moveDir));
       }
    }
 }
 
-const turnFunc = (fish: Entity, pos: Point, turnSpeed: number, turnDamping: number): void => {
+const turnFunc = (fish: Entity, x: number, y: number, turnSpeed: number, turnDamping: number): void => {
    const transformComponent = TransformComponentArray.getComponent(fish);
    const fishHitbox = transformComponent.hitboxes[0];
 
-   const direction = fishHitbox.box.position.angleTo(pos);
+   const direction = angle(x - fishHitbox.box.posX, y - fishHitbox.box.posY);
 
    const layer = getEntityLayer(fish);
    
@@ -116,10 +116,10 @@ const turnFunc = (fish: Entity, pos: Point, turnSpeed: number, turnDamping: numb
    }
 }
 
-export function createFishConfig(position: Point, rotation: number, colour: FishColour): EntityConfig {
+export function createFishConfig(x: number, y: number, angle: number, colour: FishColour): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 28, 56), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 28, 56), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(5);

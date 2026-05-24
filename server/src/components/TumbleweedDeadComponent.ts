@@ -38,7 +38,7 @@ function onTick(tumbleweed: Entity): void {
       const transformComponent = TransformComponentArray.getComponent(tumbleweed);
       const hitbox = transformComponent.hitboxes[0];
    
-      const wind = getWindVector(hitbox.box.position.x, hitbox.box.position.y);
+      const wind = getWindVector(hitbox.box.posX, hitbox.box.posY);
       applyAccelerationFromGround(hitbox, wind);
 
       tumbleweedDeadComponent.ticksUnrooted++;

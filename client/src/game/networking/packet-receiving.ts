@@ -146,10 +146,13 @@ export function onSyncGameDataPacket(reader: PacketReader): void {
       const transformComponent = TransformComponentArray.getComponent(playerInstance);
       const playerHitbox = transformComponent.hitboxes[0];
    
-      playerHitbox.box.position.set(position);
+      playerHitbox.box.posX = position.x;
+      playerHitbox.box.posY = position.y;
       playerHitbox.box.angle = angle;
-      playerHitbox.previousPosition.set(previousPosition);
-      playerHitbox.acceleration.set(acceleration);
+      playerHitbox.previousPosX = previousPosition.x;
+      playerHitbox.previousPosY = previousPosition.y;
+      playerHitbox.accelX = acceleration.x;
+      playerHitbox.accelY = acceleration.y;
    }
 }
 
@@ -163,8 +166,8 @@ export function onForcePositionUpdatePacket(reader: PacketReader): void {
 
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
-   playerHitbox.box.position.x = x;
-   playerHitbox.box.position.y = y;
+   playerHitbox.box.posX = x;
+   playerHitbox.box.posY = y;
 }
 
 export function onChatMessagePacket(reader: PacketReader): void {

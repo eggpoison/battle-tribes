@@ -210,7 +210,7 @@ class GameServer {
                playerClient = new PlayerClient(socket, tribe, layer, screenWidth, screenHeight, spawnPosition, 0, username, isSpectating, isDev);
    
                if (!isSpectating) {
-                  const config = createPlayerConfig(spawnPosition, 0, tribe, playerClient);
+                  const config = createPlayerConfig(spawnPosition.x, spawnPosition.y, 0, tribe, playerClient);
                   createEntity(config, layer, 0);
                }
 
@@ -430,7 +430,7 @@ class GameServer {
          if (entityExists(viewedEntity)) {
             const transformComponent = TransformComponentArray.getComponent(viewedEntity);
             const hitbox = transformComponent.hitboxes[0];
-            playerClient.updatePosition(hitbox.box.position.x, hitbox.box.position.y);
+            playerClient.updatePosition(hitbox.box.posX, hitbox.box.posY);
 
             playerClient.lastLayer = getEntityLayer(viewedEntity);
          }
@@ -456,7 +456,7 @@ class GameServer {
          }
 
          // Add removed entities - any entity that was previously visible but no longer.
-         const removedEntities = new Array<Entity>();
+         const removedEntities: Array<Entity> = [];
          for (const entity of playerClient.visibleEntities) {
             if (!visibleEntities.has(entity)) {
                removedEntities.push(entity);

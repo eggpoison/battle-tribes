@@ -52,7 +52,7 @@ class _BallistaFrostcicleComponentArray extends _ClientComponentArray<BallistaFr
 
       // Create arrow break particles
       for (let i = 0; i < 6; i++) {
-         createArrowDestroyParticle(hitbox.box.position.x, hitbox.box.position.y, velocity.x, velocity.y);
+         createArrowDestroyParticle(hitbox.box.posX, hitbox.box.posY, velocity.x, velocity.y);
       }
 
       playSoundOnHitbox("ice-break.mp3", 0.4, 1, entity, hitbox, false);

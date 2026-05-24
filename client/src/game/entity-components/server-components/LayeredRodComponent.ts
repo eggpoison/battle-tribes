@@ -1,4 +1,4 @@
-import { TileType, Entity, EntityType, PacketReader, Colour, getTileIndexIncludingEdges, lerp, Settings, ServerComponentType } from "webgl-test-shared";
+import { TileType, Entity, EntityType, PacketReader, Colour, getTileIndexIncludingEdges, lerp, Settings, ServerComponentType, angle } from "webgl-test-shared";
 import ColouredRenderPart from "../../render-parts/ColouredRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType, surfaceLayer } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
@@ -85,8 +85,8 @@ const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: Ent
          const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
          const hitbox = transformComponentData.hitboxes[0];
    
-         const tileX = Math.floor(hitbox.box.position.x / Settings.TILE_SIZE);
-         const tileY = Math.floor(hitbox.box.position.y / Settings.TILE_SIZE);
+         const tileX = Math.floor(hitbox.box.posX / Settings.TILE_SIZE);
+         const tileY = Math.floor(hitbox.box.posY / Settings.TILE_SIZE);
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          const tileType = surfaceLayer.getTile(tileIndex).type;
    
@@ -240,7 +240,7 @@ class _LayeredRodComponentArray extends _ServerComponentArray<LayeredRodComponen
       const layeredRodComponent = LayeredRodComponentArray.getComponent(entity);
       LayeredRodComponentArray.activateComponent(layeredRodComponent, entity);
       
-      const directionFromCollidingEntity = collidingHitbox.box.position.angleTo(affectedHitbox.box.position);
+      const directionFromCollidingEntity = angle(affectedHitbox.box.posX - collidingHitbox.box.posX, affectedHitbox.box.posY - collidingHitbox.box.posY);
 
       let existingPushX = bendToPushAmount(layeredRodComponent.bendX);
       let existingPushY = bendToPushAmount(layeredRodComponent.bendY);

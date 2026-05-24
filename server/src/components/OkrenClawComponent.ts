@@ -1,4 +1,4 @@
-import { assertBoxIsRectangular, HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Packet, Settings, Point, polarVec2 } from "battletribes-shared";
+import { assertBoxIsRectangular, HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Packet, Settings, Point, polarVec2, angle } from "battletribes-shared";
 import { getOkrenClawBigArmSegmentOffset, getOkrenClawBigArmSegmentSize, getOkrenClawMediumArmSegmentOffset, getOkrenClawMediumArmSegmentSize, getOkrenClawSlashingArmSegmentOffset, getOkrenClawSlashingArmSegmentSize } from "../entities/desert/okren-claw.js";
 import { Hitbox, getHitboxVelocity, applyAbsoluteKnockback } from "../hitboxes.js";
 import { getEntityType } from "../world.js";
@@ -69,8 +69,8 @@ export function switchOkrenClawGrowthStage(okrenClaw: Entity, growthStage: Okren
    assertBoxIsRectangular(bigArmSegmentHitbox.box);
    bigArmSegmentHitbox.box.width = bigArmSegmentSize.x;
    bigArmSegmentHitbox.box.height = bigArmSegmentSize.y;
-   bigArmSegmentHitbox.box.offset.x = bigArmSegmentOffset.x;
-   bigArmSegmentHitbox.box.offset.y = bigArmSegmentOffset.y;
+   bigArmSegmentHitbox.box.offsetX = bigArmSegmentOffset.x;
+   bigArmSegmentHitbox.box.offsetY = bigArmSegmentOffset.y;
 
    const mediumArmSegmentSize = getOkrenClawMediumArmSegmentSize(size, growthStage);
    const mediumArmSegmentOffset = getOkrenClawMediumArmSegmentOffset(size, growthStage);
@@ -78,8 +78,8 @@ export function switchOkrenClawGrowthStage(okrenClaw: Entity, growthStage: Okren
    assertBoxIsRectangular(mediumArmSegmentHitbox.box);
    mediumArmSegmentHitbox.box.width = mediumArmSegmentSize.x;
    mediumArmSegmentHitbox.box.height = mediumArmSegmentSize.y;
-   mediumArmSegmentHitbox.box.offset.x = mediumArmSegmentOffset.x;
-   mediumArmSegmentHitbox.box.offset.y = mediumArmSegmentOffset.y;
+   mediumArmSegmentHitbox.box.offsetX = mediumArmSegmentOffset.x;
+   mediumArmSegmentHitbox.box.offsetY = mediumArmSegmentOffset.y;
 
    const slashingArmSegmentSize = getOkrenClawSlashingArmSegmentSize(size, growthStage);
    const slashingArmSegmentOffset = getOkrenClawSlashingArmSegmentOffset(size, growthStage);
@@ -87,8 +87,8 @@ export function switchOkrenClawGrowthStage(okrenClaw: Entity, growthStage: Okren
    assertBoxIsRectangular(slashingArmSegmentHitbox.box);
    slashingArmSegmentHitbox.box.width = slashingArmSegmentSize.x;
    slashingArmSegmentHitbox.box.height = slashingArmSegmentSize.y;
-   slashingArmSegmentHitbox.box.offset.x = slashingArmSegmentOffset.x;
-   slashingArmSegmentHitbox.box.offset.y = slashingArmSegmentOffset.y;
+   slashingArmSegmentHitbox.box.offsetX = slashingArmSegmentOffset.x;
+   slashingArmSegmentHitbox.box.offsetY = slashingArmSegmentOffset.y;
 
    transformComponent.isDirty = true;
 }
@@ -153,7 +153,7 @@ function onHitboxCollision(affectedHitbox: Hitbox, collidingHitbox: Hitbox, coll
 
    const okrenClawComponent = OkrenClawComponentArray.getComponent(okrenClaw);
    
-   const hitDir = affectedHitbox.box.position.angleTo(collidingHitbox.box.position);
+   const hitDir = angle(collidingHitbox.box.posX - affectedHitbox.box.posX, collidingHitbox.box.posY - affectedHitbox.box.posY);
 
    damageEntity(collidingHitbox, okrenClaw, ATTACK_DAMAGES[okrenClawComponent.size], DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
    applyAbsoluteKnockback(collidingHitbox, polarVec2(200, hitDir));

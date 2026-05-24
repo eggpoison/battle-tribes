@@ -55,20 +55,20 @@ class _SlingTurretRockComponentArray extends _ServerComponentArray<SlingTurretRo
 
       // Create arrow break particles
       for (let i = 0; i < 6; i++) {
-         createArrowDestroyParticle(hitbox.box.position.x, hitbox.box.position.y, velocity.x, velocity.y);
+         createArrowDestroyParticle(hitbox.box.posX, hitbox.box.posY, velocity.x, velocity.y);
       }
 
       for (let i = 0; i < 3; i++) {
          const spawnOffsetMagnitude = 16 * Math.random();
          const spawnOffsetDirection = randAngle();
-         const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = hitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
          createRockParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(60, 100), ParticleRenderLayer.low);
       }
 
       for (let i = 0; i < 5; i++) {
-         createRockSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 16, 0, 0, ParticleRenderLayer.low);
+         createRockSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16, 0, 0, ParticleRenderLayer.low);
       }
    }
 }

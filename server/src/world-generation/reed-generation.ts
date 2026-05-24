@@ -73,7 +73,7 @@ export function generateReeds(surfaceLayer: Layer, riverMainTiles: ReadonlyArray
             if (Math.random() >= successProbability) {
                continue;
             }
-            const config = createReedConfig(new Point(x, y), 0);
+            const config = createReedConfig(x, y, 0);
             createEntityImmediate(config, surfaceLayer);
          }
       }

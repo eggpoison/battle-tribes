@@ -1,4 +1,4 @@
-import { PacketReader, Settings, Point, randAngle, randFloat, randInt, Entity, HitboxFlag, ServerComponentType } from "webgl-test-shared";
+import { PacketReader, Settings, Point, randAngle, randFloat, randInt, Entity, HitboxFlag, ServerComponentType, angle } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -101,7 +101,7 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
          const transformComponent = TransformComponentArray.getComponent(snobe);
          const hitbox = transformComponent.hitboxes[0];
 
-         const position = hitbox.box.position.offset(32 * Math.random(), randAngle());
+         const position = new Point(hitbox.box.posX, hitbox.box.posY).offset(32 * Math.random(), randAngle());
          createHighSnowParticle(position.x, position.y, randFloat(30, 50));
       }
    }
@@ -130,16 +130,16 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
 
       // Blood pool particles
       for (let i = 0; i < 2; i++) {
-         createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 20);
+         createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 20);
       }
       
       // Blood particles
       for (let i = 0; i < 10; i++) {
-         let offsetDirection = hitbox.box.position.angleTo(hitPosition);
+         let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = hitbox.box.position.x + 32 * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.position.y + 32 * Math.cos(offsetDirection);
+         const spawnPositionX = hitbox.box.posX + 32 * Math.sin(offsetDirection);
+         const spawnPositionY = hitbox.box.posY + 32 * Math.cos(offsetDirection);
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
       }
 
@@ -151,7 +151,7 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 3; i++) {
-         createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 35);
+         createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 35);
       }
 
       createBloodParticleFountain(entity, 0.1, 1.1);

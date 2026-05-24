@@ -1,8 +1,7 @@
 import { assert, Point } from "./utils.js";
 
-// @SPEED: const enum!!
 /** Client-to-server packet types */
-export enum ClientPacketType {
+export const enum ClientPacketType {
    initialPlayerData,
    activate,
    deactivate, // @CLEANUP: unused now!!
@@ -64,9 +63,8 @@ export enum ClientPacketType {
    devChangeTribeType, // ((DEV))
 }
 
-// @SPEED: const enum!!
 /** Server-to-client packet types */
-export enum ServerPacketType {
+export const enum ServerPacketType {
    initialGameData,
    gameData,
    syncGameData, // @CLEANUP: unused now!!!

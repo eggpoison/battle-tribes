@@ -1,4 +1,4 @@
-import { assertBoxIsCircular, Entity, EntityType, AttackEffectiveness, getAbsAngleDiff, Point, Settings } from "battletribes-shared";
+import { assertBoxIsCircular, Entity, EntityType, AttackEffectiveness, getAbsAngleDiff, Point, Settings, distance, angle } from "battletribes-shared";
 import { getDistanceFromPointToHitbox } from "../ai-shared.js";
 import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
 import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";
@@ -27,12 +27,12 @@ const dustfleaIsThreat = (krumblid: Entity, dustflea: Entity): boolean => {
    const dustfleaHitbox = dustfleaTransformComponent.hitboxes[0];
 
    // Make sure not too far away
-   if (getDistanceFromPointToHitbox(krumblidHitbox.box.position, dustfleaHitbox) > 120) {
+   if (getDistanceFromPointToHitbox(krumblidHitbox.box.posX, krumblidHitbox.box.posY, dustfleaHitbox) > 120) {
       return false;
    }
    
    // Make sure the dustflea is looking towards the krumblid
-   const angleFromEscapeTarget = dustfleaHitbox.box.position.angleTo(krumblidHitbox.box.position);
+   const angleFromEscapeTarget = angle(krumblidHitbox.box.posX - dustfleaHitbox.box.posX, krumblidHitbox.box.posY - dustfleaHitbox.box.posY);
    return getAbsAngleDiff(angleFromEscapeTarget, dustfleaHitbox.box.angle) < 0.6;
 }
 
@@ -56,7 +56,7 @@ export function getKrumblidDustfleaThreatTarget(krumblid: Entity, aiHelperCompon
       const entityHitbox = entityTransformComponent.hitboxes[0];
       assertBoxIsCircular(entityHitbox.box);
 
-      const dist = hitbox.box.position.distanceTo(entityHitbox.box.position);
+      const dist = distance(hitbox.box.posX, hitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          target = entity;
@@ -82,7 +82,7 @@ export function getKrumblidAttackTarget(krumblid: Entity, aiHelperComponent: AIH
       const entityHitbox = entityTransformComponent.hitboxes[0];
       assertBoxIsCircular(entityHitbox.box);
 
-      const dist = hitbox.box.position.distanceTo(entityHitbox.box.position);
+      const dist = distance(hitbox.box.posX, hitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          target = entity;
@@ -102,8 +102,8 @@ export function runKrumblidCombatAI(krumblid: Entity, aiHelperComponent: AIHelpe
    const targetHitbox = targetTransformComponent.hitboxes[0];
    
    // @Incomplete: move using pathfinding!!!
-   aiHelperComponent.moveFunc(krumblid, targetHitbox.box.position, krumblidCombatAI.acceleration);
-   aiHelperComponent.turnFunc(krumblid, targetHitbox.box.position, krumblidCombatAI.turnSpeed, krumblidCombatAI.turnDamping);
+   aiHelperComponent.moveFunc(krumblid, targetHitbox.box.posX, targetHitbox.box.posY, krumblidCombatAI.acceleration);
+   aiHelperComponent.turnFunc(krumblid, targetHitbox.box.posX, targetHitbox.box.posY, krumblidCombatAI.turnSpeed, krumblidCombatAI.turnDamping);
 
    if (entitiesAreColliding(krumblid, target) !== CollisionVars.NO_COLLISION) {
       // @Copynpaste
@@ -115,7 +115,7 @@ export function runKrumblidCombatAI(krumblid: Entity, aiHelperComponent: AIHelpe
       }
 
       if (getEntityAgeTicks(krumblid) % Settings.TICK_RATE === 0) {
-         const hitPosition = new Point((targetHitbox.box.position.x + hitbox.box.position.x) / 2, (targetHitbox.box.position.y + hitbox.box.position.y) / 2);
+         const hitPosition = new Point((targetHitbox.box.posX + hitbox.box.posX) / 2, (targetHitbox.box.posY + hitbox.box.posY) / 2);
          damageEntity(targetHitbox, krumblid, 1, 0, AttackEffectiveness.effective, hitPosition, 0);
       }
    }

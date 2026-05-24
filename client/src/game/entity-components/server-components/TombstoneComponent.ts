@@ -130,8 +130,8 @@ class _TombstoneComponentArray extends _ServerComponentArray<TombstoneComponent,
       const height = (hitbox.box as RectangularBox).height;
       
       for (let i = 0; i < 4; i++) {
-         const spawnPositionX = hitbox.box.position.x + randFloat(-width/2, width/2);
-         const spawnPositionY = hitbox.box.position.y + randFloat(-height/2, height/2);
+         const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
+         const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
 
          // @HACK @Robustness
          let moveDirection = Math.PI/2 - Math.atan2(spawnPositionY, spawnPositionX);
@@ -141,8 +141,8 @@ class _TombstoneComponentArray extends _ServerComponentArray<TombstoneComponent,
       }
 
       for (let i = 0; i < 8; i++) {
-         const spawnPositionX = hitbox.box.position.x + randFloat(-width/2, width/2);
-         const spawnPositionY = hitbox.box.position.y + randFloat(-height/2, height/2);
+         const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
+         const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
 
          createRockSpeckParticle(spawnPositionX, spawnPositionY, 0, 0, 0, ParticleRenderLayer.low);
       }
@@ -159,15 +159,15 @@ class _TombstoneComponentArray extends _ServerComponentArray<TombstoneComponent,
       const height = (hitbox.box as RectangularBox).height;
 
       for (let i = 0; i < 8; i++) {
-         const spawnPositionX = hitbox.box.position.x + randFloat(-width/2, width/2);
-         const spawnPositionY = hitbox.box.position.y + randFloat(-height/2, height/2);
+         const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
+         const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
 
          createRockParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 125), ParticleRenderLayer.low);
       }
 
       for (let i = 0; i < 5; i++) {
-         const spawnPositionX = hitbox.box.position.x + randFloat(-width/2, width/2);
-         const spawnPositionY = hitbox.box.position.y + randFloat(-height/2, height/2);
+         const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
+         const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
 
          createRockSpeckParticle(spawnPositionX, spawnPositionY, 0, 0, 0, ParticleRenderLayer.low);
       }

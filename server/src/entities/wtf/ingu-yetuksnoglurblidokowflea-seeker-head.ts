@@ -1,4 +1,4 @@
-import { createNormalisedPivotPoint, HitboxFlag, HitboxCollisionType, CircularBox, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point, polarVec2 } from "battletribes-shared";
+import { createNormalisedPivotPoint, HitboxFlag, HitboxCollisionType, CircularBox, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point, polarVec2, PivotPointType } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { InguYetuksnoglurblidokowfleaSeekerHeadComponent } from "../../components/InguYetuksnoglurblidokowfleaSeekerHeadComponent.js";
@@ -7,7 +7,7 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { Hitbox } from "../../hitboxes.js";
 import { tetherHitboxes } from "../../tethers.js";
 
-export function createInguYetuksnoglurblidokowfleaSeekerHeadConfig(position: Point, angle: number, baseOffset: Point, isCow: boolean, numSegments: number): EntityConfig {
+export function createInguYetuksnoglurblidokowfleaSeekerHeadConfig(x: number, y: number, angle: number, baseOffsetX: number, baseOffsetY: number, isCow: boolean, numSegments: number): EntityConfig {
    const transformComponent = new TransformComponent();
    
    const IDEAL_DIST = 6;
@@ -16,10 +16,10 @@ export function createInguYetuksnoglurblidokowfleaSeekerHeadConfig(position: Poi
       let hitboxPosition: Point;
       let offset: Point;
       if (lastHitbox === null) {
-         hitboxPosition = position;
-         offset = baseOffset;
+         hitboxPosition = new Point(x, y);
+         offset = new Point(baseOffsetX, baseOffsetY);
       } else {
-         hitboxPosition = lastHitbox.box.position.copy();
+         hitboxPosition = new Point(lastHitbox.box.posX, lastHitbox.box.posY);
          hitboxPosition.add(polarVec2(IDEAL_DIST, angle));
          offset = new Point(0, 0);
       }
@@ -34,7 +34,7 @@ export function createInguYetuksnoglurblidokowfleaSeekerHeadConfig(position: Poi
          flags = [HitboxFlag.YETUK_TRUNK_HEAD];
       }
 
-      const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(hitboxPosition, offset, 0, 12), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, flags);
+      const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(hitboxPosition.x, hitboxPosition.y, offset.x, offset.y, 0, 12), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, flags);
       addHitboxToTransformComponent(transformComponent, hitbox);
 
       if (lastHitbox !== null) {
@@ -55,15 +55,16 @@ export function createInguYetuksnoglurblidokowfleaSeekerHeadConfig(position: Poi
    }
 
    const offset = polarVec2(32, angle);
-   const headPosition = lastHitbox!.box.position.copy();
+   const headPosition = new Point(lastHitbox!.box.posX, lastHitbox!.box.posY);
    headPosition.add(offset);
    let headHitbox: Hitbox;
    if (isCow) {
-      headHitbox = new Hitbox(transformComponent, lastHitbox, true, new CircularBox(headPosition, offset, 0, 30), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.COW_HEAD]);
+      headHitbox = new Hitbox(transformComponent, lastHitbox, true, new CircularBox(headPosition.x, headPosition.y, offset.x, offset.y, 0, 30), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.COW_HEAD]);
    } else {
-      headHitbox = new Hitbox(transformComponent, lastHitbox, true, new CircularBox(headPosition, offset, 0, 40), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.TUKMOK_HEAD]);
+      headHitbox = new Hitbox(transformComponent, lastHitbox, true, new CircularBox(headPosition.x, headPosition.y, offset.x, offset.y, 0, 40), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.TUKMOK_HEAD]);
    }
-   headHitbox.box.pivot = createNormalisedPivotPoint(0, -0.5);
+   headHitbox.box.pivotY = -0.5;
+   headHitbox.box.pivotType = PivotPointType.normalised;
    addHitboxToTransformComponent(transformComponent, headHitbox);
 
    // Head mandibles
@@ -73,25 +74,25 @@ export function createInguYetuksnoglurblidokowfleaSeekerHeadConfig(position: Poi
 
          {
             const mandibleOffset = new Point(12, 36);
-            const mandiblePosition = headHitbox.box.position.copy();
-            mandiblePosition.add(mandibleOffset);
-            const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(mandiblePosition, mandibleOffset, Math.PI * 0.1, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_BIG]);
+            const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(headHitbox.box.posX + mandibleOffset.x, headHitbox.box.posY + mandibleOffset.y, mandibleOffset.x, mandibleOffset.y, Math.PI * 0.1, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_BIG]);
             mandibleHitbox.box.flipX = sideIsFlipped;
             // @Hack
             mandibleHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
-            mandibleHitbox.box.pivot = createNormalisedPivotPoint(-0.5, -0.5);
+            mandibleHitbox.box.pivotX = -0.5;
+            mandibleHitbox.box.pivotY = -0.5;
+            mandibleHitbox.box.pivotType = PivotPointType.normalised;
             addHitboxToTransformComponent(transformComponent, mandibleHitbox);
          }
 
          {
             const mandibleOffset = new Point(18, 32);
-            const mandiblePosition = headHitbox.box.position.copy();
-            mandiblePosition.add(mandibleOffset);
-            const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(mandiblePosition, mandibleOffset, Math.PI * 0.3, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_MEDIUM]);
+            const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(headHitbox.box.posX + mandibleOffset.x, headHitbox.box.posY + mandibleOffset.y, mandibleOffset.x, mandibleOffset.y, Math.PI * 0.3, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_MEDIUM]);
             mandibleHitbox.box.flipX = sideIsFlipped;
             // @Hack
             mandibleHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
-            mandibleHitbox.box.pivot = createNormalisedPivotPoint(-0.5, -0.5);
+            mandibleHitbox.box.pivotX = -0.5;
+            mandibleHitbox.box.pivotY = -0.5;
+            mandibleHitbox.box.pivotType = PivotPointType.normalised;
             addHitboxToTransformComponent(transformComponent, mandibleHitbox);
          }
       }
@@ -101,25 +102,25 @@ export function createInguYetuksnoglurblidokowfleaSeekerHeadConfig(position: Poi
 
          {
             const mandibleOffset = new Point(14, 48);
-            const mandiblePosition = headHitbox.box.position.copy();
-            mandiblePosition.add(mandibleOffset);
-            const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(mandiblePosition, mandibleOffset, Math.PI * 0.1, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_BIG]);
+            const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(headHitbox.box.posX + mandibleOffset.x, headHitbox.box.posY + mandibleOffset.y, mandibleOffset.x, mandibleOffset.y, Math.PI * 0.1, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_BIG]);
             mandibleHitbox.box.flipX = sideIsFlipped;
             // @Hack
             mandibleHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
-            mandibleHitbox.box.pivot = createNormalisedPivotPoint(-0.5, -0.5);
+            mandibleHitbox.box.pivotX = -0.5;
+            mandibleHitbox.box.pivotY = -0.5;
+            mandibleHitbox.box.pivotType = PivotPointType.normalised;
             addHitboxToTransformComponent(transformComponent, mandibleHitbox);
          }
 
          {
             const mandibleOffset = new Point(22, 46);
-            const mandiblePosition = headHitbox.box.position.copy();
-            mandiblePosition.add(mandibleOffset);
-            const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(mandiblePosition, mandibleOffset, Math.PI * 0.3, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_MEDIUM]);
+            const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(headHitbox.box.posX + mandibleOffset.x, headHitbox.box.posY + mandibleOffset.y, mandibleOffset.x, mandibleOffset.y, Math.PI * 0.3, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_MEDIUM]);
             mandibleHitbox.box.flipX = sideIsFlipped;
             // @Hack
             mandibleHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
-            mandibleHitbox.box.pivot = createNormalisedPivotPoint(-0.5, -0.5);
+            mandibleHitbox.box.pivotX = -0.5;
+            mandibleHitbox.box.pivotY = -0.5;
+            mandibleHitbox.box.pivotType = PivotPointType.normalised;
             addHitboxToTransformComponent(transformComponent, mandibleHitbox);
          }
       }

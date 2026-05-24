@@ -138,7 +138,7 @@ export function generateRiverTiles(): RiverGenerationInfo {
       });
    }
 
-   const tiles = new Array<WaterTileGenerationInfo>();
+   const tiles: Array<WaterTileGenerationInfo> = [];
    
    for (const rootTile of rootTiles) {
       let minTileX = rootTile.tileX - 1;
@@ -221,7 +221,7 @@ interface RiverCrossingInfo {
 }
 
 const calculateRiverCrossingPositions = (riverTiles: ReadonlyArray<WaterTileGenerationInfo>): ReadonlyArray<RiverCrossingInfo> => {
-   const riverCrossings = new Array<RiverCrossingInfo>();
+   const riverCrossings: Array<RiverCrossingInfo> = [];
    
    for (const startTile of riverTiles) {
       if (!tileIsAdjacentToLand(startTile.tileX, startTile.tileY, riverTiles)) {
@@ -313,7 +313,7 @@ export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: ReadonlyA
    // Calculate potential river crossing positions
    const potentialRiverCrossings = calculateRiverCrossingPositions(riverTiles);
 
-   const riverCrossings = new Array<RiverCrossingInfo>();
+   const riverCrossings: Array<RiverCrossingInfo> = [];
    mainLoop:
    for (const crossingInfo of potentialRiverCrossings) {
       if (Math.random() >= 0.15) {
@@ -341,7 +341,7 @@ export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: ReadonlyA
       const minY = (crossing.startTileY + 0.5) * Settings.TILE_SIZE;
       const maxY = (crossing.endTileY + 0.5) * Settings.TILE_SIZE;
 
-      const localStoneHitboxes = new Array<Hitbox>();
+      const localStoneHitboxes: Array<Hitbox> = [];
 
       stoneCreationLoop:
       for (let i = 0; i < NUM_STONE_SPAWN_ATTEMPTS_PER_RIVER; i++) {
@@ -368,13 +368,13 @@ export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: ReadonlyA
          }
 
          const stoneSize: RiverSteppingStoneSize = randInt(0, 2);
-         const stoneConfig = createRiverSteppingStoneConfig(new Point(x, y), randAngle(), stoneSize);
+         const stoneConfig = createRiverSteppingStoneConfig(x, y, randAngle(), stoneSize);
          const stoneHitbox = getConfigTransformComponent(stoneConfig.components).hitboxes[0];
 
          // Don't overlap with existing stones in the crossing
          for (const otherHitbox of localStoneHitboxes) {
             // @HACK @Cleanup should use the hitboxToHitboxDist function once i make that!!!!!
-            const dist = getDistanceFromPointToHitbox(stoneHitbox.box.position, otherHitbox) - (stoneHitbox.box as CircularBox).radius;
+            const dist = getDistanceFromPointToHitbox(stoneHitbox.box.posX, stoneHitbox.box.posY, otherHitbox) - (stoneHitbox.box as CircularBox).radius;
             if (dist < MIN_RIVER_STEPPING_STONE_SPACING) {
                continue stoneCreationLoop;
             }

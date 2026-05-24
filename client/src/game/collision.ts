@@ -1,4 +1,4 @@
-import { Settings, collisionBitsAreCompatible, Point, rotatePointAroundOrigin, Box, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, Entity, CollisionResult, _bounds, EntityType, TileType, _point, CollisionGroup, collisionGroupsCanCollide, overrideCollisionGroup } from "webgl-test-shared";
+import { Settings, collisionBitsAreCompatible, rotatePointAroundOrigin, Box, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, Entity, CollisionResult, _bounds, EntityType, TileType, _point, CollisionGroup, collisionGroupsCanCollide } from "webgl-test-shared";
 import { TransformComponent, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityType, layers } from "./world";
 import Layer from "./Layer";
@@ -268,7 +268,7 @@ export function resolveWallCollisions(entity: Entity): boolean {
             // @Garbage
             const tileCenterX = (subtileX + 0.5) * Settings.SUBTILE_SIZE;
             const tileCenterY = (subtileY + 0.5) * Settings.SUBTILE_SIZE;
-            const tileBox = new RectangularBox(new Point(tileCenterX, tileCenterY), new Point(0, 0), 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+            const tileBox = new RectangularBox(tileCenterX, tileCenterY, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
             
             // Check if the tile is colliding
             const collisionResult = box.getCollisionResult(tileBox);
@@ -349,7 +349,7 @@ export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArr
 }
 
 // @Cleanup: remove
-const testCircularBox = new CircularBox(new Point(0, 0), new Point(0, 0), 0, 0);
+const testCircularBox = new CircularBox(0, 0, 0, 0, 0, 0);
 
 // @Location
 export function getEntitiesInRange(layer: Layer, x: number, y: number, range: number): Array<Entity> {
@@ -359,8 +359,8 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
    const maxChunkY = Math.max(Math.min(Math.floor((y + range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
 
    testCircularBox.radius = range;
-   testCircularBox.position.x = x;
-   testCircularBox.position.y = y;
+   testCircularBox.posX = x;
+   testCircularBox.posY = y;
 
    const visionRangeSquared = Math.pow(range, 2);
    
@@ -378,7 +378,7 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
             const transformComponent = TransformComponentArray.getComponent(entity);
             
             const entityHitbox = transformComponent.hitboxes[0];
-            if (Math.pow(x - entityHitbox.box.position.x, 2) + Math.pow(y - entityHitbox.box.position.y, 2) <= visionRangeSquared) {
+            if (Math.pow(x - entityHitbox.box.posX, 2) + Math.pow(y - entityHitbox.box.posY, 2) <= visionRangeSquared) {
                entities.push(entity);
                seenIDs.add(entity);
                continue;

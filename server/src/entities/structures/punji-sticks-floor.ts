@@ -1,4 +1,4 @@
-import { EntityType, StatusEffect, Point, HitboxCollisionType, HitboxFlag, CollisionBit, DEFAULT_COLLISION_MASK, RectangularBox } from "battletribes-shared";
+import { EntityType, StatusEffect, HitboxCollisionType, HitboxFlag, CollisionBit, DEFAULT_COLLISION_MASK, RectangularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";
@@ -12,10 +12,10 @@ import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildin
 import { Hitbox } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
-export function createFloorPunjiSticksConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createFloorPunjiSticksConfig(x: number, y: number, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const box = new RectangularBox(position, new Point(0, 0), rotation, 48, 48);
+   const box = new RectangularBox(x, y, 0, 0, rotation, 48, 48);
    const hitbox = new Hitbox(transformComponent, null, true, box, 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);

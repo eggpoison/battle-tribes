@@ -14,7 +14,7 @@ export interface CarrySlot {
 }
 
 export class RideableComponent {
-   readonly carrySlots = new Array<CarrySlot>();
+   readonly carrySlots: Array<CarrySlot> = [];
 }
 
 export const RideableComponentArray = new ComponentArray<RideableComponent>(ServerComponentType.rideable, true, getDataLength, addDataToPacket);
@@ -59,8 +59,8 @@ export function mountCarrySlot(entity: Entity, carrySlot: CarrySlot): void {
    const entityTransformComponent = TransformComponentArray.getComponent(entity);
    const entityHitbox = entityTransformComponent.hitboxes[0];
    rotatePointAroundOrigin(carrySlot.offset.x, carrySlot.offset.y, carrySlot.parentHitbox.box.angle);
-   entityHitbox.box.position.x = carrySlot.parentHitbox.box.position.x + _point.x;
-   entityHitbox.box.position.y = carrySlot.parentHitbox.box.position.y + _point.y;
+   entityHitbox.box.posX = carrySlot.parentHitbox.box.posX + _point.x;
+   entityHitbox.box.posX = carrySlot.parentHitbox.box.posY + _point.y;
    
    // attachEntityWithTether(entity, mount, carrySlot.parentHitbox, 0, 10, 0.4, false);
    // @INCOMPLETE: SHOULD USE TETHER!!!!

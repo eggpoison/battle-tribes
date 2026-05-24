@@ -28,9 +28,9 @@ const getRandomNearbyPosition = (dustflea: Entity): Point => {
    let x: number;
    let y: number;
    do {
-      x = dustfleaHitbox.box.position.x + randFloat(-RANGE, RANGE);
-      y = dustfleaHitbox.box.position.y + randFloat(-RANGE, RANGE);
-   } while (distance(dustfleaHitbox.box.position.x, dustfleaHitbox.box.position.y, x, y) > RANGE || !positionIsInWorld(x, y))
+      x = dustfleaHitbox.box.posX + randFloat(-RANGE, RANGE);
+      y = dustfleaHitbox.box.posY + randFloat(-RANGE, RANGE);
+   } while (distance(dustfleaHitbox.box.posX, dustfleaHitbox.box.posY, x, y) > RANGE || !positionIsInWorld(x, y))
 
    return new Point(x, y);
 }
@@ -47,15 +47,14 @@ const isValidHibernatePosition = (dustflea: Entity, position: Point): boolean =>
    const minSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
    const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
 
-   const testHitbox = new CircularBox(position.copy(), new Point(0, 0), 0, WALL_CHECK_RANGE);
+   const testHitbox = new CircularBox(position.x, position.y, 0, 0, 0, WALL_CHECK_RANGE);
    
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
          const subtileIndex = getSubtileIndex(subtileX, subtileY);
          if (layer.subtileIsWall(subtileIndex)) {
             // @Speed
-            const position = new Point((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE);
-            const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+            const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
             if (testHitbox.getCollisionResult(tileBox).isColliding) {
                return false;
             }
@@ -73,7 +72,7 @@ const isValidHibernatePosition = (dustflea: Entity, position: Point): boolean =>
       const minSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
       const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
 
-      const testHitbox = new CircularBox(position.copy(), new Point(0, 0), 0, WALL_CHECK_RANGE);
+      const testHitbox = new CircularBox(position.x, position.y, 0, 0, 0, WALL_CHECK_RANGE);
       
       let isNearWall = false;
       for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
@@ -81,8 +80,7 @@ const isValidHibernatePosition = (dustflea: Entity, position: Point): boolean =>
             const subtileIndex = getSubtileIndex(subtileX, subtileY);
             if (layer.subtileIsWall(subtileIndex)) {
                // @Speed
-               const position = new Point((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE);
-               const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+               const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
                if (testHitbox.getCollisionResult(tileBox).isColliding) {
                   isNearWall = true;
                }
@@ -157,13 +155,13 @@ export function runHibernateAI(dustflea: Entity, aiHelperComponent: AIHelperComp
 
    if (ai.hibernateTargetPosition !== null) {
       // go to it!
-      aiHelperComponent.moveFunc(dustflea, ai.hibernateTargetPosition, ai.acceleration);
-      aiHelperComponent.turnFunc(dustflea, ai.hibernateTargetPosition, ai.turnSpeed, ai.turnDamping);
+      aiHelperComponent.moveFunc(dustflea, ai.hibernateTargetPosition.x, ai.hibernateTargetPosition.y, ai.acceleration);
+      aiHelperComponent.turnFunc(dustflea, ai.hibernateTargetPosition.x, ai.hibernateTargetPosition.y, ai.turnSpeed, ai.turnDamping);
 
-      if (dustfleaHitbox.box.position.distanceTo(ai.hibernateTargetPosition) < 1) {
+      if (distance(dustfleaHitbox.box.posX, dustfleaHitbox.box.posY, ai.hibernateTargetPosition.x, ai.hibernateTargetPosition.y) < 1) {
          destroyEntity(dustflea);
 
-         const cocoonConfig = createDustfleaMorphCocoonConfig(dustfleaHitbox.box.position.copy(), randAngle());
+         const cocoonConfig = createDustfleaMorphCocoonConfig(dustfleaHitbox.box.posX, dustfleaHitbox.box.posY, randAngle());
          createEntity(cocoonConfig, getEntityLayer(dustflea), 0);
       }
    } else {
@@ -176,8 +174,8 @@ export function runHibernateAI(dustflea: Entity, aiHelperComponent: AIHelperComp
       const wanderAI = aiHelperComponent.getWanderAI();
       wanderAI.update(dustflea);
       if (wanderAI.targetPosition !== null) {
-         aiHelperComponent.moveFunc(dustflea, wanderAI.targetPosition, wanderAI.acceleration);
-         aiHelperComponent.turnFunc(dustflea, wanderAI.targetPosition, wanderAI.turnSpeed, wanderAI.turnDamping);
+         aiHelperComponent.moveFunc(dustflea, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.acceleration);
+         aiHelperComponent.turnFunc(dustflea, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.turnSpeed, wanderAI.turnDamping);
       }
    }
 }

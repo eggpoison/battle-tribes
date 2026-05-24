@@ -13,7 +13,7 @@ import { AIAssignmentComponentArray } from "../../components/AIAssignmentCompone
 // @Cleanup: should this be here?
 export function getVisibleTribes(playerLayer: Layer, chunkBounds: VisibleChunkBounds): ReadonlyArray<Tribe> {
    // Calculate visible tribes
-   const visibleTribes = new Array<Tribe>();
+   const visibleTribes: Array<Tribe> = [];
    for (let chunkX = chunkBounds[0]; chunkX <= chunkBounds[1]; chunkX++) {
       for (let chunkY = chunkBounds[2]; chunkY <= chunkBounds[3]; chunkY++) {
          const chunk = playerLayer.getChunk(chunkX, chunkY);
@@ -39,7 +39,7 @@ export function getVisibleSafetyNodesData(playerClient: PlayerClient): ReadonlyA
    const minNodeY = Math.floor(playerClient.minVisibleY / Settings.SAFETY_NODE_SEPARATION);
    const maxNodeY = Math.floor(playerClient.maxVisibleY / Settings.SAFETY_NODE_SEPARATION);
    
-   const safetyNodesData = new Array<SafetyNodeData>();
+   const safetyNodesData: Array<SafetyNodeData> = [];
    for (const tribe of tribes) {
       const buildingLayer = tribe.buildingLayers[playerClient.lastLayer.depth];
 
@@ -236,7 +236,7 @@ export function addTribeBuildingSafetyData(packet: Packet, playerClient: PlayerC
 }
 
 export function getVisibleRestrictedBuildingAreas(visibleTribes: ReadonlyArray<Tribe>, chunkBounds: VisibleChunkBounds): ReadonlyArray<RestrictedBuildingAreaData> {
-   const restrictedAreasData = new Array<RestrictedBuildingAreaData>();
+   const restrictedAreasData: Array<RestrictedBuildingAreaData> = [];
    for (let i = 0; i < visibleTribes.length; i++) {
       const tribe = visibleTribes[i];
 
@@ -266,7 +266,7 @@ const getWallSideNodeData = (nodeIndex: SafetyNode, side: number): WallSideNodeD
 }
 
 export function getVisibleWallsData(playerLayer: Layer, visibleTribes: ReadonlyArray<Tribe>, chunkBounds: VisibleChunkBounds): ReadonlyArray<TribeWallData> {
-   const wallDataArray = new Array<TribeWallData>();
+   const wallDataArray: Array<TribeWallData> = [];
    for (let i = 0; i < visibleTribes.length; i++) {
       const tribe = visibleTribes[i];
       const buildingLayer = tribe.buildingLayers[playerLayer.depth];
@@ -293,7 +293,7 @@ export function getVisibleWallsData(playerLayer: Layer, visibleTribes: ReadonlyA
 }
 
 export function getVisibleWallConnections(playerLayer: Layer, visibleTribes: ReadonlyArray<Tribe>, chunkBounds: VisibleChunkBounds): ReadonlyArray<WallConnectionData> {
-   const connectionsData = new Array<WallConnectionData>();
+   const connectionsData: Array<WallConnectionData> = [];
    for (let i = 0; i < visibleTribes.length; i++) {
       const tribe = visibleTribes[i];
       const buildingLayer = tribe.buildingLayers[playerLayer.depth];

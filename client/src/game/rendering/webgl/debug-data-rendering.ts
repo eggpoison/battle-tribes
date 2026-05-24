@@ -84,19 +84,18 @@ export function createDebugDataShaders(): void {
    bindUBOToProgram(gl, triangleProgram, UBOBindingIndex.CAMERA);
 }
 
-const addCircleVertices = (vertices: Array<number>, debugData: EntityDebugData, position: Point): void => {
+const addCircleVertices = (vertices: Array<number>, debugData: EntityDebugData, x: number, y: number): void => {
    for (const circle of debugData.circles) {
       vertices.push(
-         ...generateThickCircleWireframeVertices(position, circle.radius, circle.thickness, circle.colour[0], circle.colour[1], circle.colour[2])
+         ...generateThickCircleWireframeVertices(x, y, circle.radius, circle.thickness, circle.colour[0], circle.colour[1], circle.colour[2])
       );
    }
 }
 
-const addLineVertices = (vertices: Array<number>, debugData: EntityDebugData, position: Point): void => {
+const addLineVertices = (vertices: Array<number>, debugData: EntityDebugData, x: number, y: number): void => {
    for (const line of debugData.lines) {
-      const targetPosition = new Point(...line.targetPosition);
       vertices.push(
-         ...generateLine(position, targetPosition, line.thickness, line.colour[0], line.colour[1], line.colour[2])
+         ...generateLine(x, y, line.targetPosition[0], line.targetPosition[1], line.thickness, line.colour[0], line.colour[1], line.colour[2])
       );
    }
 }
@@ -113,8 +112,8 @@ export function renderLineDebugData(debugData: EntityDebugData): void {
    const hitbox = transformComponent.hitboxes[0];
    
    const vertices: Array<number> = [];
-   addCircleVertices(vertices, debugData, hitbox.box.position);
-   addLineVertices(vertices, debugData, hitbox.box.position);
+   addCircleVertices(vertices, debugData, hitbox.box.posX, hitbox.box.posY);
+   addLineVertices(vertices, debugData, hitbox.box.posX, hitbox.box.posY);
 
    const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);

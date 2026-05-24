@@ -4,7 +4,7 @@ import { ItemType } from "./items/items.js";
 
 // @Cleanup: remove this, this is all so shit lool
 
-export enum EntityTickEventType {
+export const enum EntityTickEventType {
    cowFart,
    fireBow,
    automatonAccident,

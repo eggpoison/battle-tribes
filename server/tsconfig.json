@@ -7,8 +7,8 @@
       "strict": true,
       "sourceMap": false,
       "removeComments": false,
-      "baseUrl": "./",
       "outDir": "./dist",
+      "rootDir": "./src",
       "paths": {
          "battletribes-shared": ["../shared/dist/index.d.ts"]
       }

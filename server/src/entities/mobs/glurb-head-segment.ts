@@ -1,4 +1,4 @@
-import { HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, ItemType, Settings, lerp, Point, polarVec2, getTamingSkill, TamingSkillID, StatusEffect } from "battletribes-shared";
+import { HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, ItemType, Settings, lerp, Point, polarVec2, getTamingSkill, TamingSkillID, StatusEffect, angle } from "battletribes-shared";
 import WanderAI from "../../ai/WanderAI.js";
 import { EntityConfig, LightCreationInfo } from "../../components.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
@@ -63,7 +63,7 @@ const getAcceleration = (glurb: Entity): number => {
    return lerp(375, 650, u);
 }
 
-const propagateMoveDirective = (glurbSegment: Entity, furtherHitbox: Hitbox | null, pos: Point, foundSegments: Array<Entity>): void => {
+const propagateMoveDirective = (glurbSegment: Entity, furtherHitbox: Hitbox | null, x: number, y: number, foundSegments: Array<Entity>): void => {
    const transformComponent = TransformComponentArray.getComponent(glurbSegment);
    const hitbox = transformComponent.hitboxes[0];
 
@@ -71,9 +71,9 @@ const propagateMoveDirective = (glurbSegment: Entity, furtherHitbox: Hitbox | nu
    
    let targetDir: number;
    if (furtherHitbox === null) {
-      targetDir = hitbox.box.position.angleTo(pos);
+      targetDir = angle(x - hitbox.box.posX, y - hitbox.box.posY);
    } else {
-      targetDir = hitbox.box.position.angleTo(furtherHitbox.box.position);
+      targetDir = angle(furtherHitbox.box.posX - hitbox.box.posX, furtherHitbox.box.posY - hitbox.box.posY);
    }
    
    applyAccelerationFromGround(hitbox, polarVec2(acceleration, targetDir));
@@ -83,28 +83,28 @@ const propagateMoveDirective = (glurbSegment: Entity, furtherHitbox: Hitbox | nu
       const otherHitbox = tether.getOtherHitbox(hitbox);
       if (!foundSegments.includes(otherHitbox.entity)) {
          foundSegments.push(otherHitbox.entity);
-         propagateMoveDirective(otherHitbox.entity, hitbox, pos, foundSegments);
+         propagateMoveDirective(otherHitbox.entity, hitbox, x, y, foundSegments);
       }
    }
 }
 
-const moveFunc = (head: Entity, pos: Point): void => {
-   propagateMoveDirective(head, null, pos, []);
+const moveFunc = (head: Entity, x: number, y: number): void => {
+   propagateMoveDirective(head, null, x, y, []);
 }
 
-const turnFunc = (head: Entity, pos: Point, turnSpeed: number, turnDamping: number): void => {
+const turnFunc = (head: Entity, x: number, y: number, turnSpeed: number, turnDamping: number): void => {
    const transformComponent = TransformComponentArray.getComponent(head);
    const hitbox = transformComponent.hitboxes[0];
    
-   const targetDirection = hitbox.box.position.angleTo(pos);
+   const targetDirection = angle(x - hitbox.box.posX, y - hitbox.box.posY);
 
    turnHitboxToAngle(hitbox, targetDirection, Math.PI, 0.5, false);
 }
 
-export function createGlurbHeadSegmentConfig(position: Point, rotation: number, maxNumSegments: number): EntityConfig {
+export function createGlurbHeadSegmentConfig(x: number, y: number, rotation: number, maxNumSegments: number): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 24), 0.6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, rotation, 24), 0.6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(5);

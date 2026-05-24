@@ -172,8 +172,8 @@ const addRectVertices = (vertices: Array<number>, x: number, y: number, width: n
 
 const addBoxVertices = (vertices: Array<number>, box: Box, adjustment: Point, r: number, g: number, b: number): void => {
    // Interpolate the hitbox render position
-   const hitboxRenderPositionX = box.position.x + adjustment.x;
-   const hitboxRenderPositionY = box.position.y + adjustment.y;
+   const hitboxRenderPositionX = box.posX + adjustment.x;
+   const hitboxRenderPositionY = box.posY + adjustment.y;
 
    if (!boxIsCircular(box)) {
       // Rectangular
@@ -270,8 +270,8 @@ export function renderHitboxes(layer: Layer): void {
 
          // note: position is already pivoted so we don't have to add the rotated relative pivot
          const unrotatedRelativePivotPos = getRelativePivotPos(box, box.angle);
-         const pivotPointX = box.position.x + unrotatedRelativePivotPos.x;
-         const pivotPointY = box.position.y + unrotatedRelativePivotPos.y;
+         const pivotPointX = box.posX + unrotatedRelativePivotPos.x;
+         const pivotPointY = box.posY + unrotatedRelativePivotPos.y;
          addRectVertices(vertices, pivotPointX, pivotPointY, 4, 4, 0, 0, 0, 1);
       }
    }

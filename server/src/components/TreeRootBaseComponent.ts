@@ -1,14 +1,13 @@
-import { ServerComponentType, Entity, Settings, getSubtileIndex, getAbsAngleDiff, Point, randAngle, randFloat, randInt } from "battletribes-shared";
+import { ServerComponentType, Entity, Settings, getSubtileIndex, getAbsAngleDiff, randAngle, randFloat, randInt } from "battletribes-shared";
 import { createTreeRootBaseConfig } from "../entities/resources/tree-root-base.js";
 import { createTreeRootSegmentConfig } from "../entities/resources/tree-root-segment.js";
-import { Hitbox } from "../hitboxes.js";
 import Layer from "../Layer.js";
 import { createEntity, destroyEntity, getEntityLayer } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 
 export class TreeRootBaseComponent {
-   readonly segments = new Array<Entity>();
+   readonly segments: Array<Entity> = [];
 }
 
 export const TreeRootBaseComponentArray = new ComponentArray<TreeRootBaseComponent>(ServerComponentType.treeRootBase, true, getDataLength, addDataToPacket);
@@ -54,7 +53,7 @@ function onJoin(entity: Entity): void {
    
    const layer = getEntityLayer(entity);
 
-   const spawnOffsetDirections = new Array<number>();
+   const spawnOffsetDirections: Array<number> = [];
 
    const maxSegments = Math.random() < 2/3 ? 2 : 3;
    for (let i = 0, attempts = 0; i < maxSegments && attempts < 50; attempts++) {
@@ -72,7 +71,7 @@ function onJoin(entity: Entity): void {
          continue;
       }
 
-      if (segmentWillBeInWall(layer, treeRootHitbox.box.position.x, treeRootHitbox.box.position.y, offsetDirection)) {
+      if (segmentWillBeInWall(layer, treeRootHitbox.box.posX, treeRootHitbox.box.posY, offsetDirection)) {
          continue;
       }
       
@@ -80,10 +79,10 @@ function onJoin(entity: Entity): void {
       const offsetX = offsetMagnitude * Math.sin(offsetDirection);
       const offsetY = offsetMagnitude * Math.cos(offsetDirection);
 
-      const x = treeRootHitbox.box.position.x + offsetX;
-      const y = treeRootHitbox.box.position.y + offsetY;
+      const x = treeRootHitbox.box.posX + offsetX;
+      const y = treeRootHitbox.box.posY + offsetY;
 
-      const config = createTreeRootSegmentConfig(new Point(x, y), offsetDirection + randFloat(-0.1, 0.1), entity);
+      const config = createTreeRootSegmentConfig(x, y, offsetDirection + randFloat(-0.1, 0.1), entity);
       createEntity(config, layer, 0);
 
       spawnOffsetDirections.push(offsetDirection);
@@ -97,7 +96,7 @@ function preRemove(entity: Entity): void {
    const treeRootHitbox = transformComponent.hitboxes[0];
 
    // Respawn the tree root after a while
-   const config = createTreeRootBaseConfig(treeRootHitbox.box.position.copy(), randAngle());
+   const config = createTreeRootBaseConfig(treeRootHitbox.box.posX, treeRootHitbox.box.posY, randAngle());
    createEntity(config, getEntityLayer(entity), randInt(60, 90) * Settings.TICK_RATE);
 
    const treeRootBaseComponent = TreeRootBaseComponentArray.getComponent(entity);

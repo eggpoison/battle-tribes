@@ -379,16 +379,16 @@ const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
    const hitbox = transformComponent.hitboxes[0];
    
    for (let i = 0; i < 2; i++) {
-      createWoodShardParticle(hitbox.box.position.x, hitbox.box.position.y, 24);
+      createWoodShardParticle(hitbox.box.posX, hitbox.box.posY, 24);
    }
 
    for (let i = 0; i < 3; i++) {
-      createLightWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 24 * Math.random());
+      createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 24 * Math.random());
    }
 
    for (let i = 0; i < 2; i++) {
-      const x = hitbox.box.position.x + randFloat(-24, 24);
-      const y = hitbox.box.position.y + randFloat(-24, 24);
+      const x = hitbox.box.posX + randFloat(-24, 24);
+      const y = hitbox.box.posY + randFloat(-24, 24);
       createSawdustCloud(x, y);
    }
 }
@@ -514,8 +514,8 @@ class _BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent,
          const xShift = textureAtlas.textureWidths[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
          const yShift = textureAtlas.textureHeights[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
          rotatePointAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
-         const particleOriginX = hitbox.box.position.x + _point.x;
-         const particleOriginY = hitbox.box.position.y + _point.y;
+         const particleOriginX = hitbox.box.posX + _point.x;
+         const particleOriginY = hitbox.box.posY + _point.y;
          
          // @Incomplete: Change the particle effect type depending on the material of the worked-on partial texture
          // Create particle effects
@@ -574,13 +574,13 @@ class _BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent,
          case BlueprintType.warriorHutUpgrade:
          case BlueprintType.fenceGate: {
             for (let i = 0; i < 5; i++) {
-               const x = hitbox.box.position.x + randFloat(-32, 32);
-               const y = hitbox.box.position.y + randFloat(-32, 32);
+               const x = hitbox.box.posX + randFloat(-32, 32);
+               const y = hitbox.box.posY + randFloat(-32, 32);
                createSawdustCloud(x, y);
             }
       
             for (let i = 0; i < 8; i++) {
-               createLightWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 32);
+               createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32);
             }
             break;
          }
@@ -597,16 +597,16 @@ class _BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent,
             for (let i = 0; i < 5; i++) {
                const offsetDirection = randAngle();
                const offsetAmount = 32 * Math.random();
-               createRockParticle(hitbox.box.position.x + offsetAmount * Math.sin(offsetDirection), hitbox.box.position.y + offsetAmount * Math.cos(offsetDirection), randAngle(), randFloat(50, 70), ParticleRenderLayer.high);
+               createRockParticle(hitbox.box.posX + offsetAmount * Math.sin(offsetDirection), hitbox.box.posY + offsetAmount * Math.cos(offsetDirection), randAngle(), randFloat(50, 70), ParticleRenderLayer.high);
             }
          
             for (let i = 0; i < 10; i++) {
-               createRockSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 32 * Math.random(), 0, 0, ParticleRenderLayer.high);
+               createRockSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32 * Math.random(), 0, 0, ParticleRenderLayer.high);
             }
          
             for (let i = 0; i < 3; i++) {
-               const x = hitbox.box.position.x + randFloat(-32, 32);
-               const y = hitbox.box.position.y + randFloat(-32, 32);
+               const x = hitbox.box.posX + randFloat(-32, 32);
+               const y = hitbox.box.posY + randFloat(-32, 32);
                createDustCloud(x, y);
             }
             break;

@@ -23,7 +23,7 @@ export function findIdealWallPlacePosition(tribe: Tribe): WallPlaceSearchResult 
       return null;
    }
 
-   const potentialPlans = new Array<WallPlaceCandidate>();
+   const potentialPlans: Array<WallPlaceCandidate> = [];
 
    // 
    // Simulate placing each building to see which one increases safety the most
@@ -34,7 +34,7 @@ export function findIdealWallPlacePosition(tribe: Tribe): WallPlaceSearchResult 
    for (let i = 0; i < potentialCandidates.length; i++) {
       const candidate = potentialCandidates[i];
 
-      const virtualBuilding = createVirtualStructure(candidate.buildingLayer, candidate.position, candidate.rotation, EntityType.wall);
+      const virtualBuilding = createVirtualStructure(candidate.buildingLayer, candidate.position.x, candidate.position.y, candidate.rotation, EntityType.wall);
 
       // Simulate placing the wall
       candidate.buildingLayer.addVirtualBuilding(virtualBuilding);

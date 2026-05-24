@@ -1,4 +1,4 @@
-import { HitboxFlag, Entity, Settings, ServerComponentType, PacketReader, lerp, Point, randAngle, randFloat, randItem } from "webgl-test-shared";
+import { HitboxFlag, Entity, Settings, ServerComponentType, PacketReader, lerp, Point, randAngle, randFloat, randItem, angle } from "webgl-test-shared";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createSnowParticle, createWhiteSmokeParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
@@ -129,8 +129,8 @@ class _YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompo
       // Create snow impact particles when the Yeti does a throw attack
       if (yetiComponent.attackProgress === 0 && yetiComponent.lastAttackProgress !== 0) {
          const offsetMagnitude = Var.SNOW_THROW_OFFSET + 20;
-         const impactPositionX = hitbox.box.position.x + offsetMagnitude * Math.sin(hitbox.box.angle);
-         const impactPositionY = hitbox.box.position.y + offsetMagnitude * Math.cos(hitbox.box.angle);
+         const impactPositionX = hitbox.box.posX + offsetMagnitude * Math.sin(hitbox.box.angle);
+         const impactPositionY = hitbox.box.posY + offsetMagnitude * Math.cos(hitbox.box.angle);
          
          for (let i = 0; i < 30; i++) {
             const offsetMagnitude = randFloat(0, 20);
@@ -155,15 +155,15 @@ class _YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompo
       playSoundOnHitbox(randItem(HURT_SOUNDS), 0.7, 1, entity, hitbox, false);
 
       // Blood pool particle
-      createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, BLOOD_POOL_SIZE);
+      createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, BLOOD_POOL_SIZE);
       
       // Blood particles
       for (let i = 0; i < 10; i++) {
-         let offsetDirection = hitbox.box.position.angleTo(hitPosition);
+         let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = hitbox.box.position.x + YETI_SIZE / 2 * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.position.y + YETI_SIZE / 2 * Math.cos(offsetDirection);
+         const spawnPositionX = hitbox.box.posX + YETI_SIZE / 2 * Math.sin(offsetDirection);
+         const spawnPositionY = hitbox.box.posY + YETI_SIZE / 2 * Math.cos(offsetDirection);
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
       }
    }
@@ -174,7 +174,7 @@ class _YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompo
 
       playSoundOnHitbox(randItem(DEATH_SOUNDS), 0.7, 1, entity, hitbox, false);
 
-      createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, BLOOD_POOL_SIZE);
+      createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, BLOOD_POOL_SIZE);
 
       createBloodParticleFountain(entity, 0.15, 1.6);
    }

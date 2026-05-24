@@ -1,4 +1,4 @@
-import { Entity, EntityType, EntityTickEvent, EntityTickEventType, Settings, Point, polarVec2, randFloat, randInt } from "battletribes-shared";
+import { Entity, EntityType, EntityTickEvent, EntityTickEventType, Settings, Point, polarVec2, randFloat, randInt, distance, angle } from "battletribes-shared";
 import { getDistanceFromPointToEntity } from "../ai-shared.js";
 import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components.js";
 import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";
@@ -71,7 +71,7 @@ const getAttackTarget = (okren: Entity, aiHelperComponent: AIHelperComponent, en
       const entityTransformComponent = TransformComponentArray.getComponent(entity);
       const entityHitbox = entityTransformComponent.hitboxes[0];
 
-      const dist = hitbox.box.position.distanceTo(entityHitbox.box.position);
+      const dist = distance(hitbox.box.posX, hitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          target = entity;
@@ -102,15 +102,15 @@ const getTongue = (okrenTransformComponent: TransformComponent): Entity | null =
 
 const getTonguePosition = (hitbox: Hitbox, offsetMagnitude: number): Point => {
    const offsetDirection = hitbox.box.angle;
-   const x = hitbox.box.position.x + offsetMagnitude * Math.sin(offsetDirection);
-   const y = hitbox.box.position.y + offsetMagnitude * Math.cos(offsetDirection);
+   const x = hitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+   const y = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
    return new Point(x, y);
 }
 
 const deployTongue = (okren: Entity, okrenHitbox: Hitbox, target: Entity): void => {
    const position = getTonguePosition(okrenHitbox, TONGUE_INITIAL_OFFSET);
    
-   const tongueConfig = createOkrenTongueConfig(position, okrenHitbox.box.angle, okrenHitbox, target);
+   const tongueConfig = createOkrenTongueConfig(position.x, position.y, okrenHitbox.box.angle, okrenHitbox, target);
    const tongueTipHitbox = getConfigTransformComponent(tongueConfig.components).hitboxes[0];
    tongueConfig.attachInfo = createEntityConfigAttachInfo(tongueTipHitbox, okrenHitbox, true);
    createEntity(tongueConfig, getEntityLayer(okren), 0);
@@ -161,7 +161,7 @@ export function runOkrenCombatAI(okren: Entity, aiHelperComponent: AIHelperCompo
    // Make the okren lean into the swings
    for (const side of OKREN_SIDES) {
       if ((okrenComponent.swingStates[side] === OkrenSwingState.raising && okrenComponent.ticksInStates[side] > Math.floor(Settings.TICK_RATE * 0.25)) || (okrenComponent.swingStates[side] === OkrenSwingState.swinging && okrenComponent.ticksInStates[side] <= Math.floor(Settings.TICK_RATE * 0.15))) {
-         const targetDir = okrenHitbox.box.position.angleTo(targetHitbox.box.position);
+         const targetDir = angle(targetHitbox.box.posX - okrenHitbox.box.posX, targetHitbox.box.posY - okrenHitbox.box.posY);
          const idealAngle = targetDir + (side === OkrenSide.right ? -0.6 : 0.6);
 
          // @COPYNPASTE
@@ -176,11 +176,11 @@ export function runOkrenCombatAI(okren: Entity, aiHelperComponent: AIHelperCompo
 
    if (!isLeaning) {
       // @Incomplete: move using pathfinding!!!
-      aiHelperComponent.moveFunc(okren, targetHitbox.box.position, combatAI.acceleration);
-      aiHelperComponent.turnFunc(okren, targetHitbox.box.position, combatAI.turnSpeed, combatAI.turnDamping);
+      aiHelperComponent.moveFunc(okren, targetHitbox.box.posX, targetHitbox.box.posY, combatAI.acceleration);
+      aiHelperComponent.turnFunc(okren, targetHitbox.box.posX, targetHitbox.box.posY, combatAI.turnSpeed, combatAI.turnDamping);
    }
 
-   const distanceToTarget = getDistanceFromPointToEntity(okrenHitbox.box.position, targetTransformComponent);
+   const distanceToTarget = getDistanceFromPointToEntity(okrenHitbox.box.posX, okrenHitbox.box.posY, targetTransformComponent);
    const isInAttackRange = distanceToTarget <= 245;
 
    if (isInAttackRange) {

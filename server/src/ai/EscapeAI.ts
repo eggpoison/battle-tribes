@@ -1,4 +1,4 @@
-import { Entity, Point, Settings } from "battletribes-shared";
+import { distance, Entity, Point, Settings } from "battletribes-shared";
 import { AttackingEntitiesComponentArray } from "../components/AttackingEntitiesComponent.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
 import { AIHelperComponent, AIHelperComponentArray, AIType } from "../components/AIHelperComponent.js";
@@ -53,9 +53,9 @@ const getEscapeTarget = (entity: Entity, escapeAI: EscapeAI): Entity | null => {
       // @Hack
       const attackingEntityHitbox = attackingEntityTransformComponent.hitboxes[0];
       
-      const distance = entityHitbox.box.position.distanceTo(attackingEntityHitbox.box.position);
-      if (distance < minDistance) {
-         minDistance = distance;
+      const dist = distance(entityHitbox.box.posX, entityHitbox.box.posY, attackingEntityHitbox.box.posX, attackingEntityHitbox.box.posY);
+      if (dist < minDistance) {
+         minDistance = dist;
          escapeEntity = attackingEntity;
       }
    }
@@ -70,9 +70,9 @@ const getEscapeTarget = (entity: Entity, escapeAI: EscapeAI): Entity | null => {
          // @Hack
          const escapeTargetHitbox = escapeTargetTransformComponent.hitboxes[0];
          
-         const distance = entityHitbox.box.position.distanceTo(escapeTargetHitbox.box.position);
-         if (distance < minDistance) {
-            minDistance = distance;
+         const dist = distance(entityHitbox.box.posX, entityHitbox.box.posY, escapeTargetHitbox.box.posX, escapeTargetHitbox.box.posY);
+         if (dist < minDistance) {
+            minDistance = dist;
             escapeEntity = escapeTarget;
          }
       }
@@ -88,7 +88,8 @@ export function runEscapeAI(entity: Entity, aiHelperComponent: AIHelperComponent
    if (escapeTarget !== null) {
       const escapeTargetTransformComponent = TransformComponentArray.getComponent(escapeTarget);
       const escapeTargetHitbox = escapeTargetTransformComponent.hitboxes[0];
-      escapePosition = escapeTargetHitbox.box.position.copy();
+
+      escapePosition = new Point(escapeTargetHitbox.box.posX, escapeTargetHitbox.box.posY);
       escapeAI.lastEscapeTargetPosition = escapePosition;
       escapeAI.remainingRememberTicks = escapeAI.escapeTargetRememberTime * Settings.TICK_RATE;
    } else if (escapeAI.remainingRememberTicks > 0) {
@@ -106,12 +107,11 @@ export function runEscapeAI(entity: Entity, aiHelperComponent: AIHelperComponent
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
-   const targetX = hitbox.box.position.x * 2 - escapePosition.x;
-   const targetY = hitbox.box.position.y * 2 - escapePosition.y;
-   const targetPos = new Point(targetX, targetY);
+   const targetX = hitbox.box.posX * 2 - escapePosition.x;
+   const targetY = hitbox.box.posY * 2 - escapePosition.y;
 
-   aiHelperComponent.moveFunc(entity, targetPos, escapeAI.acceleration);
-   aiHelperComponent.turnFunc(entity, targetPos, escapeAI.turnSpeed, escapeAI.turnDamping);
+   aiHelperComponent.moveFunc(entity, targetX, targetY, escapeAI.acceleration);
+   aiHelperComponent.turnFunc(entity, targetX, targetY, escapeAI.turnSpeed, escapeAI.turnDamping);
 
    return true;
 }

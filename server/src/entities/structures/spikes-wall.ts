@@ -15,10 +15,10 @@ import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildin
 // @HACK @MEMORY: COPYNPASTE BETWEEN FLOOR AND WALLS
 const HEALTHS = [15, 45];
 
-export function createWallSpikesConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createWallSpikesConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const box = new RectangularBox(position, new Point(0, 0), rotation, 56, 28);
+   const box = new RectangularBox(x, y, 0, 0, angle, 56, 28);
    const hitbox = new Hitbox(transformComponent, null, true, box, 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
    addHitboxToTransformComponent(transformComponent, hitbox);
 

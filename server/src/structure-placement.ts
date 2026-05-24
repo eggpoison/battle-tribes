@@ -1,4 +1,4 @@
-import { _bounds, boxIsCircular, RectangularBox, boxIsCollidingWithSubtile, getEntityCollisionGroup, CollisionGroup, BlueprintType, BuildingMaterial, ServerComponentType, Entity, EntityType, Settings, STRUCTURE_TYPES, StructureType, getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, SubtileType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2 } from "battletribes-shared";
+import { _bounds, boxIsCircular, RectangularBox, boxIsCollidingWithSubtile, getEntityCollisionGroup, CollisionGroup, BlueprintType, BuildingMaterial, ServerComponentType, Entity, EntityType, Settings, STRUCTURE_TYPES, StructureType, getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, SubtileType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, angle } from "battletribes-shared";
 import { getEntitiesInRange } from "./ai-shared.js";
 import { getHitboxesCollidingEntities } from "./collision-detection.js";
 import { EntityConfig, getConfigTransformComponent } from "./components.js";
@@ -73,9 +73,9 @@ export function entityIsStructure(entityType: EntityType): entityType is Structu
    return STRUCTURE_TYPES.indexOf(entityType as StructureType) !== -1;
 }
 
-export function calculateRelativeOffsetDirection(entityPosition: Point, entityAngle: number, connectingEntityPosition: Point): number {
+export function calculateRelativeOffsetDirection(entityX: number, entityY: number, entityAngle: number, connectingPosX: number, connectingPosY: number): number {
    // Relative angle of the offset (relative to the entity)
-   let relativeOffsetDirection = entityPosition.angleTo(connectingEntityPosition);
+   let relativeOffsetDirection = angle(connectingPosX - entityX, connectingPosY - entityY);
    // Account for the entity rotaiton
    relativeOffsetDirection -= entityAngle;
    return relativeOffsetDirection;
@@ -88,45 +88,45 @@ export function createStructureConnection(connectingEntity: Entity, relativeOffs
    };
 }
 
-export function createStructureConfig(tribe: Tribe, entityType: EntityType, position: Point, angle: number, connections: Array<StructureConnection>): EntityConfig {
+export function createStructureConfig(tribe: Tribe, entityType: EntityType, x: number, y: number, angle: number, connections: Array<StructureConnection>): EntityConfig {
    let config: EntityConfig;
    switch (entityType) {
-      case EntityType.wall: config = createWallConfig(position, angle, tribe, BuildingMaterial.wood, connections, null); break;
-      case EntityType.door: config = createDoorConfig(position, angle, tribe, BuildingMaterial.wood, connections, null); break;
-      case EntityType.embrasure: config = createEmbrasureConfig(position, angle, tribe, BuildingMaterial.wood, connections, null); break;
-      case EntityType.floorSpikes: config = createFloorSpikesConfig(position, angle, tribe, BuildingMaterial.wood, connections, null); break;
-      case EntityType.wallSpikes: config = createWallSpikesConfig(position, angle, tribe, BuildingMaterial.wood, connections, null); break;
-      case EntityType.tunnel: config = createTunnelConfig(position, angle, tribe, BuildingMaterial.wood, connections, null); break;
-      case EntityType.floorPunjiSticks: config = createFloorPunjiSticksConfig(position, angle, tribe, connections, null); break;
-      case EntityType.wallPunjiSticks: config = createWallPunjiSticksConfig(position, angle, tribe, connections, null); break;
-      case EntityType.ballista: config = createBallistaConfig(position, angle, tribe, connections, null); break;
-      case EntityType.slingTurret: config = createSlingTurretConfig(position, angle, tribe, connections, null); break;
-      case EntityType.tribeTotem: config = createTribeTotemConfig(position, angle, tribe, connections, null); break;
-      case EntityType.workerHut: config = createWorkerHutConfig(position, angle, tribe, connections, null); break;
-      case EntityType.warriorHut: config = createWarriorHutConfig(position, angle, tribe, connections, null); break;
-      case EntityType.barrel: config = createBarrelConfig(position, angle, tribe, connections, null); break;
-      case EntityType.workbench: config = createWorkbenchConfig(position, angle, tribe, connections, null); break;
-      case EntityType.researchBench: config = createResearchBenchConfig(position, angle, tribe, connections, null); break;
-      case EntityType.healingTotem: config = createHealingTotemConfig(position, angle, tribe, connections, null); break;
-      case EntityType.planterBox: config = createPlanterBoxConfig(position, angle, tribe, connections, null); break;
-      case EntityType.furnace: config = createFurnaceConfig(position, angle, tribe, connections, null); break;
-      case EntityType.campfire: config = createCampfireConfig(position, angle, tribe, connections, null); break;
-      case EntityType.fence: config = createFenceConfig(position, angle, tribe, connections, null); break;
-      case EntityType.fenceGate: config = createFenceGateConfig(position, angle, tribe, connections, null); break;
-      case EntityType.frostshaper: config = createFrostshaperConfig(position, angle, tribe, connections, null); break;
-      case EntityType.stonecarvingTable: config = createStonecarvingTableConfig(position, angle, tribe, connections, null); break;
-      case EntityType.bracings: config = createBracingsConfig(position, angle, tribe, BuildingMaterial.wood, null); break;
-      case EntityType.fireTorch: config = createFireTorchConfig(position, angle, tribe, connections, null); break;
-      case EntityType.slurbTorch: config = createSlurbTorchConfig(position, angle, tribe, connections, null); break;
+      case EntityType.wall: config = createWallConfig(x, y, angle, tribe, BuildingMaterial.wood, connections, null); break;
+      case EntityType.door: config = createDoorConfig(x, y, angle, tribe, BuildingMaterial.wood, connections, null); break;
+      case EntityType.embrasure: config = createEmbrasureConfig(x, y, angle, tribe, BuildingMaterial.wood, connections, null); break;
+      case EntityType.floorSpikes: config = createFloorSpikesConfig(x, y, angle, tribe, BuildingMaterial.wood, connections, null); break;
+      case EntityType.wallSpikes: config = createWallSpikesConfig(x, y, angle, tribe, BuildingMaterial.wood, connections, null); break;
+      case EntityType.tunnel: config = createTunnelConfig(x, y, angle, tribe, BuildingMaterial.wood, connections, null); break;
+      case EntityType.floorPunjiSticks: config = createFloorPunjiSticksConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.wallPunjiSticks: config = createWallPunjiSticksConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.ballista: config = createBallistaConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.slingTurret: config = createSlingTurretConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.tribeTotem: config = createTribeTotemConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.workerHut: config = createWorkerHutConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.warriorHut: config = createWarriorHutConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.barrel: config = createBarrelConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.workbench: config = createWorkbenchConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.researchBench: config = createResearchBenchConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.healingTotem: config = createHealingTotemConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.planterBox: config = createPlanterBoxConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.furnace: config = createFurnaceConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.campfire: config = createCampfireConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.fence: config = createFenceConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.fenceGate: config = createFenceGateConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.frostshaper: config = createFrostshaperConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.stonecarvingTable: config = createStonecarvingTableConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.bracings: config = createBracingsConfig(x, y, angle, tribe, BuildingMaterial.wood, null); break;
+      case EntityType.fireTorch: config = createFireTorchConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.slurbTorch: config = createSlurbTorchConfig(x, y, angle, tribe, connections, null); break;
       // @Temporary
-      case EntityType.scrappy: config = createScrappyConfig(position, angle, tribe); break;
+      case EntityType.scrappy: config = createScrappyConfig(x, y, angle, tribe); break;
       // case EntityType.scrappy: config = createBlueprintEntityConfig(tribe, BlueprintType.scrappy, 0, null); break;
       // @Temporary
-      case EntityType.cogwalker: config = createCogwalkerConfig(position, angle, tribe); break;
+      case EntityType.cogwalker: config = createCogwalkerConfig(x, y, angle, tribe); break;
       // case EntityType.cogwalker: config = createBlueprintEntityConfig(tribe, BlueprintType.cogwalker, 0, null); break;
-      case EntityType.automatonAssembler: config = createAutomatonAssemblerConfig(position, angle, tribe, connections, null); break;
-      case EntityType.mithrilAnvil: config = createMithrilAnvilConfig(position, angle, tribe, connections, null); break;
-      case EntityType.floorSign: config = createFloorSignConfig(position, angle, tribe, connections, null); break;
+      case EntityType.automatonAssembler: config = createAutomatonAssemblerConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.mithrilAnvil: config = createMithrilAnvilConfig(x, y, angle, tribe, connections, null); break;
+      case EntityType.floorSign: config = createFloorSignConfig(x, y, angle, tribe, connections, null); break;
       // @Robustness?
       default: {
          throw new Error();
@@ -153,8 +153,7 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
             }
             
             // @Speed
-            const position = new Point((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE);
-            const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
+            const tileBox = new RectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
 
             if (box.getCollisionResult(tileBox).isColliding) {
                return true;
@@ -226,7 +225,7 @@ const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityAngle: n
    
    // @HACK
    const tribe = getTribes()[0];
-   const entityConfig = createStructureConfig(tribe, entityType, new Point(0, 0), 0, []);
+   const entityConfig = createStructureConfig(tribe, entityType, 0, 0, 0, []);
    const transformComponent = getConfigTransformComponent(entityConfig.components);
 
    let entityMinX = Number.MAX_SAFE_INTEGER;
@@ -268,7 +267,7 @@ const getStructureSnapOrigin = (structure: Entity): Point => {
    const transformComponent = TransformComponentArray.getComponent(structure);
    const hitbox = transformComponent.hitboxes[0];
    
-   const snapOrigin = hitbox.box.position.copy();
+   const snapOrigin = new Point(hitbox.box.posX, hitbox.box.posY);
    if (getEntityType(structure) === EntityType.embrasure) {
       snapOrigin.x -= 22 * Math.sin(hitbox.box.angle);
       snapOrigin.y -= 22 * Math.cos(hitbox.box.angle);
@@ -282,12 +281,12 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
    
    // @HACK @HACK @HACK @SQUEAM
    const tribe = getTribes()[0];
-   const entityConfig = createStructureConfig(tribe, entityType, new Point(0, 0), 0, []);
+   const entityConfig = createStructureConfig(tribe, entityType, 0, 0, 0, []);
    const transformComponent = getConfigTransformComponent(entityConfig.components);
    
    const snapOrigin = getStructureSnapOrigin(connectingEntity);
    
-   const snapPositions = new Array<SnapCandidate>();
+   const snapPositions: Array<SnapCandidate> = [];
 
    for (const placingEntityHitbox of transformComponent.hitboxes) {
       const box = placingEntityHitbox.box;
@@ -351,7 +350,7 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
 
             const maxLength = Math.max(placingEntityHitboxHalfWidth * 2, (i % 2 === 0 ? hitboxHalfWidth : hitboxHalfHeight) * 2);
             const minLength = Math.min(placingEntityHitboxHalfWidth * 2, (i % 2 === 0 ? hitboxHalfWidth : hitboxHalfHeight) * 2);
-            const positions = new Array<Point>();
+            const positions: Array<Point> = [];
             for (let xi = -1; xi <= 1; xi++) {
                const sideOffset = (maxLength - minLength) * 0.5 * xi;
                
@@ -374,7 +373,7 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
 
             // @SUPAHACK
             const tribe = getTribes()[0];
-            const entityConfig = createStructureConfig(tribe, entityType, position.copy(), placingEntityAngle, []);
+            const entityConfig = createStructureConfig(tribe, entityType, position.x, position.y, placingEntityAngle, []);
             const transformComponent = getConfigTransformComponent(entityConfig.components);
             
             // Don't add the position if it would be colliding with the connecting entity
@@ -449,7 +448,7 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
 }
 
 const findCandidatePlacePositions = (entityType: EntityType, desiredPlacePosition: Point, desiredPlaceRotation: number, layer: Layer): Array<SnapCandidate> => {
-   const candidatePositions = new Array<SnapCandidate>();
+   const candidatePositions: Array<SnapCandidate> = [];
    
    const entitiesInSnapRange = getEntitiesInRange(layer, desiredPlacePosition.x, desiredPlacePosition.y, Settings.STRUCTURE_SNAP_RANGE);
    for (const entity of entitiesInSnapRange) {
@@ -498,7 +497,7 @@ const getExistingGroup = (transform: SnapCandidate, groups: ReadonlyArray<Array<
 }
 
 const groupTransforms = (transforms: ReadonlyArray<SnapCandidate>, entityType: EntityType, layer: Layer): ReadonlyArray<StructurePlaceInfo> => {
-   const groups = new Array<Array<SnapCandidate>>();
+   const groups: Array<Array<SnapCandidate>> = [];
    
    for (let i = 0; i < transforms.length; i++) {
       const transform = transforms[i];
@@ -512,18 +511,18 @@ const groupTransforms = (transforms: ReadonlyArray<SnapCandidate>, entityType: E
       }
    }
 
-   const placeInfos = new Array<StructurePlaceInfo>();
+   const placeInfos: Array<StructurePlaceInfo> = [];
    for (let i = 0; i < groups.length; i++) {
       const group = groups[i];
       const firstTransform = group[0];
       
-      const connections = new Array<StructureConnection>();
+      const connections: Array<StructureConnection> = [];
       for (const transform of group) {
          // @Hack
          const connectingEntityTransformComponent = TransformComponentArray.getComponent(transform.connectedEntity);
          const connectingEntityHitbox = connectingEntityTransformComponent.hitboxes[0];
          
-         const relativeOffsetDirection = calculateRelativeOffsetDirection(transform.position, transform.angle, connectingEntityHitbox.box.position);
+         const relativeOffsetDirection = calculateRelativeOffsetDirection(transform.position.x, transform.position.y, transform.angle, connectingEntityHitbox.box.posX, connectingEntityHitbox.box.posY);
          const connection = createStructureConnection(transform.connectedEntity, relativeOffsetDirection);
          connections.push(connection);
       }
@@ -559,7 +558,7 @@ const getNearbyTileCornerSubtiles = (regularPlacePosition: Point): ReadonlyArray
    const minTileY = Math.floor(regularPlacePosition.y / Settings.TILE_SIZE);
    const maxTileY = Math.ceil(regularPlacePosition.y / Settings.TILE_SIZE);
 
-   const tileCornerSubtiles = new Array<number>();
+   const tileCornerSubtiles: Array<number> = [];
    for (let tileCornerX = minTileX; tileCornerX <= maxTileX; tileCornerX++) {
       for (let tileCornerY = minTileY; tileCornerY <= maxTileY; tileCornerY++) {
          const subtileX = tileCornerX * Settings.SUBTILES_IN_TILE;
@@ -669,7 +668,7 @@ const getBracingsPlaceInfo = (regularPlacePosition: Point, layer: Layer): Struct
    
    // @SUPAHACK
    const tribe = getTribes()[0];
-   const entityConfig = createStructureConfig(tribe, EntityType.bracings, position, angle, []);
+   const entityConfig = createStructureConfig(tribe, EntityType.bracings, x, y, angle, []);
    const transformComponent = getConfigTransformComponent(entityConfig.components);
    
    if (structureIntersectsWithBuildingBlockingTiles(layer, transformComponent.hitboxes)) {
@@ -700,7 +699,7 @@ const calculatePlaceInfo = (desiredPlacePosition: Point, desiredPlaceAngle: numb
       // @Speed @Copynpaste: already done for candidates
       // @HACK
       const tribe = getTribes()[0];
-      const entityConfig = createStructureConfig(tribe, entityType, desiredPlacePosition.copy(), desiredPlaceAngle, []);
+      const entityConfig = createStructureConfig(tribe, entityType, desiredPlacePosition.x, desiredPlacePosition.y, desiredPlaceAngle, []);
       const transformComponent = getConfigTransformComponent(entityConfig.components);
       const hitboxes = transformComponent.hitboxes;
 

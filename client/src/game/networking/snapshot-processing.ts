@@ -536,7 +536,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
             const transformComponent = TransformComponentArray.getComponent(hit.entity);
             const hitbox = transformComponent.hitboxes[0];
             for (let i = 0; i < 6; i++) {
-               const position = hitbox.box.position.offset(randFloat(0, 6), randAngle());
+               const position = new Point(hitbox.box.posX, hitbox.box.posY).offset(randFloat(0, 6), randAngle());
                createSparkParticle(position.x, position.y);
             }
          } else {
@@ -548,13 +548,13 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
             if (hit.flags & HitFlags.HIT_BY_FLESH_SWORD) {
                const hitbox = transformComponent.hitboxes[0];
                for (let i = 0; i < 2; i++) {
-                  createSlimePoolParticle(hitbox.box.position.x, hitbox.box.position.y, 32);
+                  createSlimePoolParticle(hitbox.box.posX, hitbox.box.posY, 32);
                }
             }
 
             // @Incomplete @Hack
             if (hit.flags & HitFlags.HIT_BY_SPIKES) {
-               playSound("spike-stab.mp3", 0.3, 1, hit.position, getEntityLayer(hit.entity));
+               playSound("spike-stab.mp3", 0.3, 1, hit.position.x, hit.position.y, getEntityLayer(hit.entity));
             }
 
             const hitHitbox = getHitboxByLocalID(transformComponent.hitboxes, hit.hitboxLocalID);
@@ -617,7 +617,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
 
          // @Hack @Incomplete: This will trigger the repair sound effect even if a hammer isn't the one healing the structure
          if (STRUCTURE_TYPES.includes(getEntityType(healedEntity) as any)) { // @Cleanup
-            playSound("repair.mp3", 0.4, 1, healData.position, getEntityLayer(healedEntity));
+            playSound("repair.mp3", 0.4, 1, healData.position.x, healData.position.y, getEntityLayer(healedEntity));
          }
       }
    }

@@ -128,41 +128,35 @@ export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText:
    return program;
 }
 
-export function generateLine(startPosition: Point, endPosition: Point, thickness: number, r: number, g: number, b: number): Array<number> {
+export function generateLine(startX: number, startY: number, endX: number, endY: number, thickness: number, r: number, g: number, b: number): Array<number> {
    // @Speed: Garbage collection
-   
-   let offset = endPosition.copy();
-   offset.subtract(startPosition);
+   let offset = new Point(endX, endY);
+   offset.x -= startX;
+   offset.y -= startY;
    const offsetVector = offset.convertToVector();
    offsetVector.magnitude = thickness / 2;
    offset = offsetVector.convertToPoint();
 
-   const leftOffset = new Point(-offset.y, offset.x);
-   const rightOffset = new Point(offset.y, -offset.x);
+   const bottomLeftX = startX - offset.y;
+   const bottomLeftY = startY + offset.x;
+   const bottomRightX = startX + offset.y;
+   const bottomRightY = startY - offset.x;
+   const topLeftX = endX - offset.y;
+   const topLeftY = endY + offset.x;
+   const topRightX = endX + offset.y;
+   const topRightY = endY - offset.x;
 
-   // const bottomLeftX = startPosition.x - offset.x;
-   const bl = startPosition.copy();
-   bl.add(leftOffset);
-   const br = startPosition.copy();
-   br.add(rightOffset);
-   const tl = endPosition.copy();
-   tl.add(leftOffset);
-   const tr = endPosition.copy();
-   tr.add(rightOffset);
-
-   const vertices: Array<number> = [
-      bl.x, bl.y, r, g, b,
-      br.x, br.y, r, g, b,
-      tl.x, tl.y, r, g, b,
-      tl.x, tl.y, r, g, b,
-      br.x, br.y, r, g, b,
-      tr.x, tr.y, r, g, b
+   return [
+      bottomLeftX, bottomLeftY, r, g, b,
+      bottomRightX, bottomRightY, r, g, b,
+      topLeftX, topLeftY, r, g, b,
+      topLeftX, topLeftY, r, g, b,
+      bottomRightX, bottomRightY, r, g, b,
+      topRightX, topRightY, r, g, b
    ];
-
-   return vertices;
 }
 
-export function generateThickCircleWireframeVertices(position: Point, radius: number, thickness: number, r: number, g: number, b: number): Array<number> {
+export function generateThickCircleWireframeVertices(x: number, y: number, radius: number, thickness: number, r: number, g: number, b: number): Array<number> {
    const vertices: Array<number> = [];
    const step = 2 * Math.PI / CIRCLE_VERTEX_COUNT;
    
@@ -176,10 +170,14 @@ export function generateThickCircleWireframeVertices(position: Point, radius: nu
       const tl = polarVec2(radius + thickness, radians);
       const tr = polarVec2(radius + thickness, radians + step);
 
-      bl.add(position);
-      br.add(position);
-      tl.add(position);
-      tr.add(position);
+      bl.x += x;
+      bl.y += y;
+      br.x += x;
+      br.y += y;
+      tl.x += x;
+      tl.y += y;
+      tr.x += x;
+      tr.y += y;
 
       vertices.push(
          bl.x, bl.y, r, g, b,
@@ -194,11 +192,11 @@ export function generateThickCircleWireframeVertices(position: Point, radius: nu
    return vertices;
 }
 
-export function getCirclePoint(numPoints: number, i: number, origin: Readonly<Point>, radius: number): Point {
+export function getCirclePoint(numPoints: number, i: number, originX: number, originY: number, radius: number): Point {
    const radians = i / numPoints * 2 * Math.PI;
 
-   const x = origin.x + radius * Math.sin(radians);
-   const y = origin.y + radius * Math.cos(radians);
+   const x = originX + radius * Math.sin(radians);
+   const y = originY + radius * Math.cos(radians);
    return new Point(x, y);
 }
 

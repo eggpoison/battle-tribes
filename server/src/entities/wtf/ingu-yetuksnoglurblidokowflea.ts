@@ -1,4 +1,4 @@
-import { createNormalisedPivotPoint, HitboxCollisionType, HitboxFlag, CircularBox, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, getAbsAngleDiff, lerp, Point, polarVec2, rotatePoint } from "battletribes-shared";
+import { HitboxCollisionType, HitboxFlag, CircularBox, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, getAbsAngleDiff, lerp, Point, polarVec2, rotatePoint, angle, PivotPointType } from "battletribes-shared";
 import { ChildConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../../components.js";
 import { AIHelperComponent } from "../../components/AIHelperComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -14,7 +14,7 @@ import { createOkrenClawConfig } from "../desert/okren-claw.js";
 import { createTukmokTailClubConfig } from "../tundra/tukmok-tail-club.js";
 import { createInguYetuksnoglurblidokowfleaSeekerHeadConfig } from "./ingu-yetuksnoglurblidokowflea-seeker-head.js";
 
-const moveFunc = (inguYetu: Entity, pos: Point, accelerationMagnitude: number): void => {
+const moveFunc = (inguYetu: Entity, x: number, y: number, accelerationMagnitude: number): void => {
    // @HACKKK!!!!
    // const targetEntity = PlayerComponentArray.activeEntities[0];
    // const targetTransformComponent = TransformComponentArray.getComponent(targetEntity);
@@ -29,7 +29,7 @@ const moveFunc = (inguYetu: Entity, pos: Point, accelerationMagnitude: number): 
             moveDir = hitbox.box.angle;
          } else {
             const previousHitbox = transformComponent.hitboxes[i - 1] as Hitbox;
-            moveDir = hitbox.box.position.angleTo(previousHitbox.box.position);
+            moveDir = angle(previousHitbox.box.posX - hitbox.box.posX, previousHitbox.box.posY - hitbox.box.posY);
          }
          
          const isHeadHitbox = hitbox.flags.includes(HitboxFlag.YETUK_BODY_1);
@@ -37,7 +37,7 @@ const moveFunc = (inguYetu: Entity, pos: Point, accelerationMagnitude: number): 
          const connectingVel = polarVec2(acc, moveDir);
 
          // const dirToTarget = hitbox.box.position.angleTo(targetHitbox.box.position);
-         const dirToTarget = hitbox.box.position.angleTo(pos);
+         const dirToTarget = angle(x - hitbox.box.posX, y - hitbox.box.posY);
          const velToTarget = polarVec2(accelerationMagnitude * (isHeadHitbox ? 1.2 : 0.6) * 0.5, dirToTarget);
 
          applyAccelerationFromGround(hitbox, new Point(connectingVel.x + velToTarget.x, connectingVel.y + velToTarget.y));
@@ -45,19 +45,18 @@ const moveFunc = (inguYetu: Entity, pos: Point, accelerationMagnitude: number): 
    }
 }
 
-const turnFunc = (inguYetu: Entity, _pos: Point, turnSpeed: number, turnDamping: number): void => {
+const turnFunc = (inguYetu: Entity, x: number, y: number, turnSpeed: number, turnDamping: number): void => {
    // @HACKKK!!!!
    // const targetEntity = PlayerComponentArray.activeEntities[0];
    // const targetTransformComponent = TransformComponentArray.getComponent(targetEntity);
    // const targetHitbox = targetTransformComponent.hitboxes[0];
 
    // const pos = predictHitboxPos(targetHitbox, 0.3);
-   const pos = _pos;
 
    const transformComponent = TransformComponentArray.getComponent(inguYetu);
    const headHitbox = transformComponent.rootHitboxes[0];
 
-   const targetDirection = headHitbox.box.position.angleTo(pos);
+   const targetDirection = angle(x - headHitbox.box.posX, y - headHitbox.box.posY);
 
    const absDiff = getAbsAngleDiff(headHitbox.box.angle, targetDirection);
    const angleDiffStopWiggle = 0.85;
@@ -68,20 +67,18 @@ const turnFunc = (inguYetu: Entity, _pos: Point, turnSpeed: number, turnDamping:
    turnHitboxToAngle(headHitbox, idealAngle, turnSpeed, turnDamping, false);
 }
 
-export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle: number): ReadonlyArray<EntityConfig> {
+export function createInguYetuksnoglurblidokowfleaConfig(x: number, y: number, angle: number): ReadonlyArray<EntityConfig> {
    const BODY_SEGMENT_SEPARATION = 140;
 
-   const childConfigs = new Array<ChildConfigAttachInfo>();
+   const childConfigs: Array<ChildConfigAttachInfo> = [];
    
    const transformComponent = new TransformComponent();
 
-   const body1Hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, 60), 6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_BODY_1]);
+   const body1Hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 60), 6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_BODY_1]);
    addHitboxToTransformComponent(transformComponent, body1Hitbox);
 
    const headOffset = new Point(0, 60);
-   const headPosition = position.copy();
-   headPosition.add(headOffset);
-   const headHitbox = new Hitbox(transformComponent, body1Hitbox, true, new CircularBox(headPosition, headOffset, 0, 28), 2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETI_HEAD]);
+   const headHitbox = new Hitbox(transformComponent, body1Hitbox, true, new CircularBox(x + headOffset.x, y + headOffset.y, headOffset.x, headOffset.y, 0, 28), 2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETI_HEAD]);
    addHitboxToTransformComponent(transformComponent, headHitbox);
 
    // Head mandibles
@@ -90,41 +87,39 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
 
       {
          const mandibleOffset = new Point(12, 36);
-         const mandiblePosition = headHitbox.box.position.copy();
-         mandiblePosition.add(mandibleOffset);
-         const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(mandiblePosition, mandibleOffset, Math.PI * 0.1, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_BIG]);
+         const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(headHitbox.box.posX + mandibleOffset.x, headHitbox.box.posY + mandibleOffset.y, mandibleOffset.x, mandibleOffset.y, Math.PI * 0.1, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_BIG]);
          mandibleHitbox.box.flipX = sideIsFlipped;
          // @Hack
          mandibleHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
-         mandibleHitbox.box.pivot = createNormalisedPivotPoint(-0.5, -0.5);
+         mandibleHitbox.box.pivotX = -0.5;
+         mandibleHitbox.box.pivotY = -0.5;
+         mandibleHitbox.box.pivotType = PivotPointType.normalised;
          addHitboxToTransformComponent(transformComponent, mandibleHitbox);
       }
 
       {
          const mandibleOffset = new Point(18, 32);
-         const mandiblePosition = headHitbox.box.position.copy();
-         mandiblePosition.add(mandibleOffset);
-         const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(mandiblePosition, mandibleOffset, Math.PI * 0.2, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_MEDIUM]);
+         const mandibleHitbox = new Hitbox(transformComponent, headHitbox, true, new RectangularBox(headHitbox.box.posX + mandibleOffset.x, headHitbox.box.posY + mandibleOffset.y, mandibleOffset.x, mandibleOffset.y, Math.PI * 0.2, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_MANDIBLE_MEDIUM]);
          mandibleHitbox.box.flipX = sideIsFlipped;
          // @Hack
          mandibleHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
-         mandibleHitbox.box.pivot = createNormalisedPivotPoint(-0.5, -0.5);
+         mandibleHitbox.box.pivotX = -0.5;
+         mandibleHitbox.box.pivotY = -0.5;
+         mandibleHitbox.box.pivotType = PivotPointType.normalised;
          addHitboxToTransformComponent(transformComponent, mandibleHitbox);
       }
    }
 
    const body2Offset = new Point(0, -BODY_SEGMENT_SEPARATION);
-   const body2Position = position.copy();
-   body2Position.add(rotatePoint(body2Offset, angle));
-   const body2Hitbox = new Hitbox(transformComponent, null, true, new CircularBox(body2Position, new Point(0, 0), 0, 60), 6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_BODY_2]);
+   const body2OffsetRotated = rotatePoint(body2Offset, angle);
+   const body2Hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x + body2OffsetRotated.x, y + body2OffsetRotated.y, body2Offset.x, body2Offset.y, 0, 60), 6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_BODY_2]);
    addHitboxToTransformComponent(transformComponent, body2Hitbox);
 
    // Cow's seeker head
    {
       const seekerOffset = new Point(52, 52);
-      const trunkPosition = body2Hitbox.box.position.copy();
-      trunkPosition.add(rotatePoint(seekerOffset, angle));
-      const seekerHeadConfig = createInguYetuksnoglurblidokowfleaSeekerHeadConfig(trunkPosition, angle, seekerOffset, true, 26);
+      const seekerOffsetRotated = rotatePoint(seekerOffset, angle);
+      const seekerHeadConfig = createInguYetuksnoglurblidokowfleaSeekerHeadConfig(body2Hitbox.box.posX + seekerOffsetRotated.x, body2Hitbox.box.posY + seekerOffsetRotated.y, angle, seekerOffset.x, seekerOffset.y, true, 26);
       childConfigs.push({
          entityConfig: seekerHeadConfig,
          attachedHitbox: getConfigTransformComponent(seekerHeadConfig.components).hitboxes[0],
@@ -134,17 +129,15 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
    }
    
    const body3Offset = new Point(0, -BODY_SEGMENT_SEPARATION);
-   const body3Position = body2Position.copy();
-   body3Position.add(rotatePoint(body3Offset, angle));
-   const body3Hitbox = new Hitbox(transformComponent, null, true, new CircularBox(body3Position, new Point(0, 0), 0, 60), 6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_BODY_3]);
+   const body3OffsetRotated = rotatePoint(body3Offset, angle);
+   const body3Hitbox = new Hitbox(transformComponent, null, true, new CircularBox(body2Hitbox.box.posX + body3OffsetRotated.x, body2Hitbox.box.posY + body3OffsetRotated.y, 0, 0, 0, 60), 6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_BODY_3]);
    addHitboxToTransformComponent(transformComponent, body3Hitbox);
 
    // Tukmok's seeker head
    {
       const seekerOffset = new Point(-52, 52);
-      const trunkPosition = body3Hitbox.box.position.copy();
-      trunkPosition.add(rotatePoint(seekerOffset, angle));
-      const tukmokHeadConfig = createInguYetuksnoglurblidokowfleaSeekerHeadConfig(trunkPosition, angle, seekerOffset, false, 44);
+      const seekerOffsetRotated = rotatePoint(seekerOffset, angle);
+      const tukmokHeadConfig = createInguYetuksnoglurblidokowfleaSeekerHeadConfig(body3Hitbox.box.posX + seekerOffsetRotated.x, body3Hitbox.box.posY + seekerOffsetRotated.y, angle, seekerOffset.x, seekerOffset.y, false, 44);
       childConfigs.push({
          entityConfig: tukmokHeadConfig,
          attachedHitbox: getConfigTransformComponent(tukmokHeadConfig.components).hitboxes[0],
@@ -154,16 +147,14 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
    }
    
    const body4Offset = new Point(0, -BODY_SEGMENT_SEPARATION);
-   const body4Position = body3Position.copy();
-   body4Position.add(rotatePoint(body4Offset, angle));
-   const body4Hitbox = new Hitbox(transformComponent, null, true, new CircularBox(body4Position, new Point(0, 0), 0, 60), 6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_BODY_4]);
+   const body4OffsetRotated = rotatePoint(body4Offset, angle);
+   const body4Hitbox = new Hitbox(transformComponent, null, true, new CircularBox(body3Hitbox.box.posX + body4OffsetRotated.x, body3Hitbox.box.posY + body4OffsetRotated.y, 0, 0, 0, 60), 6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_BODY_4]);
    addHitboxToTransformComponent(transformComponent, body4Hitbox);
 
    // Snobe tail
    const snobeTailOffset = new Point(0, -66);
-   const snobeTailPosition = body4Position.copy();
-   snobeTailPosition.add(rotatePoint(snobeTailOffset, angle));
-   const snobeTailHitbox = new Hitbox(transformComponent, body4Hitbox, true, new CircularBox(snobeTailPosition, snobeTailOffset, 0, 30), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_SNOBE_TAIL]);
+   const snobeTailOffsetRotated = rotatePoint(snobeTailOffset, angle);
+   const snobeTailHitbox = new Hitbox(transformComponent, body4Hitbox, true, new CircularBox(body4Hitbox.box.posX + snobeTailOffsetRotated.x, body4Hitbox.box.posY + snobeTailOffsetRotated.y, snobeTailOffset.x, snobeTailOffset.y, 0, 30), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_SNOBE_TAIL]);
    addHitboxToTransformComponent(transformComponent, snobeTailHitbox);
 
    let tailConfig!: EntityConfig;
@@ -178,12 +169,12 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
       let parent: Hitbox | null;
       if (lastHitbox === null) {
          offset = new Point(0, -30);
-         hitboxPosition = position.copy();
+         hitboxPosition = new Point(x, y);
          hitboxPosition.add(polarVec2(38, angle + Math.PI));
          parent = snobeTailHitbox;
       } else {
          offset = new Point(0, 0);
-         hitboxPosition = lastHitbox.box.position.copy();
+         hitboxPosition = new Point(lastHitbox.box.posX, lastHitbox.box.posY);
          hitboxPosition.add(polarVec2(IDEAL_TAIL_SEGMENT_SEPARATION, angle + Math.PI));
          parent = null;
       }
@@ -212,11 +203,11 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
       // The club segment gets its own entity, all others go directly on the tukmok
       let hitbox: Hitbox;
       if (i === NUM_TAIL_SEGMENTS - 1) {
-         const config = createTukmokTailClubConfig(hitboxPosition, 0, offset);
+         const config = createTukmokTailClubConfig(hitboxPosition.x, hitboxPosition.y, 0, offset.x, offset.y);
          hitbox = getConfigTransformComponent(config.components).hitboxes[0];
          tailConfig = config;
       } else {
-         hitbox = new Hitbox(transformComponent, parent, true, new CircularBox(hitboxPosition, offset, 0, radius), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, flags);
+         hitbox = new Hitbox(transformComponent, parent, true, new CircularBox(hitboxPosition.x, hitboxPosition.y, offset.x, offset.y, 0, radius), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, flags);
          addHitboxToTransformComponent(transformComponent, hitbox);
       }
 
@@ -246,9 +237,8 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
    for (const bodySegmentHitbox of mainBodySegments) {
       for (let i = 0; i < 2; i++) {
          const offset = new Point(46 * (i === 0 ? 1 : -1), -46);
-         const hitboxPosition = bodySegmentHitbox.box.position.copy();
-         hitboxPosition.add(rotatePoint(offset, angle));
-         const hitbox = new Hitbox(transformComponent, bodySegmentHitbox, true, new CircularBox(hitboxPosition, offset, i === 0 ? Math.PI * -0.25 : Math.PI * 0.25, 28), 0.3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_DUSTFLEA_DISPENSION_PORT]);
+         const offsetRotated = rotatePoint(offset, angle);
+         const hitbox = new Hitbox(transformComponent, bodySegmentHitbox, true, new CircularBox(bodySegmentHitbox.box.posX + offsetRotated.x, bodySegmentHitbox.box.posY + offsetRotated.y, offset.x, offset.y, i === 0 ? Math.PI * -0.25 : Math.PI * 0.25, 28), 0.3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_DUSTFLEA_DISPENSION_PORT]);
          addHitboxToTransformComponent(transformComponent, hitbox);
       }
    }
@@ -259,9 +249,8 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
 
       // Make a glurb segment!
       const offset = new Point(0, -BODY_SEGMENT_SEPARATION * 0.5);
-      const glurbSegmentPosition = bodySegment.box.position.copy();
-      glurbSegmentPosition.add(rotatePoint(offset, angle));
-      const glurbSegmentHitbox = new Hitbox(transformComponent, null, true, new CircularBox(glurbSegmentPosition, new Point(0, 0), angle, 28), 0.8, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_GLURB_SEGMENT]);
+      const offsetRotated = rotatePoint(offset, angle);
+      const glurbSegmentHitbox = new Hitbox(transformComponent, null, true, new CircularBox(bodySegment.box.posX + offsetRotated.x, bodySegment.box.posY + offsetRotated.y, 0, 0, angle, 28), 0.8, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETUK_GLURB_SEGMENT]);
       addHitboxToTransformComponent(transformComponent, glurbSegmentHitbox);
 
       const idealDist = BODY_SEGMENT_SEPARATION * 0.5;
@@ -295,12 +284,12 @@ export function createInguYetuksnoglurblidokowfleaConfig(position: Point, angle:
    for (const bodySegment of mainBodySegments) {
       for (let i = 0; i < 2; i++) {
          const sideIsFlipped = i === 1;
-         const clawConfig = createOkrenClawConfig(bodySegment.box.position.copy(), 0, OkrenAgeStage.youth, OkrenClawGrowthStage.FOUR, sideIsFlipped);
+         const clawConfig = createOkrenClawConfig(bodySegment.box.posX, bodySegment.box.posY, 0, OkrenAgeStage.youth, OkrenClawGrowthStage.FOUR, sideIsFlipped);
 
          const clawTransformComponent = getConfigTransformComponent(clawConfig.components);
          // @HACK
-         clawTransformComponent.hitboxes[0].box.offset.x = 40;
-         clawTransformComponent.hitboxes[0].box.offset.y = 40;
+         clawTransformComponent.hitboxes[0].box.offsetX = 40;
+         clawTransformComponent.hitboxes[0].box.offsetY = 40;
          childConfigs.push({
             entityConfig: clawConfig,
             attachedHitbox: clawTransformComponent.hitboxes[0],

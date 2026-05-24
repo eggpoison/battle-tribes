@@ -23,8 +23,10 @@ export interface Hitbox {
    
    readonly children: Array<Hitbox>;
    
-   readonly previousPosition: Point;
-   readonly acceleration: Point;
+   previousPosX: number;
+   previousPosY: number;
+   accelX: number;
+   accelY: number;
    readonly tethers: Array<HitboxTether>;
 
    /** The angle the hitbox had last frame render. Just used to interpolate hitbox rotations. That's why this isn't present in the server definition */
@@ -45,7 +47,7 @@ export interface Hitbox {
    lastUpdateTicks: number;
 }
 
-export function createHitbox(localID: number, entity: Entity, rootEntity: Entity, parent: Hitbox | null, children: Array<Hitbox>, isPartOfParent: boolean, isStatic: boolean, box: Box, previousPosition: Point, acceleration: Point, tethers: Array<HitboxTether>, previousRelativeAngle: number, angularAcceleration: number, mass: number, collisionType: HitboxCollisionType, collisionBit: CollisionBit, collisionMask: number, flags: ReadonlyArray<HitboxFlag>): Hitbox {
+export function createHitbox(localID: number, entity: Entity, rootEntity: Entity, parent: Hitbox | null, children: Array<Hitbox>, isPartOfParent: boolean, isStatic: boolean, box: Box, previousPosX: number, previousPosY: number, accelX: number, accelY: number, tethers: Array<HitboxTether>, previousRelativeAngle: number, angularAcceleration: number, mass: number, collisionType: HitboxCollisionType, collisionBit: CollisionBit, collisionMask: number, flags: ReadonlyArray<HitboxFlag>): Hitbox {
    return {
       localID,
       entity,
@@ -53,8 +55,8 @@ export function createHitbox(localID: number, entity: Entity, rootEntity: Entity
       parent,
       children,
       box,
-      previousPosition,
-      acceleration,
+      previousPosX, previousPosY,
+      accelX, accelY,
       tethers,
       previousAngle: box.angle,
       previousRelativeAngle,
@@ -81,8 +83,10 @@ export function createHitboxQuick(entity: Entity, localID: number, parent: Hitbo
       isStatic: false,
       children: [],
       box,
-      previousPosition: box.position.copy(),
-      acceleration: new Point(0, 0),
+      previousPosX: box.posX,
+      previousPosY: box.posY,
+      accelX: 0,
+      accelY: 0,
       tethers: [],
       previousAngle: box.angle,
       previousRelativeAngle: box.relativeAngle,
@@ -97,21 +101,21 @@ export function createHitboxQuick(entity: Entity, localID: number, parent: Hitbo
 }
 
 export function getHitboxVelocity(hitbox: Hitbox): void {
-   (_point as Mutable<Point>).x = (hitbox.box.position.x - hitbox.previousPosition.x) * Settings.TICK_RATE;
-   (_point as Mutable<Point>).y = (hitbox.box.position.y - hitbox.previousPosition.y) * Settings.TICK_RATE;
+   (_point as Mutable<Point>).x = (hitbox.box.posX - hitbox.previousPosX) * Settings.TICK_RATE;
+   (_point as Mutable<Point>).y = (hitbox.box.posY - hitbox.previousPosY) * Settings.TICK_RATE;
 }
 
 export function setHitboxVelocityX(hitbox: Hitbox, vx: number): void {
-   hitbox.previousPosition.x = hitbox.box.position.x - vx * Settings.DT_S;
+   hitbox.previousPosX = hitbox.box.posX - vx * Settings.DT_S;
 }
 
 export function setHitboxVelocityY(hitbox: Hitbox, vy: number): void {
-   hitbox.previousPosition.y = hitbox.box.position.y - vy * Settings.DT_S;
+   hitbox.previousPosY = hitbox.box.posY - vy * Settings.DT_S;
 }
 
 export function setHitboxVelocity(hitbox: Hitbox, vx: number, vy: number): void {
-   hitbox.previousPosition.x = hitbox.box.position.x - vx * Settings.DT_S;
-   hitbox.previousPosition.y = hitbox.box.position.y - vy * Settings.DT_S;
+   hitbox.previousPosX = hitbox.box.posX - vx * Settings.DT_S;
+   hitbox.previousPosY = hitbox.box.posY - vy * Settings.DT_S;
 }
 
 export function getRootHitbox(hitbox: Hitbox): Hitbox {
@@ -136,16 +140,16 @@ export function getHitboxTotalMassIncludingChildren(hitbox: Hitbox): number {
 
 export function addHitboxVelocity(hitbox: Hitbox, pushX: number, pushY: number): void {
    const pushedHitbox = getRootHitbox(hitbox);
-   pushedHitbox.box.position.x += pushX * Settings.DT_S;
-   pushedHitbox.box.position.y += pushY * Settings.DT_S;
+   pushedHitbox.box.posX += pushX * Settings.DT_S;
+   pushedHitbox.box.posY += pushY * Settings.DT_S;
 }
 
 export function translateHitbox(hitbox: Hitbox, translationX: number, translationY: number): void {
    const pushedHitbox = getRootHitbox(hitbox);
-   pushedHitbox.box.position.x += translationX;
-   pushedHitbox.box.position.y += translationY;
-   pushedHitbox.previousPosition.x += translationX;
-   pushedHitbox.previousPosition.y += translationY;
+   pushedHitbox.box.posX += translationX;
+   pushedHitbox.box.posY += translationY;
+   pushedHitbox.previousPosX += translationX;
+   pushedHitbox.previousPosY += translationY;
 }
 
 /** Makes the hitboxes' angle be that as specified, by only changing its relative angle */
@@ -173,8 +177,8 @@ export function applyForce(hitbox: Hitbox, forceX: number, forceY: number): void
    if (!rootHitbox.isStatic) {
       const hitboxConnectedMass = getHitboxTotalMassIncludingChildren(rootHitbox);
       if (hitboxConnectedMass !== 0) {
-         rootHitbox.acceleration.x += forceX / hitboxConnectedMass;
-         rootHitbox.acceleration.y += forceY / hitboxConnectedMass;
+         rootHitbox.accelX += forceX / hitboxConnectedMass;
+         rootHitbox.accelY += forceY / hitboxConnectedMass;
       }
    }
 }
@@ -202,7 +206,7 @@ export function getRandomPositionInBox(box: Box): Point {
    if (boxIsCircular(box)) {
       const offsetMagnitude = box.radius * Math.random();
       const offsetDirection = randAngle();
-      return new Point(box.position.x + offsetMagnitude * Math.sin(offsetDirection), box.position.y + offsetMagnitude * Math.cos(offsetDirection));
+      return new Point(box.posX + offsetMagnitude * Math.sin(offsetDirection), box.posY + offsetMagnitude * Math.cos(offsetDirection));
    } else {
       const halfWidth = box.width / 2;
       const halfHeight = box.height / 2;
@@ -211,8 +215,8 @@ export function getRandomPositionInBox(box: Box): Point {
       const yOffset = randFloat(-halfHeight, halfHeight);
 
       rotatePointAroundOrigin(xOffset, yOffset, box.angle);
-      const x = box.position.x + _point.x;
-      const y = box.position.y + _point.y;
+      const x = box.posX + _point.x;
+      const y = box.posY + _point.y;
       return new Point(x, y);
    }
 }
@@ -221,7 +225,7 @@ export function getRandomPositionOnBoxEdge(box: Box): Point {
    if (boxIsCircular(box)) {
       const offsetMagnitude = box.radius;
       const offsetDirection = randAngle();
-      return new Point(box.position.x + offsetMagnitude * Math.sin(offsetDirection), box.position.y + offsetMagnitude * Math.cos(offsetDirection));
+      return new Point(box.posX + offsetMagnitude * Math.sin(offsetDirection), box.posY + offsetMagnitude * Math.cos(offsetDirection));
    } else {
       const halfWidth = box.width / 2;
       const halfHeight = box.height / 2;
@@ -237,15 +241,15 @@ export function getRandomPositionOnBoxEdge(box: Box): Point {
       }
 
       rotatePointAroundOrigin(xOffset, yOffset, box.angle);
-      const x = box.position.x + _point.x;
-      const y = box.position.y + _point.y;
+      const x = box.posX + _point.x;
+      const y = box.posY + _point.y;
       return new Point(x, y);
    }
 }
 
 export function getHitboxTile(hitbox: Hitbox): Tile {
-   const tileX = Math.floor(hitbox.box.position.x / Settings.TILE_SIZE);
-   const tileY = Math.floor(hitbox.box.position.y / Settings.TILE_SIZE);
+   const tileX = Math.floor(hitbox.box.posX / Settings.TILE_SIZE);
+   const tileY = Math.floor(hitbox.box.posY / Settings.TILE_SIZE);
    
    const layer = getEntityLayer(hitbox.entity);
    
@@ -262,23 +266,23 @@ export function getHitboxByLocalID(hitboxes: ReadonlyArray<Hitbox>, localID: num
    return null;
 }
 
-export function getDistanceFromPointToHitbox(point: Readonly<Point>, hitbox: Hitbox): number {
+export function getDistanceFromPointToHitbox(x: number, y: number, hitbox: Hitbox): number {
    const box = hitbox.box;
    
    if (boxIsCircular(box)) {
-      const rawDistance = distance(point.x, point.y, box.position.x, box.position.y);
+      const rawDistance = distance(x, y, box.posX, box.posY);
       return rawDistance - box.radius;
    } else {
-      return distBetweenPointAndRectangle(point.x, point.y, box.position, box.width, box.height, box.angle);
+      return distBetweenPointAndRectangle(x, y, box.posX, box.posY, box.width, box.height, box.angle);
    }
 }
 
-export function getDistanceFromPointToHitboxIncludingChildren(point: Readonly<Point>, hitbox: Hitbox): number {
-   let minDist = getDistanceFromPointToHitbox(point, hitbox);
+export function getDistanceFromPointToHitboxIncludingChildren(x: number, y: number, hitbox: Hitbox): number {
+   let minDist = getDistanceFromPointToHitbox(x, y, hitbox);
 
    for (const child of hitbox.children) {
       if (child.isPartOfParent) {
-         const dist = getDistanceFromPointToHitboxIncludingChildren(point, child);
+         const dist = getDistanceFromPointToHitboxIncludingChildren(x, y, child);
          if (dist < minDist) {
             minDist = dist;
          }

@@ -22,7 +22,7 @@ const getNumChildren = (currentDepth: number): number => {
 }
 
 const spawnMithrilOre = (layer: Layer, x: number, y: number, direction: number, currentDepth: number): Entity => {
-   const children = new Array<Entity>();
+   const children: Array<Entity> = [];
    
    const numChildren = getNumChildren(currentDepth);
 
@@ -63,7 +63,7 @@ const spawnMithrilOre = (layer: Layer, x: number, y: number, direction: number, 
    
    const renderHeight = (2 - currentDepth) * 0.5 + Math.random() * 0.1;
 
-   const config = createMithrilOreNodeConfig(new Point(x, y), direction + randFloat(-0.1, 0.1), size, variant, children, renderHeight);
+   const config = createMithrilOreNodeConfig(x, y, direction + randFloat(-0.1, 0.1), size, variant, children, renderHeight);
    const oreNode = createEntityImmediate(config, layer);
    
    return oreNode;

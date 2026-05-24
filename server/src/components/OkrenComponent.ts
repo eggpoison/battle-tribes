@@ -1,4 +1,4 @@
-import { HitboxFlag, CircularBox, RectangularBox, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, Packet, Settings, getSubtileIndex, assert, clampToSubtileBoardDimensions, distance, getAbsAngleDiff, Point, positionIsInWorld, randAngle, randFloat, randInt, secondsToTicks } from "battletribes-shared";
+import { HitboxFlag, CircularBox, RectangularBox, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, Packet, Settings, getSubtileIndex, assert, clampToSubtileBoardDimensions, distance, getAbsAngleDiff, Point, positionIsInWorld, randAngle, randFloat, randInt, secondsToTicks, angle } from "battletribes-shared";
 import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared.js";
 import { getOkrenPreyTarget, getOkrenThreatTarget, runOkrenCombatAI } from "../ai/OkrenCombatAI.js";
 import { runSandBallingAI, updateSandBallingAI } from "../ai/SandBallingAI.js";
@@ -227,34 +227,33 @@ const getRandomNearbyPosition = (krumblid: Entity): Point => {
    let x: number;
    let y: number;
    do {
-      x = krumblidHitbox.box.position.x + randFloat(-RANGE, RANGE);
-      y = krumblidHitbox.box.position.y + randFloat(-RANGE, RANGE);
-   } while (distance(krumblidHitbox.box.position.x, krumblidHitbox.box.position.y, x, y) > RANGE || !positionIsInWorld(x, y))
+      x = krumblidHitbox.box.posX + randFloat(-RANGE, RANGE);
+      y = krumblidHitbox.box.posY + randFloat(-RANGE, RANGE);
+   } while (distance(krumblidHitbox.box.posX, krumblidHitbox.box.posY, x, y) > RANGE || !positionIsInWorld(x, y))
 
    return new Point(x, y);
 }
 
-const isValidEggLayPosition = (okren: Entity, position: Point): boolean => {
+const isValidEggLayPosition = (okren: Entity, x: number, y: number): boolean => {
    const layer = getEntityLayer(okren);
 
    // Nake sure it isn't near a wall
    const WALL_CHECK_RANGE = 350;
 
-   const minSubtileX = clampToSubtileBoardDimensions(Math.floor((position.x - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
-   const maxSubtileX = clampToSubtileBoardDimensions(Math.floor((position.x + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
-   const minSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
-   const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+   const minSubtileX = clampToSubtileBoardDimensions(Math.floor((x - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+   const maxSubtileX = clampToSubtileBoardDimensions(Math.floor((x + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+   const minSubtileY = clampToSubtileBoardDimensions(Math.floor((y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+   const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
 
-   const testHitbox = new CircularBox(position.copy(), new Point(0, 0), 0, WALL_CHECK_RANGE);
+   const testHitbox = new CircularBox(x, y, 0, 0, 0, WALL_CHECK_RANGE);
    
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
          const subtileIndex = getSubtileIndex(subtileX, subtileY);
          if (layer.subtileIsWall(subtileIndex)) {
             // @Speed
-            const position = new Point((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE);
             // @Copynpaste
-            const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+            const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
             const collisionResult = testHitbox.getCollisionResult(tileBox);
             if (collisionResult.isColliding) {
                return false;
@@ -297,7 +296,7 @@ function onTick(okren: Entity): void {
       if (!hasClaw(okrenTransformComponent, side)) {
          if (okrenComponent.limbRegrowTimes[side] === 0) {
             const sideIsFlipped = side === OkrenSide.left ? true : false;
-            const clawConfig = createOkrenClawConfig(okrenBodyHitbox.box.position.copy(), 0, okrenComponent.size, OkrenClawGrowthStage.ONE, sideIsFlipped);
+            const clawConfig = createOkrenClawConfig(okrenBodyHitbox.box.posX, okrenBodyHitbox.box.posY, 0, okrenComponent.size, OkrenClawGrowthStage.ONE, sideIsFlipped);
             const clawRootHitbox = getConfigTransformComponent(clawConfig.components).hitboxes[0];
             clawConfig.attachInfo = createEntityConfigAttachInfo(clawRootHitbox, okrenBodyHitbox, true);
             createEntity(clawConfig, getEntityLayer(okren), 0);
@@ -402,8 +401,8 @@ function onTick(okren: Entity): void {
    if (entityExists(tamingComponent.followTarget)) {
       const targetTransformComponent = TransformComponentArray.getComponent(tamingComponent.followTarget);
       const targetHitbox = targetTransformComponent.hitboxes[0];
-      aiHelperComponent.moveFunc(okren, targetHitbox.box.position, 350);
-      aiHelperComponent.turnFunc(okren, targetHitbox.box.position, 0.5 * Math.PI, 0.6);
+      aiHelperComponent.moveFunc(okren, targetHitbox.box.posX, targetHitbox.box.posY, 350);
+      aiHelperComponent.turnFunc(okren, targetHitbox.box.posX, targetHitbox.box.posY, 0.5 * Math.PI, 0.6);
       return;
    }
    
@@ -416,9 +415,9 @@ function onTick(okren: Entity): void {
          const targetTransformComponent = TransformComponentArray.getComponent(tamingComponent.carryTarget);
          const targetHitbox = targetTransformComponent.hitboxes[0];
          
-         const targetDirection = okrenBodyHitbox.box.position.angleTo(targetHitbox.box.position);
-         aiHelperComponent.moveFunc(okren, targetHitbox.box.position, 350);
-         aiHelperComponent.turnFunc(okren, targetHitbox.box.position, 0.5 * Math.PI, 0.6);
+         const targetDirection = angle(targetHitbox.box.posX - okrenBodyHitbox.box.posX, targetHitbox.box.posY - okrenBodyHitbox.box.posY);
+         aiHelperComponent.moveFunc(okren, targetHitbox.box.posX, targetHitbox.box.posY, 350);
+         aiHelperComponent.turnFunc(okren, targetHitbox.box.posX, targetHitbox.box.posY, 0.5 * Math.PI, 0.6);
 
          // Force carry if colliding and head is looking at the carry target
          if (getAbsAngleDiff(okrenBodyHitbox.box.angle, targetDirection) < 0.1 && entitiesAreColliding(okren, tamingComponent.carryTarget) !== CollisionVars.NO_COLLISION) {
@@ -536,7 +535,7 @@ function onTick(okren: Entity): void {
       // Wait until the okren finds a good spot to lay eggs
       if (getEntityAgeTicks(okren) % Math.floor(Settings.TICK_RATE / 4) === 0) {
          const potentialPosition = getRandomNearbyPosition(okren);
-         if (isValidEggLayPosition(okren, potentialPosition)) {
+         if (isValidEggLayPosition(okren, potentialPosition.x, potentialPosition.y)) {
             okrenComponent.eggLayPosition = potentialPosition;
             okrenComponent.isLayingEggs = true;
          }

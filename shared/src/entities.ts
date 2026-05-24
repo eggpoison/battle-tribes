@@ -1,7 +1,7 @@
 /** Unique identifier for each entity */
 export type Entity = number;
 
-export enum EntityType {
+export const enum EntityType {
    cow,
    zombie,
    tombstone,
@@ -261,22 +261,22 @@ export function getEntityTypeFromString(entityTypeString: string): EntityType | 
    
 // @Cleanup: move all of this
 
-export enum CowSpecies {
+export const enum CowSpecies {
    brown,
    black
 }
 
-export enum TreeSize {
+export const enum TreeSize {
    small,
    large
 }
 
-export enum CactusFlowerSize {
+export const enum CactusFlowerSize {
    small = 0,
    large = 1
 }
 
-export enum SlimeSize {
+export const enum SlimeSize {
    small = 0,
    medium = 1,
    large = 2
@@ -289,7 +289,7 @@ export interface TribeTotemBanner {
    readonly direction: number;
 }
 
-export enum DamageSource {
+export const enum DamageSource {
    yeti,
    zombie,
    poison,
@@ -316,7 +316,7 @@ export interface DeathInfo {
 }
 
 // @Refactor: It might be easier to send the animation info instead of whichever action which the client has to infer
-export enum LimbAction {
+export const enum LimbAction {
    none,
    engageBow,
    moveLimbToQuiver,
@@ -346,7 +346,7 @@ export enum LimbAction {
    returnShieldBashToRest
 }
 
-export enum FrozenYetiAttackType {
+export const enum FrozenYetiAttackType {
    snowThrow,
    roar,
    stomp,
@@ -354,20 +354,20 @@ export enum FrozenYetiAttackType {
    none
 }
 
-export enum FishColour {
+export const enum FishColour {
    blue,
    gold,
    red,
    lime
 }
 
-export enum RockSpikeProjectileSize {
+export const enum RockSpikeProjectileSize {
    small,
    medium,
    large
 }
 
-export enum DoorToggleType {
+export const enum DoorToggleType {
    none,
    close,
    open

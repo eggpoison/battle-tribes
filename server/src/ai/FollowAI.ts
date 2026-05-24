@@ -1,4 +1,4 @@
-import { Settings, Entity, EntityType, Point, randInt } from "battletribes-shared";
+import { Settings, Entity, EntityType, Point, randInt, angle } from "battletribes-shared";
 import { getDistanceFromPointToEntity } from "../ai-shared.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
 import { entityExists, getEntityType } from "../world.js";
@@ -82,19 +82,19 @@ export function continueFollowingEntity(entity: Entity, followAI: FollowAI, foll
    } else {
       radius = 32;
    }
-   const distance = getDistanceFromPointToEntity(followTargetHitbox.box.position, transformComponent) - radius;
+   const distance = getDistanceFromPointToEntity(followTargetHitbox.box.posX, followTargetHitbox.box.posY, transformComponent) - radius;
    if (distance < followAI.followDistance) {
       // Too close, move backwards with half acceleration!
 
-      aiHelperComponent.turnFunc(entity, followTargetHitbox.box.position, turnSpeed, turnDamping)
+      aiHelperComponent.turnFunc(entity, followTargetHitbox.box.posX, followTargetHitbox.box.posY, turnSpeed, turnDamping)
 
-      const awayDirection = followTargetHitbox.box.position.angleTo(entityHitbox.box.position);
-      const moveTargetX = entityHitbox.box.position.x + 500 * Math.sin(awayDirection);
-      const moveTargetY = entityHitbox.box.position.y + 500 * Math.cos(awayDirection);
-      aiHelperComponent.moveFunc(entity, new Point(moveTargetX, moveTargetY), acceleration * 0.5);
+      const awayDirection = angle(entityHitbox.box.posX - followTargetHitbox.box.posX, entityHitbox.box.posY - followTargetHitbox.box.posY);
+      const moveTargetX = entityHitbox.box.posX + 500 * Math.sin(awayDirection);
+      const moveTargetY = entityHitbox.box.posY + 500 * Math.cos(awayDirection);
+      aiHelperComponent.moveFunc(entity, moveTargetX, moveTargetY, acceleration * 0.5);
    } else {
-      aiHelperComponent.turnFunc(entity, followTargetHitbox.box.position, turnSpeed, turnDamping);
-      aiHelperComponent.moveFunc(entity, followTargetHitbox.box.position, acceleration);
+      aiHelperComponent.turnFunc(entity, followTargetHitbox.box.posX, followTargetHitbox.box.posY, turnSpeed, turnDamping);
+      aiHelperComponent.moveFunc(entity, followTargetHitbox.box.posX, followTargetHitbox.box.posY, acceleration);
    }
 }
 

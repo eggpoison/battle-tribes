@@ -1,4 +1,4 @@
-import { HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType, assert, customTickIntervalHasPassed, Point, polarVec2, randInt } from "battletribes-shared";
+import { HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType, assert, customTickIntervalHasPassed, Point, polarVec2, randInt, angle, distance } from "battletribes-shared";
 import { MIN_TONGUE_COOLDOWN_TICKS, MAX_TONGUE_COOLDOWN_TICKS } from "../ai/OkrenCombatAI.js";
 import { addHitboxVelocity, applyAcceleration, getHitboxTotalMassIncludingChildren, Hitbox, HitboxAngularTether, turnHitboxToAngle } from "../hitboxes.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
@@ -49,8 +49,8 @@ const getTongueLength = (tongueTransformComponent: TransformComponent): number =
 // @COPYNPASTE
 const getTonguePosition = (originHitbox: Hitbox, offsetMagnitude: number): Point => {
    const offsetDirection = originHitbox.box.angle;
-   const x = originHitbox.box.position.x + offsetMagnitude * Math.sin(offsetDirection);
-   const y = originHitbox.box.position.y + offsetMagnitude * Math.cos(offsetDirection);
+   const x = originHitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+   const y = originHitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
    return new Point(x, y);
 }
 
@@ -64,7 +64,8 @@ const addTongueSegment = (tongue: Entity, okrenHitbox: Hitbox, previousBaseHitbo
    
    // Create the new base segment hitbox
    const offsetMagnitude = distance - IDEAL_SEPARATION;
-   const newSegmentHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(getTonguePosition(okrenHitbox, offsetMagnitude), new Point(0, 0), okrenHitbox.box.angle, 16, 24), 0.3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_TONGUE_SEGMENT_MIDDLE]);
+   const tonguePostion = getTonguePosition(okrenHitbox, offsetMagnitude);
+   const newSegmentHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(tonguePostion.x, tonguePostion.y, 0, 0, okrenHitbox.box.angle, 16, 24), 0.3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_TONGUE_SEGMENT_MIDDLE]);
    addHitboxToEntity(tongue, newSegmentHitbox)
 
    // Remove the old base entities' tether to the okren
@@ -123,7 +124,7 @@ const advanceTongue = (tongue: Entity, tongueTransformComponent: TransformCompon
    for (let i = 0; i < tongueTransformComponent.hitboxes.length; i++) {
       const hitbox = tongueTransformComponent.hitboxes[i];
 
-      const targetDir = hitbox.box.position.angleTo(targetHitbox.box.position);
+      const targetDir = angle(targetHitbox.box.posX - hitbox.box.posX, targetHitbox.box.posY - hitbox.box.posY);
       
       let acc: number;
       if (i === 0) {
@@ -137,7 +138,7 @@ const advanceTongue = (tongue: Entity, tongueTransformComponent: TransformCompon
          acc = 600;
       }
 
-      applyAcceleration(hitbox, polarVec2(acc, targetDir));
+      applyAcceleration(hitbox, acc * Math.sin(targetDir), acc * Math.cos(targetDir));
       // Also turn the tip
       if (i === 0) {
          turnHitboxToAngle(hitbox, targetDir, 1, 1, false);
@@ -150,10 +151,10 @@ const advanceTongue = (tongue: Entity, tongueTransformComponent: TransformCompon
    const okrenHitbox = okrenTransformComponent.hitboxes[0];
    
    const tongueBaseHitbox = getTongueBaseHitbox(tongueTransformComponent);
-   const distance = okrenHitbox.box.position.distanceTo(tongueBaseHitbox.box.position);
+   const dist = distance(okrenHitbox.box.posX, okrenHitbox.box.posY, tongueBaseHitbox.box.posX, tongueBaseHitbox.box.posY);
 
-   if (distance >= TONGUE_INITIAL_OFFSET + IDEAL_SEPARATION) {
-      addTongueSegment(tongue, okrenHitbox, tongueBaseHitbox, distance);
+   if (dist >= TONGUE_INITIAL_OFFSET + IDEAL_SEPARATION) {
+      addTongueSegment(tongue, okrenHitbox, tongueBaseHitbox, dist);
    }
 }
 
@@ -188,7 +189,7 @@ export function startRetractingTongue(tongue: Entity, okrenTongueComponent: Okre
 
    // Do an initial jerk back of the tongue as the okren reacts to whatever caused it to want to retract its tongue (be it being hit, reaching max length, or catching something)
    for (const hitbox of tongueTransformComponent.hitboxes) {
-      const directionToOkren = hitbox.box.position.angleTo(okrenHitbox.box.position);
+      const directionToOkren = angle(okrenHitbox.box.posX - hitbox.box.posX, okrenHitbox.box.posY - hitbox.box.posY);
       addHitboxVelocity(hitbox, polarVec2(200, directionToOkren));
    }
 }
@@ -201,7 +202,7 @@ const regressTongue = (tongue: Entity, tongueTransformComponent: TransformCompon
    for (let i = 0; i < tongueTransformComponent.hitboxes.length; i++) {
       const hitbox = tongueTransformComponent.hitboxes[0];
 
-      const homeDir = hitbox.box.position.angleTo(okrenHitbox.box.position);
+      const homeDir = angle(okrenHitbox.box.posX - hitbox.box.posX, okrenHitbox.box.posY - hitbox.box.posY);
       
       // @Hack @Incomplete: should pull harder proportional to the amount of resistance the tongue is experiencing
       const MULTIPLIER = 2.3;
@@ -218,14 +219,14 @@ const regressTongue = (tongue: Entity, tongueTransformComponent: TransformCompon
          acc = 700 * MULTIPLIER;
       }
 
-      applyAcceleration(hitbox, polarVec2(acc, homeDir));
+      applyAcceleration(hitbox, acc * Math.sin(homeDir), acc * Math.cos(homeDir));
    }
 
    const tongueBaseHitbox = getTongueBaseHitbox(tongueTransformComponent);
 
    // remove base segment
-   const distance = okrenHitbox.box.position.distanceTo(tongueBaseHitbox.box.position);
-   if (distance < TONGUE_INITIAL_OFFSET) {
+   const dist = distance(okrenHitbox.box.posX, okrenHitbox.box.posY, tongueBaseHitbox.box.posX, tongueBaseHitbox.box.posY);
+   if (dist < TONGUE_INITIAL_OFFSET) {
       let nextBaseSegment: Hitbox | null;
       if (tongueTransformComponent.hitboxes.length > 1) {
          nextBaseSegment = tongueTransformComponent.hitboxes[tongueTransformComponent.hitboxes.length - 2];
@@ -286,8 +287,8 @@ const regressTongue = (tongue: Entity, tongueTransformComponent: TransformCompon
       // Destroy the previous base
       // @INCOMPLETE
       // destroyEntity(tongueBaseEntity);
-   } else if (distance >= TONGUE_INITIAL_OFFSET + IDEAL_SEPARATION) {
-      addTongueSegment(tongue, okrenHitbox, tongueBaseHitbox, distance);
+   } else if (dist >= TONGUE_INITIAL_OFFSET + IDEAL_SEPARATION) {
+      addTongueSegment(tongue, okrenHitbox, tongueBaseHitbox, dist);
    }
 }
 

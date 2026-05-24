@@ -36,7 +36,7 @@ interface CollapseInfo {
    readonly collapsedSubtiles: Array<number>;
 }
 
-const ongoingCollapses = new Array<CollapseInfo>();
+const ongoingCollapses: Array<CollapseInfo> = [];
 
 /** Contains all tiles currently involved in collapsing */
 const collapsingSubtileSet = new Set<number>();
@@ -295,7 +295,7 @@ export function runCollapses(): void {
 }
 
 export function getPlayerNearbyCollapses(playerClient: PlayerClient): ReadonlyArray<[CollapseInfo, number]> {
-   const nearbyCollapses = new Array<[CollapseInfo, number]>();
+   const nearbyCollapses: Array<[CollapseInfo, number]> = [];
    
    // @Speed
    for (const collapse of ongoingCollapses) {
@@ -343,7 +343,7 @@ export function getVisibleSubtileSupports(playerClient: PlayerClient): ReadonlyA
    const minVisibleY = playerClient.lastViewedPositionY - playerClient.screenHeight * 0.5 - PlayerClientVars.VIEW_PADDING;
    const maxVisibleY = playerClient.lastViewedPositionY + playerClient.screenHeight * 0.5 + PlayerClientVars.VIEW_PADDING;
 
-   const supports = new Array<number>();
+   const supports: Array<number> = [];
    
    const minSubtileX = (minVisibleX / Settings.TILE_SIZE) << 2;
    const maxSubtileX = (maxVisibleX / Settings.TILE_SIZE) << 2;

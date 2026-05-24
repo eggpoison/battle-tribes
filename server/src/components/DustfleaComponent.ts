@@ -1,4 +1,4 @@
-import { randInt, Settings, EntityTickEvent, EntityTickEventType, ServerComponentType, Entity, EntityType, AttackEffectiveness } from "battletribes-shared";
+import { randInt, Settings, EntityTickEvent, EntityTickEventType, ServerComponentType, Entity, EntityType, AttackEffectiveness, distance, Point } from "battletribes-shared";
 import { runHibernateAI } from "../ai/DustfleaHibernateAI.js";
 import { runEscapeAI } from "../ai/EscapeAI.js";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
@@ -42,7 +42,7 @@ const getSitTarget = (dustflea: Entity, aiHelperComponent: AIHelperComponent): E
       const entityTransformComponent = TransformComponentArray.getComponent(entity);
       const entityHitbox = entityTransformComponent.hitboxes[0];
 
-      const dist = dustfleaHitbox.box.position.distanceTo(entityHitbox.box.position);
+      const dist = distance(dustfleaHitbox.box.posX,dustfleaHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          target = entity;
@@ -71,7 +71,7 @@ const getSuckTarget = (dustflea: Entity, aiHelperComponent: AIHelperComponent): 
       const entityTransformComponent = TransformComponentArray.getComponent(entity);
       const entityHitbox = entityTransformComponent.hitboxes[0];
 
-      const dist = dustfleaHitbox.box.position.distanceTo(entityHitbox.box.position);
+      const dist = distance(dustfleaHitbox.box.posX, dustfleaHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          target = entity;
@@ -95,7 +95,7 @@ const getTargetPoopoosqueam = (dustflea: Entity, aiHelperComponent: AIHelperComp
       const entityTransformComponent = TransformComponentArray.getComponent(entity);
       const entityHitbox = entityTransformComponent.hitboxes[0];
 
-      const dist = dustfleaHitbox.box.position.distanceTo(entityHitbox.box.position);
+      const dist = distance(dustfleaHitbox.box.posX, dustfleaHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          target = entity;
@@ -116,8 +116,8 @@ function onTick(dustflea: Entity): void {
       if (target !== null) {
          const targetTransformComponent = TransformComponentArray.getComponent(target);
          const targetHitbox = targetTransformComponent.hitboxes[0];
-         aiHelperComponent.moveFunc(dustflea, targetHitbox.box.position, 250);
-         aiHelperComponent.turnFunc(dustflea, targetHitbox.box.position, 16 * Math.PI, 0.25);
+         aiHelperComponent.moveFunc(dustflea, targetHitbox.box.posX, targetHitbox.box.posY, 250);
+         aiHelperComponent.turnFunc(dustflea, targetHitbox.box.posX, targetHitbox.box.posY, 16 * Math.PI, 0.25);
          return;
       }
    }
@@ -152,8 +152,8 @@ function onTick(dustflea: Entity): void {
          if (dustfleaHitbox.parent === null) {
             const targetTransformComponent = TransformComponentArray.getComponent(suckTarget);
             const targetHitbox = targetTransformComponent.hitboxes[0];
-            aiHelperComponent.moveFunc(dustflea, targetHitbox.box.position, 250);
-            aiHelperComponent.turnFunc(dustflea, targetHitbox.box.position, 16 * Math.PI, 0.25);
+            aiHelperComponent.moveFunc(dustflea, targetHitbox.box.posX, targetHitbox.box.posY, 250);
+            aiHelperComponent.turnFunc(dustflea, targetHitbox.box.posX, targetHitbox.box.posY, 16 * Math.PI, 0.25);
             if (entitiesAreColliding(dustflea, suckTarget) !== CollisionVars.NO_COLLISION && getHitboxVelocity(dustfleaHitbox).distanceTo(getHitboxVelocity(targetHitbox)) < 125) {
                attachHitbox(dustfleaHitbox, targetHitbox, false);
 
@@ -207,8 +207,8 @@ function onTick(dustflea: Entity): void {
          if (sitTarget !== null) {
             const targetTransformComponent = TransformComponentArray.getComponent(sitTarget);
             const targetHitbox = targetTransformComponent.hitboxes[0];
-            aiHelperComponent.moveFunc(dustflea, targetHitbox.box.position, 250);
-            aiHelperComponent.turnFunc(dustflea, targetHitbox.box.position, 2 * Math.PI, 0.25);
+            aiHelperComponent.moveFunc(dustflea, targetHitbox.box.posX, targetHitbox.box.posY, 250);
+            aiHelperComponent.turnFunc(dustflea, targetHitbox.box.posX, targetHitbox.box.posY, 2 * Math.PI, 0.25);
             if (entitiesAreColliding(dustflea, sitTarget) !== CollisionVars.NO_COLLISION) {
                attachHitbox(dustfleaHitbox, targetHitbox, false);
             }
@@ -232,8 +232,8 @@ function onTick(dustflea: Entity): void {
    const wanderAI = aiHelperComponent.getWanderAI();
    wanderAI.update(dustflea);
    if (wanderAI.targetPosition !== null) {
-      aiHelperComponent.moveFunc(dustflea, wanderAI.targetPosition, wanderAI.acceleration);
-      aiHelperComponent.turnFunc(dustflea, wanderAI.targetPosition, wanderAI.turnSpeed, wanderAI.turnDamping);
+      aiHelperComponent.moveFunc(dustflea, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.acceleration);
+      aiHelperComponent.turnFunc(dustflea, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.turnSpeed, wanderAI.turnDamping);
    }
 }
 
@@ -243,7 +243,7 @@ function onWallCollision(dustflea: Entity): void {
 
    // Die when crushed against a wall
    if (dustfleaHitbox.parent !== null) {
-      damageEntity(dustfleaHitbox, null, 999, 0, AttackEffectiveness.effective, dustfleaHitbox.box.position.copy(), 0);
+      damageEntity(dustfleaHitbox, null, 999, 0, AttackEffectiveness.effective, new Point(dustfleaHitbox.box.posX, dustfleaHitbox.box.posY), 0);
    }
 }
 

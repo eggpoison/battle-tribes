@@ -733,8 +733,8 @@ class _InventoryUseComponentArray extends _ServerComponentArray<InventoryUseComp
          if (tickIntervalHasPassed(0.25 * Settings.TICK_RATE) && limbInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[limbInfo.heldItemType] === "healing") {
             // Create food eating particles
             for (let i = 0; i < 3; i++) {
-               let spawnPositionX = hitbox.box.position.x + 37 * Math.sin(hitbox.box.angle);
-               let spawnPositionY = hitbox.box.position.y + 37 * Math.cos(hitbox.box.angle);
+               let spawnPositionX = hitbox.box.posX + 37 * Math.sin(hitbox.box.angle);
+               let spawnPositionY = hitbox.box.posY + 37 * Math.cos(hitbox.box.angle);
 
                const spawnOffsetMagnitude = randFloat(0, 6);
                const spawnOffsetDirection = randAngle();

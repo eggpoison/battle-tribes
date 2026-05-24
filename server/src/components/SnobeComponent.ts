@@ -1,4 +1,4 @@
-import { Entity, EntityType, ServerComponentType, TileType, Settings, HitboxFlag, ItemType, Packet, DEFAULT_COLLISION_MASK, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randFloat, randInt, randSign, secondsToTicks, EntityTickEvent, EntityTickEventType } from "battletribes-shared";
+import { Entity, EntityType, ServerComponentType, TileType, Settings, HitboxFlag, ItemType, Packet, DEFAULT_COLLISION_MASK, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randFloat, randInt, randSign, secondsToTicks, EntityTickEvent, EntityTickEventType, distance } from "battletribes-shared";
 import { runEscapeAI } from "../ai/EscapeAI.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -93,8 +93,8 @@ function onTick(snobe: Entity): void {
       const targetTransformComponent = TransformComponentArray.getComponent(tamingComponent.followTarget);
       const targetHitbox = targetTransformComponent.hitboxes[0];
       
-      aiHelperComponent.turnFunc(snobe, targetHitbox.box.position, 8 * Math.PI, 0.5);
-      aiHelperComponent.moveFunc(snobe, targetHitbox.box.position, 800);
+      aiHelperComponent.turnFunc(snobe, targetHitbox.box.posX, targetHitbox.box.posY, 8 * Math.PI, 0.5);
+      aiHelperComponent.moveFunc(snobe, targetHitbox.box.posX, targetHitbox.box.posY, 800);
       return;
    }
 
@@ -130,9 +130,11 @@ function onTick(snobe: Entity): void {
 
          // Dig up snow when still digging
          if (customTickIntervalHasPassed(snobeComponent.ticksSpentDigging, 0.25)) {
+            const offsetMag = randFloat(2, 8);
             const offsetDir = randAngle();
-            const position = hitbox.box.position.offset(randFloat(2, 8), offsetDir);
-            const snowballConfig = createSnowballConfig(position, randAngle(), snobe, Math.random() < 0.75 ? 0 : 1);
+            const x = hitbox.box.posX + offsetMag * Math.sin(offsetDir);
+            const y = hitbox.box.posY + offsetMag * Math.cos(offsetDir);
+            const snowballConfig = createSnowballConfig(x, y, randAngle(), snobe, Math.random() < 0.75 ? 0 : 1);
 
             const snowballTransformComponent = getConfigTransformComponent(snowballConfig.components);
             const snowballHitbox = snowballTransformComponent.hitboxes[0];
@@ -176,9 +178,9 @@ function onTick(snobe: Entity): void {
             const entityTransformComponent = TransformComponentArray.getComponent(entity);
             const entityHitbox = entityTransformComponent.hitboxes[0];
             
-            const distance = hitbox.box.position.distanceTo(entityHitbox.box.position);
-            if (distance < minDist) {
-               minDist = distance;
+            const dist = distance(hitbox.box.posX, hitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
+            if (dist < minDist) {
+               minDist = dist;
                closestFoodItem = entity;
             }
          }
@@ -187,8 +189,8 @@ function onTick(snobe: Entity): void {
          const foodTransformComponent = TransformComponentArray.getComponent(closestFoodItem);
          const foodHitbox = foodTransformComponent.hitboxes[0];
          
-         aiHelperComponent.turnFunc(snobe, foodHitbox.box.position, 8 * Math.PI, 0.5);
-         aiHelperComponent.moveFunc(snobe, foodHitbox.box.position, 800);
+         aiHelperComponent.turnFunc(snobe, foodHitbox.box.posX, foodHitbox.box.posY, 8 * Math.PI, 0.5);
+         aiHelperComponent.moveFunc(snobe, foodHitbox.box.posX, foodHitbox.box.posY, 800);
 
          if (entitiesAreColliding(snobe, closestFoodItem) !== CollisionVars.NO_COLLISION) {
             healEntity(snobe, 3, snobe);
@@ -239,11 +241,11 @@ function onTick(snobe: Entity): void {
          hitbox.collisionMask = 0;
       }
 
-      snobeComponent.diggingStartPosition.x = hitbox.box.position.x;
-      snobeComponent.diggingStartPosition.y = hitbox.box.position.y;
+      snobeComponent.diggingStartPosition.x = hitbox.box.posX;
+      snobeComponent.diggingStartPosition.y = hitbox.box.posY;
 
       // create the mound too
-      const snobeMound = createSnobeMoundConfig(hitbox.box.position.copy(), randAngle());
+      const snobeMound = createSnobeMoundConfig(hitbox.box.posX, hitbox.box.posY, randAngle());
       snobeComponent.diggingMound = createEntity(snobeMound, getEntityLayer(snobe), 0);
    }
 
@@ -251,8 +253,8 @@ function onTick(snobe: Entity): void {
    const wanderAI = aiHelperComponent.getWanderAI();
    wanderAI.update(snobe);
    if (wanderAI.targetPosition !== null) {
-      aiHelperComponent.moveFunc(snobe, wanderAI.targetPosition, wanderAI.acceleration);
-      aiHelperComponent.turnFunc(snobe, wanderAI.targetPosition, wanderAI.turnSpeed, wanderAI.turnDamping);
+      aiHelperComponent.moveFunc(snobe, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.acceleration);
+      aiHelperComponent.turnFunc(snobe, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.turnSpeed, wanderAI.turnDamping);
    }
 }
 

@@ -11,7 +11,7 @@ in server:
 - 
 */
 
-export enum ServerComponentType {
+export const enum ServerComponentType {
    aiHelper,
    berryBush,
    blueprint,
@@ -286,7 +286,7 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
 
 export const NUM_COMPONENTS = Object.keys(ServerComponentTypeString).length;
 
-export enum BlueprintType {
+export const enum BlueprintType {
    stoneWall,
    woodenDoor,
    stoneDoor,
@@ -308,7 +308,7 @@ export enum BlueprintType {
    cogwalker
 }
 
-export enum TribesmanAIType {
+export const enum TribesmanAIType {
    escaping,
    attacking,
    harvestingResources,
@@ -340,14 +340,14 @@ export const TURRET_AMMO_TYPES: Record<TurretEntityType, ReadonlyArray<TurretAmm
    [EntityType.ballista]: [ItemType.wood, ItemType.rock, ItemType.slimeball, ItemType.frostcicle]
 };
 
-export enum TunnelDoorSide {
+export const enum TunnelDoorSide {
    top = 0b01,
    bottom = 0b10
 }
 
 export type TunnelDoorSides = TunnelDoorSide.top | TunnelDoorSide.bottom;
 
-export enum BuildingMaterial {
+export const enum BuildingMaterial {
    wood,
    stone
 }
@@ -371,7 +371,7 @@ export interface HealingTotemTargetData {
    readonly ticksHealed: number;
 }
 
-export enum DecorationType {
+export const enum DecorationType {
    pebble,
    rock,
    sandstoneRock,
@@ -388,7 +388,7 @@ export enum DecorationType {
 
 // @Cleanup: Should these be here?
 
-// export enum BallistaProjectileType {
+// export const enum BallistaProjectileType {
 //    woodenBolt,
 //    rock,
 //    slimeball,
@@ -486,7 +486,7 @@ export const AMMO_INFO_RECORD: Record<TurretAmmoType, GenericAmmoInfo> = {
 
 
 // @Cleanup: Should be defined in server
-export enum GuardianAttackType {
+export const enum GuardianAttackType {
    none,
    crystalSlam,
    crystalBurst,
@@ -494,21 +494,21 @@ export enum GuardianAttackType {
 }
 
 // @Cleanup: Should be defined in server
-export enum GuardianCrystalSlamStage {
+export const enum GuardianCrystalSlamStage {
    windup,
    slam,
    return
 }
 
 // @Cleanup: Should be defined in server
-export enum GuardianCrystalBurstStage {
+export const enum GuardianCrystalBurstStage {
    windup,
    burst,
    return
 }
 
 // @Cleanup: Should be defined in server
-export enum GuardianSpikyBallSummonStage {
+export const enum GuardianSpikyBallSummonStage {
    windup,
    focus,
    return
@@ -519,7 +519,7 @@ export enum GuardianSpikyBallSummonStage {
 
 
 // @Cleanup: Should be defined in server
-export enum BlockType {
+export const enum BlockType {
    toolBlock,
    shieldBlock
 }

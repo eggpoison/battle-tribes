@@ -5,7 +5,7 @@ import Layer from "./Layer.js";
 // @Cleanup: should probably combine this file with entity-spawning...
 
 export interface PackSpawningInfo {
-   getPackSize(pos: Readonly<Point>): number;
+   getPackSize(x: number, y: number): number;
    /** Distance from the original spawn that pack spawns can be made in */
    readonly spawnRange: number;
 }
@@ -40,7 +40,7 @@ export interface EntitySpawnEvent {
    readonly doStrictTileTypeCheck: boolean;
    /** If true, the entity must not be overlapping with any other collideable entities. */
    readonly doStrictCollisionCheck?: boolean;
-   readonly createEntity: (pos: Readonly<Point>, angle: number, firstEntityConfig: ReadonlyArray<EntityConfig> | null, layer: Layer) => ReadonlyArray<EntityConfig> | null;
+   readonly createEntity: (x: number, y: number, angle: number, firstEntityConfig: ReadonlyArray<EntityConfig> | null, layer: Layer) => ReadonlyArray<EntityConfig> | null;
    readonly customSpawnIsValidFunc?: (spawnInfo: EntitySpawnEvent, spawnOriginX: number, spawnOriginY: number) => boolean;
 }
 
@@ -56,7 +56,7 @@ export interface EntitySpawnEvent {
    //    usesSpawnDistribution: true
    // },
    
-export const SPAWN_INFOS = new Array<EntitySpawnEvent>();
+export const SPAWN_INFOS: Array<EntitySpawnEvent> = [];
 
 const countNumSpawnableTiles = (spawnInfo: EntitySpawnEvent, blockX: number, blockY: number): number => {
    const blockSize = spawnInfo.spawnDistribution.blockSize;
@@ -138,7 +138,7 @@ export function addEntityToSpawnDistribution(spawnDistribution: SpawnDistributio
    const blockY = Math.floor(y / Settings.TILE_SIZE / blockSize);
    
    let remainingDensity = 1;
-   const densityInfos = new Array<EntityBlockDensityInfo>();
+   const densityInfos: Array<EntityBlockDensityInfo> = [];
    
    const blockIdx = blockY * BLOCKS_IN_BOARD_DIMENSIONS + blockX;
    const blockTargetDensity = spawnDistribution.targetDensities[blockIdx];

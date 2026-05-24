@@ -4,11 +4,11 @@ import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createSlimeSpitConfig(position: Point, rotation: number, size: number): EntityConfig {
+export function createSlimeSpitConfig(x: number, y: number, angle: number, size: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
    const hitboxSize = size === 0 ? 20 : 30;
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, hitboxSize, hitboxSize), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, hitboxSize, hitboxSize), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const slimeSpitComponent = new SlimeSpitComponent(size);

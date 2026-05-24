@@ -2,8 +2,7 @@ import { assert } from "./utils.js";
 
 // @CLEANUP: Rename this to "config.ts"
 
-// @SPEED: make back into const enum!!
-export enum Settings {
+export const enum Settings {
    SERVER_PORT = 8000,
    // @Incomplete was gunna bring these out of the settings enum but cuz this is typescript this messes up some other shit, wait until i can mark them as constexpr
    /** Server ticks per second. */
@@ -16,7 +15,8 @@ export enum Settings {
    TILE_SIZE = 64,
    SUBTILE_SIZE = TILE_SIZE / 4,
    SUBTILES_IN_TILE = TILE_SIZE / SUBTILE_SIZE,
-   /** Number of chunks in the world's width and height */
+   /** Number of chunks in the world's width and height. */
+   // IF THIS EXCEEDS 255, CONTAINING CHUNK CALCULATIONS WILL BREAK
    WORLD_SIZE_CHUNKS = 64,
    /** Number of tiles in a chunk's width and height */
    CHUNK_SIZE = 4,
@@ -44,7 +44,7 @@ export enum Settings {
 
 assert(Math.pow(2, Settings.CHUNK_UNITS_LOG2) === Settings.CHUNK_UNITS);
 
-export enum PathfindingSettings {
+export const enum PathfindingSettings {
    /** Units of separation between the nodes horizontally and vertically */
    NODE_SEPARATION = 16,
    NODES_IN_WORLD_WIDTH = Settings.WORLD_UNITS / PathfindingSettings.NODE_SEPARATION + 2,

@@ -155,16 +155,16 @@ class _HealingTotemComponentArray extends _ServerComponentArray<HealingTotemComp
       
       for (let i = 0; i < healingTotemComponent.healingTargetsData.length; i++) {    
          const targetData = healingTotemComponent.healingTargetsData[i];
-         const beamLength = distance(healingTotemHitbox.box.position.x, healingTotemHitbox.box.position.y, targetData.x, targetData.y);
+         const beamLength = distance(healingTotemHitbox.box.posX, healingTotemHitbox.box.posY, targetData.x, targetData.y);
          if (Math.random() > 0.02 * beamLength * Settings.DT_S) {
             continue;
          }
 
-         const beamDirection = angle(targetData.x - healingTotemHitbox.box.position.x, targetData.y - healingTotemHitbox.box.position.y);
+         const beamDirection = angle(targetData.x - healingTotemHitbox.box.posX, targetData.y - healingTotemHitbox.box.posY);
          
          const progress = Math.random();
-         const startX = lerp(healingTotemHitbox.box.position.x + 48 * Math.sin(beamDirection), targetData.x - 30 * Math.sin(beamDirection), progress);
-         const startY = lerp(healingTotemHitbox.box.position.y + 48 * Math.cos(beamDirection), targetData.y - 30 * Math.cos(beamDirection), progress);
+         const startX = lerp(healingTotemHitbox.box.posX + 48 * Math.sin(beamDirection), targetData.x - 30 * Math.sin(beamDirection), progress);
+         const startY = lerp(healingTotemHitbox.box.posY + 48 * Math.cos(beamDirection), targetData.y - 30 * Math.cos(beamDirection), progress);
 
          // @Speed: garbage collection
          createHealingParticle(new Point(startX, startY), randInt(0, 2));

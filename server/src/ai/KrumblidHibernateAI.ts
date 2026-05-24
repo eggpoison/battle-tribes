@@ -29,9 +29,9 @@ const getRandomNearbyPosition = (krumblid: Entity): Point => {
    let x: number;
    let y: number;
    do {
-      x = krumblidHitbox.box.position.x + randFloat(-RANGE, RANGE);
-      y = krumblidHitbox.box.position.y + randFloat(-RANGE, RANGE);
-   } while (distance(krumblidHitbox.box.position.x, krumblidHitbox.box.position.y, x, y) > RANGE || !positionIsInWorld(x, y))
+      x = krumblidHitbox.box.posX + randFloat(-RANGE, RANGE);
+      y = krumblidHitbox.box.posY + randFloat(-RANGE, RANGE);
+   } while (distance(krumblidHitbox.box.posX, krumblidHitbox.box.posY, x, y) > RANGE || !positionIsInWorld(x, y))
 
    return new Point(x, y);
 }
@@ -48,7 +48,7 @@ const isValidHibernatePosition = (krumblid: Entity, position: Point): boolean =>
    const minSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
    const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
 
-   const testHitbox = new CircularBox(position.copy(), new Point(0, 0), 0, WALL_CHECK_RANGE);
+   const testHitbox = new CircularBox(position.x, position.y, 0, 0, 0, WALL_CHECK_RANGE);
    
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
@@ -57,7 +57,7 @@ const isValidHibernatePosition = (krumblid: Entity, position: Point): boolean =>
             // @Speed
             const position = new Point((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE);
             // @Copynpaste
-            const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+            const tileBox = new RectangularBox(position.x, position.y, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
             if (testHitbox.getCollisionResult(tileBox).isColliding) {
                return false;
             }
@@ -75,7 +75,7 @@ const isValidHibernatePosition = (krumblid: Entity, position: Point): boolean =>
       const minSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
       const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
 
-      const testHitbox = new CircularBox(position.copy(), new Point(0, 0), 0, WALL_CHECK_RANGE);
+      const testHitbox = new CircularBox(position.x, position.y, 0, 0, 0, WALL_CHECK_RANGE);
       
       let isNearWall = false;
       for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
@@ -84,7 +84,7 @@ const isValidHibernatePosition = (krumblid: Entity, position: Point): boolean =>
             if (layer.subtileIsWall(subtileIndex)) {
                // @Speed
                const position = new Point((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE);
-               const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+               const tileBox = new RectangularBox(position.x, position.y, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
                if (testHitbox.getCollisionResult(tileBox).isColliding) {
                   isNearWall = true;
                }
@@ -159,17 +159,17 @@ export function runKrumblidHibernateAI(krumblid: Entity, aiHelperComponent: AIHe
 
    if (hibernateAI.hibernateTargetPosition !== null) {
       // go to it!
-      aiHelperComponent.moveFunc(krumblid, hibernateAI.hibernateTargetPosition, hibernateAI.acceleration);
-      aiHelperComponent.turnFunc(krumblid, hibernateAI.hibernateTargetPosition, hibernateAI.turnSpeed, hibernateAI.turnDamping);
+      aiHelperComponent.moveFunc(krumblid, hibernateAI.hibernateTargetPosition.x, hibernateAI.hibernateTargetPosition.y, hibernateAI.acceleration);
+      aiHelperComponent.turnFunc(krumblid, hibernateAI.hibernateTargetPosition.x, hibernateAI.hibernateTargetPosition.y, hibernateAI.turnSpeed, hibernateAI.turnDamping);
 
-      if (krumblidHitbox.box.position.distanceTo(hibernateAI.hibernateTargetPosition) < 1) {
+      if (distance(krumblidHitbox.box.posX, krumblidHitbox.box.posY, hibernateAI.hibernateTargetPosition.x, hibernateAI.hibernateTargetPosition.y) < 1) {
          destroyEntity(krumblid);
 
          // If the krumblid has the imprint skill, then it retains its tame tribe
          const tamingComponent = TamingComponentArray.getComponent(krumblid);
          const tribe = hasTamingSkill(tamingComponent, TamingSkillID.imprint) ? tamingComponent.tameTribe : null;
 
-         const cocoonConfig = createKrumblidMorphCocoonConfig(krumblidHitbox.box.position.copy(), randAngle(), tribe);
+         const cocoonConfig = createKrumblidMorphCocoonConfig(krumblidHitbox.box.posX, krumblidHitbox.box.posY, randAngle(), tribe);
          createEntity(cocoonConfig, getEntityLayer(krumblid), 0);
       }
    } else {
@@ -180,8 +180,8 @@ export function runKrumblidHibernateAI(krumblid: Entity, aiHelperComponent: AIHe
       const wanderAI = aiHelperComponent.getWanderAI();
       wanderAI.update(krumblid);
       if (wanderAI.targetPosition !== null) {
-         aiHelperComponent.moveFunc(krumblid, wanderAI.targetPosition, wanderAI.acceleration);
-         aiHelperComponent.turnFunc(krumblid, wanderAI.targetPosition, wanderAI.turnSpeed, wanderAI.turnDamping);
+         aiHelperComponent.moveFunc(krumblid, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.acceleration);
+         aiHelperComponent.turnFunc(krumblid, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.turnSpeed, wanderAI.turnDamping);
       }
    }
 }

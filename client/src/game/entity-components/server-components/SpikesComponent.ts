@@ -108,13 +108,16 @@ class _SpikesComponentArray extends _ServerComponentArray<SpikesComponent, Spike
       
             // Create leaf particles
             for (let i = 0; i < 4; i++) {
-               const position = hitbox.box.position.offset(randFloat(0, 22), randAngle())
-               createLeafParticle(position.x, position.y, randAngle() + randFloat(-1, 1), Math.random() < 0.5 ? LeafParticleSize.large : LeafParticleSize.small);
+               const offsetAmount = randFloat(0, 22);
+               const offsetDirection = randAngle();
+               const x = hitbox.box.posX + offsetAmount * Math.sin(offsetDirection);
+               const y = hitbox.box.posY + offsetAmount * Math.cos(offsetDirection);
+               createLeafParticle(x, y, randAngle() + randFloat(-1, 1), Math.random() < 0.5 ? LeafParticleSize.large : LeafParticleSize.small);
             }
             
             // Create leaf specks
             for (let i = 0; i < 7; i++) {
-               createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, randFloat(0, 16), LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
+               createLeafSpeckParticle(hitbox.box.posX, hitbox.box.posY, randFloat(0, 16), LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
             }
          }
          

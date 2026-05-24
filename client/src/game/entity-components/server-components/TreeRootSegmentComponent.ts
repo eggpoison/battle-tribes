@@ -66,7 +66,7 @@ class _TreeRootSegmentComponentArray extends _ServerComponentArray<TreeRootSegme
 
    public onHit(entity: Entity, hitbox: Hitbox): void {
       for (let i = 0; i < 6; i++) {
-         createWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 16 * Math.random());
+         createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
       }
 
       playSoundOnHitbox("tree-root-segment-hit.mp3", randFloat(0.47, 0.53), randFloat(0.9, 1.1), entity, hitbox, false);
@@ -77,7 +77,7 @@ class _TreeRootSegmentComponentArray extends _ServerComponentArray<TreeRootSegme
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 10; i++) {
-         createWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 16 * Math.random());
+         createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
       }
 
       const treeRootSegmentComponent = TreeRootSegmentComponentArray.getComponent(entity);

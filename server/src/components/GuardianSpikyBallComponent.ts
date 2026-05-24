@@ -1,4 +1,4 @@
-import { ServerComponentType, Entity, EntityType, DamageSource, Packet, AttackEffectiveness, Point, polarVec2, randFloat, Settings } from "battletribes-shared";
+import { ServerComponentType, Entity, EntityType, DamageSource, Packet, AttackEffectiveness, Point, polarVec2, randFloat, Settings, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
 import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world.js";
@@ -44,7 +44,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
          return;
       }
 
-      const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
+      const hitDirection = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
       damageEntity(collidingHitbox, hitbox.entity, 2, DamageSource.yeti, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingHitbox, polarVec2(100, hitDirection));

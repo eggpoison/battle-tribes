@@ -198,8 +198,8 @@ const updateHandHitboxToLimbInfo = (limb: LimbInfo): void => {
    const handHitbox = getPlayerLimbHitbox(limb);
    
    const limbOffset = getLimbStateOffset(getCurrentLimbState(limb), getHumanoidRadius(playerInstance!));
-   handHitbox.box.offset.x = limbOffset.x;
-   handHitbox.box.offset.y = limbOffset.y;
+   handHitbox.box.offsetX = limbOffset.x;
+   handHitbox.box.offsetY = limbOffset.y;
 
    const progress = limb.currentActionDurationTicks > 0 ? limb.currentActionElapsedTicks / limb.currentActionDurationTicks : 1;
    setHitboxRelativeAngle(handHitbox, lerp(limb.currentActionStartLimbState.angle, limb.currentActionEndLimbState.angle, progress));
@@ -1122,7 +1122,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
 
          const layer = getEntityLayer(playerInstance);
          const structureType = ITEM_INFO_RECORD[itemType as PlaceableItemType].entityType;
-         const placeInfo = calculateEntityPlaceInfo(playerHitbox.box.position, playerHitbox.box.angle, structureType, layer);
+         const placeInfo = calculateEntityPlaceInfo(new Point(playerHitbox.box.posX, playerHitbox.box.posY), playerHitbox.box.angle, structureType, layer);
          
          if (placeInfo.isValid) {
             const limb = getLimbByInventoryName(inventoryUseComponent, itemInventoryName);
@@ -1340,11 +1340,11 @@ const tickItem = (itemType: ItemType): void => {
          const itemInfo = ITEM_INFO_RECORD[itemType] as PlaceableItemInfo;
          const entityType = itemInfo.entityType;
          
-         const placeInfo = calculateEntityPlaceInfo(playerHitbox.box.position, playerHitbox.box.angle, entityType, layer);
+         const placeInfo = calculateEntityPlaceInfo(new Point(playerHitbox.box.posX, playerHitbox.box.posY), playerHitbox.box.angle, entityType, layer);
 
          const serverComponentTypes = getEntityServerComponentTypes(entityType);
          
-         const components: Array<ServerComponentData<ServerComponentType>> = [];
+         const components: Array<ServerComponentData> = [];
 
          for (const componentType of serverComponentTypes) {
             switch (componentType) {
@@ -1563,8 +1563,8 @@ const tickItem = (itemType: ItemType): void => {
          // @Hack: Manually set the render object's position and rotation
          // @INCOMPLETE
          // const transformComponentData = components[ServerComponentType.transform]!;
-         // renderObject.renderPosition.x = transformComponentData.position.x;
-         // renderObject.renderPosition.y = transformComponentData.position.y;
+         // renderObject.renderPosition.x = transformComponentData.posX;
+         // renderObject.renderPosition.y = transformComponentData.posY;
          // renderObject.rotation = transformComponentData.rotation;
 
          break;

@@ -28,6 +28,8 @@ export interface HitboxRelativeAngleConstraint {
 }
 
 export class Hitbox {
+   public readonly box: Box;
+   
    public readonly localID: number;
 
    // THESE BOTH START AT 0 BUT WILL BE FILLED BY THE TRANSFORM COMPONENT'S INITIALISATION
@@ -41,19 +43,19 @@ export class Hitbox {
    /** If true, the hitbox will be considered like it and its parent are part of the same thing, regardless even of if they belong to different entities. */
    public isPartOfParent: boolean;
 
-   public readonly children = new Array<Hitbox>();
+   public readonly children: Array<Hitbox> = [];
    
-   public readonly box: Box;
-   
-   public readonly previousPosition: Point;
-   public readonly acceleration = new Point(0, 0);
+   public previousPosX: number;
+   public previousPosY: number;
+   public accelX = 0;
+   public accelY = 0;
    // @Incomplete: make it impossible to add or remove from here unless its through the proper functions
-   public readonly tethers = new Array<HitboxTether>();
+   public readonly tethers: Array<HitboxTether> = [];
    
    public previousRelativeAngle: number;
    public angularAcceleration = 0;
-   public readonly angularTethers = new Array<HitboxAngularTether>();
-   public readonly relativeAngleConstraints = new Array<HitboxRelativeAngleConstraint>();
+   public readonly angularTethers: Array<HitboxAngularTether> = [];
+   public readonly relativeAngleConstraints: Array<HitboxRelativeAngleConstraint> = [];
    
    public mass: number;
    public collisionType: HitboxCollisionType;
@@ -61,12 +63,6 @@ export class Hitbox {
    // @Temporary: this isn't readonly so that snobes can temporarily not collide with snowballs when digging
    public collisionMask: number;
    public readonly flags: ReadonlyArray<HitboxFlag>;
-
-   // @Memory @Cleanup: 4 floats per hitboxes used literally just for one shitty lil thing
-   public boundsMinX = 0;
-   public boundsMaxX = 0;
-   public boundsMinY = 0;
-   public boundsMaxY = 0;
 
    /** If true, the entity will not be pushed around by collisions or be able to be moved. */
    public isStatic = false;
@@ -77,7 +73,8 @@ export class Hitbox {
       this.isPartOfParent = isPartOfParent;
       this.box = box;
    
-      this.previousPosition = box.position.copy();
+      this.previousPosX = box.posX;
+      this.previousPosY = box.posY;
       this.previousRelativeAngle = box.relativeAngle;
 
       this.mass = mass;
@@ -94,22 +91,22 @@ export function cloneHitbox(transformComponent: TransformComponent, hitbox: Hitb
 }
 
 export function getHitboxVelocity(hitbox: Hitbox): Point {
-   const vx = (hitbox.box.position.x - hitbox.previousPosition.x) * Settings.TICK_RATE;
-   const vy = (hitbox.box.position.y - hitbox.previousPosition.y) * Settings.TICK_RATE;
+   const vx = (hitbox.box.posX - hitbox.previousPosX) * Settings.TICK_RATE;
+   const vy = (hitbox.box.posY - hitbox.previousPosY) * Settings.TICK_RATE;
    return new Point(vx, vy);
 }
 
 export function setHitboxVelocityX(hitbox: Hitbox, vx: number): void {
-   hitbox.previousPosition.x = hitbox.box.position.x - vx * Settings.DT_S;
+   hitbox.previousPosX = hitbox.box.posX - vx * Settings.DT_S;
 }
 
 export function setHitboxVelocityY(hitbox: Hitbox, vy: number): void {
-   hitbox.previousPosition.y = hitbox.box.position.y - vy * Settings.DT_S;
+   hitbox.previousPosY = hitbox.box.posY - vy * Settings.DT_S;
 }
 
 export function setHitboxVelocity(hitbox: Hitbox, vx: number, vy: number): void {
-   hitbox.previousPosition.x = hitbox.box.position.x - vx * Settings.DT_S;
-   hitbox.previousPosition.y = hitbox.box.position.y - vy * Settings.DT_S;
+   hitbox.previousPosX = hitbox.box.posX - vx * Settings.DT_S;
+   hitbox.previousPosY = hitbox.box.posY - vy * Settings.DT_S;
 }
 
 export function getRootHitbox(hitbox: Hitbox): Hitbox {
@@ -124,17 +121,17 @@ export function getRootHitbox(hitbox: Hitbox): Hitbox {
 export function addHitboxVelocity(hitbox: Hitbox, addVec: Point): void {
    const rootHitbox = getRootHitbox(hitbox);
    if (!rootHitbox.isStatic) {
-      rootHitbox.box.position.x += addVec.x * Settings.DT_S;
-      rootHitbox.box.position.y += addVec.y * Settings.DT_S;
+      rootHitbox.box.posX += addVec.x * Settings.DT_S;
+      rootHitbox.box.posY += addVec.y * Settings.DT_S;
    }
 }
 
 export function translateHitbox(hitbox: Hitbox, translation: Point): void {
    const rootHitbox = getRootHitbox(hitbox);
-   rootHitbox.box.position.x += translation.x;
-   rootHitbox.box.position.y += translation.y;
-   rootHitbox.previousPosition.x += translation.x;
-   rootHitbox.previousPosition.y += translation.y;
+   rootHitbox.box.posX += translation.x;
+   rootHitbox.box.posY += translation.y;
+   rootHitbox.previousPosX += translation.x;
+   rootHitbox.previousPosY += translation.y;
 
    const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
    transformComponent.isDirty = true;
@@ -142,10 +139,10 @@ export function translateHitbox(hitbox: Hitbox, translation: Point): void {
 
 export function teleportHitbox(hitbox: Hitbox, pos: Point): void {
    const rootHitbox = getRootHitbox(hitbox);
-   rootHitbox.box.position.x = pos.x;
-   rootHitbox.box.position.y = pos.y;
-   rootHitbox.previousPosition.x = pos.x;
-   rootHitbox.previousPosition.y = pos.y;
+   rootHitbox.box.posX = pos.x;
+   rootHitbox.box.posY = pos.y;
+   rootHitbox.previousPosX = pos.x;
+   rootHitbox.previousPosY = pos.y;
 
    const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
    transformComponent.isDirty = true;
@@ -214,21 +211,21 @@ export function applyAbsoluteKnockback(hitbox: Hitbox, knockback: Point): void {
    }
 }
 
-export function applyAcceleration(hitbox: Hitbox, acc: Point): void {
+export function applyAcceleration(hitbox: Hitbox, accelX: number, accelY: number): void {
    const rootHitbox = getRootHitbox(hitbox);
    if (!rootHitbox.isStatic) {
-      rootHitbox.acceleration.x += acc.x;
-      rootHitbox.acceleration.y += acc.y;
+      rootHitbox.accelX += accelX;
+      rootHitbox.accelY += accelY;
    }
 }
 
-export function applyForce(hitbox: Hitbox, force: Point): void {
+export function applyForce(hitbox: Hitbox, forceX: number, forceY: number): void {
    const rootHitbox = getRootHitbox(hitbox);
    if (!rootHitbox.isStatic) {
       const hitboxConnectedMass = getHitboxTotalMassIncludingChildren(rootHitbox);
       if (hitboxConnectedMass !== 0) {
-         rootHitbox.acceleration.x += force.x / hitboxConnectedMass;
-         rootHitbox.acceleration.y += force.y / hitboxConnectedMass;
+         rootHitbox.accelX += forceX / hitboxConnectedMass;
+         rootHitbox.accelY += forceY / hitboxConnectedMass;
       }
    }
 }
@@ -260,7 +257,7 @@ export function applyAccelerationFromGround(hitbox: Hitbox, acceleration: Point)
 
    const currentVelocity = getHitboxVelocity(hitbox);
 
-   applyAcceleration(hitbox, new Point((desiredVelocityX - currentVelocity.x) * transformComponent.traction, (desiredVelocityY - currentVelocity.y) * transformComponent.traction));
+   applyAcceleration(hitbox, (desiredVelocityX - currentVelocity.x) * transformComponent.traction, (desiredVelocityY - currentVelocity.y) * transformComponent.traction);
 }
 
 /** Makes the hitboxes' angle be that as specified, by only changing its relative angle */
@@ -341,8 +338,8 @@ export function turnHitboxToAngle(hitbox: Hitbox, idealAngle: number, turnSpeed:
 }
 
 export function getHitboxTile(hitbox: Hitbox): TileIndex {
-   const tileX = Math.floor(hitbox.box.position.x / Settings.TILE_SIZE);
-   const tileY = Math.floor(hitbox.box.position.y / Settings.TILE_SIZE);
+   const tileX = Math.floor(hitbox.box.posX / Settings.TILE_SIZE);
+   const tileY = Math.floor(hitbox.box.posY / Settings.TILE_SIZE);
    return getTileIndexIncludingEdges(tileX, tileY);
 }
 

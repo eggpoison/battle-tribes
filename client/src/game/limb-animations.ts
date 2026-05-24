@@ -56,14 +56,14 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
    const hitbox = transformComponent.hitboxes[0];
 
    for (const itemTypeString of Object.keys(recipe.ingredients)) {
-      const ingredientType = Number(itemTypeString) as ItemType;
+      const ingredientType: ItemType = Number(itemTypeString);
 
       if (ingredientType === ItemType.wood && Math.random() < 1 * Settings.DT_S) {
          const pos = generateRandomLimbPosition();
 
          rotatePointAroundOrigin(pos.x, pos.y, hitbox.box.angle);
-         const x = hitbox.box.position.x + _point.x;
-         const y = hitbox.box.position.y + _point.y;
+         const x = hitbox.box.posX + _point.x;
+         const y = hitbox.box.posY + _point.y;
 
          createSawdustCloud(x, y);
       }
@@ -78,8 +78,8 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
          const pos = generateRandomLimbPosition();
 
          rotatePointAroundOrigin(pos.x, pos.y, hitbox.box.angle);
-         const x = hitbox.box.position.x + _point.x;
-         const y = hitbox.box.position.y + _point.y;
+         const x = hitbox.box.posX + _point.x;
+         const y = hitbox.box.posY + _point.y;
 
          createColouredParticle(x, y, randFloat(30, 50), colour[0], colour[1], colour[2]);
       }
@@ -136,8 +136,8 @@ export function createMedicineAnimationParticles(entity: Entity, limbIdx: number
       const pos = generateRandomLimbPosition();
       
       rotatePointAroundOrigin(pos.x, pos.y, hitbox.box.angle);
-      const x = hitbox.box.position.x + _point.x;
-      const y = hitbox.box.position.y + _point.y;
+      const x = hitbox.box.posX + _point.x;
+      const y = hitbox.box.posY + _point.y;
       
       createColouredParticle(x, y, randFloat(20, 35), colour[0], colour[1], colour[2]);
    }

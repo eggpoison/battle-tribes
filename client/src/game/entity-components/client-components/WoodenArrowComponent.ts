@@ -50,7 +50,7 @@ class _WoodenArrowComponentArray extends _ClientComponentArray<WoodenArrowCompon
       getHitboxVelocity(hitbox);
       const velocity = _point;
       for (let i = 0; i < 6; i++) {
-         createArrowDestroyParticle(hitbox.box.position.x, hitbox.box.position.y, velocity.x, velocity.y);
+         createArrowDestroyParticle(hitbox.box.posX, hitbox.box.posY, velocity.x, velocity.y);
       }
    }
 }

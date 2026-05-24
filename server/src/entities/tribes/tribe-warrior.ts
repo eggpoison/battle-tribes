@@ -32,7 +32,7 @@ const generateScars = (): ReadonlyArray<ScarInfo> => {
       numScars++;
    }
 
-   const scars = new Array<ScarInfo>();
+   const scars: Array<ScarInfo> = [];
    for (let i = 0; i < numScars; i++) {
       const offsetDirection = randAngle();
       const offsetMagnitude = 20 * Math.random();
@@ -60,12 +60,12 @@ const getHitboxRadius = (tribeType: TribeType): number => {
    }
 }
 
-export function createTribeWarriorConfig(position: Point, rotation: number, tribe: Tribe): EntityConfig {
+export function createTribeWarriorConfig(x: number, y: number, angle: number, tribe: Tribe): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.traction = 1.4;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, getHitboxRadius(tribe.tribeType)), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, getHitboxRadius(tribe.tribeType)), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];

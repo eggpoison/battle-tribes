@@ -132,7 +132,7 @@ const addSnappedWallCandidates = (buildingLayer: TribeBuildingLayer, placeCandid
 }
 
 export function getWallCandidates(tribe: Tribe): ReadonlyArray<BuildingCandidate> {
-   const candidates = new Array<BuildingCandidate>();
+   const candidates: Array<BuildingCandidate> = [];
 
    for (const buildingLayer of tribe.buildingLayers) {
       addGridAlignedWallCandidates(buildingLayer, candidates);

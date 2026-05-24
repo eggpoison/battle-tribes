@@ -1,4 +1,4 @@
-import { BuildingMaterial, EntityType, StatusEffect, Point, RectangularBox, HitboxCollisionType, DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared";
+import { BuildingMaterial, EntityType, StatusEffect, RectangularBox, HitboxCollisionType, DEFAULT_COLLISION_MASK, CollisionBit } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -13,10 +13,10 @@ import { StructureConnection } from "../../structure-placement.js";
 
 const HEALTHS = [25, 75];
 
-export function createWallConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualBuilding: VirtualStructure | null): EntityConfig {
+export function createWallConfig(x: number, y: number, rotation: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualBuilding: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const box = new RectangularBox(position, new Point(0, 0), rotation, 64, 64);
+   const box = new RectangularBox(x, y, 0, 0, rotation, 64, 64);
    const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);

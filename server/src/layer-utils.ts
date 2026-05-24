@@ -1,14 +1,14 @@
-import { boxIsWithinRange, Entity, Settings, Point, positionIsInWorld } from "battletribes-shared";
+import { boxIsWithinRange, Entity, Settings, Point, positionIsInWorld, distance } from "battletribes-shared";
 import { TransformComponentArray } from "./components/TransformComponent.js";
 import Layer from "./Layer.js";
 
-export function getDistanceToClosestEntity(layer: Layer, position: Point): number {
+export function getDistanceToClosestEntity(layer: Layer, x: number, y: number): number {
    let minDistance = 2000;
 
-   const minChunkX = Math.max(Math.min(Math.floor((position.x - 2000) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor((position.x + 2000) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor((position.y - 2000) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor((position.y + 2000) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const minChunkX = Math.max(Math.min(Math.floor((x - 2000) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const maxChunkX = Math.max(Math.min(Math.floor((x + 2000) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const minChunkY = Math.max(Math.min(Math.floor((y - 2000) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const maxChunkY = Math.max(Math.min(Math.floor((y + 2000) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
 
    const checkedEntities = new Set<Entity>();
    
@@ -22,9 +22,9 @@ export function getDistanceToClosestEntity(layer: Layer, position: Point): numbe
             // @HACK
             const hitbox = transformComponent.hitboxes[0];
             
-            const distance = position.distanceTo(hitbox.box.position);
-            if (distance <= minDistance) {
-               minDistance = distance;
+            const dist = distance(x, y, hitbox.box.posX, hitbox.box.posY);
+            if (dist <= minDistance) {
+               minDistance = dist;
             }
 
             checkedEntities.add(entity);
@@ -40,19 +40,16 @@ export function getEntitiesAtPosition(layer: Layer, x: number, y: number): Array
       throw new Error("Position isn't in the board");
    }
    
-   // @Speed: Garbage collection
-   const testPosition = new Point(x, y);
-
    const chunkX = Math.floor(x / Settings.CHUNK_UNITS);
    const chunkY = Math.floor(y / Settings.CHUNK_UNITS);
 
-   const entities = new Array<Entity>();
+   const entities: Array<Entity> = [];
    
    const chunk = layer.getChunk(chunkX, chunkY);
    for (const entity of chunk.entities) {
       const transformComponent = TransformComponentArray.getComponent(entity);
       for (const hitbox of transformComponent.hitboxes) {
-         if (boxIsWithinRange(hitbox.box, testPosition, 1)) {
+         if (boxIsWithinRange(hitbox.box, x, y, 1)) {
             entities.push(entity);
             break;
          }

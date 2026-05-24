@@ -53,8 +53,8 @@ function preRemove(entity: Entity): void {
    
    const layer = getEntityLayer(entity);
    if (iceSpikesPlantedComponent.plantGrowthTicks === Vars.GROWTH_TIME_TICKS) {
-      createIceShardExplosion(layer, hitbox.box.position.x, hitbox.box.position.y, randInt(2, 3));
+      createIceShardExplosion(layer, hitbox.box.posX, hitbox.box.posY, randInt(2, 3));
    } else if (iceSpikesPlantedComponent.plantGrowthTicks >= Vars.GROWTH_TIME_TICKS * 0.5) {
-      createIceShardExplosion(layer, hitbox.box.position.x, hitbox.box.position.y, randInt(1, 2));
+      createIceShardExplosion(layer, hitbox.box.posX, hitbox.box.posY, randInt(1, 2));
    }
 }

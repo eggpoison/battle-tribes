@@ -6,10 +6,10 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { TukmokTailClubComponent } from "../../components/TukmokTailClubComponent.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createTukmokTailClubConfig(position: Point, angle: number, offset: Point): EntityConfig {
+export function createTukmokTailClubConfig(x: number, y: number, angle: number, offsetX: number, offsetY: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, offset, angle, 18), 0.28, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, offsetX, offsetY, angle, 18), 0.28, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(75);

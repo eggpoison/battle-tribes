@@ -3,7 +3,7 @@ import Layer from "./Layer.js";
 import { getEntityType } from "./world.js";
 import { layers } from "./layers.js";
 
-const entityCounts = new Array<EntityType>();
+const entityCounts: Array<EntityType> = [];
 for (let i = 0; i < NUM_ENTITY_TYPES; i++) {
    entityCounts.push(0);
 }

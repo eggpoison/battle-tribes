@@ -38,10 +38,10 @@ const createTileCensus = (): TileCensus => {
 }
 
 const createNodeGroupIDs = (): Array<Array<number>> => {
-   const nodeGroupIDs = new Array<Array<number>>();
+   const nodeGroupIDs: Array<Array<number>> = [];
 
    for (let i = 0; i < PathfindingSettings.NODES_IN_WORLD_WIDTH * PathfindingSettings.NODES_IN_WORLD_WIDTH; i++) {
-      const groupIDs = new Array<number>();
+      const groupIDs: Array<number> = [];
       nodeGroupIDs.push(groupIDs);
    }
 
@@ -72,10 +72,9 @@ const createNodeGroupIDs = (): Array<Array<number>> => {
 }
 
 const createInitialChunksArray = (): Array<Chunk> => {
-   const chunks = new Array<Chunk>();
+   const chunks: Array<Chunk> = [];
    for (let i = 0; i < Settings.WORLD_SIZE_CHUNKS * Settings.WORLD_SIZE_CHUNKS; i++) {
-      const chunk = new Chunk();
-      chunks.push(chunk);
+      chunks.push(new Chunk());
    }
    return chunks;
 }
@@ -84,10 +83,9 @@ const createCollisionGroupChunks = (): Record<CollisionGroup, ReadonlyArray<Coll
    const collisionGroupChunks: Partial<Record<CollisionGroup, ReadonlyArray<CollisionChunk>>>= {};
 
    for (let collisionGroup: CollisionGroup = 0; collisionGroup < CollisionGroup._LENGTH_; collisionGroup++) {
-      const chunks = new Array<CollisionChunk>();
+      const chunks: Array<CollisionChunk> = [];
       for (let i = 0; i < Settings.WORLD_SIZE_CHUNKS * Settings.WORLD_SIZE_CHUNKS; i++) {
-         const chunk = new CollisionChunk();
-         chunks.push(chunk);
+         chunks.push(new CollisionChunk());
       }
       collisionGroupChunks[collisionGroup] = chunks;
    }
@@ -113,10 +111,10 @@ export default class Layer {
 
    public readonly wallSubtileDamageTakenMap = new Map<number, number>();
 
-   public readonly waterRocks = new Array<WaterRockData>();
+   public readonly waterRocks: Array<WaterRockData> = [];
 
    public tileUpdateCoordinates = new Set<number>();
-   public wallSubtileUpdates = new Array<WallSubtileUpdate>();
+   public wallSubtileUpdates: Array<WallSubtileUpdate> = [];
 
    /** Stores all entities collectively in each chunk */
    public chunks = createInitialChunksArray();
@@ -129,7 +127,7 @@ export default class Layer {
 
    public readonly nodeGroupIDs = createNodeGroupIDs();
 
-   public readonly localBiomes = new Array<LocalBiome>();
+   public readonly localBiomes: Array<LocalBiome> = [];
    public readonly tileToLocalBiomeRecord: Record<TileIndex, LocalBiome> = {};
 
    /** For each light level node, stores how much each light contributes to the light level */
@@ -462,7 +460,7 @@ export function getTilesInRange(x: number, y: number, range: number): ReadonlyAr
    const minTileY = Math.floor((y - range) / Settings.TILE_SIZE);
    const maxTileY = Math.floor((y + range) / Settings.TILE_SIZE);
 
-   const tiles = new Array<TileIndex>();
+   const tiles: Array<TileIndex> = [];
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          if (tileIsInRange(x, y, range, tileX, tileY)) {

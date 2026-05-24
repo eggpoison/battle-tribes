@@ -1,4 +1,4 @@
-import { createAbsolutePivotPoint, createNormalisedPivotPoint, PivotPoint, HitboxCollisionType, HitboxFlag, CircularBox, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, ItemType, Point, randInt, getTamingSkill, TamingSkillID, Biome } from "battletribes-shared";
+import { createAbsolutePivotPoint, createNormalisedPivotPoint, PivotPoint, HitboxCollisionType, HitboxFlag, CircularBox, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, ItemType, Point, randInt, getTamingSkill, TamingSkillID, Biome, PivotPointType } from "battletribes-shared";
 import { accelerateEntityToPosition, moveEntityToPosition, turnToPosition } from "../../ai-shared.js";
 import { OkrenCombatAI } from "../../ai/OkrenCombatAI.js";
 import { SandBallingAI } from "../../ai/SandBallingAI.js";
@@ -107,16 +107,16 @@ function wanderPositionIsValid(_entity: Entity, layer: Layer, x: number, y: numb
    return biome === Biome.desert || biome === Biome.desertOasis;
 }
 
-const moveFunc = (okren: Entity, pos: Point, acceleration: number): void => {
-   accelerateEntityToPosition(okren, pos, acceleration);
+const moveFunc = (okren: Entity, x: number, y: number, acceleration: number): void => {
+   accelerateEntityToPosition(okren, x, y, acceleration);
 }
 
-const turnFunc = (okren: Entity, pos: Point, turnSpeed: number, turnDamping: number): void => {
-   turnToPosition(okren, pos, turnSpeed, turnDamping);
+const turnFunc = (okren: Entity, x: number, y: number, turnSpeed: number, turnDamping: number): void => {
+   turnToPosition(okren, x, y, turnSpeed, turnDamping);
 }
 
 // @Temporary: remove size parameter
-export function createOkrenConfig(position: Point, angle: number, size: OkrenAgeStage): EntityConfig {
+export function createOkrenConfig(x: number, y: number, angle: number, size: OkrenAgeStage): EntityConfig {
    const transformComponent = new TransformComponent();
    
    // Flesh body hitbox
@@ -128,10 +128,10 @@ export function createOkrenConfig(position: Point, angle: number, size: OkrenAge
       case OkrenAgeStage.elder:    bodyRadius = 72; break;
       case OkrenAgeStage.ancient:  bodyRadius = 80; break;
    }
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, bodyRadius), 5, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_BODY]);
+   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, bodyRadius), 5, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_BODY]);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
 
-   const childConfigs = new Array<ChildConfigAttachInfo>();
+   const childConfigs: Array<ChildConfigAttachInfo> = [];
 
    for (let i = 0; i < 2; i++) {
       const sideIsFlipped = i === 1;
@@ -153,9 +153,7 @@ export function createOkrenConfig(position: Point, angle: number, size: OkrenAge
          case OkrenAgeStage.elder:    eyeRadius = 18; break;
          case OkrenAgeStage.ancient:  eyeRadius = 18; break;
       }
-      const eyePosition = bodyHitbox.box.position.copy();
-      eyePosition.add(eyeOffset);
-      const eyeHitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(eyePosition, eyeOffset, 0, eyeRadius), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_EYE]);
+      const eyeHitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(bodyHitbox.box.posX + eyeOffset.x, bodyHitbox.box.posY + eyeOffset.y, eyeOffset.x, eyeOffset.y, 0, eyeRadius), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_EYE]);
       eyeHitbox.box.flipX = sideIsFlipped;
       // @Hack
       eyeHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
@@ -169,16 +167,16 @@ export function createOkrenConfig(position: Point, angle: number, size: OkrenAge
          case OkrenAgeStage.elder:    mandibleOffset = new Point(22, 98);  break;
          case OkrenAgeStage.ancient:  mandibleOffset = new Point(22, 106); break;
       }
-      const mandiblePosition = bodyHitbox.box.position.copy();
-      mandiblePosition.add(mandibleOffset);
-      const mandibleHitbox = new Hitbox(transformComponent, bodyHitbox, true, new RectangularBox(mandiblePosition, mandibleOffset, Math.PI * 0.1, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_MANDIBLE]);
+      const mandibleHitbox = new Hitbox(transformComponent, bodyHitbox, true, new RectangularBox(bodyHitbox.box.posX + mandibleOffset.x, bodyHitbox.box.posY + mandibleOffset.y, mandibleOffset.x, mandibleOffset.y, Math.PI * 0.1, 16, 28), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_MANDIBLE]);
       mandibleHitbox.box.flipX = sideIsFlipped;
       // @Hack
       mandibleHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
-      mandibleHitbox.box.pivot = createNormalisedPivotPoint(-0.5, -0.5);
+      mandibleHitbox.box.pivotX = -0.5;
+      mandibleHitbox.box.pivotY = -0.5;
+      mandibleHitbox.box.pivotType = PivotPointType.normalised;
       addHitboxToTransformComponent(transformComponent, mandibleHitbox);
 
-      const clawConfig = createOkrenClawConfig(bodyHitbox.box.position.copy(), 0, size, OkrenClawGrowthStage.FOUR, sideIsFlipped);
+      const clawConfig = createOkrenClawConfig(bodyHitbox.box.posX, bodyHitbox.box.posY, 0, size, OkrenClawGrowthStage.FOUR, sideIsFlipped);
       childConfigs.push({
          entityConfig: clawConfig,
          attachedHitbox: getConfigTransformComponent(clawConfig.components).hitboxes[0],

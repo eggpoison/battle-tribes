@@ -14,11 +14,10 @@ export function createHeldItemConfig(limbHitbox: Hitbox, itemType: ItemType): En
    const damageBoxInfo = heldItemAttackInfo.heldItemDamageBoxInfo;
 
    const offset = new Point(damageBoxInfo.offsetX, damageBoxInfo.offsetY);
-   const heldItemPosition = limbHitbox.box.position.copy();
-   heldItemPosition.add(rotatePoint(offset, limbHitbox.box.angle));
+   const rotatedOffset = rotatePoint(offset, limbHitbox.box.angle);
 
    // @HACK SQUEAM: the collision mask, so that the player can mine berries for a horse archer shot
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(heldItemPosition, offset, damageBoxInfo.rotation, damageBoxInfo.width, damageBoxInfo.height), 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(limbHitbox.box.posX + rotatedOffset.x, limbHitbox.box.posY + rotatedOffset.y, offset.x, offset.y, damageBoxInfo.rotation, damageBoxInfo.width, damageBoxInfo.height), 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const heldItemComponent = new HeldItemComponent(itemType);

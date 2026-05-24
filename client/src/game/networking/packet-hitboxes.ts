@@ -1,4 +1,4 @@
-import { Point, PacketReader, Box, CircularBox, RectangularBox, PivotPointType, assert, Entity, boxIsCircular, assertBoxIsCircular, assertBoxIsRectangular, updateSideAxes, HitboxCollisionType, HitboxFlag, cloneBox } from "webgl-test-shared";
+import { PacketReader, Box, CircularBox, RectangularBox, PivotPointType, assert, Entity, boxIsCircular, assertBoxIsCircular, assertBoxIsRectangular, updateSideAxes, HitboxCollisionType, HitboxFlag, cloneBox } from "webgl-test-shared";
 import { currentSnapshot } from "../networking/snapshots";
 import { Hitbox, HitboxTether, createHitbox, getHitboxByLocalID } from "../hitboxes";
 import { findEntityHitbox } from "../entity-components/server-components/TransformComponent";
@@ -11,7 +11,7 @@ const readCircularBoxFromData = (reader: PacketReader): CircularBox => {
    const angle = reader.readNumber();
    const offsetX = reader.readNumber();
    const offsetY = reader.readNumber();
-   const pivotType = reader.readNumber() as PivotPointType;
+   const pivotType: PivotPointType = reader.readNumber();
    const pivotPosX = reader.readNumber();
    const pivotPosY = reader.readNumber();
    const scale = reader.readNumber();
@@ -19,12 +19,11 @@ const readCircularBoxFromData = (reader: PacketReader): CircularBox => {
 
    const radius = reader.readNumber();
 
-   const box = new CircularBox(new Point(x, y), new Point(offsetX, offsetY), relativeAngle, radius);
+   const box = new CircularBox(x, y, offsetX, offsetY, relativeAngle, radius);
    box.angle = angle;
-   box.pivot = {
-      type: pivotType,
-      pos: new Point(pivotPosX, pivotPosY)
-   };
+   box.pivotX = pivotPosX;
+   box.pivotY = pivotPosY;
+   box.pivotType = pivotType;
    box.scale = scale;
    box.flipX = flipX;
    return box;
@@ -41,7 +40,7 @@ const readRectangularBoxFromData = (reader: PacketReader): RectangularBox => {
    const angle = reader.readNumber();
    const offsetX = reader.readNumber();
    const offsetY = reader.readNumber();
-   const pivotType = reader.readNumber() as PivotPointType;
+   const pivotType: PivotPointType = reader.readNumber();
    const pivotPosX = reader.readNumber();
    const pivotPosY = reader.readNumber();
    const scale = reader.readNumber();
@@ -50,12 +49,11 @@ const readRectangularBoxFromData = (reader: PacketReader): RectangularBox => {
    const width = reader.readNumber();
    const height = reader.readNumber();
 
-   const box = new RectangularBox(new Point(x, y), new Point(offsetX, offsetY), relativeAngle, width, height);
+   const box = new RectangularBox(x, y, offsetX, offsetY, relativeAngle, width, height);
    box.angle = angle;
-   box.pivot = {
-      type: pivotType,
-      pos: new Point(pivotPosX, pivotPosY)
-   };
+   box.pivotX = pivotPosX;
+   box.pivotY = pivotPosY;
+   box.pivotType = pivotType;
    box.scale = scale;
    box.flipX = flipX;
    return box;
@@ -84,8 +82,10 @@ export function padBoxData(reader: PacketReader): void {
 export function readHitboxFromData(reader: PacketReader, localID: number, entityHitboxes: ReadonlyArray<Hitbox>): Hitbox {
    const box = readBoxFromData(reader);
 
-   const previousPosition = new Point(reader.readNumber(), reader.readNumber());
-   const acceleration = new Point(reader.readNumber(), reader.readNumber());
+   const previousPosX = reader.readNumber();
+   const previousPosY = reader.readNumber();
+   const accelX = reader.readNumber();
+   const accelY = reader.readNumber();
 
    const tethers: Array<HitboxTether> = [];
    const numTethers = reader.readNumber();
@@ -107,7 +107,7 @@ export function readHitboxFromData(reader: PacketReader, localID: number, entity
    const angularAcceleration = reader.readNumber();
    
    const mass = reader.readNumber();
-   const collisionType = reader.readNumber() as HitboxCollisionType;
+   const collisionType: HitboxCollisionType = reader.readNumber();
    const collisionBit = reader.readNumber();
    const collisionMask = reader.readNumber();
    
@@ -146,38 +146,38 @@ export function readHitboxFromData(reader: PacketReader, localID: number, entity
    const isPartOfParent = reader.readBool();
    const isStatic = reader.readBool();
 
-   return createHitbox(localID, entity, rootEntity, parentHitbox, children, isPartOfParent, isStatic, box, previousPosition, acceleration, tethers, previousRelativeAngle, angularAcceleration, mass, collisionType, collisionBit, collisionMask, flags);
+   return createHitbox(localID, entity, rootEntity, parentHitbox, children, isPartOfParent, isStatic, box, previousPosX, previousPosY, accelX, accelY, tethers, previousRelativeAngle, angularAcceleration, mass, collisionType, collisionBit, collisionMask, flags);
 }
 
 export function createHitboxFromData(data: Hitbox): Hitbox {
-   return createHitbox(data.localID, data.entity, data.rootEntity, data.parent, data.children, data.isPartOfParent, data.isStatic, cloneBox(data.box), data.previousPosition, data.acceleration, data.tethers, data.previousRelativeAngle, data.angularAcceleration, data.mass, data.collisionType, data.collisionBit, data.collisionMask, data.flags);
+   return createHitbox(data.localID, data.entity, data.rootEntity, data.parent, data.children, data.isPartOfParent, data.isStatic, cloneBox(data.box), data.previousPosX, data.previousPosY, data.accelX, data.accelY, data.tethers, data.previousRelativeAngle, data.angularAcceleration, data.mass, data.collisionType, data.collisionBit, data.collisionMask, data.flags);
 }
 
 const updateCircularBoxFromData = (box: CircularBox, data: CircularBox): void => {
-   box.position.x = data.position.x;
-   box.position.y = data.position.y;
+   box.posX = data.posX;
+   box.posY = data.posY;
    box.relativeAngle = data.relativeAngle;
    box.angle = data.angle;
-   box.offset.x = data.offset.x;
-   box.offset.y = data.offset.y;
-   box.pivot.type = data.pivot.type;
-   box.pivot.pos.x = data.pivot.pos.x;
-   box.pivot.pos.y = data.pivot.pos.y;
+   box.offsetX = data.offsetX;
+   box.offsetY = data.offsetY;
+   box.pivotType = data.pivotType;
+   box.pivotX = data.pivotX;
+   box.pivotY = data.pivotY;
    box.scale = data.scale;
    box.flipX = data.flipX;
    box.radius = data.radius;
 }
 
 const updateRectangularBoxFromData = (box: RectangularBox, data: RectangularBox): void => {
-   box.position.x = data.position.x;
-   box.position.y = data.position.y;
+   box.posX = data.posX;
+   box.posY = data.posY;
    box.relativeAngle = data.relativeAngle;
    box.angle = data.angle;
-   box.offset.x = data.offset.x;
-   box.offset.y = data.offset.y;
-   box.pivot.type = data.pivot.type;
-   box.pivot.pos.x = data.pivot.pos.x;
-   box.pivot.pos.y = data.pivot.pos.y;
+   box.offsetX = data.offsetX;
+   box.offsetY = data.offsetY;
+   box.pivotType = data.pivotType;
+   box.pivotX = data.pivotX;
+   box.pivotY = data.pivotY;
    box.scale = data.scale;
    box.flipX = data.flipX;
    box.width = data.width;
@@ -200,8 +200,10 @@ export function updateHitboxFromData(hitbox: Hitbox, data: Hitbox): void {
    
    updateBoxFromData(hitbox.box, data.box);
 
-   hitbox.previousPosition.set(data.previousPosition);
-   hitbox.acceleration.set(data.acceleration);
+   hitbox.previousPosX = data.previousPosX;
+   hitbox.previousPosY = data.previousPosY;
+   hitbox.accelX = data.accelX;
+   hitbox.accelY = data.accelY;
 
    // Remove all previous tethers and add new ones
    // @Speed

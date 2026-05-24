@@ -15,7 +15,7 @@ export class TotemBannerComponent {
 // @Memory: useless after
 const NUM_TOTEM_POSITIONS = [4, 6, 8];
 
-const TRIBE_TOTEM_POSITIONS = new Array<TotemBannerPosition>();
+const TRIBE_TOTEM_POSITIONS: Array<TotemBannerPosition> = [];
 for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
    const numPositions = NUM_TOTEM_POSITIONS[layerIdx];
    for (let j = 0; j < numPositions; j++) {

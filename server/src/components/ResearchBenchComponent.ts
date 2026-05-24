@@ -116,7 +116,7 @@ export function continueResearching(researchBench: Entity, researcher: Entity, t
       const researcherHitbox = researcherTransformComponent.hitboxes[0];
 
       const tribeComponent = TribeComponentArray.getComponent(researchBench);
-      tribeComponent.tribe.studyTech(tech, researcherHitbox.box.position.x, researcherHitbox.box.position.y, amount);
+      tribeComponent.tribe.studyTech(tech, researcherHitbox.box.posX, researcherHitbox.box.posY, amount);
       
       researchBenchComponent.orbCompleteProgressTicks = 0;
 

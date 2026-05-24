@@ -1,4 +1,4 @@
-import { EntityType, LightLevelVar, Settings, assert, distance, Point } from "battletribes-shared";
+import { EntityType, LightLevelVar, Settings, assert, distance } from "battletribes-shared";
 import { createSlurbTorchConfig } from "../../entities/structures/slurb-torch.js";
 import Layer from "../../Layer.js";
 import { calculateLightRangeNodes, getLightIntensityAtNode, getLightLevelNode } from "../../lights.js";
@@ -26,7 +26,7 @@ export function generateLightPosition(tribe: Tribe, layer: Layer, x: number, y: 
    const requiredLightLevel = Vars.MIN_PLACEABLE_LIGHT_LEVEL - startingLightLevel;
 
    // @Supahack @Speed !
-   const slurbTorchConfig = createSlurbTorchConfig(new Point(0, 0), 0, tribe, [], null);
+   const slurbTorchConfig = createSlurbTorchConfig(0, 0, 0, tribe, [], null);
    const slurbTorchLight = slurbTorchConfig.lights[0].light;
    const range = calculateLightRangeNodes(slurbTorchLight.strength, slurbTorchLight.intensity, slurbTorchLight.radius);
 
@@ -37,7 +37,7 @@ export function generateLightPosition(tribe: Tribe, layer: Layer, x: number, y: 
    const minNodeY = Math.max(nodeY - range, -Settings.EDGE_GENERATION_DISTANCE * 4);
    const maxNodeY = Math.min(nodeY + range, (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
 
-   const validCandidates = new Array<BuildingCandidate>();
+   const validCandidates: Array<BuildingCandidate> = [];
 
    for (let currentNodeX = minNodeX; currentNodeX <= maxNodeX; currentNodeX++) {
       for (let currentNodeY = minNodeY; currentNodeY <= maxNodeY; currentNodeY++) {
@@ -68,5 +68,5 @@ export function generateLightPosition(tribe: Tribe, layer: Layer, x: number, y: 
    assert(validCandidates.length > 0);
    const candidate = validCandidates[Math.floor(Math.random() * validCandidates.length)];
    // @Copynpaste from findIdealWallPlacePosition
-   return createVirtualStructure(candidate.buildingLayer, candidate.position, candidate.rotation, EntityType.slurbTorch);
+   return createVirtualStructure(candidate.buildingLayer, candidate.position.x, candidate.position.y, candidate.rotation, EntityType.slurbTorch);
 }

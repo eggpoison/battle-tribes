@@ -1,11 +1,11 @@
-import { Entity } from "battletribes-shared";
+import { distance, Entity } from "battletribes-shared";
 import { moveEntityToEntity } from "../ai-shared.js";
 import { AIHelperComponent, AIHelperComponentArray } from "../components/AIHelperComponent.js";
 import { GuardianComponent, GuardianComponentArray } from "../components/GuardianComponent.js";
 import { GuardianSpikyBallComponentArray } from "../components/GuardianSpikyBallComponent.js";
 import { HealthComponentArray } from "../components/HealthComponent.js";
 import { TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
-import { getHitboxTile, Hitbox } from "../hitboxes.js";
+import { getHitboxTile } from "../hitboxes.js";
 
 const entityIsTargetted = (guardianComponent: GuardianComponent, target: Entity, targetTransformComponent: TransformComponent): boolean => {
    if (!HealthComponentArray.hasComponent(target)) {
@@ -40,7 +40,7 @@ const getTarget = (transformComponent: TransformComponent, guardianComponent: Gu
       const entityTransformComponent = TransformComponentArray.getComponent(entity);
       const entityHitbox = entityTransformComponent.hitboxes[0];
       
-      const dist = hitbox.box.position.distanceTo(entityHitbox.box.position);
+      const dist = distance(hitbox.box.posX, hitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
       if (dist < minDist && entityIsTargetted(guardianComponent, entity, entityTransformComponent)) {
          minDist = dist;
          target = entity;

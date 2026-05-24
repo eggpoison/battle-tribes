@@ -66,8 +66,8 @@ class _SpitPoisonAreaComponentArray extends _ServerComponentArray<SpitPoisonArea
          // Calculate spawn position
          const offsetMagnitude = range * Math.random();
          const moveDirection = randAngle();
-         const spawnPositionX = hitbox.box.position.x + offsetMagnitude * Math.sin(moveDirection);
-         const spawnPositionY = hitbox.box.position.y + offsetMagnitude * Math.cos(moveDirection);
+         const spawnPositionX = hitbox.box.posX + offsetMagnitude * Math.sin(moveDirection);
+         const spawnPositionY = hitbox.box.posY + offsetMagnitude * Math.cos(moveDirection);
 
          createPoisonBubble(spawnPositionX, spawnPositionY, 1);
       }
@@ -78,8 +78,8 @@ class _SpitPoisonAreaComponentArray extends _ServerComponentArray<SpitPoisonArea
 
       const offsetMagnitude = range * Math.random();
       const offsetDirection = randAngle();
-      const x = hitbox.box.position.x + offsetMagnitude * Math.sin(offsetDirection);
-      const y = hitbox.box.position.y + offsetMagnitude * Math.cos(offsetDirection);
+      const x = hitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+      const y = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
 
       createAcidParticle(x, y);
    }

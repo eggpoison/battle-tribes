@@ -1,4 +1,4 @@
-import { Point, Entity, ServerComponentType } from "webgl-test-shared";
+import { Point, Entity, ServerComponentType, angle } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
@@ -55,15 +55,15 @@ class _EmbrasureComponentArray extends _ClientComponentArray<EmbrasureComponent,
       playSoundOnHitbox("wooden-wall-hit.mp3", 0.3, 1, entity, hitbox, false);
 
       for (let i = 0; i < 4; i++) {
-         createLightWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 20);
+         createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 20);
       }
 
       for (let i = 0; i < 7; i++) {
-         let offsetDirection = hitbox.box.position.angleTo(hitPosition);
+         let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = hitbox.box.position.x + 20 * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.position.y + 20 * Math.cos(offsetDirection);
+         const spawnPositionX = hitbox.box.posX + 20 * Math.sin(offsetDirection);
+         const spawnPositionY = hitbox.box.posY + 20 * Math.cos(offsetDirection);
          createLightWoodSpeckParticle(spawnPositionX, spawnPositionY, 5);
       }
    }
@@ -75,11 +75,11 @@ class _EmbrasureComponentArray extends _ClientComponentArray<EmbrasureComponent,
       playSoundOnHitbox("wooden-wall-break.mp3", 0.4, 1, entity, hitbox, false);
 
       for (let i = 0; i < 7; i++) {
-         createLightWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 32 * Math.random());
+         createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32 * Math.random());
       }
 
       for (let i = 0; i < 3; i++) {
-         createWoodShardParticle(hitbox.box.position.x, hitbox.box.position.y, 32);
+         createWoodShardParticle(hitbox.box.posX, hitbox.box.posY, 32);
       }
    }
 }

@@ -31,7 +31,7 @@ function onTick(cocoon: Entity): void {
       const transformComponent = TransformComponentArray.getComponent(cocoon);
       const hitbox = transformComponent.hitboxes[0];
       
-      const krumblidConfig = createKrumblidConfig(hitbox.box.position.copy(), hitbox.box.angle);
+      const krumblidConfig = createKrumblidConfig(hitbox.box.posX, hitbox.box.posY, hitbox.box.angle);
       createEntity(krumblidConfig, getEntityLayer(cocoon), 0);
    } else if (stage !== dustfleaMorphCocoonComponent.stage) {
       dustfleaMorphCocoonComponent.stage = stage;

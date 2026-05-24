@@ -1,4 +1,4 @@
-import { HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randAngle } from "battletribes-shared";
+import { HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randAngle, distance, angle } from "battletribes-shared";
 import { createDustfleaConfig } from "../entities/desert/dustflea.js";
 import { Hitbox, applyAbsoluteKnockback } from "../hitboxes.js";
 import { createEntity, getEntityLayer, getEntityType } from "../world.js";
@@ -35,7 +35,7 @@ const getTarget = (inguYetu: Entity, aiHelperComponent: AIHelperComponent): Enti
 
       const entityTransformComponent = TransformComponentArray.getComponent(entity);
       const targetHitbox = entityTransformComponent.hitboxes[0];
-      const dist = hitbox.box.position.distanceTo(targetHitbox.box.position);
+      const dist = distance(hitbox.box.posX, hitbox.box.posY, targetHitbox.box.posX, targetHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          target = entity;
@@ -59,8 +59,8 @@ function onTick(inguYetu: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(inguYetu);
    for (const hitbox of transformComponent.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.YETUK_BODY_1) || hitbox.flags.includes(HitboxFlag.YETUK_BODY_2) || hitbox.flags.includes(HitboxFlag.YETUK_BODY_3) || hitbox.flags.includes(HitboxFlag.YETUK_BODY_4)) {
-         aiHelperComponent.moveFunc(inguYetu, targetHitbox.box.position, 650);
-         aiHelperComponent.turnFunc(inguYetu, targetHitbox.box.position, Math.PI, 1.5);
+         aiHelperComponent.moveFunc(inguYetu, targetHitbox.box.posX, targetHitbox.box.posY, 650);
+         aiHelperComponent.turnFunc(inguYetu, targetHitbox.box.posX, targetHitbox.box.posY, Math.PI, 1.5);
       }
    }
 
@@ -77,7 +77,7 @@ function onTick(inguYetu: Entity): void {
    for (const hitbox of transformComponent.hitboxes) {
       if (hitbox.flags.includes(HitboxFlag.YETUK_DUSTFLEA_DISPENSION_PORT)) {
          if (Math.random() < 1 * Settings.DT_S) {
-            const config = createDustfleaConfig(hitbox.box.position.copy(), randAngle());
+            const config = createDustfleaConfig(hitbox.box.posX, hitbox.box.posY, randAngle());
             createEntity(config, getEntityLayer(inguYetu), 0);
          }
       }
@@ -106,7 +106,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       return;
    }
 
-   const hitDir = hitbox.box.position.angleTo(collidingHitbox.box.position);
+   const hitDir = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, hitbox.entity, 2, DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
    applyAbsoluteKnockback(collidingHitbox, polarVec2(400, hitDir));

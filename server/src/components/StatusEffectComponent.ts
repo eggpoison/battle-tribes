@@ -5,9 +5,9 @@ import { getRandomPositionInEntity, TransformComponentArray } from "./TransformC
 import { Hitbox, hitboxIsInRiver } from "../hitboxes.js";
 
 export class StatusEffectComponent {
-   public readonly activeStatusEffectTypes = new Array<StatusEffect>();
-   public readonly activeStatusEffectTicksRemaining = new Array<number>();
-   public readonly activeStatusEffectTicksElapsed = new Array<number>();
+   public readonly activeStatusEffectTypes: Array<StatusEffect> = [];
+   public readonly activeStatusEffectTicksRemaining: Array<number> = [];
+   public readonly activeStatusEffectTicksElapsed: Array<number> = [];
 
    public readonly statusEffectImmunityBitset: number;
 

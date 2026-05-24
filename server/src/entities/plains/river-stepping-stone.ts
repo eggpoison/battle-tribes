@@ -10,7 +10,7 @@ export const enum RiverSteppingStoneSize {
    large
 }
 
-export function createRiverSteppingStoneConfig(position: Point, angle: number, size: RiverSteppingStoneSize): EntityConfig {
+export function createRiverSteppingStoneConfig(x: number, y: number, angle: number, size: RiverSteppingStoneSize): EntityConfig {
    const transformComponent = new TransformComponent();
 
    let radius: number;
@@ -33,7 +33,7 @@ export function createRiverSteppingStoneConfig(position: Point, angle: number, s
       }
    }
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, radius), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [flag]);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, radius), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [flag]);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const riverSteppingStoneComponent = new RiverSteppingStoneComponent();

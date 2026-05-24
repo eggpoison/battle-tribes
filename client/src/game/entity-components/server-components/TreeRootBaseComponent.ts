@@ -49,7 +49,7 @@ class _TreeRootBaseComponentArray extends _ServerComponentArray<TreeRootBaseComp
 
    public onHit(entity: Entity, hitbox: Hitbox): void {
       for (let i = 0; i < 6; i++) {
-         createWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 16 * Math.random());
+         createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
       }
 
       playSoundOnHitbox("tree-root-base-hit.mp3", randFloat(0.47, 0.53), randFloat(0.9, 1.1), entity, hitbox, false);
@@ -60,7 +60,7 @@ class _TreeRootBaseComponentArray extends _ServerComponentArray<TreeRootBaseComp
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 10; i++) {
-         createWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 16 * Math.random());
+         createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
       }
 
       playSoundOnHitbox("tree-root-base-death.mp3", 0.5, 1, entity, hitbox, false);

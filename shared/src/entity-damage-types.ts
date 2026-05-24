@@ -10,7 +10,7 @@ enum DamageType {
    pickaxe
 }
 
-export enum AttackEffectiveness {
+export const enum AttackEffectiveness {
    stopped = 0,
    ineffective = 1,
    effective = 2

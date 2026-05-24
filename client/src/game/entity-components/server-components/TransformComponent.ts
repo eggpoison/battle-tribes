@@ -245,12 +245,12 @@ export function applyAccelerationFromGround(hitbox: Hitbox, accelerationX: numbe
    const currentVelocity = _point;
    
    // Apply velocity with traction (blend towards desired velocity)
-   hitbox.acceleration.x += (desiredVelocityX - currentVelocity.x) * transformComponent.traction;
-   hitbox.acceleration.y += (desiredVelocityY - currentVelocity.y) * transformComponent.traction;
+   hitbox.accelX += (desiredVelocityX - currentVelocity.x) * transformComponent.traction;
+   hitbox.accelY += (desiredVelocityY - currentVelocity.y) * transformComponent.traction;
 }
 
 const applyHitboxKinematics = (hitbox: Hitbox): void => {
-   if (isNaN(hitbox.box.position.x) || isNaN(hitbox.box.position.y)) {
+   if (isNaN(hitbox.box.posX) || isNaN(hitbox.box.posY)) {
       throw new Error("Position was NaN.");
    }
 
@@ -269,8 +269,8 @@ const applyHitboxKinematics = (hitbox: Hitbox): void => {
    const tilePhysicsInfo = TILE_PHYSICS_INFO_RECORD[tile.type];
    const tileFriction = tilePhysicsInfo.friction;
 
-   let velX = hitbox.box.position.x - hitbox.previousPosition.x;
-   let velY = hitbox.box.position.y - hitbox.previousPosition.y;
+   let velX = hitbox.box.posX - hitbox.previousPosX;
+   let velY = hitbox.box.posY - hitbox.previousPosY;
       
    // Air friction
    // @Bug? the tile's friction shouldn't affect air friction?
@@ -288,17 +288,17 @@ const applyHitboxKinematics = (hitbox: Hitbox): void => {
    
    // Verlet integration update:
    // new position = current position + (damped implicit velocity) + acceleration * (dt^2)
-   const newX = hitbox.box.position.x + velX + hitbox.acceleration.x * Settings.DT_S * Settings.DT_S;
-   const newY = hitbox.box.position.y + velY + hitbox.acceleration.y * Settings.DT_S * Settings.DT_S;
+   const newX = hitbox.box.posX + velX + hitbox.accelX * Settings.DT_S * Settings.DT_S;
+   const newY = hitbox.box.posY + velY + hitbox.accelY * Settings.DT_S * Settings.DT_S;
 
-   hitbox.previousPosition.x = hitbox.box.position.x;
-   hitbox.previousPosition.y = hitbox.box.position.y;
+   hitbox.previousPosX = hitbox.box.posX;
+   hitbox.previousPosY = hitbox.box.posY;
 
-   hitbox.box.position.x = newX;
-   hitbox.box.position.y = newY;
+   hitbox.box.posX = newX;
+   hitbox.box.posY = newY;
 
-   hitbox.acceleration.x = 0;
-   hitbox.acceleration.y = 0;
+   hitbox.accelX = 0;
+   hitbox.accelY = 0;
 
    // Mark entity's position as updated
    cleanEntityTransform(hitbox.entity);
@@ -376,8 +376,8 @@ const applyHitboxTethers = (hitbox: Hitbox): void => {
    for (const tether of hitbox.tethers) {
       const originBox = tether.originBox;
 
-      const diffX = originBox.position.x - hitbox.box.position.x;
-      const diffY = originBox.position.y - hitbox.box.position.y;
+      const diffX = originBox.posX - hitbox.box.posX;
+      const diffY = originBox.posY - hitbox.box.posY;
       const distance = Math.sqrt(diffX * diffX + diffY * diffY);
       if (distance === 0) {
          continue;
@@ -392,8 +392,8 @@ const applyHitboxTethers = (hitbox: Hitbox): void => {
       const springForceX = normalisedDiffX * tether.springConstant * displacement;
       const springForceY = normalisedDiffY * tether.springConstant * displacement;
       
-      hitbox.acceleration.x += springForceX / hitbox.mass;
-      hitbox.acceleration.y += springForceY / hitbox.mass;
+      hitbox.accelX += springForceX / hitbox.mass;
+      hitbox.accelY += springForceY / hitbox.mass;
       // For ticking the player, we only want to affect the player's own tethers.
       // if (!onlyAffectSelf) {
          // @INCOMPLETE this no worky
@@ -485,7 +485,7 @@ class _TransformComponentArray extends _ServerComponentArray<TransformComponent,
          // Water droplet particles
          // @Hack @Cleanup: Don't hardcode fish condition
          if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.05) && getEntityType(entity) !== EntityType.fish) {
-            createWaterSplashParticle(hitbox.box.position.x, hitbox.box.position.y);
+            createWaterSplashParticle(hitbox.box.posX, hitbox.box.posY);
          }
 
          // Water splash particles
@@ -507,7 +507,7 @@ class _TransformComponentArray extends _ServerComponentArray<TransformComponent,
                   particle,
                   ParticleRenderLayer.low,
                   64, 64,
-                  hitbox.box.position.x, hitbox.box.position.y,
+                  hitbox.box.posX, hitbox.box.posY,
                   0, 0, 
                   0, 0,
                   0,
@@ -695,8 +695,8 @@ const entityShouldInterpolate = (newTransformData: TransformComponentData, previ
       }
       
       if (previousHitbox !== undefined) {
-         if (newHitbox.box.position.x !== previousHitbox.box.position.x
-            || newHitbox.box.position.y !== previousHitbox.box.position.y
+         if (newHitbox.box.posX !== previousHitbox.box.posX
+            || newHitbox.box.posY !== previousHitbox.box.posY
             || newHitbox.box.angle !== previousHitbox.box.angle) {
             return true;
          }
@@ -771,12 +771,12 @@ export function getRandomPositionInEntity(transformComponent: TransformComponent
    return getRandomPositionInBox(hitbox.box);
 }
 
-export function getDistanceFromPointToEntity(point: Readonly<Point>, entity: Entity): number {
+export function getDistanceFromPointToEntity(x: number, y: number, entity: Entity): number {
    const transformComponent = TransformComponentArray.getComponent(entity);
    
    let minDist = Number.MAX_SAFE_INTEGER;
    for (const hitbox of transformComponent.hitboxes) {
-      const dist = getDistanceFromPointToHitboxIncludingChildren(point, hitbox);
+      const dist = getDistanceFromPointToHitboxIncludingChildren(x, y, hitbox);
       if (dist < minDist) {
          minDist = dist;
       }

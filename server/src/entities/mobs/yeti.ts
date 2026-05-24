@@ -42,24 +42,22 @@ function wanderPositionIsValid(entity: Entity, layer: Layer, x: number, y: numbe
    return layer.getTileBiome(tileIndex) === Biome.tundra && yetiComponent.territory.includes(tileIndex);
 }
 
-const moveFunc = (slimewisp: Entity, pos: Point, acceleration: number): void => {
-   accelerateEntityToPosition(slimewisp, pos, acceleration);
+const moveFunc = (slimewisp: Entity, x: number, y: number, acceleration: number): void => {
+   accelerateEntityToPosition(slimewisp, x, y, acceleration);
 }
 
-const turnFunc = (slimewisp: Entity, pos: Point, turnSpeed: number, turnDamping: number): void => {
-   turnToPosition(slimewisp, pos, turnSpeed, turnDamping);
+const turnFunc = (slimewisp: Entity, x: number, y: number, turnSpeed: number, turnDamping: number): void => {
+   turnToPosition(slimewisp, x, y, turnSpeed, turnDamping);
 }
 
-export function createYetiConfig(position: Point, rotation: number, territory: ReadonlyArray<TileIndex>): EntityConfig {
+export function createYetiConfig(x: number, y: number, angle: number, territory: ReadonlyArray<TileIndex>): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 64), 3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETI_BODY]);
+   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 64), 3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETI_BODY]);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
 
    const headOffset = new Point(0, 36);
-   const headPosition = position.copy();
-   headPosition.add(headOffset);
-   const headHitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(headPosition, headOffset, 0, 28), 3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETI_HEAD]);
+   const headHitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(x + headOffset.x, y + headOffset.y, headOffset.x, headOffset.y, 0, 28), 3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETI_HEAD]);
    addHitboxToTransformComponent(transformComponent, headHitbox);
    
    const healthComponent = new HealthComponent(75);

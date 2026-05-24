@@ -12,12 +12,12 @@ import { MithrilAnvilComponent } from "../../../components/MithrilAnvilComponent
 import { Hitbox } from "../../../hitboxes.js";
 import { StructureConnection } from "../../../structure-placement.js";
 
-export function createMithrilAnvilConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createMithrilAnvilConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
    // Middle box
    {
-      const box = new RectangularBox(position, new Point(-16, 0), rotation, 48, 56);
+      const box = new RectangularBox(x, y, -16, 0, angle, 48, 56);
       const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
       hitbox.isStatic = true;
       addHitboxToTransformComponent(transformComponent, hitbox);
@@ -25,7 +25,7 @@ export function createMithrilAnvilConfig(position: Point, rotation: number, trib
 
    // Left box
    {
-      const box = new RectangularBox(position, new Point(-48, 0), rotation, 16, 40);
+      const box = new RectangularBox(x, y, -48, 0, angle, 16, 40);
       const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
       hitbox.isStatic = true;
       addHitboxToTransformComponent(transformComponent, hitbox);
@@ -33,7 +33,7 @@ export function createMithrilAnvilConfig(position: Point, rotation: number, trib
 
    // Right box
    {
-      const box = new RectangularBox(position, new Point(30, 0), rotation, 44, 40);
+      const box = new RectangularBox(x, y, 30, 0, angle, 44, 40);
       const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
       hitbox.isStatic = true;
       addHitboxToTransformComponent(transformComponent, hitbox);

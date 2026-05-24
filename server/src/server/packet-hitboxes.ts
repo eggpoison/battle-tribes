@@ -2,17 +2,17 @@ import { BaseBox, Box, boxIsCircular, CircularBox, RectangularBox, Packet } from
 import { Hitbox } from "../hitboxes.js";
 
 const addBaseBoxData = (packet: Packet, box: BaseBox): void => {
-   packet.writeNumber(box.position.x);
-   packet.writeNumber(box.position.y);
+   packet.writeNumber(box.posX);
+   packet.writeNumber(box.posY);
    packet.writeNumber(box.relativeAngle);
    packet.writeNumber(box.angle);
-   packet.writeNumber(box.offset.x);
-   packet.writeNumber(box.offset.y);
+   packet.writeNumber(box.offsetX);
+   packet.writeNumber(box.offsetY);
 
    // Pivot
-   packet.writeNumber(box.pivot.type);
-   packet.writeNumber(box.pivot.pos.x);
-   packet.writeNumber(box.pivot.pos.y);
+   packet.writeNumber(box.pivotType);
+   packet.writeNumber(box.pivotX);
+   packet.writeNumber(box.pivotY);
    
    packet.writeNumber(box.scale);
    packet.writeBool(box.totalFlipXMultiplier === -1 ? true : false);
@@ -64,10 +64,10 @@ export function addHitboxDataToPacket(packet: Packet, hitbox: Hitbox): void {
 
    addBoxDataToPacket(packet, hitbox.box);
 
-   packet.writeNumber(hitbox.previousPosition.x);
-   packet.writeNumber(hitbox.previousPosition.y);
-   packet.writeNumber(hitbox.acceleration.x);
-   packet.writeNumber(hitbox.acceleration.y);
+   packet.writeNumber(hitbox.previousPosX);
+   packet.writeNumber(hitbox.previousPosY);
+   packet.writeNumber(hitbox.accelX);
+   packet.writeNumber(hitbox.accelY);
 
    // Tethers
    packet.writeNumber(hitbox.tethers.length);

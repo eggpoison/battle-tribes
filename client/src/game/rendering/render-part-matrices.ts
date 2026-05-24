@@ -180,8 +180,8 @@ const matrixMultiplyByInterpolatedHitbox = (hitbox: Hitbox, modelMatrix: Matrix3
    scaleMatrix(modelMatrix, scale * (hitbox.box.flipX ? -1 : 1), scale);
    
    // Translation
-   const tx = lerp(currentHitboxData.box.position.x, nextHitboxData.box.position.x, interp);
-   const ty = lerp(currentHitboxData.box.position.y, nextHitboxData.box.position.y, interp);
+   const tx = lerp(currentHitboxData.box.posX, nextHitboxData.box.posX, interp);
+   const ty = lerp(currentHitboxData.box.posY, nextHitboxData.box.posY, interp);
    translateMatrix(modelMatrix, tx, ty);
 }
 
@@ -200,8 +200,8 @@ const matrixMultiplyByCalculatedHitbox = (hitbox: Hitbox, modelMatrix: Matrix3x2
 
    // Translation
    getHitboxVelocity(hitbox);
-   const tx = hitbox.box.position.x + _point.x * interp * Settings.DT_S;
-   const ty = hitbox.box.position.y + _point.y * interp * Settings.DT_S;
+   const tx = hitbox.box.posX + _point.x * interp * Settings.DT_S;
+   const ty = hitbox.box.posY + _point.y * interp * Settings.DT_S;
    translateMatrix(modelMatrix, tx, ty);
 }
 

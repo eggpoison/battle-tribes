@@ -1,4 +1,4 @@
-import { HitboxCollisionType, HitboxFlag, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point, polarVec2 } from "battletribes-shared";
+import { HitboxCollisionType, HitboxFlag, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
@@ -11,20 +11,25 @@ const NUM_SEGMENTS = 8;
 
 const IDEAL_DIST = 6;
 
-export function createTukmokTrunkConfig(position: Point, angle: number, trunkBaseOffset: Point): EntityConfig {
+export function createTukmokTrunkConfig(x: number, y: number, angle: number, trunkBaseOffsetX: number, trunkBaseOffsetY: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
    let lastHitbox: Hitbox | null = null;
    for (let i = 0; i < NUM_SEGMENTS; i++) {
-      let hitboxPosition: Point;
-      let offset: Point;
+      let hitboxX: number;
+      let hitboxY: number;
+      let offsetX: number;
+      let offsetY: number;
       if (lastHitbox === null) {
-         hitboxPosition = position;
-         offset = trunkBaseOffset;
+         hitboxX = x;
+         hitboxY = y;
+         offsetX = trunkBaseOffsetX;
+         offsetY = trunkBaseOffsetY;
       } else {
-         hitboxPosition = lastHitbox.box.position.copy();
-         hitboxPosition.add(polarVec2(IDEAL_DIST, angle));
-         offset = new Point(0, 0);
+         hitboxX = lastHitbox.box.posX + IDEAL_DIST * Math.sin(angle);
+         hitboxY = lastHitbox.box.posY + IDEAL_DIST * Math.cos(angle);
+         offsetX = 0;
+         offsetY = 0;
       }
 
       let mass: number;
@@ -37,7 +42,7 @@ export function createTukmokTrunkConfig(position: Point, angle: number, trunkBas
          flags = [HitboxFlag.TUKMOK_TRUNK_HEAD];
       }
 
-      const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(hitboxPosition, offset, 0, 12), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, flags);
+      const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(hitboxX, hitboxY, offsetX, offsetY, 0, 12), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, flags);
       addHitboxToTransformComponent(transformComponent, hitbox);
 
       if (lastHitbox !== null) {

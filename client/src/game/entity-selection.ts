@@ -1,4 +1,4 @@
-import { Entity, EntityType, PlantedEntityType, assert, distance, Point, rotatePointAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID, _point } from "webgl-test-shared";
+import { Entity, EntityType, PlantedEntityType, assert, distance, rotatePointAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID, _point } from "webgl-test-shared";
 import { currentSnapshot } from "./networking/snapshots";
 import { entityExists, getCurrentLayer, getEntityRenderObject, getEntityType } from "./world";
 import { TombstoneComponentArray } from "./entity-components/server-components/TombstoneComponent";
@@ -236,8 +236,8 @@ const getSelectedCarrySlotIdx = (entity: Entity): number | null => {
    for (let i = 0; i < rideableComponent.carrySlots.length; i++) {
       const carrySlot = rideableComponent.carrySlots[i];
       rotatePointAroundOrigin(carrySlot.offsetX, carrySlot.offsetY, hitbox.box.angle);
-      const x = hitbox.box.position.x + _point.x;
-      const y = hitbox.box.position.y + _point.y;
+      const x = hitbox.box.posX + _point.x;
+      const y = hitbox.box.posY + _point.y;
 
       const dist = distance(x, y, cursorWorldPos.x, cursorWorldPos.y);
       if (dist < minDist) {
@@ -469,7 +469,7 @@ const createInteractRenderObject = (interactAction: InteractAction): EntityRende
          assert(carryingHitbox !== undefined);
 
          // @HACK
-         const box = new CircularBox(carryingHitbox.box.position.copy(), new Point(0, 0), carryingHitbox.box.angle, 0);
+         const box = new CircularBox(carryingHitbox.box.posX, carryingHitbox.box.posY, 0, 0, carryingHitbox.box.angle, 0);
          const hitbox = createHitboxQuick(0, 0, null, box, 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
 
          const renderPart = new TexturedRenderPart(
@@ -625,12 +625,12 @@ export function updateEntitySelections(): void {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);
          for (const currentEntity of chunk.nonGrassEntities) {
-            const distToCursor = getDistanceFromPointToEntity(cursorWorldPos, currentEntity);
+            const distToCursor = getDistanceFromPointToEntity(cursorWorldPos.x, cursorWorldPos.y, currentEntity);
 
             if (distToCursor < newHighlightedEntityDist) {
                const interactAction = getEntityInteractAction(currentEntity);
                if (interactAction !== null) {
-                  const distToPlayer = getDistanceFromPointToEntity(cameraPosition, currentEntity);
+                  const distToPlayer = getDistanceFromPointToEntity(cameraPosition.x, cameraPosition.y, currentEntity);
                   if (distToPlayer < interactAction.interactRange) {
                      newHighlightedEntity = currentEntity;
                      newHighlightedEntityDist = distToCursor;
@@ -662,7 +662,7 @@ export function updateEntitySelections(): void {
       const interactAction = getEntityInteractAction(selectedEntity);
       let isTooFarAwayFromPlayer = false;
       if (interactAction !== null) {
-         const distToPlayer = getDistanceFromPointToEntity(cameraPosition, selectedEntity);
+         const distToPlayer = getDistanceFromPointToEntity(cameraPosition.x, cameraPosition.y, selectedEntity);
          if (distToPlayer >= interactAction.interactRange) {
             isTooFarAwayFromPlayer = true;
          }

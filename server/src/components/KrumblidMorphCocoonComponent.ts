@@ -48,7 +48,7 @@ function onTick(cocoon: Entity): void {
       const hitbox = transformComponent.hitboxes[0];
       
       // @Temporary: size
-      const okrenConfig = createOkrenConfig(hitbox.box.position.copy(), hitbox.box.angle, 4);
+      const okrenConfig = createOkrenConfig(hitbox.box.posX, hitbox.box.posY, hitbox.box.angle, 4);
 
       const tribe = krumblidMorphCocoonComponent.tameTribe;
       if (tribe !== null) {

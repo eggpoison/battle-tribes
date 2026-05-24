@@ -99,12 +99,10 @@ export function generateGrassStrands(): void {
 
             // @Speed: only removes a very small amount of grass, but incurs a big cost. Is there a way we can only run this for
             // grass tiles which border a water tile?
-            if (!isValidGrassPosition(surfaceLayer, x, y)) {
-               continue;
+            if (isValidGrassPosition(surfaceLayer, x, y)) {
+               const config = createGrassStrandConfig(x, y, 0, tileType);
+               createEntityImmediate(config, surfaceLayer);
             }
-
-            const config = createGrassStrandConfig(new Point(x, y), 0, tileType);
-            createEntityImmediate(config, surfaceLayer);
          }
       }
    }

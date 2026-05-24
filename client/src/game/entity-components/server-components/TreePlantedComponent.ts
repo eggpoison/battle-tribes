@@ -1,4 +1,4 @@
-import { randFloat, randItem, randInt, Point, randAngle, HitFlags, Entity, PacketReader, ServerComponentType } from "webgl-test-shared";
+import { randFloat, randItem, randInt, Point, randAngle, HitFlags, Entity, PacketReader, ServerComponentType, angle } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -92,8 +92,8 @@ class _TreePlantedComponentArray extends _ServerComponentArray<TreePlantedCompon
       {
          const moveDirection = randAngle();
 
-         const spawnPositionX = hitbox.box.position.x + radius * Math.sin(moveDirection);
-         const spawnPositionY = hitbox.box.position.y + radius * Math.cos(moveDirection);
+         const spawnPositionX = hitbox.box.posX + radius * Math.sin(moveDirection);
+         const spawnPositionY = hitbox.box.posY + radius * Math.cos(moveDirection);
 
          createLeafParticle(spawnPositionX, spawnPositionY, moveDirection + randFloat(-1, 1), Math.random() < 0.5 ? LeafParticleSize.large : LeafParticleSize.small);
       }
@@ -101,17 +101,17 @@ class _TreePlantedComponentArray extends _ServerComponentArray<TreePlantedCompon
       // Create leaf specks
       const numSpecks = Math.floor(treePlantedComponent.growthProgress * 7) + 2;
       for (let i = 0; i < numSpecks; i++) {
-         createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
+         createLeafSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
       }
 
       if (isDamagingHit) {
          // Create wood specks at the point of hit
 
-         let offsetDirection = hitbox.box.position.angleTo(hitPosition);
+         let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = hitbox.box.position.x + (radius + 2) * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.position.y + (radius + 2) * Math.cos(offsetDirection);
+         const spawnPositionX = hitbox.box.posX + (radius + 2) * Math.sin(offsetDirection);
+         const spawnPositionY = hitbox.box.posY + (radius + 2) * Math.cos(offsetDirection);
          for (let i = 0; i < 4; i++) {
             createWoodSpeckParticle(spawnPositionX, spawnPositionY, 3);
          }

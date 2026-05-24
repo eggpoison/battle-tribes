@@ -7,7 +7,7 @@ interface ItemTallyEntry {
 
 // @Temporary: rename to ItemTally once all references to the interface ItemTally are removed
 export class ItemTally2 {
-   private readonly entries = new Array<ItemTallyEntry>();
+   private readonly entries: Array<ItemTallyEntry> = [];
 
    private getItemIdx(itemType: ItemType): number | null {
       for (let i = 0; i < this.entries.length; i++) {
@@ -67,7 +67,7 @@ export class ItemTally2 {
 
    /** Given another item tally, calculates all the items in this tally which there are less of than in the other tally. */
    public getInsufficient(otherTally: ItemTally2): Array<ItemType> {
-      const insufficientItemTypes = new Array<ItemType>();
+      const insufficientItemTypes: Array<ItemType> = [];
       
       const otherEntries = otherTally.getEntries();
       for (let i = 0; i < otherEntries.length; i++) {

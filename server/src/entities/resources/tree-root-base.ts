@@ -12,10 +12,10 @@ registerEntityLootOnDeath(EntityType.treeRootBase, {
    getAmount: () => randInt(2, 3)
 });
 
-export function createTreeRootBaseConfig(position: Point, rotation: number): EntityConfig {
+export function createTreeRootBaseConfig(x: number, y: number, rotation: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 17), 1.25, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, rotation, 17), 1.25, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
 

@@ -1,4 +1,4 @@
-import { AMMO_INFO_RECORD, ServerComponentType, TurretAmmoType, TurretEntityType, Entity, EntityType, Packet, ItemType, polarVec2, randAngle, UtilVar, boxIsCircular, Settings } from "battletribes-shared";
+import { AMMO_INFO_RECORD, ServerComponentType, TurretAmmoType, TurretEntityType, Entity, EntityType, Packet, ItemType, polarVec2, randAngle, UtilVar, boxIsCircular, Settings, calculateDistanceSquared, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from "../entities/structures/sling-turret.js";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent.js";
@@ -56,7 +56,7 @@ const entityIsTargetted = (turret: Entity, entity: Entity): boolean => {
    const turretHitbox = turretTransformComponent.hitboxes[0];
 
    // @Hack: pathfinding group ID
-   if (!entityIsInLineOfSight(turretHitbox.box.position, entity, turret)) {
+   if (!entityIsInLineOfSight(turretHitbox.box.posX, turretHitbox.box.posY, entity, turret)) {
       return false;
    }
 
@@ -76,12 +76,12 @@ const entityIsTargetted = (turret: Entity, entity: Entity): boolean => {
       const box = hitbox.box;
       if (boxIsCircular(box)) {
          // Circular hitbox
-         minAngleToHitbox = getMinAngleToCircularBox(turretHitbox.box.position.x, turretHitbox.box.position.y, box);
-         maxAngleToHitbox = getMaxAngleToCircularBox(turretHitbox.box.position.x, turretHitbox.box.position.y, box);
+         minAngleToHitbox = getMinAngleToCircularBox(turretHitbox.box.posX, turretHitbox.box.posY, box);
+         maxAngleToHitbox = getMaxAngleToCircularBox(turretHitbox.box.posX, turretHitbox.box.posY, box);
       } else {
          // Rectangular hitbox
-         minAngleToHitbox = getMinAngleToRectangularBox(turretHitbox.box.position.x, turretHitbox.box.position.y, box);
-         maxAngleToHitbox = getMaxAngleToRectangularBox(turretHitbox.box.position.x, turretHitbox.box.position.y, box);
+         minAngleToHitbox = getMinAngleToRectangularBox(turretHitbox.box.posX, turretHitbox.box.posY, box);
+         maxAngleToHitbox = getMaxAngleToRectangularBox(turretHitbox.box.posX, turretHitbox.box.posY, box);
       }
 
       if (angleIsInRange(minAngleToHitbox, minAngle, maxAngle) || angleIsInRange(maxAngleToHitbox, minAngle, maxAngle)) {
@@ -108,7 +108,7 @@ const getTarget = (turret: Entity, visibleEntities: ReadonlyArray<Entity>): Enti
       // @Hack
       const entityHitbox = entityTransformComponent.hitboxes[0];
 
-      const dist = entityHitbox.box.position.calculateDistanceSquaredBetween(turretHitbox.box.position);
+      const dist = calculateDistanceSquared(entityHitbox.box.posX, entityHitbox.box.posY, turretHitbox.box.posX, turretHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          closestValidTarget = entity;
@@ -128,30 +128,31 @@ const createProjectile = (turret: Entity, transformComponent: TransformComponent
    const ammoInfo = AMMO_INFO_RECORD[ammoType];
 
    const turretHitbox = transformComponent.hitboxes[0];
-   const position = turretHitbox.box.position.copy();
-   const rotation = ammoType === ItemType.rock || ammoType === ItemType.slimeball ? randAngle() : fireDirection;
+   const x = turretHitbox.box.posX;
+   const y = turretHitbox.box.posY;
+   const angle = ammoType === ItemType.rock || ammoType === ItemType.slimeball ? randAngle() : fireDirection;
    
    let config: EntityConfig;
    
    // @Hack
    if (getEntityType(turret) === EntityType.slingTurret) {
-      config = createSlingTurretRockConfig(position, rotation, turret);
+      config = createSlingTurretRockConfig(x, y, angle, turret);
    } else {
       switch (ammoType) {
          case ItemType.wood: {
-            config = createBallistaWoodenBoltConfig(position, rotation, tribe, turret);
+            config = createBallistaWoodenBoltConfig(x, y, angle, tribe, turret);
             break;
          }
          case ItemType.rock: {
-            config = createBallistaRockConfig(position, rotation, tribe, turret);
+            config = createBallistaRockConfig(x, y, angle, tribe, turret);
             break;
          }
          case ItemType.slimeball: {
-            config = createBallistaSlimeballConfig(position, rotation, tribe, turret);
+            config = createBallistaSlimeballConfig(x, y, angle, tribe, turret);
             break;
          }
          case ItemType.frostcicle: {
-            config = createBallistaFrostcicleConfig(position, rotation, tribe, turret);
+            config = createBallistaFrostcicleConfig(x, y, angle, tribe, turret);
             break;
          }
       }
@@ -224,7 +225,7 @@ function onTick(turret: Entity): void {
          // @HACK
          const targetHitbox = targetTransformComponent.hitboxes[0];
          
-         const targetDirection = turretHitbox.box.position.angleTo(targetHitbox.box.position);
+         const targetDirection = angle(targetHitbox.box.posX - turretHitbox.box.posX, targetHitbox.box.posY - turretHitbox.box.posY);
 
          const turretAimDirection = turretComponent.aimDirection + turretHitbox.box.angle;
 

@@ -1,4 +1,4 @@
-import { ServerComponentType, Entity, EntityType, InventoryName, Settings, PathfindingSettings, TileType, angleToPoint, assert, curveWeight, distance, Point, polarVec2 } from "battletribes-shared";
+import { ServerComponentType, Entity, EntityType, InventoryName, Settings, PathfindingSettings, TileType, angleToPoint, assert, curveWeight, distance, Point, polarVec2, angle } from "battletribes-shared";
 import { getEntitiesInRange, getVelocityClosenessAdjustmentFactor } from "../ai-shared.js";
 import { TRIBESMAN_TURN_SPEED } from "../entities/tribes/tribesman-ai/tribesman-ai.js";
 import { getHumanoidRadius, getTribesmanAcceleration } from "../entities/tribes/tribesman-ai/tribesman-ai-utils.js";
@@ -28,7 +28,7 @@ export class AIPathfindingComponent {
     * Stores an array of all paths the entity is going to follow to reach its destination.
     * Once an indiviual path is completed, it is removed from this array.
    */
-   public paths = new Array<Path>();
+   public paths: Array<Path> = [];
 }
 
 export const AIPathfindingComponentArray = new ComponentArray<AIPathfindingComponent>(ServerComponentType.aiPathfinding, true, getDataLength, addDataToPacket);
@@ -87,8 +87,8 @@ const openDoors = (tribesman: Entity, tribe: Tribe): void => {
    const layer = getEntityLayer(tribesman);
    
    const offsetMagnitude = getHumanoidRadius(transformComponent) + 20;
-   const checkX = tribesmanHitbox.box.position.x + offsetMagnitude * Math.sin(tribesmanHitbox.box.angle);
-   const checkY = tribesmanHitbox.box.position.y + offsetMagnitude * Math.cos(tribesmanHitbox.box.angle);
+   const checkX = tribesmanHitbox.box.posX + offsetMagnitude * Math.sin(tribesmanHitbox.box.angle);
+   const checkY = tribesmanHitbox.box.posY + offsetMagnitude * Math.cos(tribesmanHitbox.box.angle);
    const entitiesInFront = getEntitiesInRange(layer, checkX, checkY, 40);
    for (let i = 0; i < entitiesInFront.length; i++) {
       const entity = entitiesInFront[i];
@@ -172,7 +172,7 @@ export function continueCurrentPath(tribesman: Entity): boolean {
          let centerY = 0;
 
          const findHerdMembers = (visibleEntities: ReadonlyArray<Entity>): ReadonlyArray<Entity> => {
-            const herdMembers = new Array<Entity>();
+            const herdMembers: Array<Entity> = [];
             for (let i = 0; i < visibleEntities.length; i++) {
                const entity = visibleEntities[i];
                const relationship = getEntityRelationship(tribesman, entity);
@@ -196,17 +196,17 @@ export function continueCurrentPath(tribesman: Entity): boolean {
             // @HACK
             const herdMemberHitbox = herdMemberTransformComponent.hitboxes[0];
       
-            const distance = tribesmanHitbox.box.position.distanceTo(herdMemberHitbox.box.position);
-            if (distance < minDist) {
+            const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, herdMemberHitbox.box.posX, herdMemberHitbox.box.posY);
+            if (dist < minDist) {
                closestHerdMember = herdMember;
-               minDist = distance;
+               minDist = dist;
             }
       
             totalXVal += Math.sin(herdMemberHitbox.box.angle);
             totalYVal += Math.cos(herdMemberHitbox.box.angle);
       
-            centerX += herdMemberHitbox.box.position.x;
-            centerY += herdMemberHitbox.box.position.y;
+            centerX += herdMemberHitbox.box.posX;
+            centerY += herdMemberHitbox.box.posY;
             numHerdMembers++;
          }
       
@@ -230,7 +230,7 @@ export function continueCurrentPath(tribesman: Entity): boolean {
             const herdMemberHitbox = herdMemberTransformComponent.hitboxes[0];
             
             // @Speed: Garbage collection
-            distanceVector = angleToPoint(herdMemberHitbox.box.position.angleTo(tribesmanHitbox.box.position));
+            distanceVector = polarVec2(1, angle(tribesmanHitbox.box.posX - herdMemberHitbox.box.posX, tribesmanHitbox.box.posY - herdMemberHitbox.box.posY));
          }
 
          const pathfindingAngle = angleToPoint(tribesmanHitbox.box.angle);
@@ -283,12 +283,12 @@ const getPotentialBlockingTribesmen = (tribesman: Entity): ReadonlyArray<Entity>
    
    const layer = getEntityLayer(tribesman);
    
-   const minChunkX = Math.max(Math.min(Math.floor((tribesmanHitbox.box.position.x - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor((tribesmanHitbox.box.position.x + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor((tribesmanHitbox.box.position.y - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor((tribesmanHitbox.box.position.y + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const minChunkX = Math.max(Math.min(Math.floor((tribesmanHitbox.box.posX - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const maxChunkX = Math.max(Math.min(Math.floor((tribesmanHitbox.box.posX + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const minChunkY = Math.max(Math.min(Math.floor((tribesmanHitbox.box.posY - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const maxChunkY = Math.max(Math.min(Math.floor((tribesmanHitbox.box.posY + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    
-   const blockingTribesmen = new Array<Entity>();
+   const blockingTribesmen: Array<Entity> = [];
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);
@@ -378,7 +378,7 @@ export function pathfindTribesman(tribesman: Entity, goalX: number, goalY: numbe
          goalRadius: goalRadius,
          failureDefault: failureDefault
       };
-      aiPathfindingComponent.paths = runPathfindingMultiLayer(layer, goalLayer, tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, goalX, goalY, tribe.pathfindingGroupID, footprint, options);
+      aiPathfindingComponent.paths = runPathfindingMultiLayer(layer, goalLayer, tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, goalX, goalY, tribe.pathfindingGroupID, footprint, options);
 
       cleanupPathfinding(targetEntityID, tribe, blockingTribesmen);
 
@@ -400,7 +400,7 @@ export function entityIsAccessible(tribesman: Entity, entity: Entity, tribe: Tri
    const entityHitbox = transformComponent.hitboxes[0];
    
    const layer = getEntityLayer(entity);
-   const isAccessible = positionIsAccessible(layer, entityHitbox.box.position.x, entityHitbox.box.position.y, tribe.pathfindingGroupID, getEntityFootprint(goalRadius));
+   const isAccessible = positionIsAccessible(layer, entityHitbox.box.posX, entityHitbox.box.posY, tribe.pathfindingGroupID, getEntityFootprint(goalRadius));
 
    cleanupPathfinding(entity, tribe, blockingTribesmen);
 
@@ -423,7 +423,7 @@ export function pathToEntityExists(tribesman: Entity, huntedEntity: Entity, goal
       goalRadius: Math.floor(goalRadius / PathfindingSettings.NODE_SEPARATION),
       failureDefault: PathfindFailureDefault.none
    };
-   const path = runPathfindingMultiLayer(getEntityLayer(tribesman), getEntityLayer(huntedEntity), tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, targetHitbox.box.position.x, targetHitbox.box.position.y, tribeComponent.tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), queryOptions);
+   const path = runPathfindingMultiLayer(getEntityLayer(tribesman), getEntityLayer(huntedEntity), tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, targetHitbox.box.posX, targetHitbox.box.posY, tribeComponent.tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), queryOptions);
 
    cleanupPathfinding(huntedEntity, tribeComponent.tribe, blockingTribesmen);
 

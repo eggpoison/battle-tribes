@@ -34,10 +34,12 @@ const generateResearchOrb = (researchBench: Entity): ResearchOrb => {
    const hitbox = transformComponent.hitboxes[0];
    
    const position = getRandomPositionInEntity(transformComponent);
-   position.subtract(hitbox.box.position);
+   position.x -= hitbox.box.posX;
+   position.y -= hitbox.box.posY;
    position.x *= 0.8;
    position.y *= 0.8;
-   position.add(hitbox.box.position);
+   position.x += hitbox.box.posX;
+   position.y += hitbox.box.posY;
    
    return {
       positionX: position.x,

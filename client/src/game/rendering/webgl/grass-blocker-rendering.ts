@@ -261,33 +261,33 @@ export function calculateGrassBlockerVertexData(grassBlocker: GrassBlocker): Flo
       const bottomRightOffsetX = -topLeftOffsetX;
       const bottomRightOffsetY = -topLeftOffsetY;
 
-      vertexData[0] = box.position.x + bottomLeftOffsetX;
-      vertexData[1] = box.position.y + bottomLeftOffsetY;
+      vertexData[0] = box.posX + bottomLeftOffsetX;
+      vertexData[1] = box.posY + bottomLeftOffsetY;
       vertexData[2] = opacity;
-      vertexData[3] = box.position.x + bottomRightOffsetX;
-      vertexData[4] = box.position.y + bottomRightOffsetY;
+      vertexData[3] = box.posX + bottomRightOffsetX;
+      vertexData[4] = box.posY + bottomRightOffsetY;
       vertexData[5] = opacity;
-      vertexData[6] = box.position.x + topLeftOffsetX;
-      vertexData[7] = box.position.y + topLeftOffsetY;
+      vertexData[6] = box.posX + topLeftOffsetX;
+      vertexData[7] = box.posY + topLeftOffsetY;
       vertexData[8] = opacity;
-      vertexData[9] = box.position.x + topLeftOffsetX;
-      vertexData[10] = box.position.y + topLeftOffsetY;
+      vertexData[9] = box.posX + topLeftOffsetX;
+      vertexData[10] = box.posY + topLeftOffsetY;
       vertexData[11] = opacity;
-      vertexData[12] = box.position.x + bottomRightOffsetX;
-      vertexData[13] = box.position.y + bottomRightOffsetY;
+      vertexData[12] = box.posX + bottomRightOffsetX;
+      vertexData[13] = box.posY + bottomRightOffsetY;
       vertexData[14] = opacity;
-      vertexData[15] = box.position.x + topRightOffsetX;
-      vertexData[16] = box.position.y + topRightOffsetY;
+      vertexData[15] = box.posX + topRightOffsetX;
+      vertexData[16] = box.posY + topRightOffsetY;
       vertexData[17] = opacity;
    } else {
-      let lastPos = getCirclePoint(NUM_CIRCLE_POINTS, 0, box.position, box.radius);
+      let lastPos = getCirclePoint(NUM_CIRCLE_POINTS, 0, box.posX, box.posY, box.radius);
       for (let i = 1; i <= NUM_CIRCLE_POINTS; i++) {
          // @Garbage
-         const pos = getCirclePoint(NUM_CIRCLE_POINTS, i, box.position, box.radius);
+         const pos = getCirclePoint(NUM_CIRCLE_POINTS, i, box.posX, box.posY, box.radius);
 
          const dataOffset = 3 * 3 * (i - 1);
-         vertexData[dataOffset] = box.position.x;
-         vertexData[dataOffset + 1] = box.position.y;
+         vertexData[dataOffset] = box.posX;
+         vertexData[dataOffset + 1] = box.posY;
          vertexData[dataOffset + 2] = opacity;
          vertexData[dataOffset + 3] = pos.x;
          vertexData[dataOffset + 4] = pos.y;

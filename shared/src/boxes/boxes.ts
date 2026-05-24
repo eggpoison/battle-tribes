@@ -4,7 +4,7 @@ import { PivotPointType } from "./BaseBox.js";
 import { CircularBox } from "./CircularBox.js";
 import { RectangularBox } from "./RectangularBox.js";
 
-export enum HitboxFlag {
+export const enum HitboxFlag {
    NON_GRASS_BLOCKING,
    // @Cleanup @Speed: This seems like it's central collision logic, perhaps instead change into a "collidesWithWalls" boolean on hitbox objects?
    IGNORES_WALL_COLLISIONS,
@@ -62,12 +62,12 @@ export enum HitboxFlag {
    HAND
 }
 
-export enum HitboxCollisionType {
+export const enum HitboxCollisionType {
    soft,
    hard
 }
 
-export enum BoxType {
+export const enum BoxType {
    circular,
    rectangular
 }
@@ -109,10 +109,10 @@ export function updateSideAxes(box: RectangularBox): void {
 export function getRelativePivotPos(box: Box, angle: number): Point {
    let relativePivotX: number;
    let relativePivotY: number;
-   if (box.pivot.type === PivotPointType.absolute) {
+   if (box.pivotType === PivotPointType.absolute) {
       // Absolute
-      relativePivotX = box.pivot.pos.x;
-      relativePivotY = box.pivot.pos.y;
+      relativePivotX = box.pivotX;
+      relativePivotY = box.pivotY;
    } else {
       // Normalised
       
@@ -126,8 +126,8 @@ export function getRelativePivotPos(box: Box, angle: number): Point {
          height = box.height;
       }
       
-      relativePivotX = box.pivot.pos.x * width;
-      relativePivotY = box.pivot.pos.y * height;
+      relativePivotX = box.pivotX * width;
+      relativePivotY = box.pivotY * height;
    }
 
    rotatePointAroundOrigin(relativePivotX, relativePivotY, angle);
@@ -145,8 +145,8 @@ export function getRelativePivotPos(box: Box, angle: number): Point {
 export function updateBox(box: Box, parent: Box): void {
    box.totalFlipXMultiplier = (box.flipX ? -1 : 1) * parent.totalFlipXMultiplier;
 
-   box.position.x = parent.position.x;
-   box.position.y = parent.position.y;
+   box.posX = parent.posX;
+   box.posY = parent.posY;
    
    // Now offset from the parent's position based on the hitboxes' offset.
    
@@ -155,11 +155,11 @@ export function updateBox(box: Box, parent: Box): void {
 
    // @Speed: the base offset and pivot offset both scale by flipX independently when they could both be done at once after
    
-   let offsetX = box.offset.x * box.scale;
+   let offsetX = box.offsetX * box.scale;
    if (box.totalFlipXMultiplier === -1) {
       offsetX *= -1;
    }
-   let offsetY = box.offset.y * box.scale;
+   let offsetY = box.offsetY * box.scale;
 
    // Now pivot the hitbox around the pivot point based on its relative rotation
    const relativePivotPos = getRelativePivotPos(box, box.relativeAngle);
@@ -167,8 +167,8 @@ export function updateBox(box: Box, parent: Box): void {
    offsetX -= relativePivotPos.x - unrotatedRelativePivotPos.x;
    offsetY -= relativePivotPos.y - unrotatedRelativePivotPos.y;
 
-   box.position.x += cosRotation * offsetX + sinRotation * offsetY;
-   box.position.y += cosRotation * offsetY - sinRotation * offsetX;
+   box.posX += cosRotation * offsetX + sinRotation * offsetY;
+   box.posY += cosRotation * offsetY - sinRotation * offsetX;
    
    // Update the box's angle
    box.angle = box.relativeAngle * box.totalFlipXMultiplier + parent.angle;
@@ -186,24 +186,23 @@ export function updateBox(box: Box, parent: Box): void {
    }
 }
 
-export function boxIsWithinRange(box: Box, position: Point, range: number): boolean {
+export function boxIsWithinRange(box: Box, x: number, y: number, range: number): boolean {
    if (boxIsCircular(box)) {
       // Circular hitbox
-      const collisionResult = getCircleCircleCollisionResult(position, range, box.position, box.radius * box.scale);
+      const collisionResult = getCircleCircleCollisionResult(x, y, range, box.posX, box.posY, box.radius * box.scale);
       return collisionResult.isColliding;
    } else {
       // Rectangular hitbox
-      const collisionResult = getCircleRectangleCollisionResult(position, range, box.position, box.width * box.scale, box.height * box.scale, box.angle);
+      const collisionResult = getCircleRectangleCollisionResult(x, y, range, box.posX, box.posY, box.width * box.scale, box.height * box.scale, box.angle);
       return collisionResult.isColliding;
    }
 }
 
 export function cloneBox(box: Box): Box {
    if (boxIsCircular(box)) {
-      return new CircularBox(box.position.copy(), box.offset.copy(), box.angle, box.radius);
-   } else {
-      return new RectangularBox(box.position.copy(), box.offset.copy(), box.angle, box.width, box.height);
+      return new CircularBox(box.posX, box.posY, box.offsetX, box.offsetY, box.angle, box.radius);
    }
+   return new RectangularBox(box.posX, box.posY, box.offsetX, box.offsetY, box.angle, box.width, box.height);
 }
 
 export function getBoxArea(box: Box): number {

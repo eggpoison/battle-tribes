@@ -1,6 +1,6 @@
 import { Biome } from "./biomes.js";
 
-export enum TribeType {
+export const enum TribeType {
    plainspeople,
    barbarians,
    frostlings,

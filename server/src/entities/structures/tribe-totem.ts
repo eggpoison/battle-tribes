@@ -11,10 +11,10 @@ import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildin
 import { Hitbox } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
-export function createTribeTotemConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createTribeTotemConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const box = new CircularBox(position, new Point(0, 0), rotation, 60);
+   const box = new CircularBox(x, y, 0, 0, angle, 60);
    const hitbox = new Hitbox(transformComponent, null, true, box, 2.2, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);

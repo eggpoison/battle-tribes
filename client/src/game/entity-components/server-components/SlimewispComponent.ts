@@ -51,10 +51,10 @@ class _SlimewispComponentArray extends _ServerComponentArray<SlimewispComponent,
    public onHit(_entity: Entity, hitbox: Hitbox): void {
       const radius = (hitbox.box as CircularBox).radius;
       
-      createSlimePoolParticle(hitbox.box.position.x, hitbox.box.position.y, radius);
+      createSlimePoolParticle(hitbox.box.posX, hitbox.box.posY, radius);
 
       for (let i = 0; i < 2; i++) {
-         createSlimeSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random());
+         createSlimeSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius * Math.random());
       }
    }
 
@@ -63,10 +63,10 @@ class _SlimewispComponentArray extends _ServerComponentArray<SlimewispComponent,
       const hitbox = transformComponent.hitboxes[0];
       const radius = (hitbox.box as CircularBox).radius;
 
-      createSlimePoolParticle(hitbox.box.position.x, hitbox.box.position.y, radius);
+      createSlimePoolParticle(hitbox.box.posX, hitbox.box.posY, radius);
 
       for (let i = 0; i < 3; i++) {
-         createSlimeSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random());
+         createSlimeSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius * Math.random());
       }
    }
 }

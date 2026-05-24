@@ -50,19 +50,19 @@ function positionIsValidCallback(_entity: Entity, layer: Layer, x: number, y: nu
    return layer.getBiomeAtPosition(x, y) === Biome.swamp;
 }
 
-const moveFunc = (slime: Entity, pos: Point, _acceleration: number): void => {
+const moveFunc = (slime: Entity, x: number, y: number, _acceleration: number): void => {
    const slimeComponent = SlimeComponentArray.getComponent(slime);
-   accelerateEntityToPosition(slime, pos, 150 * SLIME_SPEED_MULTIPLIERS[slimeComponent.size]);
+   accelerateEntityToPosition(slime, x, y, 150 * SLIME_SPEED_MULTIPLIERS[slimeComponent.size]);
 }
 
-const turnFunc = (slime: Entity, pos: Point): void => {
-   turnToPosition(slime, pos, 2 * Math.PI, 1);
+const turnFunc = (slime: Entity, x: number, y: number): void => {
+   turnToPosition(slime, x, y, 2 * Math.PI, 1);
 }
 
-export function createSlimeConfig(position: Point, rotation: number, size: SlimeSize): EntityConfig {
+export function createSlimeConfig(x: number, y: number, angle: number, size: SlimeSize): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, SLIME_RADII[size]), 1 + size * 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, SLIME_RADII[size]), 1 + size * 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const healthComponent = new HealthComponent(MAX_HEALTH[size]);

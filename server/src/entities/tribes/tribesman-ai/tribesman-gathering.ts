@@ -96,7 +96,7 @@ const getGatherTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entit
       const resourceTransformComponent = TransformComponentArray.getComponent(resource);
       const resourceHitbox = resourceTransformComponent.hitboxes[0];
       
-      const dist = tribesmanHitbox.box.position.distanceTo(resourceHitbox.box.position);
+      const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, resourceHitbox.box.posX, resourceHitbox.box.posY);
       if (dist < minDist) {
          closestResource = resource;
          minDist = dist;
@@ -131,7 +131,7 @@ const getFoodTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entity>
       const resourceTransformComponent = TransformComponentArray.getComponent(entity);
       const resourceHitbox = resourceTransformComponent.hitboxes[0];
 
-      const dist = tribesmanHitbox.box.position.distanceTo(resourceHitbox.box.position);
+      const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, resourceHitbox.box.posX, resourceHitbox.box.posY);
       if (dist < minDist) {
          target = entity;
          minDist = dist;
@@ -178,10 +178,10 @@ const tribesmanGetItemPickupTarget = (tribesman: Entity, visibleItemEntities: Re
          continue;
       }
       
-      const distance = tribesmanHitbox.box.position.distanceTo(itemEntityHitbox.box.position);
-      if (distance < minDistance) {
+      const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, itemEntityHitbox.box.posX, itemEntityHitbox.box.posY);
+      if (dist < minDistance) {
          closestDroppedItem = itemEntity;
-         minDistance = distance;
+         minDistance = dist;
       }
    }
 
@@ -192,7 +192,7 @@ const goPickupItemEntity = (tribesman: Entity, pickupTarget: Entity): void => {
    const targetTransformComponent = TransformComponentArray.getComponent(pickupTarget);
    const targetHitbox = targetTransformComponent.hitboxes[0];
    
-   pathfindTribesman(tribesman, targetHitbox.box.position.x, targetHitbox.box.position.y, getEntityLayer(pickupTarget), pickupTarget, TribesmanPathType.default, Math.floor(VACUUM_RANGE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
+   pathfindTribesman(tribesman, targetHitbox.box.posX, targetHitbox.box.posY, getEntityLayer(pickupTarget), pickupTarget, TribesmanPathType.default, Math.floor(VACUUM_RANGE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
    
    const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(tribesman);
    tribesmanAIComponent.currentAIType = TribesmanAIType.pickingUpDroppedItems;
@@ -213,7 +213,7 @@ const findBiomeForGathering = (tribesman: Entity, layer: Layer, biome: Biome): L
       // Should sum the density of all valid entity types to be utterly correct
 
       // @Incomplete: calculate distance to closest tile in the biome
-      const dist = distance(tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, localBiome.centerX, localBiome.centerY);
+      const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, localBiome.centerX, localBiome.centerY);
       if (dist < minDist) {
          minDist = dist;
          closestBiome = localBiome;
@@ -255,7 +255,7 @@ const moveTribesmanToBiome = (tribesman: Entity, layer: Layer, biome: Biome): vo
       const x = (getTileX(targetTile) + Math.random()) * Settings.TILE_SIZE;
       const y = (getTileY(targetTile) + Math.random()) * Settings.TILE_SIZE;
 
-      const dist = distance(x, y, tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y);
+      const dist = distance(x, y, tribesmanHitbox.box.posX, tribesmanHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          targetX = x;

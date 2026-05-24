@@ -1,4 +1,4 @@
-import { getStringLengthBytes, Packet, PacketReader, ServerPacketType, Entity, EntityType, LimbAction, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, TribeType, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, assert, Point, randAngle, CRAFTING_RECIPES, ItemRequirements, TileType, getTamingSkill, TamingSkillID, TamingTier, Tech, TechID, getTechByID, BLOCKING_LIMB_STATE, copyLimbState, RESTING_LIMB_STATES, SHIELD_BLOCKING_LIMB_STATE, updateBox, TribesmanTitle, Settings } from "battletribes-shared";
+import { getStringLengthBytes, Packet, PacketReader, ServerPacketType, Entity, EntityType, LimbAction, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, TribeType, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, assert, Point, randAngle, CRAFTING_RECIPES, ItemRequirements, TileType, getTamingSkill, TamingSkillID, TamingTier, Tech, TechID, getTechByID, BLOCKING_LIMB_STATE, copyLimbState, RESTING_LIMB_STATES, SHIELD_BLOCKING_LIMB_STATE, updateBox, TribesmanTitle, Settings, angle } from "battletribes-shared";
 import PlayerClient from "./PlayerClient.js";
 import Layer from "../Layer.js";
 import { getCurrentLimbState, getHeldItem, getHeldItemEntity, getLimbConfiguration, InventoryUseComponentArray, setLimbActions } from "../components/InventoryUseComponent.js";
@@ -72,13 +72,13 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
 
       const playerHitbox = transformComponent.hitboxes[0];
 
-      playerHitbox.previousPosition.x = previousX;
-      playerHitbox.previousPosition.y = previousY;
+      playerHitbox.previousPosX = previousX;
+      playerHitbox.previousPosY = previousY;
 
       // Cuz i've got a thing going on where if a hitbox is carried, then it can't have any acceleration. and if it does then the game will crash when it tries to detach from its parent.
       if (playerHitbox.parent === null) {
-         playerHitbox.acceleration.x = accelerationX;
-         playerHitbox.acceleration.y = accelerationY;
+         playerHitbox.accelX = accelerationX;
+         playerHitbox.accelY = accelerationY;
       }
       
       tribesmanComponent.moveIntention = moveIntention !== -999 ? moveIntention : null;
@@ -88,8 +88,8 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
       const hotbarLimbInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    
       registerDirtyEntity(player);
-      playerHitbox.box.position.x = x;
-      playerHitbox.box.position.y = y;
+      playerHitbox.box.posX = x;
+      playerHitbox.box.posY = y;
       
       setHitboxAngle(playerHitbox, angle);
       
@@ -199,7 +199,7 @@ export function processRespawnPacket(playerClient: PlayerClient): void {
       const totemTransformComponent = TransformComponentArray.getComponent(totem);
       const totemHitbox = totemTransformComponent.hitboxes[0];
       
-      spawnPosition = totemHitbox.box.position.copy();
+      spawnPosition = new Point(totemHitbox.box.posX, totemHitbox.box.posY);
       const offsetDirection = randAngle();
       spawnPosition.x += 100 * Math.sin(offsetDirection);
       spawnPosition.y += 100 * Math.cos(offsetDirection);
@@ -209,7 +209,7 @@ export function processRespawnPacket(playerClient: PlayerClient): void {
       layer = surfaceLayer;
    }
 
-   const config = createPlayerConfig(spawnPosition, 0, playerClient.tribe, playerClient);
+   const config = createPlayerConfig(spawnPosition.x, spawnPosition.y, 0, playerClient.tribe, playerClient);
    createEntity(config, layer, 0);
 
    // (The PlayerComponent onJoin function will send the packet with all the information)
@@ -470,17 +470,17 @@ export function processEntitySummonPacket(playerClient: PlayerClient, reader: Pa
    const entityType = reader.readNumber() as EntityType;
    const x = reader.readNumber();
    const y = reader.readNumber();
-   const rotation = reader.readNumber();
+   const angle = reader.readNumber();
 
    // @Hack
    let config: EntityConfig;
    switch (entityType) {
       case EntityType.cow: {
-         config = createCowConfig(new Point(x, y), rotation, 0);
+         config = createCowConfig(x, y, angle, 0);
          break;
       }
       case EntityType.krumblid: {
-         config = createKrumblidConfig(new Point(x, y), rotation);
+         config = createKrumblidConfig(x, y, angle);
          break;
       }
       default: {
@@ -497,11 +497,11 @@ export function processToggleSimulationPacket(playerClient: PlayerClient, reader
 }
 
 // @Cleanup: name, and there is already a shared definition
-const snapRotationToPlayer = (player: Entity, placePosition: Point, rotation: number): number => {
+const snapRotationToPlayer = (player: Entity, placeX: number, placeY: number, rotation: number): number => {
    const transformComponent = TransformComponentArray.getComponent(player);
    const playerHitbox = transformComponent.hitboxes[0];
    
-   const playerDirection = playerHitbox.box.position.angleTo(placePosition);
+   const playerDirection = angle(placeX - playerHitbox.box.posX, placeY - playerHitbox.box.posY);
    let snapRotation = playerDirection - rotation;
 
    // Snap to nearest PI/2 interval
@@ -522,7 +522,7 @@ export function processPlaceBlueprintPacket(playerClient: PlayerClient, reader: 
    // @Cleanup: should not do this logic here.
    const structureTransformComponent = TransformComponentArray.getComponent(structure);
    const structureHitbox = structureTransformComponent.hitboxes[0];
-   const rotation = snapRotationToPlayer(playerClient.instance, structureHitbox.box.position, structureHitbox.box.angle);
+   const rotation = snapRotationToPlayer(playerClient.instance, structureHitbox.box.posX, structureHitbox.box.posY, structureHitbox.box.angle);
    placeBlueprint(playerClient.instance, structure, blueprintType, rotation);
 }
 
@@ -576,8 +576,8 @@ export function processTPToEntityPacket(playerClient: PlayerClient, reader: Pack
    const targetHitbox = targetTransformComponent.hitboxes[0];
 
    const packet = new Packet(ServerPacketType.forcePositionUpdate, 2 * Float32Array.BYTES_PER_ELEMENT);
-   packet.writeNumber(targetHitbox.box.position.x);
-   packet.writeNumber(targetHitbox.box.position.y);
+   packet.writeNumber(targetHitbox.box.posX);
+   packet.writeNumber(targetHitbox.box.posY);
    playerClient.socket.send(packet.buffer);
 }
 
@@ -723,7 +723,7 @@ export function processTechStudyPacket(playerClient: PlayerClient, reader: Packe
       const playerHitbox = transformComponent.hitboxes[0];
 
       const selectedTech = getTechByID(tribeComponent.tribe.selectedTechID);
-      playerClient.tribe.studyTech(selectedTech, playerHitbox.box.position.x, playerHitbox.box.position.y, studyAmount);
+      playerClient.tribe.studyTech(selectedTech, playerHitbox.box.posX, playerHitbox.box.posY, studyAmount);
    }
 }
 

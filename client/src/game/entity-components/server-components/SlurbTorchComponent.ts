@@ -65,8 +65,8 @@ class _SlurbTorchComponentArray extends _ServerComponentArray<SlurbTorchComponen
       if (slurbTorchComponent.particleCreationTimer <= 0) {
          slurbTorchComponent.particleCreationTimer += randFloat(Var.MIN_PARTICLE_CREATION_INTERVAL_SECONDS, Var.MAX_PARTICLE_CREATION_INTERVAL_SECONDS);
 
-         let spawnPositionX = hitbox.box.position.x;
-         let spawnPositionY = hitbox.box.position.y;
+         let spawnPositionX = hitbox.box.posX;
+         let spawnPositionY = hitbox.box.posY;
 
          const spawnOffsetMagnitude = 7 * Math.random();
          const spawnOffsetDirection = randAngle();

@@ -17,16 +17,16 @@ export interface BuildingCandidate {
    readonly boxes: ReadonlyArray<Box>;
 }
 
-export function createBuildingCandidate(entityType: StructureType, buildingLayer: TribeBuildingLayer, x: number, y: number, rotation: number): BuildingCandidate {
+export function createBuildingCandidate(entityType: StructureType, buildingLayer: TribeBuildingLayer, x: number, y: number, angle: number): BuildingCandidate {
    // @SUPAHACK
    const tribe = getTribes()[0];
-   const entityConfig = createStructureConfig(tribe, entityType, new Point(x, y), rotation, []);
+   const entityConfig = createStructureConfig(tribe, entityType, x, y, angle, []);
    const transformComponent = getConfigTransformComponent(entityConfig.components);
 
    const candidate: BuildingCandidate = {
       buildingLayer: buildingLayer,
       position: new Point(x, y),
-      rotation: rotation,
+      rotation: angle,
       boxes: transformComponent.hitboxes.map(hitbox => hitbox.box)
    };
 
@@ -78,8 +78,7 @@ export function buildingCandidateIsValid(candidate: BuildingCandidate): boolean 
             }
             
             // @Speed
-            const position = new Point((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE);
-            const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
+            const tileBox = new RectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
 
             if (box.getCollisionResult(tileBox).isColliding) {
                return false;

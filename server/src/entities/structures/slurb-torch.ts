@@ -12,10 +12,10 @@ import { createLight } from "../../lights.js";
 import { Hitbox } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
-export function createSlurbTorchConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createSlurbTorchConfig(x: number, y: number, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const box = new CircularBox(position, new Point(0, 0), rotation, 10);
+   const box = new CircularBox(x, y, 0, 0, rotation, 10);
    const hitbox = new Hitbox(transformComponent, null, true, box, 0.55, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);

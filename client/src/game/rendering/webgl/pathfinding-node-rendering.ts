@@ -150,8 +150,8 @@ const renderConnectors = (pathData: PathData): void => {
    const entityHitbox = transformComponent.hitboxes[0];
    
    const vertices: Array<number> = [];
-   let lastNodeX = entityHitbox.box.position.x;
-   let lastNodeY = entityHitbox.box.position.y;
+   let lastNodeX = entityHitbox.box.posX;
+   let lastNodeY = entityHitbox.box.posY;
    for (let i = 0; i < pathData.pathNodes.length; i++) {
       const node = pathData.pathNodes[i];
 
@@ -164,7 +164,7 @@ const renderConnectors = (pathData: PathData): void => {
       lastNodeY = nodeY;
    }
 
-   addConnector(vertices, entityHitbox.box.position.x, entityHitbox.box.position.y, pathData.goalX, pathData.goalY);
+   addConnector(vertices, entityHitbox.box.posX, entityHitbox.box.posY, pathData.goalX, pathData.goalY);
 
    gl.useProgram(connectorProgram);
 

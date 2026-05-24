@@ -1,4 +1,4 @@
-import { HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randFloat } from "battletribes-shared";
+import { HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randFloat, angle } from "battletribes-shared";
 import { getConfigTransformComponent } from "../components.js";
 import { createInguYetukLaserConfig } from "../entities/wtf/ingu-yetuk-laser.js";
 import { addHitboxVelocity, applyAbsoluteKnockback, applyAcceleration, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
@@ -39,7 +39,7 @@ export function moveSeekerHeadToTarget(seekerHead: Entity, target: Entity): void
          mult *= 1.2;
       }
 
-      let dir = hitbox.box.position.angleTo(targetHitbox.box.position);
+      let dir = angle(targetHitbox.box.posX - hitbox.box.posX, targetHitbox.box.posY - hitbox.box.posY);
       if (i < Math.floor(transformComponent.hitboxes.length * 0.66)) {
          if (inguYetuksnoglurblidokowfleaSeekerHeadComponent.isCow) {
             dir += Math.PI * 0.33;
@@ -48,7 +48,7 @@ export function moveSeekerHeadToTarget(seekerHead: Entity, target: Entity): void
          }
       }
       
-      applyAcceleration(hitbox, polarVec2(900 * mult, dir));
+      applyAcceleration(hitbox, 900 * mult * Math.sin(dir), 900 * mult * Math.cos(dir));
 
       if (hitbox.flags.includes(HitboxFlag.COW_HEAD)) {
          turnHitboxToAngle(hitbox, dir, 2 * Math.PI, 0.5, false);
@@ -61,10 +61,10 @@ export function moveSeekerHeadToTarget(seekerHead: Entity, target: Entity): void
          if (hitbox.flags.includes(HitboxFlag.COW_HEAD) || hitbox.flags.includes(HitboxFlag.TUKMOK_HEAD)) {
             const angle = hitbox.box.angle + randFloat(-0.5, 0.5);
             for (let i = 0; i < 2; i++) {
-               const laserPosition = hitbox.box.position.offset(50, angle);
+               const laserPosition = new Point(hitbox.box.posX, hitbox.box.posY).offset(50, angle);
                laserPosition.add(polarVec2(12, angle + (i === 0 ? -Math.PI * 0.5 : Math.PI * 0.5)));
                
-               const config = createInguYetukLaserConfig(laserPosition, angle);
+               const config = createInguYetukLaserConfig(laserPosition.x, laserPosition.y, angle);
                const laserHitbox = getConfigTransformComponent(config.components).hitboxes[0];
                addHitboxVelocity(laserHitbox, polarVec2(800, angle));
                addHitboxVelocity(laserHitbox, getHitboxVelocity(hitbox));
@@ -97,7 +97,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       return;
    }
 
-   const hitDir = hitbox.box.position.angleTo(collidingHitbox.box.position);
+   const hitDir = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, hitbox.entity, 2, DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
    applyAbsoluteKnockback(collidingHitbox, polarVec2(400, hitDir));

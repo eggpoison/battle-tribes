@@ -1,4 +1,4 @@
-import { BlockType, ServerComponentType, DamageSource, Entity, EntityType, LimbAction, Settings, BowItemInfo, getItemAttackInfo, getItemType, HammerItemType, Inventory, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, itemTypeIsHammer, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Packet, customTickIntervalHasPassed, lerp, Point, polarVec2, randAngle, assertBoxIsCircular, Box, HitboxFlag, AttackVar, BLOCKING_LIMB_STATE, copyLimbState, LimbConfiguration, LimbState, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, interpolateLimbState, RectangularBox, getSubtileIndex, EntityTickEvent, EntityTickEventType, HitFlags, AttackEffectiveness, calculateAttackEffectiveness, StatusEffect, TribesmanTitle, _bounds } from "battletribes-shared";
+import { BlockType, ServerComponentType, DamageSource, Entity, EntityType, LimbAction, Settings, BowItemInfo, getItemAttackInfo, getItemType, HammerItemType, Inventory, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, itemTypeIsHammer, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Packet, customTickIntervalHasPassed, lerp, Point, polarVec2, randAngle, assertBoxIsCircular, Box, HitboxFlag, AttackVar, BLOCKING_LIMB_STATE, copyLimbState, LimbConfiguration, LimbState, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, interpolateLimbState, RectangularBox, getSubtileIndex, EntityTickEvent, EntityTickEventType, HitFlags, AttackEffectiveness, calculateAttackEffectiveness, StatusEffect, TribesmanTitle, _bounds, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { getInventory, hasInventory, InventoryComponentArray } from "./InventoryComponent.js";
 import { getHitboxesByFlag, TransformComponentArray } from "./TransformComponent.js";
@@ -99,9 +99,9 @@ const addLimbStateToPacket = (packet: Packet, limbState: LimbState): void => {
 }
 
 export class InventoryUseComponent {
-   public readonly associatedInventoryNames = new Array<InventoryName>();
+   public readonly associatedInventoryNames: Array<InventoryName> = [];
    
-   public readonly limbInfos = new Array<LimbInfo>();
+   public readonly limbInfos: Array<LimbInfo> = [];
    private readonly inventoryUseInfoRecord: Partial<Record<InventoryName, LimbInfo>> = {};
 
    public globalAttackCooldown = 0;
@@ -231,8 +231,7 @@ export function getCurrentLimbState(limb: LimbInfo): LimbState {
 
 const boxIsCollidingWithSubtile = (box: Box, subtileX: number, subtileY: number): boolean => {
    // @Speed
-   const position = new Point((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE);
-   const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+   const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
    
    return box.getCollisionResult(tileBox).isColliding;
 }
@@ -244,7 +243,7 @@ const getBoxCollidingWallSubtiles = (layer: Layer, box: Box): ReadonlyArray<numb
    const minSubtileY = Math.max(Math.floor(_bounds.minY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
    const maxSubtileY = Math.min(Math.floor(_bounds.maxY / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
 
-   const collidingWallSubtiles = new Array<number>();
+   const collidingWallSubtiles: Array<number> = [];
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
          const subtileIndex = getSubtileIndex(subtileX, subtileY);
@@ -276,8 +275,8 @@ export function getLimbStateOffset(limbState: LimbState, humanoidRadius: number)
 const updateHandHitboxToLimbInfo = (handHitbox: Hitbox, limb: LimbInfo): void => {
    const transformComponent = TransformComponentArray.getComponent(handHitbox.entity);
    const limbOffset = getLimbStateOffset(getCurrentLimbState(limb), getHumanoidRadius(transformComponent));
-   handHitbox.box.offset.x = limbOffset.x;
-   handHitbox.box.offset.y = limbOffset.y;
+   handHitbox.box.offsetX = limbOffset.x;
+   handHitbox.box.offsetY = limbOffset.y;
 
    transformComponent.isDirty = true;
    
@@ -734,10 +733,10 @@ const gatherPlant = (plant: Entity, attacker: Entity, hitHitbox: Hitbox, gloves:
       const plantRadius = plantHitbox.box.radius;
 
       const offsetDirection = randAngle();
-      const x = plantHitbox.box.position.x + (plantRadius - 7) * Math.sin(offsetDirection);
-      const y = plantHitbox.box.position.y + (plantRadius - 7) * Math.cos(offsetDirection);
+      const x = plantHitbox.box.posX + (plantRadius - 7) * Math.sin(offsetDirection);
+      const y = plantHitbox.box.posY + (plantRadius - 7) * Math.cos(offsetDirection);
    
-      const config = createItemEntityConfig(new Point(x, y), randAngle(), createItem(ItemType.leaf, 1, "", ""), null);
+      const config = createItemEntityConfig(x, y, randAngle(), createItem(ItemType.leaf, 1, "", ""), null);
       createEntity(config, getEntityLayer(plant), 0);
 
       hitEntityWithoutDamage(plant, hitHitbox, attacker, new Point(0, 0));
@@ -773,7 +772,7 @@ const damageEntityFromSwing = (attacker: Entity, limb: LimbInfo, itemType: ItemT
    const attackDamage = calculateItemDamage(attacker, itemType, attackEffectiveness, limb.isBlocked);
    const attackKnockback = calculateItemKnockback(itemType, limb.isBlocked);
 
-   const hitDirection = hitbox.box.position.angleTo(victimHitbox.box.position);
+   const hitDirection = angle(victimHitbox.box.posX - hitbox.box.posX, victimHitbox.box.posY - hitbox.box.posY);
 
    // Register the hit
    const hitFlags = itemType !== null && itemType === ItemType.flesh_sword ? HitFlags.HIT_BY_FLESH_SWORD : 0; // @HACK

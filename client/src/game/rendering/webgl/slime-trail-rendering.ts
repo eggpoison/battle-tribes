@@ -70,8 +70,8 @@ export function createSlimeTrailShaders(): void {
 }
 
 const coatFromCircularBox = (layer: Layer, box: CircularBox): void => {
-   const centerX = box.position.x / 4;
-   const centerY = box.position.y / 4;
+   const centerX = box.posX / 4;
+   const centerY = box.posY / 4;
    
    box.calculateBounds();
    const minGamePixelX = convertToGamePixel(_bounds.minX);

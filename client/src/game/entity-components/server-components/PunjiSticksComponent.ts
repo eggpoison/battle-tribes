@@ -70,8 +70,8 @@ class _PunjiSticksComponentArray extends _ServerComponentArray<PunjiSticksCompon
          
          const offsetMagnitude = 32 * Math.random();
          const offsetDirection = randAngle();
-         const x = hitbox.box.position.x + offsetMagnitude * Math.sin(offsetDirection);
-         const y = hitbox.box.position.y + offsetMagnitude * Math.cos(offsetDirection);
+         const x = hitbox.box.posX+ offsetMagnitude * Math.sin(offsetDirection);
+         const y = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
          createFlyParticle(x, y);
          punjiSticksComponent.ticksSinceLastFly = 0;
       }

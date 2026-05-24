@@ -237,18 +237,18 @@ class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeCo
 
    public onHit(entity: Entity): void {
       const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0]!;
+      const hitbox = transformComponent.hitboxes[0];
       
       const slimeComponent = SlimeComponentArray.getComponent(entity);
 
       const radius = SLIME_SIZES[slimeComponent.size] / 2;
       
       for (let i = 0; i < NUM_PUDDLE_PARTICLES_ON_HIT[slimeComponent.size]; i++) {
-         createSlimePoolParticle(hitbox.box.position.x, hitbox.box.position.y, radius);
+         createSlimePoolParticle(hitbox.box.posX, hitbox.box.posY, radius);
       }
 
       for (let i = 0; i < NUM_SPECK_PARTICLES_ON_HIT[slimeComponent.size]; i++) {
-         createSlimeSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random());
+         createSlimeSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius * Math.random());
       }
 
       playSoundOnHitbox("slime-hit-" + randInt(1, 2) + ".mp3", 0.4, 1, entity, hitbox, false);
@@ -263,11 +263,11 @@ class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeCo
       const radius = SLIME_SIZES[slimeComponent.size] / 2;
 
       for (let i = 0; i < NUM_PUDDLE_PARTICLES_ON_DEATH[slimeComponent.size]; i++) {
-         createSlimePoolParticle(hitbox.box.position.x, hitbox.box.position.y, radius);
+         createSlimePoolParticle(hitbox.box.posX, hitbox.box.posY, radius);
       }
 
       for (let i = 0; i < NUM_SPECK_PARTICLES_ON_DEATH[slimeComponent.size]; i++) {
-         createSlimeSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random());
+         createSlimeSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius * Math.random());
       }
 
       playSoundOnHitbox("slime-death.mp3", 0.4, 1, entity, hitbox, false);

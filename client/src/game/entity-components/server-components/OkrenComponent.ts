@@ -1,4 +1,4 @@
-import { Point, randAngle, randFloat, Entity, HitboxFlag, ServerComponentType, PacketReader } from "webgl-test-shared";
+import { Point, randAngle, randFloat, Entity, HitboxFlag, ServerComponentType, PacketReader, angle } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -133,8 +133,8 @@ class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenCo
          // @INCOMPLETE: this is meant for the ancient okren size. not tweaked for anything else
          for (let i = 0; i < 10; i++) {
             const offsetMagnitude = randFloat(10, 20);
-            const offsetDirection = hitbox.box.position.angleTo(hitPosition) + randAngle() * 0.2;
-            const particlePos = hitbox.box.position.offset(offsetMagnitude, offsetDirection);
+            const offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY) + randAngle() * 0.2;
+            const particlePos = new Point(hitbox.box.posX, hitbox.box.posY).offset(offsetMagnitude, offsetDirection);
             createOkrenEyeParticle(particlePos.x, particlePos.y, 0, 0, offsetDirection);
          }
       }

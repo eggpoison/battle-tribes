@@ -24,8 +24,8 @@ import { createEntityCreationInfo, EntityComponentData, layers } from "./world";
 import { padBoxData, readBoxFromData } from "./networking/packet-hitboxes";
 import { createBarrelComponentData } from "./entity-components/server-components/BarrelComponent";
 import { cursorWorldPos } from "./camera";
-import { ServerComponentData } from "./entity-components/components";
 import { getEntityServerComponentTypes } from "./entity-components/component-types";
+import { ServerComponentData } from "./entity-components/component-registry";
 
 export interface VirtualBuilding {
    readonly entityType: StructureType;
@@ -60,7 +60,7 @@ const padVirtualBuildingData = (reader: PacketReader): void => {
 }
 
 const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: number): VirtualBuilding => {
-   const entityType = reader.readNumber() as StructureType;
+   const entityType: StructureType = reader.readNumber();
    const layerDepth = reader.readNumber();
    const x = reader.readNumber();
    const y = reader.readNumber();
@@ -78,7 +78,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
 
    // @Copynpaste @Hack
 
-   const components: Array<ServerComponentData<ServerComponentType>> = [];
+   const components: Array<ServerComponentData> = [];
 
    const componentTypes = getEntityServerComponentTypes(entityType);
    for (let i = 0; i < componentTypes.length; i++) {
@@ -123,7 +123,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
             break;
          }
          case ServerComponentType.inventory: {
-            components.push(createInventoryComponentData({}));
+            components.push(createInventoryComponentData([]));
             break;
          }
          case ServerComponentType.cooking: {
@@ -174,7 +174,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
             break;
          }
          default: {
-            throw new Error(ServerComponentType[componentType]);
+            throw new Error(componentType.toString());
          }
       }
    }
@@ -202,8 +202,8 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
    // @Hack: Manually set the render object's position and rotation
    // @INCOMPLETE
    // const transformComponentData = components[ServerComponentType.transform]!;
-   // renderObject.renderPosition.x = transformComponentData.position.x;
-   // renderObject.renderPosition.y = transformComponentData.position.y;
+   // renderObject.renderPosition.x = transformComponentData.posX;
+   // renderObject.renderPosition.y = transformComponentData.posY;
    // renderObject.rotation = transformComponentData.rotation;
    recalculateRenderObjectVertexData(renderObject);
 

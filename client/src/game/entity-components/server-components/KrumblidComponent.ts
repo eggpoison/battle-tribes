@@ -1,4 +1,4 @@
-import { HitboxFlag, Point, randAngle, randFloat, randInt, Entity, ServerComponentType } from "webgl-test-shared";
+import { HitboxFlag, Point, randAngle, randFloat, randInt, Entity, ServerComponentType, angle } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -61,15 +61,15 @@ class _KrumblidComponentArray extends _ServerComponentArray<KrumblidComponent, K
    }
 
    public onHit(krumblid: Entity, hitbox: Hitbox, hitPosition: Point): void {
-      createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 20);
+      createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 20);
       
       // Blood particles
       for (let i = 0; i < 5; i++) {
-         let offsetDirection = hitbox.box.position.angleTo(hitPosition);
+         let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = hitbox.box.position.x + 32 * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.position.y + 32 * Math.cos(offsetDirection);
+         const spawnPositionX = hitbox.box.posX + 32 * Math.sin(offsetDirection);
+         const spawnPositionY = hitbox.box.posY + 32 * Math.cos(offsetDirection);
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
       }
 
@@ -87,15 +87,15 @@ class _KrumblidComponentArray extends _ServerComponentArray<KrumblidComponent, K
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 2; i++) {
-         createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 35);
+         createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 35);
       }
 
       createBloodParticleFountain(krumblid, 0.1, 0.8);
 
       for (let i = 0; i < 10; i++) {
          const offsetDirection = randAngle();
-         const spawnPositionX = hitbox.box.position.x + 20 * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.position.y + 20 * Math.cos(offsetDirection);
+         const spawnPositionX = hitbox.box.posX + 20 * Math.sin(offsetDirection);
+         const spawnPositionY = hitbox.box.posY + 20 * Math.cos(offsetDirection);
          createKrumblidChitinParticle(spawnPositionX, spawnPositionY);
       }
 

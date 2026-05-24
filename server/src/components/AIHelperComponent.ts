@@ -61,22 +61,22 @@ type AIRecord = Partial<{
    [T in AIType]: AIClass<T>;
 }>;
 
-type MoveEntityFunction = (entity: Entity, pos: Point, acceleration: number) => void;
-type TurnEntityFunction = (entity: Entity, pos: Point, turnSpeed: number, turnDamping: number) => void;
+type MoveEntityFunction = (entity: Entity, x: number, y: number, acceleration: number) => void;
+type TurnEntityFunction = (entity: Entity, x: number, y: number, turnSpeed: number, turnDamping: number) => void;
 
 export class AIHelperComponent {
    public readonly seeingHitbox: Hitbox;
    
    public visibleChunkBounds = [999, 999, 999, 999];
-   public visibleChunks = new Array<Chunk>();
+   public visibleChunks: Array<Chunk> = [];
 
-   public readonly potentialVisibleEntities = new Array<Entity>();
+   public readonly potentialVisibleEntities: Array<Entity> = [];
    /** The number of times each potential visible game object appears in the mob's visible chunks */
-   public readonly potentialVisibleEntityAppearances = new Array<number>();
+   public readonly potentialVisibleEntityAppearances: Array<number> = [];
 
    public readonly ignoreDecorativeEntities = true;
    public visionRange: number;
-   public visibleEntities = new Array<Entity>();
+   public visibleEntities: Array<Entity> = [];
 
    public readonly ais: AIRecord = {};
 
@@ -170,10 +170,10 @@ function onRemove(entity: Entity): void {
 const boxIsVisible = (seeingHitbox: Hitbox, box: Box, visionRange: number): boolean => {
    if (boxIsCircular(box)) {
       // Circular hitbox
-      return getCircleCircleCollisionResult(seeingHitbox.box.position, visionRange, box.position, box.radius).isColliding;
+      return getCircleCircleCollisionResult(seeingHitbox.box.posX, seeingHitbox.box.posY, visionRange, box.posX, box.posY, box.radius).isColliding;
    } else {
       // Rectangular hitbox
-      return getCircleRectangleCollisionResult(seeingHitbox.box.position, visionRange, box.position, box.width, box.height, box.relativeAngle).isColliding;
+      return getCircleRectangleCollisionResult(seeingHitbox.box.posX, seeingHitbox.box.posY, visionRange, box.posX, box.posY, box.width, box.height, box.relativeAngle).isColliding;
    }
 }
 
@@ -207,7 +207,7 @@ const entityIsVisible = (seeingHitbox: Hitbox, checkEntity: Entity, checkEntityT
 
 // @Speed: I'd say a good 70% of the entities here are ice spikes and decorations - unnecessary
 const calculateVisibleEntities = (aiHelperComponent: AIHelperComponent): Array<Entity> => {
-   const visibleEntities = new Array<Entity>();
+   const visibleEntities: Array<Entity> = [];
 
    const potentialVisibleEntities = aiHelperComponent.potentialVisibleEntities;
    const visionRange = aiHelperComponent.visionRange;
@@ -239,10 +239,10 @@ function onTick(entity: Entity): void {
    
    const aiHelperComponent = AIHelperComponentArray.getComponent(entity);
    
-   const minChunkX = Math.max(Math.floor((aiHelperComponent.seeingHitbox.box.position.x - aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((aiHelperComponent.seeingHitbox.box.position.x + aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
-   const minChunkY = Math.max(Math.floor((aiHelperComponent.seeingHitbox.box.position.y - aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((aiHelperComponent.seeingHitbox.box.position.y + aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkX = Math.max(Math.floor((aiHelperComponent.seeingHitbox.box.posX - aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((aiHelperComponent.seeingHitbox.box.posX + aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkY = Math.max(Math.floor((aiHelperComponent.seeingHitbox.box.posY - aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((aiHelperComponent.seeingHitbox.box.posY + aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
    
    // If the entity hasn't changed visible chunk bounds, then the potential visible entities will be the same
    // and only the visible entities need to updated
@@ -258,7 +258,7 @@ function onTick(entity: Entity): void {
 
    const layer = getEntityLayer(entity);
 
-   const newVisibleChunks = new Array<Chunk>();
+   const newVisibleChunks: Array<Chunk> = [];
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);

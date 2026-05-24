@@ -1,4 +1,4 @@
-import { ItemType, ITEM_INFO_RECORD, PlaceableItemType, Entity, EntityType } from "webgl-test-shared";
+import { ItemType, ITEM_INFO_RECORD, PlaceableItemType, Entity, EntityType, Point } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { getEntityLayer, getEntityType } from "../../world";
@@ -146,7 +146,7 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
 
       const layer = getEntityLayer(playerInstance!);
       const structureType = ITEM_INFO_RECORD[playerSelectedItem.type as PlaceableItemType].entityType;
-      const placeInfo = calculateEntityPlaceInfo(playerHitbox.box.position, playerHitbox.box.angle, structureType, layer);
+      const placeInfo = calculateEntityPlaceInfo(new Point(playerHitbox.box.posX, playerHitbox.box.posY), playerHitbox.box.angle, structureType, layer);
 
       return {
          x: placeInfo.position.x,
@@ -165,8 +165,8 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
       
       const itemType = getTurretItemType(hoveredEntity);
       return {
-         x: hoveredEntityHitbox.box.position.x,
-         y: hoveredEntityHitbox.box.position.y,
+         x: hoveredEntityHitbox.box.posX,
+         y: hoveredEntityHitbox.box.posY,
          rotation: hoveredEntityHitbox.box.angle,
          itemType: itemType,
          rangeInfo: TURRET_RANGE_INFO_RECORD[itemType]!

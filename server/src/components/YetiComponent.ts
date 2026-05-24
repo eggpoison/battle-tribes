@@ -1,4 +1,4 @@
-import { ServerComponentType, DamageSource, Entity, EntityType, Settings, Biome, Packet, ItemType, TribeType, getTileIndexIncludingEdges, getTileX, getTileY, Point, polarVec2, randAngle, randFloat, randItem, TileIndex, tileIsInWorld, UtilVar, HitboxFlag, AttackEffectiveness, EntityTickEvent, EntityTickEventType } from "battletribes-shared";
+import { ServerComponentType, DamageSource, Entity, EntityType, Settings, Biome, Packet, ItemType, TribeType, getTileIndexIncludingEdges, getTileX, getTileY, Point, polarVec2, randAngle, randFloat, randItem, TileIndex, tileIsInWorld, UtilVar, HitboxFlag, AttackEffectiveness, EntityTickEvent, EntityTickEventType, angle, distance } from "battletribes-shared";
 import { SnowThrowStage, YETI_SNOW_THROW_COOLDOWN } from "../entities/mobs/yeti.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
@@ -84,9 +84,9 @@ const tileIsValid = (territoryTiles: ReadonlyArray<TileIndex>, tileIndex: TileIn
 }
 
 export function generateYetiTerritoryTiles(originTileX: number, originTileY: number): ReadonlyArray<TileIndex> {
-   const territoryTiles = new Array<TileIndex>();
+   const territoryTiles: Array<TileIndex> = [];
    // Tiles to expand the territory from
-   const spreadTiles = new Array<TileIndex>();
+   const spreadTiles: Array<TileIndex> = [];
 
    const originTileIndex = getTileIndexIncludingEdges(originTileX, originTileY);
    territoryTiles.push(originTileIndex);
@@ -166,9 +166,8 @@ const throwSnowball = (yeti: Entity, size: number, throwAngle: number): void => 
    
    const angle = throwAngle + randFloat(-Vars.SNOW_THROW_ARC, Vars.SNOW_THROW_ARC);
    
-   const position = yetiHitbox.box.position.copy();
-   position.x += Vars.SNOW_THROW_OFFSET * Math.sin(angle);
-   position.y += Vars.SNOW_THROW_OFFSET * Math.cos(angle);
+   const positionX = yetiHitbox.box.posX + Vars.SNOW_THROW_OFFSET * Math.sin(angle);
+   const positionY = yetiHitbox.box.posY + Vars.SNOW_THROW_OFFSET * Math.cos(angle);
 
    let velocityMagnitude: number;
    if (size === 2) {
@@ -177,7 +176,7 @@ const throwSnowball = (yeti: Entity, size: number, throwAngle: number): void => 
       velocityMagnitude = randFloat(Vars.LARGE_SNOWBALL_THROW_SPEED_MIN, Vars.LARGE_SNOWBALL_THROW_SPEED_MAX);
    }
 
-   const config = createSnowballConfig(position, randAngle(), yeti, size);
+   const config = createSnowballConfig(positionX, positionY, randAngle(), yeti, size);
 
    const snowballHitbox = getConfigTransformComponent(config.components).hitboxes[0];
    addHitboxVelocity(snowballHitbox, polarVec2(velocityMagnitude, angle));
@@ -311,7 +310,7 @@ function onTick(yeti: Entity): void {
                   yetiComponent.snowThrowHoldTimer = 0;
                }
 
-               const targetAngle = yetiBodyHitbox.box.position.angleTo(targetHitbox.box.position);
+               const targetAngle = angle(targetHitbox.box.posX - yetiBodyHitbox.box.posX, targetHitbox.box.posY - yetiBodyHitbox.box.posY);
                turnHitboxToAngle(yetiBodyHitbox, targetAngle, Vars.SLOW_TURN_SPEED, 0.5, false);
                return;
             }
@@ -321,7 +320,7 @@ function onTick(yeti: Entity): void {
                   yetiComponent.snowThrowStage = SnowThrowStage.return;
                }
 
-               const targetAngle = yetiBodyHitbox.box.position.angleTo(targetHitbox.box.position);
+               const targetAngle = angle(targetHitbox.box.posX - yetiBodyHitbox.box.posX, targetHitbox.box.posY - yetiBodyHitbox.box.posY);
                turnHitboxToAngle(yetiBodyHitbox, targetAngle, Vars.SLOW_TURN_SPEED, 0.5, false);
                return;
             }
@@ -354,7 +353,7 @@ function onTick(yeti: Entity): void {
    if (chaseTarget !== null) {
       const targetTransformComponent = TransformComponentArray.getComponent(chaseTarget);
       const targetHitbox = targetTransformComponent.hitboxes[0];
-      moveEntityToPosition(yeti, targetHitbox.box.position.x, targetHitbox.box.position.y, 700, Vars.TURN_SPEED, 1);
+      moveEntityToPosition(yeti, targetHitbox.box.posX, targetHitbox.box.posY, 700, Vars.TURN_SPEED, 1);
       return;
    }
 
@@ -373,9 +372,9 @@ function onTick(yeti: Entity): void {
             const entityTransformComponent = TransformComponentArray.getComponent(entity);
             const entityHitbox = entityTransformComponent.hitboxes[0];
             
-            const distance = yetiBodyHitbox.box.position.distanceTo(entityHitbox.box.position);
-            if (distance < minDist) {
-               minDist = distance;
+            const dist = distance(yetiBodyHitbox.box.posX, yetiBodyHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
+            if (dist < minDist) {
+               minDist = dist;
                closestFoodItem = entity;
             }
          }
@@ -384,7 +383,7 @@ function onTick(yeti: Entity): void {
          const foodTransformComponent = TransformComponentArray.getComponent(closestFoodItem);
          const foodHitbox = foodTransformComponent.hitboxes[0];
          
-         moveEntityToPosition(yeti, foodHitbox.box.position.x, foodHitbox.box.position.y, 300, Vars.TURN_SPEED, 1);
+         moveEntityToPosition(yeti, foodHitbox.box.posX, foodHitbox.box.posY, 300, Vars.TURN_SPEED, 1);
 
          if (entitiesAreColliding(yeti, closestFoodItem) !== CollisionVars.NO_COLLISION) {
             healEntity(yeti, 3, yeti);
@@ -468,7 +467,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
          return;
       }
 
-      const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
+      const hitDirection = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
       
       damageEntity(collidingHitbox, yeti, 2, DamageSource.yeti, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingHitbox, polarVec2(200, hitDirection));

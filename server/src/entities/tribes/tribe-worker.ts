@@ -39,12 +39,12 @@ const getHitboxRadius = (tribeType: TribeType): number => {
    }
 }
 
-export function createTribeWorkerConfig(position: Point, angle: number, tribe: Tribe): EntityConfig {
+export function createTribeWorkerConfig(x: number, y: number, angle: number, tribe: Tribe): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.traction = 1.4;
 
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, getHitboxRadius(tribe.tribeType)), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, getHitboxRadius(tribe.tribeType)), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
    
    const humanoidRadius = (bodyHitbox.box as CircularBox).radius;
@@ -58,11 +58,9 @@ export function createTribeWorkerConfig(position: Point, angle: number, tribe: T
       const isFlipped = i === 1;
 
       const offset = getLimbStateOffset(limbState, humanoidRadius);
+      const rotatedOffset = rotatePoint(offset, angle);
 
-      const handPosition = position.copy();
-      handPosition.add(rotatePoint(offset, angle));
-      
-      const hitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(handPosition, offset, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.HAND, HitboxFlag.IGNORES_WALL_COLLISIONS]);
+      const hitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(x + rotatedOffset.x, y + rotatedOffset.y, offset.x, offset.y, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.HAND, HitboxFlag.IGNORES_WALL_COLLISIONS]);
       hitbox.box.flipX = isFlipped;
       // @Hack
       hitbox.box.totalFlipXMultiplier = isFlipped ? -1 : 1;

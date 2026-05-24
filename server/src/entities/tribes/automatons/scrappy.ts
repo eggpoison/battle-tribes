@@ -26,12 +26,12 @@ const turnFunc = () => {
    throw new Error();
 }
 
-export function createScrappyConfig(position: Point, rotation: number, tribe: Tribe): EntityConfig {
+export function createScrappyConfig(x: number, y: number, angle: number, tribe: Tribe): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.traction = 1.4;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 20), 0.75, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 20), 0.75, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(10);

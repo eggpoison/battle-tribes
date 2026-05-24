@@ -1,4 +1,4 @@
-import { TileType, ServerComponentType, PacketReader, Entity, FishColour, randAngle, randFloat, randInt, Settings } from "webgl-test-shared";
+import { TileType, ServerComponentType, PacketReader, Entity, FishColour, randAngle, randFloat, randInt, Settings, Point } from "webgl-test-shared";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
@@ -81,8 +81,8 @@ class _FishComponentArray extends _ServerComponentArray<FishComponent, FishCompo
       if (tile.type !== TileType.water && tickIntervalHasPassed(0.4 * Settings.TICK_RATE)) {
          for (let i = 0; i < 8; i++) {
             const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.position.x + 8 * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.position.y + 8 * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = hitbox.box.posX + 8 * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = hitbox.box.posY + 8 * Math.cos(spawnOffsetDirection);
 
             createWaterSplashParticle(spawnPositionX, spawnPositionY);
          }
@@ -92,7 +92,7 @@ class _FishComponentArray extends _ServerComponentArray<FishComponent, FishCompo
    public onHit(entity: Entity, hitbox: Hitbox): void {
       // Blood particles
       for (let i = 0; i < 5; i++) {
-         const position = hitbox.box.position.offset(16, randAngle());
+         const position = new Point(hitbox.box.posX, hitbox.box.posY).offset(16, randAngle());
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, position.x, position.y, randAngle(), randFloat(150, 250), true);
       }
 

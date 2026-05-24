@@ -1,4 +1,4 @@
-export enum TileType {
+export const enum TileType {
    grass,
    dirt,
    water,
@@ -19,7 +19,7 @@ export enum TileType {
    fimbultur
 }
 
-export enum SubtileType {
+export const enum SubtileType {
    none,
    rockWall,
    sandstoneWall,

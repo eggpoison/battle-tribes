@@ -9,12 +9,12 @@ import { destroyEntity, getEntityType, validateEntity } from "../../world.js";
 import Tribe from "../../Tribe.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createBallistaRockConfig(position: Point, rotation: number, tribe: Tribe, creator: Entity): EntityConfig {
+export function createBallistaRockConfig(x: number, y: number, angle: number, tribe: Tribe, creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.isAffectedByGroundFriction = false;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 12, 80), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 12, 80), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
 

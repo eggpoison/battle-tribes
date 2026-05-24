@@ -121,11 +121,11 @@ export default class Tribe {
    public tribesmanCap: number;
 
    public selectedTechID: TechID | null = null;
-   public readonly unlockedTechs = new Array<Tech>();
+   public readonly unlockedTechs: Array<Tech> = [];
    public readonly techTreeUnlockProgress: TechTreeUnlockProgress = {};
 
-   private readonly respawnTimesRemaining = new Array<number>();
-   private readonly respawnHutIDs = new Array<number>();
+   private readonly respawnTimesRemaining: Array<number> = [];
+   private readonly respawnHutIDs: Array<number> = [];
 
    /** Stores building info for each layer, accessed through the layer's depth */
    public readonly buildingLayers = layers.map(layer => new TribeBuildingLayer(layer, this));
@@ -138,12 +138,12 @@ export default class Tribe {
 
    public virtualEntityIDCounter = 0;
 
-   public entities = new Array<Entity>();
+   public entities: Array<Entity> = [];
    // @Memory: stores for alll.....
    public entitiesByEntityType = createEntitiesByEntityType();
 
    // Whereas each building layer stores these only for that building layer, this stores all virtual buildings in every building layer
-   public virtualStructures = new Array<VirtualStructure>();
+   public virtualStructures: Array<VirtualStructure> = [];
    public virtualStructureRecord: Record<number, VirtualStructure> = {};
    // @Memory: stores for alll.....
    public virtualStructuresByEntityType = createVirtualStructuresByEntityType();
@@ -375,16 +375,17 @@ export default class Tribe {
       const hutHitbox = transformComponent.hitboxes[0];
       
       // Offset the spawn position so the tribesman comes out of the correct side of the hut
-      const position = new Point(hutHitbox.box.position.x + 10 * Math.sin(hutHitbox.box.angle), hutHitbox.box.position.y + 10 * Math.cos(hutHitbox.box.angle));
+      const x = hutHitbox.box.posX + 10 * Math.sin(hutHitbox.box.angle);
+      const y = hutHitbox.box.posY + 10 * Math.cos(hutHitbox.box.angle);
       
       let config: EntityConfig;
       switch (getEntityType(hut)) {
          case EntityType.workerHut: {
-            config = createTribeWorkerConfig(position, hutHitbox.box.angle, this);
+            config = createTribeWorkerConfig(x, y, hutHitbox.box.angle, this);
             break;
          }
          case EntityType.warriorHut: {
-            config = createTribeWarriorConfig(position, hutHitbox.box.angle, this);
+            config = createTribeWarriorConfig(x, y, hutHitbox.box.angle, this);
             break;
          }
          default: {
@@ -500,7 +501,7 @@ export default class Tribe {
 
    public getArea(): Array<TileIndex> {
       // @Speed @Garbage
-      const area = new Array<TileIndex>();
+      const area: Array<TileIndex> = [];
       for (const tileInfluence of Object.values(this.area)) {
          area.push(tileInfluence.tile);
       }

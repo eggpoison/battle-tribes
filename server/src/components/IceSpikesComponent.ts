@@ -1,4 +1,4 @@
-import { Point, polarVec2, positionIsInWorld, randAngle, randInt, ServerComponentType, Entity, EntityType, DamageSource, Settings, Biome, AttackEffectiveness, StatusEffect } from "battletribes-shared";
+import { Point, polarVec2, positionIsInWorld, randAngle, randInt, ServerComponentType, Entity, EntityType, DamageSource, Settings, Biome, AttackEffectiveness, StatusEffect, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import Layer from "../Layer.js";
 import { createIceSpikesConfig } from "../entities/resources/ice-spikes.js";
@@ -63,30 +63,29 @@ const grow = (iceSpikes: Entity): void => {
    const hitbox = transformComponent.hitboxes[0];
 
    // Calculate the spawn position for the new ice spikes
-   const position = hitbox.box.position.copy();
    const offsetDirection = randAngle();
-   position.x += Vars.GROWTH_OFFSET * Math.sin(offsetDirection);
-   position.y += Vars.GROWTH_OFFSET * Math.cos(offsetDirection);
+   const x = hitbox.box.posX + Vars.GROWTH_OFFSET * Math.sin(offsetDirection);
+   const y = hitbox.box.posY + Vars.GROWTH_OFFSET * Math.cos(offsetDirection);
 
    // Don't grow outside the board
-   if (!positionIsInWorld(position.x, position.y)) {
+   if (!positionIsInWorld(x, y)) {
       return;
    }
 
    // Only grow into tundra
-   const tileX = Math.floor(position.x / Settings.TILE_SIZE);
-   const tileY = Math.floor(position.y / Settings.TILE_SIZE);
+   const tileX = Math.floor(x / Settings.TILE_SIZE);
+   const tileY = Math.floor(y / Settings.TILE_SIZE);
    const layer = getEntityLayer(iceSpikes);
    if (layer.getTileXYBiome(tileX, tileY) !== Biome.tundra) {
       return;
    }
 
    // @Speed: this function can be way too slow... just need to check for any entities within 40 units
-   const minDistanceToEntity = getDistanceToClosestEntity(layer, position);
+   const minDistanceToEntity = getDistanceToClosestEntity(layer, x, y);
    if (minDistanceToEntity >= 40) {
       const iceSpikesComponent = IceSpikesComponentArray.getComponent(iceSpikes);
 
-      const config = createIceSpikesConfig(position.copy(), randAngle(), iceSpikesComponent.rootIceSpike);
+      const config = createIceSpikesConfig(x, y, randAngle(), iceSpikesComponent.rootIceSpike);
       createEntity(config, layer, 0);
       
       const rootIceSpikesComponent = IceSpikesComponentArray.getComponent(iceSpikesComponent.rootIceSpike);
@@ -110,7 +109,7 @@ function preRemove(iceSpikes: Entity): void {
    
    // Explode into a bunch of ice spikes
    const numProjectiles = randInt(3, 4);
-   createIceShardExplosion(getEntityLayer(iceSpikes), iceSpikesHitbox.box.position.x, iceSpikesHitbox.box.position.y, numProjectiles);
+   createIceShardExplosion(getEntityLayer(iceSpikes), iceSpikesHitbox.box.posX, iceSpikesHitbox.box.posY, numProjectiles);
 }
 
 function getDataLength(): number {
@@ -143,9 +142,8 @@ export function createIceShardExplosion(layer: Layer, originX: number, originY: 
       const moveDirection = randAngle();
       const x = originX + 10 * Math.sin(moveDirection);
       const y = originY + 10 * Math.cos(moveDirection);
-      const position = new Point(x, y);
 
-      const config = createIceShardConfig(position, moveDirection);
+      const config = createIceShardConfig(x, y, moveDirection);
 
       const iceShardHitbox = getConfigTransformComponent(config.components).hitboxes[0];
       addHitboxVelocity(iceShardHitbox, polarVec2(700, moveDirection));
@@ -166,7 +164,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    if (HealthComponentArray.hasComponent(collidingEntity)) {
       const healthComponent = HealthComponentArray.getComponent(collidingEntity);
       if (canDamageEntity(healthComponent, "ice_spikes")) {
-         const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
+         const hitDirection = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
          
          damageEntity(collidingHitbox, hitbox.entity, 1, DamageSource.iceSpikes, AttackEffectiveness.effective, collisionPoint, 0);
          applyKnockback(collidingHitbox, polarVec2(180, hitDirection));

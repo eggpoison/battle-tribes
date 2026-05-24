@@ -8,13 +8,13 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { Hitbox } from "../../hitboxes.js";
 import { createLight } from "../../lights.js";
 
-export function createGuardianSpikyBallConfig(position: Point, rotation: number,creator: Entity): EntityConfig {
+export function createGuardianSpikyBallConfig(x: number, y: number, angle: number,creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.isAffectedByAirFriction = false;
    transformComponent.isAffectedByGroundFriction = false;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 20), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 20), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
    
@@ -27,7 +27,7 @@ export function createGuardianSpikyBallConfig(position: Point, rotation: number,
    
    const guardianSpikyBallComponent = new GuardianSpikyBallComponent();
    
-   const lights = new Array<LightCreationInfo>();
+   const lights: Array<LightCreationInfo> = [];
    const light = createLight(new Point(0, 0), 0.4, 0.3, 20, 0.9, 0.2, 0.9);
    lights.push({
       light: light,

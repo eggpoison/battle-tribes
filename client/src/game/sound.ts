@@ -1,4 +1,4 @@
-import { Entity, TileType, assert, Point, randInt, Settings } from "webgl-test-shared";
+import { Entity, TileType, assert, Point, randInt, Settings, distance } from "webgl-test-shared";
 import { getCurrentLayer, getEntityLayer } from "./world";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Layer from "./Layer";
@@ -20,7 +20,8 @@ let audioBuffers: Partial<Record<string, AudioBuffer>> = {};
 export interface Sound {
    readonly id: SoundID;
    volume: number;
-   readonly position: Point;
+   x: number;
+   y: number;
    readonly gainNode: GainNode;
    isRemoved: boolean;
 }
@@ -357,9 +358,9 @@ export async function beginLoadingSounds(): Promise<void> {
    requestIdleCallback(scheduleLoad);
 }
 
-const calculateSoundVolume = (volume: number, position: Point): number => {
+const calculateSoundVolume = (volume: number, x: number, y: number): number => {
    // Calculate final volume accounting for distance
-   let distanceFromPlayer = cameraPosition.distanceTo(position);
+   let distanceFromPlayer = distance(cameraPosition.x, cameraPosition.y, x, y);
    distanceFromPlayer /= 150;
    if (distanceFromPlayer < 1) {
       distanceFromPlayer = 1;
@@ -401,7 +402,7 @@ export interface SoundInfo {
    readonly sound: Sound;
 }
 // @Speed: Garbage collection, unbox the source from a point
-export function playSound(filePath: string, volume: number, pitchMultiplier: number, source: Point, layer: Layer): SoundInfo | null {
+export function playSound(filePath: string, volume: number, pitchMultiplier: number, x: number, y: number, layer: Layer): SoundInfo | null {
    // Don't play sounds when the game isn't open because god is that crushing for your mental health. maybe that is an overexaggeration
    if (!gameIsFocused) {
       return null;
@@ -422,7 +423,7 @@ export function playSound(filePath: string, volume: number, pitchMultiplier: num
    assert(audioBuffer !== undefined);
 
    const gainNode = audioContext.createGain();
-   gainNode.gain.value = calculateSoundVolume(volume, source);
+   gainNode.gain.value = calculateSoundVolume(volume, x, y);
    gainNode.connect(audioContext.destination);
    
    const trackSource = audioContext.createBufferSource();
@@ -435,7 +436,8 @@ export function playSound(filePath: string, volume: number, pitchMultiplier: num
    const sound: Sound = {
       id: idCounter++,
       volume: volume,
-      position: source,
+      x: x,
+      y: y,
       gainNode: gainNode,
       isRemoved: false
    };
@@ -455,13 +457,13 @@ export function playSound(filePath: string, volume: number, pitchMultiplier: num
 /** Plays a sound which is not embodied in the world and exists only to the playing player. */
 export function playHeadSound(filePath: string, volume: number, pitchMultiplier: number): SoundInfo | null {
    // @HACK @HACK @HACK @BUG this isn't actually disembodied and absolute / attached to camera and if the player moves or changes layers it will decrease in volume D:
-   return playSound(filePath, volume, pitchMultiplier, cameraPosition.copy(), getCurrentLayer());
+   return playSound(filePath, volume, pitchMultiplier, cameraPosition.x, cameraPosition.y, getCurrentLayer());
 }
 
 // @Cleanup: Make this return the sound info. and make it so that the sound info is guaranteed. so if it starts in wrong layer it still plays if it goes to correct layer
 export function playSoundOnHitbox(filePath: string, volume: number, pitchMultiplier: number, entity: Entity, hitbox: Hitbox, isDestroyedWhenEntityIsDestroyed: boolean): SoundInfo | null {
    // @Incomplete: use render position
-   const soundInfo = playSound(filePath, volume, pitchMultiplier, hitbox.box.position.copy(), getEntityLayer(entity));
+   const soundInfo = playSound(filePath, volume, pitchMultiplier, hitbox.box.posX, hitbox.box.posY, getEntityLayer(entity));
    
    if (soundInfo !== null) {
       soundToHitboxMap.set(soundInfo.sound, hitbox);
@@ -511,8 +513,8 @@ export function updateSounds(): void {
          const attachInfo = hitboxAttachedSounds[i];
          const sound = attachInfo.sound;
          
-         sound.position.x = hitbox.box.position.x;
-         sound.position.y = hitbox.box.position.y;
+         sound.x = hitbox.box.posX;
+         sound.y = hitbox.box.posY;
       }
    }
    
@@ -525,7 +527,7 @@ export function updateSounds(): void {
       } else {
          // @HACK to find out why this is crashing and idk why
          assert(Number.isFinite(sound.volume));
-         sound.gainNode.gain.value = calculateSoundVolume(sound.volume, sound.position);
+         sound.gainNode.gain.value = calculateSoundVolume(sound.volume, sound.x, sound.y);
       }
    }
 }
@@ -567,7 +569,7 @@ export function playRiverSounds(): void {
          if (flowDirection > 0) {
             const x = (tileX + Math.random()) * Settings.TILE_SIZE;
             const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-            playSound("water-flowing-" + randInt(1, 4) + ".mp3", 0.2, 1, new Point(x, y), layer);
+            playSound("water-flowing-" + randInt(1, 4) + ".mp3", 0.2, 1, x, y, layer);
          }
       }
    }

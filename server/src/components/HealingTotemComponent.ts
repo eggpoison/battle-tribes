@@ -11,8 +11,8 @@ const enum Vars {
 }
 
 export class HealingTotemComponent {
-   public readonly healTargetIDs = new Array<number>();
-   public readonly healTargetsTicksHealed = new Array<number>();
+   public readonly healTargetIDs: Array<number> = [];
+   public readonly healTargetsTicksHealed: Array<number> = [];
 }
 
 export const HealingTotemComponentArray = new ComponentArray<HealingTotemComponent>(ServerComponentType.healingTotem, true, getDataLength, addDataToPacket);
@@ -22,7 +22,7 @@ HealingTotemComponentArray.onTick = {
 };
 
 const getHealingTargets = (healingTotem: Entity, visibleEntities: ReadonlyArray<Entity>): ReadonlyArray<Entity> => {
-   const targets = new Array<Entity>();
+   const targets: Array<Entity> = [];
    for (const entity of visibleEntities) {
       if (targets.indexOf(entity) !== -1) {
          continue;
@@ -128,8 +128,8 @@ function addDataToPacket(packet: Packet, entity: Entity): void {
       const hitbox = transformComponent.hitboxes[0];
 
       packet.writeNumber(healTarget);
-      packet.writeNumber(hitbox.box.position.x);
-      packet.writeNumber(hitbox.box.position.y);
+      packet.writeNumber(hitbox.box.posX);
+      packet.writeNumber(hitbox.box.posY);
       packet.writeNumber(ticksHealed);
    }
 }

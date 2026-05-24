@@ -13,7 +13,7 @@ export class StructureComponent {
    /** The blueprint currently placed on the structure. 0 if none is present */
    public activeBlueprint = 0;
 
-   public readonly connections = new Array<StructureConnection>();
+   public readonly connections: Array<StructureConnection> = [];
 
    /** The virtual structure associated with the structure. If null, will automatically create a virtual building for the structure. */
    public virtualStructure: VirtualStructure | null;
@@ -37,7 +37,7 @@ const addConnection = (entity: Entity, structureComponent: StructureComponent, c
    // @Hack
    const connectedEntityHitbox = connectedEntityTransformComponent.hitboxes[0];
    
-   const relativeOffsetDirection = calculateRelativeOffsetDirection(entityHitbox.box.position, entityHitbox.box.angle, connectedEntityHitbox.box.position);
+   const relativeOffsetDirection = calculateRelativeOffsetDirection(entityHitbox.box.posX, entityHitbox.box.posY, entityHitbox.box.angle, connectedEntityHitbox.box.posX, connectedEntityHitbox.box.posY);
    const connection = createStructureConnection(connectedEntity, relativeOffsetDirection);
    structureComponent.connections.push(connection)
 
@@ -67,7 +67,7 @@ function onJoin(entity: Entity): void {
       const entityType = getEntityType(entity) as StructureType;
       const buildingLayer = tribeComponent.tribe.buildingLayers[layer.depth];
       
-      structureComponent.virtualStructure = createVirtualStructureFromHitboxes(buildingLayer, entityHitbox.box.position.copy(), entityHitbox.box.angle, entityType, transformComponent.hitboxes);
+      structureComponent.virtualStructure = createVirtualStructureFromHitboxes(buildingLayer, entityHitbox.box.posX, entityHitbox.box.posY, entityHitbox.box.angle, entityType, transformComponent.hitboxes);
    }
    
    createStructureGrassBlockers(entity);

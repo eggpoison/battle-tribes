@@ -87,7 +87,7 @@ export function addEntityDataToPacket(packet: Packet, entity: Entity, player: En
 }
 
 const getVisibleGrassBlockers = (playerClient: PlayerClient): ReadonlyArray<GrassBlocker> => {
-   const visibleGrassBlockers = new Array<GrassBlocker>();
+   const visibleGrassBlockers: Array<GrassBlocker> = [];
    const seenBlockers = new Set<GrassBlocker>();
    
    for (let chunkX = playerClient.minVisibleChunkX; chunkX <= playerClient.maxVisibleChunkX; chunkX++) {
@@ -108,7 +108,7 @@ const getVisibleGrassBlockers = (playerClient: PlayerClient): ReadonlyArray<Gras
 }
 
 const getVisibleMinedSubtiles = (playerClient: PlayerClient): ReadonlyArray<number> => {
-   const minedSubtiles = new Array<number>();
+   const minedSubtiles: Array<number> = [];
    
    for (let chunkX = playerClient.minVisibleChunkX; chunkX <= playerClient.maxVisibleChunkX; chunkX++) {
       for (let chunkY = playerClient.minVisibleChunkY; chunkY <= playerClient.maxVisibleChunkY; chunkY++) {
@@ -547,10 +547,10 @@ export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBuffe
       const transformComponent = TransformComponentArray.getComponent(player);
       const hitbox = transformComponent.hitboxes[0];
 
-      pos = hitbox.box.position;
+      pos = new Point(hitbox.box.posX, hitbox.box.posY);
       angle = hitbox.box.angle;
-      previousPos = hitbox.previousPosition;
-      acceleration = hitbox.acceleration;
+      previousPos = new Point(hitbox.previousPosX, hitbox.previousPosY);
+      acceleration = new Point(hitbox.accelX, hitbox.accelY);
    } else {
       pos = new Point(playerClient.lastViewedPositionX, playerClient.lastViewedPositionY);
       angle = 0;

@@ -14,14 +14,14 @@ import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildin
 // @Memory
 const HEALTHS = [5, 20]; 
 
-export function createBracingsConfig(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createBracingsConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox1 = new Hitbox(transformComponent, null, true, new RectangularBox(position.copy(), new Point(0, Settings.TILE_SIZE * -0.5), rotation, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [])
+   const hitbox1 = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, Settings.TILE_SIZE * -0.5, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [])
    hitbox1.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox1);
 
-   const hitbox2 = new Hitbox(transformComponent, null, true, new RectangularBox(position.copy(), new Point(0, Settings.TILE_SIZE * 0.5), rotation, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [])
+   const hitbox2 = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, Settings.TILE_SIZE * 0.5, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [])
    hitbox2.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox2);
    

@@ -1,4 +1,4 @@
-import { Settings, Point, polarVec2, randAngle, randInt, AttackEffectiveness, Packet, Entity, EntityType, DamageSource, CactusFlowerSize, ServerComponentType, CircularBox } from "battletribes-shared";
+import { Settings, Point, polarVec2, randAngle, randInt, AttackEffectiveness, Packet, Entity, EntityType, DamageSource, CactusFlowerSize, ServerComponentType, CircularBox, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { getEntityType, destroyEntity, getEntityLayer, createEntity } from "../world.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
@@ -125,7 +125,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       return;
    }
 
-   const hitDir = hitbox.box.position.angleTo(collidingHitbox.box.position);
+   const hitDir = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, hitbox.entity, 1, DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
    applyAbsoluteKnockback(collidingHitbox, polarVec2(200, hitDir));

@@ -1,4 +1,4 @@
-import { ServerComponentType, Entity, EntityType, DamageSource, SlimeSize, Packet, Settings, TileType, lerp, Point, polarVec2, randAngle, UtilVar, Biome, AttackEffectiveness } from "battletribes-shared";
+import { ServerComponentType, Entity, EntityType, DamageSource, SlimeSize, Packet, Settings, TileType, lerp, Point, polarVec2, randAngle, UtilVar, Biome, AttackEffectiveness, calculateDistanceSquared, angle, distance } from "battletribes-shared";
 import { SLIME_MAX_MERGE_WANT, SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_SPEED_MULTIPLIERS, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger, createSlimeConfig } from "../entities/mobs/slime.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { turnAngle, getEntitiesInRange, moveEntityToPosition } from "../ai-shared.js";
@@ -44,9 +44,9 @@ export class SlimeComponent {
    public mergeTimer = SLIME_MERGE_TIME;
    public mergeWeight: number;
    public lastMergeTicks: number;
-   public readonly angeredEntities = new Array<SlimeEntityAnger>();
+   public readonly angeredEntities: Array<SlimeEntityAnger> = [];
 
-   public orbSizes = new Array<SlimeSize>();
+   public orbSizes: Array<SlimeSize> = [];
 
    constructor(size: SlimeSize) {
       this.size = size;
@@ -105,10 +105,10 @@ const updateAngerTarget = (slime: Entity): Entity | null => {
 const createSpit = (slime: Entity, slimeComponent: SlimeComponent): void => {
    const transformComponent = TransformComponentArray.getComponent(slime);
    const slimeHitbox = transformComponent.hitboxes[0];
-   const x = slimeHitbox.box.position.x + SLIME_RADII[slimeComponent.size] * Math.sin(slimeHitbox.box.angle);
-   const y = slimeHitbox.box.position.y + SLIME_RADII[slimeComponent.size] * Math.cos(slimeHitbox.box.angle);
+   const x = slimeHitbox.box.posX + SLIME_RADII[slimeComponent.size] * Math.sin(slimeHitbox.box.angle);
+   const y = slimeHitbox.box.posY + SLIME_RADII[slimeComponent.size] * Math.cos(slimeHitbox.box.angle);
 
-   const config = createSlimeSpitConfig(new Point(x, y), randAngle(), slimeComponent.size === SlimeSize.large ? 1 : 0);
+   const config = createSlimeSpitConfig(x, y, randAngle(), slimeComponent.size === SlimeSize.large ? 1 : 0);
 
    const spitHitbox = getConfigTransformComponent(config.components).hitboxes[0];
    setHitboxVelocity(spitHitbox, 500 * Math.sin(slimeHitbox.box.angle), 500 * Math.cos(slimeHitbox.box.angle));
@@ -140,7 +140,7 @@ const getEnemyChaseTargetID = (slime: Entity): number => {
          continue;
       }
 
-      const distanceSquared = slimeHitbox.box.position.calculateDistanceSquaredBetween(entityHitbox.box.position);
+      const distanceSquared = calculateDistanceSquared(slimeHitbox.box.posX, slimeHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
       if (distanceSquared < minDist) {
          minDist = distanceSquared;
          closestEnemyID = entity;
@@ -172,7 +172,7 @@ const getChaseTargetID = (slime: Entity): number => {
             continue;
          }
 
-         const distanceSquared = slimeHitbox.box.position.calculateDistanceSquaredBetween(otherHitbox.box.position);
+         const distanceSquared = calculateDistanceSquared(slimeHitbox.box.posX, slimeHitbox.box.posY, otherHitbox.box.posX, otherHitbox.box.posY);
          if (distanceSquared < minDist) {
             minDist = distanceSquared;
             closestMergerID = entity;
@@ -184,7 +184,7 @@ const getChaseTargetID = (slime: Entity): number => {
             continue;
          }
 
-         const distanceSquared = slimeHitbox.box.position.calculateDistanceSquaredBetween(otherHitbox.box.position);
+         const distanceSquared = calculateDistanceSquared(slimeHitbox.box.posX, slimeHitbox.box.posY, otherHitbox.box.posX, otherHitbox.box.posY);
          if (distanceSquared < minDist) {
             minDist = distanceSquared;
             closestEnemyID = entity;
@@ -230,7 +230,7 @@ function onTick(slime: Entity): void {
       const angerTargetTransformComponent = TransformComponentArray.getComponent(angerTarget);
       const targetHitbox = angerTargetTransformComponent.hitboxes[0];
       
-      const targetDirection = slimeHitbox.box.position.angleTo(targetHitbox.box.position);
+      const targetDirection = angle(targetHitbox.box.posX - slimeHitbox.box.posX, targetHitbox.box.posY - slimeHitbox.box.posY);
       slimeComponent.eyeAngle = turnAngle(slimeComponent.eyeAngle, targetDirection, 5 * Math.PI);
 
       turnHitboxToAngle(slimeHitbox, targetDirection, Vars.TURN_SPEED, 0.5, false);
@@ -272,7 +272,7 @@ function onTick(slime: Entity): void {
       const chaseTargetTransformComponent = TransformComponentArray.getComponent(chaseTarget);
       const targetHitbox = chaseTargetTransformComponent.hitboxes[0];
       
-      const targetDirection = slimeHitbox.box.position.angleTo(targetHitbox.box.position);
+      const targetDirection = angle(targetHitbox.box.posX - slimeHitbox.box.posX, targetHitbox.box.posY - slimeHitbox.box.posY);
       slimeComponent.eyeAngle = turnAngle(slimeComponent.eyeAngle, targetDirection, 5 * Math.PI);
 
       const speedMultiplier = SLIME_SPEED_MULTIPLIERS[slimeComponent.size];
@@ -350,7 +350,7 @@ const merge = (slime1: Entity, slime2: Entity): void => {
    slimeComponent1.mergeTimer = SLIME_MERGE_TIME;
 
    if (slimeComponent1.size < SlimeSize.large && slimeComponent1.mergeWeight >= SLIME_MERGE_WEIGHTS[slimeComponent1.size + 1]) {
-      const orbSizes = new Array<SlimeSize>();
+      const orbSizes: Array<SlimeSize> = [];
 
       // Add orbs from the 2 existing slimes
       for (const orbSize of slimeComponent1.orbSizes) {
@@ -377,10 +377,10 @@ const merge = (slime1: Entity, slime2: Entity): void => {
       const slime2TransformComponent = TransformComponentArray.getComponent(slime2);
       const slime2Hitbox = slime2TransformComponent.hitboxes[0];
       
-      const x = (slime1Hitbox.box.position.x + slime2Hitbox.box.position.x) / 2;
-      const y = (slime1Hitbox.box.position.y + slime2Hitbox.box.position.y) / 2;
+      const x = (slime1Hitbox.box.posX + slime2Hitbox.box.posX) / 2;
+      const y = (slime1Hitbox.box.posY + slime2Hitbox.box.posY) / 2;
 
-      const config = createSlimeConfig(new Point(x, y), randAngle(), slimeComponent1.size + 1);
+      const config = createSlimeConfig(x, y, randAngle(), slimeComponent1.size + 1);
 
       const componentTypes = getEntityComponentTypes(config.entityType);
       const slimeComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.slime);
@@ -475,7 +475,7 @@ const propagateAnger = (slime: Entity, angeredEntity: Entity, amount: number, pr
    const visionRange = aiHelperComponent.visionRange;
    // @Speed
    const layer = getEntityLayer(slime);
-   const visibleEntities = getEntitiesInRange(layer, seeingHitbox.box.position.x, seeingHitbox.box.position.y, visionRange);
+   const visibleEntities = getEntitiesInRange(layer, seeingHitbox.box.posX, seeingHitbox.box.posY, visionRange);
 
    // @Cleanup: don't do here
    let idx = visibleEntities.indexOf(slime);
@@ -490,8 +490,8 @@ const propagateAnger = (slime: Entity, angeredEntity: Entity, amount: number, pr
          const entityTransformComponent = TransformComponentArray.getComponent(entity);
          const entityHitbox = entityTransformComponent.hitboxes[0];
          
-         const distance = seeingHitbox.box.position.distanceTo(entityHitbox.box.position);
-         const distanceFactor = distance / visionRange;
+         const dist = distance(seeingHitbox.box.posX, seeingHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
+         const distanceFactor = dist / visionRange;
 
          propagationInfo.propagatedEntityIDs.add(slime);
          

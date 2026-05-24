@@ -1,4 +1,4 @@
-import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, StatusEffect, Point } from "battletribes-shared";
+import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, StatusEffect } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { SandstoneRockComponent } from "../../components/SandstoneRockComponent.js";
@@ -6,7 +6,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createSandstoneRockConfig(position: Point, angle: number, size: number): EntityConfig {
+export function createSandstoneRockConfig(x: number, y: number, angle: number, size: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
    let radius: number;
@@ -34,7 +34,7 @@ export function createSandstoneRockConfig(position: Point, angle: number, size: 
       default: throw new Error();
    }
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, radius), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, radius), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
 

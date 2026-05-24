@@ -1,3 +1,4 @@
+import { angle } from "../../../../../shared/src";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { getTexture } from "../../textures";
 import { createWebGLProgram, gl } from "../../webgl";
@@ -61,20 +62,20 @@ export function renderDebugImages(): void {
       for (const child of transformComponent.hitboxes) {
          const hitbox = child;
          for (const tether of hitbox.tethers) {
-            const direction = hitbox.box.position.angleTo(tether.originBox.position);
+            const direction = angle(tether.originBox.posX - hitbox.box.posX, tether.originBox.posY - hitbox.box.posY);
             const perpDirection = direction + Math.PI * 0.5;
             
-            const x1 = hitbox.box.position.x + Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
-            const y1 = hitbox.box.position.y + Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
+            const x1 = hitbox.box.posX + Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
+            const y1 = hitbox.box.posY + Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
             
-            const x2 = hitbox.box.position.x - Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
-            const y2 = hitbox.box.position.y - Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
+            const x2 = hitbox.box.posX - Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
+            const y2 = hitbox.box.posY - Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
             
-            const x3 = tether.originBox.position.x + Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
-            const y3 = tether.originBox.position.y + Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
+            const x3 = tether.originBox.posX + Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
+            const y3 = tether.originBox.posY + Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
             
-            const x4 = tether.originBox.position.x - Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
-            const y4 = tether.originBox.position.y - Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
+            const x4 = tether.originBox.posX - Var.SPRING_WIDTH * 0.5 * Math.sin(perpDirection);
+            const y4 = tether.originBox.posY - Var.SPRING_WIDTH * 0.5 * Math.cos(perpDirection);
    
             vertices.push(
                x1, y1, 0, 0,

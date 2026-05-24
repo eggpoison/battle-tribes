@@ -42,10 +42,10 @@ const getPlanDebugString = (plan: AIPlan): string => {
 }
 
 export function createEntityDebugData(entity: Entity): EntityDebugData {
-   const lines = new Array<LineDebugData>();
-   const circles = new Array<CircleDebugData>();
-   const tileHighlights = new Array<TileHighlightData>();
-   const debugEntries = new Array<string>();
+   const lines: Array<LineDebugData> = [];
+   const circles: Array<CircleDebugData> = [];
+   const tileHighlights: Array<TileHighlightData> = [];
+   const debugEntries: Array<string> = [];
    let pathData: PathData | undefined;
 
    if (AIHelperComponentArray.hasComponent(entity)) {
@@ -62,7 +62,7 @@ export function createEntityDebugData(entity: Entity): EntityDebugData {
    if (TribesmanAIComponentArray.hasComponent(entity)) {
       const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(entity);
       
-      debugEntries.push("Current AI type: " + TribesmanAIType[tribesmanAIComponent.currentAIType]);
+      debugEntries.push("Current AI type: " + tribesmanAIComponent.currentAIType);
       
       // Communication range
       circles.push({

@@ -14,10 +14,10 @@ registerEntityLootOnDeath(EntityType.glurbBodySegment, {
    getAmount: () => 1
 });
 
-export function createGlurbBodySegmentConfig(position: Point, angle: number): EntityConfig {
+export function createGlurbBodySegmentConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, 28), 0.8, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 28), 0.8, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(5);

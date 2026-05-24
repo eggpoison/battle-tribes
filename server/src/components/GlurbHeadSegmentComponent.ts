@@ -1,4 +1,4 @@
-import { ServerComponentType, Entity, EntityType, ItemType, Settings, assert, Point, randAngle, EntityTickEvent, EntityTickEventType } from "battletribes-shared";
+import { ServerComponentType, Entity, EntityType, ItemType, Settings, assert, Point, randAngle, EntityTickEvent, EntityTickEventType, distance, angle } from "battletribes-shared";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
 import { Hitbox } from "../hitboxes.js";
 import { destroyEntity, entityExists, getEntityType } from "../world.js";
@@ -50,8 +50,8 @@ const moveToEntity = (glurb: Entity, targetEntity: Entity): void => {
    
    const targetTransformComponent = TransformComponentArray.getComponent(targetEntity);
    const targetHitbox = targetTransformComponent.hitboxes[0];
-   aiHelperComponent.moveFunc(glurb, targetHitbox.box.position, 0);
-   aiHelperComponent.turnFunc(glurb, targetHitbox.box.position, 0, 0);
+   aiHelperComponent.moveFunc(glurb, targetHitbox.box.posX, targetHitbox.box.posY, 0);
+   aiHelperComponent.turnFunc(glurb, targetHitbox.box.posX, targetHitbox.box.posY, 0, 0);
 }
 
 const getFollowTarget = (followAIComponent: FollowAI, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
@@ -85,7 +85,7 @@ const getFoodTarget = (glurbHeadHitbox: Hitbox, visibleEntities: ReadonlyArray<E
 
       const transformComponent = TransformComponentArray.getComponent(moss);
       const mossHitbox = transformComponent.hitboxes[0];
-      const dist = mossHitbox.box.position.distanceTo(glurbHeadHitbox.box.position);
+      const dist = distance(mossHitbox.box.posX, mossHitbox.box.posY, glurbHeadHitbox.box.posX, glurbHeadHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          target = moss;
@@ -172,11 +172,10 @@ function onTick(glurbHead: Entity): void {
       const attackerHitbox = attackerTransformComponent.hitboxes[0];
 
       // Run away!!
-      const targetX = headHitbox.box.position.x * 2 - attackerHitbox.box.position.x;
-      const targetY = headHitbox.box.position.y * 2 - attackerHitbox.box.position.y;
-      const targetPos = new Point(targetX, targetY);
-      aiHelperComponent.moveFunc(glurbHead, targetPos, 0);
-      aiHelperComponent.turnFunc(glurbHead, targetPos, 0, 0);
+      const targetX = headHitbox.box.posX * 2 - attackerHitbox.box.posX;
+      const targetY = headHitbox.box.posY * 2 - attackerHitbox.box.posY;
+      aiHelperComponent.moveFunc(glurbHead, targetX, targetY, 0);
+      aiHelperComponent.turnFunc(glurbHead, targetX, targetY, 0, 0);
       return;
    }
    
@@ -231,18 +230,18 @@ function onTick(glurbHead: Entity): void {
                   const finalSegmentTransformComponent = TransformComponentArray.getComponent(finalChild);
                   const finalSegmentHitbox = finalSegmentTransformComponent.hitboxes[0];
 
-                  const spawnOffsetDirection = headHitbox.box.position.angleTo(finalSegmentHitbox.box.position);
+                  const spawnOffsetDirection = angle(finalSegmentHitbox.box.posX - headHitbox.box.posX, finalSegmentHitbox.box.posY - headHitbox.box.posY);
                   const spawnOffsetMagnitude = 30;
-                  const x = finalSegmentHitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-                  const y = finalSegmentHitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+                  const x = finalSegmentHitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+                  const y = finalSegmentHitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
                   
                   let config: EntityConfig;
                   if (numSegments + 1 === glurbHeadSegmentComponent.maxNumSegments) {
                      // Tail segment
-                     config = createGlurbTailSegmentConfig(new Point(x, y), randAngle());
+                     config = createGlurbTailSegmentConfig(x, y, randAngle());
                   } else {
                      // Body segment
-                     config = createGlurbBodySegmentConfig(new Point(x, y), randAngle());
+                     config = createGlurbBodySegmentConfig(x, y, randAngle());
                   }
 
                   const newSegmentHitbox = getConfigTransformComponent(config.components).hitboxes[0];
@@ -274,7 +273,7 @@ function onTick(glurbHead: Entity): void {
    const wanderAI = aiHelperComponent.getWanderAI();
    wanderAI.update(glurbHead);
    if (wanderAI.targetPosition !== null) {
-      aiHelperComponent.moveFunc(glurbHead, wanderAI.targetPosition, 0);
-      aiHelperComponent.turnFunc(glurbHead, wanderAI.targetPosition, 0, 0);
+      aiHelperComponent.moveFunc(glurbHead, wanderAI.targetPosition.x, wanderAI.targetPosition.y, 0);
+      aiHelperComponent.turnFunc(glurbHead, wanderAI.targetPosition.x, wanderAI.targetPosition.y, 0, 0);
    }
 }

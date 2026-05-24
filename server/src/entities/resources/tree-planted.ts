@@ -1,4 +1,4 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, randInt, StatusEffect, HitboxCollisionType, CircularBox, ItemType } from "battletribes-shared";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, randInt, StatusEffect, HitboxCollisionType, CircularBox, ItemType } from "battletribes-shared";
 import { PlantedComponent } from "../../components/PlantedComponent.js";
 import { plantedTreeIsFullyGrown, TreePlantedComponent } from "../../components/TreePlantedComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -21,10 +21,10 @@ registerEntityLootOnDeath(EntityType.treePlanted, {
    }
 });
 
-export function createTreePlantedConfig(position: Point, rotation: number, planterBox: Entity): EntityConfig {
+export function createTreePlantedConfig(x: number, y: number, angle: number, planterBox: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 28), 0.3, HitboxCollisionType.soft, CollisionBit.plant, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 28), 0.3, HitboxCollisionType.soft, CollisionBit.plant, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
    

@@ -144,8 +144,8 @@ class _CactusComponentArray extends _ServerComponentArray<CactusComponent, Cactu
       playSoundOnHitbox("cactus-destroy.mp3", 0.4, 1, entity, hitbox, false);
       
       for (const flower of cactusComponent.flowers) {
-         const spawnPositionX = hitbox.box.position.x + flower.offsetX;
-         const spawnPositionY = hitbox.box.position.y + flower.offsetY;
+         const spawnPositionX = hitbox.box.posX + flower.offsetX;
+         const spawnPositionY = hitbox.box.posY + flower.offsetY;
 
          createFlowerParticle(spawnPositionX, spawnPositionY, flower.flowerType, flower.size, flower.rotation);
       }

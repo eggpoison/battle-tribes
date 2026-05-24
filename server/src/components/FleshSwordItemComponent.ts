@@ -1,4 +1,4 @@
-import { Biome, ServerComponentType, Entity, EntityType, Settings, angle, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, polarVec2, randItem, TileIndex } from "battletribes-shared";
+import { Biome, ServerComponentType, Entity, EntityType, Settings, angle, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, polarVec2, randItem, TileIndex, distance } from "battletribes-shared";
 import { entityHasPassedPosition } from "../ai-shared.js";
 import { Hitbox, addHitboxVelocity } from "../hitboxes.js";
 import { getEntityType, getEntityLayer } from "../world.js";
@@ -37,9 +37,9 @@ const getRunTarget = (itemEntity: Entity, visibleEntities: ReadonlyArray<Entity>
          const entityTransformComponent = TransformComponentArray.getComponent(itemEntity);
          const entityHitbox = entityTransformComponent.hitboxes[0];
 
-         const distance = hitbox.box.position.distanceTo(entityHitbox.box.position);
-         if (distance < closestRunTargetDistance) {
-            closestRunTargetDistance = distance;
+         const dist = distance(hitbox.box.posX, hitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
+         if (dist < closestRunTargetDistance) {
+            closestRunTargetDistance = dist;
             runTarget = entity;
          }
       }
@@ -55,12 +55,12 @@ const getTileWanderTargets = (itemEntity: Entity): Array<TileIndex> => {
    
    const aiHelperComponent = AIHelperComponentArray.getComponent(itemEntity);
 
-   const minTileX = Math.max(Math.min(Math.floor((hitbox.box.position.x - aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
-   const maxTileX = Math.max(Math.min(Math.floor((hitbox.box.position.x + aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
-   const minTileY = Math.max(Math.min(Math.floor((hitbox.box.position.y - aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
-   const maxTileY = Math.max(Math.min(Math.floor((hitbox.box.position.y + aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
+   const minTileX = Math.max(Math.min(Math.floor((hitbox.box.posX - aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
+   const maxTileX = Math.max(Math.min(Math.floor((hitbox.box.posX + aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
+   const minTileY = Math.max(Math.min(Math.floor((hitbox.box.posY - aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
+   const maxTileY = Math.max(Math.min(Math.floor((hitbox.box.posY + aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
 
-   const wanderTargets = new Array<TileIndex>();
+   const wanderTargets: Array<TileIndex> = [];
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -69,9 +69,8 @@ const getTileWanderTargets = (itemEntity: Entity): Array<TileIndex> => {
          // Don't try to wander to wall tiles
          // if (layer.tileIsWalls[tileIndex]) continue;
          
-         const position = new Point((tileX + Math.random()) * Settings.TILE_SIZE, (tileY + Math.random()) * Settings.TILE_SIZE);
-         const distance = hitbox.box.position.distanceTo(position);
-         if (distance <= aiHelperComponent.visionRange) {
+         const dist = distance(hitbox.box.posX, hitbox.box.posY, (tileX + Math.random()) * Settings.TILE_SIZE, (tileY + Math.random()) * Settings.TILE_SIZE);
+         if (dist <= aiHelperComponent.visionRange) {
             wanderTargets.push(tileIndex);
          }
       }
@@ -102,15 +101,15 @@ function onTick(fleshSword: Entity): void {
       const runTargetTransformComponent = TransformComponentArray.getComponent(runTarget);
       const targetHitbox = runTargetTransformComponent.hitboxes[0];
       
-      const angleFromTarget = hitbox.box.position.angleTo(targetHitbox.box.position);
-      targetPositionX = hitbox.box.position.x + 100 * Math.sin(angleFromTarget + Math.PI);
-      targetPositionY = hitbox.box.position.y + 100 * Math.cos(angleFromTarget + Math.PI);
+      const angleFromTarget = angle(targetHitbox.box.posX - hitbox.box.posX, targetHitbox.box.posY - hitbox.box.posY);
+      targetPositionX = hitbox.box.posX + 100 * Math.sin(angleFromTarget + Math.PI);
+      targetPositionY = hitbox.box.posY + 100 * Math.cos(angleFromTarget + Math.PI);
       
-      const distance = hitbox.box.position.distanceTo(targetHitbox.box.position);
-      let dist = distance / aiHelperComponent.visionRange;
-      dist = Math.pow(1 - dist, 2);
-      wiggleSpeed = lerp(1, 4, dist);
-      moveSpeed = FLESH_SWORD_ESCAPE_MOVE_SPEED * lerp(1, 3.5, dist);
+      const dist = distance(hitbox.box.posX, hitbox.box.posY, targetHitbox.box.posX, targetHitbox.box.posY);
+      let scaledDist = dist / aiHelperComponent.visionRange;
+      scaledDist = Math.pow(1 - scaledDist, 2);
+      wiggleSpeed = lerp(1, 4, scaledDist);
+      moveSpeed = FLESH_SWORD_ESCAPE_MOVE_SPEED * lerp(1, 3.5, scaledDist);
 
       fleshSwordComponent.tileTargetPosition = null;
    } else {
@@ -143,7 +142,7 @@ function onTick(fleshSword: Entity): void {
 
             let targetTile: TileIndex;
             if (foundSwampTile) {
-               const tiles = new Array<TileIndex>();
+               const tiles: Array<TileIndex> = [];
                for (const tileIndex of tileWanderTargets) {
                   if (layer.tileBiomes[tileIndex] === Biome.swamp) {
                      tiles.push(tileIndex);
@@ -166,7 +165,7 @@ function onTick(fleshSword: Entity): void {
    if (targetPositionX !== -1) {
       fleshSwordComponent.internalWiggleTicks += wiggleSpeed!;
       
-      const directMoveAngle = angle(targetPositionX - hitbox.box.position.x, targetPositionY - hitbox.box.position.y);
+      const directMoveAngle = angle(targetPositionX - hitbox.box.posX, targetPositionY - hitbox.box.posY);
 
       const moveAngleOffset = Math.sin(fleshSwordComponent.internalWiggleTicks * Settings.DT_S * 10) * Math.PI * 0.2;
 

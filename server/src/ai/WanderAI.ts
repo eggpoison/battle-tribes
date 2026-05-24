@@ -54,16 +54,16 @@ export default class WanderAI {
       if (getEntityAgeTicks(entity) % Vars.POSITION_RECORD_INTERVAL === 0) {
          // If the entity hasn't moved enough since the last position check-in, clear the target as they are most likely stuck
          if (this.targetPosition !== null) {
-            const dx = entityHitbox.box.position.x - this.lastRecordedPositionX;
-            const dy = entityHitbox.box.position.y - this.lastRecordedPositionY;
+            const dx = entityHitbox.box.posX - this.lastRecordedPositionX;
+            const dy = entityHitbox.box.posY - this.lastRecordedPositionY;
             const positionDelta = Math.sqrt(dx * dx + dy * dy);
             if (positionDelta < 10) {
                this.targetPosition = null;
             }
          }
          
-         this.lastRecordedPositionX = entityHitbox.box.position.x;
-         this.lastRecordedPositionY = entityHitbox.box.position.y;
+         this.lastRecordedPositionX = entityHitbox.box.posX;
+         this.lastRecordedPositionY = entityHitbox.box.posY;
       }
       
       if (this.targetPosition !== null) {
@@ -75,10 +75,10 @@ export default class WanderAI {
 
          const aiHelperComponent = AIHelperComponentArray.getComponent(entity);
          
-         const minTileX = Math.max(Math.floor((entityHitbox.box.position.x - aiHelperComponent.visionRange) / Settings.TILE_SIZE), 0);
-         const maxTileX = Math.min(Math.floor((entityHitbox.box.position.x + aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1);
-         const minTileY = Math.max(Math.floor((entityHitbox.box.position.y - aiHelperComponent.visionRange) / Settings.TILE_SIZE), 0);
-         const maxTileY = Math.min(Math.floor((entityHitbox.box.position.y + aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1);
+         const minTileX = Math.max(Math.floor((entityHitbox.box.posX - aiHelperComponent.visionRange) / Settings.TILE_SIZE), 0);
+         const maxTileX = Math.min(Math.floor((entityHitbox.box.posX + aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1);
+         const minTileY = Math.max(Math.floor((entityHitbox.box.posY - aiHelperComponent.visionRange) / Settings.TILE_SIZE), 0);
+         const maxTileY = Math.min(Math.floor((entityHitbox.box.posY + aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1);
          
          let attempts = 0;
          let x: number;
@@ -93,7 +93,7 @@ export default class WanderAI {
             do {
                tileX = randInt(minTileX, maxTileX);
                tileY = randInt(minTileY, maxTileY);
-            } while (++attempts <= 50 && Math.pow(entityHitbox.box.position.x - (tileX + 0.5) * Settings.TILE_SIZE, 2) + Math.pow(entityHitbox.box.position.y - (tileY + 0.5) * Settings.TILE_SIZE, 2) > aiHelperComponent.visionRange * aiHelperComponent.visionRange);
+            } while (++attempts <= 50 && Math.pow(entityHitbox.box.posX - (tileX + 0.5) * Settings.TILE_SIZE, 2) + Math.pow(entityHitbox.box.posY - (tileY + 0.5) * Settings.TILE_SIZE, 2) > aiHelperComponent.visionRange * aiHelperComponent.visionRange);
          
             x = (tileX + Math.random()) * Settings.TILE_SIZE;
             y = (tileY + Math.random()) * Settings.TILE_SIZE;

@@ -1,4 +1,4 @@
-import { ServerComponentType, EntityType, DamageSource, AttackEffectiveness, Point, polarVec2 } from "battletribes-shared";
+import { ServerComponentType, EntityType, DamageSource, AttackEffectiveness, Point, polarVec2, angle } from "battletribes-shared";
 import { applyKnockback, Hitbox } from "../hitboxes.js";
 import { getEntityType, validateEntity, destroyEntity } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -57,7 +57,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       const projectileComponent = ProjectileComponentArray.getComponent(slingTurretRock);
 
       const owner = validateEntity(projectileComponent.creator);
-      const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
+      const hitDirection = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
       
       damageEntity(collidingHitbox, owner, 2, DamageSource.arrow, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingHitbox, polarVec2(75, hitDirection));

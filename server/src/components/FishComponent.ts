@@ -1,4 +1,4 @@
-import { Entity, EntityType, FishColour, DamageSource, ServerComponentType, Packet, AttackEffectiveness, InventoryName, ItemType, Settings, TileType, customTickIntervalHasPassed, Point, polarVec2, randAngle, randFloat, randSign, UtilVar } from "battletribes-shared";
+import { Entity, EntityType, FishColour, DamageSource, ServerComponentType, Packet, AttackEffectiveness, InventoryName, ItemType, Settings, TileType, customTickIntervalHasPassed, Point, polarVec2, randAngle, randFloat, randSign, UtilVar, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { runHerdAI } from "../ai-shared.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
@@ -124,15 +124,15 @@ function onTick(fish: Entity): void {
          const leaderHitbox = leaderTransformComponent.hitboxes[0];
          
          // Follow leader
-         aiHelperComponent.moveFunc(fish, leaderHitbox.box.position, 40);
-         aiHelperComponent.turnFunc(fish, leaderHitbox.box.position, Math.PI / 1.5, 0.5);
+         aiHelperComponent.moveFunc(fish, leaderHitbox.box.posX, leaderHitbox.box.posY, 40);
+         aiHelperComponent.turnFunc(fish, leaderHitbox.box.posX, leaderHitbox.box.posY, Math.PI / 1.5, 0.5);
       } else {
          const targetTransformComponent = TransformComponentArray.getComponent(target);
          const targetHitbox = targetTransformComponent.hitboxes[0];
 
          // Attack the target
-         aiHelperComponent.moveFunc(fish, targetHitbox.box.position, 40);
-         aiHelperComponent.turnFunc(fish, targetHitbox.box.position, Math.PI / 1.5, 0.5);
+         aiHelperComponent.moveFunc(fish, targetHitbox.box.posX, targetHitbox.box.posY, 40);
+         aiHelperComponent.turnFunc(fish, targetHitbox.box.posX, targetHitbox.box.posY, Math.PI / 1.5, 0.5);
 
          if (entitiesAreColliding(fish, target) !== CollisionVars.NO_COLLISION) {
             const healthComponent = HealthComponentArray.getComponent(target);
@@ -140,10 +140,10 @@ function onTick(fish: Entity): void {
                return;
             }
             
-            const hitDirection = fishHitbox.box.position.angleTo(targetHitbox.box.position);
+            const hitDirection = angle(targetHitbox.box.posX - fishHitbox.box.posX, targetHitbox.box.posY - fishHitbox.box.posY);
 
             // @Hack
-            const collisionPoint = new Point((fishHitbox.box.position.x + targetHitbox.box.position.x) / 2, (fishHitbox.box.position.y + targetHitbox.box.position.y) / 2);
+            const collisionPoint = new Point((fishHitbox.box.posX + targetHitbox.box.posX) / 2, (fishHitbox.box.posY + targetHitbox.box.posY) / 2);
             
             damageEntity(targetHitbox, fish, 2, DamageSource.fish, AttackEffectiveness.effective, collisionPoint, 0);
             applyKnockback(targetHitbox, polarVec2(100, hitDirection));
@@ -176,7 +176,7 @@ function onTick(fish: Entity): void {
 
    // Herd AI
    // @Incomplete: Make fish steer away from land
-   const herdMembers = new Array<Entity>();
+   const herdMembers: Array<Entity> = [];
    for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
       const entity = aiHelperComponent.visibleEntities[i];
       if (getEntityType(entity) === EntityType.fish) {
@@ -194,8 +194,8 @@ function onTick(fish: Entity): void {
    const wanderAI = aiHelperComponent.getWanderAI();
    wanderAI.update(fish);
    if (wanderAI.targetPosition !== null) {
-      aiHelperComponent.moveFunc(fish, wanderAI.targetPosition, wanderAI.acceleration);
-      aiHelperComponent.turnFunc(fish, wanderAI.targetPosition, wanderAI.turnSpeed, wanderAI.turnDamping);
+      aiHelperComponent.moveFunc(fish, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.acceleration);
+      aiHelperComponent.turnFunc(fish, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.turnSpeed, wanderAI.turnDamping);
    }
 }
 

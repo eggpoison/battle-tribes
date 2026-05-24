@@ -6,10 +6,10 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { TumbleweedDeadComponent } from "../../components/TumbleweedDeadComponent.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createTumbleweedDeadConfig(position: Point, angle: number): EntityConfig {
+export function createTumbleweedDeadConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, 40), randFloat(0.19, 0.23), HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 40), randFloat(0.19, 0.23), HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding);

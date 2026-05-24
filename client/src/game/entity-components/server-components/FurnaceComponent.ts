@@ -60,15 +60,15 @@ class _FurnaceComponentArray extends _ServerComponentArray<FurnaceComponent, Fur
          if (tickIntervalHasPassed(0.17 * Settings.TICK_RATE)) {
             const spawnOffsetMagnitude = 20 * Math.random();
             const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
             createSmokeParticle(spawnPositionX, spawnPositionY, 48);
          }
 
          // Ember particles
          if (tickIntervalHasPassed(0.05 * Settings.TICK_RATE)) {
-            let spawnPositionX = hitbox.box.position.x - 30 * Math.sin(hitbox.box.angle);
-            let spawnPositionY = hitbox.box.position.y - 30 * Math.cos(hitbox.box.angle);
+            let spawnPositionX = hitbox.box.posX - 30 * Math.sin(hitbox.box.angle);
+            let spawnPositionY = hitbox.box.posY - 30 * Math.cos(hitbox.box.angle);
 
             const spawnOffsetMagnitude = 11 * Math.random();
             const spawnOffsetDirection = randAngle();
@@ -87,21 +87,21 @@ class _FurnaceComponentArray extends _ServerComponentArray<FurnaceComponent, Fur
          let spawnPositionX: number;
          let spawnPositionY: number;
          if (Math.random() < 0.5) {
-            spawnPositionX = hitbox.box.position.x + (Math.random() < 0.5 ? -0.5 : 0.5) * size;
-            spawnPositionY = hitbox.box.position.y + randFloat(-0.5, 0.5) * size;
+            spawnPositionX = hitbox.box.posX + (Math.random() < 0.5 ? -0.5 : 0.5) * size;
+            spawnPositionY = hitbox.box.posY + randFloat(-0.5, 0.5) * size;
          } else {
-            spawnPositionX = hitbox.box.position.x + randFloat(-0.5, 0.5) * size;
-            spawnPositionY = hitbox.box.position.y + (Math.random() < 0.5 ? -0.5 : 0.5) * size;
+            spawnPositionX = hitbox.box.posX + randFloat(-0.5, 0.5) * size;
+            spawnPositionY = hitbox.box.posY + (Math.random() < 0.5 ? -0.5 : 0.5) * size;
          }
 
-         let moveDirection = angle(spawnPositionX - hitbox.box.position.x, spawnPositionY - hitbox.box.position.y)
+         let moveDirection = angle(spawnPositionX - hitbox.box.posX, spawnPositionY - hitbox.box.posY)
          moveDirection += randFloat(-1, 1);
 
          createRockParticle(spawnPositionX, spawnPositionY, moveDirection, randFloat(80, 125), ParticleRenderLayer.low);
       }
 
       for (let i = 0; i < 5; i++) {
-         createRockSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, size / 2, 0, 0, ParticleRenderLayer.low);
+         createRockSpeckParticle(hitbox.box.posX, hitbox.box.posY, size / 2, 0, 0, ParticleRenderLayer.low);
       }
    }
 
@@ -111,14 +111,14 @@ class _FurnaceComponentArray extends _ServerComponentArray<FurnaceComponent, Fur
       const size = (hitbox.box as RectangularBox).width;
 
       for (let i = 0; i < 5; i++) {
-         const spawnPositionX = hitbox.box.position.x + randFloat(-0.5, 0.5) * size;
-         const spawnPositionY = hitbox.box.position.y + randFloat(-0.5, 0.5) * size;
+         const spawnPositionX = hitbox.box.posX + randFloat(-0.5, 0.5) * size;
+         const spawnPositionY = hitbox.box.posY + randFloat(-0.5, 0.5) * size;
 
          createRockParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 125), ParticleRenderLayer.low);
       }
 
       for (let i = 0; i < 5; i++) {
-         createRockSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, size / 2, 0, 0, ParticleRenderLayer.low);
+         createRockSpeckParticle(hitbox.box.posX, hitbox.box.posY, size / 2, 0, 0, ParticleRenderLayer.low);
       }
    }
 }

@@ -1,10 +1,10 @@
-import { angle, polarVec2, Entity, EntityType, EntityTypeString } from "battletribes-shared";
+import { angle, polarVec2, Entity, EntityType, EntityTypeString, distance } from "battletribes-shared";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai.js";
 import { getTribesmanAcceleration } from "./tribesman-ai-utils.js";
 import { HealthComponent } from "../../../components/HealthComponent.js";
 import { TransformComponentArray } from "../../../components/TransformComponent.js";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent.js";
-import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../../hitboxes.js";
+import { applyAccelerationFromGround, turnHitboxToAngle } from "../../../hitboxes.js";
 import { clearPathfinding } from "../../../components/AIPathfindingComponent.js";
 
 export function tribeMemberShouldEscape(entityType: EntityType, healthComponent: HealthComponent): boolean {
@@ -39,18 +39,18 @@ export function escapeFromEnemies(tribesman: Entity, visibleEnemies: ReadonlyArr
       const enemyTransformComponent = TransformComponentArray.getComponent(enemy);
       const enemyHitbox = enemyTransformComponent.hitboxes[0];
       
-      let distance = tribesmanHitbox.box.position.distanceTo(enemyHitbox.box.position);
+      let dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, enemyHitbox.box.posX, enemyHitbox.box.posY);
       // @Hack
-      if (distance > visionRange) {
-         distance = visionRange;
+      if (dist > visionRange) {
+         dist = visionRange;
       }
-      const weight = Math.pow(1 - distance / visionRange / 1.25, 0.5);
+      const weight = Math.pow(1 - dist / visionRange / 1.25, 0.5);
 
-      const relativeX = (enemyHitbox.box.position.x - tribesmanHitbox.box.position.x) * weight;
-      const relativeY = (enemyHitbox.box.position.y - tribesmanHitbox.box.position.y) * weight;
+      const relativeX = (enemyHitbox.box.posX - tribesmanHitbox.box.posX) * weight;
+      const relativeY = (enemyHitbox.box.posY - tribesmanHitbox.box.posY) * weight;
 
-      averageEnemyX += relativeX + tribesmanHitbox.box.position.x;
-      averageEnemyY += relativeY + tribesmanHitbox.box.position.y;
+      averageEnemyX += relativeX + tribesmanHitbox.box.posX;
+      averageEnemyY += relativeY + tribesmanHitbox.box.posY;
       // @Temporary: shouldn't occur, fix root cause
       if (isNaN(averageEnemyX) || isNaN(averageEnemyY)) {
          console.warn("NaN!");
@@ -64,17 +64,17 @@ export function escapeFromEnemies(tribesman: Entity, visibleEnemies: ReadonlyArr
       const enemyTransformComponent = TransformComponentArray.getComponent(enemy);
       const enemyHitbox = enemyTransformComponent.hitboxes[0];
 
-      let distance = tribesmanHitbox.box.position.distanceTo(enemyHitbox.box.position);
-      if (distance > visionRange) {
-         distance = visionRange;
+      let dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, enemyHitbox.box.posX, enemyHitbox.box.posY);
+      if (dist > visionRange) {
+         dist = visionRange;
       }
-      const weight = Math.pow(1 - distance / visionRange / 1.25, 0.5);
+      const weight = Math.pow(1 - dist / visionRange / 1.25, 0.5);
 
-      const relativeX = (enemyHitbox.box.position.x - tribesmanHitbox.box.position.x) * weight;
-      const relativeY = (enemyHitbox.box.position.y - tribesmanHitbox.box.position.y) * weight;
+      const relativeX = (enemyHitbox.box.posX - tribesmanHitbox.box.posX) * weight;
+      const relativeY = (enemyHitbox.box.posY - tribesmanHitbox.box.posY) * weight;
 
-      averageEnemyX += relativeX + tribesmanHitbox.box.position.x;
-      averageEnemyY += relativeY + tribesmanHitbox.box.position.y;
+      averageEnemyX += relativeX + tribesmanHitbox.box.posX;
+      averageEnemyY += relativeY + tribesmanHitbox.box.posY;
       // @Temporary: shouldn't occur, fix root cause
       if (isNaN(averageEnemyX) || isNaN(averageEnemyY)) {
          console.warn("NaN!");
@@ -88,7 +88,7 @@ export function escapeFromEnemies(tribesman: Entity, visibleEnemies: ReadonlyArr
    // Run away from that position
    // 
 
-   const runDir = angle(averageEnemyX - tribesmanHitbox.box.position.x, averageEnemyY - tribesmanHitbox.box.position.y) + Math.PI;
+   const runDir = angle(averageEnemyX - tribesmanHitbox.box.posX, averageEnemyY - tribesmanHitbox.box.posY) + Math.PI;
 
    const acceleration = getTribesmanAcceleration(tribesman);
    applyAccelerationFromGround(tribesmanHitbox, polarVec2(acceleration, runDir));

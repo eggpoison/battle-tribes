@@ -49,7 +49,7 @@ const createTileToLocalBiomeMap = (playerClient: PlayerClient, localBiome: Local
 }
 
 const getVisibleLocalBiomeInfo = (playerClient: PlayerClient): VisibleLocalBiomeInfo => {
-   const localBiomes = new Array<LocalBiome>();
+   const localBiomes: Array<LocalBiome> = [];
    const tileToLocalBiomeMap = new Map<TileIndex, LocalBiome>();
    
    const minTileX = clampToBoardDimensions(Math.floor(playerClient.minVisibleX / Settings.TILE_SIZE));

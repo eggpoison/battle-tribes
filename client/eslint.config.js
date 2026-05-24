@@ -27,7 +27,7 @@ export default defineConfig([
       },
       rules: {
          "semi": ["error", "always"],
-         "@typescript-eslint/explicit-function-return-type": "warn",
+         "@typescript-eslint/explicit-function-return-type": "off",
          "@typescript-eslint/no-unused-vars": "warn", // Downgrade unused variables to warnings instead of errors
          "@typescript-eslint/restrict-plus-operands": "off", // Turn this off because ( number + string ) is often useful and optimal
          "@typescript-eslint/prefer-literal-enum-member": "off", // Let me do my const enum shenanigans!!!

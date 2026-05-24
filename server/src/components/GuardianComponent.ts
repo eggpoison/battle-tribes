@@ -1,4 +1,4 @@
-import { HitboxFlag, GuardianAttackType, ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVar } from "battletribes-shared";
+import { HitboxFlag, GuardianAttackType, ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVar, angle } from "battletribes-shared";
 import { moveEntityToPosition } from "../ai-shared.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
 import { AIHelperComponentArray, AIType } from "./AIHelperComponent.js";
@@ -26,7 +26,7 @@ export const enum GuardianVars {
 
 export class GuardianComponent {
    public readonly homeTiles: ReadonlyArray<TileIndex>;
-   public limbHitboxes = new Array<Hitbox>();
+   public limbHitboxes: Array<Hitbox> = [];
 
    public lastTargetX = -1;
    public lastTargetY = -1;
@@ -143,8 +143,8 @@ const updateOrbitingGuardianLimbs = (guardian: Entity, guardianComponent: Guardi
 
       // @Hack
       const direction = guardianComponent.limbNormalDirection + (i === 0 ? Math.PI * 0.5 : Math.PI * -0.5) - guardianHitbox.box.angle;
-      box.offset.x = GuardianVars.LIMB_ORBIT_RADIUS * Math.sin(direction);
-      box.offset.y = GuardianVars.LIMB_ORBIT_RADIUS * Math.cos(direction);
+      box.offsetX = GuardianVars.LIMB_ORBIT_RADIUS * Math.sin(direction);
+      box.offsetY = GuardianVars.LIMB_ORBIT_RADIUS * Math.cos(direction);
       // @Hack
       box.relativeAngle = -guardianHitbox.box.relativeAngle;
    }
@@ -172,8 +172,8 @@ function onTick(guardian: Entity): void {
       const targetTransformComponent = TransformComponentArray.getComponent(target);
       const targetHitbox = targetTransformComponent.hitboxes[0];
       
-      guardianComponent.lastTargetX = targetHitbox.box.position.x;
-      guardianComponent.lastTargetY = targetHitbox.box.position.y;
+      guardianComponent.lastTargetX = targetHitbox.box.posX;
+      guardianComponent.lastTargetY = targetHitbox.box.posY;
 
       // Randomly start special attacks
       if (aiHelperComponent.currentAIType === null) {
@@ -253,8 +253,8 @@ function onTick(guardian: Entity): void {
             const endOffsetX = GuardianVars.LIMB_ORBIT_RADIUS * (i === 0 ? 1 : -1);
             const endOffsetY = 0;
    
-            box.offset.x = lerp(startOffsetX, endOffsetX, guardianComponent.limbMoveProgress);
-            box.offset.y = lerp(startOffsetY, endOffsetY, guardianComponent.limbMoveProgress);
+            box.offsetX = lerp(startOffsetX, endOffsetX, guardianComponent.limbMoveProgress);
+            box.offsetY = lerp(startOffsetY, endOffsetY, guardianComponent.limbMoveProgress);
             // @Copynpaste
             box.relativeAngle = (i === 0 ? Math.PI * 0.5 : Math.PI * -0.5);
          }
@@ -306,8 +306,8 @@ function onTick(guardian: Entity): void {
          const endOffsetX = 38 * (i === 0 ? 1 : -1);
          const endOffsetY = 16;
 
-         box.offset.x = lerp(startOffsetX, endOffsetX, guardianComponent.limbMoveProgress);
-         box.offset.y = lerp(startOffsetY, endOffsetY, guardianComponent.limbMoveProgress);
+         box.offsetX = lerp(startOffsetX, endOffsetX, guardianComponent.limbMoveProgress);
+         box.offsetY = lerp(startOffsetY, endOffsetY, guardianComponent.limbMoveProgress);
          // @Copynpaste
          box.relativeAngle = (i === 0 ? Math.PI * 0.5 : Math.PI * -0.5);
       }
@@ -396,7 +396,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
          return;
       }
 
-      const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
+      const hitDirection = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
       
       damageEntity(collidingHitbox, hitbox.entity, 2, DamageSource.yeti, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingHitbox, polarVec2(200, hitDirection));

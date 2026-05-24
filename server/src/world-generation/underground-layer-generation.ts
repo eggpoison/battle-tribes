@@ -81,7 +81,7 @@ const generateDepths = (dropdowns: ReadonlyArray<TileIndex>): ReadonlyArray<numb
    // To instill some randomness into the depths
    const weightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 35, 12, 1.75, 0.65);
    
-   const depths = new Array<TileIndex>();
+   const depths: Array<TileIndex> = [];
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          let distTiles = Number.MAX_SAFE_INTEGER;
@@ -198,7 +198,7 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
    const weightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 35, 12, 1.75, 0.65);
 
    const dropdownClosenessArray = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
-   const dropdowns = new Array<TileIndex>();
+   const dropdowns: Array<TileIndex> = [];
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -315,8 +315,8 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
       biome: Biome.caves,
       tileTypes: [TileType.stone],
       packSpawning: {
-         getPackSize: (pos: Point): number => {
-            const humidity = getMossHumidity(undergroundLayer, pos.x, pos.y);
+         getPackSize: (x: number, y: number): number => {
+            const humidity = getMossHumidity(undergroundLayer, x, y);
             const minPackSize = Math.floor(lerp(1, 3, humidity));
             const maxPackSize = Math.floor(lerp(2, 5, humidity));
             return randInt(minPackSize, maxPackSize);
@@ -328,8 +328,8 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
       spawnDistribution: mossSpawnDistribution,
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (pos: Point, angle: number, firstEntityConfigs: ReadonlyArray<EntityConfig> | null, layer: Layer): [EntityConfig] | null => {
-         const humidity = getMossHumidity(layer, pos.x, pos.y);
+      createEntity: (x: number, y: number, angle: number, firstEntityConfigs: ReadonlyArray<EntityConfig> | null, layer: Layer): [EntityConfig] | null => {
+         const humidity = getMossHumidity(layer, x, y);
          const minSize = lerp(0, 1, humidity);
          const maxSize = lerp(0, 3, humidity);
          let size = Math.floor(lerp(minSize, maxSize, Math.random()));
@@ -337,8 +337,8 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
             size = 2;
          }
          
-         const colour = firstEntityConfigs === null ? getMossColour(pos.x, pos.y): getConfigComponent(firstEntityConfigs[0].components, getEntityComponentTypes(EntityType.moss), ServerComponentType.moss).colour;
-         return [createMossConfig(pos, angle, size, colour)];
+         const colour = firstEntityConfigs === null ? getMossColour(x, y): getConfigComponent(firstEntityConfigs[0].components, getEntityComponentTypes(EntityType.moss), ServerComponentType.moss).colour;
+         return [createMossConfig(x, y, angle, size, colour)];
       }
    });
 
@@ -399,7 +399,7 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
          continue;
       }
       
-      const treeRoot = createTreeRootBaseConfig(new Point(x, y), 2 * Math.PI * Math.random());
+      const treeRoot = createTreeRootBaseConfig(x, y, 2 * Math.PI * Math.random());
       createEntityImmediate(treeRoot, undergroundLayer);
    }
 
@@ -446,7 +446,7 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
       spawnDistribution: createRawSpawnDistribution(4, 0),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (pos: Point, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
          return null;
       }
    });

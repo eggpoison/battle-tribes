@@ -4,9 +4,9 @@ import { GuardianGemQuakeComponent } from "../components/GuardianGemQuakeCompone
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
 import { Hitbox } from "../hitboxes.js";
 
-export function createGuardianGemQuakeConfig(position: Point, rotation: number): EntityConfig {
+export function createGuardianGemQuakeConfig(x: number, y: number, rotation: number): EntityConfig {
    const transformComponent = new TransformComponent();
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 10), 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, rotation, 10), 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
    

@@ -53,7 +53,7 @@ const updateDoorOpenProgress = (tunnel: Entity, tunnelComponent: TunnelComponent
       const alreadyExists = doorBit === tunnelComponent.firstHitboxDoorBit ? (transformComponent.hitboxes.length > 5 && transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard) : transformComponent.hitboxes[transformComponent.hitboxes.length - 1].collisionType === HitboxCollisionType.hard;
       if (!alreadyExists) {
          // @HACK @BUG: Position
-         const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(new Point(0, 0), new Point(0, 0), 0, DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT), 0.5, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+         const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(0, 0, 0, 0, 0, DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT), 0.5, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
          addHitboxToEntity(tunnel, hitbox);
          
          // @Hack!!! Wouldn't be needed if we had a hitbox awake/asleep system
@@ -90,14 +90,14 @@ const updateDoorOpenProgress = (tunnel: Entity, tunnelComponent: TunnelComponent
    const yOffset = doorHalfDiagonalLength * Math.cos(offsetDirection) - doorHalfDiagonalLength * Math.cos(baseAngle + angleToCenter);
 
    const softDoorHitbox = (transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 4 : transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard ? 6 : 5]).box as RectangularBox;
-   softDoorHitbox.offset.x = xOffset;
-   softDoorHitbox.offset.y = yOffset + (doorType === DoorType.top ? DOOR_HITBOX_OFFSET : -DOOR_HITBOX_OFFSET);
+   softDoorHitbox.offsetX = xOffset;
+   softDoorHitbox.offsetY = yOffset + (doorType === DoorType.top ? DOOR_HITBOX_OFFSET : -DOOR_HITBOX_OFFSET);
    softDoorHitbox.relativeAngle = rotation + Math.PI/2;
 
    if (hasHardHitbox) {
       const hardDoorHitbox = (transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 5 : transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard ? 7 : 6]).box as RectangularBox;
-      hardDoorHitbox.offset.x = xOffset + DOOR_HITBOX_HEIGHT * 0.5 * Math.sin(rotation + Math.PI/2);
-      hardDoorHitbox.offset.y = yOffset + DOOR_HITBOX_HEIGHT * 0.5 * Math.cos(rotation + Math.PI/2) + (doorType === DoorType.top ? DOOR_HITBOX_OFFSET : -DOOR_HITBOX_OFFSET);
+      hardDoorHitbox.offsetX = xOffset + DOOR_HITBOX_HEIGHT * 0.5 * Math.sin(rotation + Math.PI/2);
+      hardDoorHitbox.offsetY = yOffset + DOOR_HITBOX_HEIGHT * 0.5 * Math.cos(rotation + Math.PI/2) + (doorType === DoorType.top ? DOOR_HITBOX_OFFSET : -DOOR_HITBOX_OFFSET);
       hardDoorHitbox.relativeAngle = rotation + Math.PI/2;
    }
 }

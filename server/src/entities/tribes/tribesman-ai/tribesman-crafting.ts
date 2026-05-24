@@ -1,4 +1,4 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, Settings, PathfindingSettings, CRAFTING_RECIPES, InventoryName } from "battletribes-shared";
+import { TribesmanAIType, Entity, EntityType, LimbAction, Settings, PathfindingSettings, CRAFTING_RECIPES, InventoryName, distance } from "battletribes-shared";
 import Tribe from "../../../Tribe.js";
 import { turnEntityToEntity } from "../../../ai-shared.js";
 import { InventoryComponentArray, craftRecipe, InventoryComponent, countItemType } from "../../../components/InventoryComponent.js";
@@ -28,7 +28,7 @@ const getClosestCraftingStation = (tribesman: Entity, tribe: Tribe, craftingStat
       const buildingTransformComponent = TransformComponentArray.getComponent(entity);
       const buildingHitbox = buildingTransformComponent.hitboxes[0];
       
-      const dist = tribesmanHitbox.box.position.distanceTo(buildingHitbox.box.position);
+      const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, buildingHitbox.box.posX, buildingHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          closestStation = entity;
@@ -47,12 +47,12 @@ const getAvailableCraftingStations = (tribeMember: Entity): ReadonlyArray<Entity
    
    const layer = getEntityLayer(tribeMember);
    
-   const minChunkX = Math.max(Math.floor((tribeMemberHitbox.box.position.x - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((tribeMemberHitbox.box.position.x + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
-   const minChunkY = Math.max(Math.floor((tribeMemberHitbox.box.position.y - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((tribeMemberHitbox.box.position.y + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkX = Math.max(Math.floor((tribeMemberHitbox.box.posX - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((tribeMemberHitbox.box.posX + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkY = Math.max(Math.floor((tribeMemberHitbox.box.posY - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((tribeMemberHitbox.box.posY + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
 
-   const availableCraftingStations = new Array<EntityType>();
+   const availableCraftingStations: Array<EntityType> = [];
 
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -61,8 +61,8 @@ const getAvailableCraftingStations = (tribeMember: Entity): ReadonlyArray<Entity
             const entityTransformComponent = TransformComponentArray.getComponent(entity);
             const entityHitbox = entityTransformComponent.hitboxes[0];
             
-            const distance = tribeMemberHitbox.box.position.distanceTo(entityHitbox.box.position);
-            if (distance > Settings.MAX_CRAFTING_STATION_USE_DISTANCE) {
+            const dist = distance(tribeMemberHitbox.box.posX, tribeMemberHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
+            if (dist > Settings.MAX_CRAFTING_STATION_USE_DISTANCE) {
                continue;
             }
 
@@ -105,7 +105,7 @@ export function goCraftItem(tribesman: Entity, plan: AICraftRecipePlan, tribe: T
          const craftingStationTransformComponent = TransformComponentArray.getComponent(craftingStation);
          const craftingStationHitbox = craftingStationTransformComponent.hitboxes[0];
          
-         const isFinished = pathfindTribesman(tribesman, craftingStationHitbox.box.position.x, craftingStationHitbox.box.position.y, getEntityLayer(craftingStation), craftingStation, TribesmanPathType.default, Math.floor(Settings.MAX_CRAFTING_STATION_USE_DISTANCE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
+         const isFinished = pathfindTribesman(tribesman, craftingStationHitbox.box.posX, craftingStationHitbox.box.posY, getEntityLayer(craftingStation), craftingStation, TribesmanPathType.default, Math.floor(Settings.MAX_CRAFTING_STATION_USE_DISTANCE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
          if (!isFinished) {
             const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
             const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);

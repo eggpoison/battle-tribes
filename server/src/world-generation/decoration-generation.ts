@@ -20,7 +20,7 @@ interface DecorationGenerationInfo {
 }
 
 const createDecoration = (x: number, y: number, decorationType: DecorationType): void => {
-   const config = createDecorationConfig(new Point(x, y), randAngle(), decorationType);
+   const config = createDecorationConfig(x, y, randAngle(), decorationType);
    createEntityImmediate(config, surfaceLayer);
 }
 

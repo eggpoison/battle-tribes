@@ -1,10 +1,10 @@
-import { lerp, Settings, Entity, ServerComponentType } from "battletribes-shared";
+import { lerp, Settings, Entity, ServerComponentType, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { ThrowingProjectileComponentArray } from "./ThrowingProjectileComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { destroyEntity, entityExists, getEntityAgeTicks } from "../world.js";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
-import { addHitboxAngularAcceleration, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
+import { addHitboxAngularAcceleration, turnHitboxToAngle } from "../hitboxes.js";
 
 const enum Vars {
    RETURN_TIME_TICKS = 1 * Settings.TICK_RATE
@@ -47,10 +47,10 @@ function onTick(battleaxe: Entity): void {
       battleaxeHitbox.box.relativeAngle -= lerp(6 * Math.PI * Settings.DT_S, 0, Math.min(ticksSinceReturn * Settings.DT_S * 1.25, 1));
 
       // @Hack: Just set velocity instead of adding to position
-      const returnDirection = battleaxeHitbox.box.position.angleTo(ownerHitbox.box.position);
+      const returnDirection = angle(ownerHitbox.box.posX - battleaxeHitbox.box.posX, ownerHitbox.box.posY - battleaxeHitbox.box.posY);
       const returnSpeed = lerp(0, 800, Math.min(ticksSinceReturn * Settings.DT_S * 1.5, 1));
-      battleaxeHitbox.box.position.x += returnSpeed * Settings.DT_S * Math.sin(returnDirection);
-      battleaxeHitbox.box.position.y += returnSpeed * Settings.DT_S * Math.cos(returnDirection);
+      battleaxeHitbox.box.posX += returnSpeed * Settings.DT_S * Math.sin(returnDirection);
+      battleaxeHitbox.box.posY += returnSpeed * Settings.DT_S * Math.cos(returnDirection);
       transformComponent.isDirty = true;
 
       // Turn to face the owner

@@ -109,26 +109,26 @@ const createFootstepSound = (entity: Entity): void => {
    switch (tile.type) {
       case TileType.grass:
       case TileType.sandyDirt: {
-         playSound("grass-walk-" + randInt(1, 4) + ".mp3", 0.04, 1, hitbox.box.position, layer);
+         playSound("grass-walk-" + randInt(1, 4) + ".mp3", 0.04, 1, hitbox.box.posX, hitbox.box.posY, layer);
          break;
       }
       case TileType.sand: {
-         playSound("sand-walk-" + randInt(1, 4) + ".mp3", 0.02, 1, hitbox.box.position, layer);
+         playSound("sand-walk-" + randInt(1, 4) + ".mp3", 0.02, 1, hitbox.box.posX, hitbox.box.posY, layer);
          break;
       }
       case TileType.snow: {
-         playSound("snow-walk-" + randInt(1, 3) + ".mp3", 0.1, 1, hitbox.box.position, layer);
+         playSound("snow-walk-" + randInt(1, 3) + ".mp3", 0.1, 1, hitbox.box.posX, hitbox.box.posY, layer);
          break;
       }
       case TileType.rock: {
-         playSound("rock-walk-" + randInt(1, 4) + ".mp3", 0.08, 1, hitbox.box.position, layer);
+         playSound("rock-walk-" + randInt(1, 4) + ".mp3", 0.08, 1, hitbox.box.posX, hitbox.box.posY, layer);
          break;
       }
       case TileType.water: {
          // @Hack
          // For walking on river stepping stones
          if (!hitboxIsInWater(hitbox)) {
-            playSound("rock-walk-" + randInt(1, 4) + ".mp3", 0.08, 1, hitbox.box.position, layer);
+            playSound("rock-walk-" + randInt(1, 4) + ".mp3", 0.08, 1, hitbox.box.posX, hitbox.box.posY, layer);
          }
          break;
       }

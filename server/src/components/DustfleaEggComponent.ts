@@ -44,7 +44,7 @@ function onTick(dustfleaEgg: Entity): void {
       // Dustflea!!
       const transformComponent = TransformComponentArray.getComponent(dustfleaEgg);
       const hitbox = transformComponent.hitboxes[0];
-      const dustfleaConfig = createDustfleaConfig(hitbox.box.position.copy(), hitbox.box.angle);
+      const dustfleaConfig = createDustfleaConfig(hitbox.box.posX, hitbox.box.posY, hitbox.box.angle);
       createEntity(dustfleaConfig, getEntityLayer(dustfleaEgg), 0);
       destroyEntity(dustfleaEgg);
    }

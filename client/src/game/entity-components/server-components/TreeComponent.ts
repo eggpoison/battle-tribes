@@ -1,4 +1,4 @@
-import { randFloat, randItem, randInt, Point, randAngle, HitFlags, ServerComponentType, PacketReader, Entity, TreeSize } from "webgl-test-shared";
+import { randFloat, randItem, randInt, Point, randAngle, HitFlags, ServerComponentType, PacketReader, Entity, TreeSize, angle } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -86,8 +86,8 @@ class _TreeComponentArray extends _ServerComponentArray<TreeComponent, TreeCompo
       {
          const moveDirection = randAngle();
 
-         const spawnPositionX = hitbox.box.position.x + radius * Math.sin(moveDirection);
-         const spawnPositionY = hitbox.box.position.y + radius * Math.cos(moveDirection);
+         const spawnPositionX = hitbox.box.posX + radius * Math.sin(moveDirection);
+         const spawnPositionY = hitbox.box.posY + radius * Math.cos(moveDirection);
 
          createLeafParticle(spawnPositionX, spawnPositionY, moveDirection + randFloat(-1, 1), Math.random() < 0.5 ? LeafParticleSize.large : LeafParticleSize.small);
       }
@@ -95,14 +95,14 @@ class _TreeComponentArray extends _ServerComponentArray<TreeComponent, TreeCompo
       // Create leaf specks
       const numSpecks = treeComponent.treeSize === TreeSize.small ? 4 : 7;
       for (let i = 0; i < numSpecks; i++) {
-         createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
+         createLeafSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
       }
 
       if (isDamagingHit) {
          // Create wood specks at the point of hit
-         const spawnOffsetDirection = hitbox.box.position.angleTo(hitPosition);
-         const spawnPositionX = hitbox.box.position.x + (radius + 2) * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = hitbox.box.position.y + (radius + 2) * Math.cos(spawnOffsetDirection);
+         const spawnOffsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
+         const spawnPositionX = hitbox.box.posX + (radius + 2) * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + (radius + 2) * Math.cos(spawnOffsetDirection);
          for (let i = 0; i < 4; i++) {
             createWoodSpeckParticle(spawnPositionX, spawnPositionY, 3);
          }
@@ -131,8 +131,8 @@ class _TreeComponentArray extends _ServerComponentArray<TreeComponent, TreeCompo
       for (let i = 0; i < numLeaves; i++) {
          const spawnOffsetMagnitude = radius * Math.random();
          const spawnOffsetDirection = randAngle();
-         const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = hitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
          createLeafParticle(spawnPositionX, spawnPositionY, Math.random(), Math.random() < 0.5 ? LeafParticleSize.large : LeafParticleSize.small);
       }
@@ -140,11 +140,11 @@ class _TreeComponentArray extends _ServerComponentArray<TreeComponent, TreeCompo
       // Create leaf specks
       const numSpecks = treeComponent.treeSize === TreeSize.small ? 4 : 7;
       for (let i = 0; i < numSpecks; i++) {
-         createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
+         createLeafSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
       }
 
       for (let i = 0; i < 10; i++) {
-         createWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random());
+         createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius * Math.random());
       }
 
       playSoundOnHitbox(randItem(TREE_DESTROY_SOUNDS), 0.5, 1, entity, hitbox, false);

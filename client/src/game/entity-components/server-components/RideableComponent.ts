@@ -91,17 +91,17 @@ class _RideableComponentArray extends _ServerComponentArray<RideableComponent, R
                // Play mount sound when entity mounts a carry slot
                switch (getEntityType(occupiedEntity)) {
                   case EntityType.barrel: {
-                     playSound("barrel-mount.mp3", 0.4, 1, mountHitbox.box.position.copy(), layer);
+                     playSound("barrel-mount.mp3", 0.4, 1, mountHitbox.box.posX, mountHitbox.box.posY, layer);
                      break;
                   }
                   default: {
-                     playSound("mount.mp3", 0.4, 1, mountHitbox.box.position.copy(), layer);
+                     playSound("mount.mp3", 0.4, 1, mountHitbox.box.posX, mountHitbox.box.posY, layer);
                      break;
                   }
                }
             } else {
                // Play a sound when the entity dismounts a carry slot
-               playSound("dismount.mp3", 0.4, 1, mountHitbox.box.position.copy(), layer);
+               playSound("dismount.mp3", 0.4, 1, mountHitbox.box.posX, mountHitbox.box.posY, layer);
 
                if (carrySlot.occupiedEntity === playerInstance) {
                   // Dismount
@@ -113,8 +113,8 @@ class _RideableComponentArray extends _ServerComponentArray<RideableComponent, R
                   translateHitbox(playerHitbox, _point.x, _point.y);
 
                   // @HACK reset acceleration because it's accumulated a bunch for some reason
-                  playerHitbox.acceleration.x = 0;
-                  playerHitbox.acceleration.y = 0;
+                  playerHitbox.accelX = 0;
+                  playerHitbox.accelY = 0;
                }
             }
          }

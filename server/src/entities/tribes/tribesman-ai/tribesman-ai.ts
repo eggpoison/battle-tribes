@@ -1,4 +1,4 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, Settings, PathfindingSettings, getTechByID, InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, getAbsAngleDiff, polarVec2 } from "battletribes-shared";
+import { TribesmanAIType, Entity, EntityType, LimbAction, Settings, PathfindingSettings, getTechByID, InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, getAbsAngleDiff, polarVec2, distance, angle } from "battletribes-shared";
 import { willStopAtDesiredDistance, getDistanceFromPointToEntity, getClosestAccessibleEntity } from "../../../ai-shared.js";
 import { HealthComponentArray } from "../../../components/HealthComponent.js";
 import { getInventory, addItemToInventory, consumeItemFromSlot, inventoryIsFull, InventoryComponentArray, hasInventory } from "../../../components/InventoryComponent.js";
@@ -45,14 +45,14 @@ const getCommunicationTargets = (tribesman: Entity): ReadonlyArray<Entity> => {
    
    const layer = getEntityLayer(tribesman);
    
-   const minChunkX = Math.max(Math.floor((tribesmanHitbox.box.position.x - TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((tribesmanHitbox.box.position.x + TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
-   const minChunkY = Math.max(Math.floor((tribesmanHitbox.box.position.y - TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((tribesmanHitbox.box.position.y + TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkX = Math.max(Math.floor((tribesmanHitbox.box.posX - TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((tribesmanHitbox.box.posX + TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkY = Math.max(Math.floor((tribesmanHitbox.box.posY - TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((tribesmanHitbox.box.posY + TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
 
    const tribeComponent = TribeComponentArray.getComponent(tribesman);
    
-   const communcationTargets = new Array<Entity>();
+   const communcationTargets: Array<Entity> = [];
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);
@@ -84,8 +84,8 @@ const sendCallToArmsMessage = (tribesman: Entity, communicationTargets: Readonly
       const currentTribesman = communicationTargets[i];
 
       const tribesmanComponent = TribesmanAIComponentArray.getComponent(currentTribesman);
-      tribesmanComponent.helpX = targetHitbox.box.position.x;
-      tribesmanComponent.helpY = targetHitbox.box.position.y;
+      tribesmanComponent.helpX = targetHitbox.box.posX;
+      tribesmanComponent.helpY = targetHitbox.box.posY;
       tribesmanComponent.ticksSinceLastHelpRequest = 0;
    }
 }
@@ -100,7 +100,7 @@ const sendHelpMessage = (communicatingTribesman: Entity, communicationTargets: R
       // @Cleanup: bad. should only change tribesman ai in that tribesman's tick function.
       const healthComponent = HealthComponentArray.getComponent(currentTribesman);
       if (!tribeMemberShouldEscape(getEntityType(currentTribesman), healthComponent)) {
-         pathfindTribesman(currentTribesman, communicatingTribesmanHitbox.box.position.x, communicatingTribesmanHitbox.box.position.y, getEntityLayer(communicatingTribesman), communicatingTribesman, TribesmanPathType.tribesmanRequest, Math.floor(64 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
+         pathfindTribesman(currentTribesman, communicatingTribesmanHitbox.box.posX, communicatingTribesmanHitbox.box.posY, getEntityLayer(communicatingTribesman), communicatingTribesman, TribesmanPathType.tribesmanRequest, Math.floor(64 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
       }
    }
 }
@@ -317,7 +317,7 @@ export function tickTribesman(tribesman: Entity): void {
             const hutTransformComponent = TransformComponentArray.getComponent(hut);
             const hutHitbox = hutTransformComponent.hitboxes[0];
             
-            pathfindTribesman(tribesman, hutHitbox.box.position.x, hutHitbox.box.position.y, getEntityLayer(hut), hut, TribesmanPathType.default, Math.floor(50 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
+            pathfindTribesman(tribesman, hutHitbox.box.posX, hutHitbox.box.posY, getEntityLayer(hut), hut, TribesmanPathType.default, Math.floor(50 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
             
             if (entitiesAreColliding(tribesman, hut) !== CollisionVars.NO_COLLISION) {
                destroyEntity(tribesman);
@@ -365,10 +365,10 @@ export function tickTribesman(tribesman: Entity): void {
    // @Speed: we could store these arrays on the entity, and then when an entity is added/removed from the
    // visible entities array we could also add/remove them to these.
    // Categorise visible entities
-   const visibleEnemies = new Array<Entity>();
-   const visibleEnemyBuildings = new Array<Entity>();
-   const visibleHostileMobs = new Array<Entity>();
-   const visibleItemEntities = new Array<Entity>();
+   const visibleEnemies: Array<Entity> = [];
+   const visibleEnemyBuildings: Array<Entity> = [];
+   const visibleHostileMobs: Array<Entity> = [];
+   const visibleItemEntities: Array<Entity> = [];
    for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
       const entity = aiHelperComponent.visibleEntities[i];
 
@@ -431,13 +431,13 @@ export function tickTribesman(tribesman: Entity): void {
          const entityTransformComponent = TransformComponentArray.getComponent(entity);
          const entityHitbox = entityTransformComponent.hitboxes[0];
 
-         const distance = tribesmanHitbox.box.position.distanceTo(entityHitbox.box.position);
-         if (!willStopAtDesiredDistance(tribesmanHitbox, 80, distance)) {
+         const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
+         if (!willStopAtDesiredDistance(tribesmanHitbox, 80, dist)) {
             const accM = getTribesmanAcceleration(tribesman);
             applyAccelerationFromGround(tribesmanHitbox, polarVec2(accM, tribesmanHitbox.box.angle));
          }
 
-         const targetAngle = tribesmanHitbox.box.position.angleTo(entityHitbox.box.position);
+         const targetAngle = angle(entityHitbox.box.posX - tribesmanHitbox.box.posX, entityHitbox.box.posY - tribesmanHitbox.box.posY);
          turnHitboxToAngle(tribesmanHitbox, targetAngle, TRIBESMAN_TURN_SPEED, 0.5, false);
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
@@ -457,7 +457,7 @@ export function tickTribesman(tribesman: Entity): void {
          const hutTransformComponent = TransformComponentArray.getComponent(availableHut);
          const hutHitbox = hutTransformComponent.hitboxes[0];
          
-         const isFinished = pathfindTribesman(tribesman, hutHitbox.box.position.x, hutHitbox.box.position.y, getEntityLayer(availableHut), availableHut, TribesmanPathType.default, Math.floor(32 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
+         const isFinished = pathfindTribesman(tribesman, hutHitbox.box.posX, hutHitbox.box.posY, getEntityLayer(availableHut), availableHut, TribesmanPathType.default, Math.floor(32 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
 
          if (entitiesAreColliding(tribesman, availableHut) !== CollisionVars.NO_COLLISION) {
             tribesmanAIComponent.hut = availableHut;
@@ -552,10 +552,10 @@ export function tickTribesman(tribesman: Entity): void {
          const entityTransformComponent = TransformComponentArray.getComponent(entity);
          const entityHitbox = entityTransformComponent.hitboxes[0];
          
-         const distance = tribesmanHitbox.box.position.distanceTo(entityHitbox.box.position);
-         if (distance < minDistance) {
+         const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
+         if (dist < minDistance) {
             closestBlueprint = entity;
-            minDistance = distance;
+            minDistance = dist;
          }
       }
 
@@ -563,13 +563,13 @@ export function tickTribesman(tribesman: Entity): void {
          const blueprintTransformComponent = TransformComponentArray.getComponent(closestBlueprint);
          const blueprintHitbox = blueprintTransformComponent.hitboxes[0];
          
-         const targetDir = tribesmanHitbox.box.position.angleTo(blueprintHitbox.box.position);
+         const targetDir = angle(blueprintHitbox.box.posX - tribesmanHitbox.box.posX, blueprintHitbox.box.posY - tribesmanHitbox.box.posY);
 
          const desiredAttackRange = getTribesmanDesiredAttackRange() - getHumanoidRadius(transformComponent);
          
          // @Incomplete: use pathfinding
          // @Cleanup: Copy and pasted from huntEntity. Should be combined into its own function
-         const distance = getDistanceFromPointToEntity(tribesmanHitbox.box.position, blueprintTransformComponent) - getHumanoidRadius(transformComponent);
+         const distance = getDistanceFromPointToEntity(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, blueprintTransformComponent) - getHumanoidRadius(transformComponent);
          if (willStopAtDesiredDistance(tribesmanHitbox, desiredAttackRange - 20, distance)) {
             // If the tribesman will stop too close to the target, move back a bit
             const acceleration = getTribesmanSlowAcceleration(tribesman);
@@ -732,9 +732,9 @@ export function tickTribesman(tribesman: Entity): void {
             const entityTransformComponent = TransformComponentArray.getComponent(entity);
             const entityHitbox = entityTransformComponent.hitboxes[0];
             
-            const distance = tribesmanHitbox.box.position.distanceTo(entityHitbox.box.position);
-            if (distance < minDist && barrelHasFood(entity)) {
-               minDist = distance;
+            const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
+            if (dist < minDist && barrelHasFood(entity)) {
+               minDist = dist;
                closestBarrelWithFood = entity;
             }
          }
@@ -743,8 +743,8 @@ export function tickTribesman(tribesman: Entity): void {
          const barrelTransformComponent = TransformComponentArray.getComponent(closestBarrelWithFood);
          const barrelHitbox = barrelTransformComponent.hitboxes[0];
          
-         if (tribesmanHitbox.box.position.distanceTo(barrelHitbox.box.position) > BARREL_INTERACT_DISTANCE) {
-            pathfindTribesman(tribesman, barrelHitbox.box.position.x, barrelHitbox.box.position.y, getEntityLayer(closestBarrelWithFood), closestBarrelWithFood, TribesmanPathType.default, Math.floor(BARREL_INTERACT_DISTANCE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
+         if (distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, barrelHitbox.box.posX, barrelHitbox.box.posY) > BARREL_INTERACT_DISTANCE) {
+            pathfindTribesman(tribesman, barrelHitbox.box.posX, barrelHitbox.box.posY, getEntityLayer(closestBarrelWithFood), closestBarrelWithFood, TribesmanPathType.default, Math.floor(BARREL_INTERACT_DISTANCE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
          } else {
             grabBarrelFood(tribesman, closestBarrelWithFood);
             // @Cleanup: not needed? When the tribesman finishes pathfinding it should automatically clear the path??

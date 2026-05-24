@@ -12,14 +12,14 @@ export function tetherGlurbSegments(hitbox1: Hitbox, hitbox2: Hitbox): void {
    tetherHitboxes(hitbox1, hitbox2, tetherIdealDistance, 15, 0.5);
 }
 
-export function createGlurbConfig(position: Point, angle: number, numSegments: number): ReadonlyArray<EntityConfig> {
-   const configs = new Array<EntityConfig>();
+export function createGlurbConfig(x: number, y: number, angle: number, numSegments: number): ReadonlyArray<EntityConfig> {
+   const configs: Array<EntityConfig> = [];
    
-   const headConfig = createGlurbHeadSegmentConfig(position, angle, numSegments);
+   const headConfig = createGlurbHeadSegmentConfig(x, y, angle, numSegments);
    configs.push(headConfig);
    
    let lastHitbox = getConfigTransformComponent(headConfig.components).hitboxes[0];
-   let currentPos = position.copy();
+   let currentPos = new Point(x, y);
    for (let i = 0; i < numSegments - 1; i++) {
       const newPos = currentPos.offset(30, angle + Math.PI);
       currentPos.x = newPos.x;
@@ -27,9 +27,9 @@ export function createGlurbConfig(position: Point, angle: number, numSegments: n
       
       let config: EntityConfig;
       if (i === numSegments - 2) {
-         config = createGlurbTailSegmentConfig(currentPos.copy(), angle);
+         config = createGlurbTailSegmentConfig(currentPos.x, currentPos.y, angle);
       } else {
-         config = createGlurbBodySegmentConfig(currentPos.copy(), angle);
+         config = createGlurbBodySegmentConfig(currentPos.x, currentPos.y, angle);
       }
       configs.push(config);
 

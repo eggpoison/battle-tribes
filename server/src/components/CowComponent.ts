@@ -1,4 +1,4 @@
-import { CowSpecies, DamageSource, Entity, EntityType, Settings, getAbsAngleDiff, Point, polarVec2, positionIsInWorld, randAngle, randFloat, randInt, randItem, UtilVar, EntityTickEvent, EntityTickEventType, ServerComponentType, ItemType, Packet, AttackEffectiveness, TamingSkillID, CircularBox, HitboxFlag } from "battletribes-shared";
+import { CowSpecies, DamageSource, Entity, EntityType, Settings, getAbsAngleDiff, Point, polarVec2, positionIsInWorld, randAngle, randFloat, randInt, randItem, UtilVar, EntityTickEvent, EntityTickEventType, ServerComponentType, ItemType, Packet, AttackEffectiveness, TamingSkillID, CircularBox, HitboxFlag, distance, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { getHitboxByFlag, TransformComponentArray } from "./TransformComponent.js";
@@ -111,8 +111,8 @@ const poop = (cow: Entity, cowComponent: CowComponent): void => {
    // Shit it out
    const transformComponent = TransformComponentArray.getComponent(cow);
    const bodyHitbox = transformComponent.hitboxes[0];
-   const poopPosition = bodyHitbox.box.position.offset(randFloat(0, 16), randAngle());
-   const config = createItemEntityConfig(poopPosition, randAngle(), createItem(ItemType.poop, 1, "", ""), null);
+   const poopPosition = new Point(bodyHitbox.box.posX, bodyHitbox.box.posY).offset(randFloat(0, 16), randAngle());
+   const config = createItemEntityConfig(poopPosition.x, poopPosition.y, randAngle(), createItem(ItemType.poop, 1, "", ""), null);
    createEntity(config, getEntityLayer(cow), 0);
 
    // Let it out
@@ -137,7 +137,7 @@ const getTargetGrass = (cow: Entity): Entity | null => {
    
    let minDist = Number.MAX_SAFE_INTEGER;
    let closestGrassStrand: Entity | null = null;
-   const grasses = new Array<Entity>();
+   const grasses: Array<Entity> = [];
    
    for (const chunk of aiHelperComponent.visibleChunks) {
       for (const entity of chunk.entities) {
@@ -145,7 +145,7 @@ const getTargetGrass = (cow: Entity): Entity | null => {
             const grassTransformComponent = TransformComponentArray.getComponent(entity);
             const grassHitbox = grassTransformComponent.hitboxes[0];
             
-            const dist = cowHeadHitbox.box.position.distanceTo(grassHitbox.box.position);
+            const dist = distance(cowHeadHitbox.box.posX, cowHeadHitbox.box.posY, grassHitbox.box.posX, grassHitbox.box.posY);
 
             grasses.push(entity);
             if (dist < minDist) {
@@ -182,10 +182,10 @@ const graze = (cow: Entity, cowComponent: CowComponent, targetGrass: Entity): vo
    // const targetDirection = cowTransformComponent.position.angleTo(grassTransformComponent.position);
    
    const aiHelperComponent = AIHelperComponentArray.getComponent(cow);
-   aiHelperComponent.moveFunc(cow, grassHitbox.box.position, 150);
-   aiHelperComponent.turnFunc(cow, grassHitbox.box.position, Math.PI, 0.4);
+   aiHelperComponent.moveFunc(cow, grassHitbox.box.posX, grassHitbox.box.posY, 150);
+   aiHelperComponent.turnFunc(cow, grassHitbox.box.posX, grassHitbox.box.posY, Math.PI, 0.4);
 
-   const dist = cowHeadHitbox.box.position.distanceTo(grassHitbox.box.position);
+   const dist = distance(cowHeadHitbox.box.posX, cowHeadHitbox.box.posY, grassHitbox.box.posX, grassHitbox.box.posY);
    if (dist < 50) {
       // @SQUEAM so they can eat it befor ethey get jostled away in the pen shot
       // if (++cowComponent.grazeProgressTicks >= Vars.GRAZE_TIME_TICKS) {
@@ -195,9 +195,9 @@ const graze = (cow: Entity, cowComponent: CowComponent, targetGrass: Entity): vo
    
          for (let i = 0; i < 4; i++) {
             const blockAmount = randFloat(0.6, 0.9);
-            const position = grassHitbox.box.position.offset(randFloat(0, 12), randAngle());
+            const position = new Point(grassHitbox.box.posX, grassHitbox.box.posY).offset(randFloat(0, 12), randAngle());
 
-            const blockerBox = new CircularBox(position, new Point(0, 0), 0, randFloat(12, 18));
+            const blockerBox = new CircularBox(position.x, position.y, 0, 0, 0, randFloat(12, 18));
             // @SQUEAM for shot in horse archer
             // createGrassBlocker(blockerBox, getEntityLayer(cow), blockAmount, blockAmount, 0);
          }
@@ -211,7 +211,7 @@ const graze = (cow: Entity, cowComponent: CowComponent, targetGrass: Entity): vo
 }
 
 const findHerdMembers = (cowComponent: CowComponent, visibleEntities: ReadonlyArray<Entity>): ReadonlyArray<Entity> => {
-   const herdMembers = new Array<Entity>();
+   const herdMembers: Array<Entity> = [];
    for (let i = 0; i < visibleEntities.length; i++) {
       const entity = visibleEntities[i];
       if (getEntityType(entity) === EntityType.cow) {
@@ -234,8 +234,8 @@ const chaseAndEatBerry = (cow: Entity, cowComponent: CowComponent, berryItemEnti
    const berryHitbox = berryTransformComponent.hitboxes[0];
 
    const aiHelperComponent = AIHelperComponentArray.getComponent(cow);
-   aiHelperComponent.moveFunc(cow, berryHitbox.box.position, Vars.MEDIUM_ACCELERATION);
-   aiHelperComponent.turnFunc(cow, berryHitbox.box.position, Math.PI, 0.4);
+   aiHelperComponent.moveFunc(cow, berryHitbox.box.posX, berryHitbox.box.posY, Vars.MEDIUM_ACCELERATION);
+   aiHelperComponent.turnFunc(cow, berryHitbox.box.posX, berryHitbox.box.posY, Math.PI, 0.4);
 
    return false;
 }
@@ -305,7 +305,7 @@ function onTick(cow: Entity): void {
    if (1+1===3) {
       // @Temporary: cuz shouldn't it use the energy system now?????
       if (cowComponent.bowelFullness === 0 && (getEntityAgeTicks(cow) + cow) % (2 * Settings.TICK_RATE) === 0) {
-         damageEntity(cowBodyHitbox, null, 1, 0, AttackEffectiveness.effective, cowBodyHitbox.box.position.copy(), 0);
+         damageEntity(cowBodyHitbox, null, 1, 0, AttackEffectiveness.effective, new Point(cowBodyHitbox.box.posX, cowBodyHitbox.box.posY), 0);
       }
    }
    
@@ -328,8 +328,8 @@ function onTick(cow: Entity): void {
          // @SQUEAM
          const acceleration = Vars.FAST_ACCELERATION;
          // const acceleration = cowComponent.stamina > 0 ? Vars.FAST_ACCELERATION : Vars.SLOW_ACCELERATION;
-         aiHelperComponent.moveFunc(cow, targetPosition, acceleration);
-         aiHelperComponent.turnFunc(cow, targetPosition, Math.PI, 0.4);
+         aiHelperComponent.moveFunc(cow, targetPosition.x, targetPosition.y, acceleration);
+         aiHelperComponent.turnFunc(cow, targetPosition.x, targetPosition.y, Math.PI, 0.4);
 
          // Use stamina
          // @HACK this literally only works logically for 1 case
@@ -361,8 +361,8 @@ function onTick(cow: Entity): void {
       const targetTransformComponent = TransformComponentArray.getComponent(tamingComponent.followTarget);
       const targetHitbox = targetTransformComponent.hitboxes[0];
       
-      aiHelperComponent.moveFunc(cow, targetHitbox.box.position, Vars.SLOWMEDIUM_ACCELERATION);
-      aiHelperComponent.turnFunc(cow, targetHitbox.box.position, Math.PI, 0.4);
+      aiHelperComponent.moveFunc(cow, targetHitbox.box.posX, targetHitbox.box.posY, Vars.SLOWMEDIUM_ACCELERATION);
+      aiHelperComponent.turnFunc(cow, targetHitbox.box.posX, targetHitbox.box.posY, Math.PI, 0.4);
       if (getEntityAgeTicks(cow) % Settings.TICK_RATE === 0) {
          addSkillLearningProgress(tamingComponent, TamingSkillID.move, 1);
       }
@@ -371,8 +371,8 @@ function onTick(cow: Entity): void {
 
    // Go to move target
    if (cowComponent.targetMovePosition !== null) {
-      aiHelperComponent.moveFunc(cow, cowComponent.targetMovePosition, Vars.MEDIUM_ACCELERATION);
-      aiHelperComponent.turnFunc(cow, cowComponent.targetMovePosition, Math.PI, 0.4);
+      aiHelperComponent.moveFunc(cow, cowComponent.targetMovePosition.x, cowComponent.targetMovePosition.y, Vars.MEDIUM_ACCELERATION);
+      aiHelperComponent.turnFunc(cow, cowComponent.targetMovePosition.x, cowComponent.targetMovePosition.y, Math.PI, 0.4);
       return;
    }
 
@@ -385,10 +385,10 @@ function onTick(cow: Entity): void {
          const targetTransformComponent = TransformComponentArray.getComponent(tamingComponent.carryTarget);
          const targetHitbox = targetTransformComponent.hitboxes[0];
          
-         aiHelperComponent.moveFunc(cow, targetHitbox.box.position, Vars.MEDIUM_ACCELERATION);
-         aiHelperComponent.turnFunc(cow, targetHitbox.box.position, Math.PI, 0.4);
+         aiHelperComponent.moveFunc(cow, targetHitbox.box.posX, targetHitbox.box.posY, Vars.MEDIUM_ACCELERATION);
+         aiHelperComponent.turnFunc(cow, targetHitbox.box.posX, targetHitbox.box.posY, Math.PI, 0.4);
          
-         const targetDirection = cowBodyHitbox.box.position.angleTo(targetHitbox.box.position);
+         const targetDirection = angle(targetHitbox.box.posX - cowBodyHitbox.box.posX, targetHitbox.box.posY - cowBodyHitbox.box.posY);
 
          // @INCOMPLETE @HACK: Cows shouldn't be able to pick up barrels themselves. It should require a tribesman to do it for them
          /* this is just a temporary hack cuz i haven't fleshed out any of these systems.
@@ -412,10 +412,10 @@ function onTick(cow: Entity): void {
    }
 
    if (tamingComponent.depositTarget !== null) {
-      aiHelperComponent.moveFunc(cow, tamingComponent.depositTarget, Vars.MEDIUM_ACCELERATION);
-      aiHelperComponent.turnFunc(cow, tamingComponent.depositTarget, Math.PI, 0.4);
+      aiHelperComponent.moveFunc(cow, tamingComponent.depositTarget.x, tamingComponent.depositTarget.y, Vars.MEDIUM_ACCELERATION);
+      aiHelperComponent.turnFunc(cow, tamingComponent.depositTarget.x, tamingComponent.depositTarget.y, Math.PI, 0.4);
 
-      if (entityHasPassedPosition(cow, tamingComponent.depositTarget) && getDistanceFromPointToEntity(tamingComponent.depositTarget, transformComponent) < 100) {
+      if (entityHasPassedPosition(cow, tamingComponent.depositTarget) && getDistanceFromPointToEntity(tamingComponent.depositTarget.x, tamingComponent.depositTarget.y, transformComponent) < 100) {
          const rideableComponent = RideableComponentArray.getComponent(cow);
 
          let carriedEntity: Entity | null = null;
@@ -444,36 +444,36 @@ function onTick(cow: Entity): void {
          if (cowComponent.ramRemainingChargeTicks > 0) {
             cowComponent.ramRemainingChargeTicks--;
             // Turn towards the target
-            aiHelperComponent.turnFunc(cow, targetHitbox.box.position, Math.PI, 0.4);
+            aiHelperComponent.turnFunc(cow, targetHitbox.box.posX, targetHitbox.box.posY, Math.PI, 0.4);
          } else {
             // Continue charging on straight in the head's current direction
             const cowHeadHitbox = transformComponent.hitboxes[1];
-            const targetPos = cowBodyHitbox.box.position.offset(999, cowHeadHitbox.box.angle);
-            aiHelperComponent.moveFunc(cow, targetPos, Vars.FAST_ACCELERATION);
-            aiHelperComponent.turnFunc(cow, targetPos, Math.PI, 0.4);
+            const targetPos = new Point(cowBodyHitbox.box.posX, cowBodyHitbox.box.posY).offset(999, cowHeadHitbox.box.angle);
+            aiHelperComponent.moveFunc(cow, targetPos.x, targetPos.y, Vars.FAST_ACCELERATION);
+            aiHelperComponent.turnFunc(cow, targetPos.x, targetPos.y, Math.PI, 0.4);
          }
       } else {
          if (cowComponent.ramCooldownTicks > 0) {
             cowComponent.ramCooldownTicks--;
          }
          
-         const dist = getDistanceFromPointToEntity(cowBodyHitbox.box.position, targetTransformComponent);
+         const dist = getDistanceFromPointToEntity(cowBodyHitbox.box.posX, cowBodyHitbox.box.posY, targetTransformComponent);
          
          if (willStopAtDesiredDistance(cowBodyHitbox, 130, dist)) {
             // If the cow is too close, move away
             // Turn to the target while moving backwards away from it
-            const awayFromTarget = targetHitbox.box.position.angleTo(cowBodyHitbox.box.position);
-            const awayPos = cowBodyHitbox.box.position.offset(999, awayFromTarget);
+            const awayFromTarget = angle(cowBodyHitbox.box.posX - targetHitbox.box.posX, cowBodyHitbox.box.posY - targetHitbox.box.posY);
+            const awayPos = new Point(cowBodyHitbox.box.posX, cowBodyHitbox.box.posY).offset(999, awayFromTarget);
             // @Hack: acceleration (to counteract acceleration multiplier)
-            aiHelperComponent.moveFunc(cow, awayPos, Vars.SLOWMEDIUM_ACCELERATION / 0.6);
-            aiHelperComponent.turnFunc(cow, targetHitbox.box.position, Math.PI, 0.4);
+            aiHelperComponent.moveFunc(cow, awayPos.x, awayPos.y, Vars.SLOWMEDIUM_ACCELERATION / 0.6);
+            aiHelperComponent.turnFunc(cow, targetHitbox.box.posX, targetHitbox.box.posY, Math.PI, 0.4);
          } else if (willStopAtDesiredDistance(cowBodyHitbox, 180, dist)) {
             // Within valid ram start range
-            aiHelperComponent.turnFunc(cow, targetHitbox.box.position, Math.PI, 0.4);
+            aiHelperComponent.turnFunc(cow, targetHitbox.box.posX, targetHitbox.box.posY, Math.PI, 0.4);
             if (cowComponent.ramCooldownTicks === 0) {
                // If the ram attack isn't 
                const headHitbox = transformComponent.hitboxes[1];
-               const targetDirection = headHitbox.box.position.angleTo(targetHitbox.box.position);
+               const targetDirection = angle(targetHitbox.box.posX - headHitbox.box.posX, targetHitbox.box.posY - headHitbox.box.posY);
                if (getAbsAngleDiff(headHitbox.box.angle, targetDirection) < 0.1) {
                   // Start the ram attack
                   cowComponent.isRamming = true;
@@ -482,8 +482,8 @@ function onTick(cow: Entity): void {
             }
          } else {
             // If the cow isn't close enough, move towards the target
-            aiHelperComponent.moveFunc(cow, targetHitbox.box.position, Vars.MEDIUM_ACCELERATION);
-            aiHelperComponent.turnFunc(cow, targetHitbox.box.position, Math.PI, 0.4);
+            aiHelperComponent.moveFunc(cow, targetHitbox.box.posX, targetHitbox.box.posY, Vars.MEDIUM_ACCELERATION);
+            aiHelperComponent.turnFunc(cow, targetHitbox.box.posX, targetHitbox.box.posY, Math.PI, 0.4);
          }
       }
       return;
@@ -702,7 +702,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       return;
    }
 
-   const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
+   const hitDirection = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
    
    damageEntity(collidingHitbox, cow, 2, DamageSource.iceSpikes, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingHitbox, polarVec2(180, hitDirection));

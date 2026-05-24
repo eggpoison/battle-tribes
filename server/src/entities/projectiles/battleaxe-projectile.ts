@@ -7,12 +7,12 @@ import Tribe from "../../Tribe.js";
 import { BattleaxeProjectileComponent } from "../../components/BattleaxeProjectileComponent.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createBattleaxeProjectileConfig(position: Point, rotation: number, tribe: Tribe, tribeMember: Entity, itemID: number | null): EntityConfig {
+export function createBattleaxeProjectileConfig(x: number, y: number, rotation: number, tribe: Tribe, tribeMember: Entity, itemID: number | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.isAffectedByGroundFriction = false;
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), rotation, 32), 0.6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, rotation, 32), 0.6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);   
    

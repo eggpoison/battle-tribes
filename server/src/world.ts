@@ -37,11 +37,11 @@ const entityTypes: Partial<Record<Entity, EntityType>> = {};
 const entityLayers: Partial<Record<Entity, Layer>> = {};
 const entitySpawnTicks: Partial<Record<Entity, number>> = {};
 
-const tribes = new Array<Tribe>();
+const tribes: Array<Tribe> = [];
 
 // Array of join infos, sorted by the ticks remaining until they join.
-const entityJoinBuffer = new Array<EntityJoinInfo>();
-const entityRemoveBuffer = new Array<Entity>();
+const entityJoinBuffer: Array<EntityJoinInfo> = [];
+const entityRemoveBuffer: Array<Entity> = [];
 
 // We skip 0 as that is reserved as a no-entity marker
 // We skip 1 also as that is reserved client-side for its ghost spectator entity.

@@ -68,7 +68,7 @@ class _ItemComponentArray extends _ServerComponentArray<ItemComponent, ItemCompo
       if (itemComponent.itemType === ItemType.deepfrost_heart) {
          const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
-         createDeepFrostHeartBloodParticles(hitbox.box.position.x, hitbox.box.position.y, 0, 0);
+         createDeepFrostHeartBloodParticles(hitbox.box.posX, hitbox.box.posY, 0, 0);
       }
    }
 }

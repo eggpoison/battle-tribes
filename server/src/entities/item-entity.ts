@@ -8,15 +8,15 @@ import { Hitbox } from "../hitboxes.js";
 import { createLight } from "../lights.js";
 import { createItem } from "../items.js";
 
-export function createItemEntityConfig(position: Point, rotation: number, item: Item, throwingEntity: Entity | null): EntityConfig {
+export function createItemEntityConfig(x: number, y: number, angle: number, item: Item, throwingEntity: Entity | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const itemComponent = new ItemComponent(item, throwingEntity);
 
-   const lights = new Array<LightCreationInfo>();
+   const lights: Array<LightCreationInfo> = [];
    // @Hack: hardcoded!!
    if (item.type === ItemType.slurb) {
       const light = createLight(new Point(0, 0), 0.6, 0.5, 4, 1, 0.1, 1);
@@ -70,7 +70,7 @@ export function createItemsOverEntity(entity: Entity, itemType: ItemType, amount
       }
       
       // Create item entity
-      const config = createItemEntityConfig(spawnPosition, randAngle(), createItem(itemType, 1, "", ""), null);
+      const config = createItemEntityConfig(spawnPosition.x, spawnPosition.y, randAngle(), createItem(itemType, 1, "", ""), null);
       createEntity(config, getEntityLayer(entity), 0);
    }
 }

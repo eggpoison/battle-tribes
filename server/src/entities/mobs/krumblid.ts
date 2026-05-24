@@ -1,4 +1,4 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, getAbsAngleDiff, Point, randInt, HitboxCollisionType, HitboxFlag, CircularBox, Biome, Settings, ItemType, RectangularBox, createNormalisedPivotPoint, getTamingSkill, TamingSkillID } from "battletribes-shared";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, getAbsAngleDiff, Point, randInt, HitboxCollisionType, HitboxFlag, CircularBox, Biome, Settings, ItemType, RectangularBox, createNormalisedPivotPoint, getTamingSkill, TamingSkillID, angle, PivotPointType } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import WanderAI from "../../ai/WanderAI.js";
 import Layer from "../../Layer.js";
@@ -67,12 +67,12 @@ function wanderPositionIsValid(_entity: Entity, layer: Layer, x: number, y: numb
    return biome === Biome.desert || biome === Biome.desertOasis;
 }
 
-const moveFunc = (krumblid: Entity, pos: Point, acceleration: number): void => {
-   accelerateEntityToPosition(krumblid, pos, acceleration);
+const moveFunc = (krumblid: Entity, x: number, y: number, acceleration: number): void => {
+   accelerateEntityToPosition(krumblid, x, y, acceleration);
 }
 
-const turnFunc = (krumblid: Entity, pos: Point, turnSpeed: number, turnDamping: number): void => {
-   turnToPosition(krumblid, pos, turnSpeed, turnDamping);
+const turnFunc = (krumblid: Entity, x: number, y: number, turnSpeed: number, turnDamping: number): void => {
+   turnToPosition(krumblid, x, y, turnSpeed, turnDamping);
 }
 
 const extraEscapeCondition = (krumblid: Entity, escapeTarget: Entity): boolean => {
@@ -88,20 +88,20 @@ const extraEscapeCondition = (krumblid: Entity, escapeTarget: Entity): boolean =
    const escapeTargetTransformComponent = TransformComponentArray.getComponent(escapeTarget);
    const escapeTargetHitbox = escapeTargetTransformComponent.hitboxes[0];
 
-   const angleFromEscapeTarget = escapeTargetHitbox.box.position.angleTo(krumblidHitbox.box.position);
-   const positionFromEscapeTarget = new Point(krumblidHitbox.box.position.x - escapeTargetHitbox.box.position.x, krumblidHitbox.box.position.y - escapeTargetHitbox.box.position.y);
+   const angleFromEscapeTarget = angle(krumblidHitbox.box.posX - escapeTargetHitbox.box.posX, krumblidHitbox.box.posY - escapeTargetHitbox.box.posY);
+   const positionFromEscapeTarget = new Point(krumblidHitbox.box.posX - escapeTargetHitbox.box.posX, krumblidHitbox.box.posY - escapeTargetHitbox.box.posY);
 
    const escapeTargetVelocity = getHitboxVelocity(escapeTargetHitbox);
    
    return getAbsAngleDiff(angleFromEscapeTarget, escapeTargetHitbox.box.angle) < 0.4 && escapeTargetVelocity.calculateDotProduct(positionFromEscapeTarget) > 50;
 }
 
-export function createKrumblidConfig(position: Point, angle: number): EntityConfig {
+export function createKrumblidConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.traction = 1.5;
    
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, 24), 0.75, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.cactus, [HitboxFlag.KRUMBLID_BODY]);
+   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 24), 0.75, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.cactus, [HitboxFlag.KRUMBLID_BODY]);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
    
    // Mandibles
@@ -109,13 +109,13 @@ export function createKrumblidConfig(position: Point, angle: number): EntityConf
       const sideIsFlipped = i === 1;
       
       const offset = new Point(12, 28);
-      const position = bodyHitbox.box.position.copy();
-      position.add(offset);
-      const mandibleHitbox = new Hitbox(transformComponent, bodyHitbox, true, new RectangularBox(position, offset, Math.PI * 0.1, 12, 16), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.cactus, [HitboxFlag.KRUMBLID_MANDIBLE]);
+      const mandibleHitbox = new Hitbox(transformComponent, bodyHitbox, true, new RectangularBox(bodyHitbox.box.posX + offset.x, bodyHitbox.box.posY + offset.y, offset.x, offset.y, Math.PI * 0.1, 12, 16), 0.1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.cactus, [HitboxFlag.KRUMBLID_MANDIBLE]);
       mandibleHitbox.box.flipX = sideIsFlipped;
       // @Hack
       mandibleHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
-      mandibleHitbox.box.pivot = createNormalisedPivotPoint(-0.5, -0.5);
+      mandibleHitbox.box.pivotX = -0.5;
+      mandibleHitbox.box.pivotY = -0.5;
+      mandibleHitbox.box.pivotType = PivotPointType.normalised;
       addHitboxToTransformComponent(transformComponent, mandibleHitbox);
    }
    

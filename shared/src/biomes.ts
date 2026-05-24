@@ -1,4 +1,4 @@
-export enum Biome {
+export const enum Biome {
    grasslands,
    desert,
    desertOasis,

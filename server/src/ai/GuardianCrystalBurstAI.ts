@@ -1,4 +1,4 @@
-import { GuardianCrystalBurstStage, Entity, Settings, lerp, Point, polarVec2, randAngle, randFloat, randSign, UtilVar } from "battletribes-shared";
+import { GuardianCrystalBurstStage, Entity, Settings, lerp, polarVec2, randAngle, randFloat, randSign, UtilVar } from "battletribes-shared";
 import { turnToPosition } from "../ai-shared.js";
 import { GuardianComponent, GuardianComponentArray, GuardianVars } from "../components/GuardianComponent.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
@@ -24,14 +24,14 @@ const createFragmentProjectile = (guardian: Entity): void => {
 
    const offsetDirection = bodyHitbox.box.angle + randFloat(-0.2, 0.2);
    const offsetMagnitude = GuardianVars.LIMB_ORBIT_RADIUS;
-   const originX = bodyHitbox.box.position.x + offsetMagnitude * Math.sin(offsetDirection);
-   const originY = bodyHitbox.box.position.y + offsetMagnitude * Math.cos(offsetDirection);
+   const originX = bodyHitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+   const originY = bodyHitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
 
    const velocityMagnitude = randFloat(450, 700);
    const velocityDirection = offsetDirection + randFloat(-0.2, 0.2);
    const vel = polarVec2(velocityMagnitude, velocityDirection);
    
-   const config = createGuardianGemFragmentProjectileConfig(new Point(originX, originY), randAngle(), guardian);
+   const config = createGuardianGemFragmentProjectileConfig(originX, originY, randAngle(), guardian);
 
    const snowballHitbox = getConfigTransformComponent(config.components).hitboxes[0];
    addHitboxVelocity(snowballHitbox, vel);
@@ -61,8 +61,8 @@ export default class GuardianCrystalBurstAI {
          const box = hitbox.box;
 
          const limbDirection = direction * (i === 0 ? 1 : -1);
-         box.offset.x = offset * Math.sin(limbDirection);
-         box.offset.y = offset * Math.cos(limbDirection);
+         box.offsetX = offset * Math.sin(limbDirection);
+         box.offsetY = offset * Math.cos(limbDirection);
       }
 
       // @Copynpaste
@@ -71,7 +71,7 @@ export default class GuardianCrystalBurstAI {
    }
    
    public run(guardian: Entity, targetX: number, targetY: number): void {
-      turnToPosition(guardian, new Point(targetX, targetY), this.turnSpeed, 1);
+      turnToPosition(guardian, targetX, targetY, this.turnSpeed, 1);
 
       const guardianComponent = GuardianComponentArray.getComponent(guardian);
       if (this.windupProgressTicks < Vars.WINDUP_TIME_TICKS) {

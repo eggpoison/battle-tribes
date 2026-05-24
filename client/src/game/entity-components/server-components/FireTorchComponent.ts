@@ -53,8 +53,8 @@ class _FireTorchComponentArray extends _ServerComponentArray<FireTorchComponent,
       
       // Ember particles
       if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
-         let spawnPositionX = hitbox.box.position.x;
-         let spawnPositionY = hitbox.box.position.y;
+         let spawnPositionX = hitbox.box.posX;
+         let spawnPositionY = hitbox.box.posY;
 
          const spawnOffsetMagnitude = 7 * Math.random();
          const spawnOffsetDirection = randAngle();
@@ -68,8 +68,8 @@ class _FireTorchComponentArray extends _ServerComponentArray<FireTorchComponent,
       if (tickIntervalHasPassed(0.18 * Settings.TICK_RATE)) {
          const spawnOffsetMagnitude = 5 * Math.random();
          const spawnOffsetDirection = randAngle();
-         const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = hitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
          createSmokeParticle(spawnPositionX, spawnPositionY, 24);
       }
    }

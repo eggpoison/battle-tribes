@@ -2,7 +2,7 @@ import { Packet, Entity, ServerComponentType } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class BarrelComponent {
-   public openers = new Array<Entity>();
+   public openers: Array<Entity> = [];
 }
 
 export const BarrelComponentArray = new ComponentArray<BarrelComponent>(ServerComponentType.barrel, true, getDataLength, addDataToPacket);

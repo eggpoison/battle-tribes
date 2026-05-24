@@ -40,7 +40,7 @@ const createSpikyBall = (guardian: Entity, targetX: number, targetY: number): vo
       const vx = velocityMagnitude * Math.sin(velocityDirection);
       const vy = velocityMagnitude * Math.cos(velocityDirection);
       
-      const config = createGuardianSpikyBallConfig(new Point(x!, y!), randAngle(), guardian);
+      const config = createGuardianSpikyBallConfig(x!, y!, randAngle(), guardian);
 
       const spikyBallHitbox = getConfigTransformComponent(config.components).hitboxes[0];
       setHitboxVelocity(spikyBallHitbox, vx, vy);
@@ -53,7 +53,7 @@ const createSpikyBall = (guardian: Entity, targetX: number, targetY: number): vo
 export default class GuardianSpikyBallSummonAI {
    private readonly turnSpeed: number;
    
-   private spikyBallSpawnTicks = new Array<number>();
+   private spikyBallSpawnTicks: Array<number> = [];
    
    private windupProgressTicks = 0;
    private focusProgressTicks = 0;
@@ -67,7 +67,7 @@ export default class GuardianSpikyBallSummonAI {
    }
    
    public run(guardian: Entity, targetX: number, targetY: number): void {
-      turnToPosition(guardian, new Point(targetX, targetY), this.turnSpeed, 1);
+      turnToPosition(guardian, targetX, targetY, this.turnSpeed, 1);
 
       const guardianComponent = GuardianComponentArray.getComponent(guardian);
       if (this.windupProgressTicks < Vars.WINDUP_TIME_TICKS) {

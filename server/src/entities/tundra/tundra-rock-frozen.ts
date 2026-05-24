@@ -1,4 +1,4 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point, randInt, Box, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { CollisionBit, DEFAULT_COLLISION_MASK, EntityType, randInt, Box, HitboxCollisionType, RectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { TransformComponent, addHitboxToTransformComponent } from "../../components/TransformComponent.js";
 import { Hitbox } from "../../hitboxes.js";
@@ -9,7 +9,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 const HEALTHS = [15, 35, 55];
 const MASSES = [1, 2, 3];
 
-export function createTundraRockFrozenConfig(position: Point, angle: number): EntityConfig {
+export function createTundraRockFrozenConfig(x: number, y: number, angle: number): EntityConfig {
    const variant = randInt(0, 2);
    
    const transformComponent = new TransformComponent();
@@ -17,15 +17,15 @@ export function createTundraRockFrozenConfig(position: Point, angle: number): En
    let box: Box;
    switch (variant) {
       case 0: {
-         box = new RectangularBox(position, new Point(0, 0), angle, 42, 32);
+         box = new RectangularBox(x, y, 0, 0, angle, 42, 32);
          break;
       }
       case 1: {
-         box = new RectangularBox(position, new Point(0, 0), angle, 52, 50);
+         box = new RectangularBox(x, y, 0, 0, angle, 52, 50);
          break;
       }
       default: {
-         box = new RectangularBox(position, new Point(0, 0), angle, 82, 58);
+         box = new RectangularBox(x, y, 0, 0, angle, 82, 58);
          break;
       }
    }

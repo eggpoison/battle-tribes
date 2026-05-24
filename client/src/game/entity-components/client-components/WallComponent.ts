@@ -1,4 +1,4 @@
-import { EntityType, ServerComponentType, Entity, Point } from "webgl-test-shared";
+import { EntityType, ServerComponentType, Entity, Point, angle, distance } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
@@ -114,15 +114,15 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
    playSoundOnHitbox("wooden-wall-hit.mp3", 0.3, 1, entity, hitbox, false);
 
    for (let i = 0; i < 6; i++) {
-      createLightWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 32);
+      createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32);
    }
 
    for (let i = 0; i < 10; i++) {
-      let offsetDirection = hitbox.box.position.angleTo(hitPosition);
+      let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
       offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-      const spawnPositionX = hitbox.box.position.x + 32 * Math.sin(offsetDirection);
-      const spawnPositionY = hitbox.box.position.y + 32 * Math.cos(offsetDirection);
+      const spawnPositionX = hitbox.box.posX + 32 * Math.sin(offsetDirection);
+      const spawnPositionY = hitbox.box.posY + 32 * Math.cos(offsetDirection);
       createLightWoodSpeckParticle(spawnPositionX, spawnPositionY, 5);
    }
 }
@@ -143,7 +143,7 @@ function onDie(entity: Entity): void {
          const entityTransformComponent = TransformComponentArray.getComponent(entity);
          const entityHitbox = entityTransformComponent.hitboxes[0];
 
-         const dist = hitbox.box.position.distanceTo(entityHitbox.box.position);
+         const dist = distance(hitbox.box.posX, hitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
          if (dist < 1) {
             return;
          }
@@ -153,10 +153,10 @@ function onDie(entity: Entity): void {
    playSoundOnHitbox("wooden-wall-break.mp3", 0.4, 1, entity, hitbox, false);
 
    for (let i = 0; i < 16; i++) {
-      createLightWoodSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, 32 * Math.random());
+      createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32 * Math.random());
    }
 
    for (let i = 0; i < 8; i++) {
-      createWoodShardParticle(hitbox.box.position.x, hitbox.box.position.y, 32);
+      createWoodShardParticle(hitbox.box.posX, hitbox.box.posY, 32);
    }
 }

@@ -24,7 +24,7 @@ function onJoin(entity: Entity): void {
    
    const treeComponent = TreeComponentArray.getComponent(entity);
 
-   const blockerBox = new CircularBox(treeHitbox.box.position.copy(), new Point(0, 0), 0, TREE_TRUNK_RADII[treeComponent.treeSize]);
+   const blockerBox = new CircularBox(treeHitbox.box.posX, treeHitbox.box.posX, 0, 0, 0, TREE_TRUNK_RADII[treeComponent.treeSize]);
    // @SQUEAM for shot
    // createGrassBlocker(blockerBox, getEntityLayer(entity), 0, 0.9, entity)
 }

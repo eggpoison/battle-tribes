@@ -1,4 +1,4 @@
-import { EntityType, StatusEffect, Point, CollisionBit, DEFAULT_COLLISION_MASK, HitboxCollisionType, CircularBox } from "battletribes-shared";
+import { EntityType, StatusEffect, CollisionBit, DEFAULT_COLLISION_MASK, HitboxCollisionType, CircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -20,10 +20,10 @@ const turnFunc = () => {
    throw new Error();
 }
 
-export function createHealingTotemConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createHealingTotemConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const box = new CircularBox(position, new Point(0, 0), rotation, 48);
+   const box = new CircularBox(x, y, 0, 0, angle, 48);
    const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);

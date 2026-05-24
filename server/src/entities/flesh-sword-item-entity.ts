@@ -14,9 +14,9 @@ const turnFunc = () => {
    throw new Error();
 }
 
-export function createFleshSwordItemEntityConfig(position: Point, rotation: number, item: Item, throwingEntity: Entity | null): EntityConfig {
+export function createFleshSwordItemEntityConfig(x: number, y: number, angle: number, item: Item, throwingEntity: Entity | null): EntityConfig {
    const transformComponent = new TransformComponent();
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const itemComponent = new ItemComponent(item, throwingEntity);

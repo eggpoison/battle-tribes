@@ -43,8 +43,8 @@ export default class GuardianCrystalSlamAI {
       applyAbsoluteKnockback(bodyHitbox, polarVec2(150, bodyHitbox.box.angle + Math.PI));
 
       const offsetMagnitude = GuardianVars.LIMB_ORBIT_RADIUS + Vars.LIMB_EXTEND_AMOUNT;
-      const originX = bodyHitbox.box.position.x + offsetMagnitude * Math.sin(bodyHitbox.box.angle);
-      const originY = bodyHitbox.box.position.y + offsetMagnitude * Math.cos(bodyHitbox.box.angle);
+      const originX = bodyHitbox.box.posX + offsetMagnitude * Math.sin(bodyHitbox.box.angle);
+      const originY = bodyHitbox.box.posY + offsetMagnitude * Math.cos(bodyHitbox.box.angle);
       
       // Create gem quakes
       const layer = getEntityLayer(guardian);
@@ -70,7 +70,7 @@ export default class GuardianCrystalSlamAI {
             x += offsetMagnitude * Math.sin(offsetDirection);
             y += offsetMagnitude * Math.cos(offsetDirection);
             
-            const config = createGuardianGemQuakeConfig(new Point(x, y), randAngle());
+            const config = createGuardianGemQuakeConfig(x, y, randAngle());
             createEntity(config, layer, spawnDelayTicks);
          }
       }
@@ -82,8 +82,8 @@ export default class GuardianCrystalSlamAI {
          const box = hitbox.box;
 
          const limbDirection = direction * (i === 0 ? 1 : -1);
-         box.offset.x = offset * Math.sin(limbDirection);
-         box.offset.y = offset * Math.cos(limbDirection);
+         box.offsetX = offset * Math.sin(limbDirection);
+         box.offsetY = offset * Math.cos(limbDirection);
       }
 
       // @Copynpaste
@@ -127,7 +127,7 @@ export default class GuardianCrystalSlamAI {
          this.stage = GuardianCrystalSlamStage.return;
 
          // Look at target
-         turnToPosition(guardian, new Point(targetX, targetY), this.turnSpeed, 1);
+         turnToPosition(guardian, targetX, targetY, this.turnSpeed, 1);
 
          // Return limbs to normal
          let progress = this.returnProgressTicks / Vars.RETURN_TIME_TICKS;

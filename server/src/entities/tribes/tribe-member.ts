@@ -1,4 +1,4 @@
-import { AttackEffectiveness, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, EntityType, Entity, LimbAction, Settings, TribesmanTitle, TribeType, Point, dotAngles, lerp, polarVec2, randAngle, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize, ARROW_RELEASE_WAIT_TIME_TICKS, EntityTickEvent, EntityTickEventType, copyLimbState } from "battletribes-shared";
+import { AttackEffectiveness, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, EntityType, Entity, LimbAction, Settings, TribesmanTitle, TribeType, Point, dotAngles, lerp, polarVec2, randAngle, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize, ARROW_RELEASE_WAIT_TIME_TICKS, EntityTickEvent, EntityTickEventType, copyLimbState, angle } from "battletribes-shared";
 import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull } from "../../components/InventoryComponent.js";
 import { getEntitiesInRange } from "../../ai-shared.js";
 import { HealthComponentArray, healEntity } from "../../components/HealthComponent.js";
@@ -150,8 +150,8 @@ export function calculateRadialAttackTargets(entity: Entity, attackOffset: numbe
    const entityHitbox = transformComponent.hitboxes[0];
    const layer = getEntityLayer(entity);
    
-   const attackPositionX = entityHitbox.box.position.x + attackOffset * Math.sin(entityHitbox.box.angle);
-   const attackPositionY = entityHitbox.box.position.y + attackOffset * Math.cos(entityHitbox.box.angle);
+   const attackPositionX = entityHitbox.box.posX + attackOffset * Math.sin(entityHitbox.box.angle);
+   const attackPositionY = entityHitbox.box.posY + attackOffset * Math.cos(entityHitbox.box.angle);
    const attackedEntities = getEntitiesInRange(layer, attackPositionX, attackPositionY, attackRadius);
    
    // Don't attack yourself
@@ -261,16 +261,16 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const tribeMemberHitbox = transformComponent.hitboxes[0];
          
          const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
-         const placeInfo = calculateEntityPlaceInfo(tribeMemberHitbox.box.position, tribeMemberHitbox.box.angle, structureType, getEntityLayer(tribeMember));
+         const placeInfo = calculateEntityPlaceInfo(new Point(tribeMemberHitbox.box.posX, tribeMemberHitbox.box.posY), tribeMemberHitbox.box.angle, structureType, getEntityLayer(tribeMember));
 
          if (placeInfo.isValid) {
             const tribeComponent = TribeComponentArray.getComponent(tribeMember);
             // @SQUEAM
             let entityConfig: EntityConfig;
             if (placeInfo.entityType === EntityType.slingTurret) {
-               entityConfig = createBlueprintEntityConfig(placeInfo.position, placeInfo.angle, tribeComponent.tribe, BlueprintType.slingTurret, 0, null, []);
+               entityConfig = createBlueprintEntityConfig(placeInfo.position.x, placeInfo.position.y, placeInfo.angle, tribeComponent.tribe, BlueprintType.slingTurret, 0, null, []);
             } else {
-               entityConfig = createStructureConfig(tribeComponent.tribe, placeInfo.entityType, placeInfo.position, placeInfo.angle, placeInfo.connections);
+               entityConfig = createStructureConfig(tribeComponent.tribe, placeInfo.entityType, placeInfo.position.x, placeInfo.position.y, placeInfo.angle, placeInfo.connections);
             }
             createEntity(entityConfig, getEntityLayer(tribeMember), 0);
 
@@ -304,9 +304,8 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          // Offset the arrow's spawn to be just outside of the tribe member's hitox
          // @Speed: Garbage collectionb
          const tribeMemberHitbox = transformComponent.hitboxes[0];
-         const spawnPosition = tribeMemberHitbox.box.position.copy();
-         const offset = polarVec2(35, tribeMemberHitbox.box.angle);
-         spawnPosition.add(offset);
+         const spawnX = tribeMemberHitbox.box.posX + 35 * Math.sin(tribeMemberHitbox.box.angle);
+         const spawnY = tribeMemberHitbox.box.posY + 35 * Math.cos(tribeMemberHitbox.box.angle);
 
          const angle = tribeMemberHitbox.box.angle;
          
@@ -316,11 +315,11 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          switch (item.type) {
             case ItemType.wooden_bow:
             case ItemType.reinforced_bow: {
-               arrowConfig = createWoodenArrowConfig(spawnPosition, angle, tribeComponent.tribe, tribeMember);
+               arrowConfig = createWoodenArrowConfig(spawnX, spawnY, angle, tribeComponent.tribe, tribeMember);
                break;
             }
             case ItemType.ice_bow: {
-               arrowConfig = createIceArrowConfig(spawnPosition, angle, tribeComponent.tribe, tribeMember);
+               arrowConfig = createIceArrowConfig(spawnX, spawnY, angle, tribeComponent.tribe, tribeMember);
                break;
             }
             // @Robustness
@@ -384,16 +383,15 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
 
          // Offset the arrow's spawn to be just outside of the tribe member's hitbox
          // @Speed: Garbage collection
-         const spawnPosition = tribeMemberHitbox.box.position.copy();
-         const offset = polarVec2(35, tribeMemberHitbox.box.angle);
-         spawnPosition.add(offset);
+         const spawnPositionX = tribeMemberHitbox.box.posX + 35 * Math.sin(tribeMemberHitbox.box.angle);
+         const spawnPositionY = tribeMemberHitbox.box.posY + 35 * Math.cos(tribeMemberHitbox.box.angle);
          
          const itemInfo = ITEM_INFO_RECORD[item.type] as BowItemInfo;
 
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
          // @Copynpaste from bow above
-         const config = createWoodenArrowConfig(spawnPosition, tribeMemberHitbox.box.angle, tribeComponent.tribe, tribeMember);
+         const config = createWoodenArrowConfig(spawnPositionX, spawnPositionY, tribeMemberHitbox.box.angle, tribeComponent.tribe, tribeMember);
 
          const arrowHitbox = getConfigTransformComponent(config.components).hitboxes[0];
          addHitboxVelocity(arrowHitbox, polarVec2(itemInfo.projectileSpeed, tribeMemberHitbox.box.angle));
@@ -419,13 +417,13 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const limbInfo = inventoryUseComponent.getLimbInfo(inventoryName);
 
          const offsetDirection = tribeMemberHitbox.box.angle + Math.PI / 1.5 - Math.PI / 14;
-         const x = tribeMemberHitbox.box.position.x + 35 * Math.sin(offsetDirection);
-         const y = tribeMemberHitbox.box.position.y + 35 * Math.cos(offsetDirection);
+         const x = tribeMemberHitbox.box.posX + 35 * Math.sin(offsetDirection);
+         const y = tribeMemberHitbox.box.posY + 35 * Math.cos(offsetDirection);
 
          const secondsSinceLastAction = limbInfo.currentActionElapsedTicks * Settings.DT_S;
          const velocityMagnitude = lerp(1000, 1700, Math.min(secondsSinceLastAction / 3, 1));
 
-         const config = createSpearProjectileConfig(new Point(x, y), tribeMemberHitbox.box.angle, tribeMember, null);
+         const config = createSpearProjectileConfig(x, y, tribeMemberHitbox.box.angle, tribeMember, null);
 
          const spearProjectileHitbox = getConfigTransformComponent(config.components).hitboxes[0];
          
@@ -457,14 +455,14 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
 
          const offsetDirection = tribeMemberHitbox.box.angle + Math.PI / 1.5 - Math.PI / 14;
-         const x = tribeMemberHitbox.box.position.x + 35 * Math.sin(offsetDirection);
-         const y = tribeMemberHitbox.box.position.y + 35 * Math.cos(offsetDirection);
+         const x = tribeMemberHitbox.box.posX + 35 * Math.sin(offsetDirection);
+         const y = tribeMemberHitbox.box.posY + 35 * Math.cos(offsetDirection);
 
          const ticksSinceLastAction = getGameTicks() - useInfo.lastBattleaxeChargeTicks;
          const secondsSinceLastAction = ticksSinceLastAction * Settings.DT_S;
          const velocityMagnitude = lerp(600, 1100, Math.min(secondsSinceLastAction / 3, 1));
 
-         const config = createBattleaxeProjectileConfig(new Point(x, y), tribeMemberHitbox.box.angle, tribeComponent.tribe, tribeMember, item.id);
+         const config = createBattleaxeProjectileConfig(x, y, tribeMemberHitbox.box.angle, tribeComponent.tribe, tribeMember, item.id);
 
          const tribeMemberVelocity = getHitboxVelocity(tribeMemberHitbox);
          
@@ -586,7 +584,7 @@ const getFenceGatePlaceDirection = (fence: Entity): number => {
    const connectingFenceTransformComponent = TransformComponentArray.getComponent(connection.entity);
    const connectedFenceHitbox = connectingFenceTransformComponent.hitboxes[0];
 
-   let direction = fenceHitbox.box.position.angleTo(connectedFenceHitbox.box.position);
+   const direction = angle(connectedFenceHitbox.box.posX - fenceHitbox.box.posX, connectedFenceHitbox.box.posY - fenceHitbox.box.posY);
    return direction + Math.PI * 0.5;
 }
 
@@ -606,15 +604,16 @@ export function placeBlueprint(tribeMember: Entity, structure: Entity, blueprint
       case BlueprintType.stoneDoor:
       case BlueprintType.stoneEmbrasure:
       case BlueprintType.stoneTunnel: {
-         const position = structureHitbox.box.position.copy();
+         let posX = structureHitbox.box.posX;
+         let posY = structureHitbox.box.posY;
          if (blueprintType === BlueprintType.woodenEmbrasure || blueprintType === BlueprintType.stoneEmbrasure) {
-            position.x += 22 * Math.sin(dynamicRotation);
-            position.y += 22 * Math.cos(dynamicRotation);
+            posX += 22 * Math.sin(dynamicRotation);
+            posY += 22 * Math.cos(dynamicRotation);
          }
          
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
-         const config = createBlueprintEntityConfig(position, dynamicRotation, tribeComponent.tribe, blueprintType, 0, null, []);
+         const config = createBlueprintEntityConfig(posX, posY, dynamicRotation, tribeComponent.tribe, blueprintType, 0, null, []);
          createEntity(config, getEntityLayer(tribeMember), 0);
          
          destroyEntity(structure);
@@ -639,7 +638,7 @@ export function placeBlueprint(tribeMember: Entity, structure: Entity, blueprint
 
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
-         const config = createBlueprintEntityConfig(structureHitbox.box.position.copy(), structureHitbox.box.angle, tribeComponent.tribe, blueprintType, 0, null, []);
+         const config = createBlueprintEntityConfig(structureHitbox.box.posX, structureHitbox.box.posY, structureHitbox.box.angle, tribeComponent.tribe, blueprintType, 0, null, []);
          createEntity(config, getEntityLayer(tribeMember), 0);
          
          consumeItemType(tribeMember, inventoryComponent, upgradeMaterialItemType, 5);
@@ -660,7 +659,7 @@ export function placeBlueprint(tribeMember: Entity, structure: Entity, blueprint
 
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
-         const config = createBlueprintEntityConfig(structureHitbox.box.position.copy(), structureHitbox.box.angle, tribeComponent.tribe, blueprintType, structure, null, []);
+         const config = createBlueprintEntityConfig(structureHitbox.box.posX, structureHitbox.box.posY, structureHitbox.box.angle, tribeComponent.tribe, blueprintType, structure, null, []);
          createEntity(config, getEntityLayer(tribeMember), 0);
 
          consumeItemType(tribeMember, inventoryComponent, ItemType.rock, 25);
@@ -687,7 +686,7 @@ export function placeBlueprint(tribeMember: Entity, structure: Entity, blueprint
          
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
-         const config = createBlueprintEntityConfig(structureHitbox.box.position.copy(), rotation, tribeComponent.tribe, blueprintType, 0, null, structureComponent.connections);
+         const config = createBlueprintEntityConfig(structureHitbox.box.posX, structureHitbox.box.posY, rotation, tribeComponent.tribe, blueprintType, 0, null, structureComponent.connections);
          createEntity(config, getEntityLayer(tribeMember), 0);
 
          consumeItemType(tribeMember, inventoryComponent, ItemType.wood, 5);
@@ -721,12 +720,11 @@ export function throwItem(tribesman: Entity, inventoryName: InventoryName, itemS
    
    const amountRemoved = consumeItemFromSlot(tribesman, inventory, itemSlot, dropAmount);
 
-   const dropPosition = tribesmanHitbox.box.position.copy();
-   dropPosition.x += Vars.ITEM_THROW_OFFSET * Math.sin(throwDirection);
-   dropPosition.y += Vars.ITEM_THROW_OFFSET * Math.cos(throwDirection);
+   const dropPositionX = tribesmanHitbox.box.posX + Vars.ITEM_THROW_OFFSET * Math.sin(throwDirection);
+   const dropPositionY = tribesmanHitbox.box.posY + Vars.ITEM_THROW_OFFSET * Math.cos(throwDirection);
 
    // Create the item entity
-   const config = createItemEntityConfig(dropPosition, randAngle(), createItem(item.type, amountRemoved, item.nickname, item.namer), tribesman);
+   const config = createItemEntityConfig(dropPositionX, dropPositionY, randAngle(), createItem(item.type, amountRemoved, item.nickname, item.namer), tribesman);
 
    // Throw the dropped item away from the player
    const tribesmanVelocity = getHitboxVelocity(tribesmanHitbox);

@@ -1,4 +1,4 @@
-import { HitboxCollisionType, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, ItemType, Point, randInt } from "battletribes-shared";
+import { HitboxCollisionType, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, ItemType, randInt } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
@@ -12,10 +12,10 @@ registerEntityLootOnDeath(EntityType.treeRootSegment, {
    getAmount: () => randInt(1, 2)
 });
    
-export function createTreeRootSegmentConfig(position: Point, rotation: number, root: Entity): EntityConfig {
+export function createTreeRootSegmentConfig(x: number, y: number, angle: number, root: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 24, 40), 0.75, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 24, 40), 0.75, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
    

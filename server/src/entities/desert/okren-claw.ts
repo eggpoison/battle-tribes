@@ -1,4 +1,4 @@
-import { createAbsolutePivotPoint, createNormalisedPivotPoint, HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point } from "battletribes-shared";
+import { createAbsolutePivotPoint, createNormalisedPivotPoint, HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point, PivotPointType } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { EnergyStoreComponent } from "../../components/EnergyStoreComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -113,27 +113,24 @@ export function getOkrenClawSlashingArmSegmentOffset(size: OkrenAgeStage, growth
    }
 }
 
-export function createOkrenClawConfig(position: Point, angle: number, size: OkrenAgeStage, growthStage: OkrenClawGrowthStage, sideIsFlipped: boolean): EntityConfig {
+export function createOkrenClawConfig(x: number, y: number, angle: number, size: OkrenAgeStage, growthStage: OkrenClawGrowthStage, sideIsFlipped: boolean): EntityConfig {
    const transformComponent = new TransformComponent();
 
    const bigArmSegmentSize = getOkrenClawBigArmSegmentSize(size, growthStage);
    const bigArmSegmentOffset = getOkrenClawBigArmSegmentOffset(size, growthStage);
    
-   const bigArmSegmentPosition = position.copy();
-   bigArmSegmentPosition.add(bigArmSegmentOffset);
-   const bigArmSegmentHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(bigArmSegmentPosition, bigArmSegmentOffset, Math.PI * 0.3, bigArmSegmentSize.x, bigArmSegmentSize.y), 2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_BIG_ARM_SEGMENT]);
+   const bigArmSegmentHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x + bigArmSegmentOffset.x, y + bigArmSegmentOffset.y, bigArmSegmentOffset.x, bigArmSegmentOffset.y, Math.PI * 0.3, bigArmSegmentSize.x, bigArmSegmentSize.y), 2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_BIG_ARM_SEGMENT]);
    bigArmSegmentHitbox.box.flipX = sideIsFlipped;
    // @Hack
    bigArmSegmentHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
-   bigArmSegmentHitbox.box.pivot = createAbsolutePivotPoint(-2, -38);
+   bigArmSegmentHitbox.box.pivotX = -2;
+   bigArmSegmentHitbox.box.pivotY = -38;
    addHitboxToTransformComponent(transformComponent, bigArmSegmentHitbox);
 
    const mediumArmSegmentSize = getOkrenClawMediumArmSegmentSize(size, growthStage);
    const mediumArmSegmentOffset = getOkrenClawMediumArmSegmentOffset(size, growthStage);
 
-   const mediumArmSegmentPosition = bigArmSegmentHitbox.box.position.copy();
-   mediumArmSegmentPosition.add(mediumArmSegmentOffset);
-   const mediumArmSegmentHitbox = new Hitbox(transformComponent, bigArmSegmentHitbox, true, new RectangularBox(mediumArmSegmentPosition, mediumArmSegmentOffset, -Math.PI * 0.3, mediumArmSegmentSize.x, mediumArmSegmentSize.y), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_MEDIUM_ARM_SEGMENT]);
+   const mediumArmSegmentHitbox = new Hitbox(transformComponent, bigArmSegmentHitbox, true, new RectangularBox(bigArmSegmentHitbox.box.posX + mediumArmSegmentOffset.x, bigArmSegmentHitbox.box.posY + mediumArmSegmentOffset.y, mediumArmSegmentOffset.x, mediumArmSegmentOffset.y, -Math.PI * 0.3, mediumArmSegmentSize.x, mediumArmSegmentSize.y), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_MEDIUM_ARM_SEGMENT]);
    // @Temporary?? see if this absolute stuff works right
    // let mediumArmPivotY: number;
    // switch (size) {
@@ -144,15 +141,14 @@ export function createOkrenClawConfig(position: Point, angle: number, size: Okre
    //    case OkrenAgeStage.ancient:  mediumArmPivotY = -38; break;
    // }
    // mediumArmSegmentHitbox.box.pivot = createAbsolutePivotPoint(0, mediumArmPivotY);
-   mediumArmSegmentHitbox.box.pivot = createNormalisedPivotPoint(0, -0.5);
+   mediumArmSegmentHitbox.box.pivotY = -0.5;
+   mediumArmSegmentHitbox.box.pivotType = PivotPointType.normalised;
    addHitboxToTransformComponent(transformComponent, mediumArmSegmentHitbox);
    
    const slashingArmSegmentSize = getOkrenClawSlashingArmSegmentSize(size, growthStage);
    const slashingArmSegmentOffset = getOkrenClawSlashingArmSegmentOffset(size, growthStage);;
 
-   const slashingArmSegmentPosition = mediumArmSegmentHitbox.box.position.copy();
-   slashingArmSegmentPosition.add(slashingArmSegmentOffset);
-   const slashingArmSegmentHitbox = new Hitbox(transformComponent, mediumArmSegmentHitbox, true, new RectangularBox(slashingArmSegmentPosition, slashingArmSegmentOffset, -Math.PI * 0.3, slashingArmSegmentSize.x, slashingArmSegmentSize.y), 0.8, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_ARM_SEGMENT_OF_SLASHING_AND_DESTRUCTION]);
+   const slashingArmSegmentHitbox = new Hitbox(transformComponent, mediumArmSegmentHitbox, true, new RectangularBox(mediumArmSegmentHitbox.box.posX + slashingArmSegmentOffset.x, mediumArmSegmentHitbox.box.posY + slashingArmSegmentOffset.y, slashingArmSegmentOffset.x, slashingArmSegmentOffset.y, -Math.PI * 0.3, slashingArmSegmentSize.x, slashingArmSegmentSize.y), 0.8, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_ARM_SEGMENT_OF_SLASHING_AND_DESTRUCTION]);
    // @Temporary?
    // let smallArmPivotPoint: PivotPoint;
    // switch (size) {
@@ -163,7 +159,9 @@ export function createOkrenClawConfig(position: Point, angle: number, size: Okre
    //    case OkrenAgeStage.ancient:  smallArmPivotPoint = createAbsolutePivotPoint(-4, -40); break;
    // }
    // slashingArmSegmentHitbox.box.pivot = smallArmPivotPoint;
-   slashingArmSegmentHitbox.box.pivot = createNormalisedPivotPoint(-0.1, -0.5);
+   slashingArmSegmentHitbox.box.pivotX = -0.1;
+   slashingArmSegmentHitbox.box.pivotY = -0.5;
+   slashingArmSegmentHitbox.box.pivotType = PivotPointType.normalised;
    addHitboxToTransformComponent(transformComponent, slashingArmSegmentHitbox);
 
    const statusEffectComponent = new StatusEffectComponent(0);

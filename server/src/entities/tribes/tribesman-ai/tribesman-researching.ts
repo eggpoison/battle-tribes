@@ -1,4 +1,4 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, Tech, Inventory, ItemType, assert, polarVec2, PathfindingSettings } from "battletribes-shared";
+import { TribesmanAIType, Entity, EntityType, LimbAction, Tech, Inventory, ItemType, assert, polarVec2, PathfindingSettings, distance, angle } from "battletribes-shared";
 import { getDistanceFromPointToEntity } from "../../../ai-shared.js";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent.js";
 import { continueResearching, markPreemptiveMoveToBench, attemptToOccupyResearchBench, canResearchAtBench, shouldMoveToResearchBench } from "../../../components/ResearchBenchComponent.js";
@@ -38,7 +38,7 @@ const getAvailableResearchBenchID = (tribesman: Entity, tribe: Tribe): Entity =>
       const benchTransformComponent = TransformComponentArray.getComponent(bench);
       const researchBenchHitbox = benchTransformComponent.hitboxes[0];
 
-      const dist = tribesmanHitbox.box.position.distanceTo(researchBenchHitbox.box.position);
+      const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, researchBenchHitbox.box.posX, researchBenchHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          id = bench;
@@ -66,7 +66,7 @@ export function goResearchTech(tribesman: Entity, tech: Tech): void {
       const benchTransformComponent = TransformComponentArray.getComponent(occupiedBench);
       const researchBenchHitbox = benchTransformComponent.hitboxes[0];
       
-      const targetDir = tribesmanHitbox.box.position.angleTo(researchBenchHitbox.box.position);
+      const targetDir = angle(researchBenchHitbox.box.posX - tribesmanHitbox.box.posX, researchBenchHitbox.box.posY - tribesmanHitbox.box.posY);
 
       const slowAcceleration = getTribesmanSlowAcceleration(tribesman);
       applyAccelerationFromGround(tribesmanHitbox, polarVec2(slowAcceleration, targetDir));
@@ -92,14 +92,14 @@ export function goResearchTech(tribesman: Entity, tech: Tech): void {
       const benchLayer = getEntityLayer(bench);
 
       markPreemptiveMoveToBench(bench, tribesman);
-      pathfindTribesman(tribesman, researchBenchHitbox.box.position.x, researchBenchHitbox.box.position.y, benchLayer, bench, TribesmanPathType.default, Math.floor(64 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
+      pathfindTribesman(tribesman, researchBenchHitbox.box.posX, researchBenchHitbox.box.posY, benchLayer, bench, TribesmanPathType.default, Math.floor(64 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
       
       tribesmanAIComponent.targetResearchBenchID = bench;
       tribesmanAIComponent.currentAIType = TribesmanAIType.researching;
 
       // If close enough, switch to doing research
       if (benchLayer === getEntityLayer(tribesman)) {
-         const dist = getDistanceFromPointToEntity(tribesmanHitbox.box.position, benchTransformComponent) - getHumanoidRadius(transformComponent);
+         const dist = getDistanceFromPointToEntity(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, benchTransformComponent) - getHumanoidRadius(transformComponent);
          if (dist < 30) {
             attemptToOccupyResearchBench(bench, tribesman);
          }

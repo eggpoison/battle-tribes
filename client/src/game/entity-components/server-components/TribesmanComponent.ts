@@ -1,4 +1,4 @@
-import { TileType, InventoryName, ItemType, CircularBox, TribeType, PacketReader, Point, assert, lerp, randAngle, randFloat, randInt, randItem, veryBadHash, TitleGenerationInfo, TribesmanTitle, Settings, ServerComponentType, Entity, EntityType, _point } from "webgl-test-shared";
+import { TileType, InventoryName, ItemType, CircularBox, TribeType, PacketReader, Point, assert, lerp, randAngle, randFloat, randInt, randItem, veryBadHash, TitleGenerationInfo, TribesmanTitle, Settings, ServerComponentType, Entity, EntityType, _point, angle } from "webgl-test-shared";
 import { Light } from "../../lights";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle, createSprintParticle, createTitleObtainParticle, LeafParticleSize } from "../../particles";
@@ -233,7 +233,7 @@ class _TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent,
       const titles: Array<TitleGenerationInfo> = [];
       const numTitles = reader.readNumber();
       for (let i = 0; i < numTitles; i++) {
-         const title = reader.readNumber() as TribesmanTitle;
+         const title: TribesmanTitle = reader.readNumber();
          const displayOption = reader.readNumber();
          
          titles.push({
@@ -674,8 +674,8 @@ const updateTitles = (tribeMemberComponent: TribesmanComponent, entity: Entity, 
          for (let i = 0; i < 25; i++) {
             const offsetMagnitude = randFloat(12, 34);
             const offsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.position.x + offsetMagnitude * Math.sin(offsetDirection);
-            const spawnPositionY = hitbox.box.position.y + offsetMagnitude * Math.cos(offsetDirection);
+            const spawnPositionX = hitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+            const spawnPositionY = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
 
             const velocityMagnitude = randFloat(80, 120);
             const vx = velocityMagnitude * Math.sin(offsetDirection);
@@ -732,8 +732,8 @@ function onTick(entity: Entity): void {
       if (Math.random() < sprintParticleSpawnRate * Settings.DT_S) {
          const offsetMagnitude = 32 * Math.random();
          const offsetDirection = randAngle();
-         const x = entityHitbox.box.position.x + offsetMagnitude * Math.sin(offsetDirection);
-         const y = entityHitbox.box.position.y + offsetMagnitude * Math.cos(offsetDirection);
+         const x = entityHitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+         const y = entityHitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
          
          const velocityMagnitude = 32 * Math.random();
          const velocityDirection = randAngle();
@@ -747,8 +747,8 @@ function onTick(entity: Entity): void {
    if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.winterswrath) && Math.random() < 18 * Settings.DT_S) {
       const offsetMagnitude = randFloat(36, 50);
       const offsetDirection = randAngle();
-      const x = entityHitbox.box.position.x + offsetMagnitude * Math.sin(offsetDirection);
-      const y = entityHitbox.box.position.y + offsetMagnitude * Math.cos(offsetDirection);
+      const x = entityHitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+      const y = entityHitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
       
       const velocityMagnitude = randFloat(45, 75);
       const velocityDirection = offsetDirection + Math.PI * 0.5;
@@ -790,15 +790,15 @@ function updatePlayerFromData(data: TribesmanComponentData): void {
    
 function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
    // Blood pool particle
-   createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 20);
+   createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 20);
    
    // Blood particles
    for (let i = 0; i < 10; i++) {
-      let offsetDirection = hitbox.box.position.angleTo(hitPosition);
+      let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
       offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-      const spawnPositionX = hitbox.box.position.x + 32 * Math.sin(offsetDirection);
-      const spawnPositionY = hitbox.box.position.y + 32 * Math.cos(offsetDirection);
+      const spawnPositionX = hitbox.box.posX + 32 * Math.sin(offsetDirection);
+      const spawnPositionY = hitbox.box.posY + 32 * Math.cos(offsetDirection);
       createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
    }
 
@@ -831,8 +831,8 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
          const moveDirection = randAngle();
 
          const radius = getHumanoidRadius(entity);
-         const spawnPositionX = hitbox.box.position.x + radius * Math.sin(moveDirection);
-         const spawnPositionY = hitbox.box.position.y + radius * Math.cos(moveDirection);
+         const spawnPositionX = hitbox.box.posX + radius * Math.sin(moveDirection);
+         const spawnPositionY = hitbox.box.posY + radius * Math.cos(moveDirection);
 
          createLeafParticle(spawnPositionX, spawnPositionY, moveDirection + randFloat(-1, 1), Math.random() < 0.5 ? LeafParticleSize.large : LeafParticleSize.small);
       }
@@ -843,7 +843,7 @@ function onDie(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
-   createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 20);
+   createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 20);
    createBloodParticleFountain(entity, 0.1, 1);
 
    const tribeComponent = TribeComponentArray.getComponent(entity);

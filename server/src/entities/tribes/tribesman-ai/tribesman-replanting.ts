@@ -1,4 +1,4 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, PlantedEntityType, Inventory, InventoryName, ItemType, PathfindingSettings } from "battletribes-shared";
+import { TribesmanAIType, Entity, EntityType, LimbAction, PlantedEntityType, Inventory, InventoryName, ItemType, PathfindingSettings, distance } from "battletribes-shared";
 import { getDistanceFromPointToEntity, willStopAtDesiredDistance } from "../../../ai-shared.js";
 import { AIHelperComponent } from "../../../components/AIHelperComponent.js";
 import { pathfindTribesman } from "../../../components/AIPathfindingComponent.js";
@@ -55,7 +55,7 @@ export function replantPlanterBoxes(tribesman: Entity, aiHelperComponent: AIHelp
       const entityTransformComponent = TransformComponentArray.getComponent(entity);
       const entityHitbox = entityTransformComponent.hitboxes[0];
 
-      const dist = tribesmanHitbox.box.position.distanceTo(entityHitbox.box.position);
+      const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          closestReplantablePlanterBox = entity;
@@ -73,8 +73,8 @@ export function replantPlanterBoxes(tribesman: Entity, aiHelperComponent: AIHelp
       
       // @Cleanup: copy and pasted from tribesman-combat-ai
       const desiredDistance = getTribesmanAttackRadius(tribesman);
-      const distance = getDistanceFromPointToEntity(tribesmanHitbox.box.position, planterBoxTransformComponent) - getHumanoidRadius(transformComponent);
-      if (willStopAtDesiredDistance(tribesmanHitbox, desiredDistance, distance)) {
+      const dist = getDistanceFromPointToEntity(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, planterBoxTransformComponent) - getHumanoidRadius(transformComponent);
+      if (willStopAtDesiredDistance(tribesmanHitbox, desiredDistance, dist)) {
          // @Incomplete: turn to face direction and then place
          
          // @Cleanup: copy and pasted from player replant logic
@@ -93,13 +93,13 @@ export function replantPlanterBoxes(tribesman: Entity, aiHelperComponent: AIHelp
          const planterBoxTransformComponent = TransformComponentArray.getComponent(closestReplantablePlanterBox);
          const planterBoxHitbox = planterBoxTransformComponent.hitboxes[0];
 
-         const pointDistance = tribesmanHitbox.box.position.distanceTo(planterBoxHitbox.box.position);
-         const targetDirectRadius = pointDistance - distance;
+         const pointDistance = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posX, planterBoxHitbox.box.posX, planterBoxHitbox.box.posY);
+         const targetDirectRadius = pointDistance - dist;
 
          const goalRadius = Math.floor((desiredDistance + targetDirectRadius) / PathfindingSettings.NODE_SEPARATION);
          // @Temporary: failure default
          // pathfindToPosition(tribesman, closestReplantablePlanterBox.position.x, closestReplantablePlanterBox.position.y, closestReplantablePlanterBox.id, TribesmanPathType.default, goalRadius, PathfindFailureDefault.throwError);
-         pathfindTribesman(tribesman, planterBoxHitbox.box.position.x, planterBoxHitbox.box.position.y, getEntityLayer(closestReplantablePlanterBox), closestReplantablePlanterBox, TribesmanPathType.default, goalRadius, PathfindFailureDefault.returnClosest);
+         pathfindTribesman(tribesman, planterBoxHitbox.box.posX, planterBoxHitbox.box.posY, getEntityLayer(closestReplantablePlanterBox), closestReplantablePlanterBox, TribesmanPathType.default, goalRadius, PathfindFailureDefault.returnClosest);
 
          tribesmanAIComponent.currentAIType = TribesmanAIType.planting;
          setLimbActions(inventoryUseComponent, LimbAction.none);

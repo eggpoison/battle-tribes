@@ -1,4 +1,4 @@
-export enum CollisionVars {
+export const enum CollisionVars {
    NO_COLLISION = 0xFFFF
 }
 

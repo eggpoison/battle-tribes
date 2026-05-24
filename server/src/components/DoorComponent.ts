@@ -96,8 +96,8 @@ function onInitialise(config: EntityConfig): void {
    
    const componentTypes = getEntityComponentTypes(config.entityType);
    const doorComponent = getConfigComponent(config.components, componentTypes, ServerComponentType.door);
-   doorComponent.originX = doorHitbox.box.position.x;
-   doorComponent.originY = doorHitbox.box.position.y;
+   doorComponent.originX = doorHitbox.box.posX;
+   doorComponent.originY = doorHitbox.box.posY;
    doorComponent.closedAngle = doorHitbox.box.relativeAngle;
 }
 

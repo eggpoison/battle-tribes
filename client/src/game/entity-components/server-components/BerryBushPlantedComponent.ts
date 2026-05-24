@@ -93,14 +93,14 @@ class _BerryBushPlantedComponentArray extends _ServerComponentArray<BerryBushPla
 
       const moveDirection = randAngle();
       
-      const spawnPositionX = hitbox.box.position.x + radius * Math.sin(moveDirection);
-      const spawnPositionY = hitbox.box.position.y + radius * Math.cos(moveDirection);
+      const spawnPositionX = hitbox.box.posX + radius * Math.sin(moveDirection);
+      const spawnPositionY = hitbox.box.posY + radius * Math.cos(moveDirection);
 
       createLeafParticle(spawnPositionX, spawnPositionY, moveDirection + randFloat(-1, 1), LeafParticleSize.small);
       
       // Create leaf specks
       for (let i = 0; i < 5; i++) {
-         createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
+         createLeafSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
       }
 
       // @Incomplete: particles?
@@ -115,15 +115,15 @@ class _BerryBushPlantedComponentArray extends _ServerComponentArray<BerryBushPla
       for (let i = 0; i < 6; i++) {
          const offsetMagnitude = radius * Math.random();
          const spawnOffsetDirection = randAngle();
-         const spawnPositionX = hitbox.box.position.x + offsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = hitbox.box.position.y + offsetMagnitude * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = hitbox.box.posX + offsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + offsetMagnitude * Math.cos(spawnOffsetDirection);
 
          createLeafParticle(spawnPositionX, spawnPositionY, randAngle(), LeafParticleSize.small);
       }
       
       // Create leaf specks
       for (let i = 0; i < 9; i++) {
-         createLeafSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius * Math.random(), LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
+         createLeafSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius * Math.random(), LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH);
       }
       
       playSoundOnHitbox("berry-bush-destroy-1.mp3", 0.4, 1, entity, hitbox, false);

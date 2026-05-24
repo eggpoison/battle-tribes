@@ -1,4 +1,4 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, PathfindingSettings, TribesmanTitle, angle, assert, getAbsAngleDiff, getAngleDiff, polarVec2, StructureType, Inventory, InventoryName, ITEM_INFO_RECORD, itemInfoIsPlaceable, ItemType } from "battletribes-shared";
+import { TribesmanAIType, Entity, EntityType, LimbAction, PathfindingSettings, TribesmanTitle, angle, assert, getAbsAngleDiff, getAngleDiff, polarVec2, StructureType, Inventory, InventoryName, ITEM_INFO_RECORD, itemInfoIsPlaceable, ItemType, distance } from "battletribes-shared";
 import Tribe from "../../../Tribe.js";
 import { getDistanceFromPointToEntity, willStopAtDesiredDistance } from "../../../ai-shared.js";
 import { HealthComponentArray } from "../../../components/HealthComponent.js";
@@ -54,7 +54,7 @@ export function goPlaceBuilding(tribesman: Entity, hotbarInventory: Inventory, t
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
 
-   const distance = getDistanceFromPointToEntity(virtualBuilding.position, transformComponent);
+   const distance = getDistanceFromPointToEntity(virtualBuilding.position.x, virtualBuilding.position.y, transformComponent);
 
    // if the entity is close enough to the build location, become concerned about blocking entities
    if (distance < Vars.BUILDING_PLACE_DISTANCE + 100) {
@@ -100,7 +100,7 @@ export function goPlaceBuilding(tribesman: Entity, hotbarInventory: Inventory, t
       
       const tribesmanHitbox = transformComponent.hitboxes[0];
       
-      const targetDirection = angle(virtualBuilding.position.x - tribesmanHitbox.box.position.x, virtualBuilding.position.y - tribesmanHitbox.box.position.y);
+      const targetDirection = angle(virtualBuilding.position.x - tribesmanHitbox.box.posX, virtualBuilding.position.y - tribesmanHitbox.box.posY);
       if (distance < getTribesmanAttackRadius(tribesman)) {
          // @Incomplete: Shouldn't move backwards from the target position, should instead pathfind to the closest position
          // which is far enough away, as currently it will try to back into buildings and get stuck like this.
@@ -125,7 +125,7 @@ export function goPlaceBuilding(tribesman: Entity, hotbarInventory: Inventory, t
          // 
          
          const placeInfo = calculateEntityPlaceInfo(virtualBuilding.position, virtualBuilding.rotation, virtualBuilding.entityType, layer);
-         const entityConfig = createStructureConfig(tribe, virtualBuilding.entityType, placeInfo.position, placeInfo.angle, placeInfo.connections);
+         const entityConfig = createStructureConfig(tribe, virtualBuilding.entityType, placeInfo.position.x, placeInfo.position.y, placeInfo.angle, placeInfo.connections);
          createEntity(entityConfig, layer, 0);
 
          if (Math.random() < TITLE_REWARD_CHANCES.BUILDER_REWARD_CHANCE) {
@@ -182,7 +182,7 @@ export function goUpgradeBuilding(tribesman: Entity, plan: AIUpgradeBuildingPlan
    const buildingTransformComponent = TransformComponentArray.getComponent(building);
    const buildingHitbox = buildingTransformComponent.hitboxes[0];
 
-   const distance = getDistanceFromPointToEntity(tribesmanHitbox.box.position, buildingTransformComponent) - getHumanoidRadius(transformComponent);
+   const distance = getDistanceFromPointToEntity(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, buildingTransformComponent) - getHumanoidRadius(transformComponent);
    if (willStopAtDesiredDistance(tribesmanHitbox, desiredAttackRange, distance)) {
       // If the tribesman will stop too close to the target, move back a bit
       if (willStopAtDesiredDistance(tribesmanHitbox, desiredAttackRange - 20, distance)) {
@@ -190,14 +190,14 @@ export function goUpgradeBuilding(tribesman: Entity, plan: AIUpgradeBuildingPlan
          applyAccelerationFromGround(tribesmanHitbox, polarVec2(acceleration, tribesmanHitbox.box.angle + Math.PI));
       }
 
-      const targetAngle = tribesmanHitbox.box.position.angleTo(buildingHitbox.box.position);
+      const targetAngle = angle(buildingHitbox.box.posX - tribesmanHitbox.box.posX, buildingHitbox.box.posY - tribesmanHitbox.box.posY);
       turnHitboxToAngle(tribesmanHitbox, targetAngle, TRIBESMAN_TURN_SPEED, 0.5, false);
 
       if (Math.abs(getAngleDiff(tribesmanHitbox.box.angle, targetAngle)) < 0.1) {
          placeBlueprint(tribesman, building, plan.blueprintType, plan.rotation);
       }
    } else {
-      pathfindTribesman(tribesman, buildingHitbox.box.position.x, buildingHitbox.box.position.y, getEntityLayer(building), building, TribesmanPathType.default, Math.floor(desiredAttackRange / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
+      pathfindTribesman(tribesman, buildingHitbox.box.posX, buildingHitbox.box.posY, getEntityLayer(building), building, TribesmanPathType.default, Math.floor(desiredAttackRange / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
    }
 
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
@@ -228,10 +228,10 @@ export function attemptToRepairBuildings(tribesman: Entity, hammerItemSlot: numb
 
       // @Incomplete: Skip buildings which there isn't a path to
 
-      const distance = tribesmanHitbox.box.position.distanceTo(entityHitbox.box.position);
-      if (distance < minDistance) {
+      const dist = distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
+      if (dist < minDistance) {
          closestDamagedBuilding = entity;
-         minDistance = distance;
+         minDistance = dist;
       }
    }
 
@@ -249,15 +249,15 @@ export function attemptToRepairBuildings(tribesman: Entity, hammerItemSlot: numb
    const buildingTransformComponent = TransformComponentArray.getComponent(closestDamagedBuilding);
    const buildingHitbox = buildingTransformComponent.hitboxes[0];
    
-   const distance = getDistanceFromPointToEntity(tribesmanHitbox.box.position, buildingTransformComponent) - getHumanoidRadius(transformComponent);
-   if (willStopAtDesiredDistance(tribesmanHitbox, desiredAttackRange, distance)) {
+   const dist = getDistanceFromPointToEntity(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, buildingTransformComponent) - getHumanoidRadius(transformComponent);
+   if (willStopAtDesiredDistance(tribesmanHitbox, desiredAttackRange, dist)) {
       // If the tribesman will stop too close to the target, move back a bit
-      if (willStopAtDesiredDistance(tribesmanHitbox, desiredAttackRange - 20, distance)) {
+      if (willStopAtDesiredDistance(tribesmanHitbox, desiredAttackRange - 20, dist)) {
          const acceleration = getTribesmanSlowAcceleration(tribesman);
          applyAccelerationFromGround(tribesmanHitbox, polarVec2(acceleration, tribesmanHitbox.box.angle + Math.PI));
       }
 
-      const targetAngle = tribesmanHitbox.box.position.angleTo(buildingHitbox.box.position);
+      const targetAngle = angle(buildingHitbox.box.posX - tribesmanHitbox.box.posX, buildingHitbox.box.posY - tribesmanHitbox.box.posY);
       turnHitboxToAngle(tribesmanHitbox, targetAngle, TRIBESMAN_TURN_SPEED, 0.5, false);
 
       if (getAbsAngleDiff(tribesmanHitbox.box.angle, targetAngle) < 0.1) {
@@ -266,7 +266,7 @@ export function attemptToRepairBuildings(tribesman: Entity, hammerItemSlot: numb
 
       clearPathfinding(tribesman);
    } else {
-      pathfindTribesman(tribesman, buildingHitbox.box.position.x, buildingHitbox.box.position.y, getEntityLayer(closestDamagedBuilding), closestDamagedBuilding, TribesmanPathType.default, Math.floor(desiredAttackRange / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
+      pathfindTribesman(tribesman, buildingHitbox.box.posX, buildingHitbox.box.posY, getEntityLayer(closestDamagedBuilding), closestDamagedBuilding, TribesmanPathType.default, Math.floor(desiredAttackRange / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.none);
    }
 
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);

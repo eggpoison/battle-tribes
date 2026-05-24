@@ -12,10 +12,10 @@ import { AutomatonAssemblerComponent } from "../../../components/AutomatonAssemb
 import { Hitbox } from "../../../hitboxes.js";
 import { StructureConnection } from "../../../structure-placement.js";
 
-export function createAutomatonAssemblerConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createAutomatonAssemblerConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const box = new RectangularBox(position, new Point(0, 0), rotation, 160, 80);
+   const box = new RectangularBox(x, y, 0, 0, angle, 160, 80);
    const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);

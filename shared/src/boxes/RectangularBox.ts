@@ -23,8 +23,8 @@ export class RectangularBox extends BaseBox {
    public axisX = 0;
    public axisY = 0;
 
-   constructor(position: Point, offset: Point, angle: number, width: number, height: number) {
-      super(position, offset, angle);
+   constructor(x: number, y: number, offsetX: number, offsetY: number, angle: number, width: number, height: number) {
+      super(x, y, offsetX, offsetY, angle);
 
       this.width = width;
       this.height = height;
@@ -41,8 +41,8 @@ export class RectangularBox extends BaseBox {
       const yya = this.axisY * this.width;
       const halfY = Math.max(Math.abs(yxa - yya), Math.abs(yxa + yya)) * this.scale * 0.5;
 
-      const x = this.position.x;
-      const y = this.position.y;
+      const x = this.posX;
+      const y = this.posY;
       _bounds.minX = x - halfX;
       _bounds.maxX = x + halfX;
       _bounds.minY = y - halfY;
@@ -66,15 +66,15 @@ export class RectangularBox extends BaseBox {
    public getCollisionResult(otherHitbox: Box, epsilon: number = 0): CollisionResult {
       if (boxIsCircular(otherHitbox)) {
          // Circular hitbox
-         const collisionResult = getCircleRectangleCollisionResult(otherHitbox.position, otherHitbox.radius * otherHitbox.scale - epsilon, this.position, this.width * this.scale - epsilon * 0.5, this.height * this.scale - epsilon * 0.5, this.angle);
+         const collisionResult = getCircleRectangleCollisionResult(otherHitbox.posX, otherHitbox.posY, otherHitbox.radius * otherHitbox.scale - epsilon, this.posX, this.posY, this.width * this.scale - epsilon * 0.5, this.height * this.scale - epsilon * 0.5, this.angle);
          collisionResult.overlap.x *= -1;
          collisionResult.overlap.y *= -1;
          return collisionResult;
       } else {
          // Rectangular hitbox
 
-         const diffX = this.position.x - otherHitbox.position.x;
-         const diffY = this.position.y - otherHitbox.position.y;
+         const diffX = this.posX - otherHitbox.posX;
+         const diffY = this.posY - otherHitbox.posY;
          
          const width1Squared = this.width * this.scale * this.width * this.scale;
          const height1Squared = this.height * this.scale * this.height * this.scale;

@@ -1,4 +1,4 @@
-import { HitboxFlag, PacketReader, CowSpecies, Entity, Point, randAngle, randFloat, randInt, Settings, ServerComponentType } from "webgl-test-shared";
+import { HitboxFlag, PacketReader, CowSpecies, Entity, Point, randAngle, randFloat, randInt, Settings, ServerComponentType, angle } from "webgl-test-shared";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createDirtParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -119,8 +119,8 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
          
          const spawnOffsetMagnitude = 30 * Math.random();
          const spawnOffsetDirection = randAngle();
-         const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = hitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
          createDirtParticle(spawnPositionX, spawnPositionY, ParticleRenderLayer.low);
       }
 
@@ -162,16 +162,16 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
    public onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
       // Blood pool particles
       for (let i = 0; i < 2; i++) {
-         createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 20);
+         createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 20);
       }
 
       // Blood particles
       for (let i = 0; i < 10; i++) {
-         let offsetDirection = hitbox.box.position.angleTo(hitPosition);
+         let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = hitbox.box.position.x + 32 * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.position.y + 32 * Math.cos(offsetDirection);
+         const spawnPositionX = hitbox.box.posX + 32 * Math.sin(offsetDirection);
+         const spawnPositionY = hitbox.box.posY + 32 * Math.cos(offsetDirection);
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
       }
 
@@ -183,7 +183,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 3; i++) {
-         createBloodPoolParticle(hitbox.box.position.x, hitbox.box.position.y, 35);
+         createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 35);
       }
 
       createBloodParticleFountain(entity, 0.1, 1.1);

@@ -1,4 +1,4 @@
-import { ServerComponentType, Point, polarVec2, randFloat, Entity, EntityType, DamageSource, Settings, AttackEffectiveness, StatusEffect } from "battletribes-shared";
+import { ServerComponentType, Point, polarVec2, randFloat, Entity, EntityType, DamageSource, Settings, AttackEffectiveness, StatusEffect, angle } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world.js";
 import { HealthComponentArray, damageEntity, canDamageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
@@ -51,7 +51,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
          return;
       }
 
-      const hitDirection = hitbox.box.position.angleTo(collidingHitbox.box.position);
+      const hitDirection = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
       damageEntity(collidingHitbox, null, 2, DamageSource.iceShards, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingHitbox, polarVec2(150, hitDirection));

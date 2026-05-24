@@ -69,7 +69,7 @@ export type EntitiesByEntityType = { [T in EntityType]: Array<Entity> };
 export type VirtualStructuresByEntityType = { [T in StructureType]: Array<VirtualStructure> };
 
 const createRestrictedBuildingArea = (position: Point, width: number, height: number, rotation: number, associatedBuildingID: number): RestrictedBuildingArea => {
-   const box = new RectangularBox(position, new Point(0, 0), rotation, width, height);
+   const box = new RectangularBox(position.x, position.y, 0, 0, rotation, width, height);
 
    const occupiedNodes = new Set<SafetyNode>();
    addBoxesOccupiedNodes([box], occupiedNodes);
@@ -85,7 +85,8 @@ const createRestrictedBuildingArea = (position: Point, width: number, height: nu
    };
 }
 
-export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingLayer, position: Readonly<Point>, rotation: number, entityType: StructureType, hitboxes: ReadonlyArray<Hitbox>): VirtualStructure {
+export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingLayer, x: number, y: number, angle: number, entityType: StructureType, hitboxes: ReadonlyArray<Hitbox>): VirtualStructure {
+   const position = new Point(x, y);
    const boxes = hitboxes.map(hitbox => cloneBox(hitbox.box));
    
    const occupiedNodes = new Set<SafetyNode>();
@@ -95,13 +96,13 @@ export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingL
    
    switch (entityType) {
       case EntityType.wall: {
-         const sides = getWallNodeSides(position, rotation, occupiedNodes);
+         const sides = getWallNodeSides(position, angle, occupiedNodes);
          
          const virtualBuilding: VirtualWall = {
             id: virtualEntityID,
             layer: buildingLayer.layer,
             position: position,
-            rotation: rotation,
+            rotation: angle,
             occupiedNodes: occupiedNodes,
             entityType: entityType,
             boxes: boxes,
@@ -116,10 +117,10 @@ export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingL
          return virtualBuilding;
       }
       case EntityType.door: {
-         const restrictedBuildingAreas = new Array<RestrictedBuildingArea>();
+         const restrictedBuildingAreas: Array<RestrictedBuildingArea> = [];
          for (let i = 0; i < 2; i++) {
             const offsetAmount = 16 / 2 + 50;
-            const offsetDirection = rotation + (i === 1 ? Math.PI : 0);
+            const offsetDirection = angle + (i === 1 ? Math.PI : 0);
             const restrictedAreaPosition = position.offset(offsetAmount, offsetDirection);
          
             const restrictedArea = createRestrictedBuildingArea(restrictedAreaPosition, 50, 50, offsetDirection, virtualEntityID);
@@ -131,7 +132,7 @@ export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingL
             id: virtualEntityID,
             layer: buildingLayer.layer,
             position: position,
-            rotation: rotation,
+            rotation: angle,
             occupiedNodes: occupiedNodes,
             boxes: boxes,
             restrictedBuildingAreas: restrictedBuildingAreas,
@@ -141,15 +142,15 @@ export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingL
          return virtualBuilding;
       }
       default: {
-         const restrictedBuildingAreas = new Array<RestrictedBuildingArea>();
+         const restrictedBuildingAreas: Array<RestrictedBuildingArea> = [];
 
          switch (entityType) {
             case EntityType.workerHut: {
                const offsetAmount = 88 / 2 + 55;
-               const x = position.x + offsetAmount * Math.sin(rotation);
-               const y = position.y + offsetAmount * Math.cos(rotation);
+               const x = position.x + offsetAmount * Math.sin(angle);
+               const y = position.y + offsetAmount * Math.cos(angle);
       
-               const restrictedArea = createRestrictedBuildingArea(new Point(x, y), 100, 70, rotation, virtualEntityID);
+               const restrictedArea = createRestrictedBuildingArea(new Point(x, y), 100, 70, angle, virtualEntityID);
                restrictedBuildingAreas.push(restrictedArea);
                
                break;
@@ -161,7 +162,7 @@ export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingL
             }
             case EntityType.workbench: {
                const offsetAmount = 80 / 2 + 55;
-               const offsetDirection = rotation + Math.PI;
+               const offsetDirection = angle + Math.PI;
                const restrictedAreaPosition = position.offset(offsetAmount, offsetDirection);
       
                const restrictedArea = createRestrictedBuildingArea(restrictedAreaPosition, 80, 80, offsetDirection, virtualEntityID);
@@ -176,7 +177,7 @@ export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingL
             id: virtualEntityID,
             layer: buildingLayer.layer,
             position: position,
-            rotation: rotation,
+            rotation: angle,
             occupiedNodes: occupiedNodes,
             boxes: boxes,
             restrictedBuildingAreas: restrictedBuildingAreas
@@ -186,13 +187,13 @@ export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingL
    }
 }
 
-export function createVirtualStructure(buildingLayer: TribeBuildingLayer, position: Readonly<Point>, rotation: number, entityType: StructureType): VirtualStructure {
+export function createVirtualStructure(buildingLayer: TribeBuildingLayer, x: number, y: number, angle: number, entityType: StructureType): VirtualStructure {
    // @SUPAHACK
    const tribe = getTribes()[0];
-   const entityConfig = createStructureConfig(tribe, entityType, position, rotation, []);
+   const entityConfig = createStructureConfig(tribe, entityType, x, y, angle, []);
    const transformComponent = getConfigTransformComponent(entityConfig.components);
    
-   return createVirtualStructureFromHitboxes(buildingLayer, position, rotation, entityType, transformComponent.hitboxes);
+   return createVirtualStructureFromHitboxes(buildingLayer, x, y, angle, entityType, transformComponent.hitboxes);
 }
 
 export function addVirtualBuildingData(packet: Packet, virtualBuilding: VirtualStructure): void {
@@ -272,13 +273,13 @@ const getWallNodeSides = (wallPosition: Point, wallRotation: number, occupiedNod
       }
    }
    
-   const topNodes = new Array<SafetyNode>();
-   const rightNodes = new Array<SafetyNode>();
-   const bottomNodes = new Array<SafetyNode>();
-   const leftNodes = new Array<SafetyNode>();
+   const topNodes: Array<SafetyNode> = [];
+   const rightNodes: Array<SafetyNode> = [];
+   const bottomNodes: Array<SafetyNode> = [];
+   const leftNodes: Array<SafetyNode> = [];
 
    // Sort the border nodes based on their dir
-   const sortedBorderNodes = new Array<SafetyNode>();
+   const sortedBorderNodes: Array<SafetyNode> = [];
    for (const node of borderNodes) {
       const nodeDir = getWallSideNodeDir(node, wallPosition, wallRotation);
       
@@ -412,11 +413,11 @@ export default class TribeBuildingLayer {
 
    public nodeToRoomRecord: Record<SafetyNode, TribeRoom> = {};
 
-   public virtualStructures = new Array<VirtualStructure>();
+   public virtualStructures: Array<VirtualStructure> = [];
    public virtualStructureRecord: Record<number, VirtualStructure> = {};
    public virtualStructuresByEntityType = createVirtualStructuresByEntityType();
 
-   public rooms = new Array<TribeRoom>();
+   public rooms: Array<TribeRoom> = [];
    
    constructor(layer: Layer, tribe: Tribe) {
       this.layer = layer;

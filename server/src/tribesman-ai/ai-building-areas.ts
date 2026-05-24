@@ -46,8 +46,8 @@ const getDoorType = (buildingLayer: TribeBuildingLayer, door: VirtualStructure):
 }
 
 export function createTribeArea(buildingLayer: TribeBuildingLayer, nodes: Set<SafetyNode>, encounteredOccupiedNodeIndexes: Set<SafetyNode>): TribeRoom {
-   const connectedDoors = new Array<VirtualDoor>();
-   const connectedWalls = new Array<VirtualWall>();
+   const connectedDoors: Array<VirtualDoor> = [];
+   const connectedWalls: Array<VirtualWall> = [];
    const seenBuildingIDs = new Set<SafetyNode>();
 
    // @Incomplete
@@ -126,7 +126,7 @@ const sidesFormValidOutsideDoor = (buildingLayer: TribeBuildingLayer, room: Trib
 
 export function getOutsideDoorPlacePlan(buildingLayer: TribeBuildingLayer, room: TribeRoom): AIPlanAssignment<AIUpgradeBuildingPlan> | null {
    let assignment: AIPlanAssignment<AIUpgradeBuildingPlan> | null = null;
-   const potentialPlans = new Array<PotentialBuildingPlanData>();   
+   const potentialPlans: Array<PotentialBuildingPlanData> = []; 
    
    for (const wall of room.connectedWalls) {
       // Make sure it has one side fully in the area, and the opposite side fully outside.

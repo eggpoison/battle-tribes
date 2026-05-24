@@ -1,4 +1,4 @@
-import { ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Point, polarVec2 } from "battletribes-shared";
+import { ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Point, polarVec2, angle } from "battletribes-shared";
 import { applyAbsoluteKnockback, getHitboxVelocity, Hitbox } from "../hitboxes.js";
 import { destroyEntity, getEntityType } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -44,7 +44,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       return;
    }
 
-   const hitDir = hitbox.box.position.angleTo(collidingHitbox.box.position);
+   const hitDir = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, hitbox.entity, 2, DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
    applyAbsoluteKnockback(collidingHitbox, polarVec2(400, hitDir));

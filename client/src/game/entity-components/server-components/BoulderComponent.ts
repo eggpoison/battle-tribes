@@ -75,8 +75,8 @@ class _BoulderComponentArray extends _ServerComponentArray<BoulderComponent, Bou
       for (let i = 0; i < 2; i++) {
          let moveDirection = randAngle();
 
-         const spawnPositionX = hitbox.box.position.x + radius * Math.sin(moveDirection);
-         const spawnPositionY = hitbox.box.position.y + radius * Math.cos(moveDirection);
+         const spawnPositionX = hitbox.box.posX + radius * Math.sin(moveDirection);
+         const spawnPositionY = hitbox.box.posY + radius * Math.cos(moveDirection);
 
          moveDirection += randFloat(-1, 1);
 
@@ -84,7 +84,7 @@ class _BoulderComponentArray extends _ServerComponentArray<BoulderComponent, Bou
       }
 
       for (let i = 0; i < 5; i++) {
-         createRockSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius, 0, 0, ParticleRenderLayer.low);
+         createRockSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius, 0, 0, ParticleRenderLayer.low);
       }
 
       playSoundOnHitbox(randItem(ROCK_HIT_SOUNDS), 0.3, 1, entity, hitbox, false);
@@ -98,14 +98,14 @@ class _BoulderComponentArray extends _ServerComponentArray<BoulderComponent, Bou
       for (let i = 0; i < 5; i++) {
          const spawnOffsetMagnitude = radius * Math.random();
          const spawnOffsetDirection = randAngle();
-         const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = hitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
          createRockParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 125), ParticleRenderLayer.low);
       }
 
       for (let i = 0; i < 5; i++) {
-         createRockSpeckParticle(hitbox.box.position.x, hitbox.box.position.y, radius, 0, 0, ParticleRenderLayer.low);
+         createRockSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius, 0, 0, ParticleRenderLayer.low);
       }
 
       playSoundOnHitbox(randItem(ROCK_DESTROY_SOUNDS), 0.4, 1, entity, hitbox, false);

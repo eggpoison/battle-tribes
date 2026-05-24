@@ -127,8 +127,8 @@ export function getLightPositionMatrix(light: Light): Matrix3x2 {
       const hitbox = attachedHitboxInfo.hitbox;
 
       rotatePointAroundOrigin(light.offset.x, light.offset.y, hitbox.box.angle);
-      const x = hitbox.box.position.x + _point.x;
-      const y = hitbox.box.position.y + _point.y;
+      const x = hitbox.box.posX + _point.x;
+      const y = hitbox.box.posY + _point.y;
       return createTranslationMatrix(x, y);
    }
 

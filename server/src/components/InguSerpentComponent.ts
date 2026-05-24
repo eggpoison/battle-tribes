@@ -1,4 +1,4 @@
-import { Biome, HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, ItemType, Settings, StatusEffect, TileType, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, secondsToTicks } from "battletribes-shared";
+import { Biome, HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, ItemType, Settings, StatusEffect, TileType, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, secondsToTicks, distance, angle } from "battletribes-shared";
 import { getDistanceFromPointToHitbox } from "../ai-shared.js";
 import { hitboxIsCollidingWithEntity } from "../collision-detection.js";
 import { addHitboxVelocity, applyAbsoluteKnockback, getHitboxTile, Hitbox } from "../hitboxes.js";
@@ -53,7 +53,7 @@ export class InguSerpentComponent {
 
    public chompersCooldownTicks = EAT_CHOMP_COOLDOWN_TICKS;
 
-   public tribesmanTruces = new Array<TribesmanTruce>();
+   public tribesmanTruces: Array<TribesmanTruce> = [];
 }
 
 export const InguSerpentComponentArray = new ComponentArray<InguSerpentComponent>(ServerComponentType.inguSerpent, true, getDataLength, addDataToPacket);
@@ -135,7 +135,7 @@ const getTarget = (serpent: Entity, aiHelperComponent: AIHelperComponent): Entit
 
       const entityTransformComponent = TransformComponentArray.getComponent(entity);
       const targetHitbox = entityTransformComponent.hitboxes[0];
-      const dist = hitbox.box.position.distanceTo(targetHitbox.box.position);
+      const dist = distance(hitbox.box.posX, hitbox.box.posY, targetHitbox.box.posX, targetHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          target = entity;
@@ -154,18 +154,18 @@ const attackEntity = (serpent: Entity, target: Entity): void => {
 
    const targetTransformComponent = TransformComponentArray.getComponent(target);
    let targetHitbox = targetTransformComponent.hitboxes[0];
-   let minDist = headHitbox.box.position.distanceTo(targetHitbox.box.position);
+   let minDist = distance(headHitbox.box.posX, headHitbox.box.posY, targetHitbox.box.posX, targetHitbox.box.posY);
    for (let i = 1; i < targetTransformComponent.hitboxes.length; i++) {
       const hitbox = targetTransformComponent.hitboxes[i];
-      const dist = hitbox.box.position.distanceTo(targetHitbox.box.position);
+      const dist = distance(hitbox.box.posX, hitbox.box.posY, targetHitbox.box.posX, targetHitbox.box.posY);
       if (dist < minDist) {
          minDist = dist;
          targetHitbox = hitbox;
       }
    }
 
-   const headToTarget = headHitbox.box.position.angleTo(targetHitbox.box.position);
-   const distFromTarget = getDistanceFromPointToHitbox(headHitbox.box.position, targetHitbox);
+   const headToTarget = angle(targetHitbox.box.posX - headHitbox.box.posX, targetHitbox.box.posY - headHitbox.box.posY);
+   const distFromTarget = getDistanceFromPointToHitbox(headHitbox.box.posX, headHitbox.box.posY, targetHitbox);
 
    if (!inguSerpentComponent.isLeaping && inguSerpentComponent.leapCooldownTicks === 0 && distFromTarget <= LEAP_START_DISTANCE && getAbsAngleDiff(headHitbox.box.angle, headToTarget) < 0.36) {
       inguSerpentComponent.isChargingLeap = true;
@@ -194,17 +194,17 @@ const attackEntity = (serpent: Entity, target: Entity): void => {
 
       // Initial jump
       const bodyHitbox = transformComponent.hitboxes[0];
-      const bodyToTargetDir = bodyHitbox.box.position.angleTo(targetHitbox.box.position);
+      const bodyToTargetDir = angle(targetHitbox.box.posX - bodyHitbox.box.posX, targetHitbox.box.posY - bodyHitbox.box.posY);
       addHitboxVelocity(bodyHitbox, polarVec2(300, bodyToTargetDir));
 
-      const headToTargetDir = headHitbox.box.position.angleTo(targetHitbox.box.position);
+      const headToTargetDir = angle(targetHitbox.box.posX - headHitbox.box.posX, targetHitbox.box.posY - headHitbox.box.posY);
       addHitboxVelocity(headHitbox, polarVec2(300, headToTargetDir));
    }
 
    if (inguSerpentComponent.isChargingLeap) {
-      aiHelperComponent.turnFunc(serpent, targetHitbox.box.position, 3.5 * Math.PI, 1.8);
+      aiHelperComponent.turnFunc(serpent, targetHitbox.box.posX, targetHitbox.box.posY, 3.5 * Math.PI, 1.8);
    } else if (inguSerpentComponent.isLeaping) {
-      aiHelperComponent.turnFunc(serpent, targetHitbox.box.position, 3.5 * Math.PI, 1.8);
+      aiHelperComponent.turnFunc(serpent, targetHitbox.box.posX, targetHitbox.box.posY, 3.5 * Math.PI, 1.8);
       
       inguSerpentComponent.leapElapsedTicks++;
       if (inguSerpentComponent.leapElapsedTicks >= LEAP_DURATION_TICKS) {
@@ -213,9 +213,9 @@ const attackEntity = (serpent: Entity, target: Entity): void => {
       }
    } else {
       if (distFromTarget > LEAP_START_DISTANCE - 15) {
-         aiHelperComponent.moveFunc(serpent, targetHitbox.box.position, 1550);
+         aiHelperComponent.moveFunc(serpent, targetHitbox.box.posX, targetHitbox.box.posY, 1550);
       }
-      aiHelperComponent.turnFunc(serpent, targetHitbox.box.position, 3.5 * Math.PI, 1.8);
+      aiHelperComponent.turnFunc(serpent, targetHitbox.box.posX, targetHitbox.box.posY, 3.5 * Math.PI, 1.8);
 
       if (customTickIntervalHasPassed(getEntityAgeTicks(serpent), 1.6)) {
          const tickEvent: EntityTickEvent = {
@@ -269,8 +269,8 @@ function onTick(serpent: Entity): void {
       const targetTransformComponent = TransformComponentArray.getComponent(tamingComponent.followTarget);
       const targetHitbox = targetTransformComponent.hitboxes[0];
       
-      aiHelperComponent.moveFunc(serpent, targetHitbox.box.position, SLOW_ACCELERATION);
-      aiHelperComponent.turnFunc(serpent, targetHitbox.box.position, 3.5 * Math.PI, 1.8);
+      aiHelperComponent.moveFunc(serpent, targetHitbox.box.posX, targetHitbox.box.posY, SLOW_ACCELERATION);
+      aiHelperComponent.turnFunc(serpent, targetHitbox.box.posX, targetHitbox.box.posY, 3.5 * Math.PI, 1.8);
       return;
    }
 
@@ -290,9 +290,9 @@ function onTick(serpent: Entity): void {
             const entityTransformComponent = TransformComponentArray.getComponent(entity);
             const entityHitbox = entityTransformComponent.hitboxes[0];
             
-            const distance = headHitbox.box.position.distanceTo(entityHitbox.box.position);
-            if (distance < minDist) {
-               minDist = distance;
+            const dist = distance(headHitbox.box.posX, headHitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);
+            if (dist < minDist) {
+               minDist = dist;
                closestFoodItem = entity;
             }
          }
@@ -306,10 +306,10 @@ function onTick(serpent: Entity): void {
          const foodTransformComponent = TransformComponentArray.getComponent(closestFoodItem);
          const foodHitbox = foodTransformComponent.hitboxes[0];
          
-         aiHelperComponent.turnFunc(serpent, foodHitbox.box.position, 3.5 * Math.PI, 1.8);
-         aiHelperComponent.moveFunc(serpent, foodHitbox.box.position, SLOW_ACCELERATION);
+         aiHelperComponent.turnFunc(serpent, foodHitbox.box.posX, foodHitbox.box.posY, 3.5 * Math.PI, 1.8);
+         aiHelperComponent.moveFunc(serpent, foodHitbox.box.posX, foodHitbox.box.posY, SLOW_ACCELERATION);
 
-         const directionToFood = headHitbox.box.position.angleTo(foodHitbox.box.position);
+         const directionToFood = angle(foodHitbox.box.posX - headHitbox.box.posX, foodHitbox.box.posY - headHitbox.box.posY);
          if (hitboxIsCollidingWithEntity(headHitbox, closestFoodItem) && getAbsAngleDiff(headHitbox.box.angle, directionToFood) < 0.15) {
             healEntity(serpent, 3, serpent);
             destroyEntity(closestFoodItem);
@@ -347,10 +347,9 @@ function onTick(serpent: Entity): void {
       const layer = getEntityLayer(serpent);
       const tile = getHitboxTile(bodyHitbox);
       if (layer.getTileType(tile) !== TileType.permafrost) {
-         const homePos = new Point(inguSerpentComponent.homeBiome.centerX, inguSerpentComponent.homeBiome.centerY);
          // @HACK this should use pathfinding to get back
-         aiHelperComponent.moveFunc(serpent, homePos, SLOW_ACCELERATION);
-         aiHelperComponent.turnFunc(serpent, homePos, 3.5 * Math.PI, 1.8);
+         aiHelperComponent.moveFunc(serpent, inguSerpentComponent.homeBiome.centerX, inguSerpentComponent.homeBiome.centerY, SLOW_ACCELERATION);
+         aiHelperComponent.turnFunc(serpent, inguSerpentComponent.homeBiome.centerX, inguSerpentComponent.homeBiome.centerY, 3.5 * Math.PI, 1.8);
          return;
       }
    }
@@ -359,8 +358,8 @@ function onTick(serpent: Entity): void {
    const wanderAI = aiHelperComponent.getWanderAI();
    wanderAI.update(serpent);
    if (wanderAI.targetPosition !== null) {
-      aiHelperComponent.moveFunc(serpent, wanderAI.targetPosition, wanderAI.acceleration);
-      aiHelperComponent.turnFunc(serpent, wanderAI.targetPosition, wanderAI.turnSpeed, wanderAI.turnDamping);
+      aiHelperComponent.moveFunc(serpent, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.acceleration);
+      aiHelperComponent.turnFunc(serpent, wanderAI.targetPosition.x, wanderAI.targetPosition.y, wanderAI.turnSpeed, wanderAI.turnDamping);
    }
 }
 
@@ -419,7 +418,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
       return;
    }
 
-   const hitDir = hitbox.box.position.angleTo(collidingHitbox.box.position);
+   const hitDir = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, serpent, 3, DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
    applyAbsoluteKnockback(collidingHitbox, polarVec2(200, hitDir));

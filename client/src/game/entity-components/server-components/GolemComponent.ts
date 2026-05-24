@@ -209,8 +209,8 @@ class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemCo
             const velocity = _point;
 
             const offsetDirection = randAngle();
-            const x = box.position.x + box.radius * Math.sin(offsetDirection);
-            const y = box.position.y + box.radius * Math.cos(offsetDirection);
+            const x = box.posX + box.radius * Math.sin(offsetDirection);
+            const y = box.posY + box.radius * Math.cos(offsetDirection);
             createRockSpeckParticle(x, y, 0, velocity.x, velocity.y, ParticleRenderLayer.low);
          }
       } else if (golemComponent.wakeProgress === 1) {
@@ -225,8 +225,8 @@ class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemCo
             const velocity = _point;
 
             const offsetDirection = randAngle();
-            const x = box.position.x + box.radius * Math.sin(offsetDirection);
-            const y = box.position.y + box.radius * Math.cos(offsetDirection);
+            const x = box.posX + box.radius * Math.sin(offsetDirection);
+            const y = box.posY + box.radius * Math.cos(offsetDirection);
             createRockSpeckParticle(x, y, 0, velocity.x, velocity.y, ParticleRenderLayer.low);
          }
       }

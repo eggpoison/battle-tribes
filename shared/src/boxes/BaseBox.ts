@@ -33,11 +33,17 @@ export function createAbsolutePivotPoint(offsetX: number, offsetY: number): Pivo
 
 export abstract class BaseBox {
    // @CLEANUP i should really make this only able to be manipulated through some supplied functions, so places can't mistakenly manipulate it thinking they're being correct
-   public readonly position: Point;
+   public posX: number;
+   public posY: number;
+
    /** Offset of the box from its parent. If on a root hitbox of a base entity, does nothing. */
-   public readonly offset: Point;
+   public offsetX: number;
+   public offsetY: number;
+   
    /** Point from which rotation is applied relative to. */
-   public pivot = createAbsolutePivotPoint(0, 0);
+   public pivotX = 0;
+   public pivotY = 0;
+   public pivotType = PivotPointType.absolute;
 
    public relativeAngle: number;
    /** Angle the hitbox is facing, taken counterclockwise from the positive x axis (radians) */
@@ -47,9 +53,11 @@ export abstract class BaseBox {
    public flipX = false;
    public totalFlipXMultiplier = 1;
 
-   constructor(position: Point, offset: Point, rotation: number) {
-      this.position = position;
-      this.offset = offset;
+   constructor(x: number, y: number, offsetX: number, offsetY: number, rotation: number) {
+      this.posX = x;
+      this.posY = y;
+      this.offsetX = offsetX;
+      this.offsetY = offsetY;
       
       this.relativeAngle = rotation;
       this.angle = rotation;

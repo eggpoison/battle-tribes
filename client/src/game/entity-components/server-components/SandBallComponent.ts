@@ -82,8 +82,8 @@ class _SandBallComponentArray extends _ServerComponentArray<SandBallComponent, S
          while (Math.random() < particleChance--) {
             const offsetDirection = randAngle();
             const offsetAmount = hitboxRadius * randFloat(0.7, 1);
-            const x = hitbox.box.position.x + offsetAmount * Math.sin(offsetDirection);
-            const y = hitbox.box.position.y + offsetAmount * Math.sin(offsetDirection);
+            const x = hitbox.box.posX + offsetAmount * Math.sin(offsetDirection);
+            const y = hitbox.box.posY + offsetAmount * Math.cos(offsetDirection);
             createSandParticle(x, y, hitboxVelocity.x, hitboxVelocity.y, offsetDirection + randFloat(-0.3, 0.3));
          }
       }

@@ -4,12 +4,12 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { IceShardComponent } from "../../components/IceShardComponent.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createIceShardConfig(position: Point, rotation: number): EntityConfig {
+export function createIceShardConfig(x: number, y: number, rotation: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.isAffectedByGroundFriction = false;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 24, 24), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, rotation, 24, 24), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const iceShardComponent = new IceShardComponent();

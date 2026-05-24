@@ -1,4 +1,4 @@
-import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, StatusEffect, Point } from "battletribes-shared";
+import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, StatusEffect } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { DesertShrubComponent } from "../../components/DesertShrubComponent.js";
 import { EnergyStoreComponent } from "../../components/EnergyStoreComponent.js";
@@ -7,10 +7,10 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { Hitbox } from "../../hitboxes.js";
 
-export function createDesertShrubConfig(position: Point, angle: number): EntityConfig {
+export function createDesertShrubConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, 36), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 36), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
    

@@ -65,7 +65,7 @@ class _SnowballComponentArray extends _ServerComponentArray<SnowballComponent, S
       const velocity = _point;
       if (velocity.magnitude() > 50) {
          if (tickIntervalHasPassed(0.05 * Settings.TICK_RATE)) {
-            createSnowParticle(hitbox.box.position.x, hitbox.box.position.y, randFloat(40, 60));
+            createSnowParticle(hitbox.box.posX, hitbox.box.posY, randFloat(40, 60));
          }
       }
    }
@@ -75,8 +75,10 @@ class _SnowballComponentArray extends _ServerComponentArray<SnowballComponent, S
       const radius = (hitbox.box as CircularBox).radius;
       const numParticles = Math.floor(radius / 3);
       for (let i = 0; i < numParticles; i++) {
-         const position = hitbox.box.position.offset(radius, randAngle());
-         createSnowSpeckParticle(position.x, position.y);
+         const offsetDirection = randAngle();
+         const x = hitbox.box.posX + radius * Math.sin(offsetDirection);
+         const y = hitbox.box.posY + radius * Math.cos(offsetDirection);
+         createSnowSpeckParticle(x, y);
       }
    }
 
@@ -89,8 +91,8 @@ class _SnowballComponentArray extends _ServerComponentArray<SnowballComponent, S
       const numParticles = Math.floor(radius / 1.2);
       for (let i = 0; i < numParticles; i++) {
          const offsetDirection = randAngle();
-         const spawnPositionX = hitbox.box.position.x + radius * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.position.y + radius * Math.cos(offsetDirection);
+         const spawnPositionX = hitbox.box.posX + radius * Math.sin(offsetDirection);
+         const spawnPositionY = hitbox.box.posY + radius * Math.cos(offsetDirection);
          createSnowSpeckParticle(spawnPositionX, spawnPositionY);
       }
    }

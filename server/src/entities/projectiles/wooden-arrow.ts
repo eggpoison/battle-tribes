@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, AMMO_INFO_RECORD, EntityType, DamageSource, Entity, EntityTypeString, angleToPoint, Point, polarVec2, AttackEffectiveness, ItemType, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, AMMO_INFO_RECORD, EntityType, DamageSource, Entity, EntityTypeString, angleToPoint, Point, polarVec2, AttackEffectiveness, ItemType, HitboxCollisionType, RectangularBox, angle } from "battletribes-shared";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent.js";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent.js";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
@@ -9,11 +9,11 @@ import { entityExists, getEntityType } from "../../world.js";
 import Tribe from "../../Tribe.js";
 import { applyKnockback, getHitboxVelocity, Hitbox } from "../../hitboxes.js";
 
-export function createWoodenArrowConfig(position: Point, rotation: number, tribe: Tribe, owner: Entity): EntityConfig {
+export function createWoodenArrowConfig(x: number, y: number, angle: number, tribe: Tribe, owner: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
    transformComponent.isAffectedByGroundFriction = false;
    
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, 0), rotation, 12, 64), 0.025, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 12, 64), 0.025, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
 
@@ -84,7 +84,7 @@ export function onWoodenArrowHitboxCollision(arrow: Entity, collidingEntity: Ent
    if (canDamageEntity(healthComponent, attackHash)) {
       const ammoInfo = AMMO_INFO_RECORD[ItemType.wood];
    
-      const hitDirection = affectedHitbox.box.position.angleTo(collidingHitbox.box.position);
+      const hitDirection = angle(collidingHitbox.box.posX - affectedHitbox.box.posX, collidingHitbox.box.posY - affectedHitbox.box.posY);
       
       const attacker = entityExists(projectileComponent.creator) ? projectileComponent.creator : arrow;
 

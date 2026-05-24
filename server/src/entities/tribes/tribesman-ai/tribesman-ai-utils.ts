@@ -109,12 +109,12 @@ const getPotentialBlockingTribesmen = (tribesman: Entity): ReadonlyArray<Entity>
    
    const layer = getEntityLayer(tribesman);
    
-   const minChunkX = Math.max(Math.min(Math.floor((tribesmanHitbox.box.position.x - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor((tribesmanHitbox.box.position.x + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor((tribesmanHitbox.box.position.y - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor((tribesmanHitbox.box.position.y + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const minChunkX = Math.max(Math.min(Math.floor((tribesmanHitbox.box.posX - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const maxChunkX = Math.max(Math.min(Math.floor((tribesmanHitbox.box.posX + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const minChunkY = Math.max(Math.min(Math.floor((tribesmanHitbox.box.posY - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
+   const maxChunkY = Math.max(Math.min(Math.floor((tribesmanHitbox.box.posY + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    
-   const blockingTribesmen = new Array<Entity>();
+   const blockingTribesmen: Array<Entity> = [];
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);
@@ -180,7 +180,7 @@ export function entityIsAccessible(tribesman: Entity, entity: Entity, tribe: Tri
    const entityHitbox = transformComponent.hitboxes[0];
    
    const layer = getEntityLayer(entity);
-   const isAccessible = positionIsAccessible(layer, entityHitbox.box.position.x, entityHitbox.box.position.y, tribe.pathfindingGroupID, getEntityFootprint(goalRadius));
+   const isAccessible = positionIsAccessible(layer, entityHitbox.box.posX, entityHitbox.box.posY, tribe.pathfindingGroupID, getEntityFootprint(goalRadius));
 
    cleanupPathfinding(entity, tribe, blockingTribesmen);
 
@@ -203,7 +203,7 @@ export function pathToEntityExists(tribesman: Entity, huntedEntity: Entity, goal
       goalRadius: Math.floor(goalRadius / PathfindingSettings.NODE_SEPARATION),
       failureDefault: PathfindFailureDefault.none
    };
-   const path = runPathfindingMultiLayer(getEntityLayer(tribesman), getEntityLayer(huntedEntity), tribesmanHitbox.box.position.x, tribesmanHitbox.box.position.y, targetHitbox.box.position.x, targetHitbox.box.position.y, tribeComponent.tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), options);
+   const path = runPathfindingMultiLayer(getEntityLayer(tribesman), getEntityLayer(huntedEntity), tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, targetHitbox.box.posX, targetHitbox.box.posY, tribeComponent.tribe.pathfindingGroupID, getEntityFootprint(getHumanoidRadius(transformComponent)), options);
 
    cleanupPathfinding(huntedEntity, tribeComponent.tribe, blockingTribesmen);
 

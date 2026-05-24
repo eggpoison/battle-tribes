@@ -1,4 +1,4 @@
-import { Entity, BlueprintType, BuildingMaterial, ServerComponentType, HitboxFlag, averageVec2, ITEM_INFO_RECORD, HammerItemType, Packet } from "battletribes-shared";
+import { Entity, BlueprintType, BuildingMaterial, ServerComponentType, HitboxFlag, ITEM_INFO_RECORD, HammerItemType, Packet, Point } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { getBlueprintEntityType } from "../entities/blueprint-entity.js";
 import { StructureComponentArray } from "./StructureComponent.js";
@@ -87,60 +87,61 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
 
    // @Hack
    const originHitbox = transformComponent.hitboxes[0];
-   const position = originHitbox.box.position.copy();
+   const x = originHitbox.box.posX;
+   const y = originHitbox.box.posY;
    const layer = getEntityLayer(blueprintEntity);
 
-   const placeInfo = calculateEntityPlaceInfo(position, originHitbox.box.angle, entityType, layer);
+   const placeInfo = calculateEntityPlaceInfo(new Point(x, y), originHitbox.box.angle, entityType, layer);
    
    // @Copynpaste
    switch (blueprintComponent.blueprintType) {
       case BlueprintType.woodenDoor: {
-         const config = createDoorConfig(position, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.wood, placeInfo.connections, null);
+         const config = createDoorConfig(x, y, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.wood, placeInfo.connections, null);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.stoneDoor: {
-         const config = createDoorConfig(position, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.stone, placeInfo.connections, null);
+         const config = createDoorConfig(x, y, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.stone, placeInfo.connections, null);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.woodenEmbrasure: {
-         const config = createEmbrasureConfig(position, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.wood, placeInfo.connections, null);
+         const config = createEmbrasureConfig(x, y, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.wood, placeInfo.connections, null);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.stoneEmbrasure: {
-         const config = createEmbrasureConfig(position, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.stone, placeInfo.connections, null);
+         const config = createEmbrasureConfig(x, y, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.stone, placeInfo.connections, null);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.ballista: {
-         const config = createBallistaConfig(position, blueprintEntityHitbox.box.angle, tribe, placeInfo.connections, null);
+         const config = createBallistaConfig(x, y, blueprintEntityHitbox.box.angle, tribe, placeInfo.connections, null);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.slingTurret: {
-         const config = createSlingTurretConfig(position, blueprintEntityHitbox.box.angle, tribe, placeInfo.connections, null);
+         const config = createSlingTurretConfig(x, y, blueprintEntityHitbox.box.angle, tribe, placeInfo.connections, null);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.woodenTunnel: {
-         const config = createTunnelConfig(position, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.wood, placeInfo.connections, null);
+         const config = createTunnelConfig(x, y, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.wood, placeInfo.connections, null);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.stoneTunnel: {
-         const config = createTunnelConfig(position, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.stone, placeInfo.connections, null);
+         const config = createTunnelConfig(x, y, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.stone, placeInfo.connections, null);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.scrappy: {
-         const config = createScrappyConfig(position, blueprintEntityHitbox.box.angle, tribe);
+         const config = createScrappyConfig(x, y, blueprintEntityHitbox.box.angle, tribe);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.cogwalker: {
-         const config = createCogwalkerConfig(position, blueprintEntityHitbox.box.angle, tribe);
+         const config = createCogwalkerConfig(x, y, blueprintEntityHitbox.box.angle, tribe);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
@@ -154,9 +155,8 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
          const sideHitboxes = getHitboxesByFlag(transformComponent, HitboxFlag.FENCE_GATE_SIDE);
          const side1 = sideHitboxes[0];
          const side2 = sideHitboxes[1];
-         const position = averageVec2(side1.box.position, side2.box.position);
 
-         const config = createFenceGateConfig(position, blueprintEntityHitbox.box.angle, tribe, connections, null);
+         const config = createFenceGateConfig((side1.box.posX + side2.box.posX) * 0.5, (side1.box.posY + side2.box.posY) * 0.5, blueprintEntityHitbox.box.angle, tribe, connections, null);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
 
          // @TEMPORARY @HACK cuz ive made fence gate blueprints destroy the fence they were on when they are first created
@@ -165,7 +165,7 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
          return;
       }
       case BlueprintType.warriorHutUpgrade: {
-         const config = createWarriorHutConfig(position, blueprintEntityHitbox.box.angle, tribe, placeInfo.connections, null);
+         const config = createWarriorHutConfig(x, y, blueprintEntityHitbox.box.angle, tribe, placeInfo.connections, null);
          const hut = createEntity(config, getEntityLayer(blueprintEntity), 0);
 
          // Remove the previous hut
@@ -182,7 +182,7 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
       }
       // @HACK cuz it no longer upgrades the existing wall, it destroys it and then when finished its a new stone wall
       case BlueprintType.stoneWall: {
-         const config = createWallConfig(position, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.stone, placeInfo.connections, null);
+         const config = createWallConfig(x, y, blueprintEntityHitbox.box.angle, tribe, BuildingMaterial.stone, placeInfo.connections, null);
          createEntity(config, getEntityLayer(blueprintEntity), 0);
          return;
       }

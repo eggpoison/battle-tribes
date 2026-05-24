@@ -1,4 +1,4 @@
-import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point } from "battletribes-shared";
+import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { KrumblidMorphCocoonComponent } from "../../components/KrumblidMorphCocoonComponent.js";
@@ -7,10 +7,10 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { Hitbox } from "../../hitboxes.js";
 import Tribe from "../../Tribe.js";
 
-export function createKrumblidMorphCocoonConfig(position: Point, angle: number, tameTribe: Tribe | null): EntityConfig {
+export function createKrumblidMorphCocoonConfig(x: number, y: number, angle: number, tameTribe: Tribe | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, 28), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 28), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
 

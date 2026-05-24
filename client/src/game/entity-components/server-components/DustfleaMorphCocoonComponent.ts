@@ -78,8 +78,8 @@ class _DustfleaMorphCocoonComponentArray extends _ServerComponentArray<DustfleaM
       const particleChance = hitboxRadius * Settings.DT_S / 20;
       if (Math.random() < particleChance) {
          const offsetDirection = randAngle();
-         const x = hitbox.box.position.x + hitboxRadius * Math.sin(offsetDirection);
-         const y = hitbox.box.position.y + hitboxRadius * Math.cos(offsetDirection);
+         const x = hitbox.box.posX + hitboxRadius * Math.sin(offsetDirection);
+         const y = hitbox.box.posY + hitboxRadius * Math.cos(offsetDirection);
          createCocoonAmbientParticle(x, y, offsetDirection + randFloat(-0.2, 0.2));
       }
    }
@@ -109,8 +109,8 @@ class _DustfleaMorphCocoonComponentArray extends _ServerComponentArray<DustfleaM
       const hitboxRadius = (hitbox.box as CircularBox).radius;
       for (let i = 0; i < 7; i++) {
          const offsetDirection = randAngle();
-         const x = hitbox.box.position.x + hitboxRadius * Math.sin(offsetDirection);
-         const y = hitbox.box.position.y + hitboxRadius * Math.cos(offsetDirection);
+         const x = hitbox.box.posX + hitboxRadius * Math.sin(offsetDirection);
+         const y = hitbox.box.posY + hitboxRadius * Math.cos(offsetDirection);
          createCocoonFragmentParticle(x, y, offsetDirection + randFloat(-0.2, 0.2));
       }
    }

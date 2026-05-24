@@ -303,7 +303,7 @@ const craftingStationExists = (tribe: Tribe, entityType: StructureType): boolean
 }
 
 const planToCraftItem = (tribe: Tribe, recipe: CraftingRecipe, productAmount: number): AIPlanAssignment<AICraftRecipePlan> => {
-   const children = new Array<AIPlanAssignment>();
+   const children: Array<AIPlanAssignment> = [];
 
    // If a tech is required for the recipe, plan to research that tech first
    const requiredTech = getTechRequiredForItem(recipe.product);
@@ -347,7 +347,7 @@ const tribeHasResearchBench = (tribe: Tribe): boolean => {
 }
 
 const planToResearchTech = (tribe: Tribe, tech: Tech): AIPlanAssignment<AITechCompletePlan> => {
-   const children = new Array<AIPlanAssignment>();
+   const children: Array<AIPlanAssignment> = [];
 
    // @Incomplete?
    // If the tech has any precursor techs which aren't researched, research them first
@@ -400,7 +400,7 @@ const getStructureItemType = (entityType: EntityType): ItemType => {
 
 // @Cleanup: I feel like this should take in the entity type instead of the item type. That feels more natural
 export function planToPlaceStructure(tribe: Tribe, entityType: StructureType, virtualStructure: VirtualStructure | null): AIPlanAssignment<AIPlaceBuildingPlan> {
-   const children = new Array<AIPlanAssignment>();
+   const children: Array<AIPlanAssignment> = [];
    
    let placedVirtualStructure: VirtualStructure;
    if (virtualStructure === null) {
@@ -423,7 +423,7 @@ export function planToPlaceStructure(tribe: Tribe, entityType: StructureType, vi
          };
          return createPlaceBuildingPlanAssignment([], false, uselessVirtualStructure);
       }
-      placedVirtualStructure = createVirtualStructure(buildingLayer, candidate.position, candidate.rotation, entityType);
+      placedVirtualStructure = createVirtualStructure(buildingLayer, candidate.position.x, candidate.position.y, candidate.rotation, entityType);
    } else {
       placedVirtualStructure = virtualStructure;
    }
@@ -579,7 +579,7 @@ export function checkForAvailableAssignment(tribe: Tribe): AIPlanAssignment | nu
 }
 
 export function createPersonalAssignment(entity: Entity, assignment: AIPlanAssignment): AIPlanAssignment {
-   const children = new Array<AIPlanAssignment>();
+   const children: Array<AIPlanAssignment> = [];
 
    // Scrappy's can't make tools
    if (getEntityType(entity) !== EntityType.scrappy) {

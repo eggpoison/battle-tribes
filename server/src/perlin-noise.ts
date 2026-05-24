@@ -93,7 +93,7 @@ export function generatePerlinNoise(width: number, height: number, scale: number
 export function generateOctavePerlinNoise(width: number, height: number, startingScale: number, octaves: number, lacunarity: number, persistance: number, thung: number = 0): Array<number> {
    const length = width * height;
    
-   let totalNoise = new Array<number>();
+   let totalNoise: Array<number> = [];
    for (let i = 0; i < octaves; i++) {
       const scale = Math.pow(lacunarity, -i) * startingScale;
       const weightMultiplier = Math.pow(persistance, i);

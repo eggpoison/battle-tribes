@@ -66,7 +66,7 @@ export function generateSpikyBastards(undergroundLayer: Layer): void {
          const x = (attachedSubtileX + 0.5 + moveDirX * 1.5) * Settings.SUBTILE_SIZE;
          const y = (attachedSubtileY + 0.5 + moveDirY * 1.5) * Settings.SUBTILE_SIZE;
 
-         const config = createSpikyBastardConfig(new Point(x, y), angle(moveDirX, moveDirY));
+         const config = createSpikyBastardConfig(x, y, angle(moveDirX, moveDirY));
          createEntityImmediate(config, undergroundLayer);
       }
    }

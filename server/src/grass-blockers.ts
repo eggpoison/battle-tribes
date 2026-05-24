@@ -32,8 +32,8 @@ export interface GrassBlocker {
 
 let nextID = 0;
 
-const blockers = new Array<GrassBlocker>();
-const blockerAssociatedEntities = new Array<Entity>();
+const blockers: Array<GrassBlocker> = [];
+const blockerAssociatedEntities: Array<Entity> = [];
 
 const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {
    blocker.box.calculateBounds();
@@ -47,7 +47,7 @@ const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {
    const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
 
-   const chunks = new Array<Chunk>();
+   const chunks: Array<Chunk> = [];
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = surfaceLayer.getChunk(chunkX, chunkY);
@@ -70,7 +70,7 @@ const addGrassBlocker = (blocker: GrassBlocker, associatedEntityID: number): voi
 }
 
 const getBlockedGrasses = (box: Box, layer: Layer): ReadonlyArray<Entity> => {
-   const grasses = new Array<Entity>();
+   const grasses: Array<Entity> = [];
 
    box.calculateBounds();
    const minChunkX = unitsToChunksClamped(_bounds.minX);
@@ -100,7 +100,7 @@ const getBlockedGrasses = (box: Box, layer: Layer): ReadonlyArray<Entity> => {
 export function createGrassBlocker(box: Box, layer: Layer, initialBlockAmount: number, maxBlockAmount: number, associatedEntity: Entity): void {
    const blockedGrasses = getBlockedGrasses(box, layer);
    
-   const destroyedGrasses = new Array<DestroyedGrassInfo>();
+   const destroyedGrasses: Array<DestroyedGrassInfo> = [];
    for (const grass of blockedGrasses) {
       destroyEntity(grass);
 
@@ -108,7 +108,7 @@ export function createGrassBlocker(box: Box, layer: Layer, initialBlockAmount: n
       const grassHitbox = grassTransformComponent.hitboxes[0];
       
       destroyedGrasses.push({
-         position: grassHitbox.box.position.copy(),
+         position: new Point(grassHitbox.box.posX, grassHitbox.box.posY),
          angle: grassHitbox.box.angle
       });
    }
@@ -142,7 +142,7 @@ const removeGrassBlocker = (blocker: GrassBlocker, i: number): void => {
    // Revive the grass!
    for (const grassInfo of blocker.destroyedGrasses) {
       const tileType = blocker.layer.getTileTypeAtPosition(grassInfo.position.x, grassInfo.position.y);
-      const config = createGrassStrandConfig(grassInfo.position, grassInfo.angle, tileType);
+      const config = createGrassStrandConfig(grassInfo.position.x, grassInfo.position.y, grassInfo.angle, tileType);
       createEntity(config, blocker.layer, 0);
    }
 }

@@ -1,4 +1,4 @@
-import { randAngle, randFloat, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
+import { randAngle, randFloat, Entity, ServerComponentType, HitboxFlag, Point } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import Particle from "../../Particle";
@@ -112,7 +112,7 @@ export const InguSerpentComponentArray = registerServerComponentArray(ServerComp
 
 const createIceSpeckProjectile = (hitbox: Hitbox): void => {
    const spawnOffsetDirection = randAngle();
-   const spawnPosition = hitbox.box.position.offset(SIZE / 2 * Math.random(), spawnOffsetDirection);
+   const spawnPosition = new Point(hitbox.box.posX, hitbox.box.posY).offset(SIZE / 2 * Math.random(), spawnOffsetDirection);
 
    const velocityMagnitude = randFloat(60, 150);
    const velocityDirection = spawnOffsetDirection + randFloat(-0.8, 0.8);

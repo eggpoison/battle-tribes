@@ -1,4 +1,4 @@
-import { Biome, HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, getAbsAngleDiff, Point, polarVec2 } from "battletribes-shared";
+import { Biome, HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, getAbsAngleDiff, Point, polarVec2, angle } from "battletribes-shared";
 import { turnToPosition } from "../../ai-shared.js";
 import { DustfleaHibernateAI } from "../../ai/DustfleaHibernateAI.js";
 import { EscapeAI } from "../../ai/EscapeAI.js";
@@ -21,19 +21,19 @@ function wanderPositionIsValid(_entity: Entity, layer: Layer, x: number, y: numb
    return biome === Biome.desert || biome === Biome.desertOasis;
 }
 
-const moveFunc = (dustflea: Entity, pos: Point, acceleration: number): void => {
+const moveFunc = (dustflea: Entity, x: number, y: number, acceleration: number): void => {
    const ageTicks = getEntityAgeTicks(dustflea);
    if ((ageTicks + dustflea) % Math.floor(Settings.TICK_RATE / 2.3) === 0) {
       const transformComponent = TransformComponentArray.getComponent(dustflea);
       const hitbox = transformComponent.hitboxes[0];
       
-      const direction = hitbox.box.position.angleTo(pos);
+      const direction = angle(x - hitbox.box.posX, y - hitbox.box.posY);
       applyAbsoluteKnockback(hitbox, polarVec2(125, direction));
    }
 }
 
-const turnFunc = (dustflea: Entity, pos: Point, turnSpeed: number, turnDamping: number): void => {
-   turnToPosition(dustflea, pos, turnSpeed, turnDamping);
+const turnFunc = (dustflea: Entity, x: number, y: number, turnSpeed: number, turnDamping: number): void => {
+   turnToPosition(dustflea, x, y, turnSpeed, turnDamping);
 }
 
 const extraEscapeCondition = (dustflea: Entity, escapeTarget: Entity): boolean => {
@@ -47,15 +47,15 @@ const extraEscapeCondition = (dustflea: Entity, escapeTarget: Entity): boolean =
    const escapeTargetTransformComponent = TransformComponentArray.getComponent(escapeTarget);
    const escapeTargetHitbox = escapeTargetTransformComponent.hitboxes[0];
 
-   const angleFromEscapeTarget = escapeTargetHitbox.box.position.angleTo(dustfleaHitbox.box.position);
+   const angleFromEscapeTarget = angle(dustfleaHitbox.box.posX - escapeTargetHitbox.box.posX, dustfleaHitbox.box.posY - escapeTargetHitbox.box.posY);
 
    return getAbsAngleDiff(angleFromEscapeTarget, escapeTargetHitbox.box.angle) < 0.4;
 }
 
-export function createDustfleaConfig(position: Point, angle: number): EntityConfig {
+export function createDustfleaConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, 8), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 8), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const statusEffectComponent = new StatusEffectComponent(0);

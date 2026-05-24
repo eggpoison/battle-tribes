@@ -19,7 +19,7 @@ import { createItem } from "../items.js";
 /** Minimum number of units away from the border that the player will spawn at */
 const PLAYER_SPAWN_POSITION_PADDING = 300;
 
-const playerClients = new Array<PlayerClient>();
+const playerClients: Array<PlayerClient> = [];
 
 const dirtyEntities = new Set<Entity>();
 
@@ -200,7 +200,7 @@ const shouldShowDamageNumber = (playerClient: PlayerClient, attackingEntity: Ent
 }
 
 const getPlayersViewingEntity = (entity: Entity): ReadonlyArray<PlayerClient> => {
-   const viewingPlayerClients = new Array<PlayerClient>();
+   const viewingPlayerClients: Array<PlayerClient> = [];
    // @Speed: will probs become a major source of slowness with 50+ players
    for (let i = 0; i < playerClients.length; i++) {
       const playerClient = playerClients[i];
@@ -217,7 +217,7 @@ const getPlayersViewingPosition = (minX: number, maxX: number, minY: number, max
    const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
 
-   const viewingPlayerClients = new Array<PlayerClient>();
+   const viewingPlayerClients: Array<PlayerClient> = [];
    // @Speed: will probs become a major source of slowness with 50+ players
    for (let i = 0; i < playerClients.length; i++) {
       const playerClient = playerClients[i];
@@ -277,8 +277,8 @@ export function registerEntityHeal(healedEntity: Entity, healer: Entity, healAmo
    const healedEntityHitbox = transformComponent.hitboxes[0];
    
    const healData: HealData = {
-      entityPositionX: healedEntityHitbox.box.position.x,
-      entityPositionY: healedEntityHitbox.box.position.y,
+      entityPositionX: healedEntityHitbox.box.posX,
+      entityPositionY: healedEntityHitbox.box.posY,
       healedID: healedEntity,
       healerID: healer,
       healAmount: healAmount

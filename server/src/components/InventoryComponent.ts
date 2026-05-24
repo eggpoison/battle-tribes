@@ -17,13 +17,13 @@ export class InventoryComponent {
    /** Stores a record of all inventories associated with the inventory component. */
    public readonly inventoryRecord: Partial<Record<InventoryName, Inventory>> = {};
    /** Stores all inventories associated with the inventory component in the order of when they were added. */
-   public readonly inventories = new Array<Inventory>();
+   public readonly inventories: Array<Inventory> = [];
 
-   public readonly accessibleInventories = new Array<Inventory>();
+   public readonly accessibleInventories: Array<Inventory> = [];
    /** Inventories which are dropped on death */
-   public readonly droppableInventories = new Array<Inventory>();
+   public readonly droppableInventories: Array<Inventory> = [];
 
-   public readonly absentItemIDs = new Array<number>();
+   public readonly absentItemIDs: Array<number> = [];
 }
 
 export const InventoryComponentArray = new ComponentArray<InventoryComponent>(ServerComponentType.inventory, true, getDataLength, addDataToPacket);
@@ -41,7 +41,7 @@ const dropInventory = (entity: Entity, inventory: Inventory, dropRange: number):
       position.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
       position.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
       
-      const config = createItemEntityConfig(position, randAngle(), item, null);
+      const config = createItemEntityConfig(position.x, position.y, randAngle(), item, null);
       createEntity(config, getEntityLayer(entity), 0);
    }
 }

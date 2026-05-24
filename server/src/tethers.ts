@@ -30,7 +30,7 @@ export class HitboxTether {
    }
 }
 
-const tethers = new Array<HitboxTether>();
+const tethers: Array<HitboxTether> = [];
 
 export function tetherHitboxes(hitbox1: Hitbox, hitbox2: Hitbox, idealDistance: number, springConstant: number, damping: number): void {
    const tether = new HitboxTether(hitbox1, hitbox2, idealDistance, springConstant, damping);
@@ -80,8 +80,8 @@ const applyTether = (tether: HitboxTether): void => {
    const hitbox1 = tether.hitbox1;
    const hitbox2 = tether.hitbox2;
 
-   const diffX = hitbox2.box.position.x - hitbox1.box.position.x;
-   const diffY = hitbox2.box.position.y - hitbox1.box.position.y;
+   const diffX = hitbox2.box.posX - hitbox1.box.posX;
+   const diffY = hitbox2.box.posY - hitbox1.box.posY;
    const distance = Math.sqrt(diffX * diffX + diffY * diffY);
    if (distance === 0) {
       return;
@@ -108,8 +108,8 @@ const applyTether = (tether: HitboxTether): void => {
    const forceX = springForceX + dampingForceX;
    const forceY = springForceY + dampingForceY;
    
-   applyForce(hitbox1, new Point(forceX, forceY));
-   applyForce(hitbox2, new Point(-forceX, -forceY));
+   applyForce(hitbox1, forceX, forceY);
+   applyForce(hitbox2, -forceX, -forceY);
 
    // @Speed: Does this need to be done every time?
    const transformComponent1 = TransformComponentArray.getComponent(hitbox1.entity);

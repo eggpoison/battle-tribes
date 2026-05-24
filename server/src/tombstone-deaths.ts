@@ -5,7 +5,7 @@ import { PlayerComponentArray } from "./components/PlayerComponent.js";
 abstract class TombstoneDeathManager {
    private static readonly MAX_TRACKED_DEATHS = 100;
 
-   private static readonly deathInfos = new Array<DeathInfo>();
+   private static readonly deathInfos: Array<DeathInfo> = [];
    
    public static registerNewDeath(player: Entity, damageSource: DamageSource): void {
       // If the max number of deaths has been exceeded, remove the first one

@@ -1,4 +1,4 @@
-import { EntityType, StatusEffect, Point, RectangularBox, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { EntityType, StatusEffect, RectangularBox, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import Tribe from "../../Tribe.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
@@ -11,10 +11,10 @@ import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildin
 import { Hitbox } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
-export function createPlanterBoxConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createPlanterBoxConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const box = new RectangularBox(position, new Point(0, 0), rotation, 80, 80);
+   const box = new RectangularBox(x, y, 0, 0, angle, 80, 80);
    const hitbox = new Hitbox(transformComponent, null, true, box, 1.5, HitboxCollisionType.hard, CollisionBit.planterBox, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);

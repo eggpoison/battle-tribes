@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, CowSpecies, Entity, EntityType, Settings, lerp, Point, polarVec2, randInt, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, ItemType, createNormalisedPivotPoint, Biome, getTamingSkill, TamingSkillID } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, CowSpecies, Entity, EntityType, Settings, lerp, Point, polarVec2, randInt, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, ItemType, Biome, getTamingSkill, TamingSkillID, angle, PivotPointType } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import WanderAI from "../../ai/WanderAI.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
@@ -87,11 +87,11 @@ function positionIsValidCallback(_entity: Entity, layer: Layer, x: number, y: nu
    return layer.getBiomeAtPosition(x, y) === Biome.grasslands;
 }
 
-const moveFunc = (cow: Entity, pos: Point, accelerationMagnitude: number): void => {
+const moveFunc = (cow: Entity, x: number, y: number, accelerationMagnitude: number): void => {
    const transformComponent = TransformComponentArray.getComponent(cow);
    const cowBodyHitbox = transformComponent.rootHitboxes[0];
 
-   const bodyToTargetDirection = cowBodyHitbox.box.position.angleTo(pos);
+   const bodyToTargetDirection = angle(x - cowBodyHitbox.box.posX, y - cowBodyHitbox.box.posY);
 
    // Move whole cow to the target
    const alignmentToTarget = findAngleAlignment(cowBodyHitbox.box.angle, bodyToTargetDirection);
@@ -100,42 +100,43 @@ const moveFunc = (cow: Entity, pos: Point, accelerationMagnitude: number): void 
    
    // Move head to the target
    const headHitbox = transformComponent.hitboxes[1];
-   const headToTargetDirection = headHitbox.box.position.angleTo(pos);
+   const headToTargetDirection = angle(x - headHitbox.box.posX, y - headHitbox.box.posY);
    // @HACK @INCOMPLETE doesn't let ppl move the head faster or slower.
    // const headAcc = 1500 * 0.9;
    const headAcc = 1500 * 0.5 * 0.65;
-   applyAcceleration(headHitbox, polarVec2(headAcc, headToTargetDirection));
+   applyAcceleration(headHitbox, headAcc * Math.sin(headToTargetDirection), headAcc * Math.cos(headToTargetDirection));
 }
 
-const turnFunc = (cow: Entity, pos: Point, turnSpeed: number, turnDamping: number): void => {
+const turnFunc = (cow: Entity, x: number, y: number, turnSpeed: number, turnDamping: number): void => {
    const transformComponent = TransformComponentArray.getComponent(cow);
    const cowBodyHitbox = transformComponent.rootHitboxes[0];
 
-   const bodyToTargetDirection = cowBodyHitbox.box.position.angleTo(pos);
+   const bodyToTargetDirection = angle(x - cowBodyHitbox.box.posX, y - cowBodyHitbox.box.posY);
    // @HACK
    const turnSpeed2 = turnSpeed * 0.6;
    turnHitboxToAngle(cowBodyHitbox, bodyToTargetDirection, turnSpeed2, turnDamping, false);
    
    // Turn the head to face the target
    const headHitbox = transformComponent.hitboxes[1];
-   const headToTargetDirection = headHitbox.box.position.angleTo(pos);
+   const headToTargetDirection = angle(x - headHitbox.box.posX, y - headHitbox.box.posY);
    turnHitboxToAngle(headHitbox, headToTargetDirection, 5 * Math.PI, 2.5, false);
 }
 
-export function createCowConfig(position: Point, angle: number, species: CowSpecies): EntityConfig {
+export function createCowConfig(x: number, y: number, angle: number, species: CowSpecies): EntityConfig {
    const transformComponent = new TransformComponent();
 
    // Body hitbox
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(position, new Point(0, -20), angle, 50, 80), 1.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.COW_BODY]);
+   const bodyHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, -20, angle, 50, 80), 1.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.COW_BODY]);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
  
    const idealHeadDist = 50;
 
    // Head hitbox
-   const headPosition = position.offset(idealHeadDist, angle);
+   const headOffset = polarVec2(idealHeadDist, angle);
    // @Hack(ish): head initial angle is set to the angle too cuz it's not a direct child
-   const headHitbox = new Hitbox(transformComponent, null, true, new CircularBox(headPosition, new Point(0, 0), angle, 30), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.COW_HEAD]);
-   headHitbox.box.pivot = createNormalisedPivotPoint(0, -0.5);
+   const headHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x + headOffset.x, y + headOffset.y, headOffset.x, headOffset.y, angle, 30), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.COW_HEAD]);
+   headHitbox.box.pivotY = -0.5;
+   headHitbox.box.pivotType = PivotPointType.normalised;
    addHitboxToTransformComponent(transformComponent, headHitbox);
 
    tetherHitboxes(headHitbox, bodyHitbox, idealHeadDist, 150, 2);

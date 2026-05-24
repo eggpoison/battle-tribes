@@ -26,10 +26,10 @@ function onTick(cogwalker: Entity): void {
 
    const aiHelperComponent = AIHelperComponentArray.getComponent(cogwalker);
 
-   const visibleEnemies = new Array<Entity>();
-   const visibleEnemyBuildings = new Array<Entity>();
-   const visibleHostileMobs = new Array<Entity>();
-   const visibleItemEntities = new Array<Entity>();
+   const visibleEnemies: Array<Entity> = [];
+   const visibleEnemyBuildings: Array<Entity> = [];
+   const visibleHostileMobs: Array<Entity> = [];
+   const visibleItemEntities: Array<Entity> = [];
    for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
       const entity = aiHelperComponent.visibleEntities[i];
 

@@ -77,8 +77,8 @@ export const IceSpikesComponentArray = registerServerComponentArray(ServerCompon
 
 const createIceSpeckProjectile = (hitbox: Hitbox): void => {
    const spawnOffsetDirection = randAngle();
-   const spawnPositionX = hitbox.box.position.x + SIZE / 2 * Math.sin(spawnOffsetDirection);
-   const spawnPositionY = hitbox.box.position.y + SIZE / 2 * Math.cos(spawnOffsetDirection);
+   const spawnPositionX = hitbox.box.posX + SIZE / 2 * Math.sin(spawnOffsetDirection);
+   const spawnPositionY = hitbox.box.posY + SIZE / 2 * Math.cos(spawnOffsetDirection);
 
    const velocityMagnitude = randFloat(150, 300);
    const velocityDirection = spawnOffsetDirection + randFloat(-0.8, 0.8);

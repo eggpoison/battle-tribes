@@ -1,4 +1,4 @@
-import { CircularBox, ServerComponentType, Entity, ItemType, assert, Point, polarVec2, randAngle, randFloat, randSign } from "battletribes-shared";
+import { CircularBox, ServerComponentType, Entity, ItemType, assert, Point, polarVec2, randAngle, randFloat, randSign, angle } from "battletribes-shared";
 import { getConfigTransformComponent } from "../components.js";
 import { createPricklyPearFragmentProjectileConfig } from "../entities/desert/prickly-pear-fragment-projectile.js";
 import { createItemEntityConfig } from "../entities/item-entity.js";
@@ -30,9 +30,9 @@ const explode = (pricklyPear: Entity): void => {
       const offsetX = offsetMagnitude * Math.sin(offsetDirection);
       const offsetY = offsetMagnitude * Math.cos(offsetDirection);
 
-      const x = hitbox.box.position.x + offsetX;
-      const y = hitbox.box.position.y + offsetY;
-      const projectileConfig = createPricklyPearFragmentProjectileConfig(new Point(x, y), randAngle(), parentCactus);
+      const x = hitbox.box.posX + offsetX;
+      const y = hitbox.box.posY + offsetY;
+      const projectileConfig = createPricklyPearFragmentProjectileConfig(x, y, randAngle(), parentCactus);
 
       const projectileTransformComponent = getConfigTransformComponent(projectileConfig.components);
       
@@ -56,12 +56,12 @@ const drop = (pricklyPear: Entity): void => {
    const parentCactus = hitbox.parent.entity;
    const cactusTransformComponent = TransformComponentArray.getComponent(parentCactus);
    const cactusHitbox = cactusTransformComponent.hitboxes[0];
-   const angleFromCactusToPear = cactusHitbox.box.position.angleTo(hitbox.box.position);
+   const angleFromCactusToPear = angle(hitbox.box.posX - cactusHitbox.box.posX, hitbox.box.posY - cactusHitbox.box.posY);
    
-   const x = hitbox.box.position.x + 8 * Math.sin(angleFromCactusToPear);
-   const y = hitbox.box.position.y + 8 * Math.cos(angleFromCactusToPear);
+   const x = hitbox.box.posX + 8 * Math.sin(angleFromCactusToPear);
+   const y = hitbox.box.posY + 8 * Math.cos(angleFromCactusToPear);
    
-   const itemConfig = createItemEntityConfig(new Point(x, y), hitbox.box.angle, createItem(ItemType.pricklyPear, 1, "", ""), null);
+   const itemConfig = createItemEntityConfig(x, y, hitbox.box.angle, createItem(ItemType.pricklyPear, 1, "", ""), null);
 
    const itemTransformComponent = getConfigTransformComponent(itemConfig.components);
    const itemHitbox = itemTransformComponent.hitboxes[0];

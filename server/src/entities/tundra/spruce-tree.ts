@@ -1,4 +1,4 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, TreeSize, Point, randInt, HitboxCollisionType, CircularBox, ItemType } from "battletribes-shared";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, TreeSize, randInt, HitboxCollisionType, CircularBox, ItemType } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -22,12 +22,12 @@ registerEntityLootOnDeath(EntityType.spruceTree, {
 
 const TREE_RADII: ReadonlyArray<number> = [46, 64];
 
-export function createSpruceTreeConfig(position: Point, angle: number): EntityConfig {
+export function createSpruceTreeConfig(x: number, y: number, angle: number): EntityConfig {
    const size: TreeSize = randInt(0, 1);
    
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(position, new Point(0, 0), angle, TREE_RADII[size]), 1.25 + size * 0.25, HitboxCollisionType.soft, CollisionBit.plant, DEFAULT_COLLISION_MASK, []);
+   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, TREE_RADII[size]), 1.25 + size * 0.25, HitboxCollisionType.soft, CollisionBit.plant, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);
 

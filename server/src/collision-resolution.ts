@@ -89,7 +89,7 @@ const resolveHardCollisionAndFlip = (affectedHitbox: Hitbox, collisionResult: Co
 
 const resolveSoftCollision = (affectedHitbox: Hitbox, pushingHitbox: Hitbox, collisionResult: CollisionResult): void => {
    const pushForce = Settings.ENTITY_PUSH_FORCE * pushingHitbox.mass;
-   applyForce(affectedHitbox, new Point(collisionResult.overlap.x * pushForce, collisionResult.overlap.y * pushForce));
+   applyForce(affectedHitbox, collisionResult.overlap.x * pushForce, collisionResult.overlap.y * pushForce);
 }
 
 export function collide(affectedEntity: Entity, collidingEntity: Entity, collidingHitboxPairs: ReadonlyArray<HitboxCollisionPair>): void {
@@ -103,7 +103,7 @@ export function collide(affectedEntity: Entity, collidingEntity: Entity, collidi
    const affectedEntityHitbox = affectedEntityTransformComponent.hitboxes[0];
    const collidingEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
    const collidingEntityHitbox = collidingEntityTransformComponent.hitboxes[0];
-   const collisionPoint = new Point((affectedEntityHitbox.box.position.x + affectedEntityHitbox.box.position.x) / 2, (affectedEntityHitbox.box.position.y + affectedEntityHitbox.box.position.y) / 2);
+   const collisionPoint = new Point((affectedEntityHitbox.box.posX + affectedEntityHitbox.box.posX) / 2, (affectedEntityHitbox.box.posY + affectedEntityHitbox.box.posY) / 2);
    
    for (let i = 0; i < collidingHitboxPairs.length; i++) {
       const pair = collidingHitboxPairs[i];
@@ -169,8 +169,7 @@ export function collide(affectedEntity: Entity, collidingEntity: Entity, collidi
 export function resolveWallCollision(hitbox: Hitbox, subtileX: number, subtileY: number): void {
    // @Copynpaste from boxIsCollidingWithSubtile
    // @Speed
-   const position = new Point((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE);
-   const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+   const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
    
    const collisionResult = hitbox.box.getCollisionResult(tileBox);
    if (!collisionResult.isColliding) {

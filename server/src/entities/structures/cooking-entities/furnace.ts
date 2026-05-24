@@ -13,10 +13,10 @@ import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuil
 import { Hitbox } from "../../../hitboxes.js";
 import { StructureConnection } from "../../../structure-placement.js";
 
-export function createFurnaceConfig(position: Point, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createFurnaceConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const box = new RectangularBox(position, new Point(0, 0), rotation, 80, 80);
+   const box = new RectangularBox(x, y, 0, 0, angle, 80, 80);
    const hitbox = new Hitbox(transformComponent, null, true, box, 2, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
    hitbox.isStatic = true;
    addHitboxToTransformComponent(transformComponent, hitbox);

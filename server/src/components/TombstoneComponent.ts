@@ -4,7 +4,6 @@ import { createZombieConfig } from "../entities/mobs/zombie.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { createEntity, destroyEntity, getEntityLayer, getGameTime, isNight } from "../world.js";
 import TombstoneDeathManager from "../tombstone-deaths.js";
-import { Hitbox } from "../hitboxes.js";
 
 const enum Vars {
    /** Average number of zombies that are created by the tombstone in a second */
@@ -42,7 +41,7 @@ const generateZombieSpawnPosition = (tombstone: Entity): Point => {
    const transformComponent = TransformComponentArray.getComponent(tombstone);
    const tombstoneHitbox = transformComponent.hitboxes[0];
    
-   const seenIs = new Array<number>();
+   const seenIs: Array<number> = [];
    for (;;) {
       let i: number;
       do {
@@ -52,8 +51,8 @@ const generateZombieSpawnPosition = (tombstone: Entity): Point => {
       const angleFromTombstone = i * Math.PI / 2;
 
       const offsetMagnitude = Vars.ZOMBIE_SPAWN_DISTANCE + (i % 2 === 0 ? 15 : 0);
-      const x = tombstoneHitbox.box.position.x + offsetMagnitude * Math.sin(angleFromTombstone);
-      const y = tombstoneHitbox.box.position.y + offsetMagnitude * Math.cos(angleFromTombstone);
+      const x = tombstoneHitbox.box.posX + offsetMagnitude * Math.sin(angleFromTombstone);
+      const y = tombstoneHitbox.box.posY + offsetMagnitude * Math.cos(angleFromTombstone);
    
       // Make sure the spawn position is valid
       if (x < 0 || x >= Settings.WORLD_UNITS || y < 0 || y >= Settings.WORLD_UNITS) {
@@ -72,8 +71,7 @@ const spawnZombie = (tombstone: Entity, tombstoneComponent: TombstoneComponent):
    const isGolden = tombstoneComponent.tombstoneType === 0 && Math.random() < 0.005;
    
    // Spawn zombie
-   const position = new Point(tombstoneComponent.zombieSpawnPositionX, tombstoneComponent.zombieSpawnPositionY);
-   const config = createZombieConfig(position, randAngle(), isGolden, tombstone);
+   const config = createZombieConfig(tombstoneComponent.zombieSpawnPositionX, tombstoneComponent.zombieSpawnPositionY, randAngle(), isGolden, tombstone);
    createEntity(config, getEntityLayer(tombstone), 0);
 
    tombstoneComponent.numZombies++;
@@ -129,7 +127,7 @@ function preRemove(tombstone: Entity): void {
    const tombstoneTransformComponent = TransformComponentArray.getComponent(tombstone);
    const tombstoneHitbox = tombstoneTransformComponent.hitboxes[0];
 
-   const config = createZombieConfig(tombstoneHitbox.box.position.copy(), randAngle(), isGolden, tombstone);
+   const config = createZombieConfig(tombstoneHitbox.box.posX, tombstoneHitbox.box.posY, randAngle(), isGolden, tombstone);
    createEntity(config, getEntityLayer(tombstone), 0);
 }
 

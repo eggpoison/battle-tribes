@@ -1,9 +1,9 @@
 import { Box } from "./boxes/boxes.js";
 import { RectangularBox } from "./boxes/RectangularBox.js";
 import { Settings } from "./settings.js";
-import { Mutable, Point, _point, distance, polarVec2, rotatePointAroundPoint } from "./utils.js";
+import { Mutable, Point, _point, angle, distance, polarVec2, rotatePointAroundPoint } from "./utils.js";
 
-export enum CollisionBit {
+export const enum CollisionBit {
    default = 1 << 0,
    cactus = 1 << 1,
    none = 1 << 2,
@@ -86,11 +86,11 @@ const findMaxWithOffset = (box: RectangularBox, x: number, y: number, axisX: num
 
 // @Cleanup: call these functions with the actual hitboxes
 
-export function getCircleCircleCollisionResult(circle1Pos: Point, radius1: number, circle2Pos: Point, radius2: number): CollisionResult {
-   const dist = distance(circle1Pos.x, circle1Pos.y, circle2Pos.x, circle2Pos.y);
+export function getCircleCircleCollisionResult(circle1x: number, circle1y: number, radius1: number, circle2x: number, circle2y: number, radius2: number): CollisionResult {
+   const dist = distance(circle1x, circle1y, circle2x, circle2y);
       
    const amountIn = radius1 + radius2 - dist;
-   const direction = circle2Pos.angleTo(circle1Pos);
+   const direction = angle(circle1x - circle2x, circle1y - circle2y);
    
    return {
       isColliding: amountIn > 0,
@@ -100,18 +100,18 @@ export function getCircleCircleCollisionResult(circle1Pos: Point, radius1: numbe
 }
 
 /** Checks if a circle and rectangle are intersecting */
-export function getCircleRectangleCollisionResult(circlePos: Point, circleRadius: number, rectPos: Point, rectWidth: number, rectHeight: number, rectRotation: number): CollisionResult {
+export function getCircleRectangleCollisionResult(circlePosX: number, circlePosY: number, circleRadius: number, rectPosX: number, rectPosY: number, rectWidth: number, rectHeight: number, rectRotation: number): CollisionResult {
    // Rotate the circle around the rectangle to "align" it
-   rotatePointAroundPoint(circlePos.x, circlePos.y, rectPos.x, rectPos.y, -rectRotation);
-   const circlePosX = _point.x;
-   const circlePosY = _point.y;
+   rotatePointAroundPoint(circlePosX, circlePosY, rectPosX, rectPosY, -rectRotation);
+   const circleX = _point.x;
+   const circleY = _point.y;
 
    // 
    // Then do a regular rectangle check
    // 
 
-   const distanceX = circlePosX - rectPos.x;
-   const distanceY = circlePosY - rectPos.y;
+   const distanceX = circleX - rectPosX;
+   const distanceY = circleY - rectPosY;
    
    const absDistanceX = Math.abs(distanceX);
    const absDistanceY = Math.abs(distanceY);
@@ -155,11 +155,11 @@ export function getCircleRectangleCollisionResult(circlePos: Point, circleRadius
 
    const cornerDistanceSquared = Math.pow(absDistanceX - rectWidth/2, 2) + Math.pow(absDistanceY - rectHeight/2, 2);
    if (cornerDistanceSquared <= circleRadius * circleRadius) {
-      const rectCornerX = circlePosX < rectPos.x ? rectPos.x - rectWidth/2 : rectPos.x + rectWidth/2;
-      const rectCornerY = circlePosY < rectPos.y ? rectPos.y - rectHeight/2 : rectPos.y + rectHeight/2;
+      const rectCornerX = circleX < rectPosX ? rectPosX - rectWidth/2 : rectPosX + rectWidth/2;
+      const rectCornerY = circleY < rectPosY ? rectPosY - rectHeight/2 : rectPosY + rectHeight/2;
 
-      const xDistanceFromRectBorder = Math.abs(rectCornerX - circlePosX);
-      const yDistanceFromRectBorder = Math.abs(rectCornerY - circlePosY);
+      const xDistanceFromRectBorder = Math.abs(rectCornerX - circleX);
+      const yDistanceFromRectBorder = Math.abs(rectCornerY - circleY);
 
       // Whichever axis has the smallest amount in, we want to push it in that direction (least action to resolve the collision)
       // @Cleanup: Whole lot of copy and paste
@@ -225,10 +225,10 @@ export function rectanglesAreColliding(box1: RectangularBox, box2: RectangularBo
       collisionPoint: new Point(0, 0)
    };
 
-   const hitbox1x = box1.position.x;
-   const hitbox1y = box1.position.y;
-   const hitbox2x = box2.position.x;
-   const hitbox2y = box2.position.y;
+   const hitbox1x = box1.posX;
+   const hitbox1y = box1.posY;
+   const hitbox2x = box2.posX;
+   const hitbox2y = box2.posY;
    
    // Axis 1
    const axis1min1 = findMinWithOffset(box1, hitbox1x, hitbox1y, box1.axisX, box1.axisY);
@@ -270,8 +270,8 @@ export function rectanglesAreColliding(box1: RectangularBox, box2: RectangularBo
    }
    updateMinOverlap(collisionData, axis2ComplementMin1, axis2ComplementMax1, axis2ComplementMin2, axis2ComplementMax2, -box2.axisY, box2.axisX);
 
-   const directionVectorX = box2.position.x - box1.position.x;
-   const directionVectorY = box2.position.y - box1.position.y;
+   const directionVectorX = box2.posX - box1.posX;
+   const directionVectorY = box2.posY - box1.posY;
 
    // @Speed @Cleanup: why is this needed...
    if (collisionData.overlap.x * directionVectorX + collisionData.overlap.y * directionVectorY > 0) {
@@ -290,8 +290,7 @@ export function rectanglesAreColliding(box1: RectangularBox, box2: RectangularBo
 
 export function boxIsCollidingWithSubtile(box: Box, subtileX: number, subtileY: number): boolean {
    // @Speed
-   const position = new Point((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE);
-   const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+   const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
    
    const collisionResult = box.getCollisionResult(tileBox);
    return collisionResult.isColliding;
@@ -299,8 +298,7 @@ export function boxIsCollidingWithSubtile(box: Box, subtileX: number, subtileY: 
 
 export function boxIsCollidingWithTile(box: Box, tileX: number, tileY: number): boolean {
    // @Speed
-   const position = new Point((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE);
-   const tileBox = new RectangularBox(position, new Point(0, 0), 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
+   const tileBox = new RectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
    
    const collisionResult = box.getCollisionResult(tileBox);
    return collisionResult.isColliding;

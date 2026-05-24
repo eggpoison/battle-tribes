@@ -97,8 +97,8 @@ const blockProjectile = (blockAttack: Entity, projectile: Entity, blockingHitbox
    const blockBoxHitbox = blockBoxTransformComponent.hitboxes[0];
 
    limb.lastBlockTick = getGameTicks();
-   limb.blockPositionX = blockBoxHitbox.box.position.x;
-   limb.blockPositionY = blockBoxHitbox.box.position.y;
+   limb.blockPositionX = blockBoxHitbox.box.posX;
+   limb.blockPositionY = blockBoxHitbox.box.posY;
    limb.blockType = heldItemComponent.blockType!;
 
    if (heldItemComponent.blockType! === BlockType.shieldBlock) {

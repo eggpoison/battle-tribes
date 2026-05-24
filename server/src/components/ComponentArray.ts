@@ -11,7 +11,7 @@ const enum ComponentArrayPriority {
    high
 }
 
-export const ComponentArrays = new Array<ComponentArray>();
+export const ComponentArrays: Array<ComponentArray> = [];
 const ComponentArrayRecord = {} as { [T in ServerComponentType]: ComponentArray<object, T> };
 
 export function getComponentArrayRecord(): typeof ComponentArrayRecord {
@@ -22,26 +22,26 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    public readonly componentType: ServerComponentType;
    private readonly isActiveByDefault: boolean;
    
-   public components = new Array<T>();
-   private componentBuffer = new Array<T>();
-   public bufferedComponentJoinTicksRemaining = new Array<number>();
+   public components: Array<T> = [];
+   private componentBuffer: Array<T> = [];
+   public bufferedComponentJoinTicksRemaining: Array<number> = [];
 
    /** Maps entity IDs to component indexes */
    private entityToIndexMap: Partial<Record<Entity, number>> = {};
    /** Maps component indexes to entity IDs */
    private indexToEntityMap: Partial<Record<number, Entity>> = {};
    
-   public activeComponents = new Array<T>();
-   public activeEntities = new Array<Entity>();
+   public activeComponents: Array<T> = [];
+   public activeEntities: Array<Entity> = [];
 
    /** Maps entity IDs to component indexes */
    private activeEntityToIndexMap: Record<Entity, number> = {};
    /** Maps component indexes to entity IDs */
    private activeIndexToEntityMap: Record<number, Entity> = {};
 
-   private componentBufferIDs = new Array<number>();
+   private componentBufferIDs: Array<number> = [];
 
-   private deactivateBuffer = new Array<number>();
+   private deactivateBuffer: Array<number> = [];
 
    // @Cleanup: Layer should probs be in entity config
    // @Bug @Incomplete: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it). solution: make it not crash

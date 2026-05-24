@@ -100,8 +100,8 @@ class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComp
          if (customTickIntervalHasPassed(poisonStatusEffect.ticksElapsed, 0.1)) {
             const spawnOffsetMagnitude = 30 * Math.random();
             const spawnOffsetDirection = randAngle()
-            const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
             const lifetime = 2;
             
@@ -132,8 +132,8 @@ class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComp
          if (customTickIntervalHasPassed(poisonStatusEffect.ticksElapsed, 0.1)) {
             const spawnOffsetMagnitude = 30 * Math.random();
             const spawnOffsetDirection = randAngle()
-            const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
             createPoisonBubble(spawnPositionX, spawnPositionY, randFloat(0.4, 0.6));
          }
@@ -163,8 +163,8 @@ class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComp
          if (customTickIntervalHasPassed(fireStatusEffect.ticksElapsed, 0.1)) {
             const spawnOffsetMagnitude = 30 * Math.random();
             const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
             const lifetime = randFloat(0.6, 1.2);
 
@@ -207,8 +207,8 @@ class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComp
          if (customTickIntervalHasPassed(fireStatusEffect.ticksElapsed, 3/20)) {
             const spawnOffsetMagnitude = 20 * Math.random();
             const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
             const accelerationDirection = randAngle();
             const accelerationX = 40 * Math.sin(accelerationDirection);
@@ -257,8 +257,8 @@ class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComp
       if (bleedingStatusEffect !== null) {
          if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
             const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.position.x + 32 * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.position.y + 32 * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = hitbox.box.posX + 32 * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = hitbox.box.posY + 32 * Math.cos(spawnOffsetDirection);
             createBloodParticle(Math.random() < 0.5 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(40, 60), true);
          }
       }
@@ -270,8 +270,8 @@ class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComp
             const hitboxVelocity = _point;
             
             const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.position.x + 32 * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.position.y + 32 * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = hitbox.box.posX + 32 * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = hitbox.box.posY + 32 * Math.cos(spawnOffsetDirection);
             createHeatParticle(spawnPositionX, spawnPositionY, randAngle(), hitboxVelocity.x, hitboxVelocity.y);
          }
       }

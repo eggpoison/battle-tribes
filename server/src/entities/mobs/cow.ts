@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, CowSpecies, Entity, EntityType, Settings, lerp, Point, polarVec2, randInt, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, ItemType, Biome, getTamingSkill, TamingSkillID, angle, PivotPointType } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, CowSpecies, Entity, EntityType, Settings, lerp, Point, polarVec2, randInt, HitboxCollisionType, ItemType, Biome, getTamingSkill, TamingSkillID, angle, PivotPointType, setBoxPivotType, createRectangularBox, createCircularBox, HitboxTag } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import WanderAI from "../../ai/WanderAI.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
@@ -14,8 +14,8 @@ import { createCarrySlot, RideableComponent } from "../../components/RideableCom
 import { TamingComponent } from "../../components/TamingComponent.js";
 import { registerEntityTamingSpec } from "../../taming-specs.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
-import { applyAcceleration, applyAccelerationFromGround, getRootHitbox, Hitbox, turnHitboxToAngle } from "../../hitboxes.js";
-import { tetherHitboxes } from "../../tethers.js";
+import { applyAcceleration, applyAccelerationFromGround, createHitbox, getRootHitbox, Hitbox, setHitboxTag, turnHitboxToAngle } from "../../hitboxes.js";
+import { addHitboxAngularTether, tetherHitboxes } from "../../tethers.js";
 import { findAngleAlignment } from "../../ai-shared.js";
 import { DustfleaHibernateAI } from "../../ai/DustfleaHibernateAI.js";
 
@@ -126,7 +126,8 @@ export function createCowConfig(x: number, y: number, angle: number, species: Co
    const transformComponent = new TransformComponent();
 
    // Body hitbox
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, -20, angle, 50, 80), 1.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.COW_BODY]);
+   const bodyHitbox = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, -20, angle, 50, 80), 1.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(bodyHitbox, HitboxTag.cowBody);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
  
    const idealHeadDist = 50;
@@ -134,14 +135,15 @@ export function createCowConfig(x: number, y: number, angle: number, species: Co
    // Head hitbox
    const headOffset = polarVec2(idealHeadDist, angle);
    // @Hack(ish): head initial angle is set to the angle too cuz it's not a direct child
-   const headHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x + headOffset.x, y + headOffset.y, headOffset.x, headOffset.y, angle, 30), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.COW_HEAD]);
+   const headHitbox = createHitbox(transformComponent, null, createCircularBox(x + headOffset.x, y + headOffset.y, headOffset.x, headOffset.y, angle, 30), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(headHitbox, HitboxTag.cowHead);
    headHitbox.box.pivotY = -0.5;
-   headHitbox.box.pivotType = PivotPointType.normalised;
+   setBoxPivotType(headHitbox.box, PivotPointType.normalised);
    addHitboxToTransformComponent(transformComponent, headHitbox);
 
    tetherHitboxes(headHitbox, bodyHitbox, idealHeadDist, 150, 2);
-   // @Hack: method of adding
-   headHitbox.angularTethers.push({
+   addHitboxAngularTether(headHitbox, {
+      hitbox: headHitbox,
       originHitbox: bodyHitbox,
       idealAngle: 0,
       springConstant: 50,

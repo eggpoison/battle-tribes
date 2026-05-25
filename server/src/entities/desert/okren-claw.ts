@@ -1,4 +1,4 @@
-import { createAbsolutePivotPoint, createNormalisedPivotPoint, HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point, PivotPointType } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point, PivotPointType, setBoxFlipX, setBoxPivotType, createRectangularBox, HitboxTag } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { EnergyStoreComponent } from "../../components/EnergyStoreComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -6,7 +6,7 @@ import { OkrenClawComponent, OkrenClawGrowthStage } from "../../components/Okren
 import { OkrenAgeStage } from "../../components/OkrenComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxTag } from "../../hitboxes.js";
 
 const MAX_HEALTHS = [20, 25, 30, 35, 40];
 const ENERGIES = [400, 600, 800, 1000, 1200];
@@ -119,10 +119,9 @@ export function createOkrenClawConfig(x: number, y: number, angle: number, size:
    const bigArmSegmentSize = getOkrenClawBigArmSegmentSize(size, growthStage);
    const bigArmSegmentOffset = getOkrenClawBigArmSegmentOffset(size, growthStage);
    
-   const bigArmSegmentHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x + bigArmSegmentOffset.x, y + bigArmSegmentOffset.y, bigArmSegmentOffset.x, bigArmSegmentOffset.y, Math.PI * 0.3, bigArmSegmentSize.x, bigArmSegmentSize.y), 2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_BIG_ARM_SEGMENT]);
-   bigArmSegmentHitbox.box.flipX = sideIsFlipped;
-   // @Hack
-   bigArmSegmentHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
+   const bigArmSegmentHitbox = createHitbox(transformComponent, null, createRectangularBox(x + bigArmSegmentOffset.x, y + bigArmSegmentOffset.y, bigArmSegmentOffset.x, bigArmSegmentOffset.y, Math.PI * 0.3, bigArmSegmentSize.x, bigArmSegmentSize.y), 2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(bigArmSegmentHitbox, HitboxTag.okrenBigArmSegment);
+   setBoxFlipX(bigArmSegmentHitbox.box, sideIsFlipped);
    bigArmSegmentHitbox.box.pivotX = -2;
    bigArmSegmentHitbox.box.pivotY = -38;
    addHitboxToTransformComponent(transformComponent, bigArmSegmentHitbox);
@@ -130,7 +129,8 @@ export function createOkrenClawConfig(x: number, y: number, angle: number, size:
    const mediumArmSegmentSize = getOkrenClawMediumArmSegmentSize(size, growthStage);
    const mediumArmSegmentOffset = getOkrenClawMediumArmSegmentOffset(size, growthStage);
 
-   const mediumArmSegmentHitbox = new Hitbox(transformComponent, bigArmSegmentHitbox, true, new RectangularBox(bigArmSegmentHitbox.box.posX + mediumArmSegmentOffset.x, bigArmSegmentHitbox.box.posY + mediumArmSegmentOffset.y, mediumArmSegmentOffset.x, mediumArmSegmentOffset.y, -Math.PI * 0.3, mediumArmSegmentSize.x, mediumArmSegmentSize.y), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_MEDIUM_ARM_SEGMENT]);
+   const mediumArmSegmentHitbox = createHitbox(transformComponent, bigArmSegmentHitbox, createRectangularBox(bigArmSegmentHitbox.box.posX + mediumArmSegmentOffset.x, bigArmSegmentHitbox.box.posY + mediumArmSegmentOffset.y, mediumArmSegmentOffset.x, mediumArmSegmentOffset.y, -Math.PI * 0.3, mediumArmSegmentSize.x, mediumArmSegmentSize.y), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(mediumArmSegmentHitbox, HitboxTag.okrenMediumArmSegment);
    // @Temporary?? see if this absolute stuff works right
    // let mediumArmPivotY: number;
    // switch (size) {
@@ -142,13 +142,14 @@ export function createOkrenClawConfig(x: number, y: number, angle: number, size:
    // }
    // mediumArmSegmentHitbox.box.pivot = createAbsolutePivotPoint(0, mediumArmPivotY);
    mediumArmSegmentHitbox.box.pivotY = -0.5;
-   mediumArmSegmentHitbox.box.pivotType = PivotPointType.normalised;
+   setBoxPivotType(mediumArmSegmentHitbox.box, PivotPointType.normalised);
    addHitboxToTransformComponent(transformComponent, mediumArmSegmentHitbox);
    
    const slashingArmSegmentSize = getOkrenClawSlashingArmSegmentSize(size, growthStage);
    const slashingArmSegmentOffset = getOkrenClawSlashingArmSegmentOffset(size, growthStage);;
 
-   const slashingArmSegmentHitbox = new Hitbox(transformComponent, mediumArmSegmentHitbox, true, new RectangularBox(mediumArmSegmentHitbox.box.posX + slashingArmSegmentOffset.x, mediumArmSegmentHitbox.box.posY + slashingArmSegmentOffset.y, slashingArmSegmentOffset.x, slashingArmSegmentOffset.y, -Math.PI * 0.3, slashingArmSegmentSize.x, slashingArmSegmentSize.y), 0.8, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_ARM_SEGMENT_OF_SLASHING_AND_DESTRUCTION]);
+   const slashingArmSegmentHitbox = createHitbox(transformComponent, mediumArmSegmentHitbox, createRectangularBox(mediumArmSegmentHitbox.box.posX + slashingArmSegmentOffset.x, mediumArmSegmentHitbox.box.posY + slashingArmSegmentOffset.y, slashingArmSegmentOffset.x, slashingArmSegmentOffset.y, -Math.PI * 0.3, slashingArmSegmentSize.x, slashingArmSegmentSize.y), 0.8, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(slashingArmSegmentHitbox, HitboxTag.okrenArmSegmentOfSlashingAndDestruction);
    // @Temporary?
    // let smallArmPivotPoint: PivotPoint;
    // switch (size) {
@@ -161,7 +162,7 @@ export function createOkrenClawConfig(x: number, y: number, angle: number, size:
    // slashingArmSegmentHitbox.box.pivot = smallArmPivotPoint;
    slashingArmSegmentHitbox.box.pivotX = -0.1;
    slashingArmSegmentHitbox.box.pivotY = -0.5;
-   slashingArmSegmentHitbox.box.pivotType = PivotPointType.normalised;
+   setBoxPivotType(slashingArmSegmentHitbox.box, PivotPointType.normalised);
    addHitboxToTransformComponent(transformComponent, slashingArmSegmentHitbox);
 
    const statusEffectComponent = new StatusEffectComponent(0);

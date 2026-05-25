@@ -1,4 +1,4 @@
-import { Biome, HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, getAbsAngleDiff, Point, polarVec2, angle } from "battletribes-shared";
+import { Biome, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, getAbsAngleDiff, polarVec2, angle, createCircularBox } from "battletribes-shared";
 import { turnToPosition } from "../../ai-shared.js";
 import { DustfleaHibernateAI } from "../../ai/DustfleaHibernateAI.js";
 import { EscapeAI } from "../../ai/EscapeAI.js";
@@ -12,7 +12,7 @@ import { EnergyStoreComponent } from "../../components/EnergyStoreComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent.js";
-import { applyAbsoluteKnockback, Hitbox } from "../../hitboxes.js";
+import { applyAbsoluteKnockback, createHitbox } from "../../hitboxes.js";
 import Layer from "../../Layer.js";
 import { getEntityAgeTicks, getEntityType } from "../../world.js";
 
@@ -55,7 +55,7 @@ const extraEscapeCondition = (dustflea: Entity, escapeTarget: Entity): boolean =
 export function createDustfleaConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 8), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 8), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const statusEffectComponent = new StatusEffectComponent(0);

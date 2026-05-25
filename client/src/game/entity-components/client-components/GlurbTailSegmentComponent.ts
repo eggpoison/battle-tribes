@@ -12,10 +12,12 @@ export interface GlurbTailSegmentComponentData {}
 export interface GlurbTailSegmentComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.glurbTailSegment, _GlurbTailSegmentComponentArray> {}
+   interface ClientComponentRegistry {
+      [ClientComponentType.glurbTailSegment]: GlurbTailSegmentComponentArray;
+   }
 }
 
-class _GlurbTailSegmentComponentArray extends _ClientComponentArray<GlurbTailSegmentComponent, GlurbTailSegmentComponentData> {
+class GlurbTailSegmentComponentArray extends _ClientComponentArray<GlurbTailSegmentComponent, GlurbTailSegmentComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
@@ -42,4 +44,4 @@ class _GlurbTailSegmentComponentArray extends _ClientComponentArray<GlurbTailSeg
    }
 }
 
-export const GlurbTailSegmentComponentArray = registerClientComponentArray(ClientComponentType.glurbTailSegment, _GlurbTailSegmentComponentArray, true);
+export const glurbTailSegmentComponentArray = registerClientComponentArray(ClientComponentType.glurbTailSegment, GlurbTailSegmentComponentArray, true);

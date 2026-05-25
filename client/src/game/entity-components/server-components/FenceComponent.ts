@@ -6,7 +6,7 @@ import _ServerComponentArray from "../ServerComponentArray";
 import { RenderPart } from "../../render-parts/render-parts";
 import { StructureConnection } from "../../structure-placement";
 import { Hitbox } from "../../hitboxes";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -125,7 +125,7 @@ const createConnectingRenderPart = (connection: StructureConnection, parentHitbo
 }
 
 export function addFenceConnection(fence: Entity, connection: StructureConnection): void {
-   const transformComponent = TransformComponentArray.getComponent(fence);
+   const transformComponent = transformComponentArray.getComponent(fence);
    const hitbox = transformComponent.hitboxes[0];
    
    const fenceComponent = FenceComponentArray.getComponent(fence);

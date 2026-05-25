@@ -7,7 +7,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent";
+import { getRandomPositionInEntity, transformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -94,7 +94,7 @@ class _MithrilOreNodeComponentArray extends _ServerComponentArray<MithrilOreNode
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       for (let i = 0; i < 6; i++) {
          const c = randFloat(0.25, 0.4);

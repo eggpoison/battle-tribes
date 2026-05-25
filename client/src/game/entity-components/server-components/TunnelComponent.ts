@@ -7,7 +7,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TUNNEL_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -117,7 +117,7 @@ class _TunnelComponentArray extends _ServerComponentArray<TunnelComponent, Tunne
          addDoor(tunnelComponent, entity, 0b10);
       }
 
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       // Play open/close sounds
@@ -153,7 +153,7 @@ export function createTunnelComponentData(): TunnelComponentData {
 }
 
 const addDoor = (tunnelComponent: TunnelComponent, entity: Entity, doorBit: number): void => {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
    const renderPart = new TexturedRenderPart(

@@ -1,7 +1,7 @@
-import { Biome, HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, ItemType, Settings, StatusEffect, TileType, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, secondsToTicks, distance, angle } from "battletribes-shared";
+import { Biome, HitboxTag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, ItemType, Settings, StatusEffect, TileType, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, secondsToTicks, distance, angle } from "battletribes-shared";
 import { getDistanceFromPointToHitbox } from "../ai-shared.js";
 import { hitboxIsCollidingWithEntity } from "../collision-detection.js";
-import { addHitboxVelocity, applyAbsoluteKnockback, getHitboxTile, Hitbox } from "../hitboxes.js";
+import { addHitboxVelocity, applyAbsoluteKnockback, getHitboxTag, getHitboxTile, Hitbox } from "../hitboxes.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import Tribe from "../Tribe.js";
 import { destroyEntity, entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world.js";
@@ -391,7 +391,7 @@ const addTruce = (serpent: Entity, tribe: Tribe): void => {
 }
 
 function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoint: Point): void {
-   if (!hitbox.flags.includes(HitboxFlag.INGU_SERPENT_HEAD)) {
+   if (getHitboxTag(hitbox) !== HitboxTag.inguSerpentHead) {
       return;
    }
    

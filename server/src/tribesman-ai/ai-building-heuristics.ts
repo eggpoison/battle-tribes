@@ -26,7 +26,7 @@ const BASE_BUILDING_WEIGHTS: Record<InfrastructureBuildingType, number> = {
 };
 
 export function buildingIsInfrastructure(entityType: EntityType): entityType is InfrastructureBuildingType {
-   return typeof BASE_BUILDING_WEIGHTS[entityType as InfrastructureBuildingType] !== "undefined";
+   return BASE_BUILDING_WEIGHTS[entityType as InfrastructureBuildingType] !== undefined;
 }
 
 const getExtendedNodeSafety = (buildingLayer: TribeBuildingLayer, nodeIndex: number, extendDist: number): number => {
@@ -174,7 +174,7 @@ const getAverageBuildingNodeSafety = (buildingLayer: TribeBuildingLayer, occupie
 
 export function getBuildingSafety(tribe: Tribe, virtualBuilding: VirtualStructure, safetyInfo: PotentialPlanSafetyData | null): number {
    const entityType = virtualBuilding.entityType as InfrastructureBuildingType;
-   if (typeof BASE_BUILDING_WEIGHTS[entityType] === "undefined") {
+   if (BASE_BUILDING_WEIGHTS[entityType] === undefined) {
       throw new Error("Base building weight not defined for entity type " + EntityTypeString[entityType]);
    }
    

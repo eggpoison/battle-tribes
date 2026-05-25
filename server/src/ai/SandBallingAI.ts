@@ -6,8 +6,9 @@ import { getOkrenMandibleHitbox, OKREN_SIDES } from "../components/OkrenComponen
 import { SandBallComponentArray } from "../components/SandBallComponent.js";
 import { detachHitbox, TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
 import { createSandBallConfig } from "../entities/desert/sand-ball.js";
-import { applyAccelerationFromGround, turnHitboxToAngle, HitboxAngularTether, addHitboxAngularAcceleration } from "../hitboxes.js";
+import { applyAccelerationFromGround, turnHitboxToAngle, addHitboxAngularAcceleration } from "../hitboxes.js";
 import { createEntity, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world.js";
+import { addHitboxAngularTether, HitboxAngularTether } from "../tethers.js";
 
 const MIN_BALLING_COOLDOWN_TICKS = 30 * Settings.TICK_RATE;
 const MAX_BALLING_COOLDOWN_TICKS = 40 * Settings.TICK_RATE;
@@ -151,6 +152,7 @@ export function runSandBallingAI(entity: Entity, aiHelperComponent: AIHelperComp
 
       const ballHitbox = getConfigTransformComponent(ballConfig.components).hitboxes[0];
       const angularTether: HitboxAngularTether = {
+         hitbox: ballHitbox,
          originHitbox: entityHitbox,
          idealAngle: 0,
          springConstant: 10,
@@ -159,7 +161,7 @@ export function runSandBallingAI(entity: Entity, aiHelperComponent: AIHelperComp
          idealHitboxAngleOffset: 0,
          useLeverage: false
       };
-      ballHitbox.angularTethers.push(angularTether);
+      addHitboxAngularTether(ballHitbox, angularTether);
 
       ballConfig.attachInfo = createEntityConfigAttachInfoWithTether(ballHitbox, entityHitbox, offsetMagnitude, 10, 0.4, false, false);
       

@@ -1,13 +1,13 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, polarVec2, randInt, HitboxCollisionType, HitboxFlag, CircularBox, Settings, Biome, ItemType, getTamingSkill, TamingSkillID, angle } from "battletribes-shared";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, polarVec2, randInt, HitboxCollisionType, Settings, Biome, ItemType, getTamingSkill, TamingSkillID, angle, setBoxFlipX, createCircularBox, HitboxTag } from "battletribes-shared";
 import { TransformComponent, TransformComponentArray, addHitboxToTransformComponent } from "../../components/TransformComponent.js";
-import { applyAbsoluteKnockback, Hitbox } from "../../hitboxes.js";
+import { applyAbsoluteKnockback, createHitbox, setHitboxTag } from "../../hitboxes.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { SnobeComponent } from "../../components/SnobeComponent.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
 import { turnToPosition } from "../../ai-shared.js";
 import { EscapeAI } from "../../ai/EscapeAI.js";
 import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent.js";
-import { tetherHitboxes } from "../../tethers.js";
+import { addHitboxAngularConstraint, addHitboxAngularTether, tetherHitboxes } from "../../tethers.js";
 import { getEntityAgeTicks } from "../../world.js";
 import WanderAI from "../../ai/WanderAI.js";
 import Layer from "../../Layer.js";
@@ -71,17 +71,19 @@ const turnFunc = (snobe: Entity, x: number, y: number, turnSpeed: number, turnDa
 export function createSnobeConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 24), 0.45, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.SNOBE_BODY]);
+   const bodyHitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 24), 0.45, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(bodyHitbox, HitboxTag.snobeBody);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
    
    const idealButtDistance = 20;
    const buttOffset = new Point(0, -idealButtDistance);
-   const buttHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x + buttOffset.x, y + buttOffset.y, 0, 0, 0, 12), 0.15, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.SNOBE_BUTT]);
+   const buttHitbox = createHitbox(transformComponent, null, createCircularBox(x + buttOffset.x, y + buttOffset.y, 0, 0, 0, 12), 0.15, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(bodyHitbox, HitboxTag.snobeButt);
    addHitboxToTransformComponent(transformComponent, buttHitbox);
    
    tetherHitboxes(buttHitbox, bodyHitbox, idealButtDistance, 25, 1);
-   // @Hack: method of adding
-   buttHitbox.angularTethers.push({
+   addHitboxAngularTether(buttHitbox, {
+      hitbox: buttHitbox,
       originHitbox: bodyHitbox,
       idealAngle: Math.PI,
       springConstant: 18,
@@ -95,11 +97,11 @@ export function createSnobeConfig(x: number, y: number, angle: number): EntityCo
       const sideIsFlipped = i === 0;
 
       const earOffset = new Point(22, -8);
-      const earHitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(x + earOffset.x, y + earOffset.y, earOffset.x, earOffset.y, SNOBE_EAR_IDEAL_ANGLE, 8), 0.05, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.SNOBE_EAR]);
-      earHitbox.box.flipX = sideIsFlipped;
-      // @Hack
-      earHitbox.box.totalFlipXMultiplier = sideIsFlipped ? -1 : 1;
-      earHitbox.relativeAngleConstraints.push({
+      const earHitbox = createHitbox(transformComponent, bodyHitbox, createCircularBox(x + earOffset.x, y + earOffset.y, earOffset.x, earOffset.y, SNOBE_EAR_IDEAL_ANGLE, 8), 0.05, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      setHitboxTag(earHitbox, HitboxTag.snobeEar);
+      setBoxFlipX(earHitbox.box, sideIsFlipped);
+      addHitboxAngularConstraint(earHitbox, {
+         hitbox: earHitbox,
          idealAngle: earHitbox.box.relativeAngle,
          springConstant: 30,
          damping: 0.15

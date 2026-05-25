@@ -80,7 +80,7 @@ const getMostDamagingItemSlot = (tribesman: Entity, huntedEntity: Entity): numbe
    let mostDps = 0;
    for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
       const item = hotbarInventory.itemSlots[itemSlot];
-      if (typeof item === "undefined") {
+      if (item === undefined) {
          if (mostDps < 1 / Settings.DEFAULT_ATTACK_COOLDOWN) {
             mostDps = 1 / Settings.DEFAULT_ATTACK_COOLDOWN;
             bestItemSlot = itemSlot;
@@ -117,7 +117,7 @@ const getBestBowItemSlot = (tribesman: Entity): number | null => {
    let mostDamage = 0;
    for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
       const item = hotbarInventory.itemSlots[itemSlot];
-      if (typeof item === "undefined") {
+      if (item === undefined) {
          continue;
       }
       const itemInfo = ITEM_INFO_RECORD[item.type];

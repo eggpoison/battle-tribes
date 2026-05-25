@@ -1,4 +1,4 @@
-import { CollisionGroup, collisionGroupsCanCollide, Entity, collisionBitsAreCompatible, Settings, Box, CollisionResult, _bounds } from "battletribes-shared";
+import { CollisionGroup, collisionGroupsCanCollide, Entity, collisionBitsAreCompatible, Settings, Box, CollisionResult, _bounds, getBoxCollisionResult, calculateBoxBounds } from "battletribes-shared";
 import { collide } from "./collision-resolution.js";
 import { TransformComponentArray } from "./components/TransformComponent.js";
 import Layer from "./Layer.js";
@@ -48,7 +48,7 @@ const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, collis
 
    // Check if the collisions have already been marked
    // @Speed: perhaps modify the GlobalCollisionInfo type so we can skip if there was no collision. but see if that would actually make it faster
-   if (typeof collisionInfo[affectedEntity] !== "undefined") {
+   if (collisionInfo[affectedEntity] !== undefined) {
       for (let i = 0; i < collisionInfo[affectedEntity]!.length; i++) {
          const pairCollisionInfo = collisionInfo[affectedEntity]![i];
          if (pairCollisionInfo.collidingEntity === collidingEntity) {
@@ -75,7 +75,7 @@ const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, collis
          const otherBox = otherHitbox.box;
 
          // If the objects are colliding, add the colliding object and this object
-         const collisionResult = box.getCollisionResult(otherBox);
+         const collisionResult = getBoxCollisionResult(box, otherBox);
          if (collisionResult.isColliding) {
             collidingHitboxPairs.push({
                affectedHitbox: hitbox,
@@ -87,7 +87,7 @@ const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, collis
    }
 
    if (collidingHitboxPairs.length > 0) {
-      if (typeof collisionInfo[affectedEntity] === "undefined") {
+      if (collisionInfo[affectedEntity] === undefined) {
          collisionInfo[affectedEntity] = [];
       }
 
@@ -133,11 +133,11 @@ export function resolveEntityCollisions(layer: Layer): void {
          const pushingChunk = pushingChunks[chunkIdx];
          const pushedChunk = pushedChunks[chunkIdx];
 
-         for (let j = 0; j < pushingChunk.entities.length; j++) {
-            const affectedEntity = pushingChunk.entities[j];
+         for (let j = 0; j < pushingChunk.length; j++) {
+            const affectedEntity = pushingChunk[j];
 
-            for (let k = 0; k < pushedChunk.entities.length; k++) {
-               const collidingEntity = pushedChunk.entities[k];
+            for (let k = 0; k < pushedChunk.length; k++) {
+               const collidingEntity = pushedChunk[k];
 
                // @Speed: This check is only needed if the pushingGroup is the pushedGroup. And in that case we can actually just start k at j + 1 instead of 0, and this check won't be needed at all.
                if (affectedEntity === collidingEntity) {
@@ -176,7 +176,7 @@ export function resolveEntityCollisions(layer: Layer): void {
             break;
          }
       }
-      if (typeof collisionInfo === "undefined") {
+      if (collisionInfo === undefined) {
          throw new Error();
       }
 
@@ -210,7 +210,7 @@ export function entitiesAreColliding(entity1: Entity, entity2: Entity): number {
          const otherHitbox = transformComponent2.hitboxes[j];
 
          // If the objects are colliding, add the colliding object and this object
-         if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, otherHitbox.collisionMask, otherHitbox.collisionBit) && box.getCollisionResult(otherHitbox.box).isColliding) {
+         if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, otherHitbox.collisionMask, otherHitbox.collisionBit) && getBoxCollisionResult(box, otherHitbox.box).isColliding) {
             return i + (j << 8);
          }
       }
@@ -223,7 +223,7 @@ export function hitboxIsCollidingWithEntity(hitbox: Hitbox, entity: Entity): boo
    const transformComponent = TransformComponentArray.getComponent(entity);
    
    for (const currentHitbox of transformComponent.hitboxes) {
-      if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, currentHitbox.collisionMask, currentHitbox.collisionBit) && hitbox.box.getCollisionResult(currentHitbox.box).isColliding) {
+      if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, currentHitbox.collisionMask, currentHitbox.collisionBit) && getBoxCollisionResult(hitbox.box, currentHitbox.box).isColliding) {
          return true;
       }
    }
@@ -234,7 +234,7 @@ export function hitboxIsCollidingWithEntity(hitbox: Hitbox, entity: Entity): boo
 export function boxArraysAreColliding(boxes1: ReadonlyArray<Box>, boxes2: ReadonlyArray<Box>): boolean {
    for (const box of boxes1) {
       for (const otherBox of boxes2) {
-         if (box.getCollisionResult(otherBox).isColliding) {
+         if (getBoxCollisionResult(box, otherBox).isColliding) {
             return true;
          }
       }
@@ -245,7 +245,7 @@ export function boxArraysAreColliding(boxes1: ReadonlyArray<Box>, boxes2: Readon
 export function boxHasCollisionWithBoxes(box: Box, boxes: ReadonlyArray<Box>, epsilon: number = 0): boolean {
    for (let i = 0; i < boxes.length; i++) {
       const otherBox = boxes[i];
-      if (box.getCollisionResult(otherBox, epsilon).isColliding) {
+      if (getBoxCollisionResult(box, otherBox, epsilon).isColliding) {
          return true;
       }
    }
@@ -256,7 +256,7 @@ const boxHasCollisionWithHitboxes = (box: Box, hitboxes: ReadonlyArray<Hitbox>, 
    for (let i = 0; i < hitboxes.length; i++) {
       const otherHitbox = hitboxes[i];
 
-      const collisionResult = box.getCollisionResult(otherHitbox.box, epsilon);
+      const collisionResult = getBoxCollisionResult(box, otherHitbox.box, epsilon);
       if (collisionResult.isColliding) {
          return true;
       }
@@ -271,7 +271,7 @@ export function getBoxesCollidingEntities(layer: Layer, boxes: ReadonlyArray<Box
    for (let i = 0; i < boxes.length; i++) {
       const box = boxes[i];
 
-      box.calculateBounds();
+      calculateBoxBounds(box);
       let minX = _bounds.minX;
       let maxX = _bounds.maxX;
       let minY = _bounds.minY;
@@ -326,7 +326,7 @@ export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArr
       const hitbox = hitboxes[i];
       const box = hitbox.box;
 
-      box.calculateBounds();
+      calculateBoxBounds(box);
       let minX = _bounds.minX;
       let maxX = _bounds.maxX;
       let minY = _bounds.minY;

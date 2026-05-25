@@ -6,8 +6,8 @@ import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { TribeComponentArray } from "./TribeComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { tribeComponentArray } from "./TribeComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -110,10 +110,10 @@ class _TotemBannerComponentArray extends _ServerComponentArray<TotemBannerCompon
       // Add new banners
       for (const banner of Object.values(data.banners)) {
          if (!totemBannerComponent.banners.hasOwnProperty(banner.hutNum)) {
-            const transformComponent = TransformComponentArray.getComponent(entity);
+            const transformComponent = transformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
             
-            const tribeComponent = TribeComponentArray.getComponent(entity);
+            const tribeComponent = tribeComponentArray.getComponent(entity);
             const renderPart = createBannerRenderPart(tribeComponent.tribeType, renderObject, hitbox, banner);
             totemBannerComponent.bannerRenderParts[banner.hutNum] = renderPart;
             totemBannerComponent.banners[banner.hutNum] = banner;
@@ -138,7 +138,7 @@ class _TotemBannerComponentArray extends _ServerComponentArray<TotemBannerCompon
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("building-destroy-1.mp3", 0.4, 1, entity, hitbox, false);
    }

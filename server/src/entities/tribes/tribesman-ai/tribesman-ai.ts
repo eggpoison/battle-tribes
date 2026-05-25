@@ -146,7 +146,7 @@ const sendHelpMessage = (communicatingTribesman: Entity, communicationTargets: R
 //    let firstFoodItemSlot = -1; // Tribesman will only keep the first food item type in their inventory
 //    for (let itemSlot = 1; itemSlot <= tribesmanInventory.width * tribesmanInventory.height; itemSlot++) {
 //       const item = tribesmanInventory.itemSlots[itemSlot]; 
-//       if (typeof item === "undefined") {
+//       if (item === undefined) {
 //          continue;
 //       }
       
@@ -229,7 +229,7 @@ const grabBarrelFood = (tribesman: Entity, barrel: Entity): void => {
    let maxFoodValue = 0;
    for (let slotNum = 1; slotNum <= barrelInventory.width * barrelInventory.height; slotNum++) {
       const item = barrelInventory.itemSlots[slotNum];
-      if (typeof item === "undefined") {
+      if (item === undefined) {
          continue;
       }
       
@@ -239,13 +239,13 @@ const grabBarrelFood = (tribesman: Entity, barrel: Entity): void => {
       }
 
       const foodValue = (ITEM_INFO_RECORD[item.type] as ConsumableItemInfo).healAmount * item.count;
-      if (typeof food === "undefined" || foodValue > maxFoodValue) {
+      if (food === undefined || foodValue > maxFoodValue) {
          food = item;
          foodItemSlot = slotNum;
          maxFoodValue = foodValue;
       }
    }
-   if (typeof food === "undefined") {
+   if (food === undefined) {
       throw new Error("Couldn't find a food item to grab.");
    }
 
@@ -261,7 +261,7 @@ const barrelHasFood = (barrel: Entity): boolean => {
 
    for (let slotNum = 1; slotNum <= inventory.width * inventory.height; slotNum++) {
       const item = inventory.itemSlots[slotNum];
-      if (typeof item !== "undefined") {
+      if (item !== undefined) {
          if (ITEM_TYPE_RECORD[item.type] === "healing") {
             return true;
          }
@@ -339,7 +339,7 @@ export function tickTribesman(tribesman: Entity): void {
    if (hasInventory(inventoryComponent, InventoryName.armourSlot)) {
       const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
       const armour = armourSlotInventory.itemSlots[1];
-      if (typeof armour === "undefined") {
+      if (armour === undefined) {
          for (let i = 0; i < hotbarInventory.items.length; i++) {
             const item = hotbarInventory.items[i];
             if (ITEM_TYPE_RECORD[item.type] === "armour") {
@@ -559,7 +559,7 @@ export function tickTribesman(tribesman: Entity): void {
          }
       }
 
-      if (typeof closestBlueprint !== "undefined") {
+      if (closestBlueprint !== undefined) {
          const blueprintTransformComponent = TransformComponentArray.getComponent(closestBlueprint);
          const blueprintHitbox = blueprintTransformComponent.hitboxes[0];
          
@@ -603,7 +603,7 @@ export function tickTribesman(tribesman: Entity): void {
    //    const relation = targetTribesmanComponent.tribesmanRelations[tribesman];
       
    //    // @Cleanup: hardcoded val '50'
-   //    if (typeof relation !== "undefined" && relation >= 50) {
+   //    if (relation !== undefined && relation >= 50) {
    //       // Try to recruit the target
          
    //       const recruitRange = 50;
@@ -739,7 +739,7 @@ export function tickTribesman(tribesman: Entity): void {
             }
          }
       }
-      if (typeof closestBarrelWithFood !== "undefined") {
+      if (closestBarrelWithFood !== undefined) {
          const barrelTransformComponent = TransformComponentArray.getComponent(closestBarrelWithFood);
          const barrelHitbox = barrelTransformComponent.hitboxes[0];
          

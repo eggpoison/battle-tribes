@@ -1,18 +1,18 @@
-import { PathfindingNodeIndex, Settings, getEntityCollisionGroup, _point, angleToPoint, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin, Entity, EntityType, EntityTypeString, ServerComponentType, Packet, Box, boxIsCircular, getBoxArea, HitboxFlag, updateBox, TILE_PHYSICS_INFO_RECORD, TileType, getSubtileIndex, _bounds, angle, distance } from "battletribes-shared";
+import { PathfindingNodeIndex, Settings, getEntityCollisionGroup, _point, angleToPoint, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin, Entity, EntityType, EntityTypeString, ServerComponentType, Packet, Box, boxIsCircular, getBoxArea, updateBox, TILE_PHYSICS_INFO_RECORD, TileType, getSubtileIndex, _bounds, angle, distance, calculateBoxBounds, HitboxTag } from "battletribes-shared";
 import Layer from "../Layer.js";
 import Chunk from "../Chunk.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent.js";
-import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding.js";
+import { addEntityToPathfinding, clearEntityPathfindingNodes, entityCanBlockPathfinding, removeEntityFromPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding.js";
 import { resolveWallCollision } from "../collision-resolution.js";
 import { destroyEntity, entityExists, getEntityLayer, getEntityType, setEntityLayer } from "../world.js";
 import { removeEntityLights, updateEntityLights } from "../lights.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
 import { surfaceLayer, undergroundLayer } from "../layers.js";
 import { addHitboxDataToPacket, getHitboxDataLength } from "../server/packet-hitboxes.js";
-import { addHitboxAngularAcceleration, applyAcceleration, applyForce, getHitboxAngularVelocity, getHitboxTile, getHitboxTotalMassIncludingChildren, getHitboxVelocity, getRootHitbox, Hitbox, hitboxIsInRiver, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../hitboxes.js";
+import { addHitboxAngularAcceleration, applyAcceleration, applyForce, getHitboxAngularVelocity, getHitboxTag, getHitboxTile, getHitboxTotalMassIncludingChildren, getHitboxVelocity, getRootHitbox, Hitbox, hitboxIgnoresWallCollisions, hitboxIsInRiver, hitboxIsPartOfParent, setHitboxIsPartOfParent, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../hitboxes.js";
 import { EntityConfig, getConfigTransformComponent } from "../components.js";
-import { addEntityTethersToWorld, destroyTether as destroyTether } from "../tethers.js";
+import { addEntityTethersToWorld, destroyTether as destroyTether, getHitboxAngularConstraints, getHitboxAngularTethers, getHitboxTethers } from "../tethers.js";
 import { CarrySlot, RideableComponentArray } from "./RideableComponent.js";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which could take advantage of that extraction?)
@@ -96,7 +96,7 @@ export function addHitboxToEntity(entity: Entity, hitbox: Hitbox): void {
       hitbox.parent.children.push(hitbox);
    }
 
-   hitbox.box.calculateBounds();
+   calculateBoxBounds(hitbox.box);
    const minX = _bounds.minX;
    const maxX = _bounds.maxX;
    const minY = _bounds.minY;
@@ -123,9 +123,9 @@ export function addHitboxToEntity(entity: Entity, hitbox: Hitbox): void {
 }
 
 /** Returns the first hitbox with the specified flag. */
-export function getHitboxByFlag(transformComponent: TransformComponent, flag: HitboxFlag): Hitbox | null {
+export function getHitboxByTag(transformComponent: TransformComponent, tag: HitboxTag): Hitbox | null {
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitbox.flags.includes(flag)) {
+      if (getHitboxTag(hitbox) === tag) {
          return hitbox;
       }
    }
@@ -133,10 +133,10 @@ export function getHitboxByFlag(transformComponent: TransformComponent, flag: Hi
    return null;
 }
 
-export function getHitboxesByFlag(transformComponent: TransformComponent, flag: HitboxFlag): Array<Hitbox> {
+export function getHitboxesByTag(transformComponent: TransformComponent, tag: HitboxTag): Array<Hitbox> {
    const matchingHitboxes: Array<Hitbox> = [];
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitbox.flags.includes(flag)) {
+      if (getHitboxTag(hitbox) === tag) {
          matchingHitboxes.push(hitbox);
       }
    }
@@ -149,7 +149,7 @@ const addToChunk = (entity: Entity, layer: Layer, chunk: Chunk): void => {
    const chunkIndex = layer.getChunkIndex(chunk);
    const collisionGroup = getEntityCollisionGroup(getEntityType(entity));
    const collisionChunk = layer.getCollisionChunkByIndex(collisionGroup, chunkIndex);
-   collisionChunk.entities.push(entity);
+   collisionChunk.push(entity);
 
    const numViewingMobs = chunk.viewingEntities.length;
    for (let i = 0; i < numViewingMobs; i++) {
@@ -177,9 +177,9 @@ const removeFromChunk = (entity: Entity, layer: Layer, chunk: Chunk): void => {
    const chunkIndex = layer.getChunkIndex(chunk);
    const collisionGroup = getEntityCollisionGroup(getEntityType(entity));
    const collisionChunk = layer.getCollisionChunkByIndex(collisionGroup, chunkIndex);
-   idx = collisionChunk.entities.indexOf(entity);
+   idx = collisionChunk.indexOf(entity);
    if (idx !== -1) {
-      collisionChunk.entities.splice(idx, 1);
+      collisionChunk.splice(idx, 1);
    }
 
    // @Incomplete
@@ -216,7 +216,7 @@ const updateContainingChunks = (transformComponent: TransformComponent, entity: 
    // Calculate containing chunks
    const containingChunks: Array<Chunk> = [];
    for (const hitbox of transformComponent.hitboxes) {
-      hitbox.box.calculateBounds();
+      calculateBoxBounds(hitbox.box);
       const minChunkX = Math.max(Math.min(Math.floor(_bounds.minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
       const maxChunkX = Math.max(Math.min(Math.floor(_bounds.maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
       const minChunkY = Math.max(Math.min(Math.floor(_bounds.minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
@@ -278,7 +278,7 @@ const updateBoundsAndChunks = (entity: Entity, transformComponent: TransformComp
    for (let i = 0, len = hitboxes.length; i < len; i++) {
       const hitbox = hitboxes[i];
       
-      hitbox.box.calculateBounds();
+      calculateBoxBounds(hitbox.box);
       const minX = _bounds.minX;
       const maxX = _bounds.maxX;
       const minY = _bounds.minY;
@@ -357,7 +357,7 @@ export function resolveEntityBorderCollisions(transformComponent: TransformCompo
    for (let i = 0, len = hitboxes.length; i < len; i++) {
       const hitbox = hitboxes[i];
       
-      hitbox.box.calculateBounds();
+      calculateBoxBounds(hitbox.box, );
       const minX = _bounds.minX;
       const maxX = _bounds.maxX;
       const minY = _bounds.minY;
@@ -514,11 +514,11 @@ const resolveWallCollisions = (entity: Entity, transformComponent: TransformComp
    const layer = getEntityLayer(entity);
    
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitbox.flags.includes(HitboxFlag.IGNORES_WALL_COLLISIONS)) {
+      if (hitboxIgnoresWallCollisions(hitbox)) {
          continue;
       }
       
-      hitbox.box.calculateBounds();
+      calculateBoxBounds(hitbox.box);
       const minSubtileX = Math.max(Math.floor(_bounds.minX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
       const maxSubtileX = Math.min(Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
       const minSubtileY = Math.max(Math.floor(_bounds.minY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
@@ -586,96 +586,11 @@ const updatePosition = (entity: Entity, transformComponent: TransformComponent):
    updateEntityLights(entity);
 }
 
-const applyHitboxAngularTethers = (hitbox: Hitbox): void => {
-   for (const angularTether of hitbox.angularTethers) {
-      const originHitbox = angularTether.originHitbox;
-
-      const originToHitboxDirection = angle(hitbox.box.posX - originHitbox.box.posX, hitbox.box.posY - originHitbox.box.posY);
-      const idealAngle = originHitbox.box.angle + angularTether.idealAngle;
-      
-      const directionDiff = getAngleDiff(originToHitboxDirection, idealAngle);
-      
-      if (Math.abs(directionDiff) > angularTether.padding) {
-         const rotationForce = (directionDiff - angularTether.padding * Math.sign(directionDiff)) * angularTether.springConstant;
-
-         const hitboxAccDir = originToHitboxDirection + Math.PI/2;
-         const originHitboxAccDir = originToHitboxDirection - Math.PI/2;
-         
-         const hitboxTorque = getHitboxVelocity(hitbox).scalarProj(angleToPoint(hitboxAccDir));
-         const originHitboxTorque = getHitboxVelocity(originHitbox).scalarProj(angleToPoint(originHitboxAccDir));
-         
-         const relVel = hitboxTorque - originHitboxTorque;
-         const dampingForce = -relVel * angularTether.damping;
-         
-         // @HACK: the * 0.1
-         let force = (rotationForce + dampingForce) * 0.1;
-
-         if (angularTether.useLeverage) {
-            force *= distance(originHitbox.box.posX, originHitbox.box.posY, hitbox.box.posX, hitbox.box.posY);
-         }
-
-         // @HACK: the * 4
-         applyForce(hitbox, force * 4 * Math.sin(hitboxAccDir), force * 4 * Math.cos(hitboxAccDir));
-
-         // @HACK: the * 4
-         // @Speed: don't need to call 2nd polarVec2 cuz this is in the exact reverse direction
-         applyForce(originHitbox, force * 4 * Math.sin(originHitboxAccDir), force * 4 * Math.cos(originHitboxAccDir));
-      }
-
-      // Restrict the hitboxes' angle to match its direction
-      const angleDiff = getAngleDiff(hitbox.box.angle, originToHitboxDirection + angularTether.idealHitboxAngleOffset);
-      // @Hack @Cleanup: hardcoded for cow head
-      // const anglePadding = 0.3;
-      const anglePadding = 0.05;
-      const angleSpringConstant = 15;
-      const angleDamping = 0.8;
-      if (Math.abs(angleDiff) > anglePadding) {
-         const rotationForce = (angleDiff - anglePadding * Math.sign(angleDiff)) * angleSpringConstant;
-
-         const dampingForce = -getHitboxAngularVelocity(hitbox) * angleDamping;
-
-         const force = rotationForce + dampingForce;
-         addHitboxAngularAcceleration(hitbox, force / getHitboxTotalMassIncludingChildren(hitbox));
-      }
-   }
-}
-
-const applyHitboxRelativeAngleConstraints = (hitbox: Hitbox): void => {
-   for (const constraint of hitbox.relativeAngleConstraints) {
-      // Restrict the hitboxes' angle to match its direction
-      const angleDiff = getAngleDiff(hitbox.box.relativeAngle, constraint.idealAngle);
-      // @Hack @Cleanup: hardcoded
-      const anglePadding = 0;
-      if (Math.abs(angleDiff) > anglePadding) {
-         const rotationForce = (angleDiff - anglePadding * Math.sign(angleDiff)) * constraint.springConstant;
-
-         const dampingForce = -getHitboxAngularVelocity(hitbox) * constraint.damping;
-
-         const force = rotationForce + dampingForce;
-         
-         addHitboxAngularAcceleration(hitbox, force / getHitboxTotalMassIncludingChildren(hitbox));
-      }
-   }
-}
-
-const applyHitboxTethers = (hitbox: Hitbox, transformComponent: TransformComponent): void => {
-   // @Cleanup: basically a wrapper now
-   
-   applyHitboxAngularTethers(hitbox);
-   applyHitboxRelativeAngleConstraints(hitbox);
-
-   if (hitbox.angularTethers.length > 0 || hitbox.relativeAngleConstraints.length > 0) {
-      // @Speed: Is this necessary every tick?
-      transformComponent.isDirty = true;
-   }
-}
-
 const tickHitboxPhysics = (hitbox: Hitbox): void => {
    // @CLEANUP
    const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
 
    tickHitboxAngularPhysics(hitbox, transformComponent);
-   applyHitboxTethers(hitbox, transformComponent);
 
    updatePosition(hitbox.entity, transformComponent);
 
@@ -729,6 +644,7 @@ function onJoin(entity: Entity): void {
 
    // @Cleanup: should i make a separate PathfindingOccupancyComponent?
    if (entityCanBlockPathfinding(entity)) {
+      addEntityToPathfinding(entity);
       updateEntityPathfindingNodeOccupance(entity, transformComponent);
    }
 
@@ -747,7 +663,7 @@ function preRemove(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    for (const hitbox of transformComponent.hitboxes) {
       for (const childHitbox of hitbox.children) {
-         if (childHitbox.isPartOfParent) {
+         if (hitboxIsPartOfParent(childHitbox)) {
             destroyEntity(childHitbox.entity);
          }
       }
@@ -764,9 +680,13 @@ function onRemove(entity: Entity): void {
       }
 
       // Untether all tethers
-      for (let i = hitbox.tethers.length - 1; i >= 0; i--) {
-         const tether = hitbox.tethers[i];
-         destroyTether(tether);
+      // @Speed: only need to untether from the OTHER hitbox not both. Then it will get sucked up automatically.
+      const tethers = getHitboxTethers(hitbox);
+      if (tethers !== undefined) {
+         for (let i = tethers.length - 1; i >= 0; i--) {
+            const tether = tethers[i];
+            destroyTether(tether);
+         }
       }
 
       // Detach all children
@@ -787,6 +707,7 @@ function onRemove(entity: Entity): void {
 
    // @Cleanup: Same as above. should i make a separate PathfindingOccupancyComponent?
    if (entityCanBlockPathfinding(entity)) {
+      removeEntityFromPathfinding(entity);
       clearEntityPathfindingNodes(entity);
    }
 
@@ -835,7 +756,7 @@ export function attachHitboxRaw(hitbox: Hitbox, parentHitbox: Hitbox, isPartOfPa
    
    propagateRootEntityChange(hitbox, parentHitbox.rootEntity);
    hitbox.parent = parentHitbox;
-   hitbox.isPartOfParent = isPartOfParent;
+   setHitboxIsPartOfParent(hitbox, isPartOfParent);
    hitbox.parent.children.push(hitbox);
    
    registerDirtyEntity(hitbox.entity);
@@ -929,7 +850,7 @@ export function detachHitbox(hitbox: Hitbox): void {
          }
       }
 
-      if (typeof carrySlot !== "undefined") {
+      if (carrySlot !== undefined) {
          carrySlot.occupiedEntity = 0;
       }
    }
@@ -946,12 +867,15 @@ export function detachHitbox(hitbox: Hitbox): void {
    hitbox.previousRelativeAngle += hitbox.parent.box.angle;
 
    // Remove any tethers to the parent hitbox
-   for (let i = hitbox.tethers.length - 1; i >= 0; i--) {
-      const tether = hitbox.tethers[i];
-      const otherHitbox = tether.getOtherHitbox(hitbox);
-      if (otherHitbox === hitbox.parent) {
-         destroyTether(tether);
-         break;
+   const tethers = getHitboxTethers(hitbox);
+   if (tethers !== undefined) {
+      for (let i = tethers.length - 1; i >= 0; i--) {
+         const tether = tethers[i];
+         const otherHitbox = tether.getOtherHitbox(hitbox);
+         if (otherHitbox === hitbox.parent) {
+            destroyTether(tether);
+            break;
+         }
       }
    }
 
@@ -984,7 +908,7 @@ const getOwnedHitboxArea = (hitbox: Hitbox): number => {
    let area = getBoxArea(hitbox.box);
 
    for (const childHitbox of hitbox.children) {
-      if (childHitbox.isPartOfParent) {
+      if (hitboxIsPartOfParent(childHitbox)) {
          area += getBoxArea(childHitbox.box);
       }
    }
@@ -1009,7 +933,7 @@ const getWeightedHitbox = (hitbox: Hitbox, currentArea: number, targetArea: numb
    }
 
    for (const childHitbox of hitbox.children) {
-      if (childHitbox.isPartOfParent) {
+      if (hitboxIsPartOfParent(childHitbox)) {
          const result = getWeightedHitbox(childHitbox, area, targetArea);
          if (typeof result === "number") {
             area = result;

@@ -103,7 +103,7 @@ const getGatherTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entit
       }
    }
    
-   return typeof closestResource !== "undefined" ? closestResource : null;
+   return closestResource !== undefined ? closestResource : null;
 }
 
 const getFoodTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
@@ -138,7 +138,7 @@ const getFoodTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entity>
       }
    }
    
-   return typeof target !== "undefined" ? target : null;
+   return target !== undefined ? target : null;
 }
 
 const tribesmanGetItemPickupTarget = (tribesman: Entity, visibleItemEntities: ReadonlyArray<Entity>, gatheredItemType: ItemType): Entity | null => {

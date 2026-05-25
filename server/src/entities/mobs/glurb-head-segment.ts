@@ -1,4 +1,4 @@
-import { HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, ItemType, Settings, lerp, Point, polarVec2, getTamingSkill, TamingSkillID, StatusEffect, angle } from "battletribes-shared";
+import { HitboxCollisionType, DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, ItemType, Settings, lerp, Point, polarVec2, getTamingSkill, TamingSkillID, StatusEffect, angle, createCircularBox } from "battletribes-shared";
 import WanderAI from "../../ai/WanderAI.js";
 import { EntityConfig, LightCreationInfo } from "../../components.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
@@ -8,7 +8,7 @@ import { GlurbSegmentComponent } from "../../components/GlurbSegmentComponent.js
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent.js";
-import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../hitboxes.js";
+import { applyAccelerationFromGround, createHitbox, Hitbox, turnHitboxToAngle } from "../../hitboxes.js";
 import Layer from "../../Layer.js";
 import { createLight } from "../../lights.js";
 import { getEntityAgeTicks } from "../../world.js";
@@ -16,6 +16,7 @@ import { registerEntityTamingSpec } from "../../taming-specs.js";
 import { TamingComponent } from "../../components/TamingComponent.js";
 import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { getHitboxTethers } from "../../tethers.js";
 
 const enum Vars {
    MIN_FOLLOW_COOLDOWN = 10 * Settings.TICK_RATE,
@@ -79,11 +80,14 @@ const propagateMoveDirective = (glurbSegment: Entity, furtherHitbox: Hitbox | nu
    applyAccelerationFromGround(hitbox, polarVec2(acceleration, targetDir));
    
    // Propagate
-   for (const tether of hitbox.tethers) {
-      const otherHitbox = tether.getOtherHitbox(hitbox);
-      if (!foundSegments.includes(otherHitbox.entity)) {
-         foundSegments.push(otherHitbox.entity);
-         propagateMoveDirective(otherHitbox.entity, hitbox, x, y, foundSegments);
+   const tethers = getHitboxTethers(hitbox);
+   if (tethers !== undefined) {
+      for (const tether of tethers) {
+         const otherHitbox = tether.getOtherHitbox(hitbox);
+         if (!foundSegments.includes(otherHitbox.entity)) {
+            foundSegments.push(otherHitbox.entity);
+            propagateMoveDirective(otherHitbox.entity, hitbox, x, y, foundSegments);
+         }
       }
    }
 }
@@ -104,7 +108,7 @@ const turnFunc = (head: Entity, x: number, y: number, turnSpeed: number, turnDam
 export function createGlurbHeadSegmentConfig(x: number, y: number, rotation: number, maxNumSegments: number): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, rotation, 24), 0.6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, rotation, 24), 0.6, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(5);

@@ -1,4 +1,4 @@
-import { SafetyNodeData, PotentialPlanSafetyData, WallSideNodeData, TribeWallData, WallConnectionData, VisibleChunkBounds, RestrictedBuildingAreaData, EntityType, Settings, AIPlanType, Packet, CRAFTING_RECIPES, _bounds } from "battletribes-shared";
+import { SafetyNodeData, PotentialPlanSafetyData, WallSideNodeData, TribeWallData, WallConnectionData, VisibleChunkBounds, RestrictedBuildingAreaData, EntityType, Settings, AIPlanType, Packet, CRAFTING_RECIPES, _bounds, calculateBoxBounds } from "battletribes-shared";
 import Layer from "../../Layer.js";
 import Tribe from "../../Tribe.js";
 import { SafetyNode, getSafetyNode } from "../ai-building.js";
@@ -161,7 +161,7 @@ const virtualStructureIsSentToPlayer = (playerClient: PlayerClient, virtualBuild
    let minY = Number.MAX_SAFE_INTEGER;
    let maxY = Number.MIN_SAFE_INTEGER;
    for (const box of virtualBuilding.boxes) {
-      box.calculateBounds();
+      calculateBoxBounds(box);
       const boxMinX = _bounds.minX;
       const boxMaxX = _bounds.maxX;
       const boxMinY = _bounds.minY;

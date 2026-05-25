@@ -1,14 +1,14 @@
-import { HitboxFlag, Entity, Settings, ServerComponentType, PacketReader, lerp, Point, randAngle, randFloat, randItem, angle } from "webgl-test-shared";
+import { HitboxTag, Entity, Settings, ServerComponentType, PacketReader, lerp, Point, randAngle, randFloat, randItem, angle } from "webgl-test-shared";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createSnowParticle, createWhiteSmokeParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import { RandomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { randomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
+import { transformComponentArray } from "./TransformComponent";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
-import { Hitbox } from "../../hitboxes";
+import { getHitboxTag, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -36,7 +36,9 @@ export interface YetiComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.yeti, _YetiComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.yeti]: YetiComponentArray
+   }
 }
 
 export const YETI_SIZE = 128;
@@ -51,7 +53,7 @@ const ANGRY_SOUNDS: ReadonlyArray<string> = ["yeti-angry-1.mp3", "yeti-angry-2.m
 const HURT_SOUNDS: ReadonlyArray<string> = ["yeti-hurt-1.mp3", "yeti-hurt-2.mp3", "yeti-hurt-3.mp3", "yeti-hurt-4.mp3", "yeti-hurt-5.mp3"];
 const DEATH_SOUNDS: ReadonlyArray<string> = ["yeti-death-1.mp3", "yeti-death-2.mp3"];
 
-class _YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiComponentData, IntermediateInfo> {
+class YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): YetiComponentData {
       const isAttacking = reader.readBool();
       const attackProgress = reader.readNumber();
@@ -66,7 +68,8 @@ class _YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompo
 
       const pawRenderParts: Array<VisualRenderPart> = [];
       for (const hitbox of transformComponentData.hitboxes) {
-         if (hitbox.flags.includes(HitboxFlag.YETI_BODY)) {
+         const tag = getHitboxTag(hitbox);
+         if (tag === HitboxTag.yetiBody) {
             const bodyRenderPart = new TexturedRenderPart(
                hitbox,
                1,
@@ -87,7 +90,7 @@ class _YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompo
                pawRenderParts.push(paw);
                renderObject.attachRenderPart(paw);
             }
-         } else if (hitbox.flags.includes(HitboxFlag.YETI_HEAD)) {
+         } else if (tag === HitboxTag.yetiHead) {
             const headRenderPart = new TexturedRenderPart(
                hitbox,
                1,
@@ -121,10 +124,10 @@ class _YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompo
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
-      const yetiComponent = YetiComponentArray.getComponent(entity);
+      const yetiComponent = yetiComponentArray.getComponent(entity);
 
       // Create snow impact particles when the Yeti does a throw attack
       if (yetiComponent.attackProgress === 0 && yetiComponent.lastAttackProgress !== 0) {
@@ -169,7 +172,7 @@ class _YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompo
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       playSoundOnHitbox(randItem(DEATH_SOUNDS), 0.7, 1, entity, hitbox, false);
@@ -180,13 +183,13 @@ class _YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompo
    }
 
    public updateFromData(data: YetiComponentData, entity: Entity): void {
-      const yetiComponent = YetiComponentArray.getComponent(entity);
+      const yetiComponent = yetiComponentArray.getComponent(entity);
       
       const isAttacking = data.isAttacking;
       yetiComponent.attackProgress = data.attackProgress;
       updatePaws(yetiComponent);
 
-      const randomSoundComponent = RandomSoundComponentArray.getComponent(entity);
+      const randomSoundComponent = randomSoundComponentArray.getComponent(entity);
       if (isAttacking) {
          updateRandomSoundComponentSounds(randomSoundComponent, 3.5 * Settings.TICK_RATE, 5.5 * Settings.TICK_RATE, ANGRY_SOUNDS, 0.7);
       } else {
@@ -195,7 +198,7 @@ class _YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompo
    }
 }
 
-export const YetiComponentArray = registerServerComponentArray(ServerComponentType.yeti, _YetiComponentArray, true);
+export const yetiComponentArray = registerServerComponentArray(ServerComponentType.yeti, YetiComponentArray, true);
 
 const updatePaws = (yetiComponent: YetiComponent): void => {
    let attackProgress = yetiComponent.attackProgress;

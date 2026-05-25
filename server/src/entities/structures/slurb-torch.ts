@@ -1,4 +1,4 @@
-import { EntityType, StatusEffect, Point, HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { EntityType, StatusEffect, Point, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createCircularBox } from "battletribes-shared";
 import { EntityConfig, LightCreationInfo } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
@@ -9,15 +9,15 @@ import Tribe from "../../Tribe.js";
 import { SlurbTorchComponent } from "../../components/SlurbTorchComponent.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 import { createLight } from "../../lights.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
 export function createSlurbTorchConfig(x: number, y: number, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const box = new CircularBox(x, y, 0, 0, rotation, 10);
-   const hitbox = new Hitbox(transformComponent, null, true, box, 0.55, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox.isStatic = true;
+   const box = createCircularBox(x, y, 0, 0, rotation, 10);
+   const hitbox = createHitbox(transformComponent, null, box, 0.55, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(3);

@@ -13,10 +13,12 @@ export interface BracingsComponentData {}
 export interface BracingsComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.bracings, _BracingsComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.bracings]: BracingsComponentArray;
+   }
 }
 
-class _BracingsComponentArray extends _ServerComponentArray<BracingsComponent, BracingsComponentData> {
+class BracingsComponentArray extends _ServerComponentArray<BracingsComponent, BracingsComponentData> {
    public decodeData(): BracingsComponentData {
       return {};
    }
@@ -61,7 +63,7 @@ class _BracingsComponentArray extends _ServerComponentArray<BracingsComponent, B
    }
 }
 
-export const BracingsComponentArray = registerServerComponentArray(ServerComponentType.bracings, _BracingsComponentArray, true);
+export const bracingsComponentArray = registerServerComponentArray(ServerComponentType.bracings, BracingsComponentArray, true);
 
 export function createBracingsComponentData(): BracingsComponentData {
    return {};

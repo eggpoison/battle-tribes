@@ -1,14 +1,14 @@
-import { HitboxFlag, PacketReader, CowSpecies, Entity, Point, randAngle, randFloat, randInt, Settings, ServerComponentType, angle } from "webgl-test-shared";
+import { PacketReader, CowSpecies, Entity, Point, randAngle, randFloat, randInt, Settings, ServerComponentType, angle, HitboxTag } from "webgl-test-shared";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createDirtParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData } from "../../world";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { RenderPart } from "../../render-parts/render-parts";
-import { getHitboxTile, Hitbox } from "../../hitboxes";
+import { getHitboxTag, getHitboxTile, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -39,7 +39,9 @@ export interface CowComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cow, _CowComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.cow]: _CowComponentArray;
+   }
 }
 
 class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponentData, IntermediateInfo> {
@@ -65,7 +67,8 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
 
       let headRenderPart!: RenderPart;
       for (const hitbox of transformComponentData.hitboxes) {
-         if (hitbox.flags.includes(HitboxFlag.COW_BODY)) {
+         const tag = getHitboxTag(hitbox);
+         if (tag === HitboxTag.cowBody) {
             const bodyRenderPart = new TexturedRenderPart(
                hitbox,
                0,
@@ -74,7 +77,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
                getTextureArrayIndex(`entities/cow/cow-body-${cowNum}.png`)
             );
             renderObject.attachRenderPart(bodyRenderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.COW_HEAD)) {
+         } else if (tag === HitboxTag.cowHead) {
             // Head
             headRenderPart = new TexturedRenderPart(
                hitbox,
@@ -111,7 +114,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const cowComponent = CowComponentArray.getComponent(entity);
 
       if (cowComponent.grazeProgress !== -1 && tickIntervalHasPassed(0.1 * Settings.TICK_RATE)) {
@@ -131,7 +134,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
    }
 
    public updateFromData(data: CowComponentData, entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const cowComponent = CowComponentArray.getComponent(entity);
       
       const grazeProgress = data.grazeProgress;
@@ -179,7 +182,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 3; i++) {

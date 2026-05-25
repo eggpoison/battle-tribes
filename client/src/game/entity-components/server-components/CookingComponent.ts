@@ -21,10 +21,12 @@ export interface CookingComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cooking, _CookingComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.cooking]: CookingComponentArray;
+   }
 }
 
-class _CookingComponentArray extends _ServerComponentArray<CookingComponent, CookingComponentData> {
+class CookingComponentArray extends _ServerComponentArray<CookingComponent, CookingComponentData> {
    public decodeData(reader: PacketReader): CookingComponentData {
       const heatingProgress = reader.readNumber();
       const isCooking = reader.readBool();
@@ -50,23 +52,23 @@ class _CookingComponentArray extends _ServerComponentArray<CookingComponent, Coo
    }
 
    public onLoad(entity: Entity): void {
-      const cookingComponent = CookingComponentArray.getComponent(entity);
+      const cookingComponent = cookingComponentArray.getComponent(entity);
       updateLight(cookingComponent, entity);
    }
 
    public onTick(entity: Entity): void {
-      const cookingComponent = CookingComponentArray.getComponent(entity);
+      const cookingComponent = cookingComponentArray.getComponent(entity);
       updateLight(cookingComponent, entity);
    }
 
    public updateFromData(data: CookingComponentData, entity: Entity): void {
-      const cookingComponent = CookingComponentArray.getComponent(entity);
+      const cookingComponent = cookingComponentArray.getComponent(entity);
       cookingComponent.heatingProgress = data.heatingProgress;
       cookingComponent.isCooking = data.isCooking;
    }
 }
 
-export const CookingComponentArray = registerServerComponentArray(ServerComponentType.cooking, _CookingComponentArray, true);
+export const cookingComponentArray = registerServerComponentArray(ServerComponentType.cooking, CookingComponentArray, true);
 
 export function createCookingComponentData(): CookingComponentData {
    return {

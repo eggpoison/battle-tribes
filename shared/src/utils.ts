@@ -1,4 +1,4 @@
-import { RectangularBox } from "./boxes/RectangularBox.js";
+import { RectangularBox } from "./boxes.js";
 import { Settings } from "./settings.js";
 
 export enum UtilVar {

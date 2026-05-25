@@ -6,7 +6,7 @@ import { EntityComponentData, getEntityAgeTicks, getEntityLayer } from "../../wo
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -112,7 +112,7 @@ class _TombstoneComponentArray extends _ServerComponentArray<TombstoneComponent,
          }
 
          if (getEntityAgeTicks(entity) % 6 === 0) {
-            playSound("zombie-dig-" + randInt(1, 5) + ".mp3", 0.15, 1, new Point(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY), getEntityLayer(entity));
+            playSound("zombie-dig-" + randInt(1, 5) + ".mp3", 0.15, 1, tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY, getEntityLayer(entity));
          }
       }
    }
@@ -152,7 +152,7 @@ class _TombstoneComponentArray extends _ServerComponentArray<TombstoneComponent,
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       const width = (hitbox.box as RectangularBox).width;

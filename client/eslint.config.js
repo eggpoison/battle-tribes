@@ -41,7 +41,8 @@ export default defineConfig([
          "@typescript-eslint/no-dynamic-delete": "warn", // Downgrade to a warning cuz its most of the time suboptimal, but also a more long-term fix most of the time
          "@typescript-eslint/prefer-for-of": "off", // For of is often slower
          "@typescript-eslint/prefer-optional-chain": "off", // Explicitly typing it is more performant
-         "@typescript-eslint/no-duplicate-enum-values": "off" // CONST ENUMS!!!
+         "@typescript-eslint/no-duplicate-enum-values": "off", // CONST ENUMS!!!
+         "@typescript-eslint/no-empty-object-type": "off" // the reason it says that this warning exists is stupid
       },
    },
 ]);

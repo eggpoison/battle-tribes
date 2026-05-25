@@ -1,11 +1,11 @@
-import { Entity, BlueprintType, BuildingMaterial, ServerComponentType, HitboxFlag, ITEM_INFO_RECORD, HammerItemType, Packet, Point } from "battletribes-shared";
+import { Entity, BlueprintType, BuildingMaterial, ServerComponentType, HitboxTag, ITEM_INFO_RECORD, HammerItemType, Packet, Point } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { getBlueprintEntityType } from "../entities/blueprint-entity.js";
 import { StructureComponentArray } from "./StructureComponent.js";
 import { TribeComponentArray } from "./TribeComponent.js";
 import { BuildingMaterialComponentArray, upgradeMaterial } from "./BuildingMaterialComponent.js";
 import { HutComponentArray } from "./HutComponent.js";
-import { getHitboxesByFlag, TransformComponentArray } from "./TransformComponent.js";
+import { getHitboxesByTag, TransformComponentArray } from "./TransformComponent.js";
 import { createDoorConfig } from "../entities/structures/door.js";
 import { createEmbrasureConfig } from "../entities/structures/embrasure.js";
 import { createBallistaConfig } from "../entities/structures/ballista.js";
@@ -152,7 +152,7 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
          const connections = blueprintStructureComponent.connections;
 
          // @HACK: cuz the fence gate doesn't have a root hitbox on its 'core' position
-         const sideHitboxes = getHitboxesByFlag(transformComponent, HitboxFlag.FENCE_GATE_SIDE);
+         const sideHitboxes = getHitboxesByTag(transformComponent, HitboxTag.fenceGateSide);
          const side1 = sideHitboxes[0];
          const side2 = sideHitboxes[1];
 

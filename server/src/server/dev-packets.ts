@@ -223,7 +223,7 @@ export function createDevGameDataPacket(playerClient: PlayerClient): Packet {
    const distribution = viewedSpawnDistributionSpawnInfo?.spawnDistribution;
    
    const trackedEntity = SERVER.trackedEntityID;
-   const debugData = typeof trackedEntity !== "undefined" ? createEntityDebugData(trackedEntity) : null;
+   const debugData = trackedEntity !== undefined ? createEntityDebugData(trackedEntity) : null;
    
    let lengthBytes = 0;
    
@@ -284,7 +284,7 @@ export function createDevGameDataPacket(playerClient: PlayerClient): Packet {
    }
    
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   if (typeof distribution !== "undefined") {
+   if (distribution !== undefined) {
       lengthBytes += getViewedSpawnDistributionDataLength(playerClient, distribution);
    }
    
@@ -367,8 +367,8 @@ export function createDevGameDataPacket(playerClient: PlayerClient): Packet {
       addLocalBiomeDataToPacket(packet, playerClient, localBiome);
    }
 
-   packet.writeBool(typeof distribution !== "undefined");
-   if (typeof distribution !== "undefined") {
+   packet.writeBool(distribution !== undefined);
+   if (distribution !== undefined) {
       addViewedSpawnDistributionData(packet, playerClient, distribution);
    }
 

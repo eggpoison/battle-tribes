@@ -8,6 +8,8 @@
          "name": "node",
          "type": "node",
          "request": "launch",
+         // gotta build it first
+         "preLaunchTask": "npm: build",
          "args": [
             "${workspaceRoot}/dist/server/server.js"
          ],

@@ -1,9 +1,9 @@
-import { HitboxFlag, ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType, ItemType, Settings, customTickIntervalHasPassed, getAbsAngleDiff, polarVec2, randAngle, randInt, secondsToTicks, angle, distance, Point } from "battletribes-shared";
+import { ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType, ItemType, Settings, customTickIntervalHasPassed, getAbsAngleDiff, randAngle, randInt, secondsToTicks, angle, distance, Point, getBoxCollisionResult, HitboxTag } from "battletribes-shared";
 import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared.js";
 import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
 import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components.js";
 import { createItemEntityConfig } from "../entities/item-entity.js";
-import { applyAcceleration, applyForce, Hitbox } from "../hitboxes.js";
+import { applyAcceleration, applyForce, getHitboxTag, Hitbox } from "../hitboxes.js";
 import { createItem } from "../items.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { createEntity, destroyEntity, entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world.js";
@@ -17,6 +17,7 @@ import { getAvailableCarrySlot, mountCarrySlot, RideableComponentArray } from ".
 import { getRiderTargetPosition, TamingComponentArray } from "./TamingComponent.js";
 import { attachHitbox, detachHitbox, TransformComponent, TransformComponentArray } from "./TransformComponent.js";
 import { TribeComponentArray } from "./TribeComponent.js";
+import { getHitboxTethers } from "../tethers.js";
 
 const enum TrunkCombatState {
    active,
@@ -171,10 +172,13 @@ const treeIsValidTarget = (tree: Entity, aiHelperComponent: AIHelperComponent): 
 
 const getTailClub = (transformComponent: TransformComponent): Entity | null => {
    for (const hitbox of transformComponent.hitboxes) {
-      for (const tether of hitbox.tethers) {
-         const otherHitbox = tether.getOtherHitbox(hitbox);
-         if (getEntityType(otherHitbox.entity) === EntityType.tukmokTailClub) {
-            return otherHitbox.entity;
+      const tethers = getHitboxTethers(hitbox);
+      if (tethers !== undefined) {
+         for (const tether of tethers) {
+            const otherHitbox = tether.getOtherHitbox(hitbox);
+            if (getEntityType(otherHitbox.entity) === EntityType.tukmokTailClub) {
+               return otherHitbox.entity;
+            }
          }
       }
    }
@@ -185,7 +189,7 @@ const getTailClub = (transformComponent: TransformComponent): Entity | null => {
 const getTailBaseHitbox = (tukmok: Entity): Hitbox => {
    const transformComponent = TransformComponentArray.getComponent(tukmok);
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_BIG)) {
+      if (getHitboxTag(hitbox) === HitboxTag.tukmokTailMiddleSegmentBig) {
          return hitbox;
       }
    }
@@ -350,7 +354,8 @@ const attackEntity = (tukmok: Entity, target: Entity): void => {
             continue;
          }
          
-         if (hitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_BIG) || hitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_MEDIUM) || hitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_SMALL)) {
+         const tag = getHitboxTag(hitbox);
+         if (tag === HitboxTag.tukmokTailMiddleSegmentBig || tag === HitboxTag.tukmokTailMiddleSegmentMedium || tag === HitboxTag.tukmokTailMiddleSegmentSmall) {
             const flailDirection = angle(hitbox.box.posX - tailBaseHitbox.box.posX, hitbox.box.posY - tailBaseHitbox.box.posY) + Math.PI * 0.5;
             const forceAmount = flailForce * 0.27 * Math.sin(getEntityAgeTicks(tukmok) * Settings.DT_S * 4);
             applyForce(hitbox, forceAmount * Math.sin(flailDirection), forceAmount * Math.cos(flailDirection));
@@ -454,7 +459,7 @@ function onTick(tukmok: Entity): void {
             const mouthPosY = baseHitbox.box.posY + 20 * Math.cos(tukmokHeadHitbox.box.angle + Math.PI);
             moveTrunk(trunk, mouthPosX, mouthPosY, 350, true);
 
-            const collisionResult = trunkHeadHitbox.box.getCollisionResult(tukmokHeadHitbox.box);
+            const collisionResult = getBoxCollisionResult(trunkHeadHitbox.box, tukmokHeadHitbox.box);
             if (collisionResult.isColliding) {
                const leaf = trunkLeafHitbox.entity;
                destroyEntity(leaf);
@@ -483,7 +488,7 @@ function onTick(tukmok: Entity): void {
 
                moveTrunk(trunk, targetHitbox.box.posX, targetHitbox.box.posY, 550, false);
 
-               const collisionResult = trunkHeadHitbox.box.getCollisionResult(targetHitbox.box);
+               const collisionResult = getBoxCollisionResult(trunkHeadHitbox.box, targetHitbox.box);
                if (collisionResult.isColliding) {
                   // Grab leaf
                   attachHitbox(targetHitbox, trunkHeadHitbox, false);
@@ -525,7 +530,7 @@ function onTick(tukmok: Entity): void {
                      
                      const trunkHeadToTree = angle(targetHitbox.box.posX - trunkHeadHitbox.box.posX, targetHitbox.box.posY - trunkHeadHitbox.box.posY);
                      // First attach to the tree
-                     if (getAbsAngleDiff(trunkHeadHitbox.box.angle, trunkHeadToTree) < Math.PI * 0.5 && trunkHeadHitbox.box.getCollisionResult(targetHitbox.box).isColliding) {
+                     if (getAbsAngleDiff(trunkHeadHitbox.box.angle, trunkHeadToTree) < Math.PI * 0.5 && getBoxCollisionResult(trunkHeadHitbox.box, targetHitbox.box).isColliding) {
                         attachHitbox(trunkHeadHitbox, targetHitbox, false);
 
                         tukmokComponent.currentGrabElapsedTicks = 0;

@@ -1,4 +1,4 @@
-import { ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, Point } from "battletribes-shared";
+import { ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, Point, CircularBox } from "battletribes-shared";
 import { destroyEntity, getEntityAgeTicks } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
@@ -31,7 +31,7 @@ function onTick(quake: Entity): void {
       
       const transformComponent = TransformComponentArray.getComponent(quake);
       const hitbox = transformComponent.hitboxes[0];
-      hitbox.box.scale = life;
+      (hitbox.box as CircularBox).radius = 10 * life;
       transformComponent.isDirty = true;
 
       if (age >= Vars.LIFETIME_TICKS) {

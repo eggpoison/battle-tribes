@@ -9,7 +9,7 @@ import { createEntity, createEntityCreationInfo, EntityComponentData, entityExis
 import { getEntityClientComponentConfigs } from "../entity-components/client-components";
 import { registerDirtyRenderObject } from "../rendering/render-part-matrices";
 import { LightData, readLightsFromData, updateLightsFromData } from "../lights";
-import { changeEntityLayer, getRandomPositionInEntity, TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { changeEntityLayer, getRandomPositionInEntity, transformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle } from "../particles";
 import { addHitboxVelocity, getHitboxByLocalID, getHitboxVelocity, setHitboxVelocity } from "../hitboxes";
 import { createDamageNumber, createHealNumber, createResearchNumber } from "../text-canvas";
@@ -533,7 +533,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
          if (hit.attackEffectiveness === AttackEffectiveness.stopped) {
             // Register stopped hit
                      
-            const transformComponent = TransformComponentArray.getComponent(hit.entity);
+            const transformComponent = transformComponentArray.getComponent(hit.entity);
             const hitbox = transformComponent.hitboxes[0];
             for (let i = 0; i < 6; i++) {
                const position = new Point(hitbox.box.posX, hitbox.box.posY).offset(randFloat(0, 6), randAngle());
@@ -542,7 +542,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
          } else {
             // Register hit
 
-            const transformComponent = TransformComponentArray.getComponent(hit.entity);
+            const transformComponent = transformComponentArray.getComponent(hit.entity);
 
             // If the entity is hit by a flesh sword, create slime puddles
             if (hit.flags & HitFlags.HIT_BY_FLESH_SWORD) {
@@ -576,7 +576,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
 
    for (const knockbackData of snapshot.playerKnockbacks) {
       if (playerInstance !== null) {
-         const transformComponent = TransformComponentArray.getComponent(playerInstance);
+         const transformComponent = transformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];
 
          getHitboxVelocity(playerHitbox);
@@ -601,7 +601,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
       }
 
       if (entityExists(healedEntity)) {
-         const transformComponent = TransformComponentArray.getComponent(healedEntity);
+         const transformComponent = transformComponentArray.getComponent(healedEntity);
    
          // Create healing particles depending on the amount the entity was healed
          let remainingHealing = healAmount;

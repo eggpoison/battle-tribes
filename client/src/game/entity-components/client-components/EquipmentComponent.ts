@@ -6,8 +6,8 @@ import { getEntityRenderObject, getEntityType } from "../../world";
 import { InventoryUseComponentArray } from "../server-components/InventoryUseComponent";
 import _ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
-import { TribeComponentArray } from "../server-components/TribeComponent";
-import { TransformComponentArray } from "../server-components/TransformComponent";
+import { tribeComponentArray } from "../server-components/TribeComponent";
+import { transformComponentArray } from "../server-components/TransformComponent";
 import { registerClientComponentArray } from "../component-registry";
 
 const enum ArmourPixelSize {
@@ -128,11 +128,11 @@ const updateArmourRenderPart = (equipmentComponent: EquipmentComponent, entity: 
    const armour = armourInventory.itemSlots[1];
    if (armour !== undefined) {
       const entityType = getEntityType(entity);
-      const tribeComponent = TribeComponentArray.getComponent(entity);
+      const tribeComponent = tribeComponentArray.getComponent(entity);
       const textureSource = getArmourTextureSource(entityType, tribeComponent.tribeType, armour.type as ArmourItemType);
       
       if (equipmentComponent.armourRenderPart === null) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          
          equipmentComponent.armourRenderPart = new TexturedRenderPart(

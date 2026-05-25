@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, FishColour, customTickIntervalHasPassed, Point, polarVec2, UtilVar, HitboxCollisionType, RectangularBox, TileType, Settings, Biome, ItemType, angle } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, FishColour, customTickIntervalHasPassed, polarVec2, UtilVar, HitboxCollisionType, TileType, Settings, Biome, ItemType, angle, createRectangularBox } from "battletribes-shared";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent.js";
 import { FishComponent, FishComponentArray } from "../../components/FishComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -10,7 +10,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { EscapeAI } from "../../ai/EscapeAI.js";
 import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
-import { applyAccelerationFromGround, getHitboxTile, Hitbox, addHitboxVelocity, turnHitboxToAngle } from "../../hitboxes.js";
+import { applyAccelerationFromGround, getHitboxTile, addHitboxVelocity, turnHitboxToAngle, createHitbox } from "../../hitboxes.js";
 import { getEntityLayer } from "../../world.js";
 
 const enum Vars {
@@ -119,7 +119,7 @@ const turnFunc = (fish: Entity, x: number, y: number, turnSpeed: number, turnDam
 export function createFishConfig(x: number, y: number, angle: number, colour: FishColour): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 28, 56), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, 0, angle, 28, 56), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(5);

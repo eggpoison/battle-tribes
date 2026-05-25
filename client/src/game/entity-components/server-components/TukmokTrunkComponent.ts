@@ -1,4 +1,4 @@
-import { ServerComponentType, HitboxFlag } from "webgl-test-shared";
+import { HitboxTag, ServerComponentType } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -6,6 +6,7 @@ import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { getHitboxTag } from "../../hitboxes";
 
 export interface TukmokTrunkComponentData {}
 
@@ -26,7 +27,7 @@ class _TukmokTrunkComponentArray extends _ServerComponentArray<TukmokTrunkCompon
       for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
          const hitbox = transformComponentData.hitboxes[i];
 
-         const textureSource = hitbox.flags.includes(HitboxFlag.TUKMOK_TRUNK_HEAD) ? "entities/tukmok-trunk/head-segment.png" : "entities/tukmok-trunk/middle-segment.png";
+         const textureSource = getHitboxTag(hitbox) === HitboxTag.tukmokTrunkHead ? "entities/tukmok-trunk/head-segment.png" : "entities/tukmok-trunk/middle-segment.png";
          
          renderObject.attachRenderPart(
             new TexturedRenderPart(

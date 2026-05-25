@@ -18,9 +18,9 @@ import { createSlurbTorchComponentData } from "./entity-components/server-compon
 import { createSpikesComponentData } from "./entity-components/server-components/SpikesComponent";
 import { StatusEffectComponentArray, createStatusEffectComponentData } from "./entity-components/server-components/StatusEffectComponent";
 import { createStructureComponentData } from "./entity-components/server-components/StructureComponent";
-import { TransformComponentArray, applyAccelerationFromGround, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
+import { transformComponentArray, applyAccelerationFromGround, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
-import { getHumanoidRadius, TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
+import { getHumanoidRadius, tribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { attemptEntitySelection, getHoveredEntity, getSelectedEntity, setSelectedEntity } from "./entity-selection";
 import { EntityRenderObject } from "./EntityRenderObject";
 import { getHitboxVelocity, Hitbox, setHitboxRelativeAngle } from "./hitboxes";
@@ -267,7 +267,7 @@ export function tickPlayerItems(): void {
          // @Speed: Garbage collection
          limb.currentActionEndLimbState = copyLimbState(attackPattern.swung);
 
-         const transformComponent = TransformComponentArray.getComponent(playerInstance);
+         const transformComponent = transformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];
          getHitboxVelocity(playerHitbox);
          const playerVelocity = _point;
@@ -543,7 +543,7 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
          // @Speed: Garbage collection
          limb.currentActionEndLimbState = copyLimbState(SHIELD_BASH_WIND_UP_LIMB_STATE);
 
-         const transformComponent = TransformComponentArray.getComponent(playerInstance);
+         const transformComponent = transformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];
          sendAttackPacket(hotbarSelectedItemSlot, playerHitbox.box.angle);
       }
@@ -567,7 +567,7 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
    // @Speed: Garbage collection
    limb.currentActionEndLimbState = copyLimbState(attackPattern.windedBack);
 
-   const transformComponent = TransformComponentArray.getComponent(playerInstance);
+   const transformComponent = transformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
    sendAttackPacket(hotbarSelectedItemSlot, playerHitbox.box.angle);
 
@@ -584,7 +584,7 @@ const getAttackTimeMultiplier = (itemType: ItemType | null): number => {
    }
 
    // Builders swing hammers 30% faster
-   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!);
+   const tribesmanComponent = tribesmanComponentArray.getComponent(playerInstance!);
    if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.builder) && itemType !== null && ITEM_TYPE_RECORD[itemType] === "hammer") {
       swingTimeMultiplier /= 1.3;
    }
@@ -806,7 +806,7 @@ const getPlayerMoveSpeedMultiplier = (moveDirection: Point): number => {
 
    moveSpeedMultiplier *= TRIBE_INFO_RECORD[playerTribe.tribeType].moveSpeedMultiplier;
 
-   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance);
+   const tribesmanComponent = tribesmanComponentArray.getComponent(playerInstance);
    if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.sprinter)) {
       moveSpeedMultiplier *= 1.2;
    }
@@ -815,7 +815,7 @@ const getPlayerMoveSpeedMultiplier = (moveDirection: Point): number => {
       moveSpeedMultiplier *= 0.5;
    }
 
-   const transformComponent = TransformComponentArray.getComponent(playerInstance);
+   const transformComponent = transformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
    // Get how aligned the intended movement direction and the player's rotation are
    // @SPEED trig
@@ -842,7 +842,7 @@ const updateNonSpectatorMovement = (moveDirection: Point): void => {
       return;
    }
 
-   const transformComponent = TransformComponentArray.getComponent(playerInstance);
+   const transformComponent = transformComponentArray.getComponent(playerInstance);
 
    const playerAction = getInstancePlayerAction(InventoryName.hotbar);
    
@@ -960,7 +960,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
       return;
    }
    
-   const transformComponent = TransformComponentArray.getComponent(playerInstance);
+   const transformComponent = transformComponentArray.getComponent(playerInstance);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance);
 
    const attackInfo = getItemAttackInfo(itemType);
@@ -1138,7 +1138,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
 
 export function playBowFireSound(sourceEntity: Entity, bowItemType: ItemType): void {
    // @Hack
-   const transformComponent = TransformComponentArray.getComponent(sourceEntity);
+   const transformComponent = transformComponentArray.getComponent(sourceEntity);
    const hitbox = transformComponent.hitboxes[0];
 
    switch (bowItemType) {
@@ -1332,7 +1332,7 @@ const tickItem = (itemType: ItemType): void => {
       case "placeable": {
          // Create a ghost entity
 
-         const transformComponent = TransformComponentArray.getComponent(playerInstance);
+         const transformComponent = transformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];
 
          const layer = getCurrentLayer();
@@ -1520,7 +1520,7 @@ const tickItem = (itemType: ItemType): void => {
                   break;
                }
                default: {
-                  throw new Error(ServerComponentType[componentType]);
+                  throw new Error(componentType.toString());
                }
             }
          }

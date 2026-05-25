@@ -1,4 +1,4 @@
-import { EntityTypeString, Settings, randFloat, getTileIndexIncludingEdges, distance, randAngle, Point, HitboxFlag, getSubtileIndex, boxIsCollidingWithSubtile, boxIsCollidingWithTile, CollisionGroup, getEntityCollisionGroup, _bounds } from "battletribes-shared";
+import { EntityTypeString, Settings, randFloat, getTileIndexIncludingEdges, distance, randAngle, getSubtileIndex, boxIsCollidingWithSubtile, boxIsCollidingWithTile, CollisionGroup, getEntityCollisionGroup, _bounds, calculateBoxBounds } from "battletribes-shared";
 import Layer from "./Layer.js";
 import { addEntityToCensus, getEntityCount } from "./census.js";
 import OPTIONS from "./options.js";
@@ -8,7 +8,7 @@ import { EntityConfig, getConfigTransformComponent } from "./components.js";
 import { addEntityToSpawnDistribution, EntitySpawnEvent, SPAWN_INFOS } from "./entity-spawn-info.js";
 import { undergroundLayer } from "./layers.js";
 import { generateMithrilOre } from "./world-generation/mithril-ore-generation.js";
-import { Hitbox } from "./hitboxes.js";
+import { Hitbox, hitboxIgnoresWallCollisions, hitboxIsPartOfParent } from "./hitboxes.js";
 import { getHitboxesCollidingEntities } from "./collision-detection.js";
 
 const spawnConditionsAreMet = (spawnInfo: EntitySpawnEvent): boolean => {
@@ -37,7 +37,7 @@ const tileIsSpawnable = (tileIndex: number, spawnInfo: EntitySpawnEvent): boolea
 }
 
 const hitboxIncludingChildrenWouldSpawnInWall = (layer: Layer, hitbox: Hitbox): boolean => {
-   if (hitbox.flags.includes(HitboxFlag.IGNORES_WALL_COLLISIONS)) {
+   if (hitboxIgnoresWallCollisions(hitbox)) {
       return false;
    }
 
@@ -45,7 +45,7 @@ const hitboxIncludingChildrenWouldSpawnInWall = (layer: Layer, hitbox: Hitbox): 
 
    const box = hitbox.box;
 
-   box.calculateBounds();
+   calculateBoxBounds(box);
    const boundsMinX = _bounds.minX;
    const boundsMaxX = _bounds.maxX;
    const boundsMinY = _bounds.minY;
@@ -66,7 +66,7 @@ const hitboxIncludingChildrenWouldSpawnInWall = (layer: Layer, hitbox: Hitbox): 
    }
 
    for (const childHitbox of hitbox.children) {
-      if (childHitbox.isPartOfParent && hitboxIncludingChildrenWouldSpawnInWall(layer, childHitbox)) {
+      if (hitboxIsPartOfParent(childHitbox) && hitboxIncludingChildrenWouldSpawnInWall(layer, childHitbox)) {
          return true;
       }
    }
@@ -87,7 +87,7 @@ const entityWouldSpawnInWall = (layer: Layer, transformComponent: TransformCompo
 const hitboxIncludingChildrenTileTypesAreValid = (hitbox: Hitbox, spawnInfo: EntitySpawnEvent): boolean => {
    const box = hitbox.box;
    
-   box.calculateBounds();
+   calculateBoxBounds(box);
    const minX = _bounds.minX;
    const maxX = _bounds.maxX;
    const minY = _bounds.minY;
@@ -107,7 +107,7 @@ const hitboxIncludingChildrenTileTypesAreValid = (hitbox: Hitbox, spawnInfo: Ent
    }
 
    for (const childHitbox of hitbox.children) {
-      if (childHitbox.isPartOfParent && !hitboxIncludingChildrenTileTypesAreValid(childHitbox, spawnInfo)) {
+      if (hitboxIsPartOfParent(childHitbox) && !hitboxIncludingChildrenTileTypesAreValid(childHitbox, spawnInfo)) {
          return false;
       }
    }
@@ -141,7 +141,7 @@ const attemptToSpawnEntity = (spawnInfo: EntitySpawnEvent, x: number, y: number,
       }
 
       for (const hitbox of transformComponent.hitboxes) {
-         hitbox.box.calculateBounds();
+         calculateBoxBounds(hitbox.box);
          if (_bounds.minX < 0 || _bounds.maxX >= Settings.WORLD_UNITS || _bounds.minY < 0 || _bounds.maxY >= Settings.WORLD_UNITS) {
             return null;
          }
@@ -183,7 +183,7 @@ const spawnEntities = (spawnInfo: EntitySpawnEvent, spawnOriginX: number, spawnO
 
    // Pack spawning
 
-   if (typeof spawnInfo.packSpawning !== "undefined") {
+   if (spawnInfo.packSpawning !== undefined) {
       const minX = Math.max(spawnOriginX - spawnInfo.packSpawning.spawnRange, 0);
       const maxX = Math.min(spawnOriginX + spawnInfo.packSpawning.spawnRange, Settings.WORLD_SIZE_TILES * Settings.TILE_SIZE - 1);
       const minY = Math.max(spawnOriginY - spawnInfo.packSpawning.spawnRange, 0);
@@ -272,7 +272,7 @@ const runSpawnEvent = (spawnInfo: EntitySpawnEvent): void => {
       return;
    }
 
-   if (spawnPositionIsClear(spawnInfo, x, y) && (typeof spawnInfo.customSpawnIsValidFunc === "undefined" || spawnInfo.customSpawnIsValidFunc(spawnInfo, x, y))) {
+   if (spawnPositionIsClear(spawnInfo, x, y) && (spawnInfo.customSpawnIsValidFunc === undefined || spawnInfo.customSpawnIsValidFunc(spawnInfo, x, y))) {
       spawnEntities(spawnInfo, x, y);
    }
 }

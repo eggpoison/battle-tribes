@@ -1,7 +1,8 @@
-import { BaseBox, Box, boxIsCircular, CircularBox, RectangularBox, Packet } from "battletribes-shared";
+import { Box, boxIsCircular, CircularBox, RectangularBox, Packet } from "battletribes-shared";
 import { Hitbox } from "../hitboxes.js";
+import { getHitboxTethers } from "../tethers.js";
 
-const addBaseBoxData = (packet: Packet, box: BaseBox): void => {
+const addBaseBoxData = (packet: Packet, box: Box): void => {
    packet.writeNumber(box.posX);
    packet.writeNumber(box.posY);
    packet.writeNumber(box.relativeAngle);
@@ -9,16 +10,13 @@ const addBaseBoxData = (packet: Packet, box: BaseBox): void => {
    packet.writeNumber(box.offsetX);
    packet.writeNumber(box.offsetY);
 
-   // Pivot
-   packet.writeNumber(box.pivotType);
    packet.writeNumber(box.pivotX);
    packet.writeNumber(box.pivotY);
    
-   packet.writeNumber(box.scale);
-   packet.writeBool(box.totalFlipXMultiplier === -1 ? true : false);
+   packet.writeNumber(box.flags);
 }
 const getBaseBoxDataLength = (): number => {
-   return 11 * Float32Array.BYTES_PER_ELEMENT;
+   return 9 * Float32Array.BYTES_PER_ELEMENT;
 }
 
 const addCircularBoxData = (packet: Packet, box: CircularBox): void => {
@@ -70,27 +68,27 @@ export function addHitboxDataToPacket(packet: Packet, hitbox: Hitbox): void {
    packet.writeNumber(hitbox.accelY);
 
    // Tethers
-   packet.writeNumber(hitbox.tethers.length);
-   for (const tether of hitbox.tethers) {
-      const otherHitbox = tether.getOtherHitbox(hitbox);
-      addBoxDataToPacket(packet, otherHitbox.box);
-      packet.writeNumber(tether.idealDistance);
-      packet.writeNumber(tether.springConstant);
-      packet.writeNumber(tether.damping);
+   const tethers = getHitboxTethers(hitbox);
+   if (tethers !== undefined) {
+      packet.writeNumber(tethers.length);
+      for (const tether of tethers) {
+         const otherHitbox = tether.getOtherHitbox(hitbox);
+         addBoxDataToPacket(packet, otherHitbox.box);
+         packet.writeNumber(tether.idealDistance);
+         packet.writeNumber(tether.springConstant);
+         packet.writeNumber(tether.damping);
+      }
+   } else {
+      packet.writeNumber(0);
    }
 
    packet.writeNumber(hitbox.previousRelativeAngle);
    packet.writeNumber(hitbox.angularAcceleration);
    
    packet.writeNumber(hitbox.mass);
-   packet.writeNumber(hitbox.collisionType);
    packet.writeNumber(hitbox.collisionBit);
    packet.writeNumber(hitbox.collisionMask);
-   // Flags
-   packet.writeNumber(hitbox.flags.length);
-   for (const flag of hitbox.flags) {
-      packet.writeNumber(flag);
-   }
+   packet.writeNumber(hitbox.flags);
 
    packet.writeNumber(hitbox.entity);
    packet.writeNumber(hitbox.rootEntity);
@@ -111,9 +109,6 @@ export function addHitboxDataToPacket(packet: Packet, hitbox: Hitbox): void {
       packet.writeNumber(child.entity);
       packet.writeNumber(child.localID);
    }
-
-   packet.writeBool(hitbox.isPartOfParent);
-   packet.writeBool(hitbox.isStatic);
 }
 export function getHitboxDataLength(hitbox: Hitbox): number {
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
@@ -122,19 +117,21 @@ export function getHitboxDataLength(hitbox: Hitbox): number {
 
    // Tethers
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   for (const tether of hitbox.tethers) {
-      const otherHitbox = tether.getOtherHitbox(hitbox);
-      lengthBytes += getBoxDataLength(otherHitbox.box);
-      lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+   const tethers = getHitboxTethers(hitbox);
+   if (tethers !== undefined) {
+      for (const tether of tethers) {
+         const otherHitbox = tether.getOtherHitbox(hitbox);
+         lengthBytes += getBoxDataLength(otherHitbox.box);
+         lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+      }
    }
    
    // angle shit
    lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 4 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * hitbox.flags.length;
+   lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT; // flags
    lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT; // entity, rootEntity
    lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT; // parent hitbox entity, local id
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * hitbox.children.length; // children
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT; // isPartOfParent, isStatic
    return lengthBytes;
 }

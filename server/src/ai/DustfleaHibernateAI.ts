@@ -1,4 +1,4 @@
-import { CircularBox, RectangularBox, CollisionGroup, getEntityCollisionGroup, Entity, Settings, getSubtileIndex, clampToSubtileBoardDimensions, distance, Point, positionIsInWorld, randAngle, randFloat } from "battletribes-shared";
+import { CollisionGroup, getEntityCollisionGroup, Entity, Settings, getSubtileIndex, clampToSubtileBoardDimensions, distance, Point, positionIsInWorld, randAngle, randFloat, getCircleRectangleCollisionResult } from "battletribes-shared";
 import { getEntitiesInRange } from "../ai-shared.js";
 import { AIHelperComponent } from "../components/AIHelperComponent.js";
 import { detachHitbox, TransformComponentArray } from "../components/TransformComponent.js";
@@ -35,27 +35,23 @@ const getRandomNearbyPosition = (dustflea: Entity): Point => {
    return new Point(x, y);
 }
 
-const isValidHibernatePosition = (dustflea: Entity, position: Point): boolean => {
+const isValidHibernatePosition = (dustflea: Entity, x: number, y: number): boolean => {
    const layer = getEntityLayer(dustflea);
    
    // Make sure it isn't in a wall
    
    const WALL_CHECK_RANGE = 28;
 
-   const minSubtileX = clampToSubtileBoardDimensions(Math.floor((position.x - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
-   const maxSubtileX = clampToSubtileBoardDimensions(Math.floor((position.x + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
-   const minSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
-   const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+   const minSubtileX = clampToSubtileBoardDimensions(Math.floor((x - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+   const maxSubtileX = clampToSubtileBoardDimensions(Math.floor((x + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+   const minSubtileY = clampToSubtileBoardDimensions(Math.floor((y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+   const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
 
-   const testHitbox = new CircularBox(position.x, position.y, 0, 0, 0, WALL_CHECK_RANGE);
-   
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
          const subtileIndex = getSubtileIndex(subtileX, subtileY);
          if (layer.subtileIsWall(subtileIndex)) {
-            // @Speed
-            const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
-            if (testHitbox.getCollisionResult(tileBox).isColliding) {
+            if (getCircleRectangleCollisionResult(x, y, WALL_CHECK_RANGE, (subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, 0).isColliding) {
                return false;
             }
          }
@@ -67,21 +63,17 @@ const isValidHibernatePosition = (dustflea: Entity, position: Point): boolean =>
    {
       const WALL_CHECK_RANGE = 44;
 
-      const minSubtileX = clampToSubtileBoardDimensions(Math.floor((position.x - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
-      const maxSubtileX = clampToSubtileBoardDimensions(Math.floor((position.x + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
-      const minSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
-      const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((position.y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+      const minSubtileX = clampToSubtileBoardDimensions(Math.floor((x - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+      const maxSubtileX = clampToSubtileBoardDimensions(Math.floor((x + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+      const minSubtileY = clampToSubtileBoardDimensions(Math.floor((y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
+      const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
 
-      const testHitbox = new CircularBox(position.x, position.y, 0, 0, 0, WALL_CHECK_RANGE);
-      
       let isNearWall = false;
       for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
          for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
             const subtileIndex = getSubtileIndex(subtileX, subtileY);
             if (layer.subtileIsWall(subtileIndex)) {
-               // @Speed
-               const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
-               if (testHitbox.getCollisionResult(tileBox).isColliding) {
+               if (getCircleRectangleCollisionResult(x, y, WALL_CHECK_RANGE, (subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, 0).isColliding) {
                   isNearWall = true;
                }
             }
@@ -97,7 +89,7 @@ const isValidHibernatePosition = (dustflea: Entity, position: Point): boolean =>
 
    const ENTITY_OCCUPATION_CHECK_RANGE = 60;
    {
-      const nearbyEntities = getEntitiesInRange(layer, position.x, position.y, ENTITY_OCCUPATION_CHECK_RANGE);
+      const nearbyEntities = getEntitiesInRange(layer, x, y, ENTITY_OCCUPATION_CHECK_RANGE);
       for (const entity of nearbyEntities) {
          if (entity === dustflea) {
             continue;
@@ -114,7 +106,7 @@ const isValidHibernatePosition = (dustflea: Entity, position: Point): boolean =>
    // Make sure there aren't too many entities in range
 
    const ENTITY_CHECK_RANGE = 130;
-   const nearbyEntities = getEntitiesInRange(layer, position.x, position.y, ENTITY_CHECK_RANGE);
+   const nearbyEntities = getEntitiesInRange(layer, x, y, ENTITY_CHECK_RANGE);
 
    let numEntities = 0;
    for (const entity of nearbyEntities) {
@@ -140,7 +132,7 @@ export function runHibernateAI(dustflea: Entity, aiHelperComponent: AIHelperComp
    // When the dustflea doesn't have a valid hibernate target position, go look for one
    if (ai.hibernateTargetPosition === null && getEntityAgeTicks(dustflea) % Math.floor(Settings.TICK_RATE / 4) === 0) {
       const potentialPosition = getRandomNearbyPosition(dustflea);
-      if (isValidHibernatePosition(dustflea, potentialPosition)) {
+      if (isValidHibernatePosition(dustflea, potentialPosition.x, potentialPosition.y)) {
          ai.hibernateTargetPosition = potentialPosition;
       }
    }

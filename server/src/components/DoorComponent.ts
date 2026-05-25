@@ -2,7 +2,7 @@ import { ServerComponentType, DoorToggleType, Entity, Settings, angle, lerp, Poi
 import { ComponentArray } from "./ComponentArray.js";
 import { EntityConfig, getConfigComponent, getConfigTransformComponent } from "../components.js";
 import { TransformComponentArray } from "./TransformComponent.js";
-import { setHitboxAngle, teleportHitbox } from "../hitboxes.js";
+import { setHitboxAngle, setHitboxCollisionType, teleportHitbox } from "../hitboxes.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
 
 const DOOR_SWING_SPEED = 5 * Settings.DT_S;
@@ -55,7 +55,7 @@ function onTick(door: Entity): void {
          }
          updateDoorOpenProgress(door, doorComponent);
 
-         (transformComponent.hitboxes[0]).collisionType = HitboxCollisionType.soft;
+         setHitboxCollisionType(transformComponent.hitboxes[0], HitboxCollisionType.soft);
          break;
       }
       case DoorToggleType.close: {
@@ -66,7 +66,7 @@ function onTick(door: Entity): void {
          }
          updateDoorOpenProgress(door, doorComponent);
 
-         (transformComponent.hitboxes[0]).collisionType = HitboxCollisionType.hard;
+         setHitboxCollisionType(transformComponent.hitboxes[0], HitboxCollisionType.hard);
          break;
       }
    }

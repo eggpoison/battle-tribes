@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Settings, StatusEffect, Point, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Settings, StatusEffect, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
 import { EntityRelationship, getEntityRelationship, TribeComponent } from "../../components/TribeComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -8,15 +8,15 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import Tribe from "../../Tribe.js";
 import { ProjectileComponent } from "../../components/ProjectileComponent.js";
 import { IceArrowComponent } from "../../components/IceArrowComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 
 export function createIceArrowConfig(x: number, y: number, rotation: number, tribe: Tribe, creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.isAffectedByGroundFriction = false;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, rotation, 20, 56), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox.isStatic = true;
+   const hitbox = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, 0, rotation, 20, 56), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
 

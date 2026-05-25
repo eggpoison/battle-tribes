@@ -7,7 +7,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -16,7 +16,9 @@ export interface TreeRootBaseComponentData {}
 export interface TreeRootBaseComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootBase, _TreeRootBaseComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.treeRootBase]: _TreeRootBaseComponentArray;
+   }
 }
 
 class _TreeRootBaseComponentArray extends _ServerComponentArray<TreeRootBaseComponent, TreeRootBaseComponentData> {
@@ -56,7 +58,7 @@ class _TreeRootBaseComponentArray extends _ServerComponentArray<TreeRootBaseComp
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 10; i++) {

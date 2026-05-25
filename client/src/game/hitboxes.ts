@@ -1,4 +1,4 @@
-import { Box, boxIsCircular, HitboxCollisionType, HitboxFlag, Point, randAngle, randFloat, rotatePointAroundOrigin, Settings, Entity, CollisionBit, distance, distBetweenPointAndRectangle, getAngleDiff, getTileIndexIncludingEdges, randSign, _point, Mutable } from "webgl-test-shared";
+import { Box, boxIsCircular, HitboxCollisionType, Point, randAngle, randFloat, rotatePointAroundOrigin, Settings, Entity, CollisionBit, distance, distBetweenPointAndRectangle, getAngleDiff, getTileIndexIncludingEdges, randSign, _point, Mutable, HitboxFlagBit, HitboxTag } from "webgl-test-shared";
 import { getEntityLayer, getEntityRenderObject } from "./world";
 import { registerDirtyRenderObject } from "./rendering/render-part-matrices";
 import { Tile } from "./Tile";
@@ -36,18 +36,14 @@ export interface Hitbox {
    angularAcceleration: number;
 
    mass: number;
-   collisionType: HitboxCollisionType;
    readonly collisionBit: CollisionBit;
    readonly collisionMask: number;
-   readonly flags: ReadonlyArray<HitboxFlag>;
-
-   isPartOfParent: boolean;
-   isStatic: boolean;
+   flags: number;
 
    lastUpdateTicks: number;
 }
 
-export function createHitbox(localID: number, entity: Entity, rootEntity: Entity, parent: Hitbox | null, children: Array<Hitbox>, isPartOfParent: boolean, isStatic: boolean, box: Box, previousPosX: number, previousPosY: number, accelX: number, accelY: number, tethers: Array<HitboxTether>, previousRelativeAngle: number, angularAcceleration: number, mass: number, collisionType: HitboxCollisionType, collisionBit: CollisionBit, collisionMask: number, flags: ReadonlyArray<HitboxFlag>): Hitbox {
+export function createHitbox(localID: number, entity: Entity, rootEntity: Entity, parent: Hitbox | null, children: Array<Hitbox>, box: Box, previousPosX: number, previousPosY: number, accelX: number, accelY: number, tethers: Array<HitboxTether>, previousRelativeAngle: number, angularAcceleration: number, mass: number, collisionBit: CollisionBit, collisionMask: number, flags: number): Hitbox {
    return {
       localID,
       entity,
@@ -62,42 +58,43 @@ export function createHitbox(localID: number, entity: Entity, rootEntity: Entity
       previousRelativeAngle,
       angularAcceleration,
       mass,
-      collisionType,
       collisionBit,
       collisionMask,
       flags,
-      isPartOfParent,
-      isStatic,
       // Can't use the current snapshot's tick here cuz what if the hitbox is being created during the creation of the current snapshot! I gotta set it once the hitbox is actually added to the transform component.
       lastUpdateTicks: 0
    };
 }
 
-export function createHitboxQuick(entity: Entity, localID: number, parent: Hitbox | null, box: Box, mass: number, collisionType: HitboxCollisionType, collisionBit: CollisionBit, collisionMask: number, flags: ReadonlyArray<HitboxFlag>): Hitbox {
-   return {
-      localID,
-      entity,
-      rootEntity: entity,
-      parent,
-      isPartOfParent: true,
-      isStatic: false,
-      children: [],
-      box,
-      previousPosX: box.posX,
-      previousPosY: box.posY,
-      accelX: 0,
-      accelY: 0,
-      tethers: [],
-      previousAngle: box.angle,
-      previousRelativeAngle: box.relativeAngle,
-      angularAcceleration: 0,
-      mass,
-      collisionType,
-      collisionBit,
-      collisionMask,
-      flags,
-      lastUpdateTicks: 0
-   };
+export function createHitboxQuick(entity: Entity, localID: number, parent: Hitbox | null, box: Box, mass: number, collisionType: HitboxCollisionType, collisionBit: CollisionBit, collisionMask: number): Hitbox {
+   return createHitbox(localID, entity, entity, parent, [], box, box.posX, box.posY, 0, 0, [], box.relativeAngle, 0, mass, collisionBit, collisionMask, collisionType | HitboxFlagBit.IS_PART_OF_PARENT_BIT);
+}
+
+export function setHitboxTag(hitbox: Hitbox, tag: HitboxTag): void {
+   hitbox.flags = (hitbox.flags & 0xFFFF) | (tag << 16);
+}
+export function getHitboxTag(hitbox: Hitbox): HitboxTag {
+   return hitbox.flags >> 16;
+}
+
+export function getHitboxCollisionType(hitbox: Hitbox): HitboxCollisionType {
+   return hitbox.flags & 1;
+}
+
+export function hitboxIsStatic(hitbox: Hitbox): boolean {
+   return hitbox.flags & HitboxFlagBit.IS_STATIC_BIT ? true : false;
+}
+
+export function hitboxIsPartOfParent(hitbox: Hitbox): boolean {
+   return hitbox.flags & HitboxFlagBit.IS_PART_OF_PARENT_BIT ? true : false;
+}
+
+export function hitboxIgnoresWallCollisions(hitbox: Hitbox): boolean {
+   return hitbox.flags & HitboxFlagBit.IGNORES_WALL_COLLISIONS_BIT ? true : false;
+}
+
+export function setHitboxIsNonGrassBlocking(hitbox: Hitbox): void {
+   hitbox.flags |= HitboxFlagBit.NON_GRASS_BLOCKING_BIT;
 }
 
 export function getHitboxVelocity(hitbox: Hitbox): void {
@@ -131,7 +128,7 @@ export function getHitboxTotalMassIncludingChildren(hitbox: Hitbox): number {
    // @Cleanup: uses a len hack, but probs wouldn't need to if this wasn't recursive.
    for (let i = 0, len = hitbox.children.length; i < len; i++) {
       const childHitbox = hitbox.children[i];
-      if (childHitbox.isPartOfParent) {
+      if (hitboxIsPartOfParent(childHitbox)) {
          totalMass += getHitboxTotalMassIncludingChildren(childHitbox);
       }
    }
@@ -174,7 +171,7 @@ export function setHitboxRelativeAngle(hitbox: Hitbox, angle: number): void {
 
 export function applyForce(hitbox: Hitbox, forceX: number, forceY: number): void {
    const rootHitbox = getRootHitbox(hitbox);
-   if (!rootHitbox.isStatic) {
+   if (!hitboxIsStatic(rootHitbox)) {
       const hitboxConnectedMass = getHitboxTotalMassIncludingChildren(rootHitbox);
       if (hitboxConnectedMass !== 0) {
          rootHitbox.accelX += forceX / hitboxConnectedMass;
@@ -281,7 +278,7 @@ export function getDistanceFromPointToHitboxIncludingChildren(x: number, y: numb
    let minDist = getDistanceFromPointToHitbox(x, y, hitbox);
 
    for (const child of hitbox.children) {
-      if (child.isPartOfParent) {
+      if (hitboxIsPartOfParent(child)) {
          const dist = getDistanceFromPointToHitboxIncludingChildren(x, y, child);
          if (dist < minDist) {
             minDist = dist;

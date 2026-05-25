@@ -1,4 +1,4 @@
-import { EntityType, StatusEffect, Inventory, InventoryName, Point, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, RectangularBox } from "battletribes-shared";
+import { EntityType, StatusEffect, Inventory, InventoryName, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../../components.js";
 import Tribe from "../../../Tribe.js";
 import { CookingComponent } from "../../../components/CookingComponent.js";
@@ -10,15 +10,15 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../../comp
 import { TribeComponent } from "../../../components/TribeComponent.js";
 import { FurnaceComponent } from "../../../components/FurnaceComponent.js";
 import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuildingLayer.js";
-import { Hitbox } from "../../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../../hitboxes.js";
 import { StructureConnection } from "../../../structure-placement.js";
 
 export function createFurnaceConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const box = new RectangularBox(x, y, 0, 0, angle, 80, 80);
-   const hitbox = new Hitbox(transformComponent, null, true, box, 2, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox.isStatic = true;
+   const box = createRectangularBox(x, y, 0, 0, angle, 80, 80);
+   const hitbox = createHitbox(transformComponent, null, box, 2, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(25);

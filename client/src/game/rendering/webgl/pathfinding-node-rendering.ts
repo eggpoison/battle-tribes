@@ -2,7 +2,7 @@ import { createWebGLProgram, gl } from "../../webgl";
 import { EntityDebugData, PathData, PathfindingNodeIndex, angle, PathfindingSettings } from "webgl-test-shared";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { entityExists } from "../../world";
-import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
 import { hoverDebugState } from "../../../ui-state/hover-debug-state";
 import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
@@ -146,7 +146,7 @@ const renderConnectors = (pathData: PathData): void => {
       return;
    }
 
-   const transformComponent = TransformComponentArray.getComponent(debugEntity);
+   const transformComponent = transformComponentArray.getComponent(debugEntity);
    const entityHitbox = transformComponent.hitboxes[0];
    
    const vertices: Array<number> = [];

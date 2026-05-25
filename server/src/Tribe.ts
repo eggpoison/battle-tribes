@@ -181,7 +181,7 @@ export default class Tribe {
    }
 
    public entityIsAttacking(entity: Entity): boolean {
-      return typeof this.attackingEntities[entity] !== "undefined";
+      return this.attackingEntities[entity] !== undefined;
    }
 
    public registerEntity(entity: Entity): void {

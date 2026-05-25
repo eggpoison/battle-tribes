@@ -70,7 +70,7 @@ const shouldRecalculatePath = (tribesman: Entity, goalX: number, goalY: number, 
    
    // @Hack: probs better to have a failed/succeeded boolean on the path
    // If there is no path, always recalculate
-   if (typeof pathTargetNode === "undefined") {
+   if (pathTargetNode === undefined) {
       return true;
    }
    
@@ -220,7 +220,7 @@ export function continueCurrentPath(tribesman: Entity): boolean {
          // Steer away from herd members who are too close
          const minSeparationDistance = 180;
          let distanceVector: Point | undefined;
-         if (minDist < minSeparationDistance && typeof closestHerdMember !== "undefined") {
+         if (minDist < minSeparationDistance && closestHerdMember !== undefined) {
             // Calculate the weight of the separation
             let weight = 1 - minDist / minSeparationDistance;
             weight = curveWeight(weight, 2, 0.2);
@@ -235,7 +235,7 @@ export function continueCurrentPath(tribesman: Entity): boolean {
 
          const pathfindingAngle = angleToPoint(tribesmanHitbox.box.angle);
          
-         if (typeof distanceVector === "undefined") {
+         if (distanceVector === undefined) {
             distanceVector = pathfindingAngle.copy();
          }
 

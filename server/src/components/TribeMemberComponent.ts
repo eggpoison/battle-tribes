@@ -82,7 +82,7 @@ function onTick(tribeMember: Entity): void {
       // Armour defence
       const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
       const armour = armourSlotInventory.itemSlots[1];
-      if (typeof armour !== "undefined") {
+      if (armour !== undefined) {
          const itemInfo = ITEM_INFO_RECORD[armour.type] as ArmourItemInfo;
          addDefence(healthComponent, itemInfo.defence, "armour");
    

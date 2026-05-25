@@ -4,7 +4,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { createPricklyPearParticle } from "../../particles";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -56,7 +56,7 @@ class _PricklyPearFragmentProjectileComponentArray extends _ServerComponentArray
    }
       
    public onDie(fragment: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(fragment);
+      const transformComponent = transformComponentArray.getComponent(fragment);
       const hitbox = transformComponent.hitboxes[0];
 
       playSoundOnHitbox("prickly-pear-fragment-projectile-explode.mp3", 0.4, randFloat(0.9, 1.1), fragment, hitbox, false);

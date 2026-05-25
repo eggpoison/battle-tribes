@@ -6,7 +6,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
@@ -107,7 +107,7 @@ const getProjectilePullbackAmount = (entity: Entity, chargeProgress: number): nu
 }
 
 const playFireSound = (entity: Entity): void => {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
    switch (getEntityType(entity) as TurretType) {

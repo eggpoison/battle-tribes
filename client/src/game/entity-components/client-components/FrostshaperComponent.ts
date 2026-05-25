@@ -12,10 +12,12 @@ export interface FrostshaperComponentData {}
 export interface FrostshaperComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.frostshaper, _FrostshaperComponentArray> {}
+   interface ClientComponentRegistry {
+      [ClientComponentType.frostshaper]: FrostshaperComponentArray;
+   }
 }
 
-class _FrostshaperComponentArray extends _ClientComponentArray<FrostshaperComponent, FrostshaperComponentData> {
+class FrostshaperComponentArray extends _ClientComponentArray<FrostshaperComponent, FrostshaperComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
@@ -40,7 +42,7 @@ class _FrostshaperComponentArray extends _ClientComponentArray<FrostshaperCompon
    }
 }
 
-export const FrostshaperComponentArray = registerClientComponentArray(ClientComponentType.frostshaper, _FrostshaperComponentArray, true);
+export const frostshaperComponentArray = registerClientComponentArray(ClientComponentType.frostshaper, FrostshaperComponentArray, true);
 
 export function createFrostshaperComponentData(): FrostshaperComponentData {
    return {};

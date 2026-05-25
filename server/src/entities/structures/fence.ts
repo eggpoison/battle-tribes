@@ -1,4 +1,4 @@
-import { EntityType, StatusEffect, RectangularBox, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { EntityType, StatusEffect, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { FenceComponent } from "../../components/FenceComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -8,15 +8,15 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { TribeComponent } from "../../components/TribeComponent.js";
 import Tribe from "../../Tribe.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
 export function createFenceConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const box = new RectangularBox(x, y, 0, 0, angle, 20, 20);
-   const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox.isStatic = true;
+   const box = createRectangularBox(x, y, 0, 0, angle, 20, 20);
+   const hitbox = createHitbox(transformComponent, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(5);

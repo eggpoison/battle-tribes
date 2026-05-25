@@ -1,7 +1,7 @@
-import { ServerComponentType, DoorToggleType, Entity, Settings, Point, angle, lerp, CollisionBit, DEFAULT_COLLISION_MASK, Packet, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { ServerComponentType, DoorToggleType, Entity, Settings, angle, lerp, CollisionBit, DEFAULT_COLLISION_MASK, Packet, HitboxCollisionType, RectangularBox, createRectangularBox } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { addHitboxToEntity, TransformComponentArray } from "./TransformComponent.js";
-import { Hitbox } from "../hitboxes.js";
+import { createHitbox, getHitboxCollisionType, } from "../hitboxes.js";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts}
 
@@ -50,10 +50,10 @@ const updateDoorOpenProgress = (tunnel: Entity, tunnelComponent: TunnelComponent
    let hasHardHitbox = true;
    if (toggleType === DoorToggleType.close || openProgress === 0) {
       // Create hard hitbox
-      const alreadyExists = doorBit === tunnelComponent.firstHitboxDoorBit ? (transformComponent.hitboxes.length > 5 && transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard) : transformComponent.hitboxes[transformComponent.hitboxes.length - 1].collisionType === HitboxCollisionType.hard;
+      const alreadyExists = doorBit === tunnelComponent.firstHitboxDoorBit ? (transformComponent.hitboxes.length > 5 && getHitboxCollisionType(transformComponent.hitboxes[5]) === HitboxCollisionType.hard) : getHitboxCollisionType(transformComponent.hitboxes[transformComponent.hitboxes.length - 1]) === HitboxCollisionType.hard;
       if (!alreadyExists) {
          // @HACK @BUG: Position
-         const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(0, 0, 0, 0, 0, DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT), 0.5, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+         const hitbox = createHitbox(transformComponent, null, createRectangularBox(0, 0, 0, 0, 0, DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT), 0.5, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
          addHitboxToEntity(tunnel, hitbox);
          
          // @Hack!!! Wouldn't be needed if we had a hitbox awake/asleep system
@@ -67,13 +67,13 @@ const updateDoorOpenProgress = (tunnel: Entity, tunnelComponent: TunnelComponent
    } else if (toggleType === DoorToggleType.open || openProgress === 1) {
       hasHardHitbox = false;
       if (doorBit === tunnelComponent.firstHitboxDoorBit) {
-         if (transformComponent.hitboxes.length > 5 && transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard) {
+         if (transformComponent.hitboxes.length > 5 && getHitboxCollisionType(transformComponent.hitboxes[5]) === HitboxCollisionType.hard) {
             // @INCOMPLETE
             throw new Error();
             // transformComponent.children.splice(5, 1);
          }
       } else {
-         if (transformComponent.hitboxes[transformComponent.hitboxes.length - 1].collisionType === HitboxCollisionType.hard) {
+         if (getHitboxCollisionType(transformComponent.hitboxes[transformComponent.hitboxes.length - 1]) === HitboxCollisionType.hard) {
             // @INCOMPLETE
             throw new Error();
             // transformComponent.children.pop();
@@ -89,13 +89,13 @@ const updateDoorOpenProgress = (tunnel: Entity, tunnelComponent: TunnelComponent
    const xOffset = doorHalfDiagonalLength * Math.sin(offsetDirection) - doorHalfDiagonalLength * Math.sin(baseAngle + angleToCenter);
    const yOffset = doorHalfDiagonalLength * Math.cos(offsetDirection) - doorHalfDiagonalLength * Math.cos(baseAngle + angleToCenter);
 
-   const softDoorHitbox = (transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 4 : transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard ? 6 : 5]).box as RectangularBox;
+   const softDoorHitbox = (transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 4 : getHitboxCollisionType(transformComponent.hitboxes[5]) === HitboxCollisionType.hard ? 6 : 5]).box as RectangularBox;
    softDoorHitbox.offsetX = xOffset;
    softDoorHitbox.offsetY = yOffset + (doorType === DoorType.top ? DOOR_HITBOX_OFFSET : -DOOR_HITBOX_OFFSET);
    softDoorHitbox.relativeAngle = rotation + Math.PI/2;
 
    if (hasHardHitbox) {
-      const hardDoorHitbox = (transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 5 : transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard ? 7 : 6]).box as RectangularBox;
+      const hardDoorHitbox = (transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 5 : getHitboxCollisionType(transformComponent.hitboxes[5]) === HitboxCollisionType.hard ? 7 : 6]).box as RectangularBox;
       hardDoorHitbox.offsetX = xOffset + DOOR_HITBOX_HEIGHT * 0.5 * Math.sin(rotation + Math.PI/2);
       hardDoorHitbox.offsetY = yOffset + DOOR_HITBOX_HEIGHT * 0.5 * Math.cos(rotation + Math.PI/2) + (doorType === DoorType.top ? DOOR_HITBOX_OFFSET : -DOOR_HITBOX_OFFSET);
       hardDoorHitbox.relativeAngle = rotation + Math.PI/2;

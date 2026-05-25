@@ -1,7 +1,7 @@
 import { ServerComponentType, Entity, EntityType, Settings, randFloat, randInt, randSign } from "battletribes-shared";
 import { createDustfleaConfig } from "../entities/desert/dustflea.js";
 import { addHitboxAngularVelocity, Hitbox } from "../hitboxes.js";
-import { tetherHitboxes } from "../tethers.js";
+import { getHitboxTethers, tetherHitboxes } from "../tethers.js";
 import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, getEntityType, ticksToGameHours } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
@@ -70,17 +70,23 @@ function onHitboxCollision(affectedHitbox: Hitbox, collidingHitbox: Hitbox): voi
    }
 
    // Make sure neither of the hitboxes are already tethered to either of each other
-   for (const tether of affectedHitbox.tethers) {
-      const otherHitbox = tether.getOtherHitbox(affectedHitbox);
-      if (otherHitbox === collidingHitbox) {
-         return;
+   const affectedHitboxTethers = getHitboxTethers(affectedHitbox);
+   if (affectedHitboxTethers !== undefined) {
+      for (const tether of affectedHitboxTethers) {
+         const otherHitbox = tether.getOtherHitbox(affectedHitbox);
+         if (otherHitbox === collidingHitbox) {
+            return;
+         }
       }
    }
    // @Copynpaste @Hack: ideally we shouldn't have to check both hitboxes for the tether. references should be present on both not just 1
-   for (const tether of collidingHitbox.tethers) {
-      const otherHitbox = tether.getOtherHitbox(collidingHitbox)
-      if (otherHitbox === affectedHitbox) {
-         return;
+   const collidingHitboxTethers = getHitboxTethers(collidingHitbox);
+   if (collidingHitboxTethers !== undefined) {
+      for (const tether of collidingHitboxTethers) {
+         const otherHitbox = tether.getOtherHitbox(collidingHitbox)
+         if (otherHitbox === affectedHitbox) {
+            return;
+         }
       }
    }
 

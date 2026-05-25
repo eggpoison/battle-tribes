@@ -1,4 +1,4 @@
-import { Entity, TreeSize, ServerComponentType, Packet, CircularBox, randInt } from "battletribes-shared";
+import { Entity, TreeSize, ServerComponentType, Packet, randInt, createCircularBox } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { getEntityLayer } from "../world.js";
@@ -27,7 +27,7 @@ function onJoin(entity: Entity): void {
    
    const spruceTreeComponent = SpruceTreeComponentArray.getComponent(entity);
 
-   const blockerBox = new CircularBox(treeHitbox.box.posX, treeHitbox.box.posY, 0, 0, 0, TREE_TRUNK_RADII[spruceTreeComponent.treeSize]);
+   const blockerBox = createCircularBox(treeHitbox.box.posX, treeHitbox.box.posY, 0, 0, 0, TREE_TRUNK_RADII[spruceTreeComponent.treeSize]);
    createGrassBlocker(blockerBox, getEntityLayer(entity), 0, 0.9, entity)
 }
 

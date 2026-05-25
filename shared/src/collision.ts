@@ -1,5 +1,4 @@
-import { Box } from "./boxes/boxes.js";
-import { RectangularBox } from "./boxes/RectangularBox.js";
+import { Box, createRectangularBox, getRectangularBoxCollisionResult, getRectangularBoxTopLeftVertexOffset, getRectangularBoxTopRightVertexOffset, RectangularBox } from "./boxes.js";
 import { Settings } from "./settings.js";
 import { Mutable, Point, _point, angle, distance, polarVec2, rotatePointAroundPoint } from "./utils.js";
 
@@ -34,8 +33,8 @@ const findMinWithOffset = (box: RectangularBox, x: number, y: number, axisX: num
    // @Speed: can combine bits of this in the getDot function
 
    // @Speed! @Temporary
-   const topLeftVertex = box.getTopLeftVertexOffset();
-   const topRightVertex = box.getTopRightVertexOffset();
+   const topLeftVertex = getRectangularBoxTopLeftVertexOffset(box);
+   const topRightVertex = getRectangularBoxTopRightVertexOffset(box);
 
    // Top left and bottom right
    let min = getDot(x + topLeftVertex.x, y + topLeftVertex.y, axisX, axisY);
@@ -61,8 +60,8 @@ const findMaxWithOffset = (box: RectangularBox, x: number, y: number, axisX: num
    // @Speed: can combine bits of this in the getDot function
 
    // @Speed! @Temporary
-   const topLeftVertex = box.getTopLeftVertexOffset();
-   const topRightVertex = box.getTopRightVertexOffset();
+   const topLeftVertex = getRectangularBoxTopLeftVertexOffset(box);
+   const topRightVertex = getRectangularBoxTopRightVertexOffset(box);
 
    // Top left and bottom right
    let max = getDot(x + topLeftVertex.x, y + topLeftVertex.y, axisX, axisY);
@@ -290,16 +289,16 @@ export function rectanglesAreColliding(box1: RectangularBox, box2: RectangularBo
 
 export function boxIsCollidingWithSubtile(box: Box, subtileX: number, subtileY: number): boolean {
    // @Speed
-   const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+   const tileBox = createRectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
    
-   const collisionResult = box.getCollisionResult(tileBox);
+   const collisionResult = getRectangularBoxCollisionResult(tileBox, box);
    return collisionResult.isColliding;
 }
 
 export function boxIsCollidingWithTile(box: Box, tileX: number, tileY: number): boolean {
    // @Speed
-   const tileBox = new RectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
+   const tileBox = createRectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
    
-   const collisionResult = box.getCollisionResult(tileBox);
+   const collisionResult = getRectangularBoxCollisionResult(tileBox, box);
    return collisionResult.isColliding;
 }

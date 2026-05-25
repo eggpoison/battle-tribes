@@ -30,7 +30,7 @@ const enum Vars {
 const getPlaceableItemSlot = (hotbarInventory: Inventory, entityType: StructureType): number | null => {
    for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
       const item = hotbarInventory.itemSlots[itemSlot];
-      if (typeof item === "undefined") {
+      if (item === undefined) {
          continue;
       }
       
@@ -235,7 +235,7 @@ export function attemptToRepairBuildings(tribesman: Entity, hammerItemSlot: numb
       }
    }
 
-   if (typeof closestDamagedBuilding === "undefined") {
+   if (closestDamagedBuilding === undefined) {
       return false;
    }
 

@@ -6,7 +6,7 @@ import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH, createWoodSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
@@ -17,10 +17,12 @@ export interface PalmTreeComponentData {}
 export interface PalmTreeComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.palmTree, _PalmTreeComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.palmTree]: PalmTreeComponentArray;
+   }
 }
 
-class _PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, PalmTreeComponentData> {
+class PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, PalmTreeComponentData> {
    public decodeData(): PalmTreeComponentData {
       return {};
    }
@@ -87,7 +89,7 @@ class _PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, P
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
    
       const radius = (hitbox.box as CircularBox).radius;
@@ -116,4 +118,4 @@ class _PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, P
    }
 }
 
-export const PalmTreeComponentArray = registerServerComponentArray(ServerComponentType.palmTree, _PalmTreeComponentArray, true);
+export const palmTreeComponentArray = registerServerComponentArray(ServerComponentType.palmTree, PalmTreeComponentArray, true);

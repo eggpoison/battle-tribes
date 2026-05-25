@@ -8,7 +8,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { getEntityRenderObject, getEntityAgeTicks, EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponent, TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
+import { TransformComponent, transformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -103,7 +103,7 @@ class _PlanterBoxComponentArray extends _ServerComponentArray<PlanterBoxComponen
    public onTick(entity: Entity): void {
       const planterBoxComponent = PlanterBoxComponentArray.getComponent(entity);
       if (planterBoxComponent.isFertilised && customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.35)) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          createGrowthParticleInEntity(transformComponent);
       }
    }
@@ -115,7 +115,7 @@ class _PlanterBoxComponentArray extends _ServerComponentArray<PlanterBoxComponen
       const isFertilised = data.isFertilised;
       
       if (isFertilised && !planterBoxComponent.isFertilised) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          for (let i = 0; i < 25; i++) {
             createGrowthParticleInEntity(transformComponent);
          }
@@ -128,7 +128,7 @@ class _PlanterBoxComponentArray extends _ServerComponentArray<PlanterBoxComponen
       const hasPlant = plantType !== -1;
       if (hasPlant && planterBoxComponent.hasPlant !== hasPlant) {
          // Plant sound effect
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          playSoundOnHitbox("plant.mp3", 0.4, 1, entity, hitbox, false);
       }
@@ -136,7 +136,7 @@ class _PlanterBoxComponentArray extends _ServerComponentArray<PlanterBoxComponen
 
       if (plantType !== -1) {
          if (planterBoxComponent.moundRenderPart === null) {
-            const transformComponent = TransformComponentArray.getComponent(entity);
+            const transformComponent = transformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
 
             planterBoxComponent.moundRenderPart = createMoundRenderPart(plantType, hitbox);

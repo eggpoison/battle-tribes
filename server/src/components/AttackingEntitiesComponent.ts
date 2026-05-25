@@ -71,7 +71,7 @@ function onTakeDamage(entity: Entity, _hitHitbox: Hitbox, attackingEntity: Entit
    const attackingEntitiesComponent = AttackingEntitiesComponentArray.getComponent(entity);
    
    const attackerInfo = attackingEntitiesComponent.attackingEntities.get(attackingEntity);
-   if (typeof attackerInfo !== "undefined") {
+   if (attackerInfo !== undefined) {
       attackerInfo.totalDamageFromEntity += damageTaken;
       attackerInfo.ticksSinceLastHit = 0;
    } else {

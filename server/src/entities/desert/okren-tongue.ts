@@ -1,20 +1,23 @@
-import { HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, polarVec2 } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, polarVec2, createRectangularBox, HitboxTag } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { OkrenTongueComponent } from "../../components/OkrenTongueComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
-import { addHitboxVelocity, Hitbox, HitboxAngularTether } from "../../hitboxes.js";
+import { addHitboxVelocity, createHitbox, Hitbox, setHitboxTag } from "../../hitboxes.js";
+import { addHitboxAngularTether, HitboxAngularTether } from "../../tethers.js";
 
 export function createOkrenTongueConfig(x: number, y: number, angle: number, okrenHitbox: Hitbox, target: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
       
    // Only the tongue tip at first
-   const tongueTipHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 16, 24), 0.9, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_TONGUE_SEGMENT_TIP]);
+   const tongueTipHitbox = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, 0, angle, 16, 24), 0.9, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(tongueTipHitbox, HitboxTag.okrenTongueSegmentTip);
    addHitboxToTransformComponent(transformComponent, tongueTipHitbox);
    
    // Restrict the new base entity to match the direction of the okren
    // @Copynpaste
    const angularTether: HitboxAngularTether = {
+      hitbox: tongueTipHitbox,
       originHitbox: okrenHitbox,
       idealAngle: 0,
       springConstant: 1/60,
@@ -23,7 +26,7 @@ export function createOkrenTongueConfig(x: number, y: number, angle: number, okr
       idealHitboxAngleOffset: 0,
       useLeverage: false
    };
-   tongueTipHitbox.angularTethers.push(angularTether);
+   addHitboxAngularTether(tongueTipHitbox, angularTether);
 
    const healthComponent = new HealthComponent(99);
 

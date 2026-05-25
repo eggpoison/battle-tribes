@@ -1,9 +1,9 @@
 import { ItemType, Entity, PacketReader, randInt, randItem, TribeType, Settings, ServerComponentType, TribesmanAIType } from "webgl-test-shared";
-import { TribeComponentArray } from "./TribeComponent";
+import { tribeComponentArray } from "./TribeComponent";
 import { playSoundOnHitbox } from "../../sound";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -24,14 +24,16 @@ export interface TribesmanAIComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesmanAI, _TribesmanAIComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.tribesmanAI]: TribesmanAIComponentArray;
+   }
 }
 
 const GOBLIN_ANGRY_SOUNDS: ReadonlyArray<string> = ["goblin-angry-1.mp3", "goblin-angry-2.mp3", "goblin-angry-3.mp3", "goblin-angry-4.mp3"];
 const GOBLIN_ESCAPE_SOUNDS: ReadonlyArray<string> = ["goblin-escape-1.mp3", "goblin-escape-2.mp3", "goblin-escape-3.mp3"];
 const GOBLIN_AMBIENT_SOUNDS: ReadonlyArray<string> = ["goblin-ambient-1.mp3", "goblin-ambient-2.mp3", "goblin-ambient-3.mp3", "goblin-ambient-4.mp3", "goblin-ambient-5.mp3"];
 
-class _TribesmanAIComponentArray extends _ServerComponentArray<TribesmanAIComponent, TribesmanAIComponentData> {
+class TribesmanAIComponentArray extends _ServerComponentArray<TribesmanAIComponent, TribesmanAIComponentData> {
    public decodeData(reader: PacketReader): TribesmanAIComponentData {
       const aiType = reader.readNumber();
       const relationsWithPlayer = reader.readNumber();
@@ -63,11 +65,11 @@ class _TribesmanAIComponentArray extends _ServerComponentArray<TribesmanAICompon
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
-      const tribeComponent = TribeComponentArray.getComponent(entity);
-      const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(entity);
+      const tribeComponent = tribeComponentArray.getComponent(entity);
+      const tribesmanAIComponent = tribesmanAIComponentArray.getComponent(entity);
 
       // Sounds
       switch (tribesmanAIComponent.aiType) {
@@ -116,7 +118,7 @@ class _TribesmanAIComponentArray extends _ServerComponentArray<TribesmanAICompon
    }
 
    public updateFromData(data: TribesmanAIComponentData, entity: Entity): void {
-      const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(entity);
+      const tribesmanAIComponent = tribesmanAIComponentArray.getComponent(entity);
 
       tribesmanAIComponent.aiType = data.aiType;
       tribesmanAIComponent.relationsWithPlayer = data.relationsWithPlayer;
@@ -125,7 +127,7 @@ class _TribesmanAIComponentArray extends _ServerComponentArray<TribesmanAICompon
    }
 }
 
-export const TribesmanAIComponentArray = registerServerComponentArray(ServerComponentType.tribesmanAI, _TribesmanAIComponentArray, true);
+export const tribesmanAIComponentArray = registerServerComponentArray(ServerComponentType.tribesmanAI, TribesmanAIComponentArray, true);
 
 export function createTribesmanAIComponentData(): TribesmanAIComponentData {
    return {

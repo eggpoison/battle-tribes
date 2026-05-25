@@ -1,4 +1,4 @@
-import { PacketReader, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
+import { PacketReader, Entity, ServerComponentType, HitboxTag } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -8,6 +8,7 @@ import { OkrenAgeStage } from "./OkrenComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { getHitboxTag } from "../../hitboxes";
 
 export interface OkrenClawComponentData {
    readonly size: OkrenAgeStage;
@@ -56,33 +57,40 @@ class _OkrenClawComponentArray extends _ServerComponentArray<OkrenClawComponent,
       
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       for (const hitbox of transformComponentData.hitboxes) {
-         if (hitbox.flags.includes(HitboxFlag.OKREN_BIG_ARM_SEGMENT)) {
-            bigArmSegment = new TexturedRenderPart(
-               hitbox,
-               2,
-               0,
-               0, 0,
-               getTextureArrayIndex(getBigArmSegmentTextureSource(sizeString, growthStageString))
-            );
-            renderObject.attachRenderPart(bigArmSegment);
-         } else if (hitbox.flags.includes(HitboxFlag.OKREN_MEDIUM_ARM_SEGMENT)) {
-            mediumArmSegment = new TexturedRenderPart(
-               hitbox,
-               1,
-               0,
-               0, 0,
-               getTextureArrayIndex(getMediumArmSegmentTextureSource(sizeString, growthStageString))
-            )
-            renderObject.attachRenderPart(mediumArmSegment);
-         } else if (hitbox.flags.includes(HitboxFlag.OKREN_ARM_SEGMENT_OF_SLASHING_AND_DESTRUCTION)) {
-            slashingArmSegment = new TexturedRenderPart(
-               hitbox,
-               0,
-               0,
-               0, 0,
-               getTextureArrayIndex(getSlashingArmSegmentTextureSource(sizeString, growthStageString))
-            )
-            renderObject.attachRenderPart(slashingArmSegment);
+         switch (getHitboxTag(hitbox)) {
+            case HitboxTag.okrenBigArmSegment: {
+               bigArmSegment = new TexturedRenderPart(
+                  hitbox,
+                  2,
+                  0,
+                  0, 0,
+                  getTextureArrayIndex(getBigArmSegmentTextureSource(sizeString, growthStageString))
+               );
+               renderObject.attachRenderPart(bigArmSegment);
+               break;
+            }
+            case HitboxTag.okrenMediumArmSegment: {
+               mediumArmSegment = new TexturedRenderPart(
+                  hitbox,
+                  1,
+                  0,
+                  0, 0,
+                  getTextureArrayIndex(getMediumArmSegmentTextureSource(sizeString, growthStageString))
+               )
+               renderObject.attachRenderPart(mediumArmSegment);
+               break;
+            }
+            case HitboxTag.okrenArmSegmentOfSlashingAndDestruction: {
+               slashingArmSegment = new TexturedRenderPart(
+                  hitbox,
+                  0,
+                  0,
+                  0, 0,
+                  getTextureArrayIndex(getSlashingArmSegmentTextureSource(sizeString, growthStageString))
+               )
+               renderObject.attachRenderPart(slashingArmSegment);
+               break;
+            }
          }
       }
 

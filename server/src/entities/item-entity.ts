@@ -1,17 +1,17 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, Point, randAngle, getSubtileIndex, Item, ItemType, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, Point, randAngle, getSubtileIndex, Item, ItemType, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { ItemComponent } from "../components/ItemComponent.js";
 import { EntityConfig, LightCreationInfo } from "../components.js";
 import { addHitboxToTransformComponent, getRandomPositionInBox, getRandomWeightedHitbox, TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
 import Layer from "../Layer.js";
 import { createEntity, getEntityLayer } from "../world.js";
-import { Hitbox } from "../hitboxes.js";
+import { createHitbox, Hitbox } from "../hitboxes.js";
 import { createLight } from "../lights.js";
 import { createItem } from "../items.js";
 
 export function createItemEntityConfig(x: number, y: number, angle: number, item: Item, throwingEntity: Entity | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
+   const hitbox = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, 0, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const itemComponent = new ItemComponent(item, throwingEntity);
@@ -41,7 +41,7 @@ const generateItemEntitySpawnPosition = (entityLayer: Layer, transformComponent:
    for (let attempts = 0; attempts < 50; attempts++) {
       // @Speed: if hitboxIdx is defined, then this does the same thing every loop. also this condition is checked every time
       let hitbox: Hitbox;
-      if (typeof hitboxIdx !== "undefined") {
+      if (hitboxIdx !== undefined) {
          hitbox = transformComponent.hitboxes[hitboxIdx];
       } else {
          hitbox = getRandomWeightedHitbox(transformComponent);

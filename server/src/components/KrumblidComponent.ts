@@ -5,7 +5,7 @@ import { runEscapeAI } from "../ai/EscapeAI.js";
 import { updateFollowAIComponent, entityWantsToFollow, followAISetFollowTarget } from "../ai/FollowAI.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { destroyEntity, entityExists, getEntityAgeTicks, getEntityLayer, getEntityType, ticksToGameHours } from "../world.js";
-import { applyAccelerationFromGround, getHitboxTile, turnHitboxToAngle } from "../hitboxes.js";
+import { applyAccelerationFromGround, getHitboxTile, hitboxIsStatic, turnHitboxToAngle } from "../hitboxes.js";
 import { HealthComponentArray } from "./HealthComponent.js";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
 import { addHungerEnergy, getEntityFullness } from "./EnergyStomachComponent.js";
@@ -76,7 +76,7 @@ const entityIsFollowable = (entity: Entity): boolean => {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
-   if (hitbox.isStatic) {
+   if (hitboxIsStatic(hitbox)) {
       // So it isn't interested in trees n shit
       // @Incomplete: what about mobs which don't move? those should be interesting
       return false;
@@ -139,7 +139,7 @@ const entityIsHoldingLeafItem = (entity: Entity): boolean => {
       const limbInfo = inventoryUseComponent.limbInfos[i];
 
       const heldItem = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
-      if (typeof heldItem !== "undefined" && heldItem.type === ItemType.leaf) {
+      if (heldItem !== undefined && heldItem.type === ItemType.leaf) {
          return true;
       }
    }

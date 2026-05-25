@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, SlimeSize, EntityType, Entity, Settings, StatusEffect, Point, randInt, secondsToTicks, HitboxCollisionType, CircularBox, Biome, ItemType } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, SlimeSize, EntityType, Entity, Settings, StatusEffect, randInt, secondsToTicks, HitboxCollisionType, Biome, ItemType, createCircularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { SlimeComponent, SlimeComponentArray } from "../../components/SlimeComponent.js";
 import Layer from "../../Layer.js";
@@ -10,7 +10,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { CraftingStationComponent } from "../../components/CraftingStationComponent.js";
 import { registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, Hitbox } from "../../hitboxes.js";
 
 export interface SlimeEntityAnger {
    angerAmount: number;
@@ -62,7 +62,7 @@ const turnFunc = (slime: Entity, x: number, y: number): void => {
 export function createSlimeConfig(x: number, y: number, angle: number, size: SlimeSize): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, SLIME_RADII[size]), 1 + size * 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, SLIME_RADII[size]), 1 + size * 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const healthComponent = new HealthComponent(MAX_HEALTH[size]);

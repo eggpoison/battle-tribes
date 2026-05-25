@@ -1,9 +1,9 @@
-import { Point, randAngle, randFloat, Entity, HitboxFlag, ServerComponentType, PacketReader, angle } from "webgl-test-shared";
+import { Point, randAngle, randFloat, Entity, HitboxTag, ServerComponentType, PacketReader, angle, getBoxFlipX } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import { Hitbox } from "../../hitboxes";
+import { getHitboxTag, Hitbox } from "../../hitboxes";
 import { createOkrenEyeParticle } from "../../particles";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { renderParentIsHitbox } from "../../render-parts/render-parts";
@@ -64,37 +64,44 @@ class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenCo
       
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       for (const hitbox of transformComponentData.hitboxes) {
-         if (hitbox.flags.includes(HitboxFlag.OKREN_BODY)) {
-            const bodyRenderPart = new TexturedRenderPart(
-               hitbox,
-               3,
-               0,
-               0, 0,
-               getTextureArrayIndex("entities/okren/" + sizeString + "/body.png")
-            );
-            addRenderPartTag(bodyRenderPart, "tamingComponent:head");
-            renderObject.attachRenderPart(bodyRenderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.OKREN_EYE)) {
-            const hardenTimer = hitbox.box.flipX ? okrenComponentData.leftEyeHardenTimer : okrenComponentData.rightEyeHardenTimer;
-            renderObject.attachRenderPart(
-               new TexturedRenderPart(
+         switch (getHitboxTag(hitbox)) {
+            case HitboxTag.okrenBody: {
+               const bodyRenderPart = new TexturedRenderPart(
                   hitbox,
-                  5,
+                  3,
                   0,
                   0, 0,
-                  getTextureArrayIndex(getEyeTextureSource(okrenComponentData.size, hardenTimer))
-               )
-            );
-         } else if (hitbox.flags.includes(HitboxFlag.OKREN_MANDIBLE)) {
-            renderObject.attachRenderPart(
-               new TexturedRenderPart(
-                  hitbox,
-                  2,
-                  0,
-                  0, 0,
-                  getTextureArrayIndex("entities/okren/" + sizeString + "/mandible.png")
-               )
-            );
+                  getTextureArrayIndex("entities/okren/" + sizeString + "/body.png")
+               );
+               addRenderPartTag(bodyRenderPart, "tamingComponent:head");
+               renderObject.attachRenderPart(bodyRenderPart);
+               break;
+            }
+            case HitboxTag.okrenEye: {
+               const hardenTimer = getBoxFlipX(hitbox.box) ? okrenComponentData.leftEyeHardenTimer : okrenComponentData.rightEyeHardenTimer;
+               renderObject.attachRenderPart(
+                  new TexturedRenderPart(
+                     hitbox,
+                     5,
+                     0,
+                     0, 0,
+                     getTextureArrayIndex(getEyeTextureSource(okrenComponentData.size, hardenTimer))
+                  )
+               );
+               break;
+            }
+            case HitboxTag.okrenMandible: {
+               renderObject.attachRenderPart(
+                  new TexturedRenderPart(
+                     hitbox,
+                     2,
+                     0,
+                     0, 0,
+                     getTextureArrayIndex("entities/okren/" + sizeString + "/mandible.png")
+                  )
+               );
+               break;
+            }
          }
       }
    }
@@ -129,7 +136,7 @@ class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenCo
    }
 
    public onHit(_okren: Entity, hitbox: Hitbox, hitPosition: Point): void {
-      if (hitbox.flags.includes(HitboxFlag.OKREN_EYE)) {
+      if (getHitboxTag(hitbox) === HitboxTag.okrenEye) {
          // @INCOMPLETE: this is meant for the ancient okren size. not tweaked for anything else
          for (let i = 0; i < 10; i++) {
             const offsetMagnitude = randFloat(10, 20);
@@ -165,7 +172,7 @@ const getEyeTextureSource = (okrenSize: number, eyeHardenTimer: number): string 
 const getEyeRenderPart = (okren: Entity, flipX: boolean): TexturedRenderPart => {
    const renderObject = getEntityRenderObject(okren);
    for (const renderPart of renderObject.renderPartsByZIndex) {
-      if (renderParentIsHitbox(renderPart.parent) && renderPart.parent.flags.includes(HitboxFlag.OKREN_EYE) && renderPart.parent.box.flipX === flipX) {
+      if (renderParentIsHitbox(renderPart.parent) && getHitboxTag(renderPart.parent) === HitboxTag.okrenEye && getBoxFlipX(renderPart.parent.box) === flipX) {
          return renderPart as TexturedRenderPart;
       }
    }

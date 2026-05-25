@@ -5,7 +5,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityAgeTicks } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
+import { transformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -60,7 +60,7 @@ class _ResearchBenchComponentArray extends _ServerComponentArray<ResearchBenchCo
    public onTick(entity: Entity): void {
       const researchBenchComponent = ResearchBenchComponentArray.getComponent(entity);
       if (researchBenchComponent.isOccupied && customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.3)) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          const pos = getRandomPositionInEntity(transformComponent);
          createPaperParticle(pos.x, pos.y);
       }

@@ -1,7 +1,7 @@
-import { CowSpecies, DamageSource, Entity, EntityType, Settings, getAbsAngleDiff, Point, polarVec2, positionIsInWorld, randAngle, randFloat, randInt, randItem, UtilVar, EntityTickEvent, EntityTickEventType, ServerComponentType, ItemType, Packet, AttackEffectiveness, TamingSkillID, CircularBox, HitboxFlag, distance, angle } from "battletribes-shared";
+import { CowSpecies, DamageSource, Entity, EntityType, Settings, getAbsAngleDiff, Point, polarVec2, randAngle, randFloat, randInt, randItem, UtilVar, EntityTickEvent, EntityTickEventType, ServerComponentType, ItemType, Packet, AttackEffectiveness, TamingSkillID, distance, angle, createCircularBox, HitboxTag } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
-import { getHitboxByFlag, TransformComponentArray } from "./TransformComponent.js";
+import { getHitboxByTag, TransformComponentArray } from "./TransformComponent.js";
 import { createItemEntityConfig } from "../entities/item-entity.js";
 import { entityHasPassedPosition, getDistanceFromPointToEntity, willStopAtDesiredDistance } from "../ai-shared.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
@@ -130,7 +130,7 @@ const getTargetGrass = (cow: Entity): Entity | null => {
    const aiHelperComponent = AIHelperComponentArray.getComponent(cow);
    
    const transformComponent = TransformComponentArray.getComponent(cow);
-   const cowHeadHitbox = getHitboxByFlag(transformComponent, HitboxFlag.COW_HEAD);
+   const cowHeadHitbox = getHitboxByTag(transformComponent, HitboxTag.cowHead);
    if (cowHeadHitbox === null) {
       return null;
    }
@@ -170,7 +170,7 @@ const getTargetGrass = (cow: Entity): Entity | null => {
 
 const graze = (cow: Entity, cowComponent: CowComponent, targetGrass: Entity): void => {
    const cowTransformComponent = TransformComponentArray.getComponent(cow);
-   const cowHeadHitbox = getHitboxByFlag(cowTransformComponent, HitboxFlag.COW_HEAD);
+   const cowHeadHitbox = getHitboxByTag(cowTransformComponent, HitboxTag.cowHead);
    if (cowHeadHitbox === null) {
       return;
    }
@@ -197,7 +197,7 @@ const graze = (cow: Entity, cowComponent: CowComponent, targetGrass: Entity): vo
             const blockAmount = randFloat(0.6, 0.9);
             const position = new Point(grassHitbox.box.posX, grassHitbox.box.posY).offset(randFloat(0, 12), randAngle());
 
-            const blockerBox = new CircularBox(position.x, position.y, 0, 0, 0, randFloat(12, 18));
+            const blockerBox = createCircularBox(position.x, position.y, 0, 0, 0, randFloat(12, 18));
             // @SQUEAM for shot in horse archer
             // createGrassBlocker(blockerBox, getEntityLayer(cow), blockAmount, blockAmount, 0);
          }
@@ -247,7 +247,7 @@ const entityIsHoldingBerry = (entity: Entity): boolean => {
       const limbInfo = inventoryUseComponent.limbInfos[i];
 
       const heldItem = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
-      if (typeof heldItem !== "undefined" && heldItem.type === ItemType.berry) {
+      if (heldItem !== undefined && heldItem.type === ItemType.berry) {
          return true;
       }
    }

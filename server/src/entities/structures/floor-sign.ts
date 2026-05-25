@@ -1,4 +1,4 @@
-import { HitboxCollisionType, RectangularBox, DEFAULT_COLLISION_MASK, CollisionBit, EntityType, StatusEffect, Point } from "battletribes-shared";
+import { HitboxCollisionType, DEFAULT_COLLISION_MASK, CollisionBit, EntityType, StatusEffect, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { FloorSignComponent } from "../../components/FloorSignComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -6,7 +6,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { StructureComponent } from "../../components/StructureComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 import Tribe from "../../Tribe.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
@@ -14,8 +14,8 @@ import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildin
 export function createFloorSignConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructrue: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 56, 40), 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox.isStatic = true;
+   const hitbox = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, 0, angle, 56, 40), 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding);

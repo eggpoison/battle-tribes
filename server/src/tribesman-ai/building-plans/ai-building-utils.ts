@@ -1,4 +1,4 @@
-import { _bounds, Box, RectangularBox, boxIsCollidingWithSubtile, Settings, StructureType, getSubtileIndex, getTileIndexIncludingEdges, Point, randAngle, randFloat } from "battletribes-shared";
+import { _bounds, Box, RectangularBox, boxIsCollidingWithSubtile, Settings, StructureType, getSubtileIndex, getTileIndexIncludingEdges, Point, randAngle, randFloat, calculateBoxBounds, createRectangularBox, getBoxCollisionResult } from "battletribes-shared";
 import { boxArraysAreColliding, boxHasCollisionWithBoxes } from "../../collision-detection.js";
 import { getConfigTransformComponent } from "../../components.js";
 import { createStructureConfig } from "../../structure-placement.js";
@@ -36,7 +36,7 @@ export function createBuildingCandidate(entityType: StructureType, buildingLayer
 export function buildingCandidateIsValid(candidate: BuildingCandidate): boolean {
    // Make sure the hitboxes don't go outside the world
    for (const box of candidate.boxes) {
-      box.calculateBounds();
+      calculateBoxBounds(box);
       if (_bounds.minX < 0 || _bounds.maxX >= Settings.WORLD_UNITS || _bounds.minY < 0 || _bounds.maxY >= Settings.WORLD_UNITS) {
          return false;
       }
@@ -45,7 +45,7 @@ export function buildingCandidateIsValid(candidate: BuildingCandidate): boolean 
    // Make sure the building isn't in any walls
    const layer = candidate.buildingLayer.layer;
    for (const box of candidate.boxes) {
-      box.calculateBounds();
+      calculateBoxBounds(box);
       const minSubtileX = Math.floor(_bounds.minX / Settings.SUBTILE_SIZE);
       const maxSubtileX = Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE);
       const minSubtileY = Math.floor(_bounds.minY / Settings.SUBTILE_SIZE);
@@ -64,7 +64,7 @@ export function buildingCandidateIsValid(candidate: BuildingCandidate): boolean 
    // Make sure the building isn't over any building blocking tiles
    // @Copynpaste from structureIntersectsWithBuildingBlockingTiles in shared
    for (const box of candidate.boxes) {
-      box.calculateBounds();
+      calculateBoxBounds(box);
       const minTileX = Math.floor(_bounds.minX / Settings.TILE_SIZE);
       const maxTileX = Math.floor(_bounds.maxX / Settings.TILE_SIZE);
       const minTileY = Math.floor(_bounds.minY / Settings.TILE_SIZE);
@@ -78,9 +78,9 @@ export function buildingCandidateIsValid(candidate: BuildingCandidate): boolean 
             }
             
             // @Speed
-            const tileBox = new RectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
+            const tileBox = createRectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
 
-            if (box.getCollisionResult(tileBox).isColliding) {
+            if (getBoxCollisionResult(box, tileBox).isColliding) {
                return false;
             }
          }

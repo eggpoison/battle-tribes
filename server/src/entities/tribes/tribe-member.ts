@@ -184,7 +184,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const targetItem = armourSlotInventory.itemSlots[1];
          
          // If the target item slot has a different item type, don't attempt to transfer
-         if (typeof targetItem !== "undefined" && targetItem.type !== item.type) {
+         if (targetItem !== undefined && targetItem.type !== item.type) {
             return;
          }
          
@@ -203,7 +203,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const targetItem = gloveSlotInventory.itemSlots[1];
 
          // If the target item slot has a different item type, don't attempt to transfer
-         if (typeof targetItem !== "undefined" && targetItem.type !== item.type) {
+         if (targetItem !== undefined && targetItem.type !== item.type) {
             return;
          }
 
@@ -367,7 +367,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
 
          const loadProgress = useInfo.crossbowLoadProgressRecord[itemSlot];
-         if (typeof loadProgress === "undefined" || loadProgress < 1) {
+         if (loadProgress === undefined || loadProgress < 1) {
             return;
          }
 
@@ -711,7 +711,7 @@ export function throwItem(tribesman: Entity, inventoryName: InventoryName, itemS
    const inventory = getInventory(inventoryComponent, inventoryName);
 
    const item = inventory.itemSlots[itemSlot];
-   if (typeof item === "undefined") {
+   if (item === undefined) {
       return;
    }
 

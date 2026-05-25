@@ -4,7 +4,7 @@ import { createStructureConnection, StructureConnection } from "../../structure-
 import { EntityComponentData, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { addFenceConnection, FenceComponentArray, removeFenceConnection } from "./FenceComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -58,7 +58,7 @@ class _StructureComponentArray extends _ServerComponentArray<StructureComponent,
    }
 
    public onSpawn(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       switch (getEntityType(entity)) {

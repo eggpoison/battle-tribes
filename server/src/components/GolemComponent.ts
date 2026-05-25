@@ -181,7 +181,7 @@ function onTick(golem: Entity): void {
       const targetID = Number(_targetID);
 
       const target = golemComponent.attackingEntities[targetID];
-      if (typeof target === "undefined" || target.timeSinceLastAggro >= Vars.TARGET_ENTITY_FORGET_TIME) {
+      if (target === undefined || target.timeSinceLastAggro >= Vars.TARGET_ENTITY_FORGET_TIME) {
          delete golemComponent.attackingEntities[targetID];
       } else {
          target.timeSinceLastAggro += Settings.DT_S;
@@ -203,7 +203,7 @@ function onTick(golem: Entity): void {
    const target = getTarget(golemComponent);
 
    // @Hack @Copynpaste: remove once the above guard works
-   if (typeof target === "undefined") {
+   if (target === undefined) {
       // Remove summoned pebblums
       for (let i = 0; i < golemComponent.summonedPebblumIDs.length; i++) {
          const pebblumID = golemComponent.summonedPebblumIDs[i];

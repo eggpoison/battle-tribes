@@ -1,4 +1,4 @@
-import { HitboxCollisionType, HitboxFlag, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, ItemType, Settings, StatusEffect, getTamingSkill, TamingSkillID, TileType, getAbsAngleDiff, Point, polarVec2, rotatePoint, angle } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, ItemType, Settings, StatusEffect, getTamingSkill, TamingSkillID, TileType, getAbsAngleDiff, Point, polarVec2, rotatePoint, angle, createCircularBox, HitboxTag } from "battletribes-shared";
 import WanderAI from "../../ai/WanderAI.js";
 import { EntityConfig, LightCreationInfo } from "../../components.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
@@ -8,11 +8,11 @@ import { LootComponent, registerEntityLootOnDeath } from "../../components/LootC
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { TamingComponent } from "../../components/TamingComponent.js";
 import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../../components/TransformComponent.js";
-import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../hitboxes.js";
+import { applyAccelerationFromGround, createHitbox, getHitboxTag, Hitbox, setHitboxTag, turnHitboxToAngle } from "../../hitboxes.js";
 import Layer from "../../Layer.js";
 import { createLight } from "../../lights.js";
 import { registerEntityTamingSpec } from "../../taming-specs.js";
-import { tetherHitboxes } from "../../tethers.js";
+import { addHitboxAngularTether, tetherHitboxes } from "../../tethers.js";
 import { getEntityAgeTicks } from "../../world.js";
 
 registerEntityLootOnDeath(EntityType.inguSerpent, {
@@ -73,7 +73,7 @@ const moveFunc = (serpent: Entity, x: number, y: number, accelerationMagnitude: 
          moveDir = angle(previousHitbox.box.posX - hitbox.box.posX, previousHitbox.box.posY - hitbox.box.posY);
       }
       
-      const isHeadHitbox = hitbox.flags.includes(HitboxFlag.INGU_SERPENT_HEAD);
+      const isHeadHitbox = getHitboxTag(hitbox) === HitboxTag.inguSerpentHead;
       const acc = accelerationMagnitude * (isHeadHitbox ? 1.4 : 0.7) * 0.5;
       const connectingVel = polarVec2(acc, moveDir);
 
@@ -113,19 +113,21 @@ function wanderPositionIsValid(_entity: Entity, layer: Layer, x: number, y: numb
 export function createInguSerpentConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const headHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 28), 0.9, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.INGU_SERPENT_HEAD]);
+   const headHitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 28), 0.9, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(headHitbox, HitboxTag.inguSerpentHead);
    addHitboxToTransformComponent(transformComponent, headHitbox);
 
    const idealBody1Dist = 48;
 
    const body1Offset = new Point(0, -idealBody1Dist);
    const rotatedOffset = rotatePoint(body1Offset, angle);
-   const body1Hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x + rotatedOffset.x, y + rotatedOffset.y, body1Offset.x, body1Offset.y, angle, 28), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.INGU_SERPENT_BODY_1]);
+   const body1Hitbox = createHitbox(transformComponent, null, createCircularBox(x + rotatedOffset.x, y + rotatedOffset.y, body1Offset.x, body1Offset.y, angle, 28), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(body1Hitbox, HitboxTag.inguSerpentBody1);
    addHitboxToTransformComponent(transformComponent, body1Hitbox);
    
    tetherHitboxes(body1Hitbox, headHitbox, idealBody1Dist, 100, 1.2);
-   // @Hack: method of adding
-   body1Hitbox.angularTethers.push({
+   addHitboxAngularTether(body1Hitbox, {
+      hitbox: body1Hitbox,
       originHitbox: headHitbox,
       idealAngle: Math.PI,
       springConstant: 61,
@@ -139,12 +141,13 @@ export function createInguSerpentConfig(x: number, y: number, angle: number): En
 
    const body2Offset = new Point(0, -idealBody2Dist);
    const body2OffsetRotated = rotatePoint(body2Offset, angle);
-   const body2Hitbox = new Hitbox(transformComponent, null, true, new CircularBox(body1Hitbox.box.posX + body2OffsetRotated.x, body1Hitbox.box.posY + body2OffsetRotated.y, body2Offset.x, body2Offset.y, angle, 28), 0.65, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.INGU_SERPENT_BODY_2]);
+   const body2Hitbox = createHitbox(transformComponent, null, createCircularBox(body1Hitbox.box.posX + body2OffsetRotated.x, body1Hitbox.box.posY + body2OffsetRotated.y, body2Offset.x, body2Offset.y, angle, 28), 0.65, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(body2Hitbox, HitboxTag.inguSerpentBody2);
    addHitboxToTransformComponent(transformComponent, body2Hitbox);
 
    tetherHitboxes(body2Hitbox, body1Hitbox, idealBody2Dist, 100, 1.2);
-   // @Hack: method of adding
-   body2Hitbox.angularTethers.push({
+   addHitboxAngularTether(body2Hitbox, {
+      hitbox: body2Hitbox,
       originHitbox: body1Hitbox,
       idealAngle: Math.PI,
       springConstant: 61,
@@ -157,12 +160,13 @@ export function createInguSerpentConfig(x: number, y: number, angle: number): En
    const idealTailDist = 44;
 
    const tailOffset = new Point(0, -idealTailDist);
-   const tailHitbox = new Hitbox(transformComponent, null, true, new CircularBox(body2Hitbox.box.posX + tailOffset.x, body2Hitbox.box.posY + tailOffset.y, tailOffset.x, tailOffset.y, angle, 28), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.INGU_SERPENT_TAIL]);
+   const tailHitbox = createHitbox(transformComponent, null, createCircularBox(body2Hitbox.box.posX + tailOffset.x, body2Hitbox.box.posY + tailOffset.y, tailOffset.x, tailOffset.y, angle, 28), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(tailHitbox, HitboxTag.inguSerpentTail);
    addHitboxToTransformComponent(transformComponent, tailHitbox);
    
    tetherHitboxes(tailHitbox, body2Hitbox, idealTailDist, 100, 1.2);
-   // @Hack: method of adding
-   tailHitbox.angularTethers.push({
+   addHitboxAngularTether(tailHitbox, {
+      hitbox: tailHitbox,
       originHitbox: body2Hitbox,
       idealAngle: Math.PI,
       springConstant: 61,

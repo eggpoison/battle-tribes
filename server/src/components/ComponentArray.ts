@@ -101,7 +101,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       this.getDataLength = getDataLength;
       this.addDataToPacket = addDataToPacket;
 
-      assert(typeof ComponentArrayRecord[componentType] === "undefined");
+      assert(ComponentArrayRecord[componentType] === undefined);
 
       ComponentArrays.push(this);
       // @Cleanup: cast
@@ -109,7 +109,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    }
    
    public addComponentToBuffer(entity: Entity, component: T, joinDelayTicks: number): void {
-      if (typeof this.entityToIndexMap[entity] !== "undefined") {
+      if (this.entityToIndexMap[entity] !== undefined) {
          throw new Error("Component added to same entity twice.");
       }
 
@@ -217,7 +217,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
 
       this.components.pop();
 
-      if (typeof this.activeEntityToIndexMap[entity] !== "undefined") {
+      if (this.activeEntityToIndexMap[entity] !== undefined) {
          // @HACK: so that grass doesn't bring the server to 1tps by updating transforms for grass every tick
          if (this.componentType !== ServerComponentType.transform || getEntityType(entity) !== EntityType.grassStrand) {
             this.deactivateComponent(entity);
@@ -226,11 +226,11 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    }
 
    public hasComponent(entity: Entity): boolean {
-      return typeof this.entityToIndexMap[entity] !== "undefined";
+      return this.entityToIndexMap[entity] !== undefined;
    }
 
    public activateComponent(entity: Entity): void {
-      if (typeof this.activeEntityToIndexMap[entity] !== "undefined") {
+      if (this.activeEntityToIndexMap[entity] !== undefined) {
          return;
       }
 
@@ -287,10 +287,10 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
             break;
          }
       }
-      assert(typeof idx !== "undefined");
+      assert(idx !== undefined);
 
       const entity = this.indexToEntityMap[idx];
-      assert(typeof entity !== "undefined");
+      assert(entity !== undefined);
 
       return entity;
    }

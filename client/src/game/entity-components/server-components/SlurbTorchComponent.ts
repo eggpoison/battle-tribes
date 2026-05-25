@@ -2,7 +2,7 @@ import { Settings, Entity, randAngle, randFloat, ServerComponentType } from "web
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { createSlurbParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -56,7 +56,7 @@ class _SlurbTorchComponentArray extends _ServerComponentArray<SlurbTorchComponen
    public onTick(entity: Entity): void {
       // @Copynpaste: all of these effects from InventoryUseComponent
       
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       // Slurb particles

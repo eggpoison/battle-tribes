@@ -16,9 +16,10 @@ const fade = (t: number): number => {
    return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
-const calculateCornerDotProduct = (gridXCoordinates: number[][], gridYCoordinates: number[][], cornerX: number, cornerY: number, sampleX: number, sampleY: number): number => {
-   const gradientX = gridXCoordinates[cornerY][cornerX];
-   const gradientY = gridYCoordinates[cornerY][cornerX];
+const calculateCornerDotProduct = (gridCoordinates: Float32Array, cornerX: number, cornerY: number, gridWidth: number, sampleX: number, sampleY: number): number => {
+   const idx = (cornerY * gridWidth + cornerX) * 2;
+   const gradientX = gridCoordinates[idx];
+   const gradientY = gridCoordinates[idx + 1];
 
    const offsetX = sampleX - cornerX;
    const offsetY = sampleY - cornerY;
@@ -39,20 +40,15 @@ for (let i = 0; i < 360; i++) {
 
 // @TEMPORARY: the thung
 export function generatePerlinNoise(width: number, height: number, scale: number, thung: number): Array<number> {
-   const gridXCoordinates: Array<Array<number>> = [];
-   const gridYCoordinates: Array<Array<number>> = [];
-   for (let i = 0; i <= height / scale + 1; i++) {
-      const xCoordinates: Array<number> = [];
-      const yCoordinates: Array<number> = [];
-      for (let j = 0; j <= width / scale + 1; j++) {
-         const degrees = Math.floor(360 * Math.random());
-         const x = cosAngles[degrees];
-         const y = sinAngles[degrees];
-         xCoordinates.push(x);
-         yCoordinates.push(y);
-      }
-      gridXCoordinates.push(xCoordinates);
-      gridYCoordinates.push(yCoordinates);
+   const gridWidth = Math.floor(width / scale) + 2;
+   const gridHeight = Math.floor(height / scale) + 2;
+   const gridSize = gridWidth * gridHeight * 2;
+   
+   const gridCoordinates = new Float32Array(gridSize);
+   for (let i = 0; i < gridSize; i += 2) {
+      const degrees = Math.floor(360 * Math.random());
+      gridCoordinates[i] = cosAngles[degrees];
+      gridCoordinates[i + 1] = sinAngles[degrees];
    }
 
    const noise: Array<number> = [];
@@ -68,12 +64,12 @@ export function generatePerlinNoise(width: number, height: number, scale: number
          const x1 = x0 + 1;
          const y0 = Math.floor(sampleY);
          const y1 = y0 + 1;
-
-         const dotProduct1 = calculateCornerDotProduct(gridXCoordinates, gridYCoordinates, x0, y0, sampleX, sampleY);
-         const dotProduct2 = calculateCornerDotProduct(gridXCoordinates, gridYCoordinates, x1, y0, sampleX, sampleY);
-         const dotProduct3 = calculateCornerDotProduct(gridXCoordinates, gridYCoordinates, x0, y1, sampleX, sampleY);
-         const dotProduct4 = calculateCornerDotProduct(gridXCoordinates, gridYCoordinates, x1, y1, sampleX, sampleY);
-
+         
+         const dotProduct1 = calculateCornerDotProduct(gridCoordinates, x0, y0, gridWidth, sampleX, sampleY);
+         const dotProduct2 = calculateCornerDotProduct(gridCoordinates, x1, y0, gridWidth, sampleX, sampleY);
+         const dotProduct3 = calculateCornerDotProduct(gridCoordinates, x0, y1, gridWidth, sampleX, sampleY);
+         const dotProduct4 = calculateCornerDotProduct(gridCoordinates, x1, y1, gridWidth, sampleX, sampleY);
+         
          const u = fade(sampleX % 1);
          const v = fade(sampleY % 1);
          let val = interpolate(dotProduct1, dotProduct2, dotProduct3, dotProduct4, u, v);
@@ -137,7 +133,7 @@ const calculatePointCornerDotProduct = (grid: Partial<Record<string, Point>>, sa
    const key = cornerY + "-" + cornerX; // @Speed
    let corner = grid[key];
    
-   if (typeof corner === "undefined") {
+   if (corner === undefined) {
       const dir = randAngle();
       corner = new Point(Math.sin(dir), Math.cos(dir));
       grid[key] = corner;
@@ -152,7 +148,7 @@ const calculatePointCornerDotProduct = (grid: Partial<Record<string, Point>>, sa
 
 export function generatePointPerlinNoise(x: number, y: number, scale: number, name: string): number {
    let grid = pointPerlinNoiseGrids[name];
-   if (typeof grid === "undefined") {
+   if (grid === undefined) {
       grid = {};
       pointPerlinNoiseGrids[name] = grid;
    }

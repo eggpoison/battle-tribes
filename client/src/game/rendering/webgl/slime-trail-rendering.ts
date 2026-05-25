@@ -1,4 +1,4 @@
-import { distBetweenPointAndRectangularBox, Settings, RectangularBox, CircularBox, Box, boxIsCircular, _bounds } from "webgl-test-shared";
+import { distBetweenPointAndRectangularBox, Settings, RectangularBox, CircularBox, Box, boxIsCircular, _bounds, calculateBoxBounds } from "webgl-test-shared";
 import Layer from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";
 import { layers } from "../../world";
@@ -73,7 +73,7 @@ const coatFromCircularBox = (layer: Layer, box: CircularBox): void => {
    const centerX = box.posX / 4;
    const centerY = box.posY / 4;
    
-   box.calculateBounds();
+   calculateBoxBounds(box);
    const minGamePixelX = convertToGamePixel(_bounds.minX);
    const maxGamePixelX = convertToGamePixel(_bounds.maxX);
    const minGamePixelY = convertToGamePixel(_bounds.minY);
@@ -97,7 +97,7 @@ const coatFromCircularBox = (layer: Layer, box: CircularBox): void => {
 }
 
 const coatFromRectangularBox = (layer: Layer, box: RectangularBox): void => {
-   box.calculateBounds();
+   calculateBoxBounds(box);
    const minGamePixelX = convertToGamePixel(_bounds.minX);
    const maxGamePixelX = convertToGamePixel(_bounds.maxX);
    const minGamePixelY = convertToGamePixel(_bounds.minY);

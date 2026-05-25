@@ -38,7 +38,7 @@ LootComponentArray.onDeath = onDeath;
 
 const registerLootEntry = (entityType: EntityType, entry: LootEntry): void => {
    const entityTypes = itemToEntityTypesRecord[entry.itemType];
-   if (typeof entityTypes === "undefined") {
+   if (entityTypes === undefined) {
       itemToEntityTypesRecord[entry.itemType] = [entityType];
    } else {
       entityTypes.push(entityType);
@@ -47,7 +47,7 @@ const registerLootEntry = (entityType: EntityType, entry: LootEntry): void => {
 
 export function registerEntityLootOnHit(entityType: EntityType, entry: LootEntry): void {
    const existingLootEntries = lootOnHitRecord[entityType];
-   if (typeof existingLootEntries === "undefined") {
+   if (existingLootEntries === undefined) {
       lootOnHitRecord[entityType] = [entry];
    } else {
       existingLootEntries.push(entry);
@@ -58,7 +58,7 @@ export function registerEntityLootOnHit(entityType: EntityType, entry: LootEntry
 
 export function registerEntityLootOnDeath(entityType: EntityType, entry: LootEntry): void {
    const existingLootEntries = lootOnDeathRecord[entityType];
-   if (typeof existingLootEntries === "undefined") {
+   if (existingLootEntries === undefined) {
       lootOnDeathRecord[entityType] = [entry];
    } else {
       existingLootEntries.push(entry);
@@ -76,7 +76,7 @@ const removeFromPreviousLocalBiome = (entity: Entity, lootComponent: LootCompone
    const entityType = getEntityType(entity);
    
    const previousCount = census.get(entityType);
-   assert(typeof previousCount !== "undefined");
+   assert(previousCount !== undefined);
 
    census.set(entityType, previousCount - 1);
    if (previousCount === 1) {
@@ -98,7 +98,7 @@ const addToNewLocalBiome = (entity: Entity, lootComponent: LootComponent): void 
    const census = localBiome.entityCensus;
  
    const previousCount = census.get(entityType);
-   if (typeof previousCount === "undefined") {
+   if (previousCount === undefined) {
       census.set(entityType, 1);
    } else {
       census.set(entityType, previousCount + 1);
@@ -125,12 +125,12 @@ function onHit(entity: Entity): void {
    const entityType = getEntityType(entity);
 
    const entries = lootOnHitRecord[entityType];
-   if (typeof entries !== "undefined") {
+   if (entries !== undefined) {
       for (const entry of entries) {
          const amount = entry.getAmount(entity);
          createItemsOverEntity(entity, entry.itemType, amount, entry.hitboxIdx);
 
-         if (typeof entry.onItemDrop !== "undefined") {
+         if (entry.onItemDrop !== undefined) {
             entry.onItemDrop(entity);
          }
       }
@@ -141,7 +141,7 @@ function onDeath(entity: Entity): void {
    const entityType = getEntityType(entity);
 
    const entries = lootOnDeathRecord[entityType];
-   if (typeof entries !== "undefined") {
+   if (entries !== undefined) {
       for (const entry of entries) {
          const amount = entry.getAmount(entity);
          createItemsOverEntity(entity, entry.itemType, amount, entry.hitboxIdx);
@@ -151,14 +151,14 @@ function onDeath(entity: Entity): void {
 
 export function getEntityTypesWhichDropItem(itemType: ItemType): ReadonlyArray<EntityType> {
    const entityTypes = itemToEntityTypesRecord[itemType];
-   return typeof entityTypes !== "undefined" ? entityTypes : [];
+   return entityTypes !== undefined ? entityTypes : [];
 }
 
 export function entityDropsItem(entity: Entity, itemType: ItemType): boolean {
    const entityType = getEntityType(entity);
 
    const onHitEntries = lootOnHitRecord[entityType];
-   if (typeof onHitEntries !== "undefined") {
+   if (onHitEntries !== undefined) {
       for (const entry of onHitEntries) {
          if (entry.itemType === itemType && entry.getAmount(entity) > 0) {
             return true;
@@ -167,7 +167,7 @@ export function entityDropsItem(entity: Entity, itemType: ItemType): boolean {
    }
 
    const onDeathEntries = lootOnDeathRecord[entityType];
-   if (typeof onDeathEntries !== "undefined") {
+   if (onDeathEntries !== undefined) {
       for (const entry of onDeathEntries) {
          if (entry.itemType === itemType && entry.getAmount(entity) > 0) {
             return true;
@@ -183,7 +183,7 @@ export function entityDropsFoodItem(entity: Entity): boolean {
    const entityType = getEntityType(entity);
 
    const onHitEntries = lootOnHitRecord[entityType];
-   if (typeof onHitEntries !== "undefined") {
+   if (onHitEntries !== undefined) {
       for (const entry of onHitEntries) {
          if (ITEM_TYPE_RECORD[entry.itemType] === "healing" && entry.getAmount(entity) > 0) {
             return true;
@@ -192,7 +192,7 @@ export function entityDropsFoodItem(entity: Entity): boolean {
    }
 
    const onDeathEntries = lootOnDeathRecord[entityType];
-   if (typeof onDeathEntries !== "undefined") {
+   if (onDeathEntries !== undefined) {
       for (const entry of onDeathEntries) {
          if (ITEM_TYPE_RECORD[entry.itemType] === "healing" && entry.getAmount(entity) > 0) {
             return true;

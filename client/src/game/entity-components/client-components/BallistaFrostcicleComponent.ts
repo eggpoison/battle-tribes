@@ -8,7 +8,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
-import { TransformComponentArray } from "../server-components/TransformComponent";
+import { transformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
 
@@ -45,7 +45,7 @@ class _BallistaFrostcicleComponentArray extends _ClientComponentArray<BallistaFr
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       getHitboxVelocity(hitbox);
       const velocity = _point;

@@ -2,9 +2,9 @@ import { TribesmanTitle, Settings, Entity, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_CO
 import { currentSnapshot } from "./networking/snapshots";
 import { playHeadSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
-import { getRandomPositionInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { getRandomPositionInEntity, transformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
-import { TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
+import { tribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { sendStudyTechPacket } from "./networking/packet-sending/packet-sending";
 import { playerInstance } from "./player";
 import { cursorWorldPos } from "./camera";
@@ -29,7 +29,7 @@ const ORB_COMPLETE_SOUND_PITCHES = [1, 0.85, 0.7];
 const ORB_PARTICLES_PER_SECOND = [2, 3.5, 6];
 
 const generateResearchOrb = (researchBench: Entity): ResearchOrb => {
-   const transformComponent = TransformComponentArray.getComponent(researchBench);
+   const transformComponent = transformComponentArray.getComponent(researchBench);
 
    const hitbox = transformComponent.hitboxes[0];
    
@@ -131,7 +131,7 @@ const completeOrb = (): void => {
 const getResearchSpeedMultiplier = (): number => {
    let multiplier = 1;
 
-   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!);
+   const tribesmanComponent = tribesmanComponentArray.getComponent(playerInstance!);
    if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.shrewd)) {
       multiplier *= 1.5;
    }

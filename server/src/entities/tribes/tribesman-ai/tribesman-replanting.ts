@@ -63,7 +63,7 @@ export function replantPlanterBoxes(tribesman: Entity, aiHelperComponent: AIHelp
       }
    }
 
-   if (typeof closestReplantablePlanterBox !== "undefined") {
+   if (closestReplantablePlanterBox !== undefined) {
       const planterBoxTransformComponent = TransformComponentArray.getComponent(closestReplantablePlanterBox);
       
       // Select the seed

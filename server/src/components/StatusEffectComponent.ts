@@ -85,7 +85,7 @@ export function clearStatusEffect(entityID: number, statusEffectIndex: number): 
 
 export function clearStatusEffects(entityID: number): void {
    const statusEffectComponent = StatusEffectComponentArray.getComponent(entityID);
-   if (typeof statusEffectComponent === "undefined") {
+   if (statusEffectComponent === undefined) {
       return;
    }
    

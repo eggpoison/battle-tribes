@@ -141,7 +141,7 @@ export function beginSwing(attackingEntity: Entity, itemSlot: number, inventoryN
 // @Incomplete
 
 // const item = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
-// if (typeof item !== "undefined" && ITEM_TYPE_RECORD[item.type] === "hammer") {
+// if (item !== undefined && ITEM_TYPE_RECORD[item.type] === "hammer") {
 //    // First look for friendly buildings to repair
 //    const repairTarget = calculateRepairTarget(player, attackTargets);
 //    if (repairTarget !== null) {

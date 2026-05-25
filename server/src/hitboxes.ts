@@ -1,93 +1,121 @@
-import { Box, cloneBox, HitboxCollisionType, HitboxFlag, CollisionBit, Entity, EntityType, Settings, TILE_PHYSICS_INFO_RECORD, TileType, getAngleDiff, getTileIndexIncludingEdges, Point, TileIndex } from "battletribes-shared";
+import { Box, cloneBox, HitboxCollisionType, CollisionBit, Entity, EntityType, Settings, TILE_PHYSICS_INFO_RECORD, TileType, getAngleDiff, getTileIndexIncludingEdges, Point, TileIndex, HitboxTag, HitboxFlagBit } from "battletribes-shared";
 import { CollisionVars, entitiesAreColliding } from "./collision-detection.js";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
 import { registerPlayerKnockback } from "./server/player-clients.js";
-import { HitboxTether } from "./tethers.js";
 import { getEntityLayer, getEntityType } from "./world.js";
 
-export interface HitboxAngularTether {
-   readonly originHitbox: Hitbox;
-   readonly idealAngle: number;
-   readonly springConstant: number;
-   readonly damping: number;
-   /** Radians either side of the ideal angle for which the link is allowed to be in without being pulled */
-   readonly padding: number;
-
-   // @HACK: haven't fully thought this through; it's extremely unclear what this is to people reading through this (HI! if anyone else does read this)
-   readonly idealHitboxAngleOffset: number;
-
-   /** If true, then the tether will be as effective at maintaining the restriction at long distances as it is at short distances. If false then the force used to correct the restriction will be the same regardless of distance between the hitboxes. */
-   readonly useLeverage: boolean;
-}
-
-/** Puts an angular spring on the hitbox's relative angle. */
-export interface HitboxRelativeAngleConstraint {
-   readonly idealAngle: number;
-   readonly springConstant: number;
-   readonly damping: number;
-}
-
-export class Hitbox {
-   public readonly box: Box;
+export interface Hitbox {
+   readonly box: Box;
    
-   public readonly localID: number;
+   readonly localID: number;
 
-   // THESE BOTH START AT 0 BUT WILL BE FILLED BY THE TRANSFORM COMPONENT'S INITIALISATION
    /** The entity the hitbox belongs to. */
    // @Cleanup would be really nice to make the entity field readonly, but rn it has to be set when it's initialised so idk how that would work
-   public entity: Entity = 0;
+   entity: Entity;
    // Should never be directly set, instead should be set using the propagateRootEntityChange function.
-   public rootEntity: Entity = 0;
+   rootEntity: Entity;
    
-   public parent: Hitbox | null;
-   /** If true, the hitbox will be considered like it and its parent are part of the same thing, regardless even of if they belong to different entities. */
-   public isPartOfParent: boolean;
+   parent: Hitbox | null;
 
-   public readonly children: Array<Hitbox> = [];
+   readonly children: Array<Hitbox>;
    
-   public previousPosX: number;
-   public previousPosY: number;
-   public accelX = 0;
-   public accelY = 0;
-   // @Incomplete: make it impossible to add or remove from here unless its through the proper functions
-   public readonly tethers: Array<HitboxTether> = [];
+   previousPosX: number;
+   previousPosY: number;
+   accelX: number;
+   accelY: number;
    
-   public previousRelativeAngle: number;
-   public angularAcceleration = 0;
-   public readonly angularTethers: Array<HitboxAngularTether> = [];
-   public readonly relativeAngleConstraints: Array<HitboxRelativeAngleConstraint> = [];
+   previousRelativeAngle: number;
+   angularAcceleration: number;
    
-   public mass: number;
-   public collisionType: HitboxCollisionType;
-   public readonly collisionBit: CollisionBit;
-   // @Temporary: this isn't readonly so that snobes can temporarily not collide with snowballs when digging
-   public collisionMask: number;
-   public readonly flags: ReadonlyArray<HitboxFlag>;
+   mass: number;
+   // @SPEED these two are only used for three things: snobes digging down, players not colliding with plants when wearing the bush suit, and blueprint entities not pushing stuff.
+   readonly collisionBit: CollisionBit;
+   collisionMask: number;
 
-   /** If true, the entity will not be pushed around by collisions or be able to be moved. */
-   public isStatic = false;
+   /** AAAAAAAA AAAAAAAA 00000000 000BCDEF:
+    * A = Hitbox tag.
+    * B = Is static.                         (If true, the entity will not be pushed around by collisions or be able to be moved.)
+    * C = Is part of parent. Default = true. (If true, the hitbox will be considered like it and its parent are part of the same thing, regardless of if they belong to different entities.)
+    * D = Non-grass-blocking.
+    * E = Ignores wall collisions.
+    * F = Collision type, soft or hard.      (HitboxCollisionType)
+    */
+   flags: number;
+}
 
-   constructor(transformComponent: TransformComponent, parent: Hitbox | null, isPartOfParent: boolean, box: Box, mass: number, collisionType: HitboxCollisionType, collisionBit: CollisionBit, collisionMask: number, flags: ReadonlyArray<HitboxFlag>) {
-      this.localID = transformComponent.nextHitboxLocalID++;
-      this.parent = parent;
-      this.isPartOfParent = isPartOfParent;
-      this.box = box;
-   
-      this.previousPosX = box.posX;
-      this.previousPosY = box.posY;
-      this.previousRelativeAngle = box.relativeAngle;
+export function createHitbox(transformComponent: TransformComponent, parent: Hitbox | null, box: Box, mass: number, collisionType: HitboxCollisionType, collisionBit: CollisionBit, collisionMask: number): Hitbox {
+   return {
+      box,
+      localID: transformComponent.nextHitboxLocalID++,
+      // THESE BOTH START AT 0 BUT WILL BE FILLED BY THE TRANSFORM COMPONENT'S INITIALISATION
+      entity: 0,
+      rootEntity: 0,
+      parent: parent,
+      children: [],
+      previousPosX: box.posX,
+      previousPosY: box.posY,
+      accelX: 0,
+      accelY: 0,
+      previousRelativeAngle: box.relativeAngle,
+      angularAcceleration: 0,
+      mass: mass,
+      collisionBit: collisionBit,
+      collisionMask: collisionMask,
+      flags: collisionType | HitboxFlagBit.IS_PART_OF_PARENT_BIT
+   };
+}
 
-      this.mass = mass;
-      this.collisionType = collisionType;
-      this.collisionBit = collisionBit;
-      this.collisionMask = collisionMask;
-      this.flags = flags;
+export function setHitboxTag(hitbox: Hitbox, tag: HitboxTag): void {
+   hitbox.flags = (hitbox.flags & 0xFFFF) | (tag << 16);
+}
+export function getHitboxTag(hitbox: Hitbox): HitboxTag {
+   return hitbox.flags >> 16;
+}
+
+export function setHitboxCollisionType(hitbox: Hitbox, collisionType: HitboxCollisionType): void {
+   hitbox.flags = (hitbox.flags & ~1) | collisionType;
+}
+export function getHitboxCollisionType(hitbox: Hitbox): HitboxCollisionType {
+   return hitbox.flags & 1;
+}
+
+export function hitboxIsStatic(hitbox: Hitbox): boolean {
+   return hitbox.flags & HitboxFlagBit.IS_STATIC_BIT ? true : false;
+}
+export function setHitboxIsStatic(hitbox: Hitbox): void {
+   hitbox.flags |= HitboxFlagBit.IS_STATIC_BIT;
+}
+
+export function hitboxIsPartOfParent(hitbox: Hitbox): boolean {
+   return hitbox.flags & HitboxFlagBit.IS_PART_OF_PARENT_BIT ? true : false;
+}
+export function setHitboxIsPartOfParent(hitbox: Hitbox, isPartOfParent: boolean): void {
+   if (isPartOfParent) {
+      hitbox.flags |= HitboxFlagBit.IS_PART_OF_PARENT_BIT;
+   } else {
+      hitbox.flags &= ~HitboxFlagBit.IS_PART_OF_PARENT_BIT;
    }
+}
+
+export function hitboxIgnoresWallCollisions(hitbox: Hitbox): boolean {
+   return hitbox.flags & HitboxFlagBit.IGNORES_WALL_COLLISIONS_BIT ? true : false;
+}
+export function setHitboxIgnoresWallCollisions(hitbox: Hitbox): void {
+   hitbox.flags |= HitboxFlagBit.IGNORES_WALL_COLLISIONS_BIT;
+}
+
+export function setHitboxIsNonGrassBlocking(hitbox: Hitbox): void {
+   hitbox.flags |= HitboxFlagBit.NON_GRASS_BLOCKING_BIT;
+}
+export function hitboxIsNonGrassBlocking(hitbox: Hitbox): boolean {
+   return hitbox.flags & HitboxFlagBit.NON_GRASS_BLOCKING_BIT ? true : false;
 }
 
 /** Returns a deep-clone of the hitbox. */
 export function cloneHitbox(transformComponent: TransformComponent, hitbox: Hitbox): Hitbox {
-   return new Hitbox(transformComponent, hitbox.parent, hitbox.isPartOfParent, cloneBox(hitbox.box), hitbox.mass, hitbox.collisionType, hitbox.collisionBit, hitbox.collisionMask, hitbox.flags);
+   const clone = createHitbox(transformComponent, hitbox.parent, cloneBox(hitbox.box), hitbox.mass, 0, hitbox.collisionBit, hitbox.collisionMask);
+   clone.flags = hitbox.flags;
+   return clone;
 }
 
 export function getHitboxVelocity(hitbox: Hitbox): Point {
@@ -120,7 +148,7 @@ export function getRootHitbox(hitbox: Hitbox): Hitbox {
 
 export function addHitboxVelocity(hitbox: Hitbox, addVec: Point): void {
    const rootHitbox = getRootHitbox(hitbox);
-   if (!rootHitbox.isStatic) {
+   if (!hitboxIsStatic(rootHitbox)) {
       rootHitbox.box.posX += addVec.x * Settings.DT_S;
       rootHitbox.box.posY += addVec.y * Settings.DT_S;
    }
@@ -151,7 +179,7 @@ export function teleportHitbox(hitbox: Hitbox, pos: Point): void {
 export function getHitboxTotalMassIncludingChildren(hitbox: Hitbox): number {
    let totalMass = hitbox.mass;
    for (const childHitbox of hitbox.children) {
-      if (childHitbox.isPartOfParent) {
+      if (hitboxIsPartOfParent(childHitbox)) {
          totalMass += getHitboxTotalMassIncludingChildren(childHitbox);
       }
    }
@@ -175,7 +203,7 @@ export function applyKnockback(hitbox: Hitbox, addVec: Point): void {
    // @CLEANUP this is literally just addHitboxVelocity, but also registering it to the player.....
    
    const rootHitbox = getRootHitbox(hitbox);
-   if (rootHitbox.isStatic) {
+   if (hitboxIsStatic(rootHitbox)) {
       return;
    }
 
@@ -199,7 +227,7 @@ export function applyKnockback(hitbox: Hitbox, addVec: Point): void {
 // @Cleanup: Should be combined with previous function
 export function applyAbsoluteKnockback(hitbox: Hitbox, knockback: Point): void {
    const rootHitbox = getRootHitbox(hitbox);
-   if (rootHitbox.isStatic) {
+   if (hitboxIsStatic(rootHitbox)) {
       return;
    }
 
@@ -213,7 +241,7 @@ export function applyAbsoluteKnockback(hitbox: Hitbox, knockback: Point): void {
 
 export function applyAcceleration(hitbox: Hitbox, accelX: number, accelY: number): void {
    const rootHitbox = getRootHitbox(hitbox);
-   if (!rootHitbox.isStatic) {
+   if (!hitboxIsStatic(rootHitbox)) {
       rootHitbox.accelX += accelX;
       rootHitbox.accelY += accelY;
    }
@@ -221,7 +249,7 @@ export function applyAcceleration(hitbox: Hitbox, accelX: number, accelY: number
 
 export function applyForce(hitbox: Hitbox, forceX: number, forceY: number): void {
    const rootHitbox = getRootHitbox(hitbox);
-   if (!rootHitbox.isStatic) {
+   if (!hitboxIsStatic(rootHitbox)) {
       const hitboxConnectedMass = getHitboxTotalMassIncludingChildren(rootHitbox);
       if (hitboxConnectedMass !== 0) {
          rootHitbox.accelX += forceX / hitboxConnectedMass;

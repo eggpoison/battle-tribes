@@ -160,7 +160,7 @@ export function groupLocalBiomes(layer: Layer): void {
 
          for (const tile of connectedTiles) {
             const tileType = layer.getTileType(tile);
-            if (typeof tileCensus[tileType] === "undefined") {
+            if (tileCensus[tileType] === undefined) {
                tileCensus[tileType] = 1;
             } else {
                // @Hack: '!'

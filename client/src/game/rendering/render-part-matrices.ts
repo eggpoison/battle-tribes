@@ -1,11 +1,11 @@
 import { EntityRenderObject, recalculateRenderObjectVertexData } from "../EntityRenderObject";
 import { createIdentityMatrix, Matrix3x2, matrixMultiplyInPlace } from "./matrices";
-import { ServerComponentType, Entity, assert, getAngleDiff, lerp, Point, randAngle, slerp, Settings, _point, Mutable } from "webgl-test-shared";
+import { ServerComponentType, Entity, assert, getAngleDiff, lerp, Point, randAngle, slerp, Settings, _point, Mutable, getBoxFlipX } from "webgl-test-shared";
 import { RenderPart, renderParentIsHitbox } from "../render-parts/render-parts";
 import { renderLayerIsChunkRendered, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
 import { entityExists, getEntityRenderObject } from "../world";
 import { getHitboxVelocity, Hitbox } from "../hitboxes";
-import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { playerInstance } from "../player";
 import { EntitySnapshot } from "../networking/snapshot-processing";
 import { currentSnapshot, nextSnapshot } from "../networking/snapshots";
@@ -176,8 +176,9 @@ const matrixMultiplyByInterpolatedHitbox = (hitbox: Hitbox, modelMatrix: Matrix3
    rotateMatrix(modelMatrix, angle);
    
    // Scale
-   const scale = hitbox.box.scale;
-   scaleMatrix(modelMatrix, scale * (hitbox.box.flipX ? -1 : 1), scale);
+   if (getBoxFlipX(hitbox.box)) {
+      scaleMatrix(modelMatrix, -1, 1);
+   }
    
    // Translation
    const tx = lerp(currentHitboxData.box.posX, nextHitboxData.box.posX, interp);
@@ -195,8 +196,9 @@ const matrixMultiplyByCalculatedHitbox = (hitbox: Hitbox, modelMatrix: Matrix3x2
    rotateMatrix(modelMatrix, angle);
    
    // Scale
-   const scale = hitbox.box.scale;
-   scaleMatrix(modelMatrix, scale * (hitbox.box.flipX ? -1 : 1), scale);
+   if (getBoxFlipX(hitbox.box)) {
+      scaleMatrix(modelMatrix, -1, 1);
+   }
 
    // Translation
    getHitboxVelocity(hitbox);
@@ -322,7 +324,7 @@ export function updateRenderPartMatrices(clientInterp: number, serverInterp: num
 /* -------------------------------- */
 
 export function entityUsesClientInterp(entity: Entity): boolean {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    
    const entityHitbox = transformComponent.hitboxes[0];
    const rootEntity = entityHitbox.rootEntity;

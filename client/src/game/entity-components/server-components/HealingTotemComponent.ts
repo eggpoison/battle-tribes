@@ -1,7 +1,7 @@
 import { Entity, PacketReader, Point, angle, distance, lerp, randInt, Settings, HealingTotemTargetData, ServerComponentType } from "webgl-test-shared";
 import { createHealingParticle } from "../../particles";
 import { Light, removeLight } from "../../lights";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -150,7 +150,7 @@ class _HealingTotemComponentArray extends _ServerComponentArray<HealingTotemComp
          }
       }
       
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const healingTotemHitbox = transformComponent.hitboxes[0];
       
       for (let i = 0; i < healingTotemComponent.healingTargetsData.length; i++) {    

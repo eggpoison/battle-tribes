@@ -5,7 +5,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { playSoundOnHitbox } from "../../sound";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -51,7 +51,7 @@ class _DustfleaComponentArray extends _ServerComponentArray<DustfleaComponent, D
    }
 
    public onDie(dustflea: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(dustflea);
+      const transformComponent = transformComponentArray.getComponent(dustflea);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("dustflea-explosion.mp3", 0.4, randFloat(0.9, 1.1), dustflea, hitbox, false);
    }

@@ -1,4 +1,4 @@
-import { BlueprintType, Entity, EntityType, Point, HitboxCollisionType } from "battletribes-shared";
+import { BlueprintType, Entity, EntityType, HitboxCollisionType } from "battletribes-shared";
 import { EntityConfig, getConfigTransformComponent } from "../components.js";
 import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
 import { HealthComponent } from "../components/HealthComponent.js";
@@ -7,7 +7,7 @@ import Tribe from "../Tribe.js";
 import { TribeComponent } from "../components/TribeComponent.js";
 import { StructureComponent } from "../components/StructureComponent.js";
 import { VirtualStructure } from "../tribesman-ai/building-plans/TribeBuildingLayer.js";
-import { cloneHitbox } from "../hitboxes.js";
+import { cloneHitbox, setHitboxCollisionType } from "../hitboxes.js";
 import { createStructureConfig, StructureConnection } from "../structure-placement.js";
 
 // @Incomplete: Remove if the associated entity is removed
@@ -47,7 +47,7 @@ export function createBlueprintEntityConfig(x: number, y: number, angle: number,
       for (const structureHitbox of structureTransformComponent.hitboxes) {
          const hitbox = cloneHitbox(transformComponent, structureHitbox);
          hitbox.mass = 0;
-         hitbox.collisionType = HitboxCollisionType.soft;
+         setHitboxCollisionType(hitbox, HitboxCollisionType.soft);
          // @Hack
          hitbox.collisionMask = 0;
          addHitboxToTransformComponent(transformComponent, hitbox);
@@ -60,7 +60,7 @@ export function createBlueprintEntityConfig(x: number, y: number, angle: number,
 
       for (const hitbox of transformComponent.hitboxes) {
          hitbox.mass = 0;
-         hitbox.collisionType = HitboxCollisionType.soft;
+         setHitboxCollisionType(hitbox, HitboxCollisionType.soft);
       }
    }
 

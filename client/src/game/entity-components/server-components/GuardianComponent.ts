@@ -1,4 +1,4 @@
-import { GuardianAttackType, GuardianCrystalBurstStage, GuardianCrystalSlamStage, GuardianSpikyBallSummonStage, ServerComponentType, lerp, PacketReader, Entity, HitboxFlag } from "webgl-test-shared";
+import { GuardianAttackType, GuardianCrystalBurstStage, GuardianCrystalSlamStage, GuardianSpikyBallSummonStage, ServerComponentType, lerp, PacketReader, Entity, HitboxTag } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Light } from "../../lights";
 import { VisualRenderPart } from "../../render-parts/render-parts";
@@ -8,11 +8,12 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 import { registerServerComponentArray } from "../component-registry";
+import { getHitboxTag } from "../../hitboxes";
 
 export interface GuardianComponentData {
    readonly rubyGemActivation: number;
@@ -173,7 +174,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
       for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
          const hitbox = transformComponentData.hitboxes[i];
          
-         if (hitbox.flags.includes(HitboxFlag.GUARDIAN_LIMB_HITBOX)) {
+         if (getHitboxTag(hitbox) === HitboxTag.guardianLimbHitbox) {
             const limbRenderPart = new TexturedRenderPart(
                hitbox,
                0,
@@ -350,7 +351,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
          setRenderPartShakeAmount(renderPart, 0);
       }
       
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       switch (attackType) {
          case GuardianAttackType.crystalSlam: {

@@ -1,4 +1,4 @@
-import { HitboxFlag, GuardianAttackType, ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVar, angle } from "battletribes-shared";
+import { GuardianAttackType, ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVar, angle, HitboxTag } from "battletribes-shared";
 import { moveEntityToPosition } from "../ai-shared.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
 import { AIHelperComponentArray, AIType } from "./AIHelperComponent.js";
@@ -6,7 +6,7 @@ import { ComponentArray } from "./ComponentArray.js";
 import { GuardianSpikyBallComponentArray } from "./GuardianSpikyBallComponent.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";
-import { applyKnockback, Hitbox } from "../hitboxes.js";
+import { applyKnockback, getHitboxTag, Hitbox } from "../hitboxes.js";
 
 const enum Vars {
    VISION_RANGE = 250,
@@ -92,7 +92,7 @@ function onJoin(guardian: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(guardian);
    for (let i = 0; i < transformComponent.hitboxes.length; i++) {
       const hitbox = transformComponent.hitboxes[i];
-      if (hitbox.flags.includes(HitboxFlag.GUARDIAN_LIMB_HITBOX)) {
+      if (getHitboxTag(hitbox) === HitboxTag.guardianLimbHitbox) {
          guardianComponent.limbHitboxes.push(hitbox);
       }
    }

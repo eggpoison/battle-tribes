@@ -4,8 +4,8 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
-import { TransformComponentArray } from "./TransformComponent";
-import { CookingComponentArray } from "./CookingComponent";
+import { transformComponentArray } from "./TransformComponent";
+import { cookingComponentArray } from "./CookingComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -50,8 +50,8 @@ class _FurnaceComponentArray extends _ServerComponentArray<FurnaceComponent, Fur
    }
 
    public onTick(entity: Entity): void {
-      const cookingComponent = CookingComponentArray.getComponent(entity);
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const cookingComponent = cookingComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       
       if (cookingComponent.isCooking) {
          const hitbox = transformComponent.hitboxes[0];
@@ -106,7 +106,7 @@ class _FurnaceComponentArray extends _ServerComponentArray<FurnaceComponent, Fur
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const size = (hitbox.box as RectangularBox).width;
 

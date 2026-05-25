@@ -3,7 +3,7 @@ import { refreshCameraView, setCameraPosition } from "../camera";
 import { Tile } from "../Tile";
 import { addLayer, layers, setCurrentLayer } from "../world";
 import Layer from "../Layer";
-import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { initialiseRenderables } from "../rendering/render-loop";
 import { playerInstance } from "../player";
 import { registerTamingSpecsFromData } from "../taming-specs";
@@ -143,7 +143,7 @@ export function onSyncGameDataPacket(reader: PacketReader): void {
    const acceleration = reader.readPoint();
 
    if (playerInstance !== null) {
-      const transformComponent = TransformComponentArray.getComponent(playerInstance);
+      const transformComponent = transformComponentArray.getComponent(playerInstance);
       const playerHitbox = transformComponent.hitboxes[0];
    
       playerHitbox.box.posX = position.x;
@@ -164,7 +164,7 @@ export function onForcePositionUpdatePacket(reader: PacketReader): void {
    const x = reader.readNumber();
    const y = reader.readNumber();
 
-   const transformComponent = TransformComponentArray.getComponent(playerInstance);
+   const transformComponent = transformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
    playerHitbox.box.posX = x;
    playerHitbox.box.posY = y;

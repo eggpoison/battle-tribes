@@ -3,7 +3,7 @@ import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -71,7 +71,7 @@ class _KrumblidMorphCocoonComponentArray extends _ServerComponentArray<KrumblidM
    }
 
    public onTick(cocoon: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(cocoon);
+      const transformComponent = transformComponentArray.getComponent(cocoon);
       const hitbox = transformComponent.hitboxes[0];
    
       const hitboxRadius = (hitbox.box as CircularBox).radius;
@@ -101,7 +101,7 @@ class _KrumblidMorphCocoonComponentArray extends _ServerComponentArray<KrumblidM
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("cocoon-break.mp3", 0.4, 1, entity, hitbox, false);
       

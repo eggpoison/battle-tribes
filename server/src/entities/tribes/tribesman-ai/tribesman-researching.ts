@@ -123,13 +123,13 @@ const useItemInTechResearch = (tribe: Tribe, tech: Tech, itemType: ItemType, amo
    let amountUsed = 0;
 
    const techUnlockProgress = tribe.techTreeUnlockProgress[tech.id];
-   if (typeof techUnlockProgress === "undefined") {
+   if (techUnlockProgress === undefined) {
       amountUsed = Math.min(amount, amountRequiredToResearch);
       tribe.techTreeUnlockProgress[tech.id] = {
          itemProgress: { [itemType]: amountUsed },
          studyProgress: 0
       };
-   } else if (typeof techUnlockProgress.itemProgress[itemType] === "undefined") {
+   } else if (techUnlockProgress.itemProgress[itemType] === undefined) {
       amountUsed = Math.min(amount, amountRequiredToResearch);
       techUnlockProgress.itemProgress[itemType] = amountUsed;
    } else {
@@ -155,7 +155,7 @@ export function useItemsInResearch(tribesman: Entity, tech: Tech, itemType: Item
 
    for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
       const item = hotbarInventory.itemSlots[itemSlot];
-      if (typeof item === "undefined" || item.type !== itemType) {
+      if (item === undefined || item.type !== itemType) {
          continue;
       }
 

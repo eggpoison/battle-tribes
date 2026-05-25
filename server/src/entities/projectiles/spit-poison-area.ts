@@ -1,16 +1,16 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Settings, StatusEffect, Point, HitboxCollisionType, CircularBox } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Settings, StatusEffect, Point, HitboxCollisionType, createCircularBox } from "battletribes-shared";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity } from "../../components/HealthComponent.js";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
 import { EntityConfig } from "../../components.js";
 import { getEntityType } from "../../world.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { SpitPoisonAreaComponent } from "../../components/SpitPoisonAreaComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox } from "../../hitboxes.js";
 
 export function createSpitPoisonAreaConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
    // @Hack mass
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 55), Number.EPSILON, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 55), Number.EPSILON, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const spitPoisonAreaComponent = new SpitPoisonAreaComponent();

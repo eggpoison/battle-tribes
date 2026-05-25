@@ -7,12 +7,12 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
-import { resetIgnoredTileSpeedMultipliers, TransformComponentArray } from "./TransformComponent";
+import { resetIgnoredTileSpeedMultipliers, transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { playSoundOnHitbox } from "../../sound";
 import { InventoryComponentArray, getInventory } from "./InventoryComponent";
-import { TribeComponentArray } from "./TribeComponent";
+import { tribeComponentArray } from "./TribeComponent";
 import { playerInstance } from "../../player";
 import { getHitboxTile, getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -46,7 +46,9 @@ export interface TribesmanComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesman, _TribesmanComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.tribesman]: TribesmanComponentArray;
+   }
 }
 
 // @Memory
@@ -162,7 +164,7 @@ const FISH_SUIT_IGNORED_TILE_MOVE_SPEEDS = [TileType.water];
 
 /** Gets the radius of a humanoid creature with just the one circular hitbox */
 export function getHumanoidRadius(tribesman: Entity): number {
-   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const transformComponent = transformComponentArray.getComponent(tribesman);
    return ((transformComponent.hitboxes[0]).box as CircularBox).radius;
 }
 
@@ -226,7 +228,7 @@ export function tribesmanHasTitle(tribesmanComponent: TribesmanComponent, title:
    return false;
 }
 
-class _TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, TribesmanComponentData, IntermediateInfo> {
+class TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, TribesmanComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): TribesmanComponentData {
       const warpaintType = readWarpaint(reader);
       
@@ -383,12 +385,12 @@ class _TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent,
    }
 }
 
-export const TribesmanComponentArray = registerServerComponentArray(ServerComponentType.tribesman, _TribesmanComponentArray, true);
-TribesmanComponentArray.onTick = onTick;
-TribesmanComponentArray.updateFromData = updateFromData;
-TribesmanComponentArray.updatePlayerFromData = updatePlayerFromData;
-TribesmanComponentArray.onHit = onHit;
-TribesmanComponentArray.onDie = onDie;
+export const tribesmanComponentArray = registerServerComponentArray(ServerComponentType.tribesman, TribesmanComponentArray, true);
+tribesmanComponentArray.onTick = onTick;
+tribesmanComponentArray.updateFromData = updateFromData;
+tribesmanComponentArray.updatePlayerFromData = updatePlayerFromData;
+tribesmanComponentArray.onHit = onHit;
+tribesmanComponentArray.onDie = onDie;
 
 const getFistTextureSource = (entityType: EntityType, tribeType: TribeType): string => {
    switch (entityType) {
@@ -532,7 +534,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
             const offsetX = (20 - 5 * 4 / 2) * (isFlipped ? 1 : -1);
             const offsetY = 24 - 6 * 4 / 2;
 
-            const transformComponent = TransformComponentArray.getComponent(entity);
+            const transformComponent = transformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
 
             const renderPart = new TexturedRenderPart(
@@ -551,7 +553,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
          // Create shrewd eyes
          case TribesmanTitle.shrewd: {
             for (let i = 0; i < 2; i++) {
-               const transformComponent = TransformComponentArray.getComponent(entity);
+               const transformComponent = transformComponentArray.getComponent(entity);
                const hitbox = transformComponent.hitboxes[0];
 
                // @Hack
@@ -591,7 +593,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
             for (let i = 0; i < numLeaves; i++) {
                const angle = ((i - (numLeaves - 1) / 2) * Math.PI * 0.2) + Math.PI;
 
-               const transformComponent = TransformComponentArray.getComponent(entity);
+               const transformComponent = transformComponentArray.getComponent(entity);
                const hitbox = transformComponent.hitboxes[0];
                
                const radius = getHumanoidRadius(entity);
@@ -611,7 +613,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
             break;
          }
          case TribesmanTitle.yetisbane: {
-            const transformComponent = TransformComponentArray.getComponent(entity);
+            const transformComponent = transformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
 
             const radius = getHumanoidRadius(entity);
@@ -647,7 +649,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
             break;
          }
          case TribesmanTitle.wellful: {
-            const transformComponent = TransformComponentArray.getComponent(entity);
+            const transformComponent = transformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
 
             const renderPart = new TexturedRenderPart(
@@ -669,7 +671,7 @@ const updateTitles = (tribeMemberComponent: TribesmanComponent, entity: Entity, 
    if (titlesAreDifferent(tribeMemberComponent.titles, newTitles)) {
       // If at least 1 title is added, do particle effects
       if (titlesArrayHasExtra(newTitles, tribeMemberComponent.titles)) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          for (let i = 0; i < 25; i++) {
             const offsetMagnitude = randFloat(12, 34);
@@ -691,7 +693,7 @@ const updateTitles = (tribeMemberComponent: TribesmanComponent, entity: Entity, 
 }
 
 function onTick(entity: Entity): void {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(entity);
+   const tribesmanComponent = tribesmanComponentArray.getComponent(entity);
    if (tribesmanComponent.deathbringerEyeLights.length > 0) {
       const eyeFlashProgress = Math.min(getSecondsSinceLastAttack(entity) / 0.5, 1)
       const intensity = lerp(0.6, 0.5, eyeFlashProgress);
@@ -703,7 +705,7 @@ function onTick(entity: Entity): void {
       }
    }
 
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    const entityHitbox = transformComponent.hitboxes[0];
    
    const inventoryComponent = InventoryComponentArray.getComponent(entity);
@@ -760,7 +762,7 @@ function onTick(entity: Entity): void {
 }
 
 function updateFromData(data: TribesmanComponentData, entity: Entity): void {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(entity);
+   const tribesmanComponent = tribesmanComponentArray.getComponent(entity);
 
    tribesmanComponent.warpaintType = data.warpaintType;
 
@@ -776,7 +778,7 @@ function updateFromData(data: TribesmanComponentData, entity: Entity): void {
 function updatePlayerFromData(data: TribesmanComponentData): void {
    updateFromData(data, playerInstance!);
 
-   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!);
+   const tribesmanComponent = tribesmanComponentArray.getComponent(playerInstance!);
 
    // @Garbage
    const titles: Array<TribesmanTitle> = [];
@@ -802,7 +804,7 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
       createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
    }
 
-   const tribeComponent = TribeComponentArray.getComponent(entity);
+   const tribeComponent = tribeComponentArray.getComponent(entity);
    switch (tribeComponent.tribeType) {
       case TribeType.goblins: {
          playSoundOnHitbox(randItem(GOBLIN_HURT_SOUNDS), 0.4, 1, entity, hitbox, true);
@@ -840,13 +842,13 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
 }
 
 function onDie(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 20);
    createBloodParticleFountain(entity, 0.1, 1);
 
-   const tribeComponent = TribeComponentArray.getComponent(entity);
+   const tribeComponent = tribeComponentArray.getComponent(entity);
    switch (tribeComponent.tribeType) {
       case TribeType.goblins: {
          playSoundOnHitbox(randItem(GOBLIN_DIE_SOUNDS), 0.4, 1, entity, hitbox, false);

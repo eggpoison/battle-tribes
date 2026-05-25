@@ -4,7 +4,7 @@ import { nerdVision } from "../ui-state/nerd-vision-funcs";
 import { openChatMessageInput } from "../ui/game/Chat";
 import { closeCurrentMenu, hasOpenNonEmbodiedMenu, MenuType, openMenu, toggleMenu } from "../ui/menus";
 import { updateCursorScreenPos } from "./camera";
-import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { sendAscendPacket, sendDismountCarrySlotPacket, sendItemDropPacket } from "./networking/packet-sending/packet-sending";
 import { playerInstance } from "./player";
 import { getHotbarSelectedItemSlot, getSelectedItemInfo, selectItemSlot } from "./player-action-handling";
@@ -137,7 +137,7 @@ function dropItem(): void {
       return;
    }
 
-   const playerTransformComponent = TransformComponentArray.getComponent(playerInstance);
+   const playerTransformComponent = transformComponentArray.getComponent(playerInstance);
    const playerHitbox = playerTransformComponent.hitboxes[0];
    
    const dropAmount = shiftIsPressed ? 99999 : 1;
@@ -200,7 +200,7 @@ function onShiftStart(): void {
    
    // Dismount current mount if the player isn't shift clicking an item in an inventory
    if (!hasOpenNonEmbodiedMenu() && playerInstance !== null) {
-      const transformComponent = TransformComponentArray.getComponent(playerInstance);
+      const transformComponent = transformComponentArray.getComponent(playerInstance);
       const playerHitbox = transformComponent.hitboxes[0];
       if (playerHitbox.parent !== null && entityExists(playerHitbox.parent.entity)) {
          sendDismountCarrySlotPacket();

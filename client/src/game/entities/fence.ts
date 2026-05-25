@@ -1,4 +1,4 @@
-import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType } from "webgl-test-shared";
+import { EntityType, DEFAULT_COLLISION_MASK, CollisionBit, HitboxCollisionType, createRectangularBox } from "webgl-test-shared";
 import { createFenceComponentData } from "../entity-components/server-components/FenceComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createStatusEffectComponentData } from "../entity-components/server-components/StatusEffectComponent";
@@ -9,12 +9,12 @@ import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
-export function createFenceConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
+export function createFenceConfig(x: number, y: number, angle: number, tribe: Tribe): EntityComponentData {
    const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
-   const box = new RectangularBox(position, new Point(0, 0), rotation, 20, 20);
-   const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const box = createRectangularBox(x, y, 0, 0, angle, 20, 20);
+   const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
    hitboxes.push(hitbox);
 
    return {

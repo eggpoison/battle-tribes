@@ -213,7 +213,7 @@ const tickInventoryUseInfo = (tribeMember: Entity, limb: LimbInfo): void => {
             const inventory = limb.associatedInventory;
             
             const selectedItem = inventory.itemSlots[limb.selectedItemSlot];
-            if (typeof selectedItem !== "undefined") {
+            if (selectedItem !== undefined) {
                const itemCategory = ITEM_TYPE_RECORD[selectedItem.type];
                if (itemCategory === "healing") {
                   useItem(tribeMember, selectedItem, inventory.name, limb.selectedItemSlot);
@@ -238,7 +238,7 @@ const tickInventoryUseInfo = (tribeMember: Entity, limb: LimbInfo): void => {
       }
       case LimbAction.loadCrossbow: {
          const loadProgress = limb.crossbowLoadProgressRecord[limb.selectedItemSlot];
-         if (typeof loadProgress === "undefined") {
+         if (loadProgress === undefined) {
             limb.crossbowLoadProgressRecord[limb.selectedItemSlot] = Settings.DT_S;
          } else {
             limb.crossbowLoadProgressRecord[limb.selectedItemSlot]! += Settings.DT_S;
@@ -279,7 +279,7 @@ function onTick(tribeMember: Entity): void {
    // Update backpack
    const backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
    const backpack = backpackSlotInventory.itemSlots[1];
-   if (typeof backpack !== "undefined") {
+   if (backpack !== undefined) {
       const itemInfo = ITEM_INFO_RECORD[backpack.type] as BackpackItemInfo;
       resizeInventory(inventoryComponent, InventoryName.backpack, itemInfo.inventoryWidth, itemInfo.inventoryHeight);
    } else {

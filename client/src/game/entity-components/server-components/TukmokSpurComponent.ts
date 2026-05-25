@@ -1,6 +1,6 @@
-import { randFloat, Entity, ServerComponentType, HitboxFlag } from "webgl-test-shared";
+import { randFloat, Entity, ServerComponentType, HitboxTag } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { Hitbox } from "../../hitboxes";
+import { getHitboxTag, Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -26,14 +26,16 @@ class _TukmokSpurComponentArray extends _ServerComponentArray<TukmokSpurComponen
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
 
+      const tag = getHitboxTag(hitbox);
+      
       let textureSource: string;
-      if (hitbox.flags.includes(HitboxFlag.TUKMOK_SPUR_HEAD)) {
+      if (tag === HitboxTag.tukmokSpurHead) {
          textureSource = "entities/tukmok-spur/spur-head.png";
-      } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_SPUR_SHOULDER_LEFT_FRONT)) {
+      } else if (tag === HitboxTag.tukmokSpurShoulderLeftFront) {
          textureSource = "entities/tukmok-spur/spur-shoulder-left-front.png";
-      } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_SPUR_SHOULDER_LEFT_BACK)) {
+      } else if (tag === HitboxTag.tukmokSpurShoulderLeftBack) {
          textureSource = "entities/tukmok-spur/spur-shoulder-left-back.png";
-      } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_SPUR_SHOULDER_RIGHT_FRONT)) {
+      } else if (tag === HitboxTag.tukmokSpurShoulderRightFront) {
          textureSource = "entities/tukmok-spur/spur-shoulder-right-front.png";
       } else {
          textureSource = "entities/tukmok-spur/spur-shoulder-right-back.png";

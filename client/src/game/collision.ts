@@ -1,9 +1,9 @@
-import { Settings, collisionBitsAreCompatible, rotatePointAroundOrigin, Box, HitboxCollisionType, HitboxFlag, RectangularBox, CircularBox, Entity, CollisionResult, _bounds, EntityType, TileType, _point, CollisionGroup, collisionGroupsCanCollide } from "webgl-test-shared";
-import { TransformComponent, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { Settings, collisionBitsAreCompatible, rotatePointAroundOrigin, Box, HitboxCollisionType, Entity, CollisionResult, _bounds, EntityType, TileType, _point, CollisionGroup, collisionGroupsCanCollide, calculateBoxBounds, createRectangularBox, getBoxCollisionResult, createCircularBox, getCircularBoxCollisionResult } from "webgl-test-shared";
+import { TransformComponent, transformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityType, layers } from "./world";
 import Layer from "./Layer";
 import { playerInstance } from "./player";
-import { applyForce, getHitboxTile, getHitboxVelocity, Hitbox, setHitboxVelocity, translateHitbox } from "./hitboxes";
+import { applyForce, getHitboxCollisionType, getHitboxTile, getHitboxVelocity, Hitbox, hitboxIgnoresWallCollisions, hitboxIsStatic, setHitboxVelocity, translateHitbox } from "./hitboxes";
 import { getEntityComponentArrays } from "./entity-components/component-types";
 import { entityUsesClientInterp } from "./rendering/render-part-matrices";
 
@@ -77,8 +77,8 @@ export function collide(entity: Entity, collidingEntity: Entity, collidingHitbox
          const hitbox = pair.affectedHitbox;
          const collidingHitbox = pair.collidingHitbox;
 
-         if (!hitbox.isStatic) {
-            if (collidingHitbox.collisionType === HitboxCollisionType.hard) {
+         if (!hitboxIsStatic(hitbox)) {
+            if (getHitboxCollisionType(collidingHitbox) === HitboxCollisionType.hard) {
                resolveHardCollision(hitbox, pair.collisionResult);
             } else {
                resolveSoftCollision(hitbox, collidingHitbox, pair.collisionResult);
@@ -135,7 +135,7 @@ const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, global
          }
          
          // If the objects are colliding, add the colliding object and this object
-         const collisionResult = box.getCollisionResult(otherBox);
+         const collisionResult = getBoxCollisionResult(box, otherBox);
          if (collisionResult.isColliding) {
             hitboxCollisionPairs.push({
                affectedHitbox: hitbox,
@@ -191,8 +191,8 @@ function resolveLayerCollisions(layer: Layer): void {
                   continue;
                }
 
-               const transformComponent = TransformComponentArray.getComponent(entity);
-               const collidingTransformComponent = TransformComponentArray.getComponent(collidingEntity);
+               const transformComponent = transformComponentArray.getComponent(entity);
+               const collidingTransformComponent = transformComponentArray.getComponent(collidingEntity);
 
                // Make sure the entities aren't in the same carry heirarchy
                // @HACK @SPEED
@@ -239,20 +239,20 @@ export function resolveCollisions(): void {
 }
 
 export function resolveWallCollisions(entity: Entity): boolean {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    
    let hasMoved = false;
    const layer = getEntityLayer(entity);
    for (let i = 0; i < transformComponent.hitboxes.length; i++) {
       const hitbox = transformComponent.hitboxes[i];
-      if (hitbox.flags.includes(HitboxFlag.IGNORES_WALL_COLLISIONS)) {
+      if (hitboxIgnoresWallCollisions(hitbox)) {
          continue;
       }
       
       const box = hitbox.box;
       
       // @Hack: use actual bounding area
-      box.calculateBounds();
+      calculateBoxBounds(box);
       const minSubtileX = Math.max(Math.floor(_bounds.minX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
       const maxSubtileX = Math.min(Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
       const minSubtileY = Math.max(Math.floor(_bounds.minY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
@@ -268,10 +268,10 @@ export function resolveWallCollisions(entity: Entity): boolean {
             // @Garbage
             const tileCenterX = (subtileX + 0.5) * Settings.SUBTILE_SIZE;
             const tileCenterY = (subtileY + 0.5) * Settings.SUBTILE_SIZE;
-            const tileBox = new RectangularBox(tileCenterX, tileCenterY, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+            const tileBox = createRectangularBox(tileCenterX, tileCenterY, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
             
             // Check if the tile is colliding
-            const collisionResult = box.getCollisionResult(tileBox);
+            const collisionResult = getBoxCollisionResult(box, tileBox);
             if (collisionResult.isColliding) {
                resolveHardCollision(hitbox, collisionResult);
                hasMoved = true;
@@ -285,7 +285,7 @@ export function resolveWallCollisions(entity: Entity): boolean {
 const boxHasCollisionWithHitboxes = (box: Box, hitboxes: ReadonlyArray<Hitbox>, epsilon = 0): boolean => {
    for (let i = 0; i < hitboxes.length; i++) {
       const otherHitbox = hitboxes[i];
-      const collisionResult = box.getCollisionResult(otherHitbox.box, epsilon);
+      const collisionResult = getBoxCollisionResult(box, otherHitbox.box, epsilon);
       if (collisionResult.isColliding) {
          return true;
       }
@@ -302,7 +302,7 @@ export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArr
       const hitbox = hitboxes[i];
       const box = hitbox.box;
 
-      box.calculateBounds();
+      calculateBoxBounds(box);
       let minX = _bounds.minX;
       let maxX = _bounds.maxX;
       let minY = _bounds.minY;
@@ -336,7 +336,7 @@ export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArr
 
                seenEntities.add(entity);
                
-               const entityTransformComponent = TransformComponentArray.getComponent(entity);
+               const entityTransformComponent = transformComponentArray.getComponent(entity);
                if (boxHasCollisionWithHitboxes(box, entityTransformComponent.hitboxes, epsilon)) {
                   collidingEntities.push(entity);
                }
@@ -349,7 +349,7 @@ export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArr
 }
 
 // @Cleanup: remove
-const testCircularBox = new CircularBox(0, 0, 0, 0, 0, 0);
+const testCircularBox = createCircularBox(0, 0, 0, 0, 0, 0);
 
 // @Location
 export function getEntitiesInRange(layer: Layer, x: number, y: number, range: number): Array<Entity> {
@@ -375,7 +375,7 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
                continue;
             }
 
-            const transformComponent = TransformComponentArray.getComponent(entity);
+            const transformComponent = transformComponentArray.getComponent(entity);
             
             const entityHitbox = transformComponent.hitboxes[0];
             if (Math.pow(x - entityHitbox.box.posX, 2) + Math.pow(y - entityHitbox.box.posY, 2) <= visionRangeSquared) {
@@ -386,7 +386,7 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
 
             // If the test hitbox can 'see' any of the game object's hitboxes, it is visible
             for (const hitbox of transformComponent.hitboxes) {
-               const collisionResult = testCircularBox.getCollisionResult(hitbox.box);
+               const collisionResult = getCircularBoxCollisionResult(testCircularBox, hitbox.box);
                if (collisionResult.isColliding) {
                   entities.push(entity);
                   seenIDs.add(entity);
@@ -401,8 +401,8 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
 }
 
 export function entitiesAreColliding(entity1: Entity, entity2: Entity): boolean {
-   const transformComponent1 = TransformComponentArray.getComponent(entity1);
-   const transformComponent2 = TransformComponentArray.getComponent(entity2);
+   const transformComponent1 = transformComponentArray.getComponent(entity1);
+   const transformComponent2 = transformComponentArray.getComponent(entity2);
    
    // AABB bounding area check
    if (transformComponent1.boundingAreaMinX > transformComponent2.boundingAreaMaxX || // minX(1) > maxX(2)
@@ -421,7 +421,7 @@ export function entitiesAreColliding(entity1: Entity, entity2: Entity): boolean 
          const otherHitbox = transformComponent2.hitboxes[j];
 
          // If the objects are colliding, add the colliding object and this object
-         if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, otherHitbox.collisionMask, otherHitbox.collisionBit) && box.getCollisionResult(otherHitbox.box).isColliding) {
+         if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, otherHitbox.collisionMask, otherHitbox.collisionBit) && getBoxCollisionResult(box, otherHitbox.box).isColliding) {
             return true;
          }
       }
@@ -441,7 +441,7 @@ export function hitboxIsInWater(hitbox: Hitbox): boolean {
 
    const layer = getEntityLayer(hitbox.entity);
 
-   hitbox.box.calculateBounds();
+   calculateBoxBounds(hitbox.box);
    const minChunkX = Math.max(Math.min(Math.floor(_bounds.minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor(_bounds.maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const minChunkY = Math.max(Math.min(Math.floor(_bounds.minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);

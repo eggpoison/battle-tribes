@@ -1,4 +1,4 @@
-import { ServerComponentType, DamageSource, Entity, EntityType, Settings, Biome, Packet, ItemType, TribeType, getTileIndexIncludingEdges, getTileX, getTileY, Point, polarVec2, randAngle, randFloat, randItem, TileIndex, tileIsInWorld, UtilVar, HitboxFlag, AttackEffectiveness, EntityTickEvent, EntityTickEventType, angle, distance } from "battletribes-shared";
+import { ServerComponentType, DamageSource, Entity, EntityType, Settings, Biome, Packet, ItemType, TribeType, getTileIndexIncludingEdges, getTileX, getTileY, Point, polarVec2, randAngle, randFloat, randItem, TileIndex, tileIsInWorld, UtilVar, AttackEffectiveness, EntityTickEvent, EntityTickEventType, angle, distance, HitboxTag } from "battletribes-shared";
 import { SnowThrowStage, YETI_SNOW_THROW_COOLDOWN } from "../entities/mobs/yeti.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
@@ -13,7 +13,7 @@ import { surfaceLayer } from "../layers.js";
 import { AttackingEntitiesComponent, AttackingEntitiesComponentArray } from "./AttackingEntitiesComponent.js";
 import { SnowballComponentArray } from "./SnowballComponent.js";
 import { StructureComponentArray } from "./StructureComponent.js";
-import { applyAbsoluteKnockback, applyKnockback, getHitboxTile, Hitbox, addHitboxVelocity, turnHitboxToAngle } from "../hitboxes.js";
+import { applyAbsoluteKnockback, applyKnockback, getHitboxTile, Hitbox, addHitboxVelocity, turnHitboxToAngle, getHitboxTag } from "../hitboxes.js";
 import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { getConfigTransformComponent } from "../components.js";
@@ -258,7 +258,7 @@ const getYetiTarget = (yeti: Entity, visibleEntities: ReadonlyArray<Entity>): En
       }
       
       const attackerInfo = attackingEntities.get(entity);
-      if (typeof attackerInfo !== "undefined") {
+      if (attackerInfo !== undefined) {
          const damageDealt = attackerInfo.totalDamageFromEntity;
          if (damageDealt > mostDamageDealt) {
             mostDamageDealt = damageDealt;
@@ -430,7 +430,7 @@ function addDataToPacket(packet: Packet, entity: Entity): void {
 
 function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoint: Point): void {
    // Body doesn't damage
-   if (collidingHitbox.flags.includes(HitboxFlag.YETI_BODY)) {
+   if (getHitboxTag(collidingHitbox) === HitboxTag.yetiBody) {
       return;
    }
 

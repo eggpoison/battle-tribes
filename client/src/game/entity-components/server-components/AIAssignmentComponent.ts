@@ -7,10 +7,12 @@ export interface AIAssignmentComponentData {}
 export interface AIAssignmentComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiAssignment, _AIAssignmentComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.aiAssignment]: AIAssignmentComponentArray;
+   }
 }
 
-class _AIAssignmentComponentArray extends _ServerComponentArray<AIAssignmentComponent, AIAssignmentComponentData> {
+class AIAssignmentComponentArray extends _ServerComponentArray<AIAssignmentComponent, AIAssignmentComponentData> {
    public decodeData(): AIAssignmentComponentData {
       return {};
    }
@@ -24,4 +26,4 @@ class _AIAssignmentComponentArray extends _ServerComponentArray<AIAssignmentComp
    }
 }
 
-export const AIAssignmentComponentArray = registerServerComponentArray(ServerComponentType.aiAssignment, _AIAssignmentComponentArray, true);
+export const aiAssignmentComponentArray = registerServerComponentArray(ServerComponentType.aiAssignment, AIAssignmentComponentArray, true);

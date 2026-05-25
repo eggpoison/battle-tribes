@@ -3,7 +3,7 @@ import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { createPricklyPearParticle } from "../../particles";
 import { HealthComponentArray } from "./HealthComponent";
@@ -48,7 +48,7 @@ class _PricklyPearComponentArray extends _ServerComponentArray<PricklyPearCompon
    }
       
    public onDie(pricklyPear: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(pricklyPear);
+      const transformComponent = transformComponentArray.getComponent(pricklyPear);
       const hitbox = transformComponent.hitboxes[0];
 
       const healthComponent = HealthComponentArray.getComponent(pricklyPear);

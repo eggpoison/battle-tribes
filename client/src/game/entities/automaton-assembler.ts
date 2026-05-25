@@ -1,5 +1,5 @@
-import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
-import { createHitboxQuick, Hitbox } from "../hitboxes";
+import { EntityType, DEFAULT_COLLISION_MASK, CollisionBit, HitboxCollisionType, createRectangularBox } from "webgl-test-shared";
+import { createHitboxQuick, Hitbox, setHitboxIsNonGrassBlocking } from "../hitboxes";
 import { createAutomatonAssemblerComponentData } from "../entity-components/server-components/AutomatonAssemblerComponent";
 import { createCraftingStationComponentData } from "../entity-components/server-components/CraftingStationComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
@@ -10,12 +10,13 @@ import { createTribeComponentData } from "../entity-components/server-components
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
-export function createAutomatonAssemblerConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
+export function createAutomatonAssemblerConfig(x: number, y: number, angle: number, tribe: Tribe): EntityComponentData {
    const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
-   const box = new RectangularBox(position, new Point(0, 0), rotation, 160, 80);
-   const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
+   const box = createRectangularBox(x, y, 0, 0, angle, 160, 80);
+   const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsNonGrassBlocking(hitbox);
    hitboxes.push(hitbox);
 
    return {

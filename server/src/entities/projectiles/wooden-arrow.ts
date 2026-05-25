@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, AMMO_INFO_RECORD, EntityType, DamageSource, Entity, EntityTypeString, angleToPoint, Point, polarVec2, AttackEffectiveness, ItemType, HitboxCollisionType, RectangularBox, angle } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, AMMO_INFO_RECORD, EntityType, DamageSource, Entity, Point, polarVec2, AttackEffectiveness, ItemType, HitboxCollisionType, angle, createRectangularBox } from "battletribes-shared";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent.js";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent.js";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
@@ -7,15 +7,14 @@ import { addHitboxToTransformComponent, attachHitbox, TransformComponent, Transf
 import { ProjectileComponent, ProjectileComponentArray } from "../../components/ProjectileComponent.js";
 import { entityExists, getEntityType } from "../../world.js";
 import Tribe from "../../Tribe.js";
-import { applyKnockback, getHitboxVelocity, Hitbox } from "../../hitboxes.js";
+import { applyKnockback, createHitbox, getHitboxVelocity, Hitbox } from "../../hitboxes.js";
 
 export function createWoodenArrowConfig(x: number, y: number, angle: number, tribe: Tribe, owner: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
    transformComponent.isAffectedByGroundFriction = false;
    
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, angle, 12, 64), 0.025, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable, []);
+   const hitbox = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, 0, angle, 12, 64), 0.025, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable);
    addHitboxToTransformComponent(transformComponent, hitbox);
-   
 
    const tribeComponent = new TribeComponent(tribe);
 

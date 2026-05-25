@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, StatusEffect, Point, HitboxCollisionType, CircularBox, Biome } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, StatusEffect, HitboxCollisionType, Biome, createCircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
 import WanderAI from "../../ai/WanderAI.js";
@@ -7,7 +7,7 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { SlimewispComponent } from "../../components/SlimewispComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox } from "../../hitboxes.js";
 import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared.js";
 
 function positionIsValidCallback(_entity: Entity, layer: Layer, x: number, y: number): boolean {
@@ -25,7 +25,7 @@ const turnFunc = (slimewisp: Entity, x: number, y: number, turnSpeed: number, tu
 export function createSlimewispConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 16), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 16), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(3);

@@ -60,7 +60,7 @@ const getEscapeTarget = (entity: Entity, escapeAI: EscapeAI): Entity | null => {
       }
    }
 
-   if (typeof escapeAI.extraEscapeCondition !== "undefined") {
+   if (escapeAI.extraEscapeCondition !== undefined) {
       for (const escapeTarget of aiHelperComponent.visibleEntities) {
          if (!escapeAI.extraEscapeCondition(entity, escapeTarget)) {
             continue;

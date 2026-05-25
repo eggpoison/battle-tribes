@@ -1,17 +1,14 @@
-import { TileType, Settings, Entity, EntityType, CircularBox, RectangularBox, Box, boxIsCircular, angle, curveWeight, Point, lerp, rotatePointAroundPoint, distance, distBetweenPointAndRectangle, TileIndex, getTileIndexIncludingEdges, polarVec2, clamp, _point } from "battletribes-shared";
+import { TileType, Settings, Entity, EntityType, CircularBox, RectangularBox, boxIsCircular, angle, curveWeight, Point, lerp, rotatePointAroundPoint, distance, distBetweenPointAndRectangle, TileIndex, getTileIndexIncludingEdges, polarVec2, clamp, _point, getRectangularBoxTopLeftVertexOffset, circleCollidesWithBox } from "battletribes-shared";
 import Layer from "./Layer.js";
 import { getEntityPathfindingGroupID } from "./pathfinding.js";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
 import { ProjectileComponentArray } from "./components/ProjectileComponent.js";
 import { getEntityLayer, getEntityType } from "./world.js";
-import { addHitboxAngularAcceleration, applyAccelerationFromGround, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "./hitboxes.js";
+import { addHitboxAngularAcceleration, applyAccelerationFromGround, getHitboxVelocity, Hitbox, hitboxIsPartOfParent, turnHitboxToAngle } from "./hitboxes.js";
 
 const TURN_CONSTANT = Math.PI * Settings.DT_S;
 const WALL_AVOIDANCE_MULTIPLIER = 1.5;
    
-// @Cleanup: remove
-const testCircularBox = new CircularBox(0, 0, 0, 0, 0, 0);
-
 // @Cleanup: Only used in tribesman.ts, so move there.
 export function getClosestAccessibleEntity(entity: Entity, entities: ReadonlyArray<Entity>): Entity {
    if (entities.length === 0) {
@@ -126,7 +123,7 @@ export function hitboxIncludingChildrenHasPassedPosition(hitbox: Hitbox, pos: Po
 
    for (const childHitbox of hitbox.children) {
       // @INCOMPLETE: tethers??
-      if (childHitbox.isPartOfParent && hitboxIncludingChildrenHasPassedPosition(childHitbox, pos)) {
+      if (hitboxIsPartOfParent(childHitbox) && hitboxIncludingChildrenHasPassedPosition(childHitbox, pos)) {
          return true;
       }
    }
@@ -184,7 +181,7 @@ export function runHerdAI(entity: Entity, herdMembers: ReadonlyArray<Entity>, vi
       centerY += herdMemberHitbox.box.posY;
       numHerdMembers++;
    }
-   if (typeof closestHerdMember === "undefined") {
+   if (closestHerdMember === undefined) {
       return;
    }
 
@@ -307,7 +304,7 @@ export function runHerdAI(entity: Entity, herdMembers: ReadonlyArray<Entity>, vi
          distanceFromWall = entityHitbox.box.posX;
       }
 
-      if (typeof directionToNearestWall !== "undefined") {
+      if (directionToNearestWall !== undefined) {
          // Calculate the direction to turn
          const clockwiseDist = (directionToNearestWall - headingPrincipalValue + Math.PI * 2) % (Math.PI * 2);
          const counterclockwiseDist = (Math.PI * 2) - clockwiseDist;
@@ -418,47 +415,11 @@ export function getAllowedPositionRadialTiles(layer: Layer, position: Point, rad
    return tiles;
 }
 
-// @Copynpaste
-export function boxIsInRange(position: Point, range: number, box: Box): boolean {
-   testCircularBox.radius = range;
-   testCircularBox.posX = position.x;
-   testCircularBox.posY = position.y;
-
-   return testCircularBox.getCollisionResult(box).isColliding;
-}
-
-export function entityIsInVisionRange(position: Point, visionRange: number, entity: Entity): boolean {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const entityHitbox = transformComponent.hitboxes[0];
-
-   if (Math.pow(position.x - entityHitbox.box.posX, 2) + Math.pow(position.y - entityHitbox.box.posY, 2) <= Math.pow(visionRange, 2)) {
-      return true;
-   }
-
-   testCircularBox.radius = visionRange;
-   testCircularBox.posX = position.x;
-   testCircularBox.posY = position.y;
-
-   // If the test hitbox can 'see' any of the game object's hitboxes, it is visible
-   for (const hitbox of transformComponent.hitboxes) {
-      const collisionResult = testCircularBox.getCollisionResult(hitbox.box);
-      if (collisionResult.isColliding) {
-         return true;
-      }
-   }
-
-   return false;
-}
-
 export function getEntitiesInRange(layer: Layer, x: number, y: number, range: number): Array<Entity> {
    const minChunkX = Math.max(Math.min(Math.floor((x - range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor((x + range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const minChunkY = Math.max(Math.min(Math.floor((y - range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkY = Math.max(Math.min(Math.floor((y + range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
-
-   testCircularBox.radius = range;
-   testCircularBox.posX = x;
-   testCircularBox.posY = y;
 
    const visionRangeSquared = Math.pow(range, 2);
    
@@ -476,16 +437,15 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
             const transformComponent = TransformComponentArray.getComponent(entity);
             // @Hack
             const entityHitbox = transformComponent.hitboxes[0];
+
             if (Math.pow(x - entityHitbox.box.posX, 2) + Math.pow(y - entityHitbox.box.posY, 2) <= visionRangeSquared) {
                entities.push(entity);
                seenIDs.add(entity);
                continue;
             }
 
-            // If the test hitbox can 'see' any of the game object's hitboxes, it is visible
             for (const hitbox of transformComponent.hitboxes) {
-               const collisionResult = testCircularBox.getCollisionResult(hitbox.box);
-               if (collisionResult.isColliding) {
+               if (circleCollidesWithBox(x, y, range, hitbox.box)) {
                   entities.push(entity);
                   seenIDs.add(entity);
                   break;
@@ -539,8 +499,8 @@ const getAngleToVertexOffset = (x: number, y: number, hitboxX: number, hitboxY: 
 
 export function getMinAngleToRectangularBox(x: number, y: number, box: RectangularBox): number {
    // @Speed!
-   const topLeftVertexOffset = box.getTopLeftVertexOffset();
-   const topRightVertexOffset = box.getTopLeftVertexOffset();
+   const topLeftVertexOffset = getRectangularBoxTopLeftVertexOffset(box);
+   const topRightVertexOffset = getRectangularBoxTopLeftVertexOffset(box);
    
    const tl = getAngleToVertexOffset(x, y, box.posX, box.posY, topLeftVertexOffset.x, topLeftVertexOffset.y);
    const tr = getAngleToVertexOffset(x, y, box.posX, box.posY, topRightVertexOffset.x, topRightVertexOffset.y);
@@ -552,8 +512,8 @@ export function getMinAngleToRectangularBox(x: number, y: number, box: Rectangul
 
 export function getMaxAngleToRectangularBox(x: number, y: number, box: RectangularBox): number {
    // @Speed!
-   const topLeftVertexOffset = box.getTopLeftVertexOffset();
-   const topRightVertexOffset = box.getTopLeftVertexOffset();
+   const topLeftVertexOffset = getRectangularBoxTopLeftVertexOffset(box);
+   const topRightVertexOffset = getRectangularBoxTopLeftVertexOffset(box);
    
    const tl = getAngleToVertexOffset(x, y, box.posX, box.posY, topLeftVertexOffset.x, topLeftVertexOffset.y);
    const tr = getAngleToVertexOffset(x, y, box.posX, box.posY, topRightVertexOffset.x, topRightVertexOffset.y);
@@ -694,7 +654,7 @@ const hitboxOrChildrenIntersectLineOfSight = (hitbox: Hitbox, rayStartX: number,
    }
 
    for (const childHitbox of hitbox.children) {
-      if (childHitbox.isPartOfParent && hitboxOrChildrenIntersectLineOfSight(childHitbox, rayStartX, rayStartY, rayEndX, rayEndY)) {
+      if (hitboxIsPartOfParent(childHitbox) && hitboxOrChildrenIntersectLineOfSight(childHitbox, rayStartX, rayStartY, rayEndX, rayEndY)) {
          return true;
       }
    }
@@ -786,7 +746,7 @@ export function getDistanceFromPointToHitboxIncludingChildren(x: number, y: numb
    let minDist = getDistanceFromPointToHitbox(x, y, hitbox);
 
    for (const child of hitbox.children) {
-      if (child.isPartOfParent) {
+      if (hitboxIsPartOfParent(child)) {
          const dist = getDistanceFromPointToHitboxIncludingChildren(x, y, child);
          if (dist < minDist) {
             minDist = dist;

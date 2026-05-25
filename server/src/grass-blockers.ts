@@ -1,12 +1,12 @@
-import { Box, boxIsCircular, cloneBox, HitboxFlag, Entity, EntityType, Settings, Packet, Point, unitsToChunksClamped, _bounds } from "battletribes-shared";
+import { Box, boxIsCircular, cloneBox, Entity, EntityType, Settings, Packet, Point, unitsToChunksClamped, _bounds, calculateBoxBounds, getBoxCollisionResult, circleCollidesWithBox } from "battletribes-shared";
 import Chunk from "./Chunk.js";
 import { TransformComponentArray } from "./components/TransformComponent.js";
 import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "./world.js";
 import { surfaceLayer } from "./layers.js";
 import Layer from "./Layer.js";
-import { boxIsInRange } from "./ai-shared.js";
 import { addBoxDataToPacket, getBoxDataLength } from "./server/packet-hitboxes.js";
 import { createGrassStrandConfig } from "./entities/grass-strand.js";
+import { hitboxIsNonGrassBlocking } from "./hitboxes.js";
 
 const enum Vars {
    GRASS_FULL_REGROW_TICKS = Settings.TICK_RATE * 120,
@@ -36,7 +36,7 @@ const blockers: Array<GrassBlocker> = [];
 const blockerAssociatedEntities: Array<Entity> = [];
 
 const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {
-   blocker.box.calculateBounds();
+   calculateBoxBounds(blocker.box);
    const minX = _bounds.minX;
    const maxX = _bounds.maxX;
    const minY = _bounds.minY;
@@ -72,7 +72,7 @@ const addGrassBlocker = (blocker: GrassBlocker, associatedEntityID: number): voi
 const getBlockedGrasses = (box: Box, layer: Layer): ReadonlyArray<Entity> => {
    const grasses: Array<Entity> = [];
 
-   box.calculateBounds();
+   calculateBoxBounds(box);
    const minChunkX = unitsToChunksClamped(_bounds.minX);
    const maxChunkX = unitsToChunksClamped(_bounds.maxX);
    const minChunkY = unitsToChunksClamped(_bounds.minY);
@@ -85,7 +85,7 @@ const getBlockedGrasses = (box: Box, layer: Layer): ReadonlyArray<Entity> => {
                const grassTransformComponent = TransformComponentArray.getComponent(entity);
                const grassHitbox = grassTransformComponent.hitboxes[0];
 
-               const collisionResult = box.getCollisionResult(grassHitbox.box);
+               const collisionResult = getBoxCollisionResult(box, grassHitbox.box);
                if (collisionResult.isColliding) {
                   grasses.push(entity);
                }
@@ -176,7 +176,7 @@ export function createStructureGrassBlockers(structure: Entity): void {
    
    for (let i = 0; i < transformComponent.hitboxes.length; i++) {
       const hitbox = transformComponent.hitboxes[i];
-      if (hitbox.flags.includes(HitboxFlag.NON_GRASS_BLOCKING)) {
+      if (hitboxIsNonGrassBlocking(hitbox)) {
          continue;
       }
       
@@ -222,7 +222,7 @@ export function positionHasGrassBlocker(layer: Layer, x: number, y: number): boo
       for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          const chunk = layer.getChunk(chunkX, chunkY);
          for (const blocker of chunk.grassBlockers) {
-            if (boxIsInRange(new Point(x, y), range, blocker.box)) {
+            if (circleCollidesWithBox(x, y, range, blocker.box)) {
                return true;
             }
          }

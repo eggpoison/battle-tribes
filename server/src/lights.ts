@@ -55,7 +55,7 @@ const clearLightLitNodes = (light: Light, lightLayer: Layer): void => {
    for (let i = 0; i < litNodes.length; i++) {
       const node = litNodes[i];
 
-      assert(typeof lightLayer.entityLightLevels[node] !== "undefined");
+      assert(lightLayer.entityLightLevels[node] !== undefined);
       // @Hack: '!'
       lightLayer.entityLightLevels[node]!.delete(light.id);
    }
@@ -102,7 +102,7 @@ const updateLight = (light: Light, nodeX: number, nodeY: number, layer: Layer) =
          const node = getLightLevelNode(currentNodeX, currentNodeY);
          litNodes.push(node);
 
-         if (typeof layer.entityLightLevels[node] === "undefined") {
+         if (layer.entityLightLevels[node] === undefined) {
             layer.entityLightLevels[node] = new Map();
          }
          
@@ -117,7 +117,7 @@ const updateLight = (light: Light, nodeX: number, nodeY: number, layer: Layer) =
 
 export function updateEntityLights(entity: Entity): void {
    const hitboxToLightMap = entityHitboxLightsMap[entity];
-   if (typeof hitboxToLightMap === "undefined") {
+   if (hitboxToLightMap === undefined) {
       return;
    }
 
@@ -135,7 +135,7 @@ export function updateEntityLights(entity: Entity): void {
 
 export function removeEntityLights(entity: Entity): void {
    const hitboxToLightMap = entityHitboxLightsMap[entity];
-   if (typeof hitboxToLightMap === "undefined") {
+   if (hitboxToLightMap === undefined) {
       return;
    }
 
@@ -152,7 +152,7 @@ export function removeEntityLights(entity: Entity): void {
 
 // @Cleanup: the 3 final parameters are all related, and ideally should just be able to be deduced from the render part? maybe?
 export function attachLightToHitbox(light: Light, hitbox: Hitbox, entity: Entity): void {
-   if (typeof entityHitboxLightsMap[entity] === "undefined") {
+   if (entityHitboxLightsMap[entity] === undefined) {
       entityHitboxLightsMap[entity] = new Map(); 
    }
 
@@ -170,7 +170,7 @@ export function attachLightToHitbox(light: Light, hitbox: Hitbox, entity: Entity
    // };
 
    // const lightIDs = renderPartToLightsRecord[renderPart.id];
-   // if (typeof lightIDs === "undefined") {
+   // if (lightIDs === undefined) {
    //    renderPartToLightsRecord[renderPart.id] = [light.id];
    // } else {
    //    lightIDs.push(light.id);
@@ -201,7 +201,7 @@ export function getLightIntensityAtNode(layer: Layer, node: LightLevelNode): num
 
    // Entity light
    const entityFactors = layer.entityLightLevels[node];
-   if (typeof entityFactors !== "undefined") {
+   if (entityFactors !== undefined) {
       for (const pair of entityFactors) {
          const entityLightLevel = pair[1];
          lightLevel += entityLightLevel;

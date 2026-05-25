@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, AMMO_INFO_RECORD, ServerComponentType, EntityType, DamageSource, Entity, Point, AttackEffectiveness, HitboxCollisionType, RectangularBox, ItemType } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, AMMO_INFO_RECORD, ServerComponentType, EntityType, DamageSource, Entity, Point, AttackEffectiveness, HitboxCollisionType, RectangularBox, ItemType, createRectangularBox } from "battletribes-shared";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent.js";
 import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent.js";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
@@ -7,15 +7,15 @@ import { addHitboxToTransformComponent, TransformComponent, TransformComponentAr
 import { ProjectileComponent, ProjectileComponentArray } from "../../components/ProjectileComponent.js";
 import { destroyEntity, getEntityType, validateEntity } from "../../world.js";
 import Tribe from "../../Tribe.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, Hitbox, setHitboxIsStatic } from "../../hitboxes.js";
 
 export function createBallistaSlimeballConfig(x: number, y: number, rotation: number, tribe: Tribe, creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.isAffectedByGroundFriction = false;
    
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, rotation, 12, 80), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable, []);
-   hitbox.isStatic = true;
+   const hitbox = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, 0, rotation, 12, 80), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const tribeComponent = new TribeComponent(tribe);

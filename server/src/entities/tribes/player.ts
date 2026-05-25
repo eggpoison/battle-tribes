@@ -1,6 +1,6 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, EntityTypeString, LimbAction, PlantedEntityType, Point, rotatePoint, InventoryName, ItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, HitboxCollisionType, HitboxFlag, CircularBox, TRIBE_INFO_RECORD, TribeType, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, angle } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, EntityTypeString, LimbAction, PlantedEntityType, rotatePoint, InventoryName, ItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, HitboxCollisionType, CircularBox, TRIBE_INFO_RECORD, TribeType, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, angle, setBoxFlipX, createCircularBox, HitboxTag } from "battletribes-shared";
 import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, InventoryComponentArray, InventoryComponent } from "../../components/InventoryComponent.js";
-import { getCurrentLimbState, getLimbConfiguration, getLimbStateOffset, InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent.js";
+import { getCurrentLimbState, getLimbStateOffset, InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent.js";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent.js";
 import { TunnelComponentArray, updateTunnelDoorBitset } from "../../components/TunnelComponent.js";
 import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox } from "../../components/PlanterBoxComponent.js";
@@ -16,7 +16,7 @@ import { TribeMemberComponent } from "../../components/TribeMemberComponent.js";
 import { PlayerComponent } from "../../components/PlayerComponent.js";
 import PlayerClient from "../../server/PlayerClient.js";
 import { TribesmanComponent } from "../../components/TribesmanComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIgnoresWallCollisions, setHitboxTag } from "../../hitboxes.js";
 
 // @COPYNPASTE a rare triple!!!!
 export const BOW_HOLDING_LIMB_STATE: LimbState = {
@@ -46,7 +46,7 @@ export function createPlayerConfig(x: number, y: number, angle: number, tribe: T
 
    transformComponent.traction = 1.4;
 
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, getHitboxRadius(tribe.tribeType)), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const bodyHitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, getHitboxRadius(tribe.tribeType)), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
 
    const humanoidRadius = (bodyHitbox.box as CircularBox).radius;
@@ -59,14 +59,13 @@ export function createPlayerConfig(x: number, y: number, angle: number, tribe: T
       const isFlipped = i === 1;
 
       const offset = getLimbStateOffset(limbState, humanoidRadius);
-
       const rotatedOffset = rotatePoint(offset, angle);
       
       // @HACK SQUEAM: the collision mask, so that the player can mine berries for a horse archer shot
-      const hitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(x + rotatedOffset.x, y + rotatedOffset.y, offset.x, offset.y, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, [HitboxFlag.HAND, HitboxFlag.IGNORES_WALL_COLLISIONS]);
-      hitbox.box.flipX = isFlipped;
-      // @Hack
-      hitbox.box.totalFlipXMultiplier = isFlipped ? -1 : 1;
+      const hitbox = createHitbox(transformComponent, bodyHitbox, createCircularBox(x + rotatedOffset.x, y + rotatedOffset.y, offset.x, offset.y, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox);
+      setHitboxTag(hitbox, HitboxTag.hand);
+      setHitboxIgnoresWallCollisions(hitbox);
+      setBoxFlipX(hitbox.box, isFlipped)
       addHitboxToTransformComponent(transformComponent, hitbox);
    }
 
@@ -166,7 +165,7 @@ export function startChargingBattleaxe(player: Entity, inventoryName: InventoryN
    const battleaxe = inventory.itemSlots[useInfo.selectedItemSlot];
 
    // Reset the cooldown so the battleaxe doesn't fire immediately
-   if (typeof battleaxe !== "undefined") {
+   if (battleaxe !== undefined) {
       useInfo.lastBattleaxeChargeTicks = getGameTicks();
    }
    

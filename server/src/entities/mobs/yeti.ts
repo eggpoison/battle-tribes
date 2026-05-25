@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, getTileIndexIncludingEdges, Point, randInt, TileIndex, Settings, ItemType, Biome, CircularBox, HitboxCollisionType, HitboxFlag } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, getTileIndexIncludingEdges, Point, randInt, TileIndex, Settings, ItemType, Biome, HitboxCollisionType, HitboxTag, createCircularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { YetiComponent, YetiComponentArray } from "../../components/YetiComponent.js";
 import Layer from "../../Layer.js";
@@ -10,7 +10,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxTag } from "../../hitboxes.js";
 
 export const YETI_SNOW_THROW_COOLDOWN = 7;
 
@@ -53,11 +53,13 @@ const turnFunc = (slimewisp: Entity, x: number, y: number, turnSpeed: number, tu
 export function createYetiConfig(x: number, y: number, angle: number, territory: ReadonlyArray<TileIndex>): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 64), 3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETI_BODY]);
+   const bodyHitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 64), 3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(bodyHitbox, HitboxTag.yetiBody);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
 
    const headOffset = new Point(0, 36);
-   const headHitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(x + headOffset.x, y + headOffset.y, headOffset.x, headOffset.y, 0, 28), 3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.YETI_HEAD]);
+   const headHitbox = createHitbox(transformComponent, bodyHitbox, createCircularBox(x + headOffset.x, y + headOffset.y, headOffset.x, headOffset.y, 0, 28), 3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(headHitbox, HitboxTag.yetiHead);
    addHitboxToTransformComponent(transformComponent, headHitbox);
    
    const healthComponent = new HealthComponent(75);

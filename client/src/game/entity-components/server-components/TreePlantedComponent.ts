@@ -5,7 +5,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH, createWoodSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -27,12 +27,14 @@ export interface TreePlantedComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treePlanted, _TreePlantedComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.treePlanted]: TreePlantedComponentArray;
+   }
 }
 
 const TEXTURE_SOURCES = ["entities/plant/tree-sapling-1.png", "entities/plant/tree-sapling-2.png", "entities/plant/tree-sapling-3.png", "entities/plant/tree-sapling-4.png", "entities/plant/tree-sapling-5.png", "entities/plant/tree-sapling-6.png", "entities/plant/tree-sapling-7.png", "entities/plant/tree-sapling-8.png", "entities/plant/tree-sapling-9.png", "entities/plant/tree-sapling-10.png", "entities/plant/tree-sapling-11.png"];
 
-class _TreePlantedComponentArray extends _ServerComponentArray<TreePlantedComponent, TreePlantedComponentData, IntermediateInfo> {
+class TreePlantedComponentArray extends _ServerComponentArray<TreePlantedComponent, TreePlantedComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): TreePlantedComponentData {
       const growthProgress = reader.readNumber();
       return {
@@ -75,13 +77,13 @@ class _TreePlantedComponentArray extends _ServerComponentArray<TreePlantedCompon
    }
 
    public updateFromData(data: TreePlantedComponentData, entity: Entity): void {
-      const treePlantedComponent = TreePlantedComponentArray.getComponent(entity);
+      const treePlantedComponent = treePlantedComponentArray.getComponent(entity);
       treePlantedComponent.growthProgress = data.growthProgress;
       treePlantedComponent.renderPart.switchTextureSource(getTextureSource(treePlantedComponent.growthProgress));
    }
 
    public onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point, hitFlags: number): void {
-      const treePlantedComponent = TreePlantedComponentArray.getComponent(entity);
+      const treePlantedComponent = treePlantedComponentArray.getComponent(entity);
       
       const radius = Math.floor(treePlantedComponent.growthProgress * 10);
 
@@ -124,13 +126,13 @@ class _TreePlantedComponentArray extends _ServerComponentArray<TreePlantedCompon
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox(randItem(TREE_DESTROY_SOUNDS), 0.5, 1, entity, hitbox, false);
    }
 }
 
-export const TreePlantedComponentArray = registerServerComponentArray(ServerComponentType.treePlanted, _TreePlantedComponentArray, true);
+export const treePlantedComponentArray = registerServerComponentArray(ServerComponentType.treePlanted, TreePlantedComponentArray, true);
 
 const getTextureSource = (growthProgress: number): string => {
    const idx = Math.floor(growthProgress * (TEXTURE_SOURCES.length - 1))

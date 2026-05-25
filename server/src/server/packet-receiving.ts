@@ -297,7 +297,7 @@ export function processUseItemPacket(playerClient: PlayerClient, reader: PacketR
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    const item = hotbarInventory.itemSlots[itemSlot];
-   if (typeof item !== "undefined")  {
+   if (item !== undefined)  {
       useItem(playerClient.instance, item, InventoryName.hotbar, itemSlot);
    }
 }
@@ -374,7 +374,7 @@ export function processItemPickupPacket(playerClient: PlayerClient, reader: Pack
    const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot);
    
    // Don't pick up the item if there is already a held item
-   if (typeof heldItemInventory.itemSlots[1] !== "undefined") {
+   if (heldItemInventory.itemSlots[1] !== undefined) {
       return;
    }
 
@@ -382,7 +382,7 @@ export function processItemPickupPacket(playerClient: PlayerClient, reader: Pack
    const targetInventory = getInventory(targetInventoryComponent, inventoryName);
 
    const pickedUpItem = targetInventory.itemSlots[itemSlot];
-   if (typeof pickedUpItem === "undefined") {
+   if (pickedUpItem === undefined) {
       return;
    }
 
@@ -423,7 +423,7 @@ export function processItemTransferPacket(playerClient: PlayerClient, reader: Pa
    const receivingInventory = getInventory(receivingInventoryComponent, receivingInventoryName);
    
    const transferredItem = givingInventory.itemSlots[itemSlot];
-   if (typeof transferredItem === "undefined") {
+   if (transferredItem === undefined) {
       return;
    }
 
@@ -452,7 +452,7 @@ export function processItemReleasePacket(playerClient: PlayerClient, reader: Pac
    // Don't release an item if there is no held item
    const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
    const heldItem = heldItemInventory.itemSlots[1];
-   if (typeof heldItem === "undefined") {
+   if (heldItem === undefined) {
       return;
    }
 
@@ -681,7 +681,7 @@ export function processTechUnlockPacket(playerClient: PlayerClient, reader: Pack
          }
 
          const unlockProgress = tribeComponent.tribe.techTreeUnlockProgress[techID];
-         if (typeof unlockProgress !== "undefined") {
+         if (unlockProgress !== undefined) {
             unlockProgress.itemProgress[item.type] = amountCommitted + amountToAdd;
          } else {
             tribeComponent.tribe.techTreeUnlockProgress[techID] = {
@@ -925,7 +925,7 @@ export function processCompleteTamingTierPacket(playerClient: PlayerClient, read
 
    // @Hack
    const foodRequired: number | undefined = getTamingSpec(entity).tierFoodRequirements[(tamingComponent.tamingTier + 1) as TamingTier];
-   if (typeof foodRequired !== "undefined" && tamingComponent.foodEatenInTier >= foodRequired) {
+   if (foodRequired !== undefined && tamingComponent.foodEatenInTier >= foodRequired) {
       incrementTamingTier(entity, playerClient, tamingComponent);
    }
 }
@@ -1097,7 +1097,7 @@ export function processRecruitTribesmanPacket(playerClient: PlayerClient, reader
 
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
    const relation = tribesmanComponent.tribesmanRelations[playerClient.instance];
-   if (typeof relation !== "undefined" && relation >= 50) {
+   if (relation !== undefined && relation >= 50) {
       const tribeComponent = TribeComponentArray.getComponent(playerClient.instance);
       
       recruitTribesman(tribesman, tribeComponent.tribe);

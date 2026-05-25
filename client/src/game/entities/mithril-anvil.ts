@@ -1,5 +1,5 @@
-import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, RectangularBox, HitboxCollisionType, HitboxFlag } from "webgl-test-shared";
-import { createHitboxQuick, Hitbox } from "../hitboxes";
+import { EntityType, DEFAULT_COLLISION_MASK, CollisionBit, HitboxCollisionType, createRectangularBox } from "webgl-test-shared";
+import { createHitboxQuick, Hitbox, setHitboxIsNonGrassBlocking } from "../hitboxes";
 import { createCraftingStationComponentData } from "../entity-components/server-components/CraftingStationComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createMithrilAnvilComponentData } from "../entity-components/server-components/MithrilAnvilComponent";
@@ -10,28 +10,31 @@ import { createTribeComponentData } from "../entity-components/server-components
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
-export function createMithrilAnvilConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
+export function createMithrilAnvilConfig(x: number, y: number, angle: number, tribe: Tribe): EntityComponentData {
    const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
    // Middle box
    {
-      const box = new RectangularBox(position, new Point(-16, 0), rotation, 48, 56);
-      const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
+      const box = createRectangularBox(x, y, -16, 0, angle, 48, 56);
+      const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      setHitboxIsNonGrassBlocking(hitbox);
       hitboxes.push(hitbox);
    }
 
    // Left box
    {
-      const box = new RectangularBox(position, new Point(-48, 0), rotation, 16, 40);
-      const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
+      const box = createRectangularBox(x, y, -48, 0, angle, 16, 40);
+      const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      setHitboxIsNonGrassBlocking(hitbox);
       hitboxes.push(hitbox);
    }
 
    // Right box
    {
-      const box = new RectangularBox(position, new Point(30, 0), rotation, 44, 40);
-      const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
+      const box = createRectangularBox(x, y, 30, 0, angle, 44, 40);
+      const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      setHitboxIsNonGrassBlocking(hitbox);
       hitboxes.push(hitbox);
    }
    

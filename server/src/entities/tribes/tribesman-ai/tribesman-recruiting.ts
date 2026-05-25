@@ -15,7 +15,7 @@ export function getGiftableItemSlot(tribesman: Entity): number {
    let bestItemSlot = 0;
    for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
       const item = hotbarInventory.itemSlots[itemSlot];
-      if (typeof item === "undefined") {
+      if (item === undefined) {
          continue;
       }
 

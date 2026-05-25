@@ -1,4 +1,4 @@
-import { HitboxCollisionType, HitboxFlag, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Point, TileIndex } from "battletribes-shared";
+import { HitboxCollisionType, DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Point, TileIndex, createCircularBox, HitboxTag } from "battletribes-shared";
 import GuardianAI from "../../ai/GuardianAI.js";
 import GuardianCrystalBurstAI from "../../ai/GuardianCrystalBurstAI.js";
 import GuardianCrystalSlamAI from "../../ai/GuardianCrystalSlamAI.js";
@@ -11,7 +11,7 @@ import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import Layer from "../../Layer.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIgnoresWallCollisions, setHitboxTag } from "../../hitboxes.js";
 import { createLight } from "../../lights.js";
 
 function tileIsValidCallback(entity: Entity, _layer: Layer, tileIndex: TileIndex): boolean {
@@ -27,13 +27,15 @@ export function createGuardianConfig(x: number, y: number, angle: number, homeTi
    const transformComponent = new TransformComponent();
 
    // Head
-   const headHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 40), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const headHitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 40), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, headHitbox);
 
    // Limbs
    const limbOrbitRadius = getGuardianLimbOrbitRadius();
    for (let i = 0; i < 2; i++) {
-      const hitbox = new Hitbox(transformComponent, headHitbox, true, new CircularBox(0, 0, limbOrbitRadius * (i === 0 ? 1 : -1), 0, 0, 14), 0.7, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.GUARDIAN_LIMB_HITBOX, HitboxFlag.IGNORES_WALL_COLLISIONS]);
+      const hitbox = createHitbox(transformComponent, headHitbox, createCircularBox(0, 0, limbOrbitRadius * (i === 0 ? 1 : -1), 0, 0, 14), 0.7, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      setHitboxTag(hitbox, HitboxTag.guardianLimbHitbox);
+      setHitboxIgnoresWallCollisions(hitbox);
       addHitboxToTransformComponent(transformComponent, hitbox);
    }
    

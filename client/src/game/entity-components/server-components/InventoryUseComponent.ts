@@ -1,4 +1,4 @@
-import { createZeroedLimbState, LimbConfiguration, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, SPEAR_CHARGED_LIMB_STATE, interpolateLimbState, copyLimbState, PacketReader, InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool, Settings, BlockType, ServerComponentType, Point, lerp, randAngle, randFloat, randItem, Entity, EntityType, LimbAction, HitboxFlag, _point } from "webgl-test-shared";
+import { createZeroedLimbState, LimbConfiguration, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, SPEAR_CHARGED_LIMB_STATE, interpolateLimbState, copyLimbState, PacketReader, InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool, Settings, BlockType, ServerComponentType, Point, lerp, randAngle, randFloat, randItem, Entity, EntityType, LimbAction, HitboxTag, _point } from "webgl-test-shared";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import Particle from "../../Particle";
@@ -9,7 +9,7 @@ import { VisualRenderPart, RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { Light, removeLight } from "../../lights";
 import { getRenderPartRenderPosition } from "../../rendering/render-part-matrices";
@@ -311,7 +311,7 @@ export function getCurrentLimbState(limb: LimbInfo): LimbState {
 }
 
 export function getPlayerLimbHitbox(limb: LimbInfo): Hitbox {
-   const transformComponent = TransformComponentArray.getComponent(playerInstance!);
+   const transformComponent = transformComponentArray.getComponent(playerInstance!);
    // @Hack
    if (limb.inventoryName === InventoryName.hotbar) {
       return transformComponent.hitboxes[1];
@@ -654,7 +654,7 @@ class _InventoryUseComponentArray extends _ServerComponentArray<InventoryUseComp
             continue;
          }
 
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          getHitboxVelocity(hitbox);
          const velocity = _point;
@@ -1531,7 +1531,7 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
 }
 
 const playBlockEffects = (x: number, y: number, blockType: BlockType, entity: Entity): void => {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    playSoundOnHitbox(blockType === BlockType.shieldBlock ? "shield-block.mp3" : "block.mp3", blockType === BlockType.toolBlock ? 0.8 : 0.5, 1, entity, hitbox, false);
    

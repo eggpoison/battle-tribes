@@ -6,7 +6,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -15,10 +15,12 @@ export interface DesertBushLivelyComponentData {}
 export interface DesertBushLivelyComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertBushLively, _DesertBushLivelyComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.desertBushLively]: DesertBushLivelyComponentArray;
+   }
 }
 
-class _DesertBushLivelyComponentArray extends _ServerComponentArray<DesertBushLivelyComponent, DesertBushLivelyComponentData> {
+class DesertBushLivelyComponentArray extends _ServerComponentArray<DesertBushLivelyComponent, DesertBushLivelyComponentData> {
    public decodeData(): DesertBushLivelyComponentData {
       return {};
    }
@@ -53,10 +55,10 @@ class _DesertBushLivelyComponentArray extends _ServerComponentArray<DesertBushLi
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
    }
 }
 
-export const DesertBushLivelyComponentArray = registerServerComponentArray(ServerComponentType.desertBushLively, _DesertBushLivelyComponentArray, true);
+export const desertBushLivelyComponentArray = registerServerComponentArray(ServerComponentType.desertBushLively, DesertBushLivelyComponentArray, true);

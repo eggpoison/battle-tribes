@@ -4,7 +4,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -45,7 +45,7 @@ class _InguYetukLaserComponentArray extends _ServerComponentArray<InguYetukLaser
    }
 
    public onSpawn(laser: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(laser);
+      const transformComponent = transformComponentArray.getComponent(laser);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("lazur.mp3", 0.4, randFloat(0.8, 1.2), laser, hitbox, false);
    }

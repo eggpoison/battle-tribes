@@ -1,4 +1,4 @@
-import { _bounds, boxIsCircular, RectangularBox, boxIsCollidingWithSubtile, getEntityCollisionGroup, CollisionGroup, BlueprintType, BuildingMaterial, ServerComponentType, Entity, EntityType, Settings, STRUCTURE_TYPES, StructureType, getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, SubtileType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, angle } from "battletribes-shared";
+import { _bounds, boxIsCircular, RectangularBox, boxIsCollidingWithSubtile, getEntityCollisionGroup, CollisionGroup, BlueprintType, BuildingMaterial, ServerComponentType, Entity, EntityType, Settings, STRUCTURE_TYPES, StructureType, getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, SubtileType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, angle, calculateBoxBounds, createRectangularBox, getBoxCollisionResult } from "battletribes-shared";
 import { getEntitiesInRange } from "./ai-shared.js";
 import { getHitboxesCollidingEntities } from "./collision-detection.js";
 import { EntityConfig, getConfigTransformComponent } from "./components.js";
@@ -139,7 +139,7 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
    for (const hitbox of hitboxes) {
       const box = hitbox.box;
 
-      box.calculateBounds();
+      calculateBoxBounds(box);
       const minTileX = Math.floor(_bounds.minX / Settings.TILE_SIZE);
       const maxTileX = Math.floor(_bounds.maxX / Settings.TILE_SIZE);
       const minTileY = Math.floor(_bounds.minY / Settings.TILE_SIZE);
@@ -153,9 +153,9 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
             }
             
             // @Speed
-            const tileBox = new RectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
+            const tileBox = createRectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
 
-            if (box.getCollisionResult(tileBox).isColliding) {
+            if (getBoxCollisionResult(box, tileBox).isColliding) {
                return true;
             }
          }
@@ -176,7 +176,7 @@ const structurePlaceIsValid = (hitboxes: ReadonlyArray<Hitbox>, layer: Layer): b
    for (const hitbox of hitboxes) {
       const box = hitbox.box;
 
-      box.calculateBounds();
+      calculateBoxBounds(box);
       const minSubtileX = Math.floor(_bounds.minX / Settings.SUBTILE_SIZE);
       const maxSubtileX = Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE);
       const minSubtileY = Math.floor(_bounds.minY / Settings.SUBTILE_SIZE);
@@ -234,7 +234,7 @@ const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityAngle: n
    let entityMaxY = Number.MIN_SAFE_INTEGER;
    
    for (const hitbox of transformComponent.hitboxes) {
-      hitbox.box.calculateBounds();
+      calculateBoxBounds(hitbox.box);
       const minX = _bounds.minX;
       const maxX = _bounds.maxX;
       const minY = _bounds.minY;
@@ -634,7 +634,7 @@ const getBracingsPlaceInfo = (regularPlacePosition: Point, layer: Layer): Struct
       }
    }
 
-   if (typeof closestTileCorner === "undefined" || typeof secondClosestTileCorner === "undefined") {
+   if (closestTileCorner === undefined || secondClosestTileCorner === undefined) {
       throw new Error();
    }
 

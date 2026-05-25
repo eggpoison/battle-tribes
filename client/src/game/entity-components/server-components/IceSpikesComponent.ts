@@ -5,7 +5,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import Particle from "../../Particle";
 import { playSoundOnHitbox } from "../../sound";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -62,7 +62,7 @@ class _IceSpikesComponentArray extends _ServerComponentArray<IceSpikesComponent,
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 15; i++) {

@@ -1,4 +1,4 @@
-import { BuildingMaterial, ServerComponentType, Entity, EntityType, DamageSource, StatusEffect, Point, AttackEffectiveness, RectangularBox, HitboxCollisionType, HitboxFlag, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { BuildingMaterial, EntityType, StatusEffect, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createRectangularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";
 import { SpikesComponent } from "../../components/SpikesComponent.js";
@@ -9,7 +9,7 @@ import { StructureComponent } from "../../components/StructureComponent.js";
 import Tribe from "../../Tribe.js";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsNonGrassBlocking, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
 // @HACK @MEMORY: COPYNPASTE BETWEEN FLOOR AND WALLS
@@ -18,9 +18,10 @@ const HEALTHS = [15, 45];
 export function createFloorSpikesConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
-   const box = new RectangularBox(x, y, 0, 0, angle, 48, 48);
-   const hitbox = new Hitbox(transformComponent, null, true, box, 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
-   hitbox.isStatic = true;
+   const box = createRectangularBox(x, y, 0, 0, angle, 48, 48);
+   const hitbox = createHitbox(transformComponent, null, box, 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
+   setHitboxIsNonGrassBlocking(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(HEALTHS[material]);

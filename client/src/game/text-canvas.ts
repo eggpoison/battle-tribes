@@ -3,11 +3,11 @@ import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./
 import { getCurrentLayer, getEntityLayer, getEntityType } from "./world";
 import { getBuildingSafeties } from "./building-safety";
 import { getVisibleBuildingPlan, GhostBuildingPlan, VirtualBuildingSafetySimulation } from "./virtual-buildings";
-import { TribeMemberComponentArray } from "./entity-components/server-components/TribeMemberComponent";
+import { tribeMemberComponentArray } from "./entity-components/server-components/TribeMemberComponent";
 import { getHumanoidRadius } from "./entity-components/server-components/TribesmanComponent";
 import { playerInstance } from "./player";
 import { addGhostRenderObject, removeGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";
-import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
 import { TamingComponentArray } from "./entity-components/server-components/TamingComponent";
@@ -349,15 +349,15 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
 
    const currentLayer = getCurrentLayer();
 
-   for (let i = 0; i < TribeMemberComponentArray.entities.length; i++) {
-      const entity = TribeMemberComponentArray.entities[i];
+   for (let i = 0; i < tribeMemberComponentArray.entities.length; i++) {
+      const entity = tribeMemberComponentArray.entities[i];
       if (entity === playerInstance || getEntityLayer(entity) !== currentLayer) {
          continue;
       }
 
-      const tribeMemberComponent = TribeMemberComponentArray.components[i];
+      const tribeMemberComponent = tribeMemberComponentArray.components[i];
 
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
       
@@ -373,7 +373,7 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
       const tamingComponent = TamingComponentArray.components[i];
       const name = tamingComponent.name;
       if (name !== "") {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[1];
          const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
          
@@ -389,7 +389,7 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
          continue;
       }
       
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
 

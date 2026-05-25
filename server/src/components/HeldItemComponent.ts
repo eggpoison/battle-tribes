@@ -131,7 +131,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const owner = hitbox.parent.entity;
    
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(owner);
-   const inventoryName = hitbox.box.flipX ? InventoryName.offhand : InventoryName.hotbar;
+   const inventoryName = (hitbox.box.flags & 1) ? InventoryName.offhand : InventoryName.hotbar;
    const limb = inventoryUseComponent.getLimbInfo(inventoryName);
 
    const heldItemComponent = HeldItemComponentArray.getComponent(hitbox.entity);

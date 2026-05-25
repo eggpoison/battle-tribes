@@ -1,4 +1,4 @@
-import { EntityType, StatusEffect, Inventory, InventoryName, Point, HitboxCollisionType, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { EntityType, StatusEffect, Inventory, InventoryName, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -12,7 +12,7 @@ import { AmmoBoxComponent } from "../../components/AmmoBoxComponent.js";
 import { addInventoryToInventoryComponent, InventoryComponent } from "../../components/InventoryComponent.js";
 import { BallistaComponent } from "../../components/BallistaComponent.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
 const moveFunc = () => {
@@ -26,9 +26,9 @@ const turnFunc = () => {
 export function createBallistaConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const box = new RectangularBox(x, y, 0, 0, angle, 100, 100);
-   const hitbox = new Hitbox(transformComponent, null, true, box, 2, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox.isStatic = true;
+   const box = createRectangularBox(x, y, 0, 0, angle, 100, 100);
+   const hitbox = createHitbox(transformComponent, null, box, 2, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(100);

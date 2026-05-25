@@ -1,11 +1,11 @@
-import { BlockType, ServerComponentType, DamageSource, Entity, EntityType, LimbAction, Settings, BowItemInfo, getItemAttackInfo, getItemType, HammerItemType, Inventory, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, itemTypeIsHammer, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Packet, customTickIntervalHasPassed, lerp, Point, polarVec2, randAngle, assertBoxIsCircular, Box, HitboxFlag, AttackVar, BLOCKING_LIMB_STATE, copyLimbState, LimbConfiguration, LimbState, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, interpolateLimbState, RectangularBox, getSubtileIndex, EntityTickEvent, EntityTickEventType, HitFlags, AttackEffectiveness, calculateAttackEffectiveness, StatusEffect, TribesmanTitle, _bounds, angle } from "battletribes-shared";
+import { BlockType, ServerComponentType, DamageSource, Entity, EntityType, LimbAction, Settings, BowItemInfo, getItemAttackInfo, getItemType, HammerItemType, Inventory, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, itemTypeIsHammer, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Packet, customTickIntervalHasPassed, lerp, Point, polarVec2, randAngle, assertBoxIsCircular, Box, HitboxTag, AttackVar, BLOCKING_LIMB_STATE, copyLimbState, LimbConfiguration, LimbState, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, interpolateLimbState, RectangularBox, getSubtileIndex, EntityTickEvent, EntityTickEventType, HitFlags, AttackEffectiveness, calculateAttackEffectiveness, StatusEffect, TribesmanTitle, _bounds, angle, createRectangularBox, getBoxCollisionResult, calculateBoxBounds } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
 import { getInventory, hasInventory, InventoryComponentArray } from "./InventoryComponent.js";
-import { getHitboxesByFlag, TransformComponentArray } from "./TransformComponent.js";
+import { getHitboxesByTag, TransformComponentArray } from "./TransformComponent.js";
 import { registerDirtyEntity, registerEntityTickEvent } from "../server/player-clients.js";
 import Layer from "../Layer.js";
 import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType } from "../world.js";
-import { applyKnockback, getHitboxAngularVelocity, Hitbox, setHitboxRelativeAngle } from "../hitboxes.js";
+import { applyKnockback, getHitboxAngularVelocity, getHitboxTag, Hitbox, setHitboxRelativeAngle } from "../hitboxes.js";
 import { getHumanoidRadius } from "../entities/tribes/tribesman-ai/tribesman-ai-utils.js";
 import { HitboxCollisionPair } from "../collision-detection.js";
 import { createItemEntityConfig } from "../entities/item-entity.js";
@@ -150,7 +150,7 @@ export class InventoryUseComponent {
    public getLimbInfo(inventoryName: InventoryName): LimbInfo {
       const useInfo = this.inventoryUseInfoRecord[inventoryName];
 
-      if (typeof useInfo === "undefined") {
+      if (useInfo === undefined) {
          throw new Error("Use info doesn't exist");
       }
 
@@ -158,7 +158,7 @@ export class InventoryUseComponent {
    }
 
    public hasUseInfo(inventoryName: InventoryName): boolean {
-      return typeof this.inventoryUseInfoRecord[inventoryName] !== "undefined";
+      return this.inventoryUseInfoRecord[inventoryName] !== undefined;
    }
 }
 
@@ -175,7 +175,7 @@ function onJoin(entity: Entity): void {
    const inventoryComponent = InventoryComponentArray.getComponent(entity);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    
-   const handHitboxes = getHitboxesByFlag(transformComponent, HitboxFlag.HAND);
+   const handHitboxes = getHitboxesByTag(transformComponent, HitboxTag.hand);
 
    for (let i = 0; i < inventoryUseComponent.associatedInventoryNames.length; i++) {
       const inventoryName = inventoryUseComponent.associatedInventoryNames[i];
@@ -198,7 +198,7 @@ const currentActionHasFinished = (limbInfo: LimbInfo): boolean => {
 // @Cleanup: also make getHeldItemAttackInfo method
 export function getHeldItem(limbInfo: LimbInfo): Item | null {
    const item = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
-   return (typeof item !== "undefined" && limbInfo.thrownBattleaxeItemID !== item.id) ? item : null;
+   return (item !== undefined && limbInfo.thrownBattleaxeItemID !== item.id) ? item : null;
 }
 
 export function getHeldItemEntity(limbInfo: LimbInfo): Entity | null {
@@ -231,13 +231,13 @@ export function getCurrentLimbState(limb: LimbInfo): LimbState {
 
 const boxIsCollidingWithSubtile = (box: Box, subtileX: number, subtileY: number): boolean => {
    // @Speed
-   const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+   const tileBox = createRectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
    
-   return box.getCollisionResult(tileBox).isColliding;
+   return getBoxCollisionResult(box, tileBox).isColliding;
 }
 
 const getBoxCollidingWallSubtiles = (layer: Layer, box: Box): ReadonlyArray<number> => {
-   box.calculateBounds();
+   calculateBoxBounds(box);
    const minSubtileX = Math.max(Math.floor(_bounds.minX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
    const maxSubtileX = Math.min(Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
    const minSubtileY = Math.max(Math.floor(_bounds.minY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
@@ -762,7 +762,7 @@ const damageEntityFromSwing = (attacker: Entity, limb: LimbInfo, itemType: ItemT
       if (hasInventory(inventoryComponent, InventoryName.gloveSlot)) {
          const gloveInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
          const gloves = gloveInventory.itemSlots[1];
-         if (typeof gloves !== "undefined" && (gloves.type === ItemType.gathering_gloves || gloves.type === ItemType.gardening_gloves)) {
+         if (gloves !== undefined && (gloves.type === ItemType.gathering_gloves || gloves.type === ItemType.gardening_gloves)) {
             gatherPlant(victim, attacker, victimHitbox, gloves);
             return true;
          }
@@ -778,7 +778,8 @@ const damageEntityFromSwing = (attacker: Entity, limb: LimbInfo, itemType: ItemT
    const hitFlags = itemType !== null && itemType === ItemType.flesh_sword ? HitFlags.HIT_BY_FLESH_SWORD : 0; // @HACK
    damageEntity(victimHitbox, attacker, attackDamage, DamageSource.tribeMember, attackEffectiveness, collisionPoint, hitFlags);
    // @SQUEAM
-   if (getEntityType(victimHitbox.entity) === EntityType.tukmokTailClub || victimHitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_MEDIUM) || victimHitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_BIG) || victimHitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_SMALL)) {
+   const victimHitboxTag = getHitboxTag(victimHitbox);
+   if (getEntityType(victimHitbox.entity) === EntityType.tukmokTailClub || victimHitboxTag === HitboxTag.tukmokTailMiddleSegmentMedium || victimHitboxTag === HitboxTag.tukmokTailMiddleSegmentBig || victimHitboxTag === HitboxTag.tukmokTailMiddleSegmentSmall) {
 
    } else {
       applyKnockback(victimHitbox, polarVec2(attackKnockback, hitDirection));
@@ -861,12 +862,12 @@ export function onSwingEntityCollision(attacker: Entity, hitbox: Hitbox, collidi
 }
 
 function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoint: Point) {
-   if (!hitbox.flags.includes(HitboxFlag.HAND)) {
+   if (getHitboxTag(hitbox) !== HitboxTag.hand) {
       return;
    }
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(hitbox.entity);
-   const inventoryName = hitbox.box.flipX ? InventoryName.offhand : InventoryName.hotbar;
+   const inventoryName = (hitbox.box.flags & 1) ? InventoryName.offhand : InventoryName.hotbar;
    const limb = inventoryUseComponent.getLimbInfo(inventoryName);
    
    onSwingEntityCollision(hitbox.entity, hitbox, collidingHitbox, collisionPoint, limb, null);

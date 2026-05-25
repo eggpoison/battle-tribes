@@ -1,11 +1,11 @@
-import { HitboxCollisionType, HitboxFlag, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType } from "battletribes-shared";
+import { HitboxCollisionType, HitboxTag, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, createCircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { TukmokTrunkComponent } from "../../components/TukmokTrunkComponent.js";
-import { Hitbox } from "../../hitboxes.js";
-import { tetherHitboxes } from "../../tethers.js";
+import { createHitbox, Hitbox, setHitboxTag } from "../../hitboxes.js";
+import { addHitboxAngularTether, tetherHitboxes } from "../../tethers.js";
 
 const NUM_SEGMENTS = 8;
 
@@ -33,22 +33,24 @@ export function createTukmokTrunkConfig(x: number, y: number, angle: number, tru
       }
 
       let mass: number;
-      let flags: Array<HitboxFlag>;
+      let tag: HitboxTag | undefined;
       if (i < NUM_SEGMENTS - 1) {
          mass = 0.2;
-         flags = [];
       } else {
          mass = 0.3;
-         flags = [HitboxFlag.TUKMOK_TRUNK_HEAD];
+         tag = HitboxTag.tukmokTrunkHead;
       }
 
-      const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(hitboxX, hitboxY, offsetX, offsetY, 0, 12), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, flags);
+      const hitbox = createHitbox(transformComponent, null, createCircularBox(hitboxX, hitboxY, offsetX, offsetY, 0, 12), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      if (tag !== undefined) {
+         setHitboxTag(hitbox, tag);
+      }
       addHitboxToTransformComponent(transformComponent, hitbox);
 
       if (lastHitbox !== null) {
          tetherHitboxes(hitbox, lastHitbox, IDEAL_DIST, 50, 0.5);
-         // @Hack: method of adding
-         hitbox.angularTethers.push({
+         addHitboxAngularTether(hitbox, {
+            hitbox: hitbox,
             originHitbox: lastHitbox,
             idealAngle: 0,
             springConstant: 25,

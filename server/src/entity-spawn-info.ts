@@ -246,7 +246,7 @@ export function addEntityToSpawnDistribution(spawnDistribution: SpawnDistributio
 
 export function removeEntityFromSpawnDistributions(entity: Entity, spawnDistribution: SpawnDistribution): void {
    const densityInfos = spawnDistribution.entityDensityMap.get(entity);
-   if (typeof densityInfos !== "undefined") {
+   if (densityInfos !== undefined) {
       // Remove from the current densities
       // (Note: this will accumulate floating point errors, but that's what the regular distribution updates are for)
       for (const densityInfo of densityInfos) {

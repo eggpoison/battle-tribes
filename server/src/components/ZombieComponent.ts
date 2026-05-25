@@ -78,7 +78,7 @@ const tribesmanIsWearingMeatSuit = (entityID: number): boolean => {
    const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
 
    const armour = armourInventory.itemSlots[1];
-   return typeof armour !== "undefined" && armour.type === ItemType.meat_suit;
+   return armour !== undefined && armour.type === ItemType.meat_suit;
 }
 
 export function zombieShouldAttackEntity(zombie: Entity, entity: Entity): boolean {
@@ -88,7 +88,7 @@ export function zombieShouldAttackEntity(zombie: Entity, entity: Entity): boolea
    
    // If the entity is attacking the zombie, attack back
    const zombieComponent = ZombieComponentArray.getComponent(zombie);
-   if (typeof zombieComponent.attackingEntityIDs[entity] !== "undefined") {
+   if (zombieComponent.attackingEntityIDs[entity] !== undefined) {
       return true;
    }
 
@@ -193,7 +193,7 @@ const doAttack = (zombie: Entity, target: Entity): void => {
 
    // If holding an item, do a melee attack
    const handInventory = getInventory(inventoryComponent, InventoryName.handSlot);
-   if (typeof handInventory.itemSlots[1] !== "undefined") {
+   if (handInventory.itemSlots[1] !== undefined) {
       doMeleeAttack(zombie, target);
    } else {
       doBiteAttack(zombie, target);

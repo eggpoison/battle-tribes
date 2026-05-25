@@ -1,9 +1,9 @@
-import { Entity, EntityType, Settings, _point, Point, rotatePointAroundOrigin, HitboxCollisionType, RectangularBox, CollisionResult } from "battletribes-shared";
+import { Entity, EntityType, Settings, _point, Point, rotatePointAroundOrigin, HitboxCollisionType, CollisionResult, createRectangularBox, getBoxCollisionResult } from "battletribes-shared";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
 import { getComponentArrayRecord } from "./components/ComponentArray.js";
 import { getEntityType } from "./world.js";
 import { HitboxCollisionPair } from "./collision-detection.js";
-import { getHitboxVelocity, Hitbox, addHitboxVelocity, setHitboxVelocity, translateHitbox, applyForce } from "./hitboxes.js";
+import { getHitboxVelocity, Hitbox, addHitboxVelocity, setHitboxVelocity, translateHitbox, applyForce, hitboxIsStatic, getHitboxCollisionType } from "./hitboxes.js";
 import { getEntityComponentTypes } from "./entity-component-types.js";
 
 const hitboxesAreTethered = (transformComponent: TransformComponent, hitbox1: Hitbox, hitbox2: Hitbox): boolean => {
@@ -121,14 +121,14 @@ export function collide(affectedEntity: Entity, collidingEntity: Entity, collidi
          const componentType = componentTypes[i];
          const componentArray = componentArrayRecord[componentType];
 
-         if (typeof componentArray.onHitboxCollision !== "undefined") {
+         if (componentArray.onHitboxCollision !== undefined) {
             componentArray.onHitboxCollision(affectedHitbox, collidingHitbox, collisionPoint);
          }
       }
       
       // @Speed: what if there are many many hitbox pairs? will this be slow:?
-      if (!affectedHitbox.isStatic) {
-         if (collidingHitbox.collisionType === HitboxCollisionType.hard) {
+      if (!hitboxIsStatic(affectedHitbox)) {
+         if (getHitboxCollisionType(collidingHitbox) === HitboxCollisionType.hard) {
             resolveHardCollision(affectedHitbox, pair.collisionResult);
          } else {
             resolveSoftCollision(affectedHitbox, collidingHitbox, pair.collisionResult);
@@ -143,7 +143,7 @@ export function collide(affectedEntity: Entity, collidingEntity: Entity, collidi
       const componentType = componentTypes[i];
       const componentArray = componentArrayRecord[componentType];
 
-      if (typeof componentArray.onEntityCollision !== "undefined") {
+      if (componentArray.onEntityCollision !== undefined) {
          componentArray.onEntityCollision(affectedEntity, collidingEntity, collidingHitboxPairs);
       }
    }
@@ -169,9 +169,9 @@ export function collide(affectedEntity: Entity, collidingEntity: Entity, collidi
 export function resolveWallCollision(hitbox: Hitbox, subtileX: number, subtileY: number): void {
    // @Copynpaste from boxIsCollidingWithSubtile
    // @Speed
-   const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
+   const tileBox = createRectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
    
-   const collisionResult = hitbox.box.getCollisionResult(tileBox);
+   const collisionResult = getBoxCollisionResult(hitbox.box, tileBox);
    if (!collisionResult.isColliding) {
       return;
    }
@@ -192,7 +192,7 @@ export function resolveWallCollision(hitbox: Hitbox, subtileX: number, subtileY:
       const componentType = componentTypes[i];
       const componentArray = componentArrayRecord[componentType];
 
-      if (typeof componentArray.onWallCollision !== "undefined") {
+      if (componentArray.onWallCollision !== undefined) {
          componentArray.onWallCollision(entity);
       }
    }

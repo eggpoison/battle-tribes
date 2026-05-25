@@ -1,7 +1,7 @@
 import { Entity, CircularBox, lerp, randAngle, Settings, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox, SoundInfo } from "../../sound";
 import { createAcidParticle, createPoisonBubble } from "../../particles";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -36,7 +36,7 @@ class _SpitPoisonAreaComponentArray extends _ServerComponentArray<SpitPoisonArea
 
    // @INCOMPLETE: Won't play when you walk into discovering a previously-offscreen spit poison!
    public onJoin(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       const spitPoisonAreaComponent = SpitPoisonAreaComponentArray.getComponent(entity);
@@ -51,7 +51,7 @@ class _SpitPoisonAreaComponentArray extends _ServerComponentArray<SpitPoisonArea
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const spitPoisonAreaComponent = SpitPoisonAreaComponentArray.getComponent(entity);
 
       const hitbox = transformComponent.hitboxes[0];

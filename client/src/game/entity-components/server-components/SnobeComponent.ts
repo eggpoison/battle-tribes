@@ -1,14 +1,14 @@
-import { PacketReader, Settings, Point, randAngle, randFloat, randInt, Entity, HitboxFlag, ServerComponentType, angle } from "webgl-test-shared";
+import { PacketReader, Settings, Point, randAngle, randFloat, randInt, Entity, HitboxTag, ServerComponentType, angle } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import { Hitbox } from "../../hitboxes";
-import { TransformComponentArray } from "./TransformComponent";
+import { getHitboxTag, Hitbox } from "../../hitboxes";
+import { transformComponentArray } from "./TransformComponent";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain, createHighSnowParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { HealthComponentArray } from "./HealthComponent";
-import { RandomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
+import { randomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -44,36 +44,43 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       for (const hitbox of transformComponentData.hitboxes) {
-         if (hitbox.flags.includes(HitboxFlag.SNOBE_BODY)) {
-            const renderPart = new TexturedRenderPart(
-               hitbox,
-               2,
-               0,
-               0, 0,
-               getTextureArrayIndex("entities/snobe/body.png")
-            );
-            addRenderPartTag(renderPart, "tamingComponent:head")
-            renderObject.attachRenderPart(renderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.SNOBE_BUTT)) {
-            renderObject.attachRenderPart(
-               new TexturedRenderPart(
+         switch (getHitboxTag(hitbox)) {
+            case HitboxTag.snobeBody: {
+               const renderPart = new TexturedRenderPart(
                   hitbox,
-                  1,
+                  2,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/snobe/butt.png")
-               )
-            );
-         } else if (hitbox.flags.includes(HitboxFlag.SNOBE_EAR)) {
-            renderObject.attachRenderPart(
-               new TexturedRenderPart(
-                  hitbox,
-                  3,
-                  0,
-                  0, 0,
-                  getTextureArrayIndex("entities/snobe/ear.png")
-               )
-            );
+                  getTextureArrayIndex("entities/snobe/body.png")
+               );
+               addRenderPartTag(renderPart, "tamingComponent:head")
+               renderObject.attachRenderPart(renderPart);
+               break;
+            }
+            case HitboxTag.snobeButt: {
+               renderObject.attachRenderPart(
+                  new TexturedRenderPart(
+                     hitbox,
+                     1,
+                     0,
+                     0, 0,
+                     getTextureArrayIndex("entities/snobe/butt.png")
+                  )
+               );
+               break;
+            }
+            case HitboxTag.snobeEar: {
+               renderObject.attachRenderPart(
+                  new TexturedRenderPart(
+                     hitbox,
+                     3,
+                     0,
+                     0, 0,
+                     getTextureArrayIndex("entities/snobe/ear.png")
+                  )
+               );
+               break;
+            }
          }
       }
    }
@@ -93,12 +100,12 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
    }
 
    public onTick(snobe: Entity): void {
-      const randomSoundComponent = RandomSoundComponentArray.getComponent(snobe);
+      const randomSoundComponent = randomSoundComponentArray.getComponent(snobe);
       updateRandomSoundComponentSounds(randomSoundComponent, 3 * Settings.TICK_RATE, 7 * Settings.TICK_RATE, AMBIENT_SOUNDS, 0.3);
 
       const snobeComponent = SnobeComponentArray.getComponent(snobe);
       if (snobeComponent.isDigging && snobeComponent.diggingProgress < 1 && Math.random() < 15 * Settings.DT_S) {
-         const transformComponent = TransformComponentArray.getComponent(snobe);
+         const transformComponent = transformComponentArray.getComponent(snobe);
          const hitbox = transformComponent.hitboxes[0];
 
          const position = new Point(hitbox.box.posX, hitbox.box.posY).offset(32 * Math.random(), randAngle());
@@ -147,7 +154,7 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 3; i++) {

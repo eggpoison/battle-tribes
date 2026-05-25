@@ -1,11 +1,11 @@
-import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, StatusEffect, randInt } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, StatusEffect, randInt, createCircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { DesertBushSandyComponent } from "../../components/DesertBushSandyComponent.js";
 import { EnergyStoreComponent } from "../../components/EnergyStoreComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 
 export function createDesertBushSandyConfig(x: number, y: number, angle: number): EntityConfig {
    const size = randInt(0, 1);
@@ -14,8 +14,8 @@ export function createDesertBushSandyConfig(x: number, y: number, angle: number)
 
    const radius = size === 0 ? 32 : 40;
    const mass = size === 0 ? 1.2 : 1.6;
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, radius), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox.isStatic = true;
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, radius), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding);

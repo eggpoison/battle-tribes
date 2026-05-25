@@ -1,4 +1,4 @@
-import { HitboxFlag, ServerComponentType } from "webgl-test-shared";
+import { HitboxTag, ServerComponentType } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -6,6 +6,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { getHitboxTag } from "../../hitboxes";
 
 export interface OkrenTongueComponentData {}
 
@@ -24,24 +25,29 @@ class _OkrenTongueComponentArray extends _ServerComponentArray<OkrenTongueCompon
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
       for (const hitbox of transformComponentData.hitboxes) {
-         if (hitbox.flags.includes(HitboxFlag.OKREN_TONGUE_SEGMENT_MIDDLE)) {
-            const renderPart = new TexturedRenderPart(
-               hitbox,
-               0,
-               0,
-               0, 0,
-               getTextureArrayIndex("entities/okren/tongue-segment.png")
-            );
-            renderObject.attachRenderPart(renderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.OKREN_TONGUE_SEGMENT_TIP)) {
-            const renderPart = new TexturedRenderPart(
-               hitbox,
-               0,
-               0,
-               0, 0,
-               getTextureArrayIndex("entities/okren/tongue-tip.png")
-            );
-            renderObject.attachRenderPart(renderPart);
+         switch (getHitboxTag(hitbox)) {
+            case HitboxTag.okrenTongueSegmentMiddle: {
+               const renderPart = new TexturedRenderPart(
+                  hitbox,
+                  0,
+                  0,
+                  0, 0,
+                  getTextureArrayIndex("entities/okren/tongue-segment.png")
+               );
+               renderObject.attachRenderPart(renderPart);
+               break;
+            }
+            case HitboxTag.okrenTongueSegmentTip: {
+               const renderPart = new TexturedRenderPart(
+                  hitbox,
+                  0,
+                  0,
+                  0, 0,
+                  getTextureArrayIndex("entities/okren/tongue-tip.png")
+               );
+               renderObject.attachRenderPart(renderPart);
+               break;
+            }
          }
       }
    }

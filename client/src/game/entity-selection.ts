@@ -1,4 +1,4 @@
-import { Entity, EntityType, PlantedEntityType, assert, distance, rotatePointAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, HitboxCollisionType, CircularBox, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID, _point } from "webgl-test-shared";
+import { Entity, EntityType, PlantedEntityType, assert, distance, rotatePointAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, HitboxCollisionType, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID, _point, createCircularBox } from "webgl-test-shared";
 import { currentSnapshot } from "./networking/snapshots";
 import { entityExists, getCurrentLayer, getEntityRenderObject, getEntityType } from "./world";
 import { TombstoneComponentArray } from "./entity-components/server-components/TombstoneComponent";
@@ -6,7 +6,7 @@ import { TunnelComponentArray } from "./entity-components/server-components/Tunn
 import { PlanterBoxComponentArray } from "./entity-components/server-components/PlanterBoxComponent";
 import { CraftingStationComponentArray } from "./entity-components/server-components/CraftingStationComponent";
 import { getLimbByInventoryName, InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
-import { getDistanceFromPointToEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { getDistanceFromPointToEntity, transformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { sendMountCarrySlotPacket, sendPickUpEntityPacket, sendStructureInteractPacket, sendModifyBuildingPacket, sendSetCarryTargetPacket, sendSetAttackTargetPacket, sendOpenEntityInventoryPacket as sendStartEntityInteractionPacket, sendStructureUninteractPacket } from "./networking/packet-sending/packet-sending";
 import { EntityRenderObject } from "./EntityRenderObject";
 import { RideableComponentArray } from "./entity-components/server-components/RideableComponent";
@@ -225,7 +225,7 @@ const getTunnelDoorSide = (groupNum: number): TunnelDoorSide => {
 }
 
 const getSelectedCarrySlotIdx = (entity: Entity): number | null => {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    const rideableComponent = RideableComponentArray.getComponent(entity);
@@ -395,7 +395,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
 
    // Pick up arrows
    if (entityType === EntityType.woodenArrow) {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       getHitboxVelocity(hitbox);
       if (_point.magnitude() < 1) {
@@ -458,7 +458,7 @@ const createInteractRenderObject = (interactAction: InteractAction): EntityRende
          return getEntityRenderObject(interactAction.interactEntity);
       }
       case InteractActionType.mountCarrySlot: {
-         const transformComponent = TransformComponentArray.getComponent(interactAction.interactEntity);
+         const transformComponent = transformComponentArray.getComponent(interactAction.interactEntity);
          
          const renderObject = new EntityRenderObject(0, 0, 0, 1, true);
 
@@ -469,8 +469,8 @@ const createInteractRenderObject = (interactAction: InteractAction): EntityRende
          assert(carryingHitbox !== undefined);
 
          // @HACK
-         const box = new CircularBox(carryingHitbox.box.posX, carryingHitbox.box.posY, 0, 0, carryingHitbox.box.angle, 0);
-         const hitbox = createHitboxQuick(0, 0, null, box, 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+         const box = createCircularBox(carryingHitbox.box.posX, carryingHitbox.box.posY, 0, 0, carryingHitbox.box.angle, 0);
+         const hitbox = createHitboxQuick(0, 0, null, box, 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
 
          const renderPart = new TexturedRenderPart(
             hitbox,

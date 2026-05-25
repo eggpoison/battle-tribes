@@ -1,10 +1,10 @@
 import { Entity, BuildingMaterial, ItemType, EntityType, BlueprintType, ITEM_TYPE_RECORD } from "../../../shared/src";
-import { BuildingMaterialComponentArray } from "../game/entity-components/server-components/BuildingMaterialComponent";
+import { buildingMaterialComponentArray } from "../game/entity-components/server-components/BuildingMaterialComponent";
 import { HutComponentArray } from "../game/entity-components/server-components/HutComponent";
 import { PlanterBoxComponentArray } from "../game/entity-components/server-components/PlanterBoxComponent";
 import { SpikesComponentArray } from "../game/entity-components/server-components/SpikesComponent";
 import { StructureComponentArray } from "../game/entity-components/server-components/StructureComponent";
-import { TribeComponentArray } from "../game/entity-components/server-components/TribeComponent";
+import { tribeComponentArray } from "../game/entity-components/server-components/TribeComponent";
 import { TunnelComponentArray } from "../game/entity-components/server-components/TunnelComponent";
 import { GhostType } from "../game/rendering/webgl/entity-ghost-rendering";
 import { playerTribe } from "../game/tribes";
@@ -115,7 +115,7 @@ const playerIsHoldingHammer = (): boolean => {
 
 export function getBuildMenuOptions(entity: Entity): ReadonlyArray<BuildMenuOption> {
    // Enemy buildings can't be selected
-   const tribeComponent = TribeComponentArray.tryGetComponent(entity);
+   const tribeComponent = tribeComponentArray.tryGetComponent(entity);
    if (tribeComponent === null || tribeComponent.tribeID !== playerTribe.id) {
       return [];
    }
@@ -126,7 +126,7 @@ export function getBuildMenuOptions(entity: Entity): ReadonlyArray<BuildMenuOpti
       return [];
    }
 
-   const buildingMaterialComponent = BuildingMaterialComponentArray.tryGetComponent(entity);
+   const buildingMaterialComponent = buildingMaterialComponentArray.tryGetComponent(entity);
    
    const options = new Array<BuildMenuOption>();
 
@@ -159,8 +159,8 @@ export function getBuildMenuOptions(entity: Entity): ReadonlyArray<BuildMenuOpti
 
    // Wall shaping options
    if (isHoldingHammer && entityType === EntityType.wall) {
-      const wallComponent = BuildingMaterialComponentArray.getComponent(entity);
-      const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(entity);
+      const wallComponent = buildingMaterialComponentArray.getComponent(entity);
+      const buildingMaterialComponent = buildingMaterialComponentArray.getComponent(entity);
       options.push({
          name: "Door",
          imageSource: DOOR_IMAGE_SOURCES[wallComponent.material],

@@ -1,10 +1,10 @@
-import { Entity, EntityType, ServerComponentType, TileType, Settings, HitboxFlag, ItemType, Packet, DEFAULT_COLLISION_MASK, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randFloat, randInt, randSign, secondsToTicks, EntityTickEvent, EntityTickEventType, distance } from "battletribes-shared";
+import { Entity, EntityType, ServerComponentType, TileType, Settings, ItemType, Packet, DEFAULT_COLLISION_MASK, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randFloat, randInt, randSign, secondsToTicks, EntityTickEvent, EntityTickEventType, distance, HitboxTag } from "battletribes-shared";
 import { runEscapeAI } from "../ai/EscapeAI.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType } from "../world.js";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent.js";
-import { addHitboxAngularAcceleration, addHitboxAngularVelocity, addHitboxVelocity, getHitboxAngularVelocity, getHitboxTile, Hitbox, teleportHitbox } from "../hitboxes.js";
+import { addHitboxAngularAcceleration, addHitboxAngularVelocity, addHitboxVelocity, getHitboxAngularVelocity, getHitboxTag, getHitboxTile, Hitbox, teleportHitbox } from "../hitboxes.js";
 import { SNOBE_EAR_IDEAL_ANGLE } from "../entities/tundra/snobe.js";
 import { updateFollowAIComponent, entityWantsToFollow, followAISetFollowTarget, continueFollowingEntity } from "../ai/FollowAI.js";
 import { ItemComponentArray } from "./ItemComponent.js";
@@ -47,7 +47,7 @@ const entityIsFollowable = (entity: Entity): boolean => {
 const getEarHitbox = (transformComponent: TransformComponent, i: number): Hitbox => {
    let currI = 0;
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitbox.flags.includes(HitboxFlag.SNOBE_EAR) && currI++ === i) {
+      if (getHitboxTag(hitbox) === HitboxTag.snobeEar && currI++ === i) {
          return hitbox;
       }
    }

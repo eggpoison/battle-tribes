@@ -1,6 +1,6 @@
 import { CircularBox, randAngle, randFloat, ServerComponentType, PacketReader, Entity, randInt, _point, Settings } from "webgl-test-shared";
 import { createSnowParticle } from "../../particles";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -59,7 +59,7 @@ class _SnowballComponentArray extends _ServerComponentArray<SnowballComponent, S
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       getHitboxVelocity(hitbox);
       const velocity = _point;
@@ -83,7 +83,7 @@ class _SnowballComponentArray extends _ServerComponentArray<SnowballComponent, S
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       // Create a bunch of snow particles throughout the snowball

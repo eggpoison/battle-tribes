@@ -7,7 +7,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
-import { TransformComponentArray } from "../server-components/TransformComponent";
+import { transformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
 
@@ -45,7 +45,7 @@ class _WoodenArrowComponentArray extends _ClientComponentArray<WoodenArrowCompon
 
    public onDie(entity: Entity): void {
       // Create arrow break particles
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       getHitboxVelocity(hitbox);
       const velocity = _point;

@@ -1,6 +1,6 @@
-import { HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randAngle, distance, angle } from "battletribes-shared";
+import { HitboxTag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randAngle, distance, angle } from "battletribes-shared";
 import { createDustfleaConfig } from "../entities/desert/dustflea.js";
-import { Hitbox, applyAbsoluteKnockback } from "../hitboxes.js";
+import { Hitbox, applyAbsoluteKnockback, getHitboxTag } from "../hitboxes.js";
 import { createEntity, getEntityLayer, getEntityType } from "../world.js";
 import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -58,7 +58,8 @@ function onTick(inguYetu: Entity): void {
 
    const transformComponent = TransformComponentArray.getComponent(inguYetu);
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitbox.flags.includes(HitboxFlag.YETUK_BODY_1) || hitbox.flags.includes(HitboxFlag.YETUK_BODY_2) || hitbox.flags.includes(HitboxFlag.YETUK_BODY_3) || hitbox.flags.includes(HitboxFlag.YETUK_BODY_4)) {
+      const tag = getHitboxTag(hitbox);
+      if (tag === HitboxTag.yetukBody1 || tag === HitboxTag.yetukBody2 || tag === HitboxTag.yetukBody3 || tag === HitboxTag.yetukBody4) {
          aiHelperComponent.moveFunc(inguYetu, targetHitbox.box.posX, targetHitbox.box.posY, 650);
          aiHelperComponent.turnFunc(inguYetu, targetHitbox.box.posX, targetHitbox.box.posY, Math.PI, 1.5);
       }
@@ -75,7 +76,7 @@ function onTick(inguYetu: Entity): void {
 
    // Create dustfleas
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitbox.flags.includes(HitboxFlag.YETUK_DUSTFLEA_DISPENSION_PORT)) {
+      if (getHitboxTag(hitbox) === HitboxTag.yetukDustfleaDispensionPort) {
          if (Math.random() < 1 * Settings.DT_S) {
             const config = createDustfleaConfig(hitbox.box.posX, hitbox.box.posY, randAngle());
             createEntity(config, getEntityLayer(inguYetu), 0);

@@ -8,7 +8,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { playerTribe } from "../../tribes";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { tamingMenuState } from "../../../ui-state/taming-menu-state";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -394,7 +394,7 @@ export function skillLearningIsComplete(skillLearning: TamingSkillLearning): boo
 
 // @Hack
 const getHeadHitbox = (entity: Entity): Hitbox => {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    return transformComponent.hitboxes[0];
 }
 

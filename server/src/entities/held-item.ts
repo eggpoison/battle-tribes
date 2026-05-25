@@ -1,9 +1,9 @@
-import { HitboxCollisionType, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, getItemAttackInfo, ItemType, Point, rotatePoint } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, getItemAttackInfo, ItemType, Point, rotatePoint, createRectangularBox } from "battletribes-shared";
 import { createEntityConfigAttachInfo, EntityConfig } from "../components.js";
 import { HeldItemComponent } from "../components/HeldItemComponent.js";
 import { StatusEffectComponent } from "../components/StatusEffectComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
-import { Hitbox } from "../hitboxes.js";
+import { createHitbox, Hitbox } from "../hitboxes.js";
 
 export function createHeldItemConfig(limbHitbox: Hitbox, itemType: ItemType): EntityConfig {
    const transformComponent = new TransformComponent();
@@ -17,7 +17,7 @@ export function createHeldItemConfig(limbHitbox: Hitbox, itemType: ItemType): En
    const rotatedOffset = rotatePoint(offset, limbHitbox.box.angle);
 
    // @HACK SQUEAM: the collision mask, so that the player can mine berries for a horse archer shot
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(limbHitbox.box.posX + rotatedOffset.x, limbHitbox.box.posY + rotatedOffset.y, offset.x, offset.y, damageBoxInfo.rotation, damageBoxInfo.width, damageBoxInfo.height), 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox, []);
+   const hitbox = createHitbox(transformComponent, null, createRectangularBox(limbHitbox.box.posX + rotatedOffset.x, limbHitbox.box.posY + rotatedOffset.y, offset.x, offset.y, damageBoxInfo.rotation, damageBoxInfo.width, damageBoxInfo.height), 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.planterBox);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const heldItemComponent = new HeldItemComponent(itemType);

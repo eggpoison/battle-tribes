@@ -1,4 +1,4 @@
-import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, createCircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../../components.js";
 import { AIAssignmentComponent } from "../../../components/AIAssignmentComponent.js";
 import { AIHelperComponent, AIType } from "../../../components/AIHelperComponent.js";
@@ -12,7 +12,7 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../../comp
 import { TribeComponent } from "../../../components/TribeComponent.js";
 import { TribeMemberComponent } from "../../../components/TribeMemberComponent.js";
 import { TribesmanAIComponent } from "../../../components/TribesmanAIComponent.js";
-import { Hitbox } from "../../../hitboxes.js";
+import { createHitbox } from "../../../hitboxes.js";
 import { addHumanoidInventories } from "../../../inventories.js";
 import Tribe from "../../../Tribe.js";
 import { generateCogwalkerName } from "../../../tribesman-names.js";
@@ -31,7 +31,7 @@ export function createCogwalkerConfig(x: number, y: number, angle: number, tribe
 
    transformComponent.traction = 1.4;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 28), 1.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 28), 1.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(25);

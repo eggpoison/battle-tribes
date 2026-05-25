@@ -6,7 +6,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -71,7 +71,7 @@ class _SandBallComponentArray extends _ServerComponentArray<SandBallComponent, S
    }
 
    public onTick(sandBall: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(sandBall);
+      const transformComponent = transformComponentArray.getComponent(sandBall);
       const hitbox = transformComponent.hitboxes[0];
       if (hitbox.rootEntity !== sandBall) {
          const hitboxRadius = (hitbox.box as CircularBox).radius;

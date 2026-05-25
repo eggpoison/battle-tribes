@@ -2,7 +2,7 @@ import { randFloat, randItem, Entity } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
-import { TransformComponentArray } from "../server-components/TransformComponent";
+import { transformComponentArray } from "../server-components/TransformComponent";
 import { registerClientComponentArray } from "../component-registry";
 
 export interface RandomSoundComponentData {}
@@ -19,7 +19,9 @@ export interface RandomSoundComponent {
 }
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.randomSound, _RandomSoundComponentArray> {}
+   interface ClientComponentRegistry {
+      [ClientComponentType.randomSound]: RandomSoundComponentArray;
+   }
 }
 
 // @Cleanup this system is so shit
@@ -41,7 +43,7 @@ export function updateRandomSoundComponentSounds(randomSoundComponent: RandomSou
    }
 }
 
-class _RandomSoundComponentArray extends _ClientComponentArray<RandomSoundComponent, RandomSoundComponentData> {
+class RandomSoundComponentArray extends _ClientComponentArray<RandomSoundComponent, RandomSoundComponentData> {
    public createComponent(): RandomSoundComponent {
       return {
          minSoundIntervalTicks: 0,
@@ -57,7 +59,7 @@ class _RandomSoundComponentArray extends _ClientComponentArray<RandomSoundCompon
    }
 
    public onTick(entity: Entity): void {
-      const randomSoundComponent = RandomSoundComponentArray.getComponent(entity);
+      const randomSoundComponent = randomSoundComponentArray.getComponent(entity);
       if (randomSoundComponent.maxSoundIntervalTicks === 0) {
          return;
       }
@@ -66,7 +68,7 @@ class _RandomSoundComponentArray extends _ClientComponentArray<RandomSoundCompon
       if (randomSoundComponent.soundTimerTicks <= 0) {
          randomSoundComponent.soundTimerTicks = randFloat(randomSoundComponent.minSoundIntervalTicks, randomSoundComponent.maxSoundIntervalTicks);
 
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          
          const soundSrc = randItem(randomSoundComponent.sounds);
@@ -75,7 +77,7 @@ class _RandomSoundComponentArray extends _ClientComponentArray<RandomSoundCompon
    }
 }
 
-export const RandomSoundComponentArray = registerClientComponentArray(ClientComponentType.randomSound, _RandomSoundComponentArray, true);
+export const randomSoundComponentArray = registerClientComponentArray(ClientComponentType.randomSound, RandomSoundComponentArray, true);
 
 export function createRandomSoundComponentData(): RandomSoundComponentData {
    return {};

@@ -200,7 +200,7 @@ function addDataToPacket(packet: Packet, entity: Entity, player: Entity | null):
    }
 
    packet.writeNumber(tribesmanComponent.currentAIType);
-   const relationsWithPlayer = player !== null && typeof tribesmanComponent.tribesmanRelations[player] !== "undefined" ? tribesmanComponent.tribesmanRelations[player]! : 0;
+   const relationsWithPlayer = player !== null && tribesmanComponent.tribesmanRelations[player] !== undefined ? tribesmanComponent.tribesmanRelations[player]! : 0;
    packet.writeNumber(relationsWithPlayer);
    packet.writeNumber(craftingItemType);
    packet.writeNumber(craftingProgress);
@@ -215,7 +215,7 @@ const adjustTribesmanRelations = (tribesmanID: number, otherTribesmanID: number,
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesmanID);
    const relations = tribesmanComponent.tribesmanRelations;
 
-   if (typeof relations[otherTribesmanID] === "undefined") {
+   if (relations[otherTribesmanID] === undefined) {
       relations[otherTribesmanID] = adjustment;
    } else {
       relations[otherTribesmanID]! += adjustment;
@@ -278,7 +278,7 @@ export function getTribesmanRelationship(tribesman: Entity, comparingTribesman: 
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
    const relations = tribesmanComponent.tribesmanRelations;
 
-   if (typeof relations[comparingTribesman] === "undefined") {
+   if (relations[comparingTribesman] === undefined) {
       return EntityRelationship.neutral;
    } else {
       const relation = relations[comparingTribesman]!;

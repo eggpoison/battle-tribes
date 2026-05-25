@@ -2,7 +2,7 @@ import { PacketReader, Entity, assert, Point, rotatePointAroundOrigin, _point } 
 import { getEntityLayer, layers } from "./world";
 import { createTranslationMatrix, Matrix3x2 } from "./rendering/matrices";
 import { getHitboxByLocalID, Hitbox } from "./hitboxes";
-import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { currentSnapshot } from "./networking/snapshots";
 
 export type LightID = number;
@@ -191,7 +191,7 @@ export function updateLightsFromData(lightData: ReadonlyArray<LightData>): void 
       const entity = data.entity;
       const hitboxLocalID = data.hitboxLocalID;
 
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = getHitboxByLocalID(transformComponent.hitboxes, hitboxLocalID);
       assert(hitbox !== null);
       

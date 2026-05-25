@@ -1,18 +1,18 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, Point, HitboxCollisionType, RectangularBox } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent.js";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { ProjectileComponent } from "../../components/ProjectileComponent.js";
 import { SlingTurretRockComponent } from "../../components/SlingTurretRockComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 
 export function createSlingTurretRockConfig(x: number, y: number, rotation: number, owner: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
 
    transformComponent.isAffectedByGroundFriction = false;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, 0, rotation, 12, 64), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable, []);
-   hitbox.isStatic = true;
+   const hitbox = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, 0, rotation, 12, 64), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK & ~CollisionBit.arrowPassable);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const ownerTribeComponent = TribeComponentArray.getComponent(owner);

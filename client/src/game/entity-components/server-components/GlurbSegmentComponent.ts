@@ -7,7 +7,7 @@ import { coatSlimeTrails } from "../../rendering/webgl/slime-trail-rendering";
 import { playSound, playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityLayer, getEntityRenderObject } from "../../world";
-import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformComponent";
+import { entityIsVisibleToCamera, transformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -80,7 +80,7 @@ class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComp
          }
       } else {
          if (glurbSegmentComponent.mossBallRenderPart === null) {
-            const transformComponent = TransformComponentArray.getComponent(glurbSegment);
+            const transformComponent = transformComponentArray.getComponent(glurbSegment);
             const hitbox = transformComponent.hitboxes[0];
             
             glurbSegmentComponent.mossBallRenderPart = createMossBallRenderPart(mossBallCompleteness, hitbox);
@@ -96,7 +96,7 @@ class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComp
       // @Hack
       if (entityIsVisibleToCamera(glurb)) {
          const layer = getEntityLayer(glurb);
-         const transformComponent = TransformComponentArray.getComponent(glurb);
+         const transformComponent = transformComponentArray.getComponent(glurb);
          for (const hitbox of transformComponent.hitboxes) {
             coatSlimeTrails(layer, hitbox.box);
          }
@@ -114,11 +114,11 @@ class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComp
          createSlurbParticle(hitPosition.x, hitPosition.y, randAngle(), randFloat(80, 120), 0, 0);
       }
 
-      playSound("glurb-hit.mp3", 0.4, randFloat(0.9, 1.2), hitPosition, getEntityLayer(entity));
+      playSound("glurb-hit.mp3", 0.4, randFloat(0.9, 1.2), hitPosition.x, hitPosition.y, getEntityLayer(entity));
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 3; i++) {

@@ -1,12 +1,12 @@
-import { HitboxFlag, Point, randAngle, randFloat, randInt, Entity, ServerComponentType, angle } from "webgl-test-shared";
+import { HitboxTag, Point, randAngle, randFloat, randInt, Entity, ServerComponentType, angle } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain, createKrumblidChitinParticle } from "../../particles";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
-import { Hitbox } from "../../hitboxes";
+import { getHitboxTag, Hitbox } from "../../hitboxes";
 import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
@@ -28,7 +28,7 @@ class _KrumblidComponentArray extends _ServerComponentArray<KrumblidComponent, K
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       for (const hitbox of transformComponentData.hitboxes) {
-         if (hitbox.flags.includes(HitboxFlag.KRUMBLID_BODY)) {
+         if (getHitboxTag(hitbox) === HitboxTag.krumblidBody) {
             renderObject.attachRenderPart(
                new TexturedRenderPart(
                   hitbox,
@@ -83,7 +83,7 @@ class _KrumblidComponentArray extends _ServerComponentArray<KrumblidComponent, K
          return;
       }
       
-      const transformComponent = TransformComponentArray.getComponent(krumblid);
+      const transformComponent = transformComponentArray.getComponent(krumblid);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 2; i++) {

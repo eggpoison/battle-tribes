@@ -315,7 +315,7 @@ const planToCraftItem = (tribe: Tribe, recipe: CraftingRecipe, productAmount: nu
    
    // If there is no crafting station which can craft the recipe, first place that crafting station.
    // @HACK: CAST!!!
-   if (typeof recipe.craftingStation !== "undefined" && !craftingStationExists(tribe, recipe.craftingStation as any)) {
+   if (recipe.craftingStation !== undefined && !craftingStationExists(tribe, recipe.craftingStation as any)) {
       children.push(
          // @HACK: CAST!!!
          planToPlaceStructure(tribe, recipe.craftingStation as any, null)
@@ -358,7 +358,7 @@ const planToResearchTech = (tribe: Tribe, tech: Tech): AIPlanAssignment<AITechCo
       const amountRequired = entry.count;
 
       // Skip items which have already been donated
-      if (typeof tribe.techTreeUnlockProgress[tech.id] !== "undefined" && typeof tribe.techTreeUnlockProgress[tech.id]!.itemProgress[requiredItemType] !== "undefined" && tribe.techTreeUnlockProgress[tech.id]!.itemProgress[requiredItemType]! >= amountRequired) {
+      if (tribe.techTreeUnlockProgress[tech.id] !== undefined && tribe.techTreeUnlockProgress[tech.id]!.itemProgress[requiredItemType] !== undefined && tribe.techTreeUnlockProgress[tech.id]!.itemProgress[requiredItemType]! >= amountRequired) {
          continue;
       }
 

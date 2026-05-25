@@ -1,6 +1,6 @@
-import { assertBoxIsRectangular, HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Packet, Settings, Point, polarVec2, angle } from "battletribes-shared";
+import { assertBoxIsRectangular, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Packet, Settings, Point, polarVec2, angle, HitboxTag } from "battletribes-shared";
 import { getOkrenClawBigArmSegmentOffset, getOkrenClawBigArmSegmentSize, getOkrenClawMediumArmSegmentOffset, getOkrenClawMediumArmSegmentSize, getOkrenClawSlashingArmSegmentOffset, getOkrenClawSlashingArmSegmentSize } from "../entities/desert/okren-claw.js";
-import { Hitbox, getHitboxVelocity, applyAbsoluteKnockback } from "../hitboxes.js";
+import { Hitbox, getHitboxVelocity, applyAbsoluteKnockback, getHitboxTag } from "../hitboxes.js";
 import { getEntityType } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
@@ -42,9 +42,9 @@ OkrenClawComponentArray.onTick = {
    func: onTick
 };
 
-const getHitbox = (transformComponent: TransformComponent, flag: HitboxFlag): Hitbox => {
+const getHitbox = (transformComponent: TransformComponent, tag: HitboxTag): Hitbox => {
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitbox.flags.includes(flag)) {
+      if (getHitboxTag(hitbox) === tag) {
          return hitbox;
       }
    }
@@ -59,9 +59,9 @@ export function switchOkrenClawGrowthStage(okrenClaw: Entity, growthStage: Okren
 
    const size = okrenClawComponent.size;
 
-   const bigArmSegmentHitbox = getHitbox(transformComponent, HitboxFlag.OKREN_BIG_ARM_SEGMENT);
-   const mediumArmSegmentHitbox = getHitbox(transformComponent, HitboxFlag.OKREN_MEDIUM_ARM_SEGMENT);
-   const slashingArmSegmentHitbox = getHitbox(transformComponent, HitboxFlag.OKREN_ARM_SEGMENT_OF_SLASHING_AND_DESTRUCTION);
+   const bigArmSegmentHitbox = getHitbox(transformComponent, HitboxTag.okrenBigArmSegment);
+   const mediumArmSegmentHitbox = getHitbox(transformComponent, HitboxTag.okrenMediumArmSegment);
+   const slashingArmSegmentHitbox = getHitbox(transformComponent, HitboxTag.okrenArmSegmentOfSlashingAndDestruction);
    
    const bigArmSegmentSize = getOkrenClawBigArmSegmentSize(size, growthStage);
    const bigArmSegmentOffset = getOkrenClawBigArmSegmentOffset(size, growthStage);
@@ -116,7 +116,7 @@ function onTick(okrenClaw: Entity): void {
 }
 
 function onHitboxCollision(affectedHitbox: Hitbox, collidingHitbox: Hitbox, collisionPoint: Point): void {
-   if (!affectedHitbox.flags.includes(HitboxFlag.OKREN_ARM_SEGMENT_OF_SLASHING_AND_DESTRUCTION)) {
+   if (getHitboxTag(affectedHitbox) !== HitboxTag.okrenArmSegmentOfSlashingAndDestruction) {
       return;
    }
 

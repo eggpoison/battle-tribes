@@ -82,7 +82,7 @@ const completeAssignment = (entity: Entity, aiAssignmentComponent: AIAssignmentC
                   break;
                }
             }
-            assert(typeof idx !== "undefined");
+            assert(idx !== undefined);
             parent.children.splice(idx, 1);
          }
 

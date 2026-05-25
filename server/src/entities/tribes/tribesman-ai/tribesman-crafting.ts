@@ -35,7 +35,7 @@ const getClosestCraftingStation = (tribesman: Entity, tribe: Tribe, craftingStat
       }
    }
 
-   if (typeof closestStation !== "undefined") {
+   if (closestStation !== undefined) {
       return closestStation;
    }
    return null;
@@ -85,7 +85,7 @@ export function goCraftItem(tribesman: Entity, plan: AICraftRecipePlan, tribe: T
    
    // Move to a crafting station if necessary
    const availableCraftingStations = getAvailableCraftingStations(tribesman);
-   if (typeof recipe.craftingStation !== "undefined") {
+   if (recipe.craftingStation !== undefined) {
       const craftingStation = getClosestCraftingStation(tribesman, tribe, recipe.craftingStation);
 
       // If there are no crafting stations available, create a plan to do that

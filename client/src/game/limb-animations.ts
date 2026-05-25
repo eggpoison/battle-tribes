@@ -6,8 +6,8 @@ import { ParticleColour } from "./rendering/webgl/particle-rendering";
 import { createColouredParticle, createSawdustCloud } from "./particles";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
 import { VisualRenderPart } from "./render-parts/render-parts";
-import { TribesmanAIComponentArray } from "./entity-components/server-components/TribesmanAIComponent";
-import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { tribesmanAIComponentArray } from "./entity-components/server-components/TribesmanAIComponent";
+import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityAgeTicks, getEntityRenderObject } from "./world";
 import { currentSnapshot } from "./networking/snapshots";
 import { getRenderPartAge } from "./render-parts/render-part-ages";
@@ -42,7 +42,7 @@ export function generateRandomLimbPosition(): Point {
 }
 
 export function createCraftingAnimationParticles(entity: Entity, limbIdx: number): void {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
+   const tribesmanComponent = tribesmanAIComponentArray.getComponent(entity);
    
    const recipe = getItemRecipe(tribesmanComponent.craftingItemType);
    if (recipe === null) {
@@ -51,7 +51,7 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
       return;
    }
    
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    // @Hack
    const hitbox = transformComponent.hitboxes[0];
 
@@ -87,7 +87,7 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
 }
 
 const createBandageRenderPart = (entity: Entity): void => {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    const offsetMagnitude = 32 * Math.random();
@@ -129,7 +129,7 @@ export function updateBandageRenderPart(entity: Entity, renderPart: VisualRender
 
 export function createMedicineAnimationParticles(entity: Entity, limbIdx: number): void {
    if (Math.random() < 5 * Settings.DT_S) {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       const colour = randItem(MEDICINE_PARTICLE_COLOURS);
@@ -155,7 +155,7 @@ const getCustomItemRenderPartTextureSource = (entity: Entity, state: CustomItemS
          return CLIENT_ITEM_INFO_RECORD[ItemType.herbal_medicine].entityTextureSource;
       }
       case CustomItemState.crafting: {
-         const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
+         const tribesmanComponent = tribesmanAIComponentArray.getComponent(entity);
          return CLIENT_ITEM_INFO_RECORD[tribesmanComponent.craftingItemType].entityTextureSource;
       }
    }
@@ -184,7 +184,7 @@ const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState):
          return 1 - useProgress;
       }
       case CustomItemState.crafting: {
-         const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
+         const tribesmanComponent = tribesmanAIComponentArray.getComponent(entity);
          return tribesmanComponent.craftingProgress * 0.8;
       }
    }
@@ -212,7 +212,7 @@ export function updateCustomItemRenderPart(entity: Entity): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    if (customItemState !== null) {
       if (inventoryUseComponent.customItemRenderPart === null) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          
          inventoryUseComponent.customItemRenderPart = new TexturedRenderPart(

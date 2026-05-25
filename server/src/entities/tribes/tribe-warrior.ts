@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, ScarInfo, EntityType, TRIBE_INFO_RECORD, TribeType, randInt, Point, randAngle, HitboxCollisionType, CircularBox } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, ScarInfo, EntityType, TRIBE_INFO_RECORD, TribeType, randInt, Point, randAngle, HitboxCollisionType, CircularBox, createCircularBox } from "battletribes-shared";
 import { TribesmanAIComponent } from "../../components/TribesmanAIComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -15,7 +15,7 @@ import { AIAssignmentComponent } from "../../components/AIAssignmentComponent.js
 import { PatrolAI } from "../../ai/PatrolAI.js";
 import { generateTribesmanName } from "../../tribesman-names.js";
 import { TribesmanComponent } from "../../components/TribesmanComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, Hitbox } from "../../hitboxes.js";
 import { AIPathfindingComponent } from "../../components/AIPathfindingComponent.js";
 
 const moveFunc = () => {
@@ -65,7 +65,7 @@ export function createTribeWarriorConfig(x: number, y: number, angle: number, tr
 
    transformComponent.traction = 1.4;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, getHitboxRadius(tribe.tribeType)), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, getHitboxRadius(tribe.tribeType)), 1.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];

@@ -3,8 +3,8 @@ import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createSmokeParticle, createEmberParticle } from "../../particles";
-import { CookingComponentArray } from "./CookingComponent";
-import { TransformComponentArray } from "./TransformComponent";
+import { cookingComponentArray } from "./CookingComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
@@ -16,10 +16,12 @@ export interface CampfireComponentData {}
 export interface CampfireComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.campfire, _CampfireComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.campfire]: CampfireComponentArray;
+   }
 }
 
-class _CampfireComponentArray extends _ServerComponentArray<CampfireComponent, CampfireComponentData> {
+class CampfireComponentArray extends _ServerComponentArray<CampfireComponent, CampfireComponentData> {
    public decodeData(): CampfireComponentData {
       return {};
    }
@@ -48,8 +50,8 @@ class _CampfireComponentArray extends _ServerComponentArray<CampfireComponent, C
    }
 
    public onTick(entity: Entity): void {
-      const cookingComponent = CookingComponentArray.getComponent(entity);
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const cookingComponent = cookingComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       
       if (cookingComponent.isCooking) {
          const hitbox = transformComponent.hitboxes[0];
@@ -79,7 +81,7 @@ class _CampfireComponentArray extends _ServerComponentArray<CampfireComponent, C
    }
 }
 
-export const CampfireComponentArray = registerServerComponentArray(ServerComponentType.campfire, _CampfireComponentArray, true);
+export const campfireComponentArray = registerServerComponentArray(ServerComponentType.campfire, CampfireComponentArray, true);
 
 export function createCampfireComponentData(): CampfireComponentData {
    return {};

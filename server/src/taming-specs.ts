@@ -24,7 +24,7 @@ export function registerEntityTamingSpec(entityType: EntityType, spec: EntityTam
 export function getTamingSpec(entity: Entity): EntityTamingSpec {
    const entityType = getEntityType(entity);
    const spec = tamingSpecsMap.get(entityType);
-   assert(typeof spec !== "undefined");
+   assert(spec !== undefined);
    return spec;
 }
 
@@ -56,7 +56,7 @@ export function addTamingSpecToData(packet: Packet, tamingSpec: EntityTamingSpec
 
    for (let tamingTier = 0; tamingTier <= tamingSpec.maxTamingTier; tamingTier++) {
       const foodRequirements = tamingSpec.tierFoodRequirements[tamingTier as TamingTier];
-      assert(typeof foodRequirements !== "undefined");
+      assert(foodRequirements !== undefined);
       packet.writeNumber(foodRequirements);
    }
 }

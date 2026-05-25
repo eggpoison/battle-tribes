@@ -47,7 +47,7 @@ export function subtileIsCollapsing(subtileIndex: number): boolean {
 
 export function getSubtileSupport(layer: Layer, subtileIndex: number): number {
    const subtileInfo = layer.minedSubtileInfoMap.get(subtileIndex);
-   if (typeof subtileInfo === "undefined") {
+   if (subtileInfo === undefined) {
       throw new Error();
    }
    return subtileInfo.support;
@@ -189,7 +189,7 @@ const expandCollapseToSubtile = (collapse: CollapseInfo, subtileIndex: number, e
 
             const minedSubtileInfo = collapse.layer.minedSubtileInfoMap.get(subtileIndex);
             // @Hack: Shouldn't need!
-            if (typeof minedSubtileInfo === "undefined") {
+            if (minedSubtileInfo === undefined) {
                break;
             }
 

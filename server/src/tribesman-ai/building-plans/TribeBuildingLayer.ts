@@ -1,4 +1,4 @@
-import { Box, cloneBox, RectangularBox, Entity, EntityType, NUM_ENTITY_TYPES, Packet, Settings, STRUCTURE_TYPES, StructureType, angle, clampAngleA, Point } from "battletribes-shared";
+import { Box, cloneBox, RectangularBox, Entity, EntityType, NUM_ENTITY_TYPES, Packet, Settings, STRUCTURE_TYPES, StructureType, angle, clampAngleA, Point, createRectangularBox } from "battletribes-shared";
 import { getConfigTransformComponent } from "../../components.js";
 import { Hitbox } from "../../hitboxes.js";
 import Layer from "../../Layer.js";
@@ -69,7 +69,7 @@ export type EntitiesByEntityType = { [T in EntityType]: Array<Entity> };
 export type VirtualStructuresByEntityType = { [T in StructureType]: Array<VirtualStructure> };
 
 const createRestrictedBuildingArea = (position: Point, width: number, height: number, rotation: number, associatedBuildingID: number): RestrictedBuildingArea => {
-   const box = new RectangularBox(position.x, position.y, 0, 0, rotation, width, height);
+   const box = createRectangularBox(position.x, position.y, 0, 0, rotation, width, height);
 
    const occupiedNodes = new Set<SafetyNode>();
    addBoxesOccupiedNodes([box], occupiedNodes);

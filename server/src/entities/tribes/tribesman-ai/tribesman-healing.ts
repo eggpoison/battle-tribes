@@ -34,7 +34,7 @@ export function continueTribesmanHealing(tribesmanID: Entity, healingItemUseInfo
 
    const foodItem = healingItemUseInfo.inventory.itemSlots[healingItemUseInfo.itemSlot];
    // @HACK
-   if (typeof foodItem === "undefined") {
+   if (foodItem === undefined) {
       console.warn("shite.")
       return;
    }

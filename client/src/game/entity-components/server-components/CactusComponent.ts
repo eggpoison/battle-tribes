@@ -2,7 +2,7 @@ import { assert, randAngle, randInt, PacketReader, ServerComponentType, CactusFl
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createCactusSpineParticle, createFlowerParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
@@ -31,7 +31,9 @@ export interface CactusComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cactus, _CactusComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.cactus]: CactusComponentArray;
+   }
 }
 
 export const CACTUS_RADIUS = 40;
@@ -44,7 +46,7 @@ const getFlowerTextureSource = (type: number, size: CactusFlowerSize): string =>
    }
 }
 
-class _CactusComponentArray extends _ServerComponentArray<CactusComponent, CactusComponentData> {
+class CactusComponentArray extends _ServerComponentArray<CactusComponent, CactusComponentData> {
    public decodeData(reader: PacketReader): CactusComponentData {
       const flowers: Array<CactusFlower> = [];
       const numFlowers = reader.readNumber();
@@ -123,7 +125,7 @@ class _CactusComponentArray extends _ServerComponentArray<CactusComponent, Cactu
    }
 
    public onHit(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       // Create cactus spine particles when hurt
@@ -136,10 +138,10 @@ class _CactusComponentArray extends _ServerComponentArray<CactusComponent, Cactu
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
-      const cactusComponent = CactusComponentArray.getComponent(entity);
+      const cactusComponent = cactusComponentArray.getComponent(entity);
 
       playSoundOnHitbox("cactus-destroy.mp3", 0.4, 1, entity, hitbox, false);
       
@@ -152,4 +154,4 @@ class _CactusComponentArray extends _ServerComponentArray<CactusComponent, Cactu
    }
 }
 
-export const CactusComponentArray = registerServerComponentArray(ServerComponentType.cactus, _CactusComponentArray, true);
+export const cactusComponentArray = registerServerComponentArray(ServerComponentType.cactus, CactusComponentArray, true);

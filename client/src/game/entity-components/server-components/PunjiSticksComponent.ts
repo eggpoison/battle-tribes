@@ -1,7 +1,7 @@
 import { Entity, EntityType, randAngle, randFloat, Settings, ServerComponentType } from "webgl-test-shared";
 import { createFlyParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -60,7 +60,7 @@ class _PunjiSticksComponentArray extends _ServerComponentArray<PunjiSticksCompon
    }
       
    public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const punjiSticksComponent = PunjiSticksComponentArray.getComponent(entity);
 
       punjiSticksComponent.ticksSinceLastFly++;
@@ -86,13 +86,13 @@ class _PunjiSticksComponentArray extends _ServerComponentArray<PunjiSticksCompon
    }
 
    public onHit(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("wooden-spikes-hit.mp3", 0.3, 1, entity, hitbox, false);
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("wooden-spikes-destroy.mp3", 0.4, 1, entity, hitbox, false);
    }

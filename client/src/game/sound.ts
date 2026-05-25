@@ -1,6 +1,6 @@
 import { Entity, TileType, assert, Point, randInt, Settings, distance } from "webgl-test-shared";
 import { getCurrentLayer, getEntityLayer } from "./world";
-import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { cameraPosition, maxVisibleChunkX, maxVisibleChunkY, minVisibleChunkX, minVisibleChunkY } from "./camera";
@@ -485,7 +485,7 @@ export function playSoundOnHitbox(filePath: string, volume: number, pitchMultipl
 }
 
 export function removeEntitySounds(entity: Entity): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
+   const transformComponent = transformComponentArray.getComponent(entity);
    for (const hitbox of transformComponent.hitboxes) {
       const entityAttachedSounds = soundsAttachedToHitboxes.get(hitbox);
       if (entityAttachedSounds === undefined) {

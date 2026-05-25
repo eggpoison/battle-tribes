@@ -82,7 +82,7 @@ export function dismountMount(entity: Entity, mount: Entity): void {
       }
    }
    
-   if (typeof carrySlot === "undefined") {
+   if (carrySlot === undefined) {
       return;
    }
 

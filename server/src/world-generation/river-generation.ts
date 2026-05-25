@@ -83,7 +83,7 @@ export function generateRiverTiles(): RiverGenerationInfo {
          }  
       }
 
-      if (typeof currentTileCoordinates === "undefined") {
+      if (currentTileCoordinates === undefined) {
          throw new Error();
       }
 
@@ -109,12 +109,12 @@ export function generateRiverTiles(): RiverGenerationInfo {
             }
          }
 
-         if (typeof minTileCoordinates === "undefined") {
+         if (minTileCoordinates === undefined) {
             break;
          }
 
          let flowDirectionIdx: number;
-         if (rootTiles.length > 0 && typeof secondMinTileCoordinates !== "undefined" && Math.random() < 0.3) {
+         if (rootTiles.length > 0 && secondMinTileCoordinates !== undefined && Math.random() < 0.3) {
             minTileCoordinates = secondMinTileCoordinates;
             flowDirectionIdx = rootTiles[rootTiles.length - 1].flowDirectionIdx;
          } else {

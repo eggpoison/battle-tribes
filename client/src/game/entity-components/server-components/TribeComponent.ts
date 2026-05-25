@@ -1,8 +1,8 @@
 import { Entity, PacketReader, randAngle, randFloat, ServerComponentType, TribeType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
-import { getHumanoidRadius, TribesmanComponentArray } from "./TribesmanComponent";
+import { getHumanoidRadius, tribesmanComponentArray } from "./TribesmanComponent";
 import { createConversionParticle } from "../../particles";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { Tribe, tribeExists } from "../../tribes";
 import { playerInstance } from "../../player";
@@ -22,13 +22,15 @@ export interface TribeComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribe, _TribeComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.tribe]: TribeComponentArray;
+   }
 }
 
-class _TribeComponentArray extends _ServerComponentArray<TribeComponent, TribeComponentData> {
+class TribeComponentArray extends _ServerComponentArray<TribeComponent, TribeComponentData> {
    public decodeData(reader: PacketReader): TribeComponentData {
       const tribeID = reader.readNumber();
-      const tribeType = reader.readNumber() as TribeType;
+      const tribeType: TribeType = reader.readNumber();
       
       return {
          tribeID: tribeID,
@@ -55,14 +57,14 @@ class _TribeComponentArray extends _ServerComponentArray<TribeComponent, TribeCo
    }
 
    public updateFromData(data: TribeComponentData, entity: Entity): void {
-      const tribeComponent = TribeComponentArray.getComponent(entity);
+      const tribeComponent = tribeComponentArray.getComponent(entity);
       
       const tribeID = data.tribeID;
       const tribeType = data.tribeType;
       
       // Tribesman conversion
-      if (tribeID !== tribeComponent.tribeID && TribesmanComponentArray.hasComponent(entity)) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+      if (tribeID !== tribeComponent.tribeID && tribesmanComponentArray.hasComponent(entity)) {
+         const transformComponent = transformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
 
          playSoundOnHitbox("conversion.mp3", 0.4, 1, entity, hitbox, false);
@@ -92,7 +94,7 @@ class _TribeComponentArray extends _ServerComponentArray<TribeComponent, TribeCo
    }
 }
 
-export const TribeComponentArray = registerServerComponentArray(ServerComponentType.tribe, _TribeComponentArray, true);
+export const tribeComponentArray = registerServerComponentArray(ServerComponentType.tribe, TribeComponentArray, true);
 
 export function createTribeComponentData(tribe: Tribe): TribeComponentData {
    return {

@@ -1,15 +1,15 @@
-import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, createCircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { DustfleaEggComponent } from "../../components/DustfleaEggComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox } from "../../hitboxes.js";
 
 export function createDustfleaEggConfig(x: number, y: number, angle: number, parentOkren: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 12), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 12), 0.4, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    const statusEffectComponent = new StatusEffectComponent(0);

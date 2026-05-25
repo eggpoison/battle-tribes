@@ -1,4 +1,4 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, randInt, StatusEffect, HitboxCollisionType, CircularBox, ItemType } from "battletribes-shared";
+import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, randInt, StatusEffect, HitboxCollisionType, ItemType, createCircularBox } from "battletribes-shared";
 import { PlantedComponent } from "../../components/PlantedComponent.js";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -6,7 +6,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { IceSpikesPlantedComponent, plantedIceSpikesIsFullyGrown } from "../../components/IceSpikesPlantedComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 
 registerEntityLootOnDeath(EntityType.iceSpikesPlanted, {
    itemType: ItemType.frostcicle,
@@ -17,8 +17,8 @@ registerEntityLootOnDeath(EntityType.iceSpikesPlanted, {
 
 export function createIceSpikesPlantedConfig(x: number, y: number, angle: number, planterBox: Entity): EntityConfig {
    const transformComponent = new TransformComponent();
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 28), 0.3, HitboxCollisionType.soft, CollisionBit.plant, DEFAULT_COLLISION_MASK, []);
-   hitbox.isStatic = true;
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 28), 0.3, HitboxCollisionType.soft, CollisionBit.plant, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(5);

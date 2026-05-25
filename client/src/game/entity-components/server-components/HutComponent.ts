@@ -5,7 +5,7 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityAgeTicks, getEntityRenderObject, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -129,7 +129,7 @@ class _HutComponentArray extends _ServerComponentArray<HutComponent, HutComponen
 
       // @Incomplete: What if this packet is skipped?
       if (lastDoorSwingTicks === currentSnapshot.tick) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          playSoundOnHitbox("door-open.mp3", 0.4, 1, entity, hitbox, false);
       }
@@ -140,7 +140,7 @@ class _HutComponentArray extends _ServerComponentArray<HutComponent, HutComponen
 
       if (hutComponent.isRecalling) {
          if (hutComponent.recallMarker === null) {
-            const transformComponent = TransformComponentArray.getComponent(entity);
+            const transformComponent = transformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
             
             hutComponent.recallMarker = createRecallMarker(hitbox);

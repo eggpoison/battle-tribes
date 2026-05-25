@@ -1,6 +1,6 @@
-import { randAngle, randFloat, Entity, ServerComponentType, HitboxFlag, Point } from "webgl-test-shared";
+import { randAngle, randFloat, Entity, ServerComponentType, Point, HitboxTag } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { Hitbox } from "../../hitboxes";
+import { getHitboxTag, Hitbox } from "../../hitboxes";
 import Particle from "../../Particle";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { addMonocolourParticleToBufferContainer, highMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -8,7 +8,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
@@ -33,7 +33,8 @@ class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentCompon
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
       for (const hitbox of transformComponentData.hitboxes) {
-         if (hitbox.flags.includes(HitboxFlag.INGU_SERPENT_HEAD)) {
+         const tag = getHitboxTag(hitbox);
+         if (tag === HitboxTag.inguSerpentHead) {
             const renderPart = new TexturedRenderPart(
                hitbox,
                3,
@@ -43,7 +44,7 @@ class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentCompon
             );
             addRenderPartTag(renderPart, "tamingComponent:head");
             renderObject.attachRenderPart(renderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.INGU_SERPENT_BODY_1)) {
+         } else if (tag === HitboxTag.inguSerpentBody1) {
             renderObject.attachRenderPart(
                new TexturedRenderPart(
                   hitbox,
@@ -53,7 +54,7 @@ class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentCompon
                   getTextureArrayIndex("entities/ingu-serpent/body-1.png")
                )
             );
-         } else if (hitbox.flags.includes(HitboxFlag.INGU_SERPENT_BODY_2)) {
+         } else if (tag === HitboxTag.inguSerpentBody2) {
             renderObject.attachRenderPart(
                new TexturedRenderPart(
                   hitbox,
@@ -63,7 +64,7 @@ class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentCompon
                   getTextureArrayIndex("entities/ingu-serpent/body-2.png")
                )
             );
-         } else if (hitbox.flags.includes(HitboxFlag.INGU_SERPENT_TAIL)) {
+         } else if (tag === HitboxTag.inguSerpentTail) {
             renderObject.attachRenderPart(
                new TexturedRenderPart(
                   hitbox,
@@ -95,7 +96,7 @@ class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentCompon
    }
 
    public onDie(serpent: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(serpent);
+      const transformComponent = transformComponentArray.getComponent(serpent);
       const hitbox = transformComponent.hitboxes[0];
 
       for (const hitbox of transformComponent.hitboxes) {

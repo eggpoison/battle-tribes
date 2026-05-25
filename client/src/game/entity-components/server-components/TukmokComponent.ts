@@ -1,13 +1,13 @@
-import { Point, randAngle, randFloat, randInt, Entity, ServerComponentType, HitboxFlag, angle } from "webgl-test-shared";
+import { Point, randAngle, randFloat, randInt, Entity, ServerComponentType, HitboxTag, angle } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { Hitbox } from "../../hitboxes";
+import { getHitboxTag, Hitbox } from "../../hitboxes";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
@@ -31,7 +31,8 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
       for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
          const hitbox = transformComponentData.hitboxes[i];
          
-         if (hitbox.flags.includes(HitboxFlag.TUKMOK_BODY)) {
+         const tag = getHitboxTag(hitbox);
+         if (tag === HitboxTag.tukmokBody) {
             renderObject.attachRenderPart(
                new TexturedRenderPart(
                   hitbox,
@@ -41,7 +42,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
                   getTextureArrayIndex("entities/tukmok/body.png")
                )
             );
-         } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_HEAD)) {
+         } else if (tag === HitboxTag.tukmokHead) {
             const renderPart = new TexturedRenderPart(
                hitbox,
                2,
@@ -51,7 +52,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
             );
             addRenderPartTag(renderPart, "tamingComponent:head");
             renderObject.attachRenderPart(renderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_SMALL)) {
+         } else if (tag === HitboxTag.tukmokTailMiddleSegmentSmall) {
             renderObject.attachRenderPart(
                new TexturedRenderPart(
                   hitbox,
@@ -61,7 +62,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
                   getTextureArrayIndex("entities/tukmok/tail-segment-small.png")
                )
             );
-         } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_TAIL_MIDDLE_SEGMENT_MEDIUM)) {
+         } else if (tag === HitboxTag.tukmokTailMiddleSegmentMedium) {
             renderObject.attachRenderPart(
                new TexturedRenderPart(
                   hitbox,
@@ -115,7 +116,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
    }
 
    public onDie(tukmok: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(tukmok);
+      const transformComponent = transformComponentArray.getComponent(tukmok);
       const hitbox = transformComponent.hitboxes[0];
       
       for (let i = 0; i < 3; i++) {

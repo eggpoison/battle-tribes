@@ -12,10 +12,12 @@ export interface LilypadComponentData {}
 export interface LilypadComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.lilypad, _LilypadComponentArray> {}
+   interface ClientComponentRegistry {
+      [ClientComponentType.lilypad]: LilypadComponentArray;
+   }
 }
 
-class _LilypadComponentArray extends _ClientComponentArray<LilypadComponent, LilypadComponentData> {
+class LilypadComponentArray extends _ClientComponentArray<LilypadComponent, LilypadComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
@@ -40,7 +42,7 @@ class _LilypadComponentArray extends _ClientComponentArray<LilypadComponent, Lil
    }
 }
 
-export const LilypadComponentArray = registerClientComponentArray(ClientComponentType.lilypad, _LilypadComponentArray, true);
+export const lilypadComponentArray = registerClientComponentArray(ClientComponentType.lilypad, LilypadComponentArray, true);
 
 export function createLilypadComponentData(): LilypadComponentData {
    return {};

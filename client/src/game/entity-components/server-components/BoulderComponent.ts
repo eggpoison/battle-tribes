@@ -5,7 +5,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createRockParticle, createRockSpeckParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { ROCK_HIT_SOUNDS, ROCK_DESTROY_SOUNDS, playSoundOnHitbox } from "../../sound";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -27,10 +27,12 @@ const TEXTURE_SOURCES = [
 ];
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.boulder, _BoulderComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.boulder]: BoulderComponentArray;
+   }
 }
 
-class _BoulderComponentArray extends _ServerComponentArray<BoulderComponent, BoulderComponentData> {
+class BoulderComponentArray extends _ServerComponentArray<BoulderComponent, BoulderComponentData> {
    public decodeData(reader: PacketReader): BoulderComponentData {
       const boulderType = reader.readNumber();
       return {
@@ -91,7 +93,7 @@ class _BoulderComponentArray extends _ServerComponentArray<BoulderComponent, Bou
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const radius = (hitbox.box as CircularBox).radius;
 
@@ -112,4 +114,4 @@ class _BoulderComponentArray extends _ServerComponentArray<BoulderComponent, Bou
    }
 }
 
-export const BoulderComponentArray = registerServerComponentArray(ServerComponentType.boulder, _BoulderComponentArray, true);
+export const boulderComponentArray = registerServerComponentArray(ServerComponentType.boulder, BoulderComponentArray, true);

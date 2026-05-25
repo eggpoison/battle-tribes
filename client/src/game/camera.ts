@@ -6,7 +6,7 @@ import Layer from "./Layer";
 import { entityExists, getCurrentLayer } from "./world";
 import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
 import { Hitbox } from "./hitboxes";
-import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { debugDisplayState } from "../ui-state/debug-display-state";
 import { hoverDebugState } from "../ui-state/hover-debug-state";
 import { Tile } from "./Tile";
@@ -91,7 +91,7 @@ export function setCameraZoom(zoom: number): void {
 }
 
 export function setCameraSubject(cameraSubject: Entity | 0): void {
-   const transformComponent = TransformComponentArray.tryGetComponent(cameraSubject);
+   const transformComponent = transformComponentArray.tryGetComponent(cameraSubject);
    if (transformComponent !== null) {
       cameraSubjectHitbox = transformComponent.hitboxes[0];
    } else {

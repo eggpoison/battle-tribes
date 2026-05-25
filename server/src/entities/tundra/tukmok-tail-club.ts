@@ -1,15 +1,15 @@
-import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Point } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, createCircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { TukmokTailClubComponent } from "../../components/TukmokTailClubComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox } from "../../hitboxes.js";
 
 export function createTukmokTailClubConfig(x: number, y: number, angle: number, offsetX: number, offsetY: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, offsetX, offsetY, angle, 18), 0.28, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, offsetX, offsetY, angle, 18), 0.28, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(75);

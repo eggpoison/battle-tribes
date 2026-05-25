@@ -101,7 +101,7 @@ export function getEntityRelationship(entity: Entity, comparingEntity: Entity): 
          const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity);
 
          // @HACK @TEMPORARY
-         if (typeof tribeComponent === "undefined") {
+         if (tribeComponent === undefined) {
             return EntityRelationship.neutral;
          }
          

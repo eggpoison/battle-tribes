@@ -175,7 +175,7 @@ export function registerCommand(command: string, playerClient: PlayerClient): vo
       }
       case "itemname": {
          const itemNamePart = parts[1];
-         if (typeof itemNamePart === "undefined") {
+         if (itemNamePart === undefined) {
             break;
          }
          const itemNameString = itemNamePart.val;

@@ -120,7 +120,7 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
    // config.components[ServerComponentType.transform].rotation = summonPacket.rotation;
 
    // const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory];
-   // if (typeof inventoryComponentSummonData !== "undefined") {
+   // if (inventoryComponentSummonData !== undefined) {
    //    config.components[ServerComponentType.inventory].inventories
       
    //    const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
@@ -147,7 +147,7 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
    // }
 
    // const tribeComponentSummonData = summonPacket.summonData[ServerComponentType.tribe];
-   // if (typeof tribeComponentSummonData !== "undefined") {
+   // if (tribeComponentSummonData !== undefined) {
    //    config.components[ServerComponentType.tribe].tribe = getTribe(tribeComponentSummonData.tribeID);
    // }
 

@@ -71,7 +71,7 @@ const readInventory = (reader: PacketReader): Inventory => {
    for (let j = 0; j < numItems; j++) {
       const itemSlot = reader.readNumber();
       const id = reader.readNumber();
-      const itemType = reader.readNumber() as ItemType;
+      const itemType: ItemType = reader.readNumber();
       const count = reader.readNumber();
       const nickname = reader.readString();
       const namer = reader.readString();

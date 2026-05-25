@@ -2,7 +2,7 @@ import { ItemType, ITEM_INFO_RECORD, PlaceableItemType, Entity, EntityType, Poin
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { getEntityLayer, getEntityType } from "../../world";
-import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { TurretComponentArray } from "../../entity-components/server-components/TurretComponent";
 import { playerInstance } from "../../player";
 import { calculateEntityPlaceInfo } from "../../structure-placement";
@@ -141,7 +141,7 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
    // @Cleanup: shouldn't call structure place info func. should have it passed in probably
    const playerSelectedItem = getPlayerSelectedItem();
    if (playerSelectedItem !== null && (playerSelectedItem.type === ItemType.ballista || playerSelectedItem.type === ItemType.sling_turret)) {
-      const playerTransformComponent = TransformComponentArray.getComponent(playerInstance!);
+      const playerTransformComponent = transformComponentArray.getComponent(playerInstance!);
       const playerHitbox = playerTransformComponent.hitboxes[0];
 
       const layer = getEntityLayer(playerInstance!);
@@ -159,7 +159,7 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
 
    const hoveredEntity = getHoveredEntity();
    if (hoveredEntity !== null && TurretComponentArray.hasComponent(hoveredEntity)) {
-      const hoveredEntityTransformComponent = TransformComponentArray.getComponent(hoveredEntity);
+      const hoveredEntityTransformComponent = transformComponentArray.getComponent(hoveredEntity);
       // @Hack
       const hoveredEntityHitbox = hoveredEntityTransformComponent.hitboxes[0];
       

@@ -15,10 +15,12 @@ export interface CogwalkerComponentData {}
 export interface CogwalkerComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cogwalker, _CogwalkerComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.cogwalker]: CogwalkerComponentArray;
+   }
 }
 
-class _CogwalkerComponentArray extends _ServerComponentArray<CogwalkerComponent, CogwalkerComponentData> {
+class CogwalkerComponentArray extends _ServerComponentArray<CogwalkerComponent, CogwalkerComponentData> {
    public decodeData(): CogwalkerComponentData {
       return {};
    }
@@ -77,4 +79,4 @@ class _CogwalkerComponentArray extends _ServerComponentArray<CogwalkerComponent,
    }
 }
 
-export const CogwalkerComponentArray = registerServerComponentArray(ServerComponentType.cogwalker, _CogwalkerComponentArray, true);
+export const cogwalkerComponentArray = registerServerComponentArray(ServerComponentType.cogwalker, CogwalkerComponentArray, true);

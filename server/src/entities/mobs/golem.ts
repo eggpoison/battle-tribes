@@ -1,11 +1,11 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Settings, StatusEffect, distance, Point, randAngle, randInt, HitboxCollisionType, CircularBox, ItemType } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Settings, StatusEffect, distance, Point, randAngle, randInt, HitboxCollisionType, CircularBox, ItemType, createCircularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { GolemComponent } from "../../components/GolemComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { EntityConfig, LightCreationInfo } from "../../components.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { registerEntityLootOnDeath } from "../../components/LootComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, Hitbox } from "../../hitboxes.js";
 import { createLight } from "../../lights.js";
 
 export const enum GolemVars {
@@ -62,11 +62,11 @@ export function createGolemConfig(x: number, y: number, rotation: number): Entit
    const transformComponent = new TransformComponent();
    
    // Create core hitbox
-   const coreHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, rotation, 36), ROCK_MASSIVE_MASS, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const coreHitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, rotation, 36), ROCK_MASSIVE_MASS, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, coreHitbox);
 
    // Create head hitbox
-   const headHitbox = new Hitbox(transformComponent, coreHitbox, true, new CircularBox(0, 0, 0, 45, 0, 32), ROCK_LARGE_MASS, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const headHitbox = createHitbox(transformComponent, coreHitbox, createCircularBox(0, 0, 0, 45, 0, 32), ROCK_LARGE_MASS, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, headHitbox);
    
    // Lights on the head hitboxes' eyes
@@ -108,7 +108,7 @@ export function createGolemConfig(x: number, y: number, rotation: number): Entit
       }
 
       const mass = size === 0 ? ROCK_SMALL_MASS : ROCK_MEDIUM_MASS;
-      const hitbox = new Hitbox(transformComponent, coreHitbox, true, new CircularBox(0, 0, x, y, 0, radius), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+      const hitbox = createHitbox(transformComponent, coreHitbox, createCircularBox(0, 0, x, y, 0, radius), mass, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
       addHitboxToTransformComponent(transformComponent, hitbox);
 
       i++;
@@ -117,12 +117,12 @@ export function createGolemConfig(x: number, y: number, rotation: number): Entit
    // Create hand hitboxes
    for (let j = 0; j < 2; j++) {
       const offsetX = 60 * (j === 0 ? -1 : 1);
-      const hitbox = new Hitbox(transformComponent, coreHitbox, true, new CircularBox(0, 0, offsetX, 50, 0, 20), ROCK_MEDIUM_MASS, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+      const hitbox = createHitbox(transformComponent, coreHitbox, createCircularBox(0, 0, offsetX, 50, 0, 20), ROCK_MEDIUM_MASS, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
       addHitboxToTransformComponent(transformComponent, hitbox);
 
       // Wrist
       const inFactor = 0.75;
-      const wristHitbox = new Hitbox(transformComponent, coreHitbox, true, new CircularBox(0, 0, offsetX * inFactor, 50 * inFactor, 0, 12), ROCK_TINY_MASS, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+      const wristHitbox = createHitbox(transformComponent, coreHitbox, createCircularBox(0, 0, offsetX * inFactor, 50 * inFactor, 0, 12), ROCK_TINY_MASS, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
       addHitboxToTransformComponent(transformComponent, wristHitbox);
    }
    

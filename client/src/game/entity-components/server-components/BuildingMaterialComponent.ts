@@ -16,7 +16,9 @@ export interface BuildingMaterialComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.buildingMaterial, _BuildingMaterialComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.buildingMaterial]: BuildingMaterialComponentArray;
+   }
 }
 
 export const WALL_TEXTURE_SOURCES = ["entities/wall/wooden-wall.png", "entities/wall/stone-wall.png"];
@@ -41,7 +43,7 @@ const getMaterialTextureSources = (entityType: EntityType): ReadonlyArray<string
    }
 }
 
-class _BuildingMaterialComponentArray extends _ServerComponentArray<BuildingMaterialComponent, BuildingMaterialComponentData> {
+class BuildingMaterialComponentArray extends _ServerComponentArray<BuildingMaterialComponent, BuildingMaterialComponentData> {
    public decodeData(reader: PacketReader): BuildingMaterialComponentData {
       const material = reader.readNumber();
       return {
@@ -63,7 +65,7 @@ class _BuildingMaterialComponentArray extends _ServerComponentArray<BuildingMate
    }
 
    public updateFromData(data: BuildingMaterialComponentData, entity: Entity): void {
-      const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(entity);
+      const buildingMaterialComponent = buildingMaterialComponentArray.getComponent(entity);
       
       const material = data.material;
       
@@ -94,7 +96,7 @@ class _BuildingMaterialComponentArray extends _ServerComponentArray<BuildingMate
    }
 }
 
-export const BuildingMaterialComponentArray = registerServerComponentArray(ServerComponentType.buildingMaterial, _BuildingMaterialComponentArray, true);
+export const buildingMaterialComponentArray = registerServerComponentArray(ServerComponentType.buildingMaterial, BuildingMaterialComponentArray, true);
 
 export function createBuildingMaterialComponentData(material: BuildingMaterial): BuildingMaterialComponentData {
    return {

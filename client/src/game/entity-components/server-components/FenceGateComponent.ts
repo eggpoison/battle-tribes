@@ -1,4 +1,4 @@
-import { HitboxFlag, ServerComponentType } from "webgl-test-shared";
+import { HitboxTag, ServerComponentType } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -6,6 +6,7 @@ import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { getHitboxTag } from "../../hitboxes";
 
 export interface FenceGateComponentData {}
 
@@ -24,7 +25,7 @@ class _FenceGateComponentArray extends _ServerComponentArray<FenceGateComponent,
       const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
       
       for (const hitbox of transformComponent.hitboxes) {
-         if (hitbox.flags.includes(HitboxFlag.FENCE_GATE_DOOR)) {
+         if (getHitboxTag(hitbox) === HitboxTag.fenceGateDoor) {
             renderObject.attachRenderPart(
                   new TexturedRenderPart(
                   hitbox,

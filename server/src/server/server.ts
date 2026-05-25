@@ -23,7 +23,7 @@ import { surfaceLayer, layers } from "../layers.js";
 import { generateReeds } from "../world-generation/reed-generation.js";
 import { regenerateSurfaceTerrain, riverMainTiles } from "../world-generation/surface-layer-generation.js";
 import { updateWind } from "../wind.js";
-import { applyTethers } from "../tethers.js";
+import { applyAngularConstraints, applyAngularTethers, applyTethers } from "../tethers.js";
 import { generateGrassStrands } from "../world-generation/grass-generation.js";
 import { Hitbox } from "../hitboxes.js";
 import { generateDecorations } from "../world-generation/decoration-generation.js";
@@ -177,7 +177,7 @@ class GameServer {
 
          socket.on("close", () => {
             // If the connection closes before the intial player data is sent then the player client will be undefined
-            if (typeof playerClient !== "undefined") {
+            if (playerClient !== undefined) {
                handlePlayerDisconnect(playerClient);
             }
          });
@@ -255,7 +255,7 @@ class GameServer {
 
                // if (!isSpectating) {
                //    setTimeout(() => {
-               //       if (typeof playerClient !== "undefined") {
+               //       if (playerClient !== undefined) {
                //          destroyEntity(playerClient.instance);
                //       }
                //    }, 20000);
@@ -266,7 +266,7 @@ class GameServer {
                return;
             }
 
-            if (typeof playerClient === "undefined") {
+            if (playerClient === undefined) {
                return;
             }
             
@@ -338,7 +338,7 @@ class GameServer {
 
       SERVER.isRunning = true;
       
-      if (typeof SERVER.tickInterval === "undefined") {
+      if (SERVER.tickInterval === undefined) {
          console.log("Server started on port " + Settings.SERVER_PORT);
          // @SQUEAM to test low TPS scenario
          setInterval(SERVER.tick, 1000 / Settings.TICK_RATE);
@@ -361,7 +361,11 @@ class GameServer {
          updateWind();
          
          tickEntities();
+         
          applyTethers();
+         applyAngularTethers();
+         applyAngularConstraints();
+
          updateDynamicPathfindingNodes();
 
          for (const layer of layers) {

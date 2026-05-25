@@ -1,4 +1,4 @@
-import { BuildingMaterial, Entity, EntityType, StatusEffect, HitboxCollisionType, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { BuildingMaterial, Entity, EntityType, StatusEffect, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { destroyEntity, getEntityType } from "../../world.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
@@ -9,7 +9,7 @@ import { TribeComponent } from "../../components/TribeComponent.js";
 import Tribe from "../../Tribe.js";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
 const HEALTHS = [15, 45];
@@ -24,19 +24,19 @@ export function createEmbrasureConfig(x: number, y: number, angle: number, tribe
    const HORIZONTAL_HITBOX_HEIGHT = 16;
 
    // Add the two vertical hitboxes (can stop arrows)
-   const hitbox1 = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, -(64 - VERTICAL_HITBOX_WIDTH) / 2 + 0.025, 0, angle, VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox1.isStatic = true;
+   const hitbox1 = createHitbox(transformComponent, null, createRectangularBox(x, y, -(64 - VERTICAL_HITBOX_WIDTH) / 2 + 0.025, 0, angle, VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox1);
    addHitboxToTransformComponent(transformComponent, hitbox1);
-   const hitbox2 = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, (64 - VERTICAL_HITBOX_WIDTH) / 2 - 0.025, 0, angle, VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox2.isStatic = true;
+   const hitbox2 = createHitbox(transformComponent, null, createRectangularBox(x, y, (64 - VERTICAL_HITBOX_WIDTH) / 2 - 0.025, 0, angle, VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox2);
    addHitboxToTransformComponent(transformComponent, hitbox2);
 
    // Add the two horizontal hitboxes (cannot stop arrows)
-   const hitbox3 = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, -(64 - HORIZONTAL_HITBOX_WIDTH) / 2 + 0.025, 0, angle, HORIZONTAL_HITBOX_WIDTH, HORIZONTAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.arrowPassable, DEFAULT_COLLISION_MASK, []);
-   hitbox3.isStatic = true;
+   const hitbox3 = createHitbox(transformComponent, null, createRectangularBox(x, y, -(64 - HORIZONTAL_HITBOX_WIDTH) / 2 + 0.025, 0, angle, HORIZONTAL_HITBOX_WIDTH, HORIZONTAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.arrowPassable, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox3);
    addHitboxToTransformComponent(transformComponent, hitbox3);
-   const hitbox4 = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, (64 - HORIZONTAL_HITBOX_WIDTH) / 2 + 0.025, 0, angle, HORIZONTAL_HITBOX_WIDTH, HORIZONTAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.arrowPassable, DEFAULT_COLLISION_MASK, []);
-   hitbox4.isStatic = true;
+   const hitbox4 = createHitbox(transformComponent, null, createRectangularBox(x, y, (64 - HORIZONTAL_HITBOX_WIDTH) / 2 + 0.025, 0, angle, HORIZONTAL_HITBOX_WIDTH, HORIZONTAL_HITBOX_HEIGHT), 0.4, HitboxCollisionType.hard, CollisionBit.arrowPassable, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox4);
    addHitboxToTransformComponent(transformComponent, hitbox4);
 
    const healthComponent = new HealthComponent(HEALTHS[material]);

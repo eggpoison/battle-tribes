@@ -1,9 +1,10 @@
 import { Entity, Box, boxIsCircular, getRelativePivotPos, HitboxCollisionType, CollisionGroup, getEntityCollisionGroup, Point, polarVec2, rotatePointAroundOrigin, _point } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityType } from "../../world";
 import Layer from "../../Layer";
+import { getHitboxCollisionType } from "../../hitboxes";
 
 const BORDER_THICKNESS = 3;
 const HALF_BORDER_THICKNESS = BORDER_THICKNESS / 2;
@@ -177,12 +178,12 @@ const addBoxVertices = (vertices: Array<number>, box: Box, adjustment: Point, r:
 
    if (!boxIsCircular(box)) {
       // Rectangular
-      addRectVertices(vertices, hitboxRenderPositionX, hitboxRenderPositionY, box.width * box.scale, box.height * box.scale, box.angle, r, g, b);
+      addRectVertices(vertices, hitboxRenderPositionX, hitboxRenderPositionY, box.width, box.height, box.angle, r, g, b);
    } else {
       // Circular
 
       const step = 2 * Math.PI / CIRCLE_VERTEX_COUNT;
-      const radius = box.radius * box.scale;
+      const radius = box.radius;
 
       for (let i = 0; i < CIRCLE_VERTEX_COUNT; i++) {
          const radians = i * 2 * Math.PI / CIRCLE_VERTEX_COUNT;
@@ -232,8 +233,8 @@ const renderVertices = (vertices: Array<number>): void => {
 export function renderHitboxes(layer: Layer): void {
    const vertices: Array<number> = [];
    
-   for (let i = 0; i < TransformComponentArray.entities.length; i++) {
-      const entity = TransformComponentArray.entities[i];
+   for (let i = 0; i < transformComponentArray.entities.length; i++) {
+      const entity = transformComponentArray.entities[i];
 
       // Don't show hitboxes from other layers
       const entityLayer = getEntityLayer(entity);
@@ -247,7 +248,7 @@ export function renderHitboxes(layer: Layer): void {
          continue;
       }
       
-      const transformComponent = TransformComponentArray.components[i];
+      const transformComponent = transformComponentArray.components[i];
       
       const adjustment = calculateBoxAdjustment(entity);
 
@@ -255,7 +256,7 @@ export function renderHitboxes(layer: Layer): void {
          let r: number;
          let g: number;
          let b: number;
-         if (hitbox.collisionType === HitboxCollisionType.hard) {
+         if (getHitboxCollisionType(hitbox) === HitboxCollisionType.hard) {
             r = 1;
             g = 0;
             b = 0;

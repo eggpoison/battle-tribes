@@ -1,4 +1,4 @@
-import { EntityType, StatusEffect, Point, rotatePoint, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, HitboxCollisionType, HitboxFlag, PivotPointType } from "battletribes-shared";
+import { EntityType, StatusEffect, Point, rotatePoint, CollisionBit, DEFAULT_COLLISION_MASK, HitboxCollisionType, HitboxTag, PivotPointType, setBoxPivotType, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import Tribe from "../../Tribe.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
@@ -8,7 +8,7 @@ import { StructureComponent } from "../../components/StructureComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";
 import { FenceGateComponent } from "../../components/FenceGateComponent.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, Hitbox, setHitboxIsNonGrassBlocking, setHitboxIsStatic, setHitboxTag } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
 export function createFenceGateConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
@@ -20,8 +20,10 @@ export function createFenceGateConfig(x: number, y: number, angle: number, tribe
       
       const offset = new Point(32 * mult, 0);
       const offsetRotated = rotatePoint(offset, angle);
-      const hitbox = new Hitbox(transformComponent, null, true, new RectangularBox(x + offsetRotated.x, y + offsetRotated.y, offset.x, offset.y, angle, 16, 24), 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.FENCE_GATE_SIDE, HitboxFlag.NON_GRASS_BLOCKING]);
-      hitbox.isStatic = true;
+      const hitbox = createHitbox(transformComponent, null, createRectangularBox(x + offsetRotated.x, y + offsetRotated.y, offset.x, offset.y, angle, 16, 24), 0, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      setHitboxTag(hitbox, HitboxTag.fenceGateSide);
+      setHitboxIsStatic(hitbox);
+      setHitboxIsNonGrassBlocking(hitbox);
       addHitboxToTransformComponent(transformComponent, hitbox);
 
       if (i === 0) {
@@ -29,11 +31,13 @@ export function createFenceGateConfig(x: number, y: number, angle: number, tribe
       }
    }
    
-   const hitbox = new Hitbox(transformComponent, leftSideHitbox, true, new RectangularBox(leftSideHitbox.box.posX, leftSideHitbox.box.posY, 32, 0, 0, 56, 16), 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.FENCE_GATE_DOOR, HitboxFlag.NON_GRASS_BLOCKING]);
+   const hitbox = createHitbox(transformComponent, leftSideHitbox, createRectangularBox(leftSideHitbox.box.posX, leftSideHitbox.box.posY, 32, 0, 0, 56, 16), 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(hitbox, HitboxTag.fenceGateDoor);
+   setHitboxIsStatic(hitbox);
+   setHitboxIsNonGrassBlocking(hitbox);
    hitbox.box.pivotX = -0.5;
    hitbox.box.pivotY = 0.5;
-   hitbox.box.pivotType = PivotPointType.normalised;
-   hitbox.isStatic = true;
+   setBoxPivotType(hitbox.box, PivotPointType.normalised);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(5);

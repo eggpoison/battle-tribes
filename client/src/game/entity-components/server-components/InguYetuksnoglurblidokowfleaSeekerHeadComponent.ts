@@ -1,4 +1,4 @@
-import { HitboxFlag, ServerComponentType } from "webgl-test-shared";
+import { HitboxTag, ServerComponentType } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -6,6 +6,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { getHitboxTag } from "../../hitboxes";
 
 export interface InguYetuksnoglurblidokowfleaSeekerHeadComponentData {}
 
@@ -25,7 +26,8 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
 
       for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
          const hitbox = transformComponentData.hitboxes[i];
-         if (hitbox.flags.includes(HitboxFlag.YETUK_TRUNK_MIDDLE)) {
+         const tag = getHitboxTag(hitbox);
+         if (tag === HitboxTag.yetukTrunkMiddle) {
             const renderPart = new TexturedRenderPart(
                hitbox,
                4.7,
@@ -34,7 +36,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                getTextureArrayIndex("entities/tukmok-trunk/middle-segment.png")
             );
             renderObject.attachRenderPart(renderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.YETUK_TRUNK_HEAD)) {
+         } else if (tag === HitboxTag.yetukTrunkHead) {
             const renderPart = new TexturedRenderPart(
                hitbox,
                4.7,
@@ -43,7 +45,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                getTextureArrayIndex("entities/tukmok-trunk/head-segment.png")
             );
             renderObject.attachRenderPart(renderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.COW_HEAD)) {
+         } else if (tag === HitboxTag.cowHead) {
             const renderPart = new TexturedRenderPart(
                hitbox,
                4.7,
@@ -52,7 +54,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                getTextureArrayIndex("entities/cow/cow-head-1.png")
             );
             renderObject.attachRenderPart(renderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.TUKMOK_HEAD)) {
+         } else if (tag === HitboxTag.tukmokHead) {
             const renderPart = new TexturedRenderPart(
                hitbox,
                4.7,
@@ -61,7 +63,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                getTextureArrayIndex("entities/tukmok/head.png")
             );
             renderObject.attachRenderPart(renderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.YETUK_MANDIBLE_BIG)) {
+         } else if (tag === HitboxTag.yetukMandibleBig) {
             const renderPart = new TexturedRenderPart(
                hitbox,
                4.6,
@@ -70,7 +72,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                getTextureArrayIndex("entities/okren/adult/mandible.png")
             );
             renderObject.attachRenderPart(renderPart);
-         } else if (hitbox.flags.includes(HitboxFlag.YETUK_MANDIBLE_MEDIUM)) {
+         } else if (tag === HitboxTag.yetukMandibleMedium) {
             const renderPart = new TexturedRenderPart(
                hitbox,
                4.6,

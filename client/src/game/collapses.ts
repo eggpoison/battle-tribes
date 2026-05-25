@@ -78,7 +78,7 @@ export function tickCollapse(collapsingSubtileIndex: number, ageTicks: number): 
       const x = subtileX * Settings.SUBTILE_SIZE;
       const y = subtileY * Settings.SUBTILE_SIZE;
 
-      playSound("wall-collapse-" + randInt(1, 2) + ".mp3", 0.4, 1, new Point(x, y), undergroundLayer);
+      playSound("wall-collapse-" + randInt(1, 2) + ".mp3", 0.4, 1, x, y, undergroundLayer);
    }
 }
 

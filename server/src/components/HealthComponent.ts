@@ -48,7 +48,7 @@ function onTick(entity: Entity): void {
 
 export function canDamageEntity(healthComponent: HealthComponent, attackHash: string): boolean {
    // Can't attack if the entity has local invulnerability
-   if (typeof attackHash !== "undefined" && healthComponent.localIframeHashes.indexOf(attackHash) !== -1) {
+   if (attackHash !== undefined && healthComponent.localIframeHashes.indexOf(attackHash) !== -1) {
       return false;
    }
 
@@ -60,7 +60,7 @@ const callOnTakeDamageCallbacks = (entity: Entity, hitHitbox: Hitbox, attackingE
    const entityComponentTypes = getEntityComponentTypes(getEntityType(entity));
    for (const componentType of entityComponentTypes) {
       const componentArray = componentArrayRecord[componentType];
-      if (typeof componentArray.onTakeDamage !== "undefined") {
+      if (componentArray.onTakeDamage !== undefined) {
          componentArray.onTakeDamage(entity, hitHitbox, attackingEntity, damageSource, damage);
       }
    }
@@ -72,7 +72,7 @@ const callOnDeathCallbacks = (entity: Entity, attackingEntity: Entity | null, da
    
    for (const componentType of entityComponentTypes) {
       const componentArray = componentArrayRecord[componentType];
-      if (typeof componentArray.onDeath !== "undefined") {
+      if (componentArray.onDeath !== undefined) {
          componentArray.onDeath(entity, attackingEntity, damageSource);
       }
    }
@@ -92,7 +92,7 @@ export function damageEntity(hitHitbox: Hitbox, attackingEntity: Entity | null, 
    const attackedEntityComponentTypes = getEntityComponentTypes(getEntityType(entity));
    for (const componentType of attackedEntityComponentTypes) {
       const componentArray = componentArrayRecord[componentType];
-      if (typeof componentArray.getDamageTakenMultiplier !== "undefined") {
+      if (componentArray.getDamageTakenMultiplier !== undefined) {
          damageMultiplier *= componentArray.getDamageTakenMultiplier(entity, hitHitbox);
       }
    }
@@ -122,7 +122,7 @@ export function damageEntity(hitHitbox: Hitbox, attackingEntity: Entity | null, 
          const attackingEntityComponentTypes = getEntityComponentTypes(getEntityType(attackingEntity));
          for (const componentType of attackingEntityComponentTypes) {
             const componentArray = componentArrayRecord[componentType];
-            if (typeof componentArray.onKill !== "undefined") {
+            if (componentArray.onKill !== undefined) {
                componentArray.onKill(attackingEntity, entity);
             }
          }
@@ -137,7 +137,7 @@ export function damageEntity(hitHitbox: Hitbox, attackingEntity: Entity | null, 
       const attackingEntityComponentTypes = getEntityComponentTypes(getEntityType(attackingEntity));
       for (const componentType of attackingEntityComponentTypes) {
          const componentArray = componentArrayRecord[componentType];
-         if (typeof componentArray.onDealDamage !== "undefined") {
+         if (componentArray.onDealDamage !== undefined) {
             componentArray.onDealDamage(attackingEntity, entity, damageSource);
          }
       }

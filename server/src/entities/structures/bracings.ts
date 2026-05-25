@@ -1,4 +1,4 @@
-import { HitboxCollisionType, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, BuildingMaterial, EntityType, Settings, StatusEffect, Point } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, BuildingMaterial, EntityType, Settings, StatusEffect, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { BracingsComponent } from "../../components/BracingsComponent.js";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent.js";
@@ -7,7 +7,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { StructureComponent } from "../../components/StructureComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import Tribe from "../../Tribe.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 
@@ -17,12 +17,12 @@ const HEALTHS = [5, 20];
 export function createBracingsConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
-   const hitbox1 = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, Settings.TILE_SIZE * -0.5, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [])
-   hitbox1.isStatic = true;
+   const hitbox1 = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, Settings.TILE_SIZE * -0.5, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK)
+   setHitboxIsStatic(hitbox1);
    addHitboxToTransformComponent(transformComponent, hitbox1);
 
-   const hitbox2 = new Hitbox(transformComponent, null, true, new RectangularBox(x, y, 0, Settings.TILE_SIZE * 0.5, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [])
-   hitbox2.isStatic = true;
+   const hitbox2 = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, Settings.TILE_SIZE * 0.5, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK)
+   setHitboxIsStatic(hitbox2);
    addHitboxToTransformComponent(transformComponent, hitbox2);
    
    const healthComponent = new HealthComponent(HEALTHS[material]);

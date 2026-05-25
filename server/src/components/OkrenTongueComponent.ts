@@ -1,8 +1,8 @@
-import { HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK, ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType, assert, customTickIntervalHasPassed, Point, polarVec2, randInt, angle, distance } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType, assert, customTickIntervalHasPassed, Point, polarVec2, randInt, angle, distance, createRectangularBox, HitboxTag } from "battletribes-shared";
 import { MIN_TONGUE_COOLDOWN_TICKS, MAX_TONGUE_COOLDOWN_TICKS } from "../ai/OkrenCombatAI.js";
-import { addHitboxVelocity, applyAcceleration, getHitboxTotalMassIncludingChildren, Hitbox, HitboxAngularTether, turnHitboxToAngle } from "../hitboxes.js";
+import { addHitboxVelocity, applyAcceleration, createHitbox, hitboxIsStatic, getHitboxTag, getHitboxTotalMassIncludingChildren, Hitbox, setHitboxTag, turnHitboxToAngle } from "../hitboxes.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
-import { destroyTether, tetherHitboxes } from "../tethers.js";
+import { destroyTether, getHitboxTethers, tetherHitboxes, getHitboxAngularTethers, HitboxAngularTether, addHitboxAngularTether } from "../tethers.js";
 import { entityExists, getEntityAgeTicks, getEntityType } from "../world.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -65,17 +65,22 @@ const addTongueSegment = (tongue: Entity, okrenHitbox: Hitbox, previousBaseHitbo
    // Create the new base segment hitbox
    const offsetMagnitude = distance - IDEAL_SEPARATION;
    const tonguePostion = getTonguePosition(okrenHitbox, offsetMagnitude);
-   const newSegmentHitbox = new Hitbox(transformComponent, null, true, new RectangularBox(tonguePostion.x, tonguePostion.y, 0, 0, okrenHitbox.box.angle, 16, 24), 0.3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.OKREN_TONGUE_SEGMENT_MIDDLE]);
+   const newSegmentHitbox = createHitbox(transformComponent, null, createRectangularBox(tonguePostion.x, tonguePostion.y, 0, 0, okrenHitbox.box.angle, 16, 24), 0.3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxTag(newSegmentHitbox, HitboxTag.okrenTongueSegmentMiddle);
    addHitboxToEntity(tongue, newSegmentHitbox)
 
    // Remove the old base entities' tether to the okren
    let didFind = false;
-   for (let i = 0; i < previousBaseHitbox.angularTethers.length; i++) {
-      const angularTether = previousBaseHitbox.angularTethers[i];
-      if (angularTether.originHitbox === okrenHitbox) {
-         previousBaseHitbox.angularTethers.splice(i, 1);
-         didFind = true;
-         break;
+   const angularTethers = getHitboxAngularTethers(previousBaseHitbox);
+   if (angularTethers !== undefined) {
+      for (let i = 0; i < angularTethers.length; i++) {
+         const angularTether = angularTethers[i];
+         if (angularTether.originHitbox === okrenHitbox) {
+            // @HACK !
+            angularTethers.splice(i, 1);
+            didFind = true;
+            break;
+         }
       }
    }
    if (!didFind) {
@@ -85,6 +90,7 @@ const addTongueSegment = (tongue: Entity, okrenHitbox: Hitbox, previousBaseHitbo
    // Restrict the new base entity to match the direction of the okren
    // (Make sure the root of the tongue begins at the okren's mouth)
    const angularTether: HitboxAngularTether = {
+      hitbox: newSegmentHitbox,
       originHitbox: okrenHitbox,
       idealAngle: 0,
       springConstant: 2.5/60,
@@ -93,11 +99,12 @@ const addTongueSegment = (tongue: Entity, okrenHitbox: Hitbox, previousBaseHitbo
       idealHitboxAngleOffset: 0,
       useLeverage: false
    };
-   newSegmentHitbox.angularTethers.push(angularTether);
+   addHitboxAngularTether(newSegmentHitbox, angularTether);
 
    // Tether the old base entity to the new base entity
    tetherHitboxes(previousBaseHitbox, newSegmentHitbox, IDEAL_SEPARATION, 280, 2.5);
-   previousBaseHitbox.angularTethers.push({
+   addHitboxAngularTether(previousBaseHitbox, {
+      hitbox: previousBaseHitbox,
       originHitbox: newSegmentHitbox,
       idealAngle: 0,
       springConstant: 1,
@@ -176,6 +183,7 @@ export function startRetractingTongue(tongue: Entity, okrenTongueComponent: Okre
    // @Copynpaste
    // Create a tether on the new base hitbox back to the okren to further encourage it!
    const angularTether: HitboxAngularTether = {
+      hitbox: tongueBaseHitbox,
       originHitbox: okrenHitbox,
       idealAngle: 0,
       springConstant: 2.5/60,
@@ -184,7 +192,7 @@ export function startRetractingTongue(tongue: Entity, okrenTongueComponent: Okre
       idealHitboxAngleOffset: 0,
       useLeverage: false
    };
-   tongueBaseHitbox.angularTethers.push(angularTether);
+   addHitboxAngularTether(tongueBaseHitbox, angularTether);
    // tongueBaseHitbox.tethers.push(createHitboxTether(tongueBaseHitbox, okrenHitbox, 0, 400/60, 0.5, false));
 
    // Do an initial jerk back of the tongue as the okren reacts to whatever caused it to want to retract its tongue (be it being hit, reaching max length, or catching something)
@@ -243,30 +251,38 @@ const regressTongue = (tongue: Entity, tongueTransformComponent: TransformCompon
          // Remove the tethers the next base part has to the one being removed
 
          let hasFound = false;
-         for (let i = 0; i < nextBaseSegment.tethers.length; i++) {
-            const tether = nextBaseSegment.tethers[i];
-            const otherHitbox = tether.getOtherHitbox(nextBaseSegment);
-            if (otherHitbox === tongueBaseHitbox) {
-               destroyTether(tether);
-               hasFound = true;
-               break;
+         const tethers = getHitboxTethers(nextBaseSegment);
+         if (tethers !== undefined) {
+            for (let i = 0; i < tethers.length; i++) {
+               const tether = tethers[i];
+               const otherHitbox = tether.getOtherHitbox(nextBaseSegment);
+               if (otherHitbox === tongueBaseHitbox) {
+                  destroyTether(tether);
+                  hasFound = true;
+                  break;
+               }
             }
          }
          assert(hasFound);
 
          hasFound = false;
-         for (let i = 0; i < nextBaseSegment.angularTethers.length; i++) {
-            const tether = nextBaseSegment.angularTethers[i];
-            if (tether.originHitbox === tongueBaseHitbox) {
-               nextBaseSegment.angularTethers.splice(i, 1);
-               hasFound = true;
-               break;
+         const angularTethers = getHitboxAngularTethers(nextBaseSegment);
+         if (angularTethers !== undefined) {
+            for (let i = 0; i < angularTethers.length; i++) {
+               const tether = angularTethers[i];
+               if (tether.originHitbox === tongueBaseHitbox) {
+                  // @HACK
+                  angularTethers.splice(i, 1);
+                  hasFound = true;
+                  break;
+               }
             }
          }
          assert(hasFound);
 
          // Create a tether on the new base hitbox back to the okren to further encourage it!
          const angularTether: HitboxAngularTether = {
+            hitbox: nextBaseSegment,
             originHitbox: okrenHitbox,
             idealAngle: 0,
             springConstant: 2.5/60,
@@ -275,7 +291,7 @@ const regressTongue = (tongue: Entity, tongueTransformComponent: TransformCompon
             idealHitboxAngleOffset: 0,
             useLeverage: false
          };
-         nextBaseSegment.angularTethers.push(angularTether);
+         addHitboxAngularTether(nextBaseSegment, angularTether);
          // nextBaseSegmentHitbox.tethers.push(createHitboxTether(nextBaseSegmentHitbox, okrenHitbox, 0, 400/60, 0.5, false));
       } else {
          // final one! !
@@ -334,7 +350,7 @@ const entityIsSnaggable = (entity: Entity): boolean => {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
-   if (hitbox.isStatic) {
+   if (hitboxIsStatic(hitbox)) {
       return false;
    }
 
@@ -353,7 +369,7 @@ const entityIsSnaggable = (entity: Entity): boolean => {
 
 function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox): void {
    // Only the tip is sticky
-   if (!hitbox.flags.includes(HitboxFlag.OKREN_TONGUE_SEGMENT_TIP)) {
+   if (getHitboxTag(hitbox) !== HitboxTag.okrenTongueSegmentTip) {
       return;
    }
    
@@ -363,10 +379,13 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox): void {
    }
 
    // Don't snag if the hitbox is already tethered
-   for (const tether of collidingHitbox.tethers) {
-      const otherHitbox = tether.getOtherHitbox(collidingHitbox);
-      if (otherHitbox === hitbox) {
-         return;
+   const collidingHitboxTethers = getHitboxTethers(collidingHitbox);
+   if (collidingHitboxTethers !== undefined) {
+      for (const tether of collidingHitboxTethers) {
+         const otherHitbox = tether.getOtherHitbox(collidingHitbox);
+         if (otherHitbox === hitbox) {
+            return;
+         }
       }
    }
 

@@ -1,6 +1,5 @@
 import { WaterRockData, Entity, PathfindingSettings, Settings, NUM_TILE_TYPES, SubtileType, TileType, assert, distance, getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, Biome, CollisionGroup, getSubtileIndex, LightLevelNode } from "battletribes-shared";
 import Chunk from "./Chunk.js";
-import CollisionChunk from "./CollisionChunk.js";
 import { EntityPairCollisionInfo, GlobalCollisionInfo } from "./collision-detection.js";
 import { MinedSubtileInfo } from "./collapses.js";
 import { getPathfindingNode, PathfindingServerVars } from "./pathfinding-utils.js";
@@ -17,6 +16,8 @@ interface TileCensus {
    readonly types: Record<TileType, Array<TileIndex>>;
    biomes: Record<Biome, Array<TileIndex>>;
 }
+
+export type CollisionChunk = Array<Entity>;
 
 const createTileCensus = (): TileCensus => {
    return {
@@ -85,7 +86,7 @@ const createCollisionGroupChunks = (): Record<CollisionGroup, ReadonlyArray<Coll
    for (let collisionGroup: CollisionGroup = 0; collisionGroup < CollisionGroup._LENGTH_; collisionGroup++) {
       const chunks: Array<CollisionChunk> = [];
       for (let i = 0; i < Settings.WORLD_SIZE_CHUNKS * Settings.WORLD_SIZE_CHUNKS; i++) {
-         chunks.push(new CollisionChunk());
+         chunks.push([]);
       }
       collisionGroupChunks[collisionGroup] = chunks;
    }
@@ -152,7 +153,7 @@ export default class Layer {
    
    public getMinedSubtileType(subtileIndex: number): SubtileType {
       const minedSubtileInfo = this.minedSubtileInfoMap.get(subtileIndex);
-      assert(typeof minedSubtileInfo !== "undefined");
+      assert(minedSubtileInfo !== undefined);
 
       return minedSubtileInfo.subtileType;
    }

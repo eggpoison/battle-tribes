@@ -1,4 +1,4 @@
-import { Point, EntityType, DEFAULT_COLLISION_MASK, CollisionBit, CircularBox, HitboxCollisionType } from "webgl-test-shared";
+import { EntityType, DEFAULT_COLLISION_MASK, CollisionBit, HitboxCollisionType, createCircularBox } from "webgl-test-shared";
 import { createAIHelperComponentData } from "../entity-components/server-components/AIHelperComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createStatusEffectComponentData } from "../entity-components/server-components/StatusEffectComponent";
@@ -10,11 +10,12 @@ import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
-export function createCogwalkerConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
+export function createCogwalkerConfig(x: number, y: number, angle: number, tribe: Tribe): EntityComponentData {
    const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
-   const hitbox = createHitboxQuick(0, hitboxLocalID++, null, new CircularBox(position, new Point(0, 0), rotation, 28), 1.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const hitbox = createHitboxQuick(0, hitboxLocalID++, null, createCircularBox(x, y, 0, 0, angle, 28), 1.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK
+);
    hitboxes.push(hitbox);
 
    return {

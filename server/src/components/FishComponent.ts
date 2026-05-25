@@ -62,7 +62,7 @@ const entityIsWearingFishlordSuit = (entityID: number): boolean => {
    const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
 
    const armour = armourInventory.itemSlots[1];
-   return typeof armour !== "undefined" && armour.type === ItemType.fishlord_suit;
+   return armour !== undefined && armour.type === ItemType.fishlord_suit;
 }
 
 const unfollowLeader = (fish: Entity, leader: Entity): void => {

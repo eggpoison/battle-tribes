@@ -1,4 +1,4 @@
-import { ServerComponentType, Settings, Entity, EntityType, Packet, Box, boxIsCircular, getCircleCircleCollisionResult, getCircleRectangleCollisionResult, Point } from "battletribes-shared";
+import { ServerComponentType, Settings, Entity, EntityType, Packet, Box, boxIsCircular, getCircleCircleCollisionResult, getCircleRectangleCollisionResult } from "battletribes-shared";
 import Chunk from "../Chunk.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent.js";
@@ -8,7 +8,7 @@ import GuardianAI from "../ai/GuardianAI.js";
 import GuardianCrystalSlamAI from "../ai/GuardianCrystalSlamAI.js";
 import GuardianCrystalBurstAI from "../ai/GuardianCrystalBurstAI.js";
 import GuardianSpikyBallSummonAI from "../ai/GuardianSpikyBallSummonAI.js";
-import { Hitbox } from "../hitboxes.js";
+import { Hitbox, hitboxIsPartOfParent } from "../hitboxes.js";
 import { FollowAI } from "../ai/FollowAI.js";
 import { PatrolAI } from "../ai/PatrolAI.js";
 import { EscapeAI } from "../ai/EscapeAI.js";
@@ -188,7 +188,7 @@ const hitboxWithChildrenIsVisible = (seeingHitbox: Hitbox, hitbox: Hitbox, visio
    }
    
    for (const childHitbox of hitbox.children) {
-      if (childHitbox.isPartOfParent && hitboxWithChildrenIsVisible(seeingHitbox, childHitbox, visionRange)) {
+      if (hitboxIsPartOfParent(childHitbox) && hitboxWithChildrenIsVisible(seeingHitbox, childHitbox, visionRange)) {
          return true;
       }
    }

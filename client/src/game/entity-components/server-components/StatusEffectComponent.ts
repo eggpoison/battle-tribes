@@ -4,7 +4,7 @@ import Particle from "../../Particle";
 import { createPoisonBubble, createBloodParticle, BloodParticleSize, createHeatParticle } from "../../particles";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour, lowTexturedParticles, highMonocolourParticles, highTexturedParticles } from "../../rendering/webgl/particle-rendering";
 import { Light, removeLight } from "../../lights";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
@@ -89,7 +89,7 @@ class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComp
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
@@ -286,7 +286,7 @@ class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComp
          if (!hasStatusEffect(statusEffectComponent, statusEffectData.type)) {
             switch (statusEffectData.type) {
                case StatusEffect.freezing: {
-                  const transformComponent = TransformComponentArray.getComponent(entity);
+                  const transformComponent = transformComponentArray.getComponent(entity);
                   const hitbox = transformComponent.hitboxes[0];
                   playSoundOnHitbox("freezing.mp3", 0.4, 1, entity, hitbox, false);
                   break;

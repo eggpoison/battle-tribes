@@ -1,4 +1,4 @@
-import { TransformComponentArray } from "../../../game/entity-components/server-components/TransformComponent";
+import { transformComponentArray } from "../../../game/entity-components/server-components/TransformComponent";
 import { getCurrentLayer } from "../../../game/world";
 import { setCameraZoom } from "../../../game/camera";
 import { GameInteractState, gameUIState } from "../../../ui-state/game-ui-state";
@@ -234,7 +234,7 @@ export function openDebugInfoDisplay(parent: HTMLElement): void {
    debugInfoDisplay.refreshTickDebugData = (): void => {
       networkBufferedBytesNode.data = getNetworkBufferedBytes().toString();
       numActiveSoundsNode.data = getNumSounds().toString();
-      numEntitiesNode.data = TransformComponentArray.entities.length.toString();
+      numEntitiesNode.data = transformComponentArray.entities.length.toString();
       numParticlesNode.data = (lowMonocolourParticles.length + lowTexturedParticles.length + highMonocolourParticles.length + highTexturedParticles.length).toString();
       numLightsNode.data = getCurrentLayer().lights.length.toString();
    }

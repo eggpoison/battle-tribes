@@ -1,4 +1,4 @@
-import { EntityType, Settings, StructureType, Point, assert, distBetweenPointAndRectangle, Box, boxIsCircular, getSubtileIndex, CircularBox, _bounds } from "battletribes-shared";
+import { EntityType, Settings, StructureType, Point, assert, distBetweenPointAndRectangle, Box, boxIsCircular, getSubtileIndex, CircularBox, _bounds, calculateCircularBoxBounds, calculateBoxBounds } from "battletribes-shared";
 import { TribeRoom, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas.js";
 import Layer from "../Layer.js";
 import TribeBuildingLayer, { getNumWallConnections, updateTribeWalls } from "./building-plans/TribeBuildingLayer.js";
@@ -56,7 +56,7 @@ const addCircularBoxNodePositions = (box: CircularBox, positions: Set<SafetyNode
    const centerX = box.posX / Settings.SAFETY_NODE_SEPARATION;
    const centerY = box.posY / Settings.SAFETY_NODE_SEPARATION;
    
-   box.calculateBounds();
+   calculateCircularBoxBounds(box);
    const minNodeX = Math.max(Math.floor(_bounds.minX / Settings.SAFETY_NODE_SEPARATION), 0);
    const maxNodeX = Math.min(Math.ceil(_bounds.maxX / Settings.SAFETY_NODE_SEPARATION), Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1);
    const minNodeY = Math.max(Math.floor(_bounds.minY / Settings.SAFETY_NODE_SEPARATION), 0);
@@ -105,7 +105,7 @@ export function addBoxesOccupiedNodes(boxes: ReadonlyArray<Box>, positions: Set<
       if (boxIsCircular(box)) {
          addCircularBoxNodePositions(box, positions);
       } else {
-         box.calculateBounds();
+         calculateBoxBounds(box);
          addRectangularSafetyNodePositions(box.posX, box.posY, box.width, box.height, box.angle, _bounds.minX, _bounds.maxX, _bounds.minY, _bounds.maxY, positions);
       }
    }

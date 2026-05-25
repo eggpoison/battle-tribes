@@ -1,11 +1,11 @@
-import { HitboxFlag, CircularBox, RectangularBox, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, Packet, Settings, getSubtileIndex, assert, clampToSubtileBoardDimensions, distance, getAbsAngleDiff, Point, positionIsInWorld, randAngle, randFloat, randInt, secondsToTicks, angle } from "battletribes-shared";
+import { ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, Packet, Settings, getSubtileIndex, clampToSubtileBoardDimensions, distance, getAbsAngleDiff, Point, positionIsInWorld, randFloat, randInt, secondsToTicks, angle, HitboxTag, getCircleRectangleCollisionResult } from "battletribes-shared";
 import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared.js";
 import { getOkrenPreyTarget, getOkrenThreatTarget, runOkrenCombatAI } from "../ai/OkrenCombatAI.js";
 import { runSandBallingAI, updateSandBallingAI } from "../ai/SandBallingAI.js";
 import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components.js";
 import { createDustfleaEggConfig } from "../entities/desert/dustflea-egg.js";
 import { createOkrenClawConfig } from "../entities/desert/okren-claw.js";
-import { addHitboxAngularVelocity, getHitboxAngularVelocity, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
+import { addHitboxAngularVelocity, getHitboxAngularVelocity, getHitboxTag, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { createEntity, entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
@@ -133,16 +133,17 @@ const setOkrenHitboxIdealAngles = (okren: Entity, side: OkrenSide, idealAngles: 
          if (getEntityType(childHitbox.entity) === EntityType.okrenClaw) {
             const clawTransformComponent = TransformComponentArray.getComponent(childHitbox.entity);
             for (const hitbox of clawTransformComponent.hitboxes) {
-               const isRightSide = hitbox.box.totalFlipXMultiplier === 1;
-               if (isRightSide !== (side === OkrenSide.right)) {
+               const isLeftSide = (hitbox.box.flags & 1) ? true : false;
+               if (isLeftSide !== (side === OkrenSide.left)) {
                   continue;
                }
                
-               if (hitbox.flags.includes(HitboxFlag.OKREN_BIG_ARM_SEGMENT)) {
+               const tag = getHitboxTag(hitbox);
+               if (tag === HitboxTag.okrenBigArmSegment) {
                   turnHitboxToAngle(hitbox, idealAngles.bigIdealAngle, bigTurnSpeed, 0.28, true);
-               } else if (hitbox.flags.includes(HitboxFlag.OKREN_MEDIUM_ARM_SEGMENT)) {
+               } else if (tag === HitboxTag.okrenMediumArmSegment) {
                   turnHitboxToAngle(hitbox, idealAngles.mediumIdealAngle, mediumTurnSpeed, 0.24, true);
-               } else if (hitbox.flags.includes(HitboxFlag.OKREN_ARM_SEGMENT_OF_SLASHING_AND_DESTRUCTION)) {
+               } else if (tag === HitboxTag.okrenArmSegmentOfSlashingAndDestruction) {
                   turnHitboxToAngle(hitbox, idealAngles.smallIdealAngle, smallTurnSpeed, 0.2, true);
                }
             }
@@ -160,20 +161,21 @@ export function okrenHitboxesHaveReachedIdealAngles(okren: Entity, side: OkrenSi
          if (getEntityType(childHitbox.entity) === EntityType.okrenClaw) {
             const clawTransformComponent = TransformComponentArray.getComponent(childHitbox.entity);
             for (const hitbox of clawTransformComponent.hitboxes) {
-               const isRightSide = hitbox.box.totalFlipXMultiplier === 1;
-               if (isRightSide !== (side === OkrenSide.right)) {
+               const isLeftSide = (hitbox.box.flags & 1) ? true : false;
+               if (isLeftSide !== (side === OkrenSide.left)) {
                   continue;
                }
                
-               if (hitbox.flags.includes(HitboxFlag.OKREN_BIG_ARM_SEGMENT)) {
+               const tag = getHitboxTag(hitbox);
+               if (tag === HitboxTag.okrenBigArmSegment) {
                   if (getAbsAngleDiff(hitbox.box.relativeAngle, idealAngles.bigIdealAngle) > EPSILON) {
                      return false;
                   }
-               } else if (hitbox.flags.includes(HitboxFlag.OKREN_MEDIUM_ARM_SEGMENT)) {
+               } else if (tag === HitboxTag.okrenMediumArmSegment) {
                   if (getAbsAngleDiff(hitbox.box.relativeAngle, idealAngles.mediumIdealAngle) > EPSILON) {
                      return false;
                   }
-               } else if (hitbox.flags.includes(HitboxFlag.OKREN_ARM_SEGMENT_OF_SLASHING_AND_DESTRUCTION)) {
+               } else if (tag === HitboxTag.okrenArmSegmentOfSlashingAndDestruction) {
                   if (getAbsAngleDiff(hitbox.box.relativeAngle, idealAngles.smallIdealAngle) > EPSILON) {
                      return false;
                   }
@@ -189,12 +191,12 @@ export function okrenHitboxesHaveReachedIdealAngles(okren: Entity, side: OkrenSi
 export function getOkrenMandibleHitbox(okren: Entity, side: OkrenSide): Hitbox | null {
    const transformComponent = TransformComponentArray.getComponent(okren);
    for (const hitbox of transformComponent.hitboxes) {
-      const isRightSide = hitbox.box.totalFlipXMultiplier === 1;
-      if (isRightSide !== (side === OkrenSide.right)) {
+      const isLeftSide = (hitbox.box.flags & 1) ? true : false;
+      if (isLeftSide !== (side === OkrenSide.left)) {
          continue;
       }
       
-      if (hitbox.flags.includes(HitboxFlag.OKREN_MANDIBLE)) {
+      if (getHitboxTag(hitbox) === HitboxTag.okrenMandible) {
          return hitbox;
       }
    }
@@ -245,17 +247,11 @@ const isValidEggLayPosition = (okren: Entity, x: number, y: number): boolean => 
    const minSubtileY = clampToSubtileBoardDimensions(Math.floor((y - WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
    const maxSubtileY = clampToSubtileBoardDimensions(Math.floor((y + WALL_CHECK_RANGE) / Settings.SUBTILE_SIZE));
 
-   const testHitbox = new CircularBox(x, y, 0, 0, 0, WALL_CHECK_RANGE);
-   
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
          const subtileIndex = getSubtileIndex(subtileX, subtileY);
          if (layer.subtileIsWall(subtileIndex)) {
-            // @Speed
-            // @Copynpaste
-            const tileBox = new RectangularBox((subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, 0, 0, 0, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE);
-            const collisionResult = testHitbox.getCollisionResult(tileBox);
-            if (collisionResult.isColliding) {
+            if (getCircleRectangleCollisionResult(x, y, WALL_CHECK_RANGE, (subtileX + 0.5) * Settings.SUBTILE_SIZE, (subtileY + 0.5) * Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, Settings.SUBTILE_SIZE, 0).isColliding) {
                return false;
             }
          }
@@ -274,7 +270,7 @@ const hasClaw = (okrenTransformComponent: TransformComponent, side: OkrenSide): 
 
          const clawTransformComponent = TransformComponentArray.getComponent(childHitbox.entity);
          const rootHitbox = clawTransformComponent.hitboxes[0];
-         if (rootHitbox.box.flipX === (side === OkrenSide.left ? true : false)) {
+         if ((rootHitbox.box.flags & 1) ? true : false === (side === OkrenSide.left ? true : false)) {
             return true;
          }
       }
@@ -594,7 +590,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    }
    
    // @Hack: mandible attacking
-   if (!hitbox.flags.includes(HitboxFlag.OKREN_MANDIBLE)) {
+   if (getHitboxTag(hitbox) !== HitboxTag.okrenMandible) {
       return;
    }
 
@@ -614,7 +610,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
 }
 
 function onTakeDamage(okren: Entity, hitHitbox: Hitbox): void {
-   if (hitHitbox.flags.includes(HitboxFlag.OKREN_EYE)) {
+   if (getHitboxTag(hitHitbox) === HitboxTag.okrenEye) {
       // @Hack: entity is the okren because the dustflea egg isn't created yet so the function can't get the transform component of it
       const tickEvent: EntityTickEvent = {
          type: EntityTickEventType.okrenEyeHitSound,
@@ -624,7 +620,7 @@ function onTakeDamage(okren: Entity, hitHitbox: Hitbox): void {
       registerEntityTickEvent(okren, tickEvent);
 
       // Make the eye harden for a bit
-      const isLeftSide = hitHitbox.box.flipX;
+      const isLeftSide = (hitHitbox.box.flags & 1) ? true : false;
       const i = isLeftSide ? OkrenSide.left : OkrenSide.right;
       const okrenComponent = OkrenComponentArray.getComponent(okren);
       const hardenTimeTicks = secondsToTicks(0.62);
@@ -635,7 +631,8 @@ function onTakeDamage(okren: Entity, hitHitbox: Hitbox): void {
       // Make all the limbs spasm a lil' bit
       const transformComponent = TransformComponentArray.getComponent(okren);
       for (const hitbox of transformComponent.hitboxes) {
-         if (hitbox.flags.includes(HitboxFlag.OKREN_BIG_ARM_SEGMENT) || hitbox.flags.includes(HitboxFlag.OKREN_MEDIUM_ARM_SEGMENT) || hitbox.flags.includes(HitboxFlag.OKREN_ARM_SEGMENT_OF_SLASHING_AND_DESTRUCTION)) {
+         const tag = getHitboxTag(hitbox);
+         if (tag === HitboxTag.okrenBigArmSegment || tag === HitboxTag.okrenMediumArmSegment || tag === HitboxTag.okrenArmSegmentOfSlashingAndDestruction) {
             addHitboxAngularVelocity(hitbox, -randFloat(1.1, 1.3));
          }
       }
@@ -643,7 +640,7 @@ function onTakeDamage(okren: Entity, hitHitbox: Hitbox): void {
 }
 
 function getDamageTakenMultiplier(_entity: Entity, hitHitbox: Hitbox): number {
-   if (hitHitbox.flags.includes(HitboxFlag.OKREN_EYE)) {
+   if (getHitboxTag(hitHitbox) === HitboxTag.okrenEye) {
       return 2;
    } else {
       return 1;

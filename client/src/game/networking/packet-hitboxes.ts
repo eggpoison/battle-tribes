@@ -1,4 +1,4 @@
-import { PacketReader, Box, CircularBox, RectangularBox, PivotPointType, assert, Entity, boxIsCircular, assertBoxIsCircular, assertBoxIsRectangular, updateSideAxes, HitboxCollisionType, HitboxFlag, cloneBox } from "webgl-test-shared";
+import { PacketReader, Box, CircularBox, RectangularBox, assert, Entity, boxIsCircular, assertBoxIsCircular, assertBoxIsRectangular, updateSideAxes, cloneBox, createCircularBox, createRectangularBox } from "webgl-test-shared";
 import { currentSnapshot } from "../networking/snapshots";
 import { Hitbox, HitboxTether, createHitbox, getHitboxByLocalID } from "../hitboxes";
 import { findEntityHitbox } from "../entity-components/server-components/TransformComponent";
@@ -11,25 +11,21 @@ const readCircularBoxFromData = (reader: PacketReader): CircularBox => {
    const angle = reader.readNumber();
    const offsetX = reader.readNumber();
    const offsetY = reader.readNumber();
-   const pivotType: PivotPointType = reader.readNumber();
    const pivotPosX = reader.readNumber();
    const pivotPosY = reader.readNumber();
-   const scale = reader.readNumber();
-   const flipX = reader.readBool();
+   const flags = reader.readNumber();
 
    const radius = reader.readNumber();
 
-   const box = new CircularBox(x, y, offsetX, offsetY, relativeAngle, radius);
+   const box = createCircularBox(x, y, offsetX, offsetY, relativeAngle, radius);
    box.angle = angle;
    box.pivotX = pivotPosX;
    box.pivotY = pivotPosY;
-   box.pivotType = pivotType;
-   box.scale = scale;
-   box.flipX = flipX;
+   box.flags = flags;
    return box;
 }
 const padCircularBoxData = (reader: PacketReader): void => {
-   reader.padOffset(12 * Float32Array.BYTES_PER_ELEMENT);
+   reader.padOffset(10 * Float32Array.BYTES_PER_ELEMENT);
 }
 
 const readRectangularBoxFromData = (reader: PacketReader): RectangularBox => {
@@ -40,26 +36,22 @@ const readRectangularBoxFromData = (reader: PacketReader): RectangularBox => {
    const angle = reader.readNumber();
    const offsetX = reader.readNumber();
    const offsetY = reader.readNumber();
-   const pivotType: PivotPointType = reader.readNumber();
    const pivotPosX = reader.readNumber();
    const pivotPosY = reader.readNumber();
-   const scale = reader.readNumber();
-   const flipX = reader.readBool();
+   const flags = reader.readNumber();
 
    const width = reader.readNumber();
    const height = reader.readNumber();
 
-   const box = new RectangularBox(x, y, offsetX, offsetY, relativeAngle, width, height);
+   const box = createRectangularBox(x, y, offsetX, offsetY, relativeAngle, width, height);
    box.angle = angle;
    box.pivotX = pivotPosX;
    box.pivotY = pivotPosY;
-   box.pivotType = pivotType;
-   box.scale = scale;
-   box.flipX = flipX;
+   box.flags = flags;
    return box;
 }
 const padRectangularBoxData = (reader: PacketReader): void => {
-   reader.padOffset(13 * Float32Array.BYTES_PER_ELEMENT);
+   reader.padOffset(11 * Float32Array.BYTES_PER_ELEMENT);
 }
 
 export function readBoxFromData(reader: PacketReader): Box {
@@ -107,15 +99,10 @@ export function readHitboxFromData(reader: PacketReader, localID: number, entity
    const angularAcceleration = reader.readNumber();
    
    const mass = reader.readNumber();
-   const collisionType: HitboxCollisionType = reader.readNumber();
    const collisionBit = reader.readNumber();
    const collisionMask = reader.readNumber();
    
-   const numFlags = reader.readNumber();
-   const flags: Array<HitboxFlag> = [];
-   for (let i = 0; i < numFlags; i++) {
-      flags.push(reader.readNumber());
-   }
+   const flags = reader.readNumber();
 
    const entity = reader.readNumber();
    const rootEntity = reader.readNumber();
@@ -143,14 +130,11 @@ export function readHitboxFromData(reader: PacketReader, localID: number, entity
       }
    }
 
-   const isPartOfParent = reader.readBool();
-   const isStatic = reader.readBool();
-
-   return createHitbox(localID, entity, rootEntity, parentHitbox, children, isPartOfParent, isStatic, box, previousPosX, previousPosY, accelX, accelY, tethers, previousRelativeAngle, angularAcceleration, mass, collisionType, collisionBit, collisionMask, flags);
+   return createHitbox(localID, entity, rootEntity, parentHitbox, children, box, previousPosX, previousPosY, accelX, accelY, tethers, previousRelativeAngle, angularAcceleration, mass, collisionBit, collisionMask, flags);
 }
 
 export function createHitboxFromData(data: Hitbox): Hitbox {
-   return createHitbox(data.localID, data.entity, data.rootEntity, data.parent, data.children, data.isPartOfParent, data.isStatic, cloneBox(data.box), data.previousPosX, data.previousPosY, data.accelX, data.accelY, data.tethers, data.previousRelativeAngle, data.angularAcceleration, data.mass, data.collisionType, data.collisionBit, data.collisionMask, data.flags);
+   return createHitbox(data.localID, data.entity, data.rootEntity, data.parent, data.children, cloneBox(data.box), data.previousPosX, data.previousPosY, data.accelX, data.accelY, data.tethers, data.previousRelativeAngle, data.angularAcceleration, data.mass, data.collisionBit, data.collisionMask, data.flags);
 }
 
 const updateCircularBoxFromData = (box: CircularBox, data: CircularBox): void => {
@@ -160,11 +144,9 @@ const updateCircularBoxFromData = (box: CircularBox, data: CircularBox): void =>
    box.angle = data.angle;
    box.offsetX = data.offsetX;
    box.offsetY = data.offsetY;
-   box.pivotType = data.pivotType;
    box.pivotX = data.pivotX;
    box.pivotY = data.pivotY;
-   box.scale = data.scale;
-   box.flipX = data.flipX;
+   box.flags = data.flags;
    box.radius = data.radius;
 }
 
@@ -175,11 +157,9 @@ const updateRectangularBoxFromData = (box: RectangularBox, data: RectangularBox)
    box.angle = data.angle;
    box.offsetX = data.offsetX;
    box.offsetY = data.offsetY;
-   box.pivotType = data.pivotType;
    box.pivotX = data.pivotX;
    box.pivotY = data.pivotY;
-   box.scale = data.scale;
-   box.flipX = data.flipX;
+   box.flags = data.flags;
    box.width = data.width;
    box.height = data.height;
    updateSideAxes(box);
@@ -216,9 +196,10 @@ export function updateHitboxFromData(hitbox: Hitbox, data: Hitbox): void {
    hitbox.angularAcceleration = data.angularAcceleration;
    
    hitbox.mass = data.mass;
-   hitbox.collisionType = data.collisionType;
 
    hitbox.rootEntity = data.rootEntity;
+
+   hitbox.flags = data.flags;
    
    let parentEntity: Entity;
    let parentHitboxLocalID: number;
@@ -241,9 +222,6 @@ export function updateHitboxFromData(hitbox: Hitbox, data: Hitbox): void {
          hitbox.children.push(child);
       }
    }
-
-   hitbox.isPartOfParent = data.isPartOfParent;
-   hitbox.isStatic = data.isStatic;
 
    hitbox.lastUpdateTicks = currentSnapshot.tick;
 }

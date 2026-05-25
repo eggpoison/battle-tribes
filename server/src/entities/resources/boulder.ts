@@ -1,11 +1,11 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, StatusEffect, randInt, HitboxCollisionType, CircularBox, ItemType } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, StatusEffect, randInt, HitboxCollisionType, ItemType, createCircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { BoulderComponent } from "../../components/BoulderComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 
 registerEntityLootOnDeath(EntityType.boulder, {
    itemType: ItemType.rock,
@@ -14,8 +14,8 @@ registerEntityLootOnDeath(EntityType.boulder, {
 
 export function createBoulderConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 40), 1.25, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox.isStatic = true;
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 40), 1.25, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
 
    const healthComponent = new HealthComponent(40);

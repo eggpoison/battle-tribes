@@ -1,7 +1,7 @@
-import { HitboxFlag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randFloat, angle } from "battletribes-shared";
+import { HitboxTag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randFloat, angle } from "battletribes-shared";
 import { getConfigTransformComponent } from "../components.js";
 import { createInguYetukLaserConfig } from "../entities/wtf/ingu-yetuk-laser.js";
-import { addHitboxVelocity, applyAbsoluteKnockback, applyAcceleration, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
+import { addHitboxVelocity, applyAbsoluteKnockback, applyAcceleration, getHitboxTag, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
 import { createEntity, getEntityLayer, getEntityType } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
@@ -30,11 +30,11 @@ export function moveSeekerHeadToTarget(seekerHead: Entity, target: Entity): void
    for (let i = 0; i < transformComponent.hitboxes.length; i++) {
       const hitbox = transformComponent.hitboxes[i];
       // don't accelerate the base one cuz its attached to the monster
-      if ((hitbox.parent !== null && hitbox.parent.entity !== seekerHead) || hitbox.flags.includes(HitboxFlag.YETUK_MANDIBLE_MEDIUM) || hitbox.flags.includes(HitboxFlag.YETUK_MANDIBLE_BIG)) {
+      if ((hitbox.parent !== null && hitbox.parent.entity !== seekerHead) || getHitboxTag(hitbox) === HitboxTag.yetukMandibleMedium || getHitboxTag(hitbox) === HitboxTag.yetukMandibleBig) {
          continue;
       }
       
-      let mult = hitbox.flags.includes(HitboxFlag.COW_HEAD) ? 1 : 0.4;
+      let mult = getHitboxTag(hitbox) === HitboxTag.cowHead ? 1 : 0.4;
       if (!inguYetuksnoglurblidokowfleaSeekerHeadComponent.isCow) {
          mult *= 1.2;
       }
@@ -50,7 +50,7 @@ export function moveSeekerHeadToTarget(seekerHead: Entity, target: Entity): void
       
       applyAcceleration(hitbox, 900 * mult * Math.sin(dir), 900 * mult * Math.cos(dir));
 
-      if (hitbox.flags.includes(HitboxFlag.COW_HEAD)) {
+      if (getHitboxTag(hitbox) === HitboxTag.cowHead) {
          turnHitboxToAngle(hitbox, dir, 2 * Math.PI, 0.5, false);
       }
    }
@@ -58,7 +58,8 @@ export function moveSeekerHeadToTarget(seekerHead: Entity, target: Entity): void
    if (Math.random() < 2 * Settings.DT_S) {
       for (let i = 0; i < transformComponent.hitboxes.length; i++) {
          const hitbox = transformComponent.hitboxes[i];
-         if (hitbox.flags.includes(HitboxFlag.COW_HEAD) || hitbox.flags.includes(HitboxFlag.TUKMOK_HEAD)) {
+         const tag = getHitboxTag(hitbox);
+         if (tag === HitboxTag.cowHead || tag === HitboxTag.tukmokHead) {
             const angle = hitbox.box.angle + randFloat(-0.5, 0.5);
             for (let i = 0; i < 2; i++) {
                const laserPosition = new Point(hitbox.box.posX, hitbox.box.posY).offset(50, angle);

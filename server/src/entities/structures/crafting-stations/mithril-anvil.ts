@@ -1,4 +1,4 @@
-import { EntityType, StatusEffect, Point, HitboxCollisionType, HitboxFlag, RectangularBox, CollisionBit, DEFAULT_COLLISION_MASK } from "battletribes-shared";
+import { EntityType, StatusEffect, HitboxCollisionType, HitboxTag, CollisionBit, DEFAULT_COLLISION_MASK, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../../components.js";
 import { CraftingStationComponent } from "../../../components/CraftingStationComponent.js";
 import { HealthComponent } from "../../../components/HealthComponent.js";
@@ -9,7 +9,7 @@ import { TribeComponent } from "../../../components/TribeComponent.js";
 import Tribe from "../../../Tribe.js";
 import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 import { MithrilAnvilComponent } from "../../../components/MithrilAnvilComponent.js";
-import { Hitbox } from "../../../hitboxes.js";
+import { createHitbox, setHitboxIsNonGrassBlocking, setHitboxIsStatic } from "../../../hitboxes.js";
 import { StructureConnection } from "../../../structure-placement.js";
 
 export function createMithrilAnvilConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
@@ -17,25 +17,28 @@ export function createMithrilAnvilConfig(x: number, y: number, angle: number, tr
    
    // Middle box
    {
-      const box = new RectangularBox(x, y, -16, 0, angle, 48, 56);
-      const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
-      hitbox.isStatic = true;
+      const box = createRectangularBox(x, y, -16, 0, angle, 48, 56);
+      const hitbox = createHitbox(transformComponent, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      setHitboxIsStatic(hitbox);
+      setHitboxIsNonGrassBlocking(hitbox);
       addHitboxToTransformComponent(transformComponent, hitbox);
    }
 
    // Left box
    {
-      const box = new RectangularBox(x, y, -48, 0, angle, 16, 40);
-      const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
-      hitbox.isStatic = true;
+      const box = createRectangularBox(x, y, -48, 0, angle, 16, 40);
+      const hitbox = createHitbox(transformComponent, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      setHitboxIsStatic(hitbox);
+      setHitboxIsNonGrassBlocking(hitbox);
       addHitboxToTransformComponent(transformComponent, hitbox);
    }
 
    // Right box
    {
-      const box = new RectangularBox(x, y, 30, 0, angle, 44, 40);
-      const hitbox = new Hitbox(transformComponent, null, true, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.NON_GRASS_BLOCKING]);
-      hitbox.isStatic = true;
+      const box = createRectangularBox(x, y, 30, 0, angle, 44, 40);
+      const hitbox = createHitbox(transformComponent, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      setHitboxIsStatic(hitbox);
+      setHitboxIsNonGrassBlocking(hitbox);
       addHitboxToTransformComponent(transformComponent, hitbox);
    }
 

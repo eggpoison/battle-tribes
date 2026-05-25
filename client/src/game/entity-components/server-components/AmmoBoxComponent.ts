@@ -1,7 +1,7 @@
 import { PacketReader, Entity, ServerComponentType, TurretAmmoType } from "webgl-test-shared";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
@@ -115,7 +115,7 @@ const updateAmmoType = (ammoBoxComponent: AmmoBoxComponent, entity: Entity, ammo
       ammoBoxComponent.ammoType = null;
 
       if (ammoBoxComponent.ammoWarningRenderPart === null) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
+         const transformComponent = transformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          
          ammoBoxComponent.ammoWarningRenderPart = new TexturedRenderPart(

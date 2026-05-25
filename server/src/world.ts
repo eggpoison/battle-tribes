@@ -138,29 +138,29 @@ export function ticksToGameHours(ticks: number): number {
 
 export function getEntityType(entity: Entity): EntityType {
    const entityType = entityTypes[entity];
-   assert(typeof entityType !== "undefined");
+   assert(entityType !== undefined);
    return entityType;
 }
 
-/** Cleanup: obscure, only used in 1 situation. Rework so we can remove this */
+/** Cleanup: obscure, only used in 1 situation. Rework so this can be remvoed */
 export function validateEntity(entity: Entity): Entity | 0 {
-   return typeof entityTypes[entity] !== "undefined" ? entity : 0;
+   return entityTypes[entity] !== undefined ? entity : 0;
 }
 
 export function entityExists(entity: Entity): boolean {
-   return typeof entityTypes[entity] !== "undefined";
+   return entityTypes[entity] !== undefined;
 }
 
 export function getEntityLayer(entity: Entity): Layer {
    const layer = entityLayers[entity];
-   if (typeof layer === "undefined") {
+   if (layer === undefined) {
       throw new Error("Entity doesn't exist!");
    }
    return layer;
 }
 
 export function getEntityAgeTicks(entity: Entity): number {
-   if (typeof entitySpawnTicks[entity] === "undefined") {
+   if (entitySpawnTicks[entity] === undefined) {
       throw new Error();
    }
    return ticks - entitySpawnTicks[entity]!;
@@ -168,7 +168,7 @@ export function getEntityAgeTicks(entity: Entity): number {
 
 export function getEntitySpawnTicks(entity: Entity): number {
    const spawnTicks = entitySpawnTicks[entity];
-   if (typeof spawnTicks === "undefined") {
+   if (spawnTicks === undefined) {
       throw new Error("Entity doesn't exist!");
    }
    return spawnTicks;
@@ -217,13 +217,13 @@ export function pushEntityJoinBuffer(shouldTickJoinInfos: boolean): void {
    }
 
    // Do this before the onJoin function so that child configs get registered to the parent transformComponetns in time for the onJoin functions
-   if (typeof finalPushedIdx !== "undefined") {
+   if (finalPushedIdx !== undefined) {
       // Check if there are any entities which are immediately being carried or have children
       for (let i = 0; i <= finalPushedIdx; i++) {
          const joinInfo = entityJoinBuffer[i];
 
          const attachInfo = joinInfo.entityConfig.attachInfo;
-         if (typeof attachInfo !== "undefined") {
+         if (attachInfo !== undefined) {
             if (entityConfigAttachInfoIsTethered(attachInfo)) {
                attachEntityWithTether(joinInfo.entity, attachInfo.parentHitbox.entity, attachInfo.parentHitbox, attachInfo.idealDistance, attachInfo.springConstant, attachInfo.damping, attachInfo.isPartOfParent);
             } else {
@@ -232,7 +232,7 @@ export function pushEntityJoinBuffer(shouldTickJoinInfos: boolean): void {
          }
 
          const childConfigs = joinInfo.entityConfig.childConfigs;
-         if (typeof childConfigs !== "undefined") {
+         if (childConfigs !== undefined) {
             for (const childConfig of childConfigs) {
                // Find the join info for the child
                // @Speed !
@@ -244,7 +244,7 @@ export function pushEntityJoinBuffer(shouldTickJoinInfos: boolean): void {
                      break;
                   }
                }
-               assert(typeof childJoinInfo !== "undefined");
+               assert(childJoinInfo !== undefined);
                
                attachHitboxRaw(childConfig.attachedHitbox, childConfig.parentHitbox, childConfig.isPartOfParent);
             }
@@ -266,7 +266,7 @@ export function pushEntityJoinBuffer(shouldTickJoinInfos: boolean): void {
       const finalJoiningIdx = componentArrayFinalJoiningIndexes[componentArray.componentType];
       
       const onJoin = componentArray.onJoin;
-      if (typeof onJoin !== "undefined" && finalJoiningIdx !== null) {
+      if (onJoin !== undefined && finalJoiningIdx !== null) {
          const componentBufferIDs = componentArray.getComponentBufferIDs();
 
          for (let j = 0; j <= finalJoiningIdx; j++) {
@@ -296,7 +296,7 @@ export function createEntity<ComponentTypes extends ServerComponentType>(entityC
       const componentType = componentTypes[i];
       const componentArray = componentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
 
-      if (typeof componentArray.onInitialise !== "undefined") {
+      if (componentArray.onInitialise !== undefined) {
          // @Cleanup: first 2 parameters can be combined
          componentArray.onInitialise(entityConfig, entity, layer);
       }
@@ -313,14 +313,14 @@ export function createEntity<ComponentTypes extends ServerComponentType>(entityC
    addEntityToJoinBuffer(entity, entityConfig, layer, componentTypes, joinDelayTicks);
 
    // @Hack? Should the child configs just be handled on the entity config when adding it to the world?
-   if (typeof entityConfig.childConfigs !== "undefined") {
+   if (entityConfig.childConfigs !== undefined) {
       for (const childConfig of entityConfig.childConfigs) {
          createEntity(childConfig.entityConfig, layer, joinDelayTicks);
       }
    }
 
-   if (typeof entityConfig.attachInfo !== "undefined") {
-      if (typeof entityConfig.attachInfo.attachedHitbox === "undefined") {
+   if (entityConfig.attachInfo !== undefined) {
+      if (entityConfig.attachInfo.attachedHitbox === undefined) {
          throw new Error();
       }
    }
@@ -345,7 +345,7 @@ export function createEntityImmediate<ComponentTypes extends ServerComponentType
       const componentType = componentTypes[i];
       const componentArray = componentArrayRecord[componentType];
 
-      if (typeof componentArray.onInitialise !== "undefined") {
+      if (componentArray.onInitialise !== undefined) {
          // @Cleanup: first 2 parameters can be combined
          componentArray.onInitialise(entityConfig, entity, layer);
       }
@@ -369,7 +369,7 @@ export function createEntityImmediate<ComponentTypes extends ServerComponentType
    }
 
    const attachInfo = entityConfig.attachInfo;
-   if (typeof attachInfo !== "undefined") {
+   if (attachInfo !== undefined) {
       if (entityConfigAttachInfoIsTethered(attachInfo)) {
          attachEntityWithTether(entity, attachInfo.parentHitbox.entity, attachInfo.parentHitbox, attachInfo.idealDistance, attachInfo.springConstant, attachInfo.damping, attachInfo.isPartOfParent);
       } else {
@@ -380,7 +380,7 @@ export function createEntityImmediate<ComponentTypes extends ServerComponentType
 
    // @Hack? Should the child configs just be handled on the entity config when adding it to the world?
    const childConfigs = entityConfig.childConfigs;
-   if (typeof childConfigs !== "undefined") {
+   if (childConfigs !== undefined) {
       for (const childConfig of childConfigs) {
          createEntityImmediate(childConfig.entityConfig, layer);
          attachHitboxRaw(childConfig.attachedHitbox, childConfig.parentHitbox, childConfig.isPartOfParent);
@@ -391,7 +391,7 @@ export function createEntityImmediate<ComponentTypes extends ServerComponentType
       const componentArray = componentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
 
       const onJoin = componentArray.onJoin;
-      if (typeof onJoin !== "undefined") {
+      if (onJoin !== undefined) {
          onJoin(entity);
       }
    }
@@ -412,7 +412,7 @@ export function destroyFlaggedEntities(): void {
       // Call remove functions
       for (let i = 0; i < ComponentArrays.length; i++) {
          const componentArray = ComponentArrays[i];
-         if (componentArray.hasComponent(entity) && typeof componentArray.onRemove !== "undefined") {
+         if (componentArray.hasComponent(entity) && componentArray.onRemove !== undefined) {
             componentArray.onRemove(entity);
          }
       }
@@ -476,7 +476,7 @@ export function destroyEntity(entity: Entity): void {
    const componentArrayRecord = getComponentArrayRecord();
    for (const componentType of componentTypes) {
       const componentArray = componentArrayRecord[componentType];
-      if (typeof componentArray.preRemove !== "undefined") {
+      if (componentArray.preRemove !== undefined) {
          componentArray.preRemove(entity);
       }
    }
@@ -508,7 +508,7 @@ export function addEntityToJoinBuffer(entity: Entity, entityConfig: EntityConfig
 export function tickEntities(): void {
    const gameTicks = getGameTicks();
    for (const componentArray of ComponentArrays) {
-      if (typeof componentArray.onTick !== "undefined" && gameTicks % componentArray.onTick.tickInterval === 0) {
+      if (componentArray.onTick !== undefined && gameTicks % componentArray.onTick.tickInterval === 0) {
          const func = componentArray.onTick.func;
          for (let i = 0; i < componentArray.activeEntities.length; i++) {
             const entity = componentArray.activeEntities[i];

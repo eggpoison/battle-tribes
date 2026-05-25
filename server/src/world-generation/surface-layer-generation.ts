@@ -1,4 +1,4 @@
-import { TileType, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randInt, smoothstep, Settings, TribeType, RectangularBox, ServerComponentType, Biome, EntityType, TreeSize, TileIndex, tileIsInWorldIncludingEdges } from "battletribes-shared";
+import { TileType, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randInt, smoothstep, Settings, TribeType, RectangularBox, ServerComponentType, Biome, EntityType, TreeSize, TileIndex, tileIsInWorldIncludingEdges, createRectangularBox } from "battletribes-shared";
 import { generateOctavePerlinNoise, generatePerlinNoise, generatePointPerlinNoise } from "../perlin-noise.js";
 import BIOME_GENERATION_INFO, { BiomeGenerationInfo, BiomeSpawnRequirements, TileGenerationInfo } from "./terrain-generation-info.js";
 import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } from "./river-generation.js";
@@ -121,16 +121,16 @@ const isTooCloseToReedOrLilypad = (layer: Layer, x: number, y: number): boolean 
 
 const matchesBiomeRequirements = (generationInfo: BiomeSpawnRequirements, height: number, temperature: number, humidity: number): boolean => {
    // Height
-   if (typeof generationInfo.minHeight !== "undefined" && height < generationInfo.minHeight) return false;
-   if (typeof generationInfo.maxHeight !== "undefined" && height > generationInfo.maxHeight) return false;
+   if (generationInfo.minHeight !== undefined && height < generationInfo.minHeight) return false;
+   if (generationInfo.maxHeight !== undefined && height > generationInfo.maxHeight) return false;
    
    // Temperature
-   if (typeof generationInfo.minTemperature !== "undefined" && temperature < generationInfo.minTemperature) return false;
-   if (typeof generationInfo.maxTemperature !== "undefined" && temperature > generationInfo.maxTemperature) return false;
+   if (generationInfo.minTemperature !== undefined && temperature < generationInfo.minTemperature) return false;
+   if (generationInfo.maxTemperature !== undefined && temperature > generationInfo.maxTemperature) return false;
    
    // Humidity
-   if (typeof generationInfo.minHumidity !== "undefined" && humidity < generationInfo.minHumidity) return false;
-   if (typeof generationInfo.maxHumidity !== "undefined" && humidity > generationInfo.maxHumidity) return false;
+   if (generationInfo.minHumidity !== undefined && humidity < generationInfo.minHumidity) return false;
+   if (generationInfo.maxHumidity !== undefined && humidity > generationInfo.maxHumidity) return false;
 
    return true;
 }
@@ -158,17 +158,17 @@ const getMinPossibleTemperature = (biome: Biome, tileGenerationInfo: TileGenerat
    let min = 0;
 
    const biomeGenerationInfo = getBiomeGenerationInfo(biome);
-   if (typeof biomeGenerationInfo !== "undefined" && biomeGenerationInfo.spawnRequirements !== null) {
+   if (biomeGenerationInfo !== undefined && biomeGenerationInfo.spawnRequirements !== null) {
       const biomeMinTemperature = biomeGenerationInfo.spawnRequirements.minTemperature;
-      if (typeof biomeMinTemperature !== "undefined" && biomeMinTemperature > min) {
+      if (biomeMinTemperature !== undefined && biomeMinTemperature > min) {
          min = biomeMinTemperature;
       }
    }
 
    const tileRequirements = tileGenerationInfo.requirements;
-   if (typeof tileRequirements !== "undefined") {
+   if (tileRequirements !== undefined) {
       const tileMinTemperature = tileRequirements.minTemperature;
-      if (typeof tileMinTemperature !== "undefined" && tileMinTemperature > min) {
+      if (tileMinTemperature !== undefined && tileMinTemperature > min) {
          min = tileMinTemperature;
       }
    }
@@ -181,17 +181,17 @@ const getMaxPossibleTemperature = (biome: Biome, tileGenerationInfo: TileGenerat
    let max = 1;
 
    const biomeGenerationInfo = getBiomeGenerationInfo(biome);
-   if (typeof biomeGenerationInfo !== "undefined" && biomeGenerationInfo.spawnRequirements !== null) {
+   if (biomeGenerationInfo !== undefined && biomeGenerationInfo.spawnRequirements !== null) {
       const biomeMaxTemperature = biomeGenerationInfo.spawnRequirements.maxTemperature;
-      if (typeof biomeMaxTemperature !== "undefined" && biomeMaxTemperature < max) {
+      if (biomeMaxTemperature !== undefined && biomeMaxTemperature < max) {
          max = biomeMaxTemperature;
       }
    }
 
    const tileRequirements = tileGenerationInfo.requirements;
-   if (typeof tileRequirements !== "undefined") {
+   if (tileRequirements !== undefined) {
       const tileMaxTemperature = tileRequirements.maxTemperature;
-      if (typeof tileMaxTemperature !== "undefined" && tileMaxTemperature < max) {
+      if (tileMaxTemperature !== undefined && tileMaxTemperature < max) {
          max = tileMaxTemperature;
       }
    }
@@ -205,12 +205,12 @@ const getTileGenerationInfo = <T extends TileGenerationInfo>(tileBiomes: Uint8Ar
    
    for (const tileGenerationInfo of tileGenerationArray) {
       const requirements = tileGenerationInfo.requirements;
-      if (typeof requirements === "undefined") {
+      if (requirements === undefined) {
          return tileGenerationInfo;
       }
       
       // Check requirements
-      if (typeof requirements.customNoise !== "undefined") {
+      if (requirements.customNoise !== undefined) {
          let noiseIsValid = true;
          for (const noise of requirements.customNoise) {
             // If greater than 1, then the tile generation info will be valid
@@ -221,25 +221,25 @@ const getTileGenerationInfo = <T extends TileGenerationInfo>(tileBiomes: Uint8Ar
             // @Speed @Garbage
             currentWeight *= generatePointPerlinNoise(tileX, tileY, noise.scale, biome + "-" + noise.scale);
    
-            if (typeof noise.minWeight !== "undefined") {
+            if (noise.minWeight !== undefined) {
                minWeight *= noise.minWeight;
             }
-            if (typeof noise.maxWeight !== "undefined") {
+            if (noise.maxWeight !== undefined) {
                maxWeight *= noise.maxWeight;
             }
-            // if (typeof requirements.noise.minWeight !== "undefined" && weight < requirements.noise.minWeight) continue;
-            // if (typeof requirements.noise.maxWeight !== "undefined" && weight > requirements.noise.maxWeight) continue;
+            // if (requirements.noise.minWeight !== undefined && weight < requirements.noise.minWeight) continue;
+            // if (requirements.noise.maxWeight !== undefined && weight > requirements.noise.maxWeight) continue;
    
             // @HACK
             // Narrow the window
-            if (typeof requirements.minTemperature !== "undefined" || typeof requirements.maxTemperature !== "undefined") {
+            if (requirements.minTemperature !== undefined || requirements.maxTemperature !== undefined) {
                // currentWeight *= temperature;
    
-               if (typeof requirements.minTemperature !== "undefined" && temperature < requirements.minTemperature) {
+               if (requirements.minTemperature !== undefined && temperature < requirements.minTemperature) {
                   noiseIsValid = false;
                   break;
                }
-               if (typeof requirements.maxTemperature !== "undefined" && temperature > requirements.maxTemperature) {
+               if (requirements.maxTemperature !== undefined && temperature > requirements.maxTemperature) {
                   noiseIsValid = false;
                   break;
                }
@@ -252,10 +252,10 @@ const getTileGenerationInfo = <T extends TileGenerationInfo>(tileBiomes: Uint8Ar
                // move the min weight to the max according to the placement
                minWeight = lerp(minWeight, maxWeight, temperaturePlacement);
             }
-            // if (typeof requirements.minTemperature !== "undefined") {
+            // if (requirements.minTemperature !== undefined) {
             //    minWeight *= getMinPossibleTemperature(biome, tileGenerationInfo);
             // }
-            // if (typeof requirements.maxTemperature !== "undefined") {
+            // if (requirements.maxTemperature !== undefined) {
             //    maxWeight *= getMaxPossibleTemperature(biome, tileGenerationInfo);
             // }
 
@@ -270,17 +270,17 @@ const getTileGenerationInfo = <T extends TileGenerationInfo>(tileBiomes: Uint8Ar
          }
       }
 
-      if (typeof requirements.minDist !== "undefined" && dist < requirements.minDist) continue;
-      if (typeof requirements.maxDist !== "undefined" && dist > requirements.maxDist) continue;
+      if (requirements.minDist !== undefined && dist < requirements.minDist) continue;
+      if (requirements.maxDist !== undefined && dist > requirements.maxDist) continue;
 
-      if (typeof requirements.minHeight !== "undefined" && height < requirements.minHeight) continue;
-      if (typeof requirements.maxHeight !== "undefined" && height > requirements.maxHeight) continue;
+      if (requirements.minHeight !== undefined && height < requirements.minHeight) continue;
+      if (requirements.maxHeight !== undefined && height > requirements.maxHeight) continue;
 
-      // if (typeof requirements.minTemperature !== "undefined" && temperature < requirements.minTemperature) continue;
-      // if (typeof requirements.maxTemperature !== "undefined" && temperature > requirements.maxTemperature) continue;
+      // if (requirements.minTemperature !== undefined && temperature < requirements.minTemperature) continue;
+      // if (requirements.maxTemperature !== undefined && temperature > requirements.maxTemperature) continue;
 
-      if (typeof requirements.minHumidity !== "undefined" && humidity < requirements.minHumidity) continue;
-      if (typeof requirements.maxHumidity !== "undefined" && humidity > requirements.maxHumidity) continue;
+      if (requirements.minHumidity !== undefined && humidity < requirements.minHumidity) continue;
+      if (requirements.maxHumidity !== undefined && humidity > requirements.maxHumidity) continue;
       
       return tileGenerationInfo;
    }
@@ -300,14 +300,14 @@ const generateTileTypes = (tileBiomes: Uint8Array, biomeDists: Uint8Array, tileT
          const humidity = humidityMap[tileIndex];
 
          const floorTileGenerationInfo = getTileGenerationInfo(tileBiomes, biomeDists, biome, biomeGenerationInfo.floorTiles, tileX, tileY, height, temperature, humidity);
-         if (typeof floorTileGenerationInfo === "undefined") {
+         if (floorTileGenerationInfo === undefined) {
             throw new Error(`Couldn't find a valid floor tile generation info! Biome: ${biome}`);
          }
 
          tileTypes[tileIndex] = floorTileGenerationInfo.tileType;
          
          const wallTileGenerationInfo = getTileGenerationInfo(tileBiomes, biomeDists, biome, biomeGenerationInfo.wallTiles, tileX, tileY, height, temperature, humidity);
-         if (OPTIONS.generateWalls && typeof wallTileGenerationInfo !== "undefined") {
+         if (OPTIONS.generateWalls && wallTileGenerationInfo !== undefined) {
             setWallInSubtiles(subtileTypes, tileX, tileY, wallTileGenerationInfo.subtileType)
          }
       }
@@ -349,8 +349,8 @@ const spreadBiomeDists = (biomeDists: Uint8Array, biomes: Uint8Array, biomeBorde
    const ADJACENT_OFFSETS_X = [0, 0, 1, -1];
    const ADJACENT_OFFSETS_Y = [1, -1, 0, 0];
 
-   while (biomeBorderTiles.length > 0) {
-      const tileIndex = biomeBorderTiles[0];
+   for (let i = 0; i < biomeBorderTiles.length; i++) {
+      const tileIndex = biomeBorderTiles[i];
 
       const biome = biomes[tileIndex];
       const biomeDist = biomeDists[tileIndex];
@@ -358,12 +358,13 @@ const spreadBiomeDists = (biomeDists: Uint8Array, biomes: Uint8Array, biomeBorde
       const tileX = getTileX(tileIndex);
       const tileY = getTileY(tileIndex);
 
-      for (let i = 0; i < 4; i++) {
-         const offsetX = ADJACENT_OFFSETS_X[i];
-         const offsetY = ADJACENT_OFFSETS_Y[i];
+      for (let j = 0; j < 4; j++) {
+         const offsetX = ADJACENT_OFFSETS_X[j];
+         const offsetY = ADJACENT_OFFSETS_Y[j];
          
          const adjacentTileX = tileX + offsetX;
          const adjacentTileY = tileY + offsetY;
+         // @Speed: almost never true
          if (tileIsInWorldIncludingEdges(adjacentTileX, adjacentTileY)) {
             const adjacentTileIndex = getTileIndexIncludingEdges(adjacentTileX, adjacentTileY);
             
@@ -371,17 +372,11 @@ const spreadBiomeDists = (biomeDists: Uint8Array, biomes: Uint8Array, biomeBorde
             const adjacentBiomeDist = biomeDists[adjacentTileIndex];
             // Since biomeDist=1 will always be spread before biomeDist=2, etc, can elide the check for < adjacentBiomeDist
             if (adjacentBiome === biome && adjacentBiomeDist === 0) {
-               // @Speed
-               if (!biomeBorderTiles.includes(adjacentTileIndex)) {
-                  biomeBorderTiles.push(adjacentTileIndex);
-                  biomeDists[adjacentTileIndex] = biomeDist + 1;
-               }
+               biomeBorderTiles.push(adjacentTileIndex);
+               biomeDists[adjacentTileIndex] = biomeDist + 1;
             }
          }
       }
-
-      // @speed? chop em all at once?
-      biomeBorderTiles.splice(0, 1);
    }
 }
 
@@ -1230,7 +1225,7 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
 
 // @SQUEAM
 export function regenerateSurfaceTerrain(): void {
-   return;
+   // return;
    SRandom.seed(2845700342);
    
    const builtinRandomFunc = Math.random;
@@ -1251,7 +1246,12 @@ export function regenerateSurfaceTerrain(): void {
    // const tileMithrilRichnesses = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    const wallSubtileTypes = new Uint8Array(16 * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
 
-   // Fill temperature and humidity arrays
+   const biomeDists = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+
+   const biomeBorderTiles: Array<TileIndex> = [];
+
+   // Fill temperature and humidity arrays, calculate biomes, and mark tiles with biomeDist=1.
+   let previousBiome = 0;
    for (let tileIndex = 0; tileIndex < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES; tileIndex++) {
       const rawTemperature = temperatureMap[tileIndex];
       const rawHumidity = humidityMap[tileIndex];
@@ -1261,9 +1261,36 @@ export function regenerateSurfaceTerrain(): void {
       const temperature = smoothstep(rawTemperature)
       const humidity = smoothstep(rawHumidity);
 
-      tileTemperatures[tileIndex] = temperature;
-      tileHumidities[tileIndex] = humidity;
-      tileBiomes[tileIndex] = calculateMatchingBiome(height, temperature, humidity);
+      surfaceLayer.tileTemperatures[tileIndex] = temperature;
+      surfaceLayer.tileHumidities[tileIndex] = humidity;
+
+      const biome = calculateMatchingBiome(height, temperature, humidity);
+
+      surfaceLayer.tileBiomes[tileIndex] = biome;
+
+      // Left-right biome borders
+      const tileX = getTileX(tileIndex);
+      if (biome !== previousBiome && tileX > -Settings.EDGE_GENERATION_DISTANCE) {
+         biomeBorderTiles.push(tileIndex);
+         biomeBorderTiles.push(tileIndex - 1);
+         biomeDists[tileIndex] = 1;
+         biomeDists[tileIndex - 1] = 1;
+      }
+
+      previousBiome = biome;
+
+      // Top-down biome borders
+      const tileY = getTileY(tileIndex);
+      if (tileY > -Settings.EDGE_GENERATION_DISTANCE) {
+         const tileBelow = tileIndex - Settings.FULL_WORLD_SIZE_TILES;
+         const biomeBelow = surfaceLayer.tileBiomes[tileBelow];
+         if (biomeBelow !== biome) {
+            biomeBorderTiles.push(tileIndex);
+            biomeBorderTiles.push(tileBelow);
+            biomeDists[tileIndex] = 1;
+            biomeDists[tileBelow] = 1;
+         }
+      }
    }
 
    // Generate rivers
@@ -1277,8 +1304,10 @@ export function regenerateSurfaceTerrain(): void {
       riverMainTiles = [];
    }
 
+   spreadBiomeDists(biomeDists, surfaceLayer.tileBiomes, biomeBorderTiles);
+
    // Generate tiles
-   generateTileTypes(tileBiomes, tileTypes, wallSubtileTypes, heightMap, temperatureMap, humidityMap);
+   generateTileTypes(surfaceLayer.tileBiomes, biomeDists, surfaceLayer.tileTypes, surfaceLayer.wallSubtileTypes, heightMap, temperatureMap, humidityMap);
 
    // Create flow directions array and create ice rivers
    for (const tileInfo of riverTiles) {
@@ -1310,7 +1339,7 @@ export function regenerateSurfaceTerrain(): void {
          if (prevType === TileType.grass) {
             const tileX = getTileX(tileIndex);
             const tileY = getTileY(tileIndex);
-            const box = new RectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
+            const box = createRectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
             const es = getBoxesCollidingEntities(surfaceLayer, [box]);
             // console.log(es.length);
             for (const e of es) {

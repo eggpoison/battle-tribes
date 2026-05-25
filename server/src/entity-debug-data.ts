@@ -152,7 +152,7 @@ export function getEntityDebugDataLength(debugData: EntityDebugData): number {
    }
 
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   if (typeof debugData.pathData !== "undefined") {
+   if (debugData.pathData !== undefined) {
       lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
       
       lengthBytes += Float32Array.BYTES_PER_ELEMENT;
@@ -204,7 +204,7 @@ export function addEntityDebugDataToPacket(packet: Packet, entity: Entity, debug
       packet.writeString(string);
    }
 
-   if (typeof debugData.pathData !== "undefined") {
+   if (debugData.pathData !== undefined) {
       packet.writeBool(true);
 
       packet.writeNumber(debugData.pathData.goalX);

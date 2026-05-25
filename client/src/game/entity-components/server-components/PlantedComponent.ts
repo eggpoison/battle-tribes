@@ -1,7 +1,7 @@
 import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-shared";
 import { createDirtParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { registerServerComponentArray } from "../component-registry";
 import _ServerComponentArray from "../ServerComponentArray";
 
@@ -29,7 +29,7 @@ class _PlantedComponentArray extends _ServerComponentArray<PlantedComponent, Pla
    public onSpawn(entity: Entity): void {
       // Create dirt particles
       
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       for (let i = 0; i < 7; i++) {
          const offsetDirection = randAngle();

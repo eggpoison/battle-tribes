@@ -1,4 +1,4 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, TRIBE_INFO_RECORD, TribeType, angle, Point, rotatePoint, LimbConfiguration, RESTING_LIMB_STATES, CircularBox, HitboxCollisionType, HitboxFlag } from "battletribes-shared";
+import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, TRIBE_INFO_RECORD, TribeType, rotatePoint, LimbConfiguration, RESTING_LIMB_STATES, CircularBox, HitboxCollisionType, HitboxTag, setBoxFlipX, createCircularBox } from "battletribes-shared";
 import Tribe from "../../Tribe.js";
 import { TribesmanAIComponent } from "../../components/TribesmanAIComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";
@@ -14,7 +14,7 @@ import { PatrolAI } from "../../ai/PatrolAI.js";
 import { AIAssignmentComponent } from "../../components/AIAssignmentComponent.js";
 import { generateTribesmanName } from "../../tribesman-names.js";
 import { TribesmanComponent } from "../../components/TribesmanComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIgnoresWallCollisions, setHitboxTag } from "../../hitboxes.js";
 import { AIPathfindingComponent } from "../../components/AIPathfindingComponent.js";
 
 const moveFunc = () => {
@@ -44,7 +44,7 @@ export function createTribeWorkerConfig(x: number, y: number, angle: number, tri
 
    transformComponent.traction = 1.4;
 
-   const bodyHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, getHitboxRadius(tribe.tribeType)), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const bodyHitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, getHitboxRadius(tribe.tribeType)), 1, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
    
    const humanoidRadius = (bodyHitbox.box as CircularBox).radius;
@@ -60,10 +60,10 @@ export function createTribeWorkerConfig(x: number, y: number, angle: number, tri
       const offset = getLimbStateOffset(limbState, humanoidRadius);
       const rotatedOffset = rotatePoint(offset, angle);
 
-      const hitbox = new Hitbox(transformComponent, bodyHitbox, true, new CircularBox(x + rotatedOffset.x, y + rotatedOffset.y, offset.x, offset.y, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, [HitboxFlag.HAND, HitboxFlag.IGNORES_WALL_COLLISIONS]);
-      hitbox.box.flipX = isFlipped;
-      // @Hack
-      hitbox.box.totalFlipXMultiplier = isFlipped ? -1 : 1;
+      const hitbox = createHitbox(transformComponent, bodyHitbox, createCircularBox(x + rotatedOffset.x, y + rotatedOffset.y, offset.x, offset.y, 0, 12), 0.125, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+      setHitboxTag(hitbox, HitboxTag.hand);
+      setHitboxIgnoresWallCollisions(hitbox);
+      setBoxFlipX(hitbox.box, isFlipped);
       addHitboxToTransformComponent(transformComponent, hitbox);
    }
 

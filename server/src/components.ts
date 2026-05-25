@@ -91,7 +91,7 @@ import { LootComponent } from "./components/LootComponent.js";
 import { GlurbBodySegmentComponent } from "./components/GlurbBodySegmentComponent.js";
 import { GlurbSegmentComponent } from "./components/GlurbSegmentComponent.js";
 import { FleshSwordItemComponent } from "./components/FleshSwordItemComponent.js";
-import { HitboxAngularTether, Hitbox } from "./hitboxes.js";
+import { Hitbox } from "./hitboxes.js";
 import { MossComponent } from "./components/MossComponent.js";
 import { FloorSignComponent } from "./components/FloorSignComponent.js";
 import { DesertBushLivelyComponent } from "./components/DesertBushLivelyComponent.js";
@@ -131,6 +131,7 @@ import { InguYetuksnoglurblidokowfleaSeekerHeadComponent } from "./components/In
 import { InguYetukLaserComponent } from "./components/InguYetukLaserComponent.js";
 import { RiverSteppingStoneComponent } from "./components/RiverSteppingStoneComponent.js";
 import { HeldItemComponent } from "./components/HeldItemComponent.js";
+import { HitboxAngularTether } from "./tethers.js";
 
 // @Cleanup @Robustness: find better way to do this
 // @Cleanup: see if you can remove the arrow functions
@@ -350,5 +351,5 @@ export function createEntityConfigAttachInfoWithTether(attachedHitbox: Hitbox, p
 }
 
 export function entityConfigAttachInfoIsTethered(attachInfo: EntityConfigAttachInfo | EntityConfigAttachInfoWithTether): attachInfo is EntityConfigAttachInfoWithTether {
-   return typeof (attachInfo as EntityConfigAttachInfoWithTether).angularTether !== "undefined";
+   return (attachInfo as EntityConfigAttachInfoWithTether).angularTether !== undefined;
 }

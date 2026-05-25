@@ -2,7 +2,7 @@ import { randAngle, randFloat, Entity, ServerComponentType, Settings } from "web
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import { createEmberParticle, createSmokeParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -48,7 +48,7 @@ class _FireTorchComponentArray extends _ServerComponentArray<FireTorchComponent,
    public onTick(entity: Entity): void {
       // @Copynpaste: all of these effects from InventoryUseComponent
       
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       // Ember particles

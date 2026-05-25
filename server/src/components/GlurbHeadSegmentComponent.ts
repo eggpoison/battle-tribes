@@ -16,6 +16,7 @@ import { createGlurbTailSegmentConfig } from "../entities/mobs/glurb-tail-segmen
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { GlurbSegmentComponentArray } from "./GlurbSegmentComponent.js";
 import { tetherGlurbSegments } from "../entities/mobs/glurb.js";
+import { getHitboxTethers } from "../tethers.js";
 
 const enum Vars {
    // @Temporary
@@ -101,15 +102,18 @@ const getFinalSegment = (glurbSegment: Entity, foundSegments: Array<Entity>): En
    const hitbox = transformComponent.hitboxes[0];
 
    let nextSegment: Entity | undefined;
-   for (const tether of hitbox.tethers) {
-      const otherHitbox = tether.getOtherHitbox(hitbox);
-      if (!foundSegments.includes(otherHitbox.entity)) {
-         foundSegments.push(otherHitbox.entity);
-         nextSegment = otherHitbox.entity;
+   const tethers = getHitboxTethers(hitbox);
+   if (tethers !== undefined) {
+      for (const tether of tethers) {
+         const otherHitbox = tether.getOtherHitbox(hitbox);
+         if (!foundSegments.includes(otherHitbox.entity)) {
+            foundSegments.push(otherHitbox.entity);
+            nextSegment = otherHitbox.entity;
+         }
       }
    }
 
-   if (typeof nextSegment !== "undefined") {
+   if (nextSegment !== undefined) {
       return getFinalSegment(nextSegment, foundSegments);
    } else {
       return glurbSegment;
@@ -122,15 +126,18 @@ const getNumSegments = (glurbSegment: Entity, foundSegments: Array<Entity>): num
    const hitbox = transformComponent.hitboxes[0];
 
    let nextSegment: Entity | undefined;
-   for (const tether of hitbox.tethers) {
-      const otherHitbox = tether.getOtherHitbox(hitbox);
-      if (!foundSegments.includes(otherHitbox.entity)) {
-         foundSegments.push(otherHitbox.entity);
-         nextSegment = otherHitbox.entity;
+   const tethers = getHitboxTethers(hitbox);
+   if (tethers !== undefined) {
+      for (const tether of tethers) {
+         const otherHitbox = tether.getOtherHitbox(hitbox);
+         if (!foundSegments.includes(otherHitbox.entity)) {
+            foundSegments.push(otherHitbox.entity);
+            nextSegment = otherHitbox.entity;
+         }
       }
    }
 
-   if (typeof nextSegment !== "undefined") {
+   if (nextSegment !== undefined) {
       return 1 + getNumSegments(nextSegment, foundSegments);
    } else {
       return 1;

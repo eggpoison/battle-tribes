@@ -1,6 +1,6 @@
 import { Entity, Settings, ServerComponentType } from "webgl-test-shared";
 import { createIceSpeckProjectile, createSnowflakeParticle } from "../../particles";
-import { TransformComponentArray } from "./TransformComponent";
+import { transformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -26,7 +26,7 @@ class _IceArrowComponentArray extends _ServerComponentArray<IceArrowComponent, I
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       if (Math.random() < 30 * Settings.DT_S) {
@@ -42,7 +42,7 @@ class _IceArrowComponentArray extends _ServerComponentArray<IceArrowComponent, I
    }
 
    public onRemove(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
+      const transformComponent = transformComponentArray.getComponent(entity);
       for (let i = 0; i < 6; i++) {
          createIceSpeckProjectile(transformComponent);
       }

@@ -1,4 +1,3 @@
-import { Point } from "webgl-test-shared";
 import { createIdentityMatrix } from "../rendering/matrices";
 import { RenderPartParent, RenderPart } from "./render-parts";
 

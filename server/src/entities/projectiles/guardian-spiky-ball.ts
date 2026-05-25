@@ -1,11 +1,11 @@
-import { HitboxCollisionType, CircularBox, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, StatusEffect } from "battletribes-shared";
+import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, StatusEffect, createCircularBox } from "battletribes-shared";
 import { EntityConfig, LightCreationInfo } from "../../components.js";
 import { GuardianSpikyBallComponent } from "../../components/GuardianSpikyBallComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { ProjectileComponent } from "../../components/ProjectileComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { createLight } from "../../lights.js";
 
 export function createGuardianSpikyBallConfig(x: number, y: number, angle: number,creator: Entity): EntityConfig {
@@ -14,8 +14,8 @@ export function createGuardianSpikyBallConfig(x: number, y: number, angle: numbe
    transformComponent.isAffectedByAirFriction = false;
    transformComponent.isAffectedByGroundFriction = false;
 
-   const hitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, 20), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
-   hitbox.isStatic = true;
+   const hitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 20), 0.5, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(hitbox);
    addHitboxToTransformComponent(transformComponent, hitbox);
    
    

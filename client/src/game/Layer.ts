@@ -1,4 +1,4 @@
-import { Point, randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings, getTileIndexIncludingEdges, getSubtileIndex, getSubtileX, getSubtileY, CollisionGroup } from "webgl-test-shared";
+import { randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings, getTileIndexIncludingEdges, getSubtileIndex, getSubtileX, getSubtileY, CollisionGroup } from "webgl-test-shared";
 import Chunk from "./Chunk";
 import { Light } from "./lights";
 import Particle from "./Particle";
@@ -132,7 +132,7 @@ export default class Layer {
       if (subtileType === SubtileType.none && this.wallSubtileTypes[subtileIndex] !== SubtileType.none) {
          const x = (subtileX + 0.5) * Settings.SUBTILE_SIZE;
          const y = (subtileY + 0.5) * Settings.SUBTILE_SIZE;
-         playSound("stone-destroy-" + randInt(1, 2) + ".mp3", 0.6, 1, new Point(x, y), this);
+         playSound("stone-destroy-" + randInt(1, 2) + ".mp3", 0.6, 1, x, y, this);
 
          // Speck debris
          for (let i = 0; i < 7; i++) {

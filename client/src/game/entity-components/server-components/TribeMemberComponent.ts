@@ -14,10 +14,12 @@ export interface TribeMemberComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribeMember, _TribeMemberComponentArray> {}
+   interface ServerComponentRegistry {
+      [ServerComponentType.tribeMember]: TribeMemberComponentArray;
+   }
 }
 
-class _TribeMemberComponentArray extends _ServerComponentArray<TribeMemberComponent, TribeMemberComponentData> {
+class TribeMemberComponentArray extends _ServerComponentArray<TribeMemberComponent, TribeMemberComponentData> {
    public decodeData(reader: PacketReader): TribeMemberComponentData {
       const name = reader.readString();
       return {
@@ -38,12 +40,12 @@ class _TribeMemberComponentArray extends _ServerComponentArray<TribeMemberCompon
    }
 
    public updateFromData(data: TribeMemberComponentData, entity: Entity): void {
-      const tribeMemberComponent = TribeMemberComponentArray.getComponent(entity);
+      const tribeMemberComponent = tribeMemberComponentArray.getComponent(entity);
       tribeMemberComponent.name = data.name;
    }
 }
 
-export const TribeMemberComponentArray = registerServerComponentArray(ServerComponentType.tribeMember, _TribeMemberComponentArray, true);
+export const tribeMemberComponentArray = registerServerComponentArray(ServerComponentType.tribeMember, TribeMemberComponentArray, true);
 
 export function createTribeMemberComponentData(): TribeMemberComponentData {
    return {

@@ -1,7 +1,7 @@
-import { ServerComponentType, DoorToggleType, Entity, HitboxCollisionType, HitboxFlag, Settings } from "battletribes-shared";
+import { ServerComponentType, DoorToggleType, Entity, HitboxCollisionType, HitboxTag, Settings } from "battletribes-shared";
 import { ComponentArray } from "./ComponentArray.js";
-import { getHitboxByFlag, TransformComponentArray } from "./TransformComponent.js";
-import { setHitboxRelativeAngle } from "../hitboxes.js";
+import { getHitboxByTag, TransformComponentArray } from "./TransformComponent.js";
+import { setHitboxCollisionType, setHitboxRelativeAngle } from "../hitboxes.js";
 
 const enum Vars {
    DOOR_SWING_SPEED = 5 * Settings.DT_S
@@ -20,7 +20,7 @@ FenceGateComponentArray.onTick = {
 
 const updateDoorOpenProgress = (fenceGate: Entity, fenceGateComponent: FenceGateComponent): void => {
    const transformComponent = TransformComponentArray.getComponent(fenceGate);
-   const doorHitbox = getHitboxByFlag(transformComponent, HitboxFlag.FENCE_GATE_DOOR);
+   const doorHitbox = getHitboxByTag(transformComponent, HitboxTag.fenceGateDoor);
    if (doorHitbox !== null) {
       setHitboxRelativeAngle(doorHitbox, -(Math.PI/2 - 0.1) * fenceGateComponent.openProgress);
    }
@@ -56,16 +56,16 @@ export function toggleFenceGateDoor(fenceGate: Entity): void {
 
    const transformComponent = TransformComponentArray.getComponent(fenceGate);
    
-   const doorHitbox = getHitboxByFlag(transformComponent, HitboxFlag.FENCE_GATE_DOOR);
+   const doorHitbox = getHitboxByTag(transformComponent, HitboxTag.fenceGateDoor);
    if (doorHitbox !== null) {
       if (fenceGateComponent.openProgress === 0) {
          // Open the door
          fenceGateComponent.toggleType = DoorToggleType.open;
-         doorHitbox.collisionType = HitboxCollisionType.soft;
+         setHitboxCollisionType(doorHitbox, HitboxCollisionType.soft);
       } else {
          // Close the door
          fenceGateComponent.toggleType = DoorToggleType.close;
-         doorHitbox.collisionType = HitboxCollisionType.hard;
+         setHitboxCollisionType(doorHitbox, HitboxCollisionType.hard);
       }
    }
 }

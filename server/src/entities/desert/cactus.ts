@@ -1,10 +1,10 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, CactusFlowerSize, EntityType, randInt, randFloat, randAngle, StatusEffect, HitboxCollisionType, CircularBox, ItemType } from "battletribes-shared";
+import { CollisionBit, DEFAULT_COLLISION_MASK, CactusFlowerSize, EntityType, randInt, randFloat, randAngle, StatusEffect, HitboxCollisionType, CircularBox, ItemType, createCircularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { ChildConfigAttachInfo, EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { CactusComponent, CactusFlower } from "../../components/CactusComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
-import { Hitbox } from "../../hitboxes.js";
+import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 
 const RADIUS = 40;
@@ -20,8 +20,8 @@ export function createCactusConfig(x: number, y: number, angle: number): EntityC
    const transformComponent = new TransformComponent();
 
    // Root hitbox
-   const rootHitbox = new Hitbox(transformComponent, null, true, new CircularBox(x, y, 0, 0, angle, RADIUS - HITBOX_PADDING), 1, HitboxCollisionType.soft, CollisionBit.cactus, DEFAULT_COLLISION_MASK, []);
-   rootHitbox.isStatic = true;
+   const rootHitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, RADIUS - HITBOX_PADDING), 1, HitboxCollisionType.soft, CollisionBit.cactus, DEFAULT_COLLISION_MASK);
+   setHitboxIsStatic(rootHitbox);
    addHitboxToTransformComponent(transformComponent, rootHitbox);
 
    const flowers: Array<CactusFlower> = [];
@@ -59,8 +59,8 @@ export function createCactusConfig(x: number, y: number, angle: number): EntityC
       const offsetDirection = randAngle();
       const offsetX = 37 * Math.sin(offsetDirection);
       const offsetY = 37 * Math.cos(offsetDirection);
-      const box = new CircularBox(0, 0, offsetX, offsetY, 0, 18);
-      const hitbox = new Hitbox(transformComponent, rootHitbox, true, box, 0.4, HitboxCollisionType.soft, CollisionBit.cactus, DEFAULT_COLLISION_MASK, []);
+      const box = createCircularBox(0, 0, offsetX, offsetY, 0, 18);
+      const hitbox = createHitbox(transformComponent, rootHitbox, box, 0.4, HitboxCollisionType.soft, CollisionBit.cactus, DEFAULT_COLLISION_MASK);
       addHitboxToTransformComponent(transformComponent, hitbox);
 
       if (Math.random() < 0.45) {

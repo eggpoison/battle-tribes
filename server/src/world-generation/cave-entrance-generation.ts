@@ -38,7 +38,7 @@ export function generateCaveEntrances(surfaceLayer: Layer, biomeDists: Uint8Arra
          }
       }
       // Couldn't find a good spot for it!
-      if (typeof originTile === "undefined") {
+      if (originTile === undefined) {
          continue;
       }
 

@@ -98,7 +98,7 @@ function onTick(entity: Entity): void {
    const ingredientInventory = getInventory(inventoryComponent, InventoryName.ingredientInventory);
    
    const ingredient = ingredientInventory.itemSlots[1];
-   if (typeof ingredient !== "undefined") {
+   if (ingredient !== undefined) {
       cookingComponent.currentRecipe = getHeatingRecipeByIngredientType(getEntityType(entity), ingredient.type);
    }
    
@@ -114,7 +114,7 @@ function onTick(entity: Entity): void {
       // If the heating entity needs more heat, attempt to use a fuel item
       if (cookingComponent.remainingHeatSeconds <= 0) {
          const fuel = fuelInventory.itemSlots[1];
-         if (typeof fuel !== "undefined") {
+         if (fuel !== undefined) {
             if (!FUEL_SOURCES.hasOwnProperty(fuel.type)) {
                console.warn(`Item type '${ItemTypeString[fuel.type]}' is not a valid fuel type.`);
                return;

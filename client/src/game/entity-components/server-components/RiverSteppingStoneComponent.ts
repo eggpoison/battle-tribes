@@ -1,4 +1,4 @@
-import { randFloat, ServerComponentType, HitboxFlag } from "webgl-test-shared";
+import { randFloat, ServerComponentType, HitboxTag } from "webgl-test-shared";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -6,6 +6,7 @@ import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { getHitboxTag } from "../../hitboxes";
 
 export interface RiverSteppingStoneComponentData {}
 
@@ -24,10 +25,12 @@ class _RiverSteppingStoneComponentArray extends _ServerComponentArray<RiverStepp
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
       
+      const tag = getHitboxTag(hitbox);
+      
       let textureSource: string;
-      if (hitbox.flags.includes(HitboxFlag.RIVER_STEPPING_STONE_SMALL)) {
+      if (tag === HitboxTag.riverSteppingStoneSmall) {
          textureSource = "entities/river-stepping-stone/stone-small.png";
-      } else if (hitbox.flags.includes(HitboxFlag.RIVER_STEPPING_STONE_MEDIUM)) {
+      } else if (tag === HitboxTag.riverSteppingStoneMedium) {
          textureSource = "entities/river-stepping-stone/stone-medium.png";
       } else {
          textureSource = "entities/river-stepping-stone/stone-large.png";

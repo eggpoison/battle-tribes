@@ -1,4 +1,4 @@
-import { Point, EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, CircularBox, HitboxCollisionType } from "webgl-test-shared";
+import { EntityType, ServerComponentType, DEFAULT_COLLISION_MASK, CollisionBit, HitboxCollisionType, createCircularBox } from "webgl-test-shared";
 import { createAIHelperComponentData } from "../entity-components/server-components/AIHelperComponent";
 import { createHealingTotemComponentData } from "../entity-components/server-components/HealingTotemComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
@@ -10,12 +10,12 @@ import { createHitboxQuick, Hitbox } from "../hitboxes";
 import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
-export function createHealingTotemConfig(position: Point, rotation: number, tribe: Tribe): EntityComponentData {
+export function createHealingTotemConfig(x: number, y: number, angle: number, tribe: Tribe): EntityComponentData {
    const hitboxes: Array<Hitbox> = [];
    let hitboxLocalID = 0;
 
-   const box = new CircularBox(position, new Point(0, 0), rotation, 48);
-   const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK, []);
+   const box = createCircularBox(x, y, 0, 0, angle, 48);
+   const hitbox = createHitboxQuick(0, hitboxLocalID++, null, box, 1, HitboxCollisionType.hard, CollisionBit.default, DEFAULT_COLLISION_MASK);
    hitboxes.push(hitbox);
 
    return {

@@ -1,4 +1,5 @@
-import { Entity, assert } from "webgl-test-shared";
+import { Entity } from "../../../../../shared/src/entities";
+import { assert } from "../../../../../shared/src/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, getEntityTextureAtlasUBO, UBOBindingIndex } from "../ubos";
 import { RenderableType, addRenderable } from "../render-loop";

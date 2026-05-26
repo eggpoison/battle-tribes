@@ -1,4 +1,9 @@
-import { Entity, CircularBox, PacketReader, randAngle, randItem, Settings, ServerComponentType, _point } from "webgl-test-shared";
+import { CircularBox } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { randAngle, _point, randItem } from "../../../../../shared/src/utils";
 import { createRockSpeckParticle } from "../../particles";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -6,7 +11,7 @@ import { Light } from "../../lights";
 import { playSoundOnHitbox, ROCK_HIT_SOUNDS } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
@@ -197,7 +202,7 @@ class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemCo
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const golemComponent = GolemComponentArray.getComponent(entity);
 
       if (golemComponent.wakeProgress > 0 && golemComponent.wakeProgress < 1) {
@@ -239,7 +244,7 @@ class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemCo
       const ticksAwake = data.ticksAwake;
       const isAwake = data.isAwake;
 
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       
       if (isAwake && ticksAwake % ANGRY_SOUND_INTERVAL_TICKS === 0) {
          const hitbox = transformComponent.hitboxes[0];

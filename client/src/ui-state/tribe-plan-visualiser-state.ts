@@ -1,4 +1,4 @@
-import { Entity } from "webgl-test-shared";
+import { Entity } from "../../../shared/src/entities";
 import { AIPlan, TribeAssignmentInfo } from "../game/rendering/tribe-plan-visualiser/tribe-plan-visualiser";
 import { ExtendedTribe } from "../game/tribes";
 import { entityExists } from "../game/world";

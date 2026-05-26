@@ -1,11 +1,13 @@
-import { randAngle, randFloat, randInt, Entity, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { randInt, randAngle, randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import Particle from "../../Particle";
 import { playSoundOnHitbox } from "../../sound";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -62,7 +64,7 @@ class _IceSpikesComponentArray extends _ServerComponentArray<IceSpikesComponent,
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 15; i++) {

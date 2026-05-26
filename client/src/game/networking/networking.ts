@@ -1,4 +1,4 @@
-import { PacketReader, ServerPacketType } from "../../../../shared/src";
+import { PacketReader, ServerPacketType } from "../../../../shared/src/packets";
 import { closeGameScreen, gameScreenIsOpen, openGameScreen } from "../../ui/GameScreen";
 import { setLoadingScreenStateToWaiting, openLoadingScreen, setLoadingScreenStateToError, setLoadingScreenStateToInitialising, closeLoadingScreen } from "../../ui/LoadingScreen";
 import { startGame, stopGame, updateGame } from "../game";

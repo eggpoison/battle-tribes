@@ -1,11 +1,15 @@
-import { randFloat, randItem, randInt, Point, randAngle, HitFlags, Entity, PacketReader, ServerComponentType, angle } from "webgl-test-shared";
+import { HitFlags } from "../../../../../shared/src/client-server-types";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Point, randAngle, randFloat, angle, randItem, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH, createWoodSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -27,9 +31,7 @@ export interface TreePlantedComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.treePlanted]: TreePlantedComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treePlanted, TreePlantedComponentArray> {}
 }
 
 const TEXTURE_SOURCES = ["entities/plant/tree-sapling-1.png", "entities/plant/tree-sapling-2.png", "entities/plant/tree-sapling-3.png", "entities/plant/tree-sapling-4.png", "entities/plant/tree-sapling-5.png", "entities/plant/tree-sapling-6.png", "entities/plant/tree-sapling-7.png", "entities/plant/tree-sapling-8.png", "entities/plant/tree-sapling-9.png", "entities/plant/tree-sapling-10.png", "entities/plant/tree-sapling-11.png"];
@@ -126,7 +128,7 @@ class TreePlantedComponentArray extends _ServerComponentArray<TreePlantedCompone
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox(randItem(TREE_DESTROY_SOUNDS), 0.5, 1, entity, hitbox, false);
    }

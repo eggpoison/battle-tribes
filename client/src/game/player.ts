@@ -1,7 +1,9 @@
-import { Entity, TribeType, updateBox } from "webgl-test-shared";
+import { Entity } from "../../../shared/src/entities";
+import { TribeType } from "../../../shared/src/tribes";
+import { updateBox } from "../../../shared/src/boxes";
 import { cursorWorldPos } from "./camera";
 import { selectItemSlot } from "./player-action-handling";
-import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
 import { calculateHitboxRenderPosition, registerDirtyRenderObject } from "./rendering/render-part-matrices";
 import { getEntityRenderObject } from "./world";
@@ -70,7 +72,7 @@ export function updatePlayerDirection(clientInterp: number, serverInterp: number
       return;
    }
 
-   const transformComponent = transformComponentArray.getComponent(playerInstance);
+   const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
 
    // Use the render position instead of the hitboxes' actual game position, as that is not up-to-date for each and every rendered frame.

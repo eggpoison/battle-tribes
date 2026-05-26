@@ -1,4 +1,5 @@
-import { Box, PacketReader } from "webgl-test-shared";
+import { Box } from "../../../shared/src/boxes";
+import { PacketReader } from "../../../shared/src/packets";
 import { currentSnapshot } from "./networking/snapshots";
 import Layer from "./Layer";
 import { readBoxFromData } from "./networking/packet-hitboxes";

@@ -1,10 +1,13 @@
-import { assert, rotatePointAroundOrigin, PacketReader, Entity, EntityType, ServerComponentType, _point } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity, EntityType } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { assert, rotatePointAroundOrigin, _point } from "../../../../../shared/src/utils";
 import { translateHitbox } from "../../hitboxes";
 import { playerInstance } from "../../player";
 import { playSound } from "../../sound";
 import { entityExists, EntityComponentData, getEntityLayer, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -82,7 +85,7 @@ class _RideableComponentArray extends _ServerComponentArray<RideableComponent, R
          const occupiedEntity = carrySlotData.occupiedEntity;
 
          if (occupiedEntity !== carrySlot.occupiedEntity) {
-            const transformComponent = transformComponentArray.getComponent(entity);
+            const transformComponent = TransformComponentArray.getComponent(entity);
             const mountHitbox = transformComponent.hitboxMap.get(carrySlot.hitboxLocalID);
             assert(mountHitbox !== undefined);
             const layer = getEntityLayer(entity);
@@ -106,7 +109,7 @@ class _RideableComponentArray extends _ServerComponentArray<RideableComponent, R
                if (carrySlot.occupiedEntity === playerInstance) {
                   // Dismount
                   
-                  const transformComponent = transformComponentArray.getComponent(playerInstance);
+                  const transformComponent = TransformComponentArray.getComponent(playerInstance);
                   const playerHitbox = transformComponent.hitboxes[0];
 
                   rotatePointAroundOrigin(carrySlot.offsetX + carrySlot.dismountOffsetX, carrySlot.offsetY + carrySlot.dismountOffsetY, mountHitbox.box.angle);

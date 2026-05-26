@@ -1,8 +1,11 @@
-import { Settings, Entity, randAngle, randFloat, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { Settings } from "../../../../../shared/src/settings";
+import { randFloat, randAngle } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { createSlurbParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -56,7 +59,7 @@ class _SlurbTorchComponentArray extends _ServerComponentArray<SlurbTorchComponen
    public onTick(entity: Entity): void {
       // @Copynpaste: all of these effects from InventoryUseComponent
       
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       // Slurb particles

@@ -1,4 +1,4 @@
-import { StatusEffect } from "webgl-test-shared";
+import { StatusEffect } from "../../../shared/src/status-effects";
 
 export interface ClientStatusEffectInfo {
    readonly name: string;

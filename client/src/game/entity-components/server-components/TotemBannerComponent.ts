@@ -1,4 +1,7 @@
-import { PacketReader, TribeType, Entity, TribeTotemBanner, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { TribeTotemBanner, Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { TribeType } from "../../../../../shared/src/tribes";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -7,7 +10,7 @@ import _ServerComponentArray from "../ServerComponentArray";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tribeComponentArray } from "./TribeComponent";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -110,7 +113,7 @@ class _TotemBannerComponentArray extends _ServerComponentArray<TotemBannerCompon
       // Add new banners
       for (const banner of Object.values(data.banners)) {
          if (!totemBannerComponent.banners.hasOwnProperty(banner.hutNum)) {
-            const transformComponent = transformComponentArray.getComponent(entity);
+            const transformComponent = TransformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
             
             const tribeComponent = tribeComponentArray.getComponent(entity);
@@ -138,7 +141,7 @@ class _TotemBannerComponentArray extends _ServerComponentArray<TotemBannerCompon
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("building-destroy-1.mp3", 0.4, 1, entity, hitbox, false);
    }

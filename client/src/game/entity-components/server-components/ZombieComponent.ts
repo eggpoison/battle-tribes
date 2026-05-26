@@ -1,6 +1,10 @@
-import { Entity, PacketReader, Point, randAngle, randFloat, randInt, Settings, ServerComponentType, angle } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { randInt, Point, angle, randAngle, randFloat } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -102,7 +106,7 @@ class _ZombieComponentArray extends _ServerComponentArray<ZombieComponent, Zombi
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       // @Sync should be a server event
@@ -130,7 +134,7 @@ class _ZombieComponentArray extends _ServerComponentArray<ZombieComponent, Zombi
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 20);

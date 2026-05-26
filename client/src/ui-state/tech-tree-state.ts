@@ -1,4 +1,4 @@
-import { Tech, TechID } from "webgl-test-shared";
+import { TechID, Tech } from "../../../shared/src/techs";
 import { ExtendedTribe } from "../game/tribes";
 
 let x = 0;

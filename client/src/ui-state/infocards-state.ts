@@ -1,4 +1,4 @@
-import { TribesmanTitle } from "webgl-test-shared";
+import { TribesmanTitle } from "../../../shared/src/titles";
 
 let titleOffer: TribesmanTitle | null = null;
 

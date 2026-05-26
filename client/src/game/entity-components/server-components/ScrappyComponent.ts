@@ -1,4 +1,5 @@
-import { LimbConfiguration, ServerComponentType } from "webgl-test-shared";
+import { LimbConfiguration } from "../../../../../shared/src/attack-patterns";
+import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";

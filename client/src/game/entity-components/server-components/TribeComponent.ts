@@ -1,8 +1,7 @@
-import { Entity, PacketReader, randAngle, randFloat, ServerComponentType, TribeType } from "webgl-test-shared";
 import { playSoundOnHitbox } from "../../sound";
 import { getHumanoidRadius, tribesmanComponentArray } from "./TribesmanComponent";
 import { createConversionParticle } from "../../particles";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { Tribe, tribeExists } from "../../tribes";
 import { playerInstance } from "../../player";
@@ -10,6 +9,11 @@ import { EntityComponentData } from "../../world";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { TribeType } from "../../../../../shared/src/tribes";
+import { randAngle, randFloat } from "../../../../../shared/src/utils";
 
 export interface TribeComponentData {
    readonly tribeID: number;
@@ -22,9 +26,7 @@ export interface TribeComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.tribe]: TribeComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribe, TribeComponentArray> {}
 }
 
 class TribeComponentArray extends _ServerComponentArray<TribeComponent, TribeComponentData> {
@@ -64,7 +66,7 @@ class TribeComponentArray extends _ServerComponentArray<TribeComponent, TribeCom
       
       // Tribesman conversion
       if (tribeID !== tribeComponent.tribeID && tribesmanComponentArray.hasComponent(entity)) {
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
 
          playSoundOnHitbox("conversion.mp3", 0.4, 1, entity, hitbox, false);

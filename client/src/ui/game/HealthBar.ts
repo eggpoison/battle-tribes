@@ -1,5 +1,5 @@
+import { assert } from "../../../../shared/src/utils";
 import HealthIcon from "../../images/miscellaneous/health.png";
-import { assert } from "../../../../shared/src";
 
 let healthBarElem: HTMLElement | null = null;
 let healthCounterNode: Text | null = null;

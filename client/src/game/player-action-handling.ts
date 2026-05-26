@@ -1,4 +1,12 @@
-import { assert, Point, TribeType, TRIBE_INFO_RECORD, TribesmanTitle, STATUS_EFFECT_MODIFIERS, Settings, ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Entity, LimbAction, ServerComponentType, BuildingMaterial, AttackVar, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, polarVec2, lerp, _point } from "webgl-test-shared";
+import { ServerComponentType, BuildingMaterial } from "../../../shared/src/components";
+import { STATUS_EFFECT_MODIFIERS } from "../../../shared/src/status-effects";
+import { TribesmanTitle } from "../../../shared/src/titles";
+import { TribeType, TRIBE_INFO_RECORD } from "../../../shared/src/tribes";
+import { ARROW_RELEASE_WAIT_TIME_TICKS, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemInfo, PlaceableItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS } from "../../../shared/src/items/items";
+import { Entity, LimbAction } from "../../../shared/src/entities";
+import { AttackVar, BLOCKING_LIMB_STATE, copyLimbState, interpolateLimbState, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE } from "../../../shared/src/attack-patterns";
+import { _point, assert, lerp, Point } from "../../../shared/src/utils";
+import { Settings } from "../../../shared/src/settings";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
 import { playerActionState } from "../ui-state/player-action-state";
 import { currentSnapshot } from "./networking/snapshots";
@@ -18,7 +26,7 @@ import { createSlurbTorchComponentData } from "./entity-components/server-compon
 import { createSpikesComponentData } from "./entity-components/server-components/SpikesComponent";
 import { StatusEffectComponentArray, createStatusEffectComponentData } from "./entity-components/server-components/StatusEffectComponent";
 import { createStructureComponentData } from "./entity-components/server-components/StructureComponent";
-import { transformComponentArray, applyAccelerationFromGround, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray, applyAccelerationFromGround, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
 import { getHumanoidRadius, tribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { attemptEntitySelection, getHoveredEntity, getSelectedEntity, setSelectedEntity } from "./entity-selection";
@@ -267,7 +275,7 @@ export function tickPlayerItems(): void {
          // @Speed: Garbage collection
          limb.currentActionEndLimbState = copyLimbState(attackPattern.swung);
 
-         const transformComponent = transformComponentArray.getComponent(playerInstance);
+         const transformComponent = TransformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];
          getHitboxVelocity(playerHitbox);
          const playerVelocity = _point;
@@ -543,7 +551,7 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
          // @Speed: Garbage collection
          limb.currentActionEndLimbState = copyLimbState(SHIELD_BASH_WIND_UP_LIMB_STATE);
 
-         const transformComponent = transformComponentArray.getComponent(playerInstance);
+         const transformComponent = TransformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];
          sendAttackPacket(hotbarSelectedItemSlot, playerHitbox.box.angle);
       }
@@ -567,7 +575,7 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
    // @Speed: Garbage collection
    limb.currentActionEndLimbState = copyLimbState(attackPattern.windedBack);
 
-   const transformComponent = transformComponentArray.getComponent(playerInstance);
+   const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
    sendAttackPacket(hotbarSelectedItemSlot, playerHitbox.box.angle);
 
@@ -815,7 +823,7 @@ const getPlayerMoveSpeedMultiplier = (moveDirection: Point): number => {
       moveSpeedMultiplier *= 0.5;
    }
 
-   const transformComponent = transformComponentArray.getComponent(playerInstance);
+   const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
    // Get how aligned the intended movement direction and the player's rotation are
    // @SPEED trig
@@ -842,7 +850,7 @@ const updateNonSpectatorMovement = (moveDirection: Point): void => {
       return;
    }
 
-   const transformComponent = transformComponentArray.getComponent(playerInstance);
+   const transformComponent = TransformComponentArray.getComponent(playerInstance);
 
    const playerAction = getInstancePlayerAction(InventoryName.hotbar);
    
@@ -960,7 +968,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
       return;
    }
    
-   const transformComponent = transformComponentArray.getComponent(playerInstance);
+   const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance);
 
    const attackInfo = getItemAttackInfo(itemType);
@@ -1138,7 +1146,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
 
 export function playBowFireSound(sourceEntity: Entity, bowItemType: ItemType): void {
    // @Hack
-   const transformComponent = transformComponentArray.getComponent(sourceEntity);
+   const transformComponent = TransformComponentArray.getComponent(sourceEntity);
    const hitbox = transformComponent.hitboxes[0];
 
    switch (bowItemType) {
@@ -1332,7 +1340,7 @@ const tickItem = (itemType: ItemType): void => {
       case "placeable": {
          // Create a ghost entity
 
-         const transformComponent = transformComponentArray.getComponent(playerInstance);
+         const transformComponent = TransformComponentArray.getComponent(playerInstance);
          const playerHitbox = transformComponent.hitboxes[0];
 
          const layer = getCurrentLayer();

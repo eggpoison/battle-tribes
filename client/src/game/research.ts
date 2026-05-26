@@ -1,8 +1,12 @@
-import { TribesmanTitle, Settings, Entity, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize, distance, randAngle } from "webgl-test-shared";
+import { Entity } from "../../../shared/src/entities";
+import { distance, randAngle } from "../../../shared/src/utils";
+import { getRandomResearchOrbSize, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME } from "../../../shared/src/research";
+import { Settings } from "../../../shared/src/settings";
+import { TribesmanTitle } from "../../../shared/src/titles";
 import { currentSnapshot } from "./networking/snapshots";
 import { playHeadSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
-import { getRandomPositionInEntity, transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { getRandomPositionInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
 import { tribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { sendStudyTechPacket } from "./networking/packet-sending/packet-sending";
@@ -29,7 +33,7 @@ const ORB_COMPLETE_SOUND_PITCHES = [1, 0.85, 0.7];
 const ORB_PARTICLES_PER_SECOND = [2, 3.5, 6];
 
 const generateResearchOrb = (researchBench: Entity): ResearchOrb => {
-   const transformComponent = transformComponentArray.getComponent(researchBench);
+   const transformComponent = TransformComponentArray.getComponent(researchBench);
 
    const hitbox = transformComponent.hitboxes[0];
    

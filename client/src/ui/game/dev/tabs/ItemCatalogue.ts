@@ -1,5 +1,5 @@
+import { ItemType, NUM_ITEM_TYPES } from "../../../../../../shared/src/items/items";
 import CLIENT_ITEM_INFO_RECORD from "../../../../game/client-item-info";
-import { ItemType, NUM_ITEM_TYPES } from "webgl-test-shared";
 import { createInventoryContainer } from "../../inventories/Inventory";
 import { addItemToItemSlot, createItemSlot } from "../../inventories/ItemSlot";
 import { closeCurrentMenu } from "../../../menus";

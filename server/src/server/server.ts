@@ -15,11 +15,10 @@ import { TribeComponentArray } from "../components/TribeComponent.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent.js";
 import { sortComponentArrays } from "../components/ComponentArray.js";
-import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed } from "../world.js";
+import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, surfaceLayer, layers } from "../world.js";
 import { resolveEntityCollisions } from "../collision-detection.js";
 import { runCollapses } from "../collapses.js";
 import { updateTribes } from "../tribes.js";
-import { surfaceLayer, layers } from "../layers.js";
 import { generateReeds } from "../world-generation/reed-generation.js";
 import { regenerateSurfaceTerrain, riverMainTiles } from "../world-generation/surface-layer-generation.js";
 import { updateWind } from "../wind.js";
@@ -389,7 +388,9 @@ class GameServer {
          }
       }
 
-      regenerateSurfaceTerrain();
+      if (getGameTicks() % 5 === 0) {
+         regenerateSurfaceTerrain();
+      }
 
       preDestroyFlaggedEntities();
 

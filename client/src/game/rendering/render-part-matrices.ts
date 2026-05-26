@@ -1,11 +1,15 @@
+import { Entity } from "../../../../shared/src/entities";
+import { getBoxFlipX } from "../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../shared/src/components";
+import { Settings } from "../../../../shared/src/settings";
+import { _point, assert, getAngleDiff, lerp, Mutable, Point, randAngle, slerp } from "../../../../shared/src/utils";
 import { EntityRenderObject, recalculateRenderObjectVertexData } from "../EntityRenderObject";
 import { createIdentityMatrix, Matrix3x2, matrixMultiplyInPlace } from "./matrices";
-import { ServerComponentType, Entity, assert, getAngleDiff, lerp, Point, randAngle, slerp, Settings, _point, Mutable, getBoxFlipX } from "webgl-test-shared";
 import { RenderPart, renderParentIsHitbox } from "../render-parts/render-parts";
 import { renderLayerIsChunkRendered, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
 import { entityExists, getEntityRenderObject } from "../world";
 import { getHitboxVelocity, Hitbox } from "../hitboxes";
-import { transformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { playerInstance } from "../player";
 import { EntitySnapshot } from "../networking/snapshot-processing";
 import { currentSnapshot, nextSnapshot } from "../networking/snapshots";
@@ -324,7 +328,7 @@ export function updateRenderPartMatrices(clientInterp: number, serverInterp: num
 /* -------------------------------- */
 
 export function entityUsesClientInterp(entity: Entity): boolean {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    const entityHitbox = transformComponent.hitboxes[0];
    const rootEntity = entityHitbox.rootEntity;

@@ -1,4 +1,6 @@
-import { randFloat, Entity, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { randFloat } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -6,7 +8,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -15,9 +17,7 @@ export interface DesertBushLivelyComponentData {}
 export interface DesertBushLivelyComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.desertBushLively]: DesertBushLivelyComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertBushLively, DesertBushLivelyComponentArray> {}
 }
 
 class DesertBushLivelyComponentArray extends _ServerComponentArray<DesertBushLivelyComponent, DesertBushLivelyComponentData> {
@@ -55,7 +55,7 @@ class DesertBushLivelyComponentArray extends _ServerComponentArray<DesertBushLiv
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
    }

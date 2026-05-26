@@ -1,5 +1,12 @@
-import { Settings, collisionBitsAreCompatible, rotatePointAroundOrigin, Box, HitboxCollisionType, Entity, CollisionResult, _bounds, EntityType, TileType, _point, CollisionGroup, collisionGroupsCanCollide, calculateBoxBounds, createRectangularBox, getBoxCollisionResult, createCircularBox, getCircularBoxCollisionResult } from "webgl-test-shared";
-import { TransformComponent, transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { Entity, EntityType } from "../../../shared/src/entities";
+import { CollisionResult } from "../../../shared/src/collision";
+import { CollisionGroup, collisionGroupsCanCollide } from "../../../shared/src/collision-groups";
+import { _point, rotatePointAroundOrigin } from "../../../shared/src/utils";
+import { Settings } from "../../../shared/src/settings";
+import { _bounds, Box, calculateBoxBounds, createCircularBox, createRectangularBox, getBoxCollisionResult, getCircularBoxCollisionResult, HitboxCollisionType } from "../../../shared/src/boxes";
+import { collisionBitsAreCompatible } from "../../../shared/src/hitbox-collision";
+import { TileType } from "../../../shared/src/tiles";
+import { TransformComponent, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityType, layers } from "./world";
 import Layer from "./Layer";
 import { playerInstance } from "./player";
@@ -191,8 +198,8 @@ function resolveLayerCollisions(layer: Layer): void {
                   continue;
                }
 
-               const transformComponent = transformComponentArray.getComponent(entity);
-               const collidingTransformComponent = transformComponentArray.getComponent(collidingEntity);
+               const transformComponent = TransformComponentArray.getComponent(entity);
+               const collidingTransformComponent = TransformComponentArray.getComponent(collidingEntity);
 
                // Make sure the entities aren't in the same carry heirarchy
                // @HACK @SPEED
@@ -239,7 +246,7 @@ export function resolveCollisions(): void {
 }
 
 export function resolveWallCollisions(entity: Entity): boolean {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    let hasMoved = false;
    const layer = getEntityLayer(entity);
@@ -336,7 +343,7 @@ export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArr
 
                seenEntities.add(entity);
                
-               const entityTransformComponent = transformComponentArray.getComponent(entity);
+               const entityTransformComponent = TransformComponentArray.getComponent(entity);
                if (boxHasCollisionWithHitboxes(box, entityTransformComponent.hitboxes, epsilon)) {
                   collidingEntities.push(entity);
                }
@@ -375,7 +382,7 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
                continue;
             }
 
-            const transformComponent = transformComponentArray.getComponent(entity);
+            const transformComponent = TransformComponentArray.getComponent(entity);
             
             const entityHitbox = transformComponent.hitboxes[0];
             if (Math.pow(x - entityHitbox.box.posX, 2) + Math.pow(y - entityHitbox.box.posY, 2) <= visionRangeSquared) {
@@ -401,8 +408,8 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
 }
 
 export function entitiesAreColliding(entity1: Entity, entity2: Entity): boolean {
-   const transformComponent1 = transformComponentArray.getComponent(entity1);
-   const transformComponent2 = transformComponentArray.getComponent(entity2);
+   const transformComponent1 = TransformComponentArray.getComponent(entity1);
+   const transformComponent2 = TransformComponentArray.getComponent(entity2);
    
    // AABB bounding area check
    if (transformComponent1.boundingAreaMinX > transformComponent2.boundingAreaMaxX || // minX(1) > maxX(2)

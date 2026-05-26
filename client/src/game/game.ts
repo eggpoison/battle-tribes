@@ -1,4 +1,5 @@
-import { Entity, Settings } from "webgl-test-shared";
+import { Entity } from "../../../shared/src/entities";
+import { Settings } from "../../../shared/src/settings";
 import { updateTextNumbers } from "./text-canvas";
 import { playRiverSounds, updateSounds } from "./sound";
 import { attemptToResearch, updateResearchOrb } from "./research";

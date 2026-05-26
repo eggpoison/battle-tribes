@@ -1,9 +1,13 @@
-import { Settings, ServerComponentType, PacketReader, Entity, SlimeSize, lerp, randAngle, randFloat, randInt } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { SlimeSize, Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { lerp, randInt, randFloat, randAngle } from "../../../../../shared/src/utils";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
@@ -160,7 +164,7 @@ class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeCo
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       if (Math.random() < 0.2 * Settings.DT_S) {
@@ -236,7 +240,7 @@ class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeCo
    }
 
    public onHit(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       const slimeComponent = SlimeComponentArray.getComponent(entity);
@@ -255,7 +259,7 @@ class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeCo
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       const slimeComponent = SlimeComponentArray.getComponent(entity);
@@ -291,7 +295,7 @@ const createOrb = (slimeComponent: SlimeComponent, entity: Entity, size: SlimeSi
    const spriteSize = SLIME_SIZES[slimeComponent.size];
    const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orbInfo.offset);
 
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    const renderPart = new TexturedRenderPart(

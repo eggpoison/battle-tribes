@@ -1,4 +1,10 @@
-import { randAngle, randFloat, randInt, TileIndex, SubtileType, TileType, RiverFlowDirectionsRecord, WaterRockData, Entity, Settings, getTileIndexIncludingEdges, getSubtileIndex, getSubtileX, getSubtileY, CollisionGroup } from "webgl-test-shared";
+import { RiverFlowDirectionsRecord, WaterRockData } from "../../../shared/src/client-server-types";
+import { CollisionGroup } from "../../../shared/src/collision-groups";
+import { Entity } from "../../../shared/src/entities";
+import { Settings } from "../../../shared/src/settings";
+import { getSubtileIndex, getSubtileX, getSubtileY } from "../../../shared/src/subtiles";
+import { SubtileType, TileType } from "../../../shared/src/tiles";
+import { getTileIndexIncludingEdges, randAngle, randFloat, randInt, TileIndex } from "../../../shared/src/utils";
 import Chunk from "./Chunk";
 import { Light } from "./lights";
 import Particle from "./Particle";

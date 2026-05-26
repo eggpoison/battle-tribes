@@ -1,4 +1,3 @@
-import { Point, customTickIntervalHasPassed, lerp, randAngle, randFloat, randInt, randItem, rotatePointAroundOrigin, secondsToTicks, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, getItemRecipe, Entity, LimbAction, Settings, assert, _point } from "webgl-test-shared";
 import { InventoryUseComponentArray, LimbInfo } from "./entity-components/server-components/InventoryUseComponent";
 import { getTextureArrayIndex } from "./texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
@@ -7,10 +6,15 @@ import { createColouredParticle, createSawdustCloud } from "./particles";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
 import { VisualRenderPart } from "./render-parts/render-parts";
 import { tribesmanAIComponentArray } from "./entity-components/server-components/TribesmanAIComponent";
-import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityAgeTicks, getEntityRenderObject } from "./world";
 import { currentSnapshot } from "./networking/snapshots";
 import { getRenderPartAge } from "./render-parts/render-part-ages";
+import { _point, assert, customTickIntervalHasPassed, lerp, Point, randAngle, randFloat, randInt, randItem, rotatePointAroundOrigin, secondsToTicks } from "../../../shared/src/utils";
+import { ConsumableItemInfo, ITEM_INFO_RECORD, ItemType } from "../../../shared/src/items/items";
+import { Entity, LimbAction } from "../../../shared/src/entities";
+import { getItemRecipe } from "../../../shared/src/items/crafting-recipes";
+import { Settings } from "../../../shared/src/settings";
 
 enum CustomItemState {
    usingMedicine,
@@ -51,7 +55,7 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
       return;
    }
    
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    // @Hack
    const hitbox = transformComponent.hitboxes[0];
 
@@ -87,7 +91,7 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
 }
 
 const createBandageRenderPart = (entity: Entity): void => {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    const offsetMagnitude = 32 * Math.random();
@@ -129,7 +133,7 @@ export function updateBandageRenderPart(entity: Entity, renderPart: VisualRender
 
 export function createMedicineAnimationParticles(entity: Entity, limbIdx: number): void {
    if (Math.random() < 5 * Settings.DT_S) {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       const colour = randItem(MEDICINE_PARTICLE_COLOURS);
@@ -212,7 +216,7 @@ export function updateCustomItemRenderPart(entity: Entity): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    if (customItemState !== null) {
       if (inventoryUseComponent.customItemRenderPart === null) {
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          
          inventoryUseComponent.customItemRenderPart = new TexturedRenderPart(

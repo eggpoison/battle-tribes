@@ -1,4 +1,7 @@
-import { randFloat, randInt, Settings, Entity, ServerComponentType, HitboxTag } from "webgl-test-shared";
+import { HitboxTag } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Settings } from "../../../../../shared/src/settings";
+import { randInt, randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -153,10 +156,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
       }
    }
 
-   public onTick(inguYetuk: Entity): void {
-      // @HACK!!!
-
-
+   public onTick(): void {
       const mult = 1.5;
 
       if (Math.random() < 0.6 * mult * Settings.DT_S) {

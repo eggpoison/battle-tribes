@@ -1,4 +1,7 @@
-import { randFloat, Entity, ServerComponentType, HitboxTag } from "webgl-test-shared";
+import { HitboxTag } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { randFloat } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";

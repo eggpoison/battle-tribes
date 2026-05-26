@@ -1,4 +1,4 @@
-import { _point, rotatePointAroundPoint } from "webgl-test-shared";
+import { rotatePointAroundPoint, _point } from "../../../../../shared/src/utils";
 import { RESEARCH_ORB_SIZES, ResearchOrb, getResearchOrb, getResearchOrbCompleteProgress } from "../../research";
 import { createWebGLProgram, gl } from "../../webgl";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";

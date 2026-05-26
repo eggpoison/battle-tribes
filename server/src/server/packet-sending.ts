@@ -4,9 +4,8 @@ import { getComponentArrayRecord } from "../components/ComponentArray.js";
 import PlayerClient from "./PlayerClient.js";
 import { PlayerComponentArray } from "../components/PlayerComponent.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
-import { entityExists, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes } from "../world.js";
+import { entityExists, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes, layers } from "../world.js";
 import { getPlayerNearbyCollapses, getSubtileSupport, subtileIsCollapsing } from "../collapses.js";
-import { layers } from "../layers.js";
 import { addExtendedTribeData, addShortTribeData, getExtendedTribeDataLength, getShortTribeDataLength, shouldAddTribeExtendedData } from "../Tribe.js";
 import { addGrassBlockerToData, getGrassBlockerLengthBytes, GrassBlocker } from "../grass-blockers.js";
 import { addTamingSpecToData, getTamingSpecDataLength, getTamingSpecsMap } from "../taming-specs.js";
@@ -65,7 +64,7 @@ export function addEntityDataToPacket(packet: Packet, entity: Entity, player: En
    packet.writeNumber(entityType);
    // @Bandwidth: Only include when client doesn't know about this information
    packet.writeNumber(getEntitySpawnTicks(entity));
-   packet.writeNumber(layers.indexOf(getEntityLayer(entity)));
+   packet.writeNumber(getEntityLayer(entity).depth);
 
    const componentTypes = getEntityComponentTypes(entityType);
    const componentArrayRecord = getComponentArrayRecord();

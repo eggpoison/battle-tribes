@@ -1,8 +1,8 @@
+import { assert } from "../../../shared/src/utils";
 import { gl } from "./webgl";
 import { imageIsLoaded } from "./utils";
 import { FLOOR_TILE_TEXTURE_SOURCE_RECORD, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
 import { BREAK_PROGRESS_TEXTURE_SOURCES } from "./rendering/webgl/tile-break-progress-rendering";
-import { assert } from "webgl-test-shared";
 
 // @HACK: this just imports everythign..... slow... prolly some i dont need.
 // @SPEED: do the same thing in texture-atlases!!

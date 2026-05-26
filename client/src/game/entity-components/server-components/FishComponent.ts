@@ -1,7 +1,12 @@
-import { TileType, ServerComponentType, PacketReader, Entity, FishColour, randAngle, randFloat, randInt, Settings, Point } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { FishColour, Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { TileType } from "../../../../../shared/src/tiles";
+import { randFloat, randAngle, Point, randInt } from "../../../../../shared/src/utils";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -74,7 +79,7 @@ class _FishComponentArray extends _ServerComponentArray<FishComponent, FishCompo
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       const tile = getHitboxTile(hitbox);
@@ -100,7 +105,7 @@ class _FishComponentArray extends _ServerComponentArray<FishComponent, FishCompo
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       createBloodParticleFountain(entity, 0.1, 0.8);

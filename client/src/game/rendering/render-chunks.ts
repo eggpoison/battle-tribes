@@ -1,4 +1,6 @@
-import { assert, Settings, WaterRockData } from "webgl-test-shared";
+import { Settings } from "../../../../shared/src/settings";
+import { WaterRockData } from "../../../../shared/src/client-server-types";
+import { assert } from "../../../../shared/src/utils";
 import { createTileRenderChunks } from "./webgl/solid-tile-rendering";
 import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
 import { calculateShadowInfo, TileShadowType } from "./webgl/tile-shadow-rendering";
@@ -35,7 +37,8 @@ export interface RenderChunkTileShadowInfo {
    readonly vao: WebGLVertexArrayObject;
    readonly buffer: WebGLBuffer;
    // @Hack: make readonly
-   vertexData: Float32Array;
+   vertexData: ArrayBuffer;
+   vertexCount: number;
 }
 
 export interface RenderChunkWallBorderInfo {
@@ -97,17 +100,18 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    
    // Group water rocks
    // @Speed: Garbage collection
-   let waterRocksChunked: Record<number, Record<number, Array<WaterRockData>>> = {};
+   const waterRocksChunked = new Map<number, Array<WaterRockData>>();
    for (const waterRock of waterRocks) {
       const renderChunkX = Math.floor(waterRock.position[0] / RENDER_CHUNK_UNITS);
       const renderChunkY = Math.floor(waterRock.position[1] / RENDER_CHUNK_UNITS);
-      if (!waterRocksChunked.hasOwnProperty(renderChunkX)) {
-         waterRocksChunked[renderChunkX] = {};
+      const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
+
+      const waterRocks = waterRocksChunked.get(renderChunkIndex);
+      if (waterRocks === undefined) {
+         waterRocksChunked.set(renderChunkIndex, [waterRock]);
+      } else {
+         waterRocks.push(waterRock);
       }
-      if (!waterRocksChunked[renderChunkX].hasOwnProperty(renderChunkY)) {
-         waterRocksChunked[renderChunkX][renderChunkY] = [];
-      }
-      waterRocksChunked[renderChunkX][renderChunkY].push(waterRock);
    }
 
    // @SQUEAM
@@ -146,9 +150,9 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    layer.riverInfoArray = [];
    for (let renderChunkY = -RENDER_CHUNK_EDGE_GENERATION; renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
       for (let renderChunkX = -RENDER_CHUNK_EDGE_GENERATION; renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
-         const waterRocks = (waterRocksChunked.hasOwnProperty(renderChunkX) && waterRocksChunked[renderChunkX].hasOwnProperty(renderChunkY)) ? waterRocksChunked[renderChunkX][renderChunkY] : [];
-
-         const data = calculateRiverRenderChunkData(layer, renderChunkX, renderChunkY, waterRocks);
+         const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
+         const waterRocks = waterRocksChunked.get(renderChunkIndex);
+         const data = waterRocks !== undefined ? calculateRiverRenderChunkData(layer, renderChunkX, renderChunkY, waterRocks) : null;
          layer.riverInfoArray.push(data);
       }
    }

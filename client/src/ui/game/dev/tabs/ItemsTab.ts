@@ -1,5 +1,6 @@
+import { ItemType, getItemStackSize } from "../../../../../../shared/src/items/items";
+import { assert } from "../../../../../../shared/src/utils";
 import { sendDevGiveItemPacket } from "../../../../game/networking/packet-sending/packet-sending";
-import { assert, getItemStackSize, ItemType } from "webgl-test-shared";
 import { createItemCatalogue, destroyItemCatalogue } from "./ItemCatalogue";
 
 let itemsTabElem: HTMLElement | null = null;

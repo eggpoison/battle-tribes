@@ -1,8 +1,11 @@
-import { assert, randAngle, randInt, PacketReader, ServerComponentType, CactusFlowerSize, Entity } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { CactusFlowerSize, Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { assert, randInt, randAngle } from "../../../../../shared/src/utils";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createCactusSpineParticle, createFlowerParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
@@ -31,9 +34,7 @@ export interface CactusComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.cactus]: CactusComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cactus, CactusComponentArray> {}
 }
 
 export const CACTUS_RADIUS = 40;
@@ -125,7 +126,7 @@ class CactusComponentArray extends _ServerComponentArray<CactusComponent, Cactus
    }
 
    public onHit(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       // Create cactus spine particles when hurt
@@ -138,7 +139,7 @@ class CactusComponentArray extends _ServerComponentArray<CactusComponent, Cactus
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       const cactusComponent = cactusComponentArray.getComponent(entity);

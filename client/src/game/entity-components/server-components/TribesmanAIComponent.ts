@@ -1,9 +1,15 @@
-import { ItemType, Entity, PacketReader, randInt, randItem, TribeType, Settings, ServerComponentType, TribesmanAIType } from "webgl-test-shared";
+import { TribesmanAIType, ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { ItemType } from "../../../../../shared/src/items/items";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { TribeType } from "../../../../../shared/src/tribes";
+import { randItem, randInt } from "../../../../../shared/src/utils";
 import { tribeComponentArray } from "./TribeComponent";
 import { playSoundOnHitbox } from "../../sound";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -24,9 +30,7 @@ export interface TribesmanAIComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.tribesmanAI]: TribesmanAIComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesmanAI, TribesmanAIComponentArray> {}
 }
 
 const GOBLIN_ANGRY_SOUNDS: ReadonlyArray<string> = ["goblin-angry-1.mp3", "goblin-angry-2.mp3", "goblin-angry-3.mp3", "goblin-angry-4.mp3"];
@@ -65,7 +69,7 @@ class TribesmanAIComponentArray extends _ServerComponentArray<TribesmanAICompone
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       const tribeComponent = tribeComponentArray.getComponent(entity);

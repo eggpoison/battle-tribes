@@ -1,4 +1,8 @@
-import { Point, randAngle, randFloat, Entity, HitboxTag, ServerComponentType, PacketReader, angle, getBoxFlipX } from "webgl-test-shared";
+import { HitboxTag, getBoxFlipX } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Point, randFloat, angle, randAngle } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";

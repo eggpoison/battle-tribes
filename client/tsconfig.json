@@ -16,12 +16,11 @@
       "sourceMap": true,
       "moduleResolution": "bundler",
       "declaration": true,
-      "isolatedModules": true,
-      "baseUrl": ".",
-      "paths": {
-         "webgl-test-shared": ["../shared/src"]
-      }
+      "isolatedModules": true
    },
+   "references": [
+     { "path": "../shared" }
+   ],
    "include": ["src"],
    "exclude": ["node_modules/*", "__sapper__/*", "public/*", "tools/*"]
 }

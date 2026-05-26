@@ -1,4 +1,4 @@
-import { ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 

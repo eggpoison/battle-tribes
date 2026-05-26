@@ -1,6 +1,9 @@
-import { Entity, TileType, assert, Point, randInt, Settings, distance } from "webgl-test-shared";
+import { assert, distance, randInt } from "../../../shared/src/utils";
+import { Entity } from "../../../shared/src/entities";
+import { Settings } from "../../../shared/src/settings";
+import { TileType } from "../../../shared/src/tiles";
 import { getCurrentLayer, getEntityLayer } from "./world";
-import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { cameraPosition, maxVisibleChunkX, maxVisibleChunkY, minVisibleChunkX, minVisibleChunkY } from "./camera";
@@ -15,7 +18,7 @@ export const ROCK_DESTROY_SOUNDS: ReadonlyArray<string> = ["rock-destroy-1.mp3",
 let idCounter: SoundID = 0;
 
 let audioContext: AudioContext;
-let audioBuffers: Partial<Record<string, AudioBuffer>> = {};
+const audioBuffers: Partial<Record<string, AudioBuffer>> = {};
 
 export interface Sound {
    readonly id: SoundID;
@@ -485,7 +488,7 @@ export function playSoundOnHitbox(filePath: string, volume: number, pitchMultipl
 }
 
 export function removeEntitySounds(entity: Entity): void {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    for (const hitbox of transformComponent.hitboxes) {
       const entityAttachedSounds = soundsAttachedToHitboxes.get(hitbox);
       if (entityAttachedSounds === undefined) {

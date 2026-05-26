@@ -1,4 +1,6 @@
-import { PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getServerComponentData } from "../component-types";
@@ -14,9 +16,7 @@ export interface TribeMemberComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.tribeMember]: TribeMemberComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribeMember, TribeMemberComponentArray> {}
 }
 
 class TribeMemberComponentArray extends _ServerComponentArray<TribeMemberComponent, TribeMemberComponentData> {

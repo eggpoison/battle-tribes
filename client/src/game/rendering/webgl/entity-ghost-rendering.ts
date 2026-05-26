@@ -1,4 +1,4 @@
-import { assert, Point } from "webgl-test-shared";
+import { Point, assert } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { cleanupEntityRendering, renderEntity, setupEntityRendering } from "./entity-rendering";
 import { gl } from "../../webgl";

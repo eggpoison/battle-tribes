@@ -1,4 +1,4 @@
-import { assert } from "../../../../shared/src";
+import { assert } from "../../../../shared/src/utils";
 import { sendChatMessagePacket } from "../../game/networking/packet-sending/packet-sending";
 
 const enum Var {

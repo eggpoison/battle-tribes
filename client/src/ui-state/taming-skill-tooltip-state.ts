@@ -1,4 +1,4 @@
-import { TamingSkillNode } from "../../../shared/src";
+import { TamingSkillNode } from "../../../shared/src/taming";
 
 let skillNode: TamingSkillNode | null = null;
 let x = 0;

@@ -1,10 +1,12 @@
-import { PacketReader, Entity, EntityType, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity, EntityType } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
 import { playSoundOnHitbox } from "../../sound";
 import { createStructureConnection, StructureConnection } from "../../structure-placement";
 import { EntityComponentData, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { addFenceConnection, FenceComponentArray, removeFenceConnection } from "./FenceComponent";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -58,7 +60,7 @@ class _StructureComponentArray extends _ServerComponentArray<StructureComponent,
    }
 
    public onSpawn(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       switch (getEntityType(entity)) {

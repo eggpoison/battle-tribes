@@ -1,8 +1,11 @@
-import { Entity, TileType, randInt, Settings, _point } from "webgl-test-shared";
+import { Entity } from "../../../../../shared/src/entities";
+import { Settings } from "../../../../../shared/src/settings";
+import { TileType } from "../../../../../shared/src/tiles";
+import { _point, randInt } from "../../../../../shared/src/utils";
 import { playSound } from "../../sound";
 import { createFootprintParticle } from "../../particles";
 import { EntityComponentData, getEntityLayer } from "../../world";
-import { transformComponentArray } from "../server-components/TransformComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 import { ClientComponentType } from "../client-component-types";
 import { getHitboxTile, getHitboxVelocity } from "../../hitboxes";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
@@ -34,12 +37,10 @@ export interface FootprintComponent {
 }
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry {
-      [ClientComponentType.footprint]: FootprintComponentArray;
-   }
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.footprint, _FootprintComponentArray> {}
 }
 
-class FootprintComponentArray extends _ClientComponentArray<FootprintComponent, FootprintComponentData> {
+class _FootprintComponentArray extends _ClientComponentArray<FootprintComponent, FootprintComponentData> {
    public createComponent(entityComponentData: EntityComponentData): FootprintComponent {
       const clientComponentTypes = getEntityClientComponentTypes(entityComponentData.entityType);
       const footprintComponentData = getClientComponentData(entityComponentData.clientComponentData, clientComponentTypes, ClientComponentType.footprint);
@@ -61,11 +62,11 @@ class FootprintComponentArray extends _ClientComponentArray<FootprintComponent, 
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       
       const hitbox = transformComponent.hitboxes[0];
       if (hitbox.parent === null) {
-         const footprintComponent = footprintComponentArray.getComponent(entity);
+         const footprintComponent = FootprintComponentArray.getComponent(entity);
          
          getHitboxVelocity(hitbox);
          const velocity = _point;
@@ -89,7 +90,7 @@ class FootprintComponentArray extends _ClientComponentArray<FootprintComponent, 
    }
 }
 
-export const footprintComponentArray = registerClientComponentArray(ClientComponentType.footprint, FootprintComponentArray, true);
+export const FootprintComponentArray = registerClientComponentArray(ClientComponentType.footprint, _FootprintComponentArray, true);
 
 export function createFootprintComponentData(footstepParticleIntervalSeconds: number, footstepOffset: number, footstepSize: number, footstepLifetime: number, footstepSoundIntervalDist: number, doDoubleFootprints: boolean): FootprintComponentData {
    return {
@@ -103,7 +104,7 @@ export function createFootprintComponentData(footstepParticleIntervalSeconds: nu
 }
 
 const createFootstepSound = (entity: Entity): void => {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    const layer = getEntityLayer(entity);
    

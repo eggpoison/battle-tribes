@@ -42,7 +42,8 @@ export default defineConfig([
          "@typescript-eslint/prefer-for-of": "off", // For of is often slower
          "@typescript-eslint/prefer-optional-chain": "off", // Explicitly typing it is more performant
          "@typescript-eslint/no-duplicate-enum-values": "off", // CONST ENUMS!!!
-         "@typescript-eslint/no-empty-object-type": "off" // the reason it says that this warning exists is stupid
+         "@typescript-eslint/no-empty-object-type": "off", // the reason it says that this warning exists is stupid
+         "no-fallthrough": "off"
       },
    },
 ]);

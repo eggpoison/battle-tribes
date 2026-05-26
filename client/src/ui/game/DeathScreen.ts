@@ -1,4 +1,4 @@
-import { assert, randItem } from "webgl-test-shared";
+import { assert, randItem } from "../../../../shared/src/utils";
 import { sendRespawnPacket } from "../../game/networking/packet-sending/packet-sending";
 import { addTickCallback } from "../../game/tick-callbacks";
 import { deathScreen } from "../../ui-state/death-screen-funcs";

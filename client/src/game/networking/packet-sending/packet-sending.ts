@@ -1,4 +1,12 @@
-import { TribesmanTitle, TribeType, Point, TamingSkillID, TechID, BlueprintType, InventoryName, ItemType, Entity, EntityType, getStringLengthBytes, Packet, ClientPacketType } from "webgl-test-shared";
+import { BlueprintType } from "../../../../../shared/src/components";
+import { Entity, EntityType } from "../../../../../shared/src/entities";
+import { ItemType, InventoryName } from "../../../../../shared/src/items/items";
+import { Packet, ClientPacketType, getStringLengthBytes } from "../../../../../shared/src/packets";
+import { TamingSkillID } from "../../../../../shared/src/taming";
+import { TechID } from "../../../../../shared/src/techs";
+import { TribesmanTitle } from "../../../../../shared/src/titles";
+import { TribeType } from "../../../../../shared/src/tribes";
+import { Point } from "../../../../../shared/src/utils";
 import { sendData } from "../socket";
 
 export function sendInitialPlayerDataPacket(username: string, tribeType: TribeType, isSpectating: boolean, windowWidth: number, windowHeight: number): void {

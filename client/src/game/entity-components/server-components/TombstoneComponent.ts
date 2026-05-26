@@ -1,4 +1,9 @@
-import { PacketReader, Point, randAngle, randFloat, randInt, randItem, Settings, DeathInfo, Entity, DamageSource, ServerComponentType, RectangularBox } from "webgl-test-shared";
+import { RectangularBox } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { DeathInfo, DamageSource, Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { randInt, randFloat, randItem, randAngle } from "../../../../../shared/src/utils";
 import { createDirtParticle, createRockParticle, createRockSpeckParticle } from "../../particles";
 import { playSound, playSoundOnHitbox, ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -6,7 +11,7 @@ import { EntityComponentData, getEntityAgeTicks, getEntityLayer } from "../../wo
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -152,7 +157,7 @@ class _TombstoneComponentArray extends _ServerComponentArray<TombstoneComponent,
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       const width = (hitbox.box as RectangularBox).width;

@@ -1,4 +1,4 @@
-import { Settings } from "webgl-test-shared";
+import { Settings } from "../../../../../shared/src/settings";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY } from "../../camera";

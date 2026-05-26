@@ -1,4 +1,6 @@
-import { distBetweenPointAndRectangularBox, Settings, RectangularBox, CircularBox, Box, boxIsCircular, _bounds, calculateBoxBounds } from "webgl-test-shared";
+import { CircularBox, calculateBoxBounds, _bounds, RectangularBox, Box, boxIsCircular } from "../../../../../shared/src/boxes";
+import { Settings } from "../../../../../shared/src/settings";
+import { distBetweenPointAndRectangularBox } from "../../../../../shared/src/utils";
 import Layer from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";
 import { layers } from "../../world";

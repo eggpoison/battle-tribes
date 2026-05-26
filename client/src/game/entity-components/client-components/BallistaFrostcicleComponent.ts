@@ -1,4 +1,5 @@
-import { _point, Entity } from "webgl-test-shared";
+import { Entity } from "../../../../../shared/src/entities";
+import { _point } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle } from "../../particles";
@@ -8,9 +9,9 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
-import { transformComponentArray } from "../server-components/TransformComponent";
-import { getTransformComponentData } from "../component-types";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 import { registerClientComponentArray } from "../component-registry";
+import { getTransformComponentData } from "../component-types";
 
 export interface BallistaFrostcicleComponentData {}
 
@@ -45,7 +46,7 @@ class _BallistaFrostcicleComponentArray extends _ClientComponentArray<BallistaFr
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       getHitboxVelocity(hitbox);
       const velocity = _point;

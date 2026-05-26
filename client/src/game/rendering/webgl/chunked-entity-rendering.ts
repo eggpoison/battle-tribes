@@ -1,4 +1,6 @@
-import { Settings, Entity, assert, EntityTypeString, _point } from "webgl-test-shared";
+import { Entity, EntityTypeString } from "../../../../../shared/src/entities";
+import { _point, assert } from "../../../../../shared/src/utils";
+import { Settings } from "../../../../../shared/src/settings";
 import { RenderLayer } from "../../render-layers";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { clearEntityInVertexData, createEntityRenderData, EntityRenderingVar, setRenderObjectInVertexData, setupEntityRendering } from "./entity-rendering";

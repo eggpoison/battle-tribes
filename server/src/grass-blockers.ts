@@ -1,8 +1,7 @@
 import { Box, boxIsCircular, cloneBox, Entity, EntityType, Settings, Packet, Point, unitsToChunksClamped, _bounds, calculateBoxBounds, getBoxCollisionResult, circleCollidesWithBox } from "battletribes-shared";
 import Chunk from "./Chunk.js";
 import { TransformComponentArray } from "./components/TransformComponent.js";
-import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "./world.js";
-import { surfaceLayer } from "./layers.js";
+import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType, surfaceLayer } from "./world.js";
 import Layer from "./Layer.js";
 import { addBoxDataToPacket, getBoxDataLength } from "./server/packet-hitboxes.js";
 import { createGrassStrandConfig } from "./entities/grass-strand.js";

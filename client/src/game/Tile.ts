@@ -1,4 +1,5 @@
-import { Biome, TileType } from "webgl-test-shared";
+import { Biome } from "../../../shared/src/biomes";
+import { TileType } from "../../../shared/src/tiles";
 
 export class Tile {
    public readonly x: number;

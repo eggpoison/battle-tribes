@@ -1,4 +1,8 @@
-import { type CraftingRecipe, CRAFTING_RECIPES, type CraftingStationEntityType, getTechRequiredForItem, assert, ItemTally2, tallyInventoryItems, Inventory, InventoryName } from "webgl-test-shared";
+import { CraftingRecipe, CRAFTING_RECIPES, CraftingStationEntityType } from "../../../../../shared/src/items/crafting-recipes";
+import { Inventory, InventoryName } from "../../../../../shared/src/items/items";
+import { ItemTally2, tallyInventoryItems } from "../../../../../shared/src/items/ItemTally";
+import { getTechRequiredForItem } from "../../../../../shared/src/techs";
+import { assert } from "../../../../../shared/src/utils";
 import { playHeadSound } from "../../../game/sound";
 import { sendCraftItemPacket } from "../../../game/networking/packet-sending/packet-sending";
 import { playerTribe } from "../../../game/tribes";

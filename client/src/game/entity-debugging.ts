@@ -1,4 +1,4 @@
-import { Entity } from "webgl-test-shared";
+import { Entity } from "../../../shared/src/entities";
 import { getCameraSubject } from "./camera";
 import { sendSetDebugEntityPacket } from "./networking/packet-sending/packet-sending";
 import { playerInstance } from "./player";

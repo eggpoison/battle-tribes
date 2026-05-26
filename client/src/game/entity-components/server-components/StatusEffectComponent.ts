@@ -1,10 +1,16 @@
-import { Entity, customTickIntervalHasPassed, lerp, randAngle, randFloat, randItem, PacketReader, StatusEffect, StatusEffectData, ServerComponentType, _point, Settings } from "webgl-test-shared";
+import { StatusEffectData } from "../../../../../shared/src/client-server-types";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { StatusEffect } from "../../../../../shared/src/status-effects";
+import { customTickIntervalHasPassed, randAngle, lerp, randFloat, randItem, _point } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
 import Particle from "../../Particle";
 import { createPoisonBubble, createBloodParticle, BloodParticleSize, createHeatParticle } from "../../particles";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour, lowTexturedParticles, highMonocolourParticles, highTexturedParticles } from "../../rendering/webgl/particle-rendering";
 import { Light, removeLight } from "../../lights";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
@@ -89,7 +95,7 @@ class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComp
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
@@ -286,7 +292,7 @@ class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComp
          if (!hasStatusEffect(statusEffectComponent, statusEffectData.type)) {
             switch (statusEffectData.type) {
                case StatusEffect.freezing: {
-                  const transformComponent = transformComponentArray.getComponent(entity);
+                  const transformComponent = TransformComponentArray.getComponent(entity);
                   const hitbox = transformComponent.hitboxes[0];
                   playSoundOnHitbox("freezing.mp3", 0.4, 1, entity, hitbox, false);
                   break;

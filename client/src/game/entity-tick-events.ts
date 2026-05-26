@@ -1,7 +1,9 @@
-import { Entity, ItemType, randAngle, randFloat, randInt, EntityTickEventType } from "webgl-test-shared";
+import { Entity } from "../../../shared/src/entities";
+import { EntityTickEventType } from "../../../shared/src/entity-events";
+import { randAngle, randFloat, randInt } from "../../../shared/src/utils";
 import { playSoundOnHitbox } from "./sound";
 import { entityExists } from "./world";
-import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { createHotSparkParticle } from "./particles";
 import { playBowFireSound } from "./player-action-handling";
 import { getRandomPositionOnBoxEdge } from "./hitboxes";
@@ -13,7 +15,7 @@ export function processTickEvent(entity: Entity, type: EntityTickEventType, data
    }
    
    // @Hack
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    switch (type) {
@@ -22,8 +24,7 @@ export function processTickEvent(entity: Entity, type: EntityTickEventType, data
          break;
       }
       case EntityTickEventType.fireBow: {
-         // @Cleanup: why need cast?
-         playBowFireSound(entity, data as ItemType);
+         playBowFireSound(entity, data);
          break;
       }
       case EntityTickEventType.automatonAccident: {

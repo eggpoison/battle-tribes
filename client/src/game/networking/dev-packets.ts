@@ -1,4 +1,7 @@
-import { assert, PacketReader, CircleDebugData, EntityDebugData, LineDebugData, PathData, PathfindingNodeIndex, TileHighlightData, SafetyNodeData } from "webgl-test-shared";
+import { SafetyNodeData } from "../../../../shared/src/ai-building-types";
+import { CircleDebugData, EntityDebugData, LineDebugData, PathData, PathfindingNodeIndex, TileHighlightData } from "../../../../shared/src/client-server-types";
+import { PacketReader } from "../../../../shared/src/packets";
+import { assert } from "../../../../shared/src/utils";
 import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { readTribeBuildingSafeties, resetBuildingSafeties } from "../building-safety";
 import { updateLightLevelsFromData } from "../light-levels";

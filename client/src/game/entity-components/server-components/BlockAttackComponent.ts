@@ -1,4 +1,3 @@
-import { PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 

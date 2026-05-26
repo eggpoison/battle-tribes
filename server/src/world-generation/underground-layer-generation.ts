@@ -182,7 +182,10 @@ const setWaterInMossHumidityMultipliers = (mossSpawnDistribution: Readonly<Spawn
    }
 }
 
-export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer: Layer): void {
+export function generateUndergroundTerrain(depth: number, surfaceLayer: Layer): Layer {
+   // @MEMORY: humidity and temperature are useless here kinda..?
+   const undergroundLayer = new Layer(depth, new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES), new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES));
+
    for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
       for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
          if (surfaceLayer.getTileXYType(tileX, tileY) === TileType.dropdown) {
@@ -450,4 +453,6 @@ export function generateUndergroundTerrain(surfaceLayer: Layer, undergroundLayer
          return null;
       }
    });
+   
+   return undergroundLayer;
 }

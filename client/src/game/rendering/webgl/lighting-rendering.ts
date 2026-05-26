@@ -1,4 +1,3 @@
-import { distance, getTileX, getTileY, lerp, Settings } from "webgl-test-shared";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getLightPositionMatrix } from "../../lights";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
@@ -8,6 +7,8 @@ import { currentSnapshot } from "../../networking/snapshots";
 import { cameraPosition } from "../../camera";
 import { gameFramebufferTexture } from "../render";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
+import { Settings } from "../../../../../shared/src/settings";
+import { distance, getTileX, getTileY, lerp } from "../../../../../shared/src/utils";
 
 const enum Var {
    MAX_LIGHTS = 64,
@@ -84,7 +85,7 @@ export function createNightShaders(): void {
    precision mediump float;
    
    #define MAX_LIGHTS ${Var.MAX_LIGHTS}
-   #define TILE_SIZE ${Settings.TILE_SIZE.toFixed(1)}
+   #define TILE_SIZE ${(Settings.TILE_SIZE).toFixed(1)}
 
    struct RectLight {
       vec2 position;
@@ -196,7 +197,7 @@ export function createNightShaders(): void {
 
       if (minDistFromRectLight < 999999.9) {
          float lightIntensity = 1.0;
-         float strength = ${Var.DROPDOWN_LIGHT_STRENGTH.toFixed(1)};
+         float strength = ${(Var.DROPDOWN_LIGHT_STRENGTH).toFixed(1)};
 
          float intensity = exp(-minDistFromRectLight / 64.0 / strength) * lightIntensity;
          if (intensity > 0.0) {

@@ -1,4 +1,4 @@
-import { EntityType } from "webgl-test-shared";
+import { EntityType } from "../../../shared/src/entities";
 
 interface ClientEntityInfo {
    readonly name: string;

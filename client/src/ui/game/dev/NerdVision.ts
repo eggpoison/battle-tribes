@@ -1,8 +1,8 @@
+import { assert } from "../../../../../shared/src/utils";
 import { openDebugInfoDisplay } from "./DebugInfoDisplay";
 import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 import { hideFrameGraph, showFrameGraph } from "./FrameGraph";
 import { createTabSelector, destroyTabSelector } from "./TabSelector";
-import { assert } from "../../../../../shared/src";
 
 let isVisible = false;
 let _terminalIsVisible = false;

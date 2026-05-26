@@ -1,9 +1,11 @@
-import { randAngle, randFloat, Entity, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { randFloat, randAngle } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { createPricklyPearParticle } from "../../particles";
 import { HealthComponentArray } from "./HealthComponent";
@@ -48,7 +50,7 @@ class _PricklyPearComponentArray extends _ServerComponentArray<PricklyPearCompon
    }
       
    public onDie(pricklyPear: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(pricklyPear);
+      const transformComponent = TransformComponentArray.getComponent(pricklyPear);
       const hitbox = transformComponent.hitboxes[0];
 
       const healthComponent = HealthComponentArray.getComponent(pricklyPear);

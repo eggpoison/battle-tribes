@@ -1,8 +1,7 @@
 import { DecorationType, Settings, TileType, randInt, randFloat, TileIndex, getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorldIncludingEdges, Point, randAngle } from "battletribes-shared";
 import { getTilesInRange } from "../Layer.js";
 import { createDecorationConfig } from "../entities/decoration.js";
-import { surfaceLayer } from "../layers.js";
-import { createEntityImmediate } from "../world.js";
+import { createEntityImmediate, surfaceLayer } from "../world.js";
 
 const enum Vars {
    RIVERSIDE_DECORATION_SPAWN_ATTEMPT_DENSITY_PER_TILE = 0.5,

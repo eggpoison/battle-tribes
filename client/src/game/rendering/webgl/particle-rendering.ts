@@ -1,4 +1,5 @@
-import { lerp, Settings } from "webgl-test-shared";
+import { Settings } from "../../../../../shared/src/settings";
+import { lerp } from "../../../../../shared/src/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import ObjectBufferContainer from "../ObjectBufferContainer";
 import { getTexture } from "../../textures";

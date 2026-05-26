@@ -1,10 +1,10 @@
+import { _point } from "../../../../../shared/src/utils";
 import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { cleanupEntityRendering, renderEntity, setEntityRenderingOverrideAlphaWithOne, setupEntityRendering } from "./entity-rendering";
 import { cleanEntityRenderObject, getRenderPartRenderPosition } from "../render-part-matrices";
 import { EntityRenderObject, recalculateRenderObjectVertexData } from "../../EntityRenderObject";
 import { gameFramebuffer } from "../render";
-import { _point } from "../../../../../shared/src";
 import { createTranslationMatrix, matrixMultiplyInPlace, overrideMatrix } from "../matrices";
 
 let renderProgram: WebGLProgram;

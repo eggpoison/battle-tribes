@@ -1,4 +1,5 @@
-import { _point, Entity } from "webgl-test-shared";
+import { Entity } from "../../../../../shared/src/entities";
+import { _point } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle } from "../../particles";
@@ -7,7 +8,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
-import { transformComponentArray } from "../server-components/TransformComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
 
@@ -45,7 +46,7 @@ class _BallistaSlimeballComponentArray extends _ClientComponentArray<BallistaSli
 
    public onDie(entity: Entity): void {
       // Create arrow break particles
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       getHitboxVelocity(hitbox);
       const velocity = _point;

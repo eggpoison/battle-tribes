@@ -4,10 +4,9 @@ import { TRIBESMAN_TURN_SPEED } from "../entities/tribes/tribesman-ai/tribesman-
 import { getHumanoidRadius, getTribesmanAcceleration } from "../entities/tribes/tribesman-ai/tribesman-ai-utils.js";
 import { Hitbox, applyAccelerationFromGround, getHitboxTile, getHitboxVelocity, turnHitboxToAngle } from "../hitboxes.js";
 import Layer from "../Layer.js";
-import { surfaceLayer } from "../layers.js";
 import { convertEntityPathfindingGroupID, entityCanBlockPathfinding, entityHasReachedNode, runPathfindingMultiLayer, getAngleToNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, Path, PathfindFailureDefault, PathfindOptions, positionIsAccessible } from "../pathfinding.js";
 import Tribe from "../Tribe.js";
-import { getEntityAgeTicks, getEntityLayer, getEntityType, getGameTicks } from "../world.js";
+import { getEntityAgeTicks, getEntityLayer, getEntityType, getGameTicks, surfaceLayer } from "../world.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { doorIsClosed, toggleDoor } from "./DoorComponent.js";

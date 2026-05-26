@@ -1,4 +1,5 @@
-import { Entity, Inventory } from "../../../../../shared/src";
+import { Entity } from "../../../../../shared/src/entities";
+import { Inventory } from "../../../../../shared/src/items/items";
 import { createItemSlot, makeItemSlotInteractable } from "./ItemSlot";
 
 // @Speed: the CSS property set is unnecessary for inventories with a height of 1.

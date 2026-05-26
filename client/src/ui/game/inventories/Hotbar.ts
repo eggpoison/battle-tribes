@@ -1,4 +1,7 @@
-import { assert, Entity, Inventory, InventoryName, Item, TribeType } from "webgl-test-shared";
+import { Entity } from "../../../../../shared/src/entities";
+import { Inventory, InventoryName, Item } from "../../../../../shared/src/items/items";
+import { TribeType } from "../../../../../shared/src/tribes";
+import { assert } from "../../../../../shared/src/utils";
 import { getInventory, InventoryComponent } from "../../../game/entity-components/server-components/InventoryComponent";
 import { playerTribe } from "../../../game/tribes";
 import BackpackWireframe from "../../../images/miscellaneous/backpack-wireframe.png";

@@ -1,11 +1,14 @@
-import { randItem, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { randItem } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { createGemQuakeProjectile } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -52,7 +55,7 @@ class _GuardianGemQuakeComponentArray extends _ServerComponentArray<GuardianGemQ
    }
 
    public onLoad(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       for (let i = 0; i < 2; i++) {
          createGemQuakeProjectile(transformComponent);
       }

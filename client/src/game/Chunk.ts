@@ -1,4 +1,4 @@
-import { Entity, EntityType } from "webgl-test-shared";
+import { Entity, EntityType } from "../../../shared/src/entities";
 import { getEntityType } from "./world";
 
 class Chunk {

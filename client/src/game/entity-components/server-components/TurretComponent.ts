@@ -1,4 +1,8 @@
-import { PacketReader, ItemType, lerp, randAngle, ServerComponentType, TurretAmmoType, Entity, EntityType } from "webgl-test-shared";
+import { ServerComponentType, TurretAmmoType } from "../../../../../shared/src/components";
+import { EntityType, Entity } from "../../../../../shared/src/entities";
+import { ItemType } from "../../../../../shared/src/items/items";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { lerp, randAngle } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
@@ -6,7 +10,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
@@ -107,7 +111,7 @@ const getProjectilePullbackAmount = (entity: Entity, chargeProgress: number): nu
 }
 
 const playFireSound = (entity: Entity): void => {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
    switch (getEntityType(entity) as TurretType) {

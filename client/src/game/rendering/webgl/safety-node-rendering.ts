@@ -1,4 +1,6 @@
-import { BuildingPlanData, SafetyNodeData, TribeWallData, WallSideNodeData, Settings, distance, rotatePointAroundOrigin, _point } from "webgl-test-shared";
+import { SafetyNodeData, TribeWallData, BuildingPlanData, WallSideNodeData } from "../../../../../shared/src/ai-building-types";
+import { Settings } from "../../../../../shared/src/settings";
+import { distance, rotatePointAroundOrigin, _point } from "../../../../../shared/src/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { entitySelectionState } from "../../../ui-state/entity-selection-state";

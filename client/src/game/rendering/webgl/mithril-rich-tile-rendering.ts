@@ -1,4 +1,7 @@
-import { clampToBoardDimensions, SubtileType, Settings, getTileIndexIncludingEdges, getSubtileIndex } from "webgl-test-shared";
+import { Settings } from "../../../../../shared/src/settings";
+import { getSubtileIndex } from "../../../../../shared/src/subtiles";
+import { SubtileType } from "../../../../../shared/src/tiles";
+import { clampToBoardDimensions, getTileIndexIncludingEdges } from "../../../../../shared/src/utils";
 import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY } from "../../camera";
 import Layer from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";

@@ -1,7 +1,9 @@
-import { Entity, ServerComponentType, Settings } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { Settings } from "../../../../../shared/src/settings";
 import { playSoundOnHitbox } from "../../sound";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -40,7 +42,7 @@ class _BattleaxeProjectileComponentArray extends _ServerComponentArray<Battleaxe
 export const BattleaxeProjectileComponentArray = registerServerComponentArray(ServerComponentType.battleaxeProjectile, _BattleaxeProjectileComponentArray, true);
 
 const playWhoosh = (entity: Entity): void => {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    playSoundOnHitbox("air-whoosh.mp3", 0.25, 1, entity, hitbox, true);
 }

@@ -1,6 +1,7 @@
-import { assert, ItemType } from "webgl-test-shared";
+import { ItemType } from "../../../shared/src/items/items";
+import { assert } from "../../../shared/src/utils";
 
-export type ClientItemInfo = {
+export interface ClientItemInfo {
    readonly entityTextureSource: string;
    readonly textureSource: string;
    /** Texture source when used as a tool in a tribe members' hand. Empty string if not used as a tool */

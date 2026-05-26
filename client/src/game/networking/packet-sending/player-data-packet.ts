@@ -1,7 +1,9 @@
-import { Packet, ClientPacketType, InventoryName, GameDataPacketOptions } from "../../../../../shared/src";
+import { GameDataPacketOptions } from "../../../../../shared/src/client-server-types";
+import { InventoryName } from "../../../../../shared/src/items/items";
+import { Packet, ClientPacketType } from "../../../../../shared/src/packets";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
 import { cameraPosition } from "../../camera";
-import { transformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { getPlayerInputDirection } from "../../event-handling";
 import { playerInstance, isSpectating } from "../../player";
 import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../../player-action-handling";
@@ -40,7 +42,7 @@ export function sendPlayerDataPacket(): void {
    let angularAcceleration: number;
 
    if (playerInstance !== null) {
-      const transformComponent = transformComponentArray.getComponent(playerInstance);
+      const transformComponent = TransformComponentArray.getComponent(playerInstance);
       const playerHitbox = transformComponent.hitboxes[0];
 
       x = playerHitbox.box.posX;

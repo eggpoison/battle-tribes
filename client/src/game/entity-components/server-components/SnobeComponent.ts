@@ -1,10 +1,15 @@
-import { PacketReader, Settings, Point, randAngle, randFloat, randInt, Entity, HitboxTag, ServerComponentType, angle } from "webgl-test-shared";
+import { HitboxTag } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { Point, randAngle, randFloat, angle, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain, createHighSnowParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { HealthComponentArray } from "./HealthComponent";
@@ -105,7 +110,7 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
 
       const snobeComponent = SnobeComponentArray.getComponent(snobe);
       if (snobeComponent.isDigging && snobeComponent.diggingProgress < 1 && Math.random() < 15 * Settings.DT_S) {
-         const transformComponent = transformComponentArray.getComponent(snobe);
+         const transformComponent = TransformComponentArray.getComponent(snobe);
          const hitbox = transformComponent.hitboxes[0];
 
          const position = new Point(hitbox.box.posX, hitbox.box.posY).offset(32 * Math.random(), randAngle());
@@ -154,7 +159,7 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 3; i++) {

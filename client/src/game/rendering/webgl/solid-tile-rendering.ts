@@ -1,4 +1,7 @@
-import { Settings, NUM_TILE_TYPES, SubtileType, TileType, TileTypeString, getSubtileIndex, getTileIndexIncludingEdges, assert, getTileX, getTileY } from "webgl-test-shared";
+import { Settings } from "../../../../../shared/src/settings";
+import { getSubtileIndex } from "../../../../../shared/src/subtiles";
+import { TileType, NUM_TILE_TYPES, SubtileType, TileTypeString } from "../../../../../shared/src/tiles";
+import { getTileIndexIncludingEdges, assert, getTileX, getTileY } from "../../../../../shared/src/utils";
 import { gl, createWebGLProgram, createTextureArray } from "../../webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkX, getRenderChunkY } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";

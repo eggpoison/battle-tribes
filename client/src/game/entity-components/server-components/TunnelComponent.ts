@@ -1,4 +1,7 @@
-import { angle, lerp, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { angle, lerp } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -7,7 +10,7 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TUNNEL_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -117,7 +120,7 @@ class _TunnelComponentArray extends _ServerComponentArray<TunnelComponent, Tunne
          addDoor(tunnelComponent, entity, 0b10);
       }
 
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       // Play open/close sounds
@@ -153,7 +156,7 @@ export function createTunnelComponentData(): TunnelComponentData {
 }
 
 const addDoor = (tunnelComponent: TunnelComponent, entity: Entity, doorBit: number): void => {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
    const renderPart = new TexturedRenderPart(

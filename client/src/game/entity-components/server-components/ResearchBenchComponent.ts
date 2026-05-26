@@ -1,11 +1,14 @@
-import { PacketReader, customTickIntervalHasPassed, ServerComponentType, Entity } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { customTickIntervalHasPassed } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { createPaperParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityAgeTicks } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
+import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -60,7 +63,7 @@ class _ResearchBenchComponentArray extends _ServerComponentArray<ResearchBenchCo
    public onTick(entity: Entity): void {
       const researchBenchComponent = ResearchBenchComponentArray.getComponent(entity);
       if (researchBenchComponent.isOccupied && customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.3)) {
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const pos = getRandomPositionInEntity(transformComponent);
          createPaperParticle(pos.x, pos.y);
       }

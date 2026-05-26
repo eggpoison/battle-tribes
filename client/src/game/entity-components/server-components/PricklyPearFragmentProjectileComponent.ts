@@ -1,10 +1,13 @@
-import { randAngle, randFloat, Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { randFloat, randAngle } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { createPricklyPearParticle } from "../../particles";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -56,7 +59,7 @@ class _PricklyPearFragmentProjectileComponentArray extends _ServerComponentArray
    }
       
    public onDie(fragment: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(fragment);
+      const transformComponent = TransformComponentArray.getComponent(fragment);
       const hitbox = transformComponent.hitboxes[0];
 
       playSoundOnHitbox("prickly-pear-fragment-projectile-explode.mp3", 0.4, randFloat(0.9, 1.1), fragment, hitbox, false);

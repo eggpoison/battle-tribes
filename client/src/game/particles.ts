@@ -1,7 +1,10 @@
-import { BlockType, CactusFlowerSize, Entity, Point, Settings, _point, lerp, polarVec2, randAngle, randFloat, randInt, randItem, randSign } from "webgl-test-shared";
+import { _point, lerp, Point, polarVec2, randAngle, randFloat, randInt, randItem, randSign } from "../../../shared/src/utils";
+import { CactusFlowerSize, Entity } from "../../../shared/src/entities";
+import { Settings } from "../../../shared/src/settings";
+import { BlockType } from "../../../shared/src/components";
 import Particle from "./Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, highMonocolourParticles, highTexturedParticles, lowMonocolourParticles, lowTexturedParticles } from "./rendering/webgl/particle-rendering";
-import { TransformComponent, transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponent, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getHitboxVelocity, Hitbox } from "./hitboxes";
 import { addTickCallback } from "./tick-callbacks";
 import { playerInstance } from "./player";
@@ -71,7 +74,7 @@ const BLOOD_FOUNTAIN_RAY_COUNT = 5;
 
 export function createBloodParticleFountain(entity: Entity, interval: number, speedMultiplier: number): void {
    const offset = randAngle();
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    for (let i = 0; i < 4; i++) {
@@ -131,7 +134,7 @@ export function createLeafParticle(spawnPositionX: number, spawnPositionY: numbe
 export function createFootprintParticle(entity: Entity, isLeftFootprint: boolean, footstepOffset: number, size: number, lifetime: number): void {
    const footstepAngleOffset = isLeftFootprint ? Math.PI : 0;
 
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
    getHitboxVelocity(hitbox);
@@ -1684,7 +1687,7 @@ const POISON_COLOUR_LOW = [34/255, 12/255, 0];
 const POISON_COLOUR_HIGH = [77/255, 173/255, 38/255];
 
 export function createPoisonParticle(entity: Entity): void {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    // Calculate spawn position
@@ -2274,7 +2277,7 @@ export function createControlCommandParticles(commandType: AnimalStaffCommandTyp
    
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance);
 
-   const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[0];
+   const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[0]!;
 
    const originMatrix = createTranslationMatrix(14, 14);
    matrixMultiplyInPlace(activeItemRenderPart.modelMatrix, originMatrix);

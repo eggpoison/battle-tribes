@@ -1,4 +1,4 @@
-import { Settings } from "webgl-test-shared";
+import { Settings } from "../../../../shared/src/settings";
 import { maxVisibleChunkX, maxVisibleChunkY, maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleChunkX, minVisibleChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY, refreshCameraPosition, refreshCameraView } from "../camera";
 import { getHighlightedEntity, getHighlightedRenderObject, getSelectedEntity } from "../entity-selection";
 import Layer from "../Layer";

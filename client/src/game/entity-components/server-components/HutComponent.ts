@@ -1,11 +1,15 @@
-import { PacketReader, ServerComponentType, Settings, Point, lerp, secondsToTicks, Entity, EntityType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { EntityType, Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { secondsToTicks, lerp, Point } from "../../../../../shared/src/utils";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityAgeTicks, getEntityRenderObject, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -129,7 +133,7 @@ class _HutComponentArray extends _ServerComponentArray<HutComponent, HutComponen
 
       // @Incomplete: What if this packet is skipped?
       if (lastDoorSwingTicks === currentSnapshot.tick) {
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          playSoundOnHitbox("door-open.mp3", 0.4, 1, entity, hitbox, false);
       }
@@ -140,7 +144,7 @@ class _HutComponentArray extends _ServerComponentArray<HutComponent, HutComponen
 
       if (hutComponent.isRecalling) {
          if (hutComponent.recallMarker === null) {
-            const transformComponent = transformComponentArray.getComponent(entity);
+            const transformComponent = TransformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
             
             hutComponent.recallMarker = createRecallMarker(hitbox);

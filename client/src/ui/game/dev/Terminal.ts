@@ -1,4 +1,5 @@
-import { CommandPermissions, assert, commandIsValid } from "webgl-test-shared";
+import { assert } from "../../../../../shared/src/utils";
+import { commandIsValid, CommandPermissions } from "../../../../../shared/src/commands";
 import { sendTerminalCommandPacket } from "../../../game/networking/packet-sending/packet-sending";
 import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 
@@ -160,7 +161,7 @@ export function openTerminal(): void {
    </div>
    `;
 
-   lineInputElem = terminalElem.querySelector(`input[name="line-input"]`) as HTMLInputElement;
+   lineInputElem = terminalElem.querySelector(`input[name="line-input"]`)!;
    lineInputElem.addEventListener("change", updateLineInputWidth);
    lineInputElem.addEventListener("keydown", enterKey);
 

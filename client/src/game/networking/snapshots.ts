@@ -1,6 +1,6 @@
-import { PacketReader, Settings } from "../../../../shared/src";
+import { PacketReader } from "../../../../shared/src/packets";
+import { Settings } from "../../../../shared/src/settings";
 import { debugInfoDisplay } from "../../ui/game/dev/debug-info-display-funcs";
-import { gameIsFocused } from "../event-handling";
 import { TickSnapshot, decodeSnapshotFromGameDataPacket, updateGameStateToSnapshot } from "./snapshot-processing";
 
 const enum Var {

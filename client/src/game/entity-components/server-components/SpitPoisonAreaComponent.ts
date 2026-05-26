@@ -1,9 +1,13 @@
-import { Entity, CircularBox, lerp, randAngle, Settings, ServerComponentType } from "webgl-test-shared";
 import { playSoundOnHitbox, SoundInfo } from "../../sound";
 import { createAcidParticle, createPoisonBubble } from "../../particles";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
+import { CircularBox } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { Settings } from "../../../../../shared/src/settings";
+import { lerp, randAngle } from "../../../../../shared/src/utils";
 
 const enum Var {
    MAX_RANGE = 55
@@ -36,7 +40,7 @@ class _SpitPoisonAreaComponentArray extends _ServerComponentArray<SpitPoisonArea
 
    // @INCOMPLETE: Won't play when you walk into discovering a previously-offscreen spit poison!
    public onJoin(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       const spitPoisonAreaComponent = SpitPoisonAreaComponentArray.getComponent(entity);
@@ -51,7 +55,7 @@ class _SpitPoisonAreaComponentArray extends _ServerComponentArray<SpitPoisonArea
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const spitPoisonAreaComponent = SpitPoisonAreaComponentArray.getComponent(entity);
 
       const hitbox = transformComponent.hitboxes[0];

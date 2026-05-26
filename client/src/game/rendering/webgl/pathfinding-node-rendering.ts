@@ -1,8 +1,10 @@
+import { angle } from "../../../../../shared/src/utils";
+import { PathfindingNodeIndex, PathData, EntityDebugData } from "../../../../../shared/src/client-server-types";
+import { PathfindingSettings } from "../../../../../shared/src/settings";
 import { createWebGLProgram, gl } from "../../webgl";
-import { EntityDebugData, PathData, PathfindingNodeIndex, angle, PathfindingSettings } from "webgl-test-shared";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { entityExists } from "../../world";
-import { transformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
 import { hoverDebugState } from "../../../ui-state/hover-debug-state";
 import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
@@ -146,7 +148,7 @@ const renderConnectors = (pathData: PathData): void => {
       return;
    }
 
-   const transformComponent = transformComponentArray.getComponent(debugEntity);
+   const transformComponent = TransformComponentArray.getComponent(debugEntity);
    const entityHitbox = transformComponent.hitboxes[0];
    
    const vertices: Array<number> = [];

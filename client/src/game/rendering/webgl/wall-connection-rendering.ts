@@ -1,4 +1,5 @@
-import { WallConnectionData, _point, rotatePointAroundOrigin } from "webgl-test-shared";
+import { WallConnectionData } from "../../../../../shared/src/ai-building-types";
+import { rotatePointAroundOrigin, _point } from "../../../../../shared/src/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";

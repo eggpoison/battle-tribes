@@ -1,4 +1,5 @@
-import { getTileIndexIncludingEdges, getTileX, getTileY, Settings } from "webgl-test-shared";
+import { Settings } from "../../../../../shared/src/settings";
+import { getTileX, getTileY } from "../../../../../shared/src/utils";
 import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY, minVisibleTileX, maxVisibleTileX, minVisibleTileY, maxVisibleTileY } from "../../camera";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getCurrentLayer } from "../../world";

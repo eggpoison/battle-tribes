@@ -1,8 +1,10 @@
+import { Entity } from "../../../../../shared/src/entities";
+import { Settings } from "../../../../../shared/src/settings";
+import { angle, distance, rotatePointAroundPoint, _point } from "../../../../../shared/src/utils";
 import { createWebGLProgram, gl } from "../../webgl";
-import { _point, angle, distance, Entity, rotatePointAroundPoint, Settings } from "webgl-test-shared";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { HealingTotemComponentArray } from "../../entity-components/server-components/HealingTotemComponent";
-import { transformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { entityExists } from "../../world";
 
 export const HEALING_BEAM_THICKNESS = 32;
@@ -47,7 +49,7 @@ export function createHealingBeamShaders(): void {
    precision mediump float;
 
    #define BEAM_THICKNESS ${HEALING_BEAM_THICKNESS.toFixed(1)}
-   #define TPS ${Settings.TICK_RATE.toFixed(1)}
+   #define TPS ${(Settings.TICK_RATE).toFixed(1)}
 
    #define INNER_COLOUR vec4(15.0/255.0, 252.0/255.0, 3.0/255.0, 0.8)
    #define OUTER_COLOUR vec4(10.0/255.0, 199.0/255.0, 54.0/255.0, 0.0)
@@ -134,7 +136,7 @@ const getVisibleHealingBeams = (): ReadonlyArray<HealingBeam> => {
       const entity = entities[i];
       const healingTotemComponent = HealingTotemComponentArray.components[i];
 
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < healingTotemComponent.healingTargetsData.length; i++) {
@@ -162,7 +164,7 @@ const createData = (visibleBeams: ReadonlyArray<HealingBeam>): ReadonlyArray<num
       let endX: number;
       let endY: number;
       if (entityExists(beam.entity)) {
-         const transformComponent = transformComponentArray.getComponent(beam.entity)
+         const transformComponent = TransformComponentArray.getComponent(beam.entity)
          const hitbox = transformComponent.hitboxes[0];
          endX = hitbox.box.posX;
          endY = hitbox.box.posY;

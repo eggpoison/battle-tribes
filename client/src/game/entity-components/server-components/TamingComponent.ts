@@ -1,4 +1,11 @@
-import { TribeType, getTamingSkill, TamingSkill, TamingSkillID, Settings, PacketReader, ItemType, Entity, EntityType, ServerComponentType, UtilVar } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity, EntityType } from "../../../../../shared/src/entities";
+import { ItemType } from "../../../../../shared/src/items/items";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { TamingSkill, TamingSkillID, getTamingSkill } from "../../../../../shared/src/taming";
+import { TribeType } from "../../../../../shared/src/tribes";
+import { UtilVar } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { getPlayerSelectedItem } from "../../player-action-handling";
@@ -8,13 +15,12 @@ import { getTextureArrayIndex } from "../../texture-atlases";
 import { playerTribe } from "../../tribes";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { tamingMenuState } from "../../../ui-state/taming-menu-state";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getRenderThingByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
-import { ClientComponentType } from "../client-component-types";
 
 export interface TamingSkillLearning {
    readonly skill: TamingSkill;
@@ -394,7 +400,7 @@ export function skillLearningIsComplete(skillLearning: TamingSkillLearning): boo
 
 // @Hack
 const getHeadHitbox = (entity: Entity): Hitbox => {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    return transformComponent.hitboxes[0];
 }
 

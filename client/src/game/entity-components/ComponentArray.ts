@@ -1,4 +1,5 @@
-import { Point, Entity } from "webgl-test-shared";
+import { Entity } from "../../../../shared/src/entities";
+import { Point } from "../../../../shared/src/utils";
 import { EntityComponentData } from "../world";
 import { Hitbox } from "../hitboxes";
 import { ComponentTint, EntityRenderObject } from "../EntityRenderObject";

@@ -1,4 +1,8 @@
-import { PacketReader, InventoryName, Item, ITEM_TYPE_RECORD, Inventory, ItemType, Entity, LimbAction, ServerComponentType, assert } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { LimbAction, Entity } from "../../../../../shared/src/entities";
+import { Inventory, Item, ITEM_TYPE_RECORD, InventoryName, ItemType } from "../../../../../shared/src/items/items";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { assert } from "../../../../../shared/src/utils";
 import { playerInstance } from "../../player";
 import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../player-action-handling";
 import { EntityComponentData } from "../../world";

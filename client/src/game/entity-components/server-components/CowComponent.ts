@@ -1,9 +1,14 @@
-import { PacketReader, CowSpecies, Entity, Point, randAngle, randFloat, randInt, Settings, ServerComponentType, angle, HitboxTag } from "webgl-test-shared";
+import { HitboxTag } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { CowSpecies, Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { randAngle, randInt, Point, angle, randFloat } from "../../../../../shared/src/utils";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createDirtParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData } from "../../world";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -39,9 +44,7 @@ export interface CowComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.cow]: _CowComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cow, _CowComponentArray> {}
 }
 
 class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponentData, IntermediateInfo> {
@@ -114,7 +117,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const cowComponent = CowComponentArray.getComponent(entity);
 
       if (cowComponent.grazeProgress !== -1 && tickIntervalHasPassed(0.1 * Settings.TICK_RATE)) {
@@ -134,7 +137,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
    }
 
    public updateFromData(data: CowComponentData, entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const cowComponent = CowComponentArray.getComponent(entity);
       
       const grazeProgress = data.grazeProgress;
@@ -182,7 +185,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 3; i++) {

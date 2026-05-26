@@ -1,4 +1,6 @@
-import { EntitySummonPacket, EntityType, Inventory, InventoryName, NUM_INVENTORY_NAMES, TribesmanTitle } from "webgl-test-shared";
+import { EntityType } from "../../../shared/src/entities";
+import { InventoryName, Inventory, NUM_INVENTORY_NAMES } from "../../../shared/src/items/items";
+import { TribesmanTitle } from "../../../shared/src/titles";
 
 // @Hack? @Robustness
 export const ENTITY_INVENTORY_NAME_RECORD: Partial<Record<EntityType, ReadonlyArray<InventoryName>>> = {
@@ -21,13 +23,6 @@ const summonedInventories = ((): Record<InventoryName, Inventory> => {
 
 let summonedTribeID = 0;
       
-let summonPacket: EntitySummonPacket = {
-   position: [0, 0],
-   rotation: 0,
-   entityType: 0,
-   summonData: {}
-};
-
 export const tabSelectorState = {
    get titles() {
       return titles;
@@ -46,9 +41,5 @@ export const tabSelectorState = {
    },
    setSummonedTribeID(newSummonedTribeID: number): void {
       summonedTribeID = newSummonedTribeID;
-   },
-
-   setSummonPacket(newSummonPacket: EntitySummonPacket): void {
-      summonPacket = newSummonPacket;
    }
 };

@@ -1,4 +1,4 @@
-import { assert } from "../../../../../shared/src";
+import { assert } from "../../../../../shared/src/utils";
 import { frameGraph } from "../../../ui-state/frame-graph-funcs";
 
 let fps = 0;
@@ -8,10 +8,12 @@ let max = 0;
 
 let frameGraphElem: HTMLElement | null = null;
 
-frameGraph.setFPS = (newFPS: number): void => { fps = newFPS; };
-frameGraph.setAverage = (newAverage: number): void => { average = newAverage; };
-frameGraph.setMin = (newMin: number): void => { min = newMin; };
-frameGraph.setMax = (newMax: number): void => { max = newMax; };
+frameGraph.setMetrics = (newFPS: number, newAverage: number, newMin: number, newMax: number): void => {
+   fps = newFPS;
+   average = newAverage;
+   min = newMin;
+   max = newMax;
+};
 
 export function createFrameGraph(): void {
    assert(frameGraphElem === null);

@@ -1,6 +1,7 @@
-import { Settings } from "../../../shared/src";
+import { Settings } from "../../../shared/src/settings";
 
 // @CLEANUP this system is awful. kill it
+
 
 interface TickCallback {
    time: number;

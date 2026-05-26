@@ -1,7 +1,6 @@
 import { getTileX, getTileY, TileIndex, tileIsInWorldIncludingEdges, TileType, Entity, EntityType, NUM_ENTITY_TYPES, Biome, Settings } from "battletribes-shared";
 import Layer from "./Layer.js";
-import { getEntityType } from "./world.js";
-import { layers } from "./layers.js";
+import { getEntityType, layers } from "./world.js";
 
 const entityCounts: Array<EntityType> = [];
 for (let i = 0; i < NUM_ENTITY_TYPES; i++) {

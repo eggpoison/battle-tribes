@@ -1,5 +1,6 @@
+import { boxIsCircular } from "../../../../../shared/src/boxes";
+import { rotatePointAroundOrigin, _point } from "../../../../../shared/src/utils";
 import { createTexture, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../../webgl";
-import { _point, boxIsCircular, rotatePointAroundOrigin } from "webgl-test-shared";
 import { getTexture } from "../../textures";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { getGrassBlockers, GrassBlocker } from "../../grass-blockers";

@@ -1,4 +1,8 @@
-import { randFloat, Point, randAngle, Settings, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { Point, randAngle, randFloat } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getRandomPositionInBox, Hitbox } from "../../hitboxes";
 import { createSlurbParticle } from "../../particles";
@@ -7,7 +11,7 @@ import { coatSlimeTrails } from "../../rendering/webgl/slime-trail-rendering";
 import { playSound, playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityLayer, getEntityRenderObject } from "../../world";
-import { entityIsVisibleToCamera, transformComponentArray } from "./TransformComponent";
+import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -80,7 +84,7 @@ class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComp
          }
       } else {
          if (glurbSegmentComponent.mossBallRenderPart === null) {
-            const transformComponent = transformComponentArray.getComponent(glurbSegment);
+            const transformComponent = TransformComponentArray.getComponent(glurbSegment);
             const hitbox = transformComponent.hitboxes[0];
             
             glurbSegmentComponent.mossBallRenderPart = createMossBallRenderPart(mossBallCompleteness, hitbox);
@@ -96,7 +100,7 @@ class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComp
       // @Hack
       if (entityIsVisibleToCamera(glurb)) {
          const layer = getEntityLayer(glurb);
-         const transformComponent = transformComponentArray.getComponent(glurb);
+         const transformComponent = TransformComponentArray.getComponent(glurb);
          for (const hitbox of transformComponent.hitboxes) {
             coatSlimeTrails(layer, hitbox.box);
          }
@@ -118,7 +122,7 @@ class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComp
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 3; i++) {

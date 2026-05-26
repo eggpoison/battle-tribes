@@ -1,6 +1,9 @@
-import { randAngle, PacketReader, DoorToggleType, Entity, ServerComponentType, Point } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { DoorToggleType, Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Point, randAngle } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -72,7 +75,7 @@ class _DoorComponentArray extends _ServerComponentArray<DoorComponent, DoorCompo
    }
 
    public updateFromData(data: DoorComponentData, entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       const toggleType = data.toggleType;
@@ -103,7 +106,7 @@ class _DoorComponentArray extends _ServerComponentArray<DoorComponent, DoorCompo
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       playSoundOnHitbox("wooden-wall-break.mp3", 0.4, 1, entity, hitbox, false);

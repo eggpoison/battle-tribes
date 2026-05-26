@@ -1,4 +1,6 @@
-import { EntityType, DEFAULT_COLLISION_MASK, CollisionBit, HitboxCollisionType, createRectangularBox } from "webgl-test-shared";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/src/boxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
+import { EntityType } from "../../../../shared/src/entities";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";
 import { createPunjiSticksComponentData } from "../entity-components/server-components/PunjiSticksComponent";
 import { createSpikesComponentData } from "../entity-components/server-components/SpikesComponent";

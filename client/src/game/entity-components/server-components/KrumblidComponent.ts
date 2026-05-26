@@ -1,9 +1,12 @@
-import { HitboxTag, Point, randAngle, randFloat, randInt, Entity, ServerComponentType, angle } from "webgl-test-shared";
+import { HitboxTag } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { Point, angle, randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain, createKrumblidChitinParticle } from "../../particles";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
@@ -83,7 +86,7 @@ class _KrumblidComponentArray extends _ServerComponentArray<KrumblidComponent, K
          return;
       }
       
-      const transformComponent = transformComponentArray.getComponent(krumblid);
+      const transformComponent = TransformComponentArray.getComponent(krumblid);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 2; i++) {

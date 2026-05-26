@@ -1,4 +1,4 @@
-import { TamingSkillID } from "webgl-test-shared";
+import { TamingSkillID } from "../../../shared/src/taming";
 import TamingTier0Icon from "../images/entities/miscellaneous/taming-tier-0.png";
 import TamingTier1Icon from "../images/entities/miscellaneous/taming-tier-1.png";
 import TamingTier2Icon from "../images/entities/miscellaneous/taming-tier-2.png";

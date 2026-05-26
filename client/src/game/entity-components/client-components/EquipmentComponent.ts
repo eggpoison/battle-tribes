@@ -1,5 +1,7 @@
+import { EntityType, Entity } from "../../../../../shared/src/entities";
+import { ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName } from "../../../../../shared/src/items/items";
+import { TribeType } from "../../../../../shared/src/tribes";
 import { getTextureArrayIndex } from "../../texture-atlases";
-import { TribeType, Entity, EntityType, ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName, ARMOUR_ITEM_TYPES, NUM_ITEM_TYPES, itemTypeIsGlove } from "webgl-test-shared";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getInventory, InventoryComponentArray } from "../server-components/InventoryComponent";
 import { getEntityRenderObject, getEntityType } from "../../world";
@@ -7,7 +9,7 @@ import { InventoryUseComponentArray } from "../server-components/InventoryUseCom
 import _ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { tribeComponentArray } from "../server-components/TribeComponent";
-import { transformComponentArray } from "../server-components/TransformComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 import { registerClientComponentArray } from "../component-registry";
 
 const enum ArmourPixelSize {
@@ -132,7 +134,7 @@ const updateArmourRenderPart = (equipmentComponent: EquipmentComponent, entity: 
       const textureSource = getArmourTextureSource(entityType, tribeComponent.tribeType, armour.type as ArmourItemType);
       
       if (equipmentComponent.armourRenderPart === null) {
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          
          equipmentComponent.armourRenderPart = new TexturedRenderPart(

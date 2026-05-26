@@ -1,4 +1,7 @@
-import { Settings, WaterRockData, WaterRockSize, lerp, randFloat, TileType, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges, _point, rotatePointAroundPoint } from "webgl-test-shared";
+import { WaterRockSize, WaterRockData } from "../../../../../shared/src/client-server-types";
+import { Settings } from "../../../../../shared/src/settings";
+import { TileType } from "../../../../../shared/src/tiles";
+import { tileIsInWorldIncludingEdges, getTileIndexIncludingEdges, rotatePointAroundPoint, _point, lerp, randFloat } from "../../../../../shared/src/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getTexture } from "../../textures";
 import { RenderChunkRiverInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "../render-chunks";

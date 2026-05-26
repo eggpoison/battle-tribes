@@ -1,4 +1,4 @@
-import { TileType, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randInt, smoothstep, Settings, TribeType, RectangularBox, ServerComponentType, Biome, EntityType, TreeSize, TileIndex, tileIsInWorldIncludingEdges, createRectangularBox } from "battletribes-shared";
+import { TileType, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randInt, smoothstep, Settings, TribeType, ServerComponentType, Biome, EntityType, TreeSize, TileIndex, tileIsInWorldIncludingEdges, createRectangularBox } from "battletribes-shared";
 import { generateOctavePerlinNoise, generatePerlinNoise, generatePointPerlinNoise } from "../perlin-noise.js";
 import BIOME_GENERATION_INFO, { BiomeGenerationInfo, BiomeSpawnRequirements, TileGenerationInfo } from "./terrain-generation-info.js";
 import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } from "./river-generation.js";
@@ -8,7 +8,7 @@ import { generateCaveEntrances } from "./cave-entrance-generation.js";
 import { groupLocalBiomes, setWallInSubtiles } from "./terrain-generation-utils.js";
 import { createRawSpawnDistribution, EntitySpawnEvent, registerNewSpawnInfo } from "../entity-spawn-info.js";
 import { getEntitiesInRange } from "../ai-shared.js";
-import { destroyEntity, getEntityType, getGameTicks } from "../world.js";
+import { destroyEntity, getEntityType, getGameTicks, surfaceLayer } from "../world.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
 import { entityIsTribesman } from "../entities/tribes/tribe-member.js";
 import { entityIsStructure } from "../structure-placement.js";
@@ -45,7 +45,6 @@ import { createDustfleaConfig } from "../entities/desert/dustflea.js";
 import { createKrumblidConfig } from "../entities/mobs/krumblid.js";
 import { createOkrenConfig } from "../entities/desert/okren.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
-import { surfaceLayer } from "../layers.js";
 import SRandom from "../SRandom.js";
 import { getBoxesCollidingEntities } from "../collision-detection.js";
 
@@ -287,7 +286,7 @@ const getTileGenerationInfo = <T extends TileGenerationInfo>(tileBiomes: Uint8Ar
 }
 
 /** Generate the tile array's tile types based on their biomes */
-const generateTileTypes = (tileBiomes: Uint8Array, biomeDists: Uint8Array, tileTypes: Uint8Array, subtileTypes: Uint8Array, heightMap: Array<number>, temperatureMap: Array<number>, humidityMap: Array<number>): void => {
+const generateTileTypes = (tileBiomes: Uint8Array, biomeDists: Uint8Array, tileTypes: Uint8Array, subtileTypes: Uint8Array, heightMap: Float32Array, temperatures: Float32Array, humidities: Float32Array): void => {
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -296,8 +295,8 @@ const generateTileTypes = (tileBiomes: Uint8Array, biomeDists: Uint8Array, tileT
          const biomeGenerationInfo = getBiomeGenerationInfo(biome);
 
          const height = heightMap[tileIndex];
-         const temperature = temperatureMap[tileIndex];
-         const humidity = humidityMap[tileIndex];
+         const temperature = temperatures[tileIndex];
+         const humidity = humidities[tileIndex];
 
          const floorTileGenerationInfo = getTileGenerationInfo(tileBiomes, biomeDists, biome, biomeGenerationInfo.floorTiles, tileX, tileY, height, temperature, humidity);
          if (floorTileGenerationInfo === undefined) {
@@ -380,18 +379,18 @@ const spreadBiomeDists = (biomeDists: Uint8Array, biomes: Uint8Array, biomeBorde
    }
 }
 
-export function generateSurfaceTerrain(surfaceLayer: Layer): void {
+export function generateSurfaceTerrain(depth: number): Layer {
    // @SQUEAM
    SRandom.seed(2845700342);
-   
+
+   const heightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HEIGHT_NOISE_SCALE, 3, 1.5, 0.75);
+   const tileTemperatures = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, TEMPERATURE_NOISE_SCALE, 0);
+   const tileHumidities = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HUMIDITY_NOISE_SCALE, 0);
+
+   const surfaceLayer =  new Layer(depth, tileTemperatures, tileHumidities);
    for (let i = 0; i < surfaceLayer.ambientLightFactors.length; i++) {
       surfaceLayer.ambientLightFactors[i] = 1;
    }
-
-   // Generate the noise
-   const heightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HEIGHT_NOISE_SCALE, 3, 1.5, 0.75);
-   const temperatureMap = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, TEMPERATURE_NOISE_SCALE, 0);
-   const humidityMap = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HUMIDITY_NOISE_SCALE, 0);
 
    const biomeDists = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
 
@@ -400,17 +399,10 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
    // Fill temperature and humidity arrays, calculate biomes, and mark tiles with biomeDist=1.
    let previousBiome = 0;
    for (let tileIndex = 0; tileIndex < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES; tileIndex++) {
-      const rawTemperature = temperatureMap[tileIndex];
-      const rawHumidity = humidityMap[tileIndex];
+      const temperature = tileTemperatures[tileIndex];
+      const humidity = tileHumidities[tileIndex];
       const height = heightMap[tileIndex];
       
-      // @Huh??
-      const temperature = smoothstep(rawTemperature)
-      const humidity = smoothstep(rawHumidity);
-
-      surfaceLayer.tileTemperatures[tileIndex] = temperature;
-      surfaceLayer.tileHumidities[tileIndex] = humidity;
-
       const biome = calculateMatchingBiome(height, temperature, humidity);
 
       surfaceLayer.tileBiomes[tileIndex] = biome;
@@ -454,7 +446,7 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
    spreadBiomeDists(biomeDists, surfaceLayer.tileBiomes, biomeBorderTiles);
 
    // Generate tiles
-   generateTileTypes(surfaceLayer.tileBiomes, biomeDists, surfaceLayer.tileTypes, surfaceLayer.wallSubtileTypes, heightMap, temperatureMap, humidityMap);
+   generateTileTypes(surfaceLayer.tileBiomes, biomeDists, surfaceLayer.tileTypes, surfaceLayer.wallSubtileTypes, heightMap, tileTemperatures, tileHumidities);
 
    // Create flow directions array and create ice rivers
    for (const tileInfo of riverTiles) {
@@ -658,7 +650,7 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
          const tileX = Math.floor(x / Settings.TILE_SIZE);
          const tileY = Math.floor(y / Settings.TILE_SIZE);
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-         const temperature = temperatureMap[tileIndex];
+         const temperature = tileTemperatures[tileIndex];
          if (temperature > 0.25) {
             return null;
          }
@@ -687,7 +679,7 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
          const tileX = Math.floor(x / Settings.TILE_SIZE);
          const tileY = Math.floor(y / Settings.TILE_SIZE);
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-         const temperature = temperatureMap[tileIndex];
+         const temperature = tileTemperatures[tileIndex];
          if (temperature > 0.25) {
             return null;
          }
@@ -1045,7 +1037,7 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
          const tileX = Math.floor(x / Settings.TILE_SIZE);
          const tileY = Math.floor(y / Settings.TILE_SIZE);
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-         const temperature = temperatureMap[tileIndex];
+         const temperature = tileTemperatures[tileIndex];
          if (temperature < 0.82) {
             return null;
          }
@@ -1221,11 +1213,13 @@ export function generateSurfaceTerrain(surfaceLayer: Layer): void {
          }
       });
    }
+
+   return surfaceLayer;
 }
 
 // @SQUEAM
 export function regenerateSurfaceTerrain(): void {
-   // return;
+   return;
    SRandom.seed(2845700342);
    
    const builtinRandomFunc = Math.random;
@@ -1241,8 +1235,8 @@ export function regenerateSurfaceTerrain(): void {
    const tileTypes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    const tileBiomes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    const riverFlowDirections = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
-   const tileTemperatures = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
-   const tileHumidities = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   surfaceLayer.tileTemperatures = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   surfaceLayer.tileHumidities = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    // const tileMithrilRichnesses = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    const wallSubtileTypes = new Uint8Array(16 * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
 
@@ -1258,11 +1252,8 @@ export function regenerateSurfaceTerrain(): void {
       const height = heightMap[tileIndex];
       
       // @Huh??
-      const temperature = smoothstep(rawTemperature)
-      const humidity = smoothstep(rawHumidity);
-
-      surfaceLayer.tileTemperatures[tileIndex] = temperature;
-      surfaceLayer.tileHumidities[tileIndex] = humidity;
+      const temperature = rawTemperature;
+      const humidity = rawHumidity;
 
       const biome = calculateMatchingBiome(height, temperature, humidity);
 

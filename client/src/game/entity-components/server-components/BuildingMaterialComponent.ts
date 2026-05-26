@@ -1,4 +1,6 @@
-import { PacketReader, Entity, EntityType, BuildingMaterial, ServerComponentType } from "webgl-test-shared";
+import { BuildingMaterial, ServerComponentType } from "../../../../../shared/src/components";
+import { EntityType, Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
@@ -16,9 +18,7 @@ export interface BuildingMaterialComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.buildingMaterial]: BuildingMaterialComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.buildingMaterial, BuildingMaterialComponentArray> {}
 }
 
 export const WALL_TEXTURE_SOURCES = ["entities/wall/wooden-wall.png", "entities/wall/stone-wall.png"];

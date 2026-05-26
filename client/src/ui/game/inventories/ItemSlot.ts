@@ -1,4 +1,6 @@
-import { assert, Entity, Inventory, InventoryName, Item, ItemType } from "../../../../../shared/src";
+import { Entity } from "../../../../../shared/src/entities";
+import { Inventory, InventoryName, ItemType, Item } from "../../../../../shared/src/items/items";
+import { assert } from "../../../../../shared/src/utils";
 import { getItemTypeImage } from "../../../game/client-item-info";
 import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
 import { shiftIsPressed } from "../../../game/event-handling";

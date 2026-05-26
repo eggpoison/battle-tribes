@@ -1,4 +1,5 @@
-import { assert, Settings } from "../../../../shared/src";
+import { Settings } from "../../../../shared/src/settings";
+import { assert } from "../../../../shared/src/utils";
 
 let socket: WebSocket | null = null;
 

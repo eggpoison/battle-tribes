@@ -1,9 +1,8 @@
-import { EntityType, Settings, SubtileType, TileType, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randAngle, randItem, TileIndex, tileIsInWorldIncludingEdges, Biome } from "battletribes-shared";
+import { EntityType, Settings, SubtileType, TileType, getTileIndexIncludingEdges, getTileX, getTileY, lerp, randAngle, randItem, TileIndex, tileIsInWorldIncludingEdges, Biome } from "battletribes-shared";
 import { getEntitiesInRange } from "../ai-shared.js";
 import { createGuardianConfig } from "../entities/mobs/guardian.js";
-import { createEntity, getEntityType } from "../world.js";
+import { createEntity, getEntityType, surfaceLayer } from "../world.js";
 import { tileHasWallSubtile, setWallInSubtiles } from "./terrain-generation-utils.js";
-import { surfaceLayer } from "../layers.js";
 import Layer from "../Layer.js";
 
 const enum Vars {

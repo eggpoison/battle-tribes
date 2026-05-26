@@ -1,4 +1,3 @@
-import { Entity } from "webgl-test-shared";
 import { entityExists, getEntityType } from "../game/world";
 import { sendStructureUninteractPacket } from "../game/networking/packet-sending/packet-sending";
 import { updateHighlightedEntityRenderObject } from "../game/entity-selection";

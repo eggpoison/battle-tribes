@@ -1,4 +1,6 @@
-import { randFloat, Entity, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { randFloat } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createWoodSpeckParticle } from "../../particles";
@@ -7,7 +9,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -16,9 +18,7 @@ export interface TreeRootBaseComponentData {}
 export interface TreeRootBaseComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.treeRootBase]: _TreeRootBaseComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootBase, _TreeRootBaseComponentArray> {}
 }
 
 class _TreeRootBaseComponentArray extends _ServerComponentArray<TreeRootBaseComponent, TreeRootBaseComponentData> {
@@ -58,7 +58,7 @@ class _TreeRootBaseComponentArray extends _ServerComponentArray<TreeRootBaseComp
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       for (let i = 0; i < 10; i++) {

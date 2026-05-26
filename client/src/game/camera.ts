@@ -1,4 +1,4 @@
-import { Point, Settings, Entity, getTileIndexIncludingEdges, tileIsInWorld } from "webgl-test-shared";
+import { getTileIndexIncludingEdges, Point, tileIsInWorld } from "../../../shared/src/utils";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
 import Chunk from "./Chunk";
@@ -6,10 +6,12 @@ import Layer from "./Layer";
 import { entityExists, getCurrentLayer } from "./world";
 import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
 import { Hitbox } from "./hitboxes";
-import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { debugDisplayState } from "../ui-state/debug-display-state";
 import { hoverDebugState } from "../ui-state/hover-debug-state";
 import { Tile } from "./Tile";
+import { Entity } from "../../../shared/src/entities";
+import { Settings } from "../../../shared/src/settings";
 
 let cameraSubjectHitbox: Hitbox | null = null;
 
@@ -91,7 +93,7 @@ export function setCameraZoom(zoom: number): void {
 }
 
 export function setCameraSubject(cameraSubject: Entity | 0): void {
-   const transformComponent = transformComponentArray.tryGetComponent(cameraSubject);
+   const transformComponent = TransformComponentArray.tryGetComponent(cameraSubject);
    if (transformComponent !== null) {
       cameraSubjectHitbox = transformComponent.hitboxes[0];
    } else {

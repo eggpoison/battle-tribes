@@ -1,4 +1,10 @@
-import { createZeroedLimbState, LimbConfiguration, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, SPEAR_CHARGED_LIMB_STATE, interpolateLimbState, copyLimbState, PacketReader, InventoryName, ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, itemInfoIsTool, Settings, BlockType, ServerComponentType, Point, lerp, randAngle, randFloat, randItem, Entity, EntityType, LimbAction, HitboxTag, _point } from "webgl-test-shared";
+import { InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, itemInfoIsTool, ItemType } from "../../../../../shared/src/items/items";
+import { Entity, EntityType, LimbAction } from "../../../../../shared/src/entities";
+import { copyLimbState, createZeroedLimbState, interpolateLimbState, LimbConfiguration, LimbState, RESTING_LIMB_STATES, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, SPEAR_CHARGED_LIMB_STATE } from "../../../../../shared/src/attack-patterns";
+import { _point, lerp, Point, randAngle, randFloat, randItem } from "../../../../../shared/src/utils";
+import { BlockType, ServerComponentType } from "../../../../../shared/src/components";
+import { Settings } from "../../../../../shared/src/settings";
+import { PacketReader } from "../../../../../shared/src/packets";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import Particle from "../../Particle";
@@ -9,7 +15,7 @@ import { VisualRenderPart, RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { Light, removeLight } from "../../lights";
 import { getRenderPartRenderPosition } from "../../rendering/render-part-matrices";
@@ -78,9 +84,9 @@ export interface InventoryUseComponent {
 
    readonly limbAttachPoints: Array<RenderAttachPoint>;
    readonly limbRenderParts: Array<VisualRenderPart>;
-   readonly activeItemRenderParts: Record<number, TexturedRenderPart>;
+   readonly activeItemRenderParts: Partial<Record<number, TexturedRenderPart>>;
    readonly inactiveCrossbowArrowRenderParts: Record<number, VisualRenderPart>;
-   readonly arrowRenderParts: Record<number, VisualRenderPart>;
+   readonly arrowRenderParts: Partial<Record<number, VisualRenderPart>>;
 
    customItemRenderPart: TexturedRenderPart | null;
    readonly bandageRenderParts: Array<VisualRenderPart>;
@@ -311,7 +317,7 @@ export function getCurrentLimbState(limb: LimbInfo): LimbState {
 }
 
 export function getPlayerLimbHitbox(limb: LimbInfo): Hitbox {
-   const transformComponent = transformComponentArray.getComponent(playerInstance!);
+   const transformComponent = TransformComponentArray.getComponent(playerInstance!);
    // @Hack
    if (limb.inventoryName === InventoryName.hotbar) {
       return transformComponent.hitboxes[1];
@@ -398,7 +404,7 @@ const lerpThingBetweenStates = (entity: Entity, thing: RenderPart, startState: L
 }
 
 const removeHeldItemRenderPart = (inventoryUseComponent: InventoryUseComponent, entity: Entity, limbIdx: number): void => {
-   if (inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
+   if (inventoryUseComponent.activeItemRenderParts[limbIdx] !== undefined) {
       const renderObject = getEntityRenderObject(entity);
       renderObject.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
       delete inventoryUseComponent.activeItemRenderParts[limbIdx];
@@ -412,7 +418,7 @@ const updateHeldItemRenderPart = (inventoryUseComponent: InventoryUseComponent, 
    }
    
    // Create held item render part if missing
-   if (!inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
+   if (inventoryUseComponent.activeItemRenderParts[limbIdx] === undefined) {
       const renderPart = new TexturedRenderPart(
          inventoryUseComponent.limbAttachPoints[limbIdx],
          limbIdx === 0 ? 1.15 : 1.1,
@@ -516,7 +522,7 @@ const updateHeldItemRenderPartForAttack = (inventoryUseComponent: InventoryUseCo
 }
 
 const removeArrowRenderPart = (inventoryUseComponent: InventoryUseComponent, entity: Entity, limbIdx: number): void => {
-    if (inventoryUseComponent.arrowRenderParts.hasOwnProperty(limbIdx)) {
+    if (inventoryUseComponent.arrowRenderParts[limbIdx] !== undefined) {
       const renderObject = getEntityRenderObject(entity);
       renderObject.removeRenderPart(inventoryUseComponent.arrowRenderParts[limbIdx]);
       delete inventoryUseComponent.arrowRenderParts[limbIdx];
@@ -576,7 +582,7 @@ class _InventoryUseComponentArray extends _ServerComponentArray<InventoryUseComp
 
       const numUseInfos = reader.readNumber();
       for (let i = 0; i < numUseInfos; i++) {
-         const usedInventoryName = reader.readNumber() as InventoryName;
+         const usedInventoryName: InventoryName = reader.readNumber();
 
          const limbInfo = createZeroedLimbInfo(usedInventoryName);
          limbInfos.push(limbInfo);
@@ -654,7 +660,7 @@ class _InventoryUseComponentArray extends _ServerComponentArray<InventoryUseComp
             continue;
          }
 
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          getHitboxVelocity(hitbox);
          const velocity = _point;
@@ -662,7 +668,7 @@ class _InventoryUseComponentArray extends _ServerComponentArray<InventoryUseComp
          switch (limbInfo.heldItemType) {
             case ItemType.deepfrost_heart: {
                // Make the deep frost heart item spew blue blood particles
-               const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
+               const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx]!;
                getRenderPartRenderPosition(activeItemRenderPart);
                const renderPosition = _point;
                createDeepFrostHeartBloodParticles(renderPosition.x, renderPosition.y, velocity.x, velocity.y);
@@ -1070,7 +1076,7 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
    const heldItemType = limb.heldItemType;
    const itemSize = heldItemType !== null && itemInfoIsTool(heldItemType, ITEM_INFO_RECORD[heldItemType]) ? 8 * 4 : 4 * 4;
    
-   const heldItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
+   const heldItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx]!;
    updateLimbTorch(limb, heldItemRenderPart, entity, heldItemType);
    
    // @Hack
@@ -1317,7 +1323,7 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
             //    }
             // }
 
-            if (!inventoryUseComponent.arrowRenderParts.hasOwnProperty(limbIdx)) {
+            if (inventoryUseComponent.arrowRenderParts[limbIdx] === undefined) {
                inventoryUseComponent.arrowRenderParts[limbIdx] = new TexturedRenderPart(
                   attachPoint,
                   attachPoint.zIndex + 0.15,
@@ -1348,7 +1354,7 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
             let textureSourceArray: ReadonlyArray<string>;
             // @Hack @Incomplete
             textureSourceArray = BOW_CHARGE_TEXTURE_SOURCES;
-            inventoryUseComponent.activeItemRenderParts[limbIdx].switchTextureSource(textureSourceArray[0]);
+            inventoryUseComponent.activeItemRenderParts[limbIdx]!.switchTextureSource(textureSourceArray[0]);
          } else if (limb.action === LimbAction.arrowReleased) {
             removeArrowRenderPart(inventoryUseComponent, entity, limbIdx);
          }
@@ -1531,7 +1537,7 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
 }
 
 const playBlockEffects = (x: number, y: number, blockType: BlockType, entity: Entity): void => {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    playSoundOnHitbox(blockType === BlockType.shieldBlock ? "shield-block.mp3" : "block.mp3", blockType === BlockType.toolBlock ? 0.8 : 0.5, 1, entity, hitbox, false);
    

@@ -1,10 +1,14 @@
-import { randFloat, randItem, randInt, Point, randAngle, HitFlags, ServerComponentType, PacketReader, Entity, TreeSize, angle } from "webgl-test-shared";
+import { HitFlags } from "../../../../../shared/src/client-server-types";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { TreeSize, Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Point, randAngle, randFloat, angle, randItem, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, createWoodSpeckParticle, LEAF_SPECK_COLOUR_HIGH, LEAF_SPECK_COLOUR_LOW } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -115,7 +119,7 @@ class _TreeComponentArray extends _ServerComponentArray<TreeComponent, TreeCompo
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       const treeComponent = TreeComponentArray.getComponent(entity);

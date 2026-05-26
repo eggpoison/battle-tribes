@@ -1,4 +1,9 @@
-import { Point, HitFlags, Entity, ServerComponentType, PacketReader, Settings } from "webgl-test-shared";
+import { HitFlags } from "../../../../../shared/src/client-server-types";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { Point } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
 import { EntityComponentData, getEntityRenderObject } from "../../world";

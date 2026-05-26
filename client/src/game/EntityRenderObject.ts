@@ -1,4 +1,5 @@
-import { Entity, assert } from "webgl-test-shared";
+import { Entity } from "../../../shared/src/entities";
+import { assert } from "../../../shared/src/utils";
 import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
 import { removeRenderable } from "./rendering/render-loop";
 import { renderParentIsHitbox, RenderPart } from "./render-parts/render-parts";

@@ -1,10 +1,13 @@
-import { Entity, PacketReader, assertUnreachable, randAngle, randFloat, rotatePointAroundOrigin, BlueprintType, ServerComponentType, _point } from "webgl-test-shared";
+import { BlueprintType, ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { randFloat, randAngle, rotatePointAroundOrigin, _point, assertUnreachable } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../../particles";
 import { getEntityTextureAtlasInfo, getTextureArrayIndex } from "../../texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { BALLISTA_GEAR_X, BALLISTA_GEAR_Y, BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../../utils";
@@ -41,9 +44,7 @@ interface ProgressTextureInfo {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.blueprint]: BlueprintComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.blueprint, BlueprintComponentArray> {}
 }
 
 // @Cleanup: Some of these are duplicates
@@ -377,7 +378,7 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
 };
 
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    
    for (let i = 0; i < 2; i++) {
@@ -461,7 +462,7 @@ class BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent, 
       for (let i = 0; i < progressTextureInfoArray.length; i++) {
          const progressTextureInfo = progressTextureInfoArray[i];
 
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
 
          const renderPart = new TexturedRenderPart(
@@ -487,7 +488,7 @@ class BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent, 
    }
 
    public onSpawn(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("blueprint-place.mp3", 0.4, 1, entity, hitbox, false);
    }
@@ -503,7 +504,7 @@ class BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent, 
       updatePartialTexture(entity);
 
       if (blueprintProgress !== blueprintComponent.lastBlueprintProgress) {
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
 
          playSoundOnHitbox("blueprint-work.mp3", 0.4, randFloat(0.9, 1.1), entity, hitbox, false);
@@ -559,7 +560,7 @@ class BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent, 
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       playSoundOnHitbox("blueprint-work.mp3", 0.4, 1, entity, hitbox, false);
@@ -651,7 +652,7 @@ const updatePartialTexture = (entity: Entity): void => {
 
       const textureSource = progressTextureInfo.progressTextureSources[localTextureIndex];
       if (blueprintComponent.partialRenderParts.length <= i) {
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          // @HACK @COPYNPASTE since fence gates don't have their first hitbox at its actual 'position'
          let hitbox: Hitbox;
          if (blueprintType === BlueprintType.fenceGate) {

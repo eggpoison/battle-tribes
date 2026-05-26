@@ -1,4 +1,8 @@
-import { randFloat, randItem, randInt, Point, randAngle, ServerComponentType, CircularBox, HitFlags, Entity, angle } from "webgl-test-shared";
+import { CircularBox } from "../../../../../shared/src/boxes";
+import { HitFlags } from "../../../../../shared/src/client-server-types";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { Point, randAngle, randFloat, angle, randItem, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -6,7 +10,7 @@ import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH, createWoodSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
@@ -17,12 +21,10 @@ export interface PalmTreeComponentData {}
 export interface PalmTreeComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.palmTree]: PalmTreeComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.palmTree, _PalmTreeComponentArray> {}
 }
 
-class PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, PalmTreeComponentData> {
+class _PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, PalmTreeComponentData> {
    public decodeData(): PalmTreeComponentData {
       return {};
    }
@@ -89,7 +91,7 @@ class PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, Pa
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
    
       const radius = (hitbox.box as CircularBox).radius;
@@ -118,4 +120,4 @@ class PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, Pa
    }
 }
 
-export const palmTreeComponentArray = registerServerComponentArray(ServerComponentType.palmTree, PalmTreeComponentArray, true);
+export const PalmTreeComponentArray = registerServerComponentArray(ServerComponentType.palmTree, _PalmTreeComponentArray, true);

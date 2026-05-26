@@ -1,4 +1,6 @@
-import { assert, Entity, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { assert } from "../../../../../shared/src/utils";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
@@ -6,7 +8,7 @@ import _ServerComponentArray from "../ServerComponentArray";
 import { RenderPart } from "../../render-parts/render-parts";
 import { StructureConnection } from "../../structure-placement";
 import { Hitbox } from "../../hitboxes";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -125,7 +127,7 @@ const createConnectingRenderPart = (connection: StructureConnection, parentHitbo
 }
 
 export function addFenceConnection(fence: Entity, connection: StructureConnection): void {
-   const transformComponent = transformComponentArray.getComponent(fence);
+   const transformComponent = TransformComponentArray.getComponent(fence);
    const hitbox = transformComponent.hitboxes[0];
    
    const fenceComponent = FenceComponentArray.getComponent(fence);

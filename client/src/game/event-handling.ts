@@ -1,10 +1,11 @@
-import { Point, Settings } from "../../../shared/src";
+import { Point } from "../../../shared/src/utils";
+import { Settings } from "../../../shared/src/settings";
 import { gameUIState } from "../ui-state/game-ui-state";
 import { nerdVision } from "../ui-state/nerd-vision-funcs";
 import { openChatMessageInput } from "../ui/game/Chat";
 import { closeCurrentMenu, hasOpenNonEmbodiedMenu, MenuType, openMenu, toggleMenu } from "../ui/menus";
 import { updateCursorScreenPos } from "./camera";
-import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { sendAscendPacket, sendDismountCarrySlotPacket, sendItemDropPacket } from "./networking/packet-sending/packet-sending";
 import { playerInstance } from "./player";
 import { getHotbarSelectedItemSlot, getSelectedItemInfo, selectItemSlot } from "./player-action-handling";
@@ -66,7 +67,7 @@ export let shiftIsPressed = false;
 export let playerIsLightspeed = false;
 
 let movementBitfield = 0;
-let moveInputVec = new Point(0, 0);
+const moveInputVec = new Point(0, 0);
 let moveInputDir = -999;
 
 function updatePlayerInputInfo(bit: number, isStart: boolean): void {
@@ -137,7 +138,7 @@ function dropItem(): void {
       return;
    }
 
-   const playerTransformComponent = transformComponentArray.getComponent(playerInstance);
+   const playerTransformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = playerTransformComponent.hitboxes[0];
    
    const dropAmount = shiftIsPressed ? 99999 : 1;
@@ -200,7 +201,7 @@ function onShiftStart(): void {
    
    // Dismount current mount if the player isn't shift clicking an item in an inventory
    if (!hasOpenNonEmbodiedMenu() && playerInstance !== null) {
-      const transformComponent = transformComponentArray.getComponent(playerInstance);
+      const transformComponent = TransformComponentArray.getComponent(playerInstance);
       const playerHitbox = transformComponent.hitboxes[0];
       if (playerHitbox.parent !== null && entityExists(playerHitbox.parent.entity)) {
          sendDismountCarrySlotPacket();

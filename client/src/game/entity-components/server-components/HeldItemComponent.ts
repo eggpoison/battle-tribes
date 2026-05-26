@@ -1,4 +1,7 @@
-import { PacketReader, Entity, ServerComponentType, ItemType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { ItemType } from "../../../../../shared/src/items/items";
+import { PacketReader } from "../../../../../shared/src/packets";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getEntityServerComponentTypes } from "../component-types";

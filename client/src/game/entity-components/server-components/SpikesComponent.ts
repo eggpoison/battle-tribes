@@ -1,10 +1,13 @@
-import { Entity, PacketReader, ServerComponentType, randAngle, randFloat } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { randFloat, randAngle } from "../../../../../shared/src/utils";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../../particles";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
@@ -96,7 +99,7 @@ class _SpikesComponentArray extends _ServerComponentArray<SpikesComponent, Spike
       spikesComponent.isCovered = data.isCovered;
       
       if (isCoveredBefore !== spikesComponent.isCovered) {
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
 
          if (spikesComponent.isCovered) {

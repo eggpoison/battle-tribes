@@ -1,4 +1,4 @@
-import { TribeType } from "webgl-test-shared";
+import { TribeType } from "../../../shared/src/tribes";
 
 interface ClientTribeInfo {
    readonly name: string;

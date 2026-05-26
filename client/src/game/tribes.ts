@@ -1,4 +1,9 @@
-import { TribeType, getTechByID, Tech, TechID, TechTreeUnlockProgress, PacketReader, ItemType, Entity, EntityType, ItemRequirements } from "webgl-test-shared";
+import { Entity, EntityType } from "../../../shared/src/entities";
+import { ItemRequirements } from "../../../shared/src/items/crafting-recipes";
+import { ItemType } from "../../../shared/src/items/items";
+import { PacketReader } from "../../../shared/src/packets";
+import { getTechByID, Tech, TechID, TechTreeUnlockProgress } from "../../../shared/src/techs";
+import { TribeType } from "../../../shared/src/tribes";
 import { techTreeState } from "../ui-state/tech-tree-state";
 import { playHeadSound } from "./sound";
 
@@ -107,12 +112,12 @@ export function readExtendedTribeData(reader: PacketReader): ExtendedTribe {
    const techTreeUnlockProgress: TechTreeUnlockProgress = {};
    const numTechProgressEntries = reader.readNumber();
    for (let i = 0; i < numTechProgressEntries; i++) {
-      const techID = reader.readNumber() as TechID;
+      const techID: TechID = reader.readNumber();
 
       const itemProgress: ItemRequirements = {};
       const numRequirements = reader.readNumber();
       for (let j = 0; j < numRequirements; j++) {
-         const itemType = reader.readNumber() as ItemType;
+         const itemType: ItemType = reader.readNumber();
          const amount = reader.readNumber();
          itemProgress[itemType] = amount;
       }
@@ -129,7 +134,7 @@ export function readExtendedTribeData(reader: PacketReader): ExtendedTribe {
    const numTribesmen = reader.readNumber();
    for (let i = 0; i < numTribesmen; i++) {
       const entity: Entity = reader.readNumber();
-      const entityType = reader.readNumber() as EntityType;
+      const entityType: EntityType = reader.readNumber();
       const name = reader.readString();
 
       const tribesman: TribesmanInfo = {

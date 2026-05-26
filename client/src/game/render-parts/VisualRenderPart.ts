@@ -1,4 +1,4 @@
-import { Colour, lerp } from "../../../../shared/src";
+import { Colour, lerp } from "../../../../shared/src/utils";
 import BaseRenderPart from "./BaseRenderPart";
 
 // Underscore at the start to differentiate from the specific type in render-parts

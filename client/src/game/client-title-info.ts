@@ -1,4 +1,4 @@
-import { TribesmanTitle } from "webgl-test-shared";
+import { TribesmanTitle } from "../../../shared/src/titles";
 
 export interface ClientTitleInfo {
    readonly effects: ReadonlyArray<string>;

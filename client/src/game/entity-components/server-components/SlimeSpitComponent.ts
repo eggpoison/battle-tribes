@@ -1,11 +1,14 @@
-import { ServerComponentType, Entity, Settings, PacketReader } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
 import { createPoisonParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../component-types";
@@ -61,7 +64,7 @@ class _SlimeSpitComponentArray extends _ServerComponentArray<SlimeSpitComponent,
    }
 
    public onLoad(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("slime-spit.mp3", 0.5, 1, entity, hitbox, false);
    }

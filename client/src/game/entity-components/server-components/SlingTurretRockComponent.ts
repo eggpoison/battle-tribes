@@ -1,13 +1,15 @@
-import { randAngle, randFloat, Entity, ServerComponentType, _point } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { _point, randAngle, randFloat } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
-import { getHitboxVelocity, Hitbox } from "../../hitboxes";
+import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -48,7 +50,7 @@ class _SlingTurretRockComponentArray extends _ServerComponentArray<SlingTurretRo
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       getHitboxVelocity(hitbox);
       const velocity = _point;

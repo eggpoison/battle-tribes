@@ -1,4 +1,6 @@
-import { Point, Entity, ServerComponentType, angle } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { Point, angle } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
@@ -9,7 +11,7 @@ import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { EMBRASURE_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
-import { transformComponentArray } from "../server-components/TransformComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
@@ -69,7 +71,7 @@ class _EmbrasureComponentArray extends _ClientComponentArray<EmbrasureComponent,
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       playSoundOnHitbox("wooden-wall-break.mp3", 0.4, 1, entity, hitbox, false);

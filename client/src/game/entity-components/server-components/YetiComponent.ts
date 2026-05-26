@@ -1,9 +1,14 @@
-import { HitboxTag, Entity, Settings, ServerComponentType, PacketReader, lerp, Point, randAngle, randFloat, randItem, angle } from "webgl-test-shared";
+import { HitboxTag } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { randFloat, randAngle, Point, randItem, angle, lerp } from "../../../../../shared/src/utils";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createSnowParticle, createWhiteSmokeParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { randomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import _ServerComponentArray from "../ServerComponentArray";
@@ -124,7 +129,7 @@ class YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompon
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       const yetiComponent = yetiComponentArray.getComponent(entity);
@@ -172,7 +177,7 @@ class YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompon
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       playSoundOnHitbox(randItem(DEATH_SOUNDS), 0.7, 1, entity, hitbox, false);

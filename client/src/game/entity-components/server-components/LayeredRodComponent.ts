@@ -1,4 +1,9 @@
-import { TileType, Entity, EntityType, PacketReader, Colour, getTileIndexIncludingEdges, lerp, Settings, ServerComponentType, angle } from "webgl-test-shared";
+import { Settings } from "../../../../../shared/src/settings";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity, EntityType } from "../../../../../shared/src/entities";
+import { TileType } from "../../../../../shared/src/tiles";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { angle, Colour, getTileIndexIncludingEdges, lerp } from "../../../../../shared/src/utils";
 import ColouredRenderPart from "../../render-parts/ColouredRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType, surfaceLayer } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";

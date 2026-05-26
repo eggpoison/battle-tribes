@@ -1,5 +1,5 @@
-import { angle } from "../../../../../shared/src";
-import { transformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { angle } from "../../../../../shared/src/utils";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { getTexture } from "../../textures";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
@@ -56,8 +56,8 @@ export function createDebugImageShaders(): void {
 
 export function renderDebugImages(): void {
    const vertices: Array<number> = [];
-   for (let i = 0; i < transformComponentArray.components.length; i++) {
-      const transformComponent = transformComponentArray.components[i];
+   for (let i = 0; i < TransformComponentArray.components.length; i++) {
+      const transformComponent = TransformComponentArray.components[i];
 
       for (const child of transformComponent.hitboxes) {
          const hitbox = child;

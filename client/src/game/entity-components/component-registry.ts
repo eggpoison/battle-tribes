@@ -1,4 +1,4 @@
-import { ServerComponentType } from "../../../../shared/src";
+import { ServerComponentType } from "../../../../shared/src/components";
 import { ClientComponentType } from "./client-component-types";
 import _ClientComponentArray from "./ClientComponentArray";
 import _ServerComponentArray from "./ServerComponentArray";

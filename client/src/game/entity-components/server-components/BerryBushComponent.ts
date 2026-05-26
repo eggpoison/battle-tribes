@@ -1,9 +1,13 @@
-import { randAngle, randFloat, randInt, Entity, ServerComponentType, PacketReader, CircularBox } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { CircularBox } from "../../../../../shared/src/boxes";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
@@ -97,7 +101,7 @@ class _BerryBushComponentArray extends _ServerComponentArray<BerryBushComponent,
    }
 
    public onHit(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const radius = (hitbox.box as CircularBox).radius;
 
@@ -117,7 +121,7 @@ class _BerryBushComponentArray extends _ServerComponentArray<BerryBushComponent,
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const radius = (hitbox.box as CircularBox).radius;
 

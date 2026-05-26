@@ -1,4 +1,7 @@
-import { randAngle, randFloat, Entity, ServerComponentType, Point, HitboxTag } from "webgl-test-shared";
+import { HitboxTag } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { randFloat, randAngle, Point } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
 import Particle from "../../Particle";
@@ -8,7 +11,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
@@ -96,7 +99,7 @@ class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentCompon
    }
 
    public onDie(serpent: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(serpent);
+      const transformComponent = TransformComponentArray.getComponent(serpent);
       const hitbox = transformComponent.hitboxes[0];
 
       for (const hitbox of transformComponent.hitboxes) {

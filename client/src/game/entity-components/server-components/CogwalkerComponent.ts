@@ -1,4 +1,5 @@
-import { LimbConfiguration, ServerComponentType } from "webgl-test-shared";
+import { LimbConfiguration } from "../../../../../shared/src/attack-patterns";
+import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -15,9 +16,7 @@ export interface CogwalkerComponentData {}
 export interface CogwalkerComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.cogwalker]: CogwalkerComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cogwalker, CogwalkerComponentArray> {}
 }
 
 class CogwalkerComponentArray extends _ServerComponentArray<CogwalkerComponent, CogwalkerComponentData> {

@@ -1,10 +1,12 @@
-import { ItemType, Settings, Point, polarVec2, randAngle, randFloat, randSign, rotatePointAroundPoint, _point } from "webgl-test-shared";
+import { ItemType } from "../../../../../shared/src/items/items";
+import { techTreeState } from "../../../ui-state/tech-tree-state";
+import { Settings } from "../../../../../shared/src/settings";
+import { _point, Point, polarVec2, randAngle, randFloat, randSign, rotatePointAroundPoint } from "../../../../../shared/src/utils";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth } from "../../webgl";
 import { getEntityTextureAtlasInfo, getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import { getTechTreeGL } from "./tech-tree-rendering";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
-import { techTreeState } from "../../../ui-state/tech-tree-state";
 
 interface TechTreeItem {
    readonly itemType: ItemType;

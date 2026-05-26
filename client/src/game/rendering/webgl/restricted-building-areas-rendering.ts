@@ -1,4 +1,5 @@
-import { _point, RestrictedBuildingAreaData, rotatePointAroundOrigin } from "webgl-test-shared";
+import { RestrictedBuildingAreaData } from "../../../../../shared/src/client-server-types";
+import { rotatePointAroundOrigin, _point } from "../../../../../shared/src/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";

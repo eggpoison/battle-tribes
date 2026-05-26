@@ -1,8 +1,9 @@
-import { randFloat, randItem, Entity } from "webgl-test-shared";
+import { Entity } from "../../../../../shared/src/entities";
+import { randFloat, randItem } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
-import { transformComponentArray } from "../server-components/TransformComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 import { registerClientComponentArray } from "../component-registry";
 
 export interface RandomSoundComponentData {}
@@ -19,9 +20,7 @@ export interface RandomSoundComponent {
 }
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry {
-      [ClientComponentType.randomSound]: RandomSoundComponentArray;
-   }
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.randomSound, RandomSoundComponentArray> {}
 }
 
 // @Cleanup this system is so shit
@@ -68,7 +67,7 @@ class RandomSoundComponentArray extends _ClientComponentArray<RandomSoundCompone
       if (randomSoundComponent.soundTimerTicks <= 0) {
          randomSoundComponent.soundTimerTicks = randFloat(randomSoundComponent.minSoundIntervalTicks, randomSoundComponent.maxSoundIntervalTicks);
 
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          
          const soundSrc = randItem(randomSoundComponent.sounds);

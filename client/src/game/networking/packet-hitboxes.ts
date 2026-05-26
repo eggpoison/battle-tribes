@@ -1,4 +1,7 @@
-import { PacketReader, Box, CircularBox, RectangularBox, assert, Entity, boxIsCircular, assertBoxIsCircular, assertBoxIsRectangular, updateSideAxes, cloneBox, createCircularBox, createRectangularBox } from "webgl-test-shared";
+import { PacketReader } from "../../../../shared/src/packets";
+import { assertBoxIsCircular, assertBoxIsRectangular, Box, boxIsCircular, CircularBox, cloneBox, createCircularBox, createRectangularBox, RectangularBox, updateSideAxes } from "../../../../shared/src/boxes";
+import { Entity } from "../../../../shared/src/entities";
+import { assert } from "../../../../shared/src/utils";
 import { currentSnapshot } from "../networking/snapshots";
 import { Hitbox, HitboxTether, createHitbox, getHitboxByLocalID } from "../hitboxes";
 import { findEntityHitbox } from "../entity-components/server-components/TransformComponent";

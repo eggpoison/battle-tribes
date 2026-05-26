@@ -1,4 +1,3 @@
-import { ServerComponentType } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 
 // export interface SwingAttackComponentData {}

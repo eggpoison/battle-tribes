@@ -1,4 +1,4 @@
-import { lerp } from "webgl-test-shared";
+import { lerp } from "../../../../../shared/src/utils";
 import { createWebGLCanvas, createWebGLProgram, createWebGLRenderingContext } from "../../webgl";
 import { frameGraph } from "../../../ui-state/frame-graph-funcs";
 

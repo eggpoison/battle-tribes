@@ -1,7 +1,10 @@
-import { Entity, Box, boxIsCircular, getRelativePivotPos, HitboxCollisionType, CollisionGroup, getEntityCollisionGroup, Point, polarVec2, rotatePointAroundOrigin, _point } from "webgl-test-shared";
+import { Entity } from "../../../../../shared/src/entities";
+import { _point, Point, polarVec2, rotatePointAroundOrigin } from "../../../../../shared/src/utils";
+import { Box, boxIsCircular, getRelativePivotPos, HitboxCollisionType } from "../../../../../shared/src/boxes";
+import { CollisionGroup, getEntityCollisionGroup } from "../../../../../shared/src/collision-groups";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { transformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { getEntityLayer, getEntityType } from "../../world";
 import Layer from "../../Layer";
 import { getHitboxCollisionType } from "../../hitboxes";
@@ -233,8 +236,8 @@ const renderVertices = (vertices: Array<number>): void => {
 export function renderHitboxes(layer: Layer): void {
    const vertices: Array<number> = [];
    
-   for (let i = 0; i < transformComponentArray.entities.length; i++) {
-      const entity = transformComponentArray.entities[i];
+   for (let i = 0; i < TransformComponentArray.entities.length; i++) {
+      const entity = TransformComponentArray.entities[i];
 
       // Don't show hitboxes from other layers
       const entityLayer = getEntityLayer(entity);
@@ -248,7 +251,7 @@ export function renderHitboxes(layer: Layer): void {
          continue;
       }
       
-      const transformComponent = transformComponentArray.components[i];
+      const transformComponent = TransformComponentArray.components[i];
       
       const adjustment = calculateBoxAdjustment(entity);
 

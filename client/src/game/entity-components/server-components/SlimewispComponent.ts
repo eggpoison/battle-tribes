@@ -1,9 +1,11 @@
-import { CircularBox, Entity, ServerComponentType } from "webgl-test-shared";
+import { CircularBox } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -46,8 +48,6 @@ class _SlimewispComponentArray extends _ServerComponentArray<SlimewispComponent,
       return 1;
    }
 
-   public updateFromData(): void {}
-
    public onHit(_entity: Entity, hitbox: Hitbox): void {
       const radius = (hitbox.box as CircularBox).radius;
       
@@ -59,7 +59,7 @@ class _SlimewispComponentArray extends _ServerComponentArray<SlimewispComponent,
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const radius = (hitbox.box as CircularBox).radius;
 

@@ -1,4 +1,8 @@
-import { GuardianAttackType, GuardianCrystalBurstStage, GuardianCrystalSlamStage, GuardianSpikyBallSummonStage, ServerComponentType, lerp, PacketReader, Entity, HitboxTag } from "webgl-test-shared";
+import { HitboxTag } from "../../../../../shared/src/boxes";
+import { GuardianAttackType, ServerComponentType, GuardianCrystalSlamStage, GuardianCrystalBurstStage, GuardianSpikyBallSummonStage } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { lerp } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Light } from "../../lights";
 import { VisualRenderPart } from "../../render-parts/render-parts";
@@ -8,7 +12,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
@@ -351,7 +355,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
          setRenderPartShakeAmount(renderPart, 0);
       }
       
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       switch (attackType) {
          case GuardianAttackType.crystalSlam: {

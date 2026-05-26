@@ -1,4 +1,4 @@
-import { ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
@@ -13,9 +13,7 @@ export interface BracingsComponentData {}
 export interface BracingsComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.bracings]: BracingsComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.bracings, BracingsComponentArray> {}
 }
 
 class BracingsComponentArray extends _ServerComponentArray<BracingsComponent, BracingsComponentData> {

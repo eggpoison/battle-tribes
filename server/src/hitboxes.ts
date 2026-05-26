@@ -7,6 +7,7 @@ import { getEntityLayer, getEntityType } from "./world.js";
 export interface Hitbox {
    readonly box: Box;
    
+   // @Memory: is this fundamentally necessary??
    readonly localID: number;
 
    /** The entity the hitbox belongs to. */
@@ -15,8 +16,9 @@ export interface Hitbox {
    // Should never be directly set, instead should be set using the propagateRootEntityChange function.
    rootEntity: Entity;
    
+   // @Memory idea for these two: group all connected hitboxes into one "HitboxGroup" / "CompositeHitbox", which isn't formed for singular hitboxes on their own.
+   // - this would get rid of rootHitbox as well.
    parent: Hitbox | null;
-
    readonly children: Array<Hitbox>;
    
    previousPosX: number;
@@ -28,7 +30,7 @@ export interface Hitbox {
    angularAcceleration: number;
    
    mass: number;
-   // @SPEED these two are only used for three things: snobes digging down, players not colliding with plants when wearing the bush suit, and blueprint entities not pushing stuff.
+   // @MEMORY these two are only used for four things: snobes digging down, players not colliding with plants when wearing the bush suit, arrows not going through some parts of embrasures, and blueprint entities not pushing stuff.
    readonly collisionBit: CollisionBit;
    collisionMask: number;
 
@@ -234,6 +236,7 @@ export function applyAbsoluteKnockback(hitbox: Hitbox, knockback: Point): void {
    addHitboxVelocity(rootHitbox, knockback);
 
    // @Hack?
+   // @Copynpaste
    if (getEntityType(rootHitbox.entity) === EntityType.player) {
       registerPlayerKnockback(rootHitbox.entity, knockback);
    }

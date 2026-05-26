@@ -1,4 +1,9 @@
-import { randAngle, randFloat, Settings, PacketReader, Entity, ServerComponentType, CircularBox, _point } from "webgl-test-shared";
+import { CircularBox } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { _point, randAngle, randFloat } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createSandParticle } from "../../particles";
@@ -6,7 +11,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -71,7 +76,7 @@ class _SandBallComponentArray extends _ServerComponentArray<SandBallComponent, S
    }
 
    public onTick(sandBall: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(sandBall);
+      const transformComponent = TransformComponentArray.getComponent(sandBall);
       const hitbox = transformComponent.hitboxes[0];
       if (hitbox.rootEntity !== sandBall) {
          const hitboxRadius = (hitbox.box as CircularBox).radius;

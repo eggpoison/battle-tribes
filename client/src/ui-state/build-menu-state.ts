@@ -1,4 +1,6 @@
-import { Entity, BuildingMaterial, ItemType, EntityType, BlueprintType, ITEM_TYPE_RECORD } from "../../../shared/src";
+import { BlueprintType, BuildingMaterial } from "../../../shared/src/components";
+import { Entity, EntityType } from "../../../shared/src/entities";
+import { ItemType, ITEM_TYPE_RECORD } from "../../../shared/src/items/items";
 import { buildingMaterialComponentArray } from "../game/entity-components/server-components/BuildingMaterialComponent";
 import { HutComponentArray } from "../game/entity-components/server-components/HutComponent";
 import { PlanterBoxComponentArray } from "../game/entity-components/server-components/PlanterBoxComponent";

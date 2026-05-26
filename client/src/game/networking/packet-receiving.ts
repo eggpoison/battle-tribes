@@ -1,9 +1,16 @@
-import { Biome, TileType, Settings, PacketReader, WaterRockData, RiverFlowDirectionsRecord, WaterRockSize, InventoryName, AttackVar, getTileX, getTileY, getTileIndexIncludingEdges, tileIsInWorldIncludingEdges } from "webgl-test-shared";
+import { PacketReader } from "../../../../shared/src/packets";
+import { RiverFlowDirectionsRecord, WaterRockData, WaterRockSize } from "../../../../shared/src/client-server-types";
+import { Settings } from "../../../../shared/src/settings";
+import { TileType } from "../../../../shared/src/tiles";
+import { Biome } from "../../../../shared/src/biomes";
+import { getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorldIncludingEdges } from "../../../../shared/src/utils";
+import { InventoryName } from "../../../../shared/src/items/items";
+import { AttackVar } from "../../../../shared/src/attack-patterns";
 import { refreshCameraView, setCameraPosition } from "../camera";
 import { Tile } from "../Tile";
 import { addLayer, layers, setCurrentLayer } from "../world";
 import Layer from "../Layer";
-import { transformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { initialiseRenderables } from "../rendering/render-loop";
 import { playerInstance } from "../player";
 import { registerTamingSpecsFromData } from "../taming-specs";
@@ -62,8 +69,7 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
       // Read in subtiles
       const wallSubtileTypes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16);
       for (let i = 0; i < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16; i++) {
-         const subtileType = reader.readNumber();
-         wallSubtileTypes[i] = subtileType;
+         wallSubtileTypes[i] = reader.readNumber();
       }
 
       // Read subtile damages taken
@@ -143,7 +149,7 @@ export function onSyncGameDataPacket(reader: PacketReader): void {
    const acceleration = reader.readPoint();
 
    if (playerInstance !== null) {
-      const transformComponent = transformComponentArray.getComponent(playerInstance);
+      const transformComponent = TransformComponentArray.getComponent(playerInstance);
       const playerHitbox = transformComponent.hitboxes[0];
    
       playerHitbox.box.posX = position.x;
@@ -164,7 +170,7 @@ export function onForcePositionUpdatePacket(reader: PacketReader): void {
    const x = reader.readNumber();
    const y = reader.readNumber();
 
-   const transformComponent = transformComponentArray.getComponent(playerInstance);
+   const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
    playerHitbox.box.posX = x;
    playerHitbox.box.posY = y;

@@ -1,5 +1,8 @@
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
 import { Light, removeLight } from "../../lights";
-import { Entity, ServerComponentType, PacketReader, Settings } from "webgl-test-shared";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
@@ -21,9 +24,7 @@ export interface CookingComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.cooking]: CookingComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cooking, CookingComponentArray> {}
 }
 
 class CookingComponentArray extends _ServerComponentArray<CookingComponent, CookingComponentData> {

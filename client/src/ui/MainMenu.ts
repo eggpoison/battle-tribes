@@ -1,4 +1,4 @@
-import { TribeType } from "webgl-test-shared";
+import { TribeType } from "../../../shared/src/tribes";
 import { establishNewNetworkConnection } from "../game/networking/networking";
 import { setPlayerUsername, setIsSpectating, setPlayerTribeType } from "../game/player";
 import { createAudioContext } from "../game/sound";

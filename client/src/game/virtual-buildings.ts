@@ -1,4 +1,9 @@
-import { Box, HitboxCollisionType, distance, Point, StructureType, PacketReader, ServerComponentType, BuildingMaterial, DEFAULT_COLLISION_MASK, CollisionBit } from "webgl-test-shared";
+import { PacketReader } from "../../../shared/src/packets";
+import { StructureType } from "../../../shared/src/structures";
+import { Box, HitboxCollisionType } from "../../../shared/src/boxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
+import { BuildingMaterial, ServerComponentType } from "../../../shared/src/components";
+import { distance, Point } from "../../../shared/src/utils";
 import { createHitboxQuick } from "./hitboxes";
 import { createBracingsComponentData } from "./entity-components/server-components/BracingsComponent";
 import { createBuildingMaterialComponentData } from "./entity-components/server-components/BuildingMaterialComponent";

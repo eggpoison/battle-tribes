@@ -1,4 +1,12 @@
-import { Entity, EntityType, PlantedEntityType, assert, distance, rotatePointAroundOrigin, TunnelDoorSide, Settings, ItemType, InventoryName, ITEM_INFO_RECORD, HitboxCollisionType, DEFAULT_COLLISION_MASK, CollisionBit, CraftingStationEntityType, TamingSkillID, _point, createCircularBox } from "webgl-test-shared";
+import { Entity, EntityType, PlantedEntityType } from "../../../shared/src/entities";
+import { TunnelDoorSide } from "../../../shared/src/components";
+import { CraftingStationEntityType } from "../../../shared/src/items/crafting-recipes";
+import { InventoryName, ITEM_INFO_RECORD, ItemType } from "../../../shared/src/items/items";
+import { _point, assert, distance, rotatePointAroundOrigin } from "../../../shared/src/utils";
+import { TamingSkillID } from "../../../shared/src/taming";
+import { createCircularBox, HitboxCollisionType } from "../../../shared/src/boxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
+import { Settings } from "../../../shared/src/settings";
 import { currentSnapshot } from "./networking/snapshots";
 import { entityExists, getCurrentLayer, getEntityRenderObject, getEntityType } from "./world";
 import { TombstoneComponentArray } from "./entity-components/server-components/TombstoneComponent";
@@ -6,7 +14,7 @@ import { TunnelComponentArray } from "./entity-components/server-components/Tunn
 import { PlanterBoxComponentArray } from "./entity-components/server-components/PlanterBoxComponent";
 import { CraftingStationComponentArray } from "./entity-components/server-components/CraftingStationComponent";
 import { getLimbByInventoryName, InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
-import { getDistanceFromPointToEntity, transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { getDistanceFromPointToEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { sendMountCarrySlotPacket, sendPickUpEntityPacket, sendStructureInteractPacket, sendModifyBuildingPacket, sendSetCarryTargetPacket, sendSetAttackTargetPacket, sendOpenEntityInventoryPacket as sendStartEntityInteractionPacket, sendStructureUninteractPacket } from "./networking/packet-sending/packet-sending";
 import { EntityRenderObject } from "./EntityRenderObject";
 import { RideableComponentArray } from "./entity-components/server-components/RideableComponent";
@@ -225,7 +233,7 @@ const getTunnelDoorSide = (groupNum: number): TunnelDoorSide => {
 }
 
 const getSelectedCarrySlotIdx = (entity: Entity): number | null => {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    const rideableComponent = RideableComponentArray.getComponent(entity);
@@ -395,7 +403,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
 
    // Pick up arrows
    if (entityType === EntityType.woodenArrow) {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       getHitboxVelocity(hitbox);
       if (_point.magnitude() < 1) {
@@ -458,7 +466,7 @@ const createInteractRenderObject = (interactAction: InteractAction): EntityRende
          return getEntityRenderObject(interactAction.interactEntity);
       }
       case InteractActionType.mountCarrySlot: {
-         const transformComponent = transformComponentArray.getComponent(interactAction.interactEntity);
+         const transformComponent = TransformComponentArray.getComponent(interactAction.interactEntity);
          
          const renderObject = new EntityRenderObject(0, 0, 0, 1, true);
 

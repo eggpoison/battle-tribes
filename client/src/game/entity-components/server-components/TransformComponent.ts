@@ -1,4 +1,11 @@
-import { Entity, EntityType, updateBox, ServerComponentType, PacketReader, TILE_PHYSICS_INFO_RECORD, TileType, Settings, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt, getTileIndexIncludingEdges, _bounds, _point, getEntityCollisionGroup, calculateBoxBounds } from "webgl-test-shared";
+import { _bounds, calculateBoxBounds, updateBox } from "../../../../../shared/src/boxes";
+import { Entity, EntityType } from "../../../../../shared/src/entities";
+import { _point, assert, customTickIntervalHasPassed, getAngleDiff, getTileIndexIncludingEdges, lerp, Point, randAngle, randInt } from "../../../../../shared/src/utils";
+import { getEntityCollisionGroup } from "../../../../../shared/src/collision-groups";
+import { Settings } from "../../../../../shared/src/settings";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { TILE_PHYSICS_INFO_RECORD, TileType } from "../../../../../shared/src/tiles";
+import { ServerComponentType } from "../../../../../shared/src/components";
 import Chunk from "../../Chunk";
 import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityRenderObject, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
@@ -42,9 +49,7 @@ export interface TransformComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.transform]: TransformComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.transform, _TransformComponentArray> {}
 }
 
 // We use this so that a component tries to override the empty array with the same empty
@@ -78,7 +83,7 @@ const addHitbox = (transformComponent: TransformComponent, hitbox: Hitbox): void
 
 // @Hack this is a lil bit of a hack
 export function findEntityHitbox(entity: Entity, localID: number): Hitbox | null {
-   const transformComponent = transformComponentArray.tryGetComponent(entity);
+   const transformComponent = TransformComponentArray.tryGetComponent(entity);
    if (transformComponent === null) {
       return null;
    }
@@ -173,7 +178,7 @@ const cleanHitboxIncludingChildrenTransform = (hitbox: Hitbox): void => {
 }
 
 export function cleanEntityTransform(entity: Entity): void {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    for (const rootHitbox of transformComponent.rootHitboxes) {
       cleanHitboxIncludingChildrenTransform(rootHitbox);
@@ -228,7 +233,7 @@ const tickHitboxAngularPhysics = (hitbox: Hitbox): void => {
 
 // @Cleanup: Passing in hitbox really isn't the best, ideally hitbox should self-contain all the necessary info... but is that really good? + memory efficient?
 export function applyAccelerationFromGround(hitbox: Hitbox, accelerationX: number, accelerationY: number): void {
-   const transformComponent = transformComponentArray.getComponent(hitbox.entity);
+   const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
 
    const tile = getHitboxTile(hitbox);
    const tilePhysicsInfo = TILE_PHYSICS_INFO_RECORD[tile.type];
@@ -422,7 +427,7 @@ const tickHitboxPhysics = (hitbox: Hitbox): void => {
    }
 }
 
-class TransformComponentArray extends _ServerComponentArray<TransformComponent, TransformComponentData> {
+class _TransformComponentArray extends _ServerComponentArray<TransformComponent, TransformComponentData> {
    public decodeData(reader: PacketReader): TransformComponentData {
       const traction = reader.readNumber();
 
@@ -481,7 +486,7 @@ class TransformComponentArray extends _ServerComponentArray<TransformComponent, 
    }
 
    public onTick(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       if (hitboxIsInWater(hitbox)) {
          // Water droplet particles
@@ -529,7 +534,7 @@ class TransformComponentArray extends _ServerComponentArray<TransformComponent, 
    }
 
    public onUpdate(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       if (transformComponent.boundingAreaMinX < 0 || transformComponent.boundingAreaMaxX >= Settings.WORLD_UNITS || transformComponent.boundingAreaMinY < 0 || transformComponent.boundingAreaMaxY >= Settings.WORLD_UNITS) {
          // @BUG @HACK: This warning should not be a thing. This can occur if I mistakenly set the player spawn position to be outside of the world, then this runs on the player.
          
@@ -568,7 +573,7 @@ class TransformComponentArray extends _ServerComponentArray<TransformComponent, 
 
    public onRemove(entity: Entity): void {
       const layer = getEntityLayer(entity);
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       for (const chunk of transformComponent.chunks) {
          removeFromChunk(entity, chunk, layer);
       }
@@ -577,7 +582,7 @@ class TransformComponentArray extends _ServerComponentArray<TransformComponent, 
    public updateFromData(data: TransformComponentData, entity: Entity): void {
       // @SPEED: What we could do is explicitly send which hitboxes have been created, and removed, from the server. (When using carmack networking)
       
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       
       let anyHitboxHasVelocity = false;
       
@@ -608,9 +613,9 @@ class TransformComponentArray extends _ServerComponentArray<TransformComponent, 
       }
 
       if (anyHitboxHasVelocity) {
-         transformComponentArray.activateComponent(transformComponent, entity);
-      } else if (transformComponentArray.componentIsActive(entity)) {
-         transformComponentArray.queueComponentDeactivate(entity);
+         TransformComponentArray.activateComponent(transformComponent, entity);
+      } else if (TransformComponentArray.componentIsActive(entity)) {
+         TransformComponentArray.queueComponentDeactivate(entity);
       }
 
       transformComponent.traction = data.traction;
@@ -637,7 +642,7 @@ class TransformComponentArray extends _ServerComponentArray<TransformComponent, 
       // @Copynpaste
       let anyHitboxHasVelocity = false;
 
-      const transformComponent = transformComponentArray.getComponent(playerInstance!);
+      const transformComponent = TransformComponentArray.getComponent(playerInstance!);
       for (const hitboxData of data.hitboxes) {
          const hitbox = transformComponent.hitboxMap.get(hitboxData.localID);
          assert(hitbox !== undefined);
@@ -652,9 +657,9 @@ class TransformComponentArray extends _ServerComponentArray<TransformComponent, 
 
       // @Copynpaste
       if (anyHitboxHasVelocity) {
-         transformComponentArray.activateComponent(transformComponent, playerInstance!);
-      } else if (transformComponentArray.componentIsActive(playerInstance!)) {
-         transformComponentArray.queueComponentDeactivate(playerInstance!);
+         TransformComponentArray.activateComponent(transformComponent, playerInstance!);
+      } else if (TransformComponentArray.componentIsActive(playerInstance!)) {
+         TransformComponentArray.queueComponentDeactivate(playerInstance!);
       }
 
       let canAscendLayer = false;
@@ -671,7 +676,7 @@ class TransformComponentArray extends _ServerComponentArray<TransformComponent, 
    }
 
    public updateSelectedEntityState(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
 
       // @Incomplete @SQUEAM: do this camera logic with the entity-selection-funcs
@@ -682,7 +687,7 @@ class TransformComponentArray extends _ServerComponentArray<TransformComponent, 
    }
 }
 
-export const transformComponentArray = registerServerComponentArray(ServerComponentType.transform, TransformComponentArray, false);
+export const TransformComponentArray = registerServerComponentArray(ServerComponentType.transform, _TransformComponentArray, false);
 
 const entityShouldInterpolate = (newTransformData: TransformComponentData, previousTransformData: TransformComponentData): boolean => {
    // If any hitboxes' positions or angles have changed
@@ -774,7 +779,7 @@ export function getRandomPositionInEntity(transformComponent: TransformComponent
 }
 
 export function getDistanceFromPointToEntity(x: number, y: number, entity: Entity): number {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    let minDist = Number.MAX_SAFE_INTEGER;
    for (const hitbox of transformComponent.hitboxes) {
@@ -793,7 +798,7 @@ export function entityIsVisibleToCamera(entity: Entity): boolean {
 
    // If on a different layer, the entity must be below a dropdown tile
    
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
    const minTileX = Math.floor(transformComponent.boundingAreaMinX / Settings.TILE_SIZE);
    const maxTileX = Math.floor(transformComponent.boundingAreaMaxX / Settings.TILE_SIZE);
@@ -812,7 +817,7 @@ export function entityIsVisibleToCamera(entity: Entity): boolean {
 }
 
 export function changeEntityLayer(entity: Entity, newLayer: Layer): void {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const previousLayer = getEntityLayer(entity);
 
    const renderObject = getEntityRenderObject(entity);

@@ -25,8 +25,7 @@ const calculateCornerDotProduct = (gridCoordinates: Float32Array, cornerX: numbe
    const offsetY = sampleY - cornerY;
 
    // Calculate the dot product
-   const dotProduct = gradientX * offsetX + gradientY * offsetY;
-   return dotProduct;
+   return gradientX * offsetX + gradientY * offsetY;
 }
 
 const cosAngles: Array<number> = [];
@@ -39,7 +38,7 @@ for (let i = 0; i < 360; i++) {
 }
 
 // @TEMPORARY: the thung
-export function generatePerlinNoise(width: number, height: number, scale: number, thung: number): Array<number> {
+export function generatePerlinNoise(width: number, height: number, scale: number, thung: number): Float32Array {
    const gridWidth = Math.floor(width / scale) + 2;
    const gridHeight = Math.floor(height / scale) + 2;
    const gridSize = gridWidth * gridHeight * 2;
@@ -51,19 +50,20 @@ export function generatePerlinNoise(width: number, height: number, scale: number
       gridCoordinates[i + 1] = sinAngles[degrees];
    }
 
-   const noise: Array<number> = [];
+   const noise = new Float32Array(width * height);
+   let i = 0;
    for (let y = 0; y < height; y++) {
+      const sampleY = y / scale;
+      const y0 = Math.floor(sampleY);
+      const y1 = y0 + 1;
+
+      const v = fade(sampleY % 1);
+
       for (let x = 0; x < width; x++) {
          // @Temporary
-         // @Speed
          const sampleX = ((x + thung) % width) / scale;
-         // @Speed
-         const sampleY = y / scale;
-
          const x0 = Math.floor(sampleX);
          const x1 = x0 + 1;
-         const y0 = Math.floor(sampleY);
-         const y1 = y0 + 1;
          
          const dotProduct1 = calculateCornerDotProduct(gridCoordinates, x0, y0, gridWidth, sampleX, sampleY);
          const dotProduct2 = calculateCornerDotProduct(gridCoordinates, x1, y0, gridWidth, sampleX, sampleY);
@@ -71,10 +71,12 @@ export function generatePerlinNoise(width: number, height: number, scale: number
          const dotProduct4 = calculateCornerDotProduct(gridCoordinates, x1, y1, gridWidth, sampleX, sampleY);
          
          const u = fade(sampleX % 1);
-         const v = fade(sampleY % 1);
          let val = interpolate(dotProduct1, dotProduct2, dotProduct3, dotProduct4, u, v);
+         
          val = Math.min(Math.max(val, -0.5), 0.5);
-         noise.push(val + 0.5);
+         noise[i] = val + 0.5;
+
+         i++;
       }
    }
    return noise;
@@ -86,10 +88,10 @@ export function generatePerlinNoise(width: number, height: number, scale: number
  * @param lacunarity Controls the decrease in scale between octaves (1+)
  * @param persistance Controls the decrease in weight between octaves (0-1)
  */
-export function generateOctavePerlinNoise(width: number, height: number, startingScale: number, octaves: number, lacunarity: number, persistance: number, thung: number = 0): Array<number> {
+export function generateOctavePerlinNoise(width: number, height: number, startingScale: number, octaves: number, lacunarity: number, persistance: number, thung: number = 0): Float32Array {
    const length = width * height;
    
-   let totalNoise: Array<number> = [];
+   let totalNoise!: Float32Array
    for (let i = 0; i < octaves; i++) {
       const scale = Math.pow(lacunarity, -i) * startingScale;
       const weightMultiplier = Math.pow(persistance, i);

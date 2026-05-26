@@ -1,4 +1,4 @@
-import { Point, polarVec2 } from "webgl-test-shared";
+import { Point, polarVec2 } from "../../../shared/src/utils";
 import { getTechTreeGL } from "./rendering/webgl/tech-tree-rendering";
 import { TEXTURE_IMAGE_RECORD } from "./textures";
 import { setGameScreenCanvas } from "../ui/GameScreen";

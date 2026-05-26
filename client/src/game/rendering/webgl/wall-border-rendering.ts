@@ -1,4 +1,5 @@
-import { Settings, subtileIsInWorldIncludingEdges } from "webgl-test-shared";
+import { Settings } from "../../../../../shared/src/settings";
+import { subtileIsInWorldIncludingEdges } from "../../../../../shared/src/subtiles";
 import { maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY } from "../../camera";
 import { createWebGLProgram, gl } from "../../webgl";
 import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo, setRenderChunkWallBorderInfo } from "../render-chunks";

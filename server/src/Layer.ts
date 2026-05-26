@@ -101,8 +101,9 @@ export default class Layer {
    public readonly tileTypes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    public readonly tileBiomes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    public readonly riverFlowDirections = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
-   public readonly tileTemperatures = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
-   public readonly tileHumidities = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   public tileTemperatures: Float32Array;
+   public tileHumidities: Float32Array;
+   // @Memory: not needed for surface layer
    public readonly tileMithrilRichnesses = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
 
    public readonly tileCensus = createTileCensus();
@@ -138,8 +139,10 @@ export default class Layer {
 
    public readonly unspawnableTiles = new Set<TileIndex>();
 
-   constructor(depth: number) {
+   constructor(depth: number, tileTemperatures: Float32Array, tileHumidities: Float32Array) {
       this.depth = depth;
+      this.tileTemperatures = tileTemperatures;
+      this.tileHumidities = tileHumidities;
    }
 
    public tileIsBuildingBlocking(tileIndex: TileIndex): boolean {

@@ -1,4 +1,6 @@
-import { assert, Entity, InventoryName } from "../../../shared/src";
+import { Entity } from "../../../shared/src/entities";
+import { InventoryName } from "../../../shared/src/items/items";
+import { assert } from "../../../shared/src/utils";
 import { createItemsTab, destroyItemsTab } from "./game/dev/tabs/ItemsTab";
 import { closeCraftingMenu, openCraftingMenu } from "./game/menus/CraftingMenu";
 

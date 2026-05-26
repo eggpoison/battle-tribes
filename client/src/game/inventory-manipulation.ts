@@ -1,8 +1,8 @@
-import { Inventory, ItemType } from "webgl-test-shared";
+import { Inventory, ItemType } from "../../../shared/src/items/items";
 
 export function inventoryHasItems(inventory: Inventory): boolean {
    for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-      if (inventory.itemSlots.hasOwnProperty(itemSlot)) {
+      if (inventory.itemSlots[itemSlot] !== undefined) {
          return true;
       }
    }

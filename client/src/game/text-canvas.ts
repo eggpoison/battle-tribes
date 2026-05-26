@@ -1,4 +1,6 @@
-import { EntityType, distance, lerp, randAngle, randFloat, Settings, Entity } from "webgl-test-shared";
+import { distance, lerp, randAngle, randFloat } from "../../../shared/src/utils";
+import { Entity, EntityType } from "../../../shared/src/entities";
+import { Settings } from "../../../shared/src/settings";
 import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./webgl";
 import { getCurrentLayer, getEntityLayer, getEntityType } from "./world";
 import { getBuildingSafeties } from "./building-safety";
@@ -7,7 +9,7 @@ import { tribeMemberComponentArray } from "./entity-components/server-components
 import { getHumanoidRadius } from "./entity-components/server-components/TribesmanComponent";
 import { playerInstance } from "./player";
 import { addGhostRenderObject, removeGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";
-import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
 import { TamingComponentArray } from "./entity-components/server-components/TamingComponent";
@@ -357,7 +359,7 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
 
       const tribeMemberComponent = tribeMemberComponentArray.components[i];
 
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
       
@@ -373,7 +375,7 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
       const tamingComponent = TamingComponentArray.components[i];
       const name = tamingComponent.name;
       if (name !== "") {
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[1];
          const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
          
@@ -389,7 +391,7 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
          continue;
       }
       
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
 

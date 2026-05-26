@@ -1,9 +1,6 @@
 import { Settings, TileType, getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld } from "battletribes-shared";
 import Layer from "./Layer.js";
-
-export const surfaceLayer = new Layer(0);
-export const undergroundLayer = new Layer(1);
-export const layers = [surfaceLayer, undergroundLayer];
+import { surfaceLayer } from "./world.js";
 
 // @Location
 export function addLayerBuildingBlockingTiles(layer: Layer): void {

@@ -1,4 +1,5 @@
-import { assert, BlueprintType, DecorationType, ServerComponentType, EntityType } from "webgl-test-shared";
+import { BlueprintType, DecorationType, ServerComponentType } from "../../../shared/src/components";
+import { EntityType } from "../../../shared/src/entities";
 import { EntityComponentData } from "./world";
 import { getEntityServerComponentTypes, getServerComponentData } from "./entity-components/component-types";
 
@@ -98,7 +99,6 @@ export function getEntityRenderLayer(entityType: EntityType, entityComponentData
       case EntityType.decoration: {
          const serverComponentTypes = getEntityServerComponentTypes(entityType);
          const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
-         assert(decorationComponentData !== undefined);
          return decorationIsHigh(decorationComponentData.decorationType) ? RenderLayer.highDecorations : RenderLayer.lowDecorations;
       }
       case EntityType.moss: {

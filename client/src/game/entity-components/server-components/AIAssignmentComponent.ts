@@ -1,4 +1,4 @@
-import { ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
@@ -7,9 +7,7 @@ export interface AIAssignmentComponentData {}
 export interface AIAssignmentComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.aiAssignment]: AIAssignmentComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiAssignment, AIAssignmentComponentArray> {}
 }
 
 class AIAssignmentComponentArray extends _ServerComponentArray<AIAssignmentComponent, AIAssignmentComponentData> {

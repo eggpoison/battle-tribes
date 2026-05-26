@@ -1,5 +1,5 @@
+import { EntityDebugData } from "../../../shared/src/client-server-types";
 import { Tile } from "../game/Tile";
-import { EntityDebugData } from "webgl-test-shared";
 
 let tile: Tile | null = null;
 let entityDebugData: EntityDebugData | null = null;

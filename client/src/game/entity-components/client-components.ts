@@ -1,4 +1,4 @@
-import { EntityType } from "webgl-test-shared";
+import { EntityType } from "../../../../shared/src/entities";
 import { createBallistaFrostcicleComponentData } from "./client-components/BallistaFrostcicleComponent";
 import { createBallistaRockComponentData } from "./client-components/BallistaRockComponent";
 import { createBallistaSlimeballComponentData } from "./client-components/BallistaSlimeballComponent";

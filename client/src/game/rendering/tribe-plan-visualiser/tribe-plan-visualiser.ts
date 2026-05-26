@@ -1,7 +1,14 @@
-import { AIPlanType, getTechByID, TechID, Tech,StructureType, PacketReader, ItemType, CRAFTING_RECIPES, CraftingRecipe, Entity, EntityType, BlueprintType } from "webgl-test-shared";
 import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state";
 import { ExtendedTribe, getTribeByID } from "../../tribes";
 import { MenuType, openMenu } from "../../../ui/menus";
+import { Entity, EntityType } from "../../../../../shared/src/entities";
+import { AIPlanType } from "../../../../../shared/src/utils";
+import { CRAFTING_RECIPES, CraftingRecipe } from "../../../../../shared/src/items/crafting-recipes";
+import { BlueprintType } from "../../../../../shared/src/components";
+import { getTechByID, Tech, TechID } from "../../../../../shared/src/techs";
+import { ItemType } from "../../../../../shared/src/items/items";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { StructureType } from "../../../../../shared/src/structures";
 
 const enum Var {
    NODE_DISPLAY_SIZE = 100
@@ -103,7 +110,7 @@ const readCraftRecipePlan = (reader: PacketReader, assignedTribesman: Entity | n
 }
 
 const readPlaceBuildingPlan = (reader: PacketReader, assignedTribesman: Entity | null, isComplete: boolean, isCompletable: boolean, depth: number): AIPlaceBuildingPlan => {
-   const entityType = reader.readNumber() as StructureType;
+   const entityType: StructureType = reader.readNumber();
    
    return {
       type: AIPlanType.placeBuilding,
@@ -119,7 +126,7 @@ const readPlaceBuildingPlan = (reader: PacketReader, assignedTribesman: Entity |
 }
 
 const readUpgradeBuildingPlan = (reader: PacketReader, assignedTribesman: Entity | null, isComplete: boolean, isCompletable: boolean, depth: number): AIUpgradeBuildingPlan => {
-   const blueprintType = reader.readNumber() as BlueprintType;
+   const blueprintType: BlueprintType = reader.readNumber();
    
    return {
       type: AIPlanType.upgradeBuilding,
@@ -135,7 +142,7 @@ const readUpgradeBuildingPlan = (reader: PacketReader, assignedTribesman: Entity
 }
 
 const readTechStudyPlan = (reader: PacketReader, assignedTribesman: Entity | null, isComplete: boolean, isCompletable: boolean, depth: number): AITechStudyPlan => {
-   const techID = reader.readNumber() as TechID;
+   const techID: TechID = reader.readNumber();
    
    return {
       type: AIPlanType.doTechStudy,
@@ -151,8 +158,8 @@ const readTechStudyPlan = (reader: PacketReader, assignedTribesman: Entity | nul
 }
 
 const readTechItemPlan = (reader: PacketReader, assignedTribesman: Entity | null, isComplete: boolean, isCompletable: boolean, depth: number): AITechItemPlan => {
-   const techID = reader.readNumber() as TechID;
-   const itemType = reader.readNumber() as ItemType;
+   const techID: TechID = reader.readNumber();
+   const itemType: ItemType = reader.readNumber();
 
    return {
       type: AIPlanType.doTechItems,
@@ -169,7 +176,7 @@ const readTechItemPlan = (reader: PacketReader, assignedTribesman: Entity | null
 }
 
 const readTechCompletePlan = (reader: PacketReader, assignedTribesman: Entity | null, isComplete: boolean, isCompletable: boolean, depth: number): AITechCompletePlan => {
-   const techID = reader.readNumber() as TechID;
+   const techID: TechID = reader.readNumber();
    
    return {
       type: AIPlanType.completeTech,
@@ -185,7 +192,7 @@ const readTechCompletePlan = (reader: PacketReader, assignedTribesman: Entity | 
 }
 
 const readGatherItemPlan = (reader: PacketReader, assignedTribesman: Entity | null, isComplete: boolean, isCompletable: boolean, depth: number): AIGatherItemPlan => {
-   const itemType = reader.readNumber() as ItemType;
+   const itemType: ItemType = reader.readNumber();
    const amount = reader.readNumber();
 
    return {
@@ -203,7 +210,7 @@ const readGatherItemPlan = (reader: PacketReader, assignedTribesman: Entity | nu
 }
 
 const readAssignmentData = (reader: PacketReader, depth: number): AIPlan => {
-   const planType = reader.readNumber() as AIPlanType;
+   const planType: AIPlanType = reader.readNumber();
    let assignedEntity: Entity | null = reader.readNumber();
    if (assignedEntity === 0) {
       assignedEntity = null;
@@ -267,7 +274,7 @@ export function updateTribePlanData(reader: PacketReader, tribeID: number): void
    // Entity assignments
    const numEntityAssignments = reader.readNumber();
    for (let i = 0; i < numEntityAssignments; i++) {
-      const entity = reader.readNumber() as Entity;
+      const entity: Entity = reader.readNumber();
 
       const assignment = readAssignmentData(reader, 0);
       fillPlanChildrenXOffset(assignment);

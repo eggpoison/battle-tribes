@@ -1,4 +1,6 @@
-import { EntityType, DEFAULT_COLLISION_MASK, CollisionBit, HitboxCollisionType, createRectangularBox } from "webgl-test-shared";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/src/boxes";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
+import { EntityType } from "../../../../shared/src/entities";
 import { createHitboxQuick, Hitbox, setHitboxIsNonGrassBlocking } from "../hitboxes";
 import { createCraftingStationComponentData } from "../entity-components/server-components/CraftingStationComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";

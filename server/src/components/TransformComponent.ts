@@ -1,14 +1,13 @@
-import { PathfindingNodeIndex, Settings, getEntityCollisionGroup, _point, angleToPoint, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin, Entity, EntityType, EntityTypeString, ServerComponentType, Packet, Box, boxIsCircular, getBoxArea, updateBox, TILE_PHYSICS_INFO_RECORD, TileType, getSubtileIndex, _bounds, angle, distance, calculateBoxBounds, HitboxTag } from "battletribes-shared";
+import { PathfindingNodeIndex, Settings, getEntityCollisionGroup, _point, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin, Entity, EntityType, EntityTypeString, ServerComponentType, Packet, Box, boxIsCircular, getBoxArea, updateBox, TILE_PHYSICS_INFO_RECORD, TileType, getSubtileIndex, _bounds, angle, distance, calculateBoxBounds, HitboxTag } from "battletribes-shared";
 import Layer from "../Layer.js";
 import Chunk from "../Chunk.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent.js";
 import { addEntityToPathfinding, clearEntityPathfindingNodes, entityCanBlockPathfinding, removeEntityFromPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding.js";
 import { resolveWallCollision } from "../collision-resolution.js";
-import { destroyEntity, entityExists, getEntityLayer, getEntityType, setEntityLayer } from "../world.js";
+import { destroyEntity, entityExists, getEntityLayer, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../world.js";
 import { removeEntityLights, updateEntityLights } from "../lights.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
-import { surfaceLayer, undergroundLayer } from "../layers.js";
 import { addHitboxDataToPacket, getHitboxDataLength } from "../server/packet-hitboxes.js";
 import { addHitboxAngularAcceleration, applyAcceleration, applyForce, getHitboxAngularVelocity, getHitboxTag, getHitboxTile, getHitboxTotalMassIncludingChildren, getHitboxVelocity, getRootHitbox, Hitbox, hitboxIgnoresWallCollisions, hitboxIsInRiver, hitboxIsPartOfParent, setHitboxIsPartOfParent, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../hitboxes.js";
 import { EntityConfig, getConfigTransformComponent } from "../components.js";

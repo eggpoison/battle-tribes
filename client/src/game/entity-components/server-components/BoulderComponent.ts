@@ -1,11 +1,15 @@
-import { CircularBox, randAngle, randFloat, randItem, Entity, ServerComponentType, PacketReader } from "webgl-test-shared";
+import { CircularBox } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { randAngle, randFloat, randItem } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createRockParticle, createRockSpeckParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { ROCK_HIT_SOUNDS, ROCK_DESTROY_SOUNDS, playSoundOnHitbox } from "../../sound";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -27,9 +31,7 @@ const TEXTURE_SOURCES = [
 ];
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.boulder]: BoulderComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.boulder, BoulderComponentArray> {}
 }
 
 class BoulderComponentArray extends _ServerComponentArray<BoulderComponent, BoulderComponentData> {
@@ -93,7 +95,7 @@ class BoulderComponentArray extends _ServerComponentArray<BoulderComponent, Boul
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       const radius = (hitbox.box as CircularBox).radius;
 

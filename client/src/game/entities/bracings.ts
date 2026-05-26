@@ -1,4 +1,8 @@
-import { Settings, CollisionBit, DEFAULT_COLLISION_MASK, HitboxCollisionType, EntityType, BuildingMaterial, createRectangularBox } from "webgl-test-shared";
+import { BuildingMaterial } from "../../../../shared/src/components";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/src/boxes";
+import { Settings } from "../../../../shared/src/settings";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/src/collision";
+import { EntityType } from "../../../../shared/src/entities";
 import { createBracingsComponentData } from "../entity-components/server-components/BracingsComponent";
 import { createBuildingMaterialComponentData } from "../entity-components/server-components/BuildingMaterialComponent";
 import { createHealthComponentData } from "../entity-components/server-components/HealthComponent";

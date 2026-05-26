@@ -4,7 +4,7 @@ import { removeEntityFromCensus, runTileCensuses } from "./census.js";
 import { ComponentArray, ComponentArrays, getComponentArrayRecord } from "./components/ComponentArray.js";
 import { registerEntityDestruction } from "./server/player-clients.js";
 import Tribe from "./Tribe.js";
-import { addLayerBuildingBlockingTiles, layers, surfaceLayer, undergroundLayer } from "./layers.js";
+import { addLayerBuildingBlockingTiles } from "./layers.js";
 import OPTIONS from "./options.js";
 import { tileHasWallSubtile } from "./world-generation/terrain-generation-utils.js";
 import { markWallTileInPathfinding } from "./pathfinding.js";
@@ -43,15 +43,19 @@ const tribes: Array<Tribe> = [];
 const entityJoinBuffer: Array<EntityJoinInfo> = [];
 const entityRemoveBuffer: Array<Entity> = [];
 
-// We skip 0 as that is reserved as a no-entity marker
-// We skip 1 also as that is reserved client-side for its ghost spectator entity.
-// - @Cleanup: Would be nice if this didn't have to be the case, and we only had to reserve 0 and not 1.
-let entityIDCounter: Entity = 2;
+// Skip 0 as that is reserved as a no-entity marker
+let entityIDCounter: Entity = 1;
+
+export let surfaceLayer: Layer;
+export let undergroundLayer: Layer;
+export const layers: Array<Layer> = [];
 
 // @Cleanup: this should probs be in the layers file
 export function generateLayers(): void {
-   generateSurfaceTerrain(surfaceLayer);
-   generateUndergroundTerrain(surfaceLayer, undergroundLayer);
+   surfaceLayer = generateSurfaceTerrain(0);
+   undergroundLayer = generateUndergroundTerrain(1, surfaceLayer);
+   layers.push(surfaceLayer);
+   layers.push(undergroundLayer);
 
    runTileCensuses();
 

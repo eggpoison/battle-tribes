@@ -1,4 +1,6 @@
-import { EntityType, PacketReader, ServerComponentType } from "../../../../shared/src";
+import { ServerComponentType } from "../../../../shared/src/components";
+import { EntityType } from "../../../../shared/src/entities";
+import { PacketReader } from "../../../../shared/src/packets";
 import { ClientComponentType } from "./client-component-types";
 import { ClientComponentData, ComponentArray, getClientComponentArray, getServerComponentArray, ServerComponentArray, ServerComponentData } from "./component-registry";
 import { TransformComponentData } from "./server-components/TransformComponent";

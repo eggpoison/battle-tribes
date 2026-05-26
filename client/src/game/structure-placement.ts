@@ -1,7 +1,6 @@
-import { BuildingMaterial, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, SubtileType, getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, STRUCTURE_TYPES, StructureType, Settings, Entity, EntityType, getEntityCollisionGroup, CollisionGroup, boxIsCollidingWithSubtile, boxIsCircular, _bounds, TileIndex, TileType, getTileX, getTileY, tileIsInWorld, angle, calculateBoxBounds, createRectangularBox, getBoxCollisionResult } from "webgl-test-shared";
 import { Hitbox } from "./hitboxes";
 import { ItemComponentArray } from "./entity-components/server-components/ItemComponent";
-import { transformComponentArray } from "./entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Layer from "./Layer";
 import { EntityComponentData, getEntityType } from "./world";
 import { playerTribe } from "./tribes";
@@ -38,6 +37,16 @@ import { getEntitiesInRange, getHitboxesCollidingEntities } from "./collision";
 import { createFloorSignConfig } from "./entities/floor-sign";
 import { getTransformComponentData } from "./entity-components/component-types";
 import { minVisibleTileX, maxVisibleTileX, minVisibleTileY, maxVisibleTileY } from "./camera";
+import { alignAngleToClosestAxis, angle, distance, getAbsAngleDiff, getTileIndexIncludingEdges, getTileX, getTileY, Point, polarVec2, TileIndex, tileIsInWorld } from "../../../shared/src/utils";
+import { Entity, EntityType } from "../../../shared/src/entities";
+import { STRUCTURE_TYPES, StructureType } from "../../../shared/src/structures";
+import { BuildingMaterial } from "../../../shared/src/components";
+import { SubtileType, TileType } from "../../../shared/src/tiles";
+import { _bounds, boxIsCircular, calculateBoxBounds, createRectangularBox, getBoxCollisionResult } from "../../../shared/src/boxes";
+import { Settings } from "../../../shared/src/settings";
+import { getSubtileIndex, getSubtileX, getSubtileY, subtileIsInWorldIncludingEdges } from "../../../shared/src/subtiles";
+import { boxIsCollidingWithSubtile } from "../../../shared/src/collision";
+import { CollisionGroup, getEntityCollisionGroup } from "../../../shared/src/collision-groups";
 
 const enum Var {
    STRUCTURE_PLACE_DISTANCE = 60,
@@ -366,7 +375,7 @@ const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityRotation
 
 const getStructureSnapOrigin = (structure: Entity): Point => {
    // @Hack
-   const transformComponent = transformComponentArray.getComponent(structure);
+   const transformComponent = TransformComponentArray.getComponent(structure);
    const hitbox = transformComponent.hitboxes[0];
    
    const snapOrigin = new Point(hitbox.box.posX, hitbox.box.posY);
@@ -378,7 +387,7 @@ const getStructureSnapOrigin = (structure: Entity): Point => {
 }
 
 const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredPlacePosition: Point, desiredPlaceRotation: number, entityType: EntityType, layer: Layer): ReadonlyArray<SnapCandidate> => {
-   const connectingEntityTransformComponent = transformComponentArray.getComponent(connectingEntity);
+   const connectingEntityTransformComponent = TransformComponentArray.getComponent(connectingEntity);
    const connectingEntityType = getEntityType(connectingEntity);
    
    // @SUPAHACK!!!!
@@ -620,7 +629,7 @@ const groupTransforms = (transforms: ReadonlyArray<SnapCandidate>, entityType: E
       const connections: Array<StructureConnection> = [];
       for (const transform of group) {
          // @Hack
-         const connectingEntityTransformComponent = transformComponentArray.getComponent(transform.connectedEntity);
+         const connectingEntityTransformComponent = TransformComponentArray.getComponent(transform.connectedEntity);
          const connectingEntityHitbox = connectingEntityTransformComponent.hitboxes[0];
          
          const relativeOffsetDirection = calculateRelativeOffsetDirection(transform.position.x, transform.position.y, transform.angle, connectingEntityHitbox.box.posX, connectingEntityHitbox.box.posY);

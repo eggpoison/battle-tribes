@@ -1,4 +1,6 @@
-import { Settings, Entity, EntityType, assert } from "webgl-test-shared";
+import { Entity, EntityType } from "../../../shared/src/entities";
+import { assert } from "../../../shared/src/utils";
+import { Settings } from "../../../shared/src/settings";
 import { EntityRenderObject } from "./EntityRenderObject";
 import Layer from "./Layer";
 import { cleanEntityRenderParts, entityDataUsesClientInterp, undirtyRenderObject } from "./rendering/render-part-matrices";

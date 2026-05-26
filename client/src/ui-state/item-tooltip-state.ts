@@ -1,4 +1,4 @@
-import { Item } from "../../../shared/src";
+import { Item } from "../../../shared/src/items/items";
 
 let item: Item | null = null;
 

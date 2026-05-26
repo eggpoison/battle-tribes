@@ -1,4 +1,5 @@
-import { PacketReader, Entity } from "webgl-test-shared";
+import { Entity } from "../../../../shared/src/entities";
+import { PacketReader } from "../../../../shared/src/packets";
 import { ComponentArray } from "./ComponentArray";
 
 export default abstract class _ServerComponentArray<

@@ -1,4 +1,6 @@
-import { Entity, ServerComponentType, PacketReader, ScarInfo } from "webgl-test-shared";
+import { ScarInfo, ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";

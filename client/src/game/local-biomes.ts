@@ -1,4 +1,6 @@
-import { TileIndex, PacketReader, EntityType } from "webgl-test-shared";
+import { EntityType } from "../../../shared/src/entities";
+import { PacketReader } from "../../../shared/src/packets";
+import { TileIndex } from "../../../shared/src/utils";
 import { currentSnapshot } from "./networking/snapshots";
 
 interface LocalEntityCensusInfo {
@@ -26,7 +28,7 @@ const readLocalBiome = (reader: PacketReader): LocalBiome => {
    const entityCensus = new Map<EntityType, LocalEntityCensusInfo>();
    const numCensusEntries = reader.readNumber();
    for (let i = 0; i < numCensusEntries; i++) {
-      const entityType = reader.readNumber() as EntityType;
+      const entityType: EntityType = reader.readNumber();
       const count = reader.readNumber();
       const density = reader.readNumber();
       const maxDensity = reader.readNumber();
@@ -61,7 +63,7 @@ const updateLocalBiomeFromData = (reader: PacketReader, localBiome: LocalBiome):
 
    const numCensusEntries = reader.readNumber();
    for (let i = 0; i < numCensusEntries; i++) {
-      const entityType = reader.readNumber() as EntityType;
+      const entityType: EntityType = reader.readNumber();
       const count = reader.readNumber();
       const density = reader.readNumber();
       const maxDensity = reader.readNumber();

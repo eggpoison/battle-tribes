@@ -1,4 +1,5 @@
-import { getSubtileX, getSubtileY, Settings } from "webgl-test-shared";
+import { Settings } from "../../../../../shared/src/settings";
+import { getSubtileX, getSubtileY } from "../../../../../shared/src/subtiles";
 import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY } from "../../camera";
 import Layer from "../../Layer";
 import { createWebGLProgram, gl, createTextureArray } from "../../webgl";

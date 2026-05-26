@@ -1,9 +1,14 @@
-import { randAngle, randFloat, Settings, CircularBox, PacketReader, Entity, ServerComponentType } from "webgl-test-shared";
+import { CircularBox } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { PacketReader } from "../../../../../shared/src/packets";
+import { Settings } from "../../../../../shared/src/settings";
+import { randAngle, randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -71,7 +76,7 @@ class _DustfleaMorphCocoonComponentArray extends _ServerComponentArray<DustfleaM
    }
 
    public onTick(cocoon: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(cocoon);
+      const transformComponent = TransformComponentArray.getComponent(cocoon);
       const hitbox = transformComponent.hitboxes[0];
 
       const hitboxRadius = (hitbox.box as CircularBox).radius;
@@ -102,7 +107,7 @@ class _DustfleaMorphCocoonComponentArray extends _ServerComponentArray<DustfleaM
    }
 
    public onDie(entity: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       playSoundOnHitbox("cocoon-break.mp3", 0.4, 1, entity, hitbox, false);
       

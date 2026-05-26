@@ -1,6 +1,9 @@
-import { Entity, PacketReader, ItemType, ServerComponentType } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { ItemType } from "../../../../../shared/src/items/items";
+import { PacketReader } from "../../../../../shared/src/packets";
 import { createDeepFrostHeartBloodParticles } from "../../particles";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -66,7 +69,7 @@ class _ItemComponentArray extends _ServerComponentArray<ItemComponent, ItemCompo
       
       // Make the deep frost heart item spew blue blood particles
       if (itemComponent.itemType === ItemType.deepfrost_heart) {
-         const transformComponent = transformComponentArray.getComponent(entity);
+         const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[0];
          createDeepFrostHeartBloodParticles(hitbox.box.posX, hitbox.box.posY, 0, 0);
       }

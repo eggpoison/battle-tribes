@@ -1,4 +1,5 @@
-import { ServerComponentType, DecorationType, PacketReader } from "webgl-test-shared";
+import { DecorationType, ServerComponentType } from "../../../../../shared/src/components";
+import { PacketReader } from "../../../../../shared/src/packets";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";

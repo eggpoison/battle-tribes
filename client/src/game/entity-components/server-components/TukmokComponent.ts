@@ -1,4 +1,7 @@
-import { Point, randAngle, randFloat, randInt, Entity, ServerComponentType, HitboxTag, angle } from "webgl-test-shared";
+import { HitboxTag } from "../../../../../shared/src/boxes";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { Point, randInt, randFloat, angle, randAngle } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain } from "../../particles";
@@ -7,7 +10,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
@@ -116,7 +119,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
    }
 
    public onDie(tukmok: Entity): void {
-      const transformComponent = transformComponentArray.getComponent(tukmok);
+      const transformComponent = TransformComponentArray.getComponent(tukmok);
       const hitbox = transformComponent.hitboxes[0];
       
       for (let i = 0; i < 3; i++) {

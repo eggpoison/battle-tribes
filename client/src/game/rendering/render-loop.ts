@@ -1,3 +1,4 @@
+import { Entity, EntityType } from "../../../../shared/src/entities";
 import Particle from "../Particle";
 import { cleanupEntityRendering, renderEntity, setupEntityRendering } from "./webgl/entity-rendering";
 import { RenderPartOverlayGroup, renderEntityOverlay } from "./webgl/overlay-rendering";
@@ -5,7 +6,6 @@ import { NUM_RENDER_LAYERS, RenderLayer } from "../render-layers";
 import { renderChunkedEntities, renderLayerIsChunkRendered } from "./webgl/chunked-entity-rendering";
 import { getEntityRenderObject, getEntityType, layers } from "../world";
 import Layer from "../Layer";
-import { Entity, EntityType } from "webgl-test-shared";
 import { gl } from "../webgl";
 import { debugDisplayState } from "../../ui-state/debug-display-state";
 

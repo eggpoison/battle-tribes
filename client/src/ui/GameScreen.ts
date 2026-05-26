@@ -1,4 +1,4 @@
-import { assert } from "../../../shared/src";
+import { assert } from "../../../shared/src/utils";
 import { InventoryComponentArray } from "../game/entity-components/server-components/InventoryComponent";
 import { playerInstance } from "../game/player";
 import { createChat, destroyChat } from "./game/Chat";

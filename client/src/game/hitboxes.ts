@@ -1,4 +1,8 @@
-import { Box, boxIsCircular, HitboxCollisionType, Point, randAngle, randFloat, rotatePointAroundOrigin, Settings, Entity, CollisionBit, distance, distBetweenPointAndRectangle, getAngleDiff, getTileIndexIncludingEdges, randSign, _point, Mutable, HitboxFlagBit, HitboxTag } from "webgl-test-shared";
+import { CollisionBit } from "../../../shared/src/collision";
+import { Entity } from "../../../shared/src/entities";
+import { Box, boxIsCircular, HitboxCollisionType, HitboxFlagBit, HitboxTag } from "../../../shared/src/boxes";
+import { Settings } from "../../../shared/src/settings";
+import { _point, distance, distBetweenPointAndRectangle, getAngleDiff, getTileIndexIncludingEdges, Mutable, Point, randAngle, randFloat, randSign, rotatePointAroundOrigin } from "../../../shared/src/utils";
 import { getEntityLayer, getEntityRenderObject } from "./world";
 import { registerDirtyRenderObject } from "./rendering/render-part-matrices";
 import { Tile } from "./Tile";

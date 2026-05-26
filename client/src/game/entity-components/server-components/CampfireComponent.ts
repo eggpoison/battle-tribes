@@ -1,10 +1,13 @@
-import { randAngle, randFloat, Entity, ServerComponentType, Settings } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity } from "../../../../../shared/src/entities";
+import { Settings } from "../../../../../shared/src/settings";
+import { randAngle, randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { createSmokeParticle, createEmberParticle } from "../../particles";
 import { cookingComponentArray } from "./CookingComponent";
-import { transformComponentArray } from "./TransformComponent";
+import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
@@ -16,9 +19,7 @@ export interface CampfireComponentData {}
 export interface CampfireComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry {
-      [ServerComponentType.campfire]: CampfireComponentArray;
-   }
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.campfire, CampfireComponentArray> {}
 }
 
 class CampfireComponentArray extends _ServerComponentArray<CampfireComponent, CampfireComponentData> {
@@ -51,7 +52,7 @@ class CampfireComponentArray extends _ServerComponentArray<CampfireComponent, Ca
 
    public onTick(entity: Entity): void {
       const cookingComponent = cookingComponentArray.getComponent(entity);
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       
       if (cookingComponent.isCooking) {
          const hitbox = transformComponent.hitboxes[0];

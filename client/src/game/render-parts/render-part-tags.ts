@@ -1,4 +1,4 @@
-import { assert } from "../../../../shared/src";
+import { assert } from "../../../../shared/src/utils";
 import { EntityRenderObject } from "../EntityRenderObject";
 import { RenderPart } from "./render-parts";
 

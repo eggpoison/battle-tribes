@@ -1,4 +1,5 @@
-import { PacketReader, LightLevelNode } from "webgl-test-shared";
+import { LightLevelNode } from "../../../shared/src/light-levels";
+import { PacketReader } from "../../../shared/src/packets";
 import { currentSnapshot } from "./networking/snapshots";
 import { getLightLevelRenderingChunkIndex, LightLevelBGUpdateInfo, updateLightLevelRenderingChunks } from "./rendering/webgl/light-levels-bg-rendering";
 
@@ -18,7 +19,7 @@ export function updateLightLevelsFromData(reader: PacketReader): void {
    
    const numLightLevelNodes = reader.readNumber();
    for (let i = 0; i < numLightLevelNodes; i++) {
-      const node = reader.readNumber() as LightLevelNode;
+      const node: LightLevelNode = reader.readNumber();
       const lightLevel = reader.readNumber();
 
       const existingNodeInfo = nodeInfos.get(node);

@@ -1,11 +1,14 @@
-import { assert, mod, Settings, getLightLevelNodeX, getLightLevelNodeY, LightLevelNode, LightLevelVar } from "webgl-test-shared";
+import { getLightLevelNodeX, getLightLevelNodeY, LightLevelNode, LightLevelVar } from "../../../../../shared/src/light-levels";
+import { Settings } from "../../../../../shared/src/settings";
+import { mod } from "../../../../../shared/src/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 const enum Var {
    SQUARE_SIZE = 6,
    NODES_IN_RENDERING_CHUNK = 16,
-   RENDERING_CHUNK_SIZE = LightLevelVar.LIGHT_NODE_SIZE * NODES_IN_RENDERING_CHUNK,
+   // RENDERING_CHUNK_SIZE = LightLevelVar.LIGHT_NODE_SIZE * NODES_IN_RENDERING_CHUNK,
+   RENDERING_CHUNK_SIZE = 16 * NODES_IN_RENDERING_CHUNK,
    // @Bug: doesn't account for light nodes outside world border
    RENDERING_CHUNKS_IN_WORLD_WIDTH = Settings.WORLD_UNITS / RENDERING_CHUNK_SIZE,
    ATTRIBUTES_PER_VERTEX = 3
@@ -202,7 +205,6 @@ export function updateLightLevelRenderingChunks(bgUpdateInfos: Map<number, Light
          };
          renderingChunks.set(renderingChunkIndex, renderingChunk);
       } else {
-         assert(renderingChunk !== undefined);
          renderingChunk.numNodes += bgUpdateInfo.addedNodeInfos.length;
          renderingChunk.numNodes -= bgUpdateInfo.removedNodeInfos.length;
 

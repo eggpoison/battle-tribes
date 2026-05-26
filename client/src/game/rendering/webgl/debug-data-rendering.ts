@@ -1,8 +1,9 @@
-import { Point, EntityDebugData, Settings } from "webgl-test-shared";
+import { EntityDebugData } from "../../../../../shared/src/client-server-types";
+import { Settings } from "../../../../../shared/src/settings";
 import { createWebGLProgram, generateLine, generateThickCircleWireframeVertices, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { entityExists } from "../../world";
-import { transformComponentArray } from "../../entity-components/server-components/TransformComponent";
+import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 
 let lineProgram: WebGLProgram;
 
@@ -108,7 +109,7 @@ export function renderLineDebugData(debugData: EntityDebugData): void {
       throw new Error("Couldn't find entity.");
    }
 
-   const transformComponent = transformComponentArray.getComponent(debugData.entity);
+   const transformComponent = TransformComponentArray.getComponent(debugData.entity);
    const hitbox = transformComponent.hitboxes[0];
    
    const vertices: Array<number> = [];

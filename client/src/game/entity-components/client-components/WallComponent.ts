@@ -1,4 +1,6 @@
-import { EntityType, ServerComponentType, Entity, Point, angle, distance } from "webgl-test-shared";
+import { ServerComponentType } from "../../../../../shared/src/components";
+import { Entity, EntityType } from "../../../../../shared/src/entities";
+import { Point, angle, distance } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
@@ -10,7 +12,7 @@ import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { WALL_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
 import { HealthComponentArray } from "../server-components/HealthComponent";
-import { transformComponentArray } from "../server-components/TransformComponent";
+import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
@@ -88,7 +90,7 @@ const updateDamageRenderPart = (entity: Entity, health: number, maxHealth: numbe
    
    const textureSource = "entities/wall/wooden-wall-damage-" + damageStage + ".png";
    if (wallComponent.damageRenderPart === null) {
-      const transformComponent = transformComponentArray.getComponent(entity);
+      const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
       
       wallComponent.damageRenderPart = new TexturedRenderPart(
@@ -129,7 +131,7 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
 
 // @Incomplete: doesn't play when removed by deconstruction
 function onDie(entity: Entity): void {
-   const transformComponent = transformComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
    // @Speed @Hack
@@ -140,7 +142,7 @@ function onDie(entity: Entity): void {
             continue;
          }
 
-         const entityTransformComponent = transformComponentArray.getComponent(entity);
+         const entityTransformComponent = TransformComponentArray.getComponent(entity);
          const entityHitbox = entityTransformComponent.hitboxes[0];
 
          const dist = distance(hitbox.box.posX, hitbox.box.posY, entityHitbox.box.posX, entityHitbox.box.posY);

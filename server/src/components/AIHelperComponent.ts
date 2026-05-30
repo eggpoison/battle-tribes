@@ -1,4 +1,5 @@
 import { ServerComponentType, Settings, Entity, EntityType, Packet, Box, boxIsCircular, getCircleCircleCollisionResult, getCircleRectangleCollisionResult } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import Chunk from "../Chunk.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent.js";
@@ -319,7 +320,7 @@ function onTick(entity: Entity): void {
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entityID: number): void {

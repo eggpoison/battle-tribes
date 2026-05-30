@@ -20,6 +20,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 import { registerServerComponentArray } from "../component-registry";
+import { Bytes } from "../../../../../shared/src/constants";
 
 enum GolemRockSize {
    massive,
@@ -114,7 +115,7 @@ class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemCo
       const wakeProgress = reader.readNumber();
 
       const ticksAwake = reader.readNumber();
-      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+      reader.padOffset(2 * Bytes.Float32);
 
       const isAwake = reader.readBool();
 

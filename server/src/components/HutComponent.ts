@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class HutComponent {
@@ -12,7 +13,7 @@ export class HutComponent {
 export const HutComponentArray = new ComponentArray<HutComponent>(ServerComponentType.hut, true, getDataLength, addDataToPacket);
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

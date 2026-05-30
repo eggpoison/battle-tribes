@@ -2,6 +2,7 @@ import { Settings } from "../../../../../shared/src/settings";
 import { subtileIsInWorldIncludingEdges } from "../../../../../shared/src/subtiles";
 import { TileType } from "../../../../../shared/src/tiles";
 import { tileIsInWorldIncludingEdges } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { RenderChunkTileShadowInfo, getRenderChunkTileShadowInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
@@ -303,7 +304,7 @@ const getChunkDropdownShadows = (layer: Layer, renderChunkX: number, renderChunk
 }
 
 const calculateVertexData = (tileShadows: ReadonlyArray<TileShadowInfo>): ArrayBuffer => {
-   const vertexData = new ArrayBuffer(tileShadows.length * 6 * Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT);
+   const vertexData = new ArrayBuffer(tileShadows.length * 6 * Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32);
    const floatView = new Float32Array(vertexData);
    const uintView = new Uint32Array(vertexData);
    
@@ -364,16 +365,13 @@ export function calculateShadowInfo(layer: Layer, renderChunkX: number, renderCh
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribIPointer(2, 1, gl.UNSIGNED_INT, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribIPointer(2, 1, gl.UNSIGNED_INT, Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32, 4 * Bytes.Float32);
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
    gl.enableVertexAttribArray(2);
-
-   // @speed
-   gl.bindVertexArray(null);
 
    return {
       vao: vao,
@@ -396,9 +394,6 @@ export function recalculateTileShadows(layer: Layer, renderChunkX: number, rende
    
    gl.bindBuffer(gl.ARRAY_BUFFER, renderChunkShadowInfo.buffer);
    gl.bufferData(gl.ARRAY_BUFFER, renderChunkShadowInfo.vertexData, gl.STATIC_DRAW);
-   
-   // @Speed
-   gl.bindVertexArray(null);
 }
 
 export function renderTileShadows(layer: Layer, tileShadowType: TileShadowType): void {
@@ -421,6 +416,4 @@ export function renderTileShadows(layer: Layer, tileShadowType: TileShadowType):
 
    gl.disable(gl.BLEND);
    gl.blendFunc(gl.ONE, gl.ZERO);
-
-   gl.bindVertexArray(null);
 }

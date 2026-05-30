@@ -1,4 +1,5 @@
 import { Colour, Point, polarVec2, randAngle, randFloat, ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class LayeredRodComponent {
@@ -22,7 +23,7 @@ export class LayeredRodComponent {
 export const LayeredRodComponentArray = new ComponentArray<LayeredRodComponent>(ServerComponentType.layeredRod, true, getDataLength, addDataToPacket);
 
 function getDataLength(): number {
-   return 6 * Float32Array.BYTES_PER_ELEMENT;
+   return 6 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

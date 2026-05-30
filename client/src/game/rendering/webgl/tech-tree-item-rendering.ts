@@ -2,6 +2,7 @@ import { ItemType } from "../../../../../shared/src/items/items";
 import { techTreeState } from "../../../ui-state/tech-tree-state";
 import { Settings } from "../../../../../shared/src/settings";
 import { _point, Point, polarVec2, randAngle, randFloat, randSign, rotatePointAroundPoint } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth } from "../../webgl";
 import { getEntityTextureAtlasInfo, getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
@@ -147,10 +148,10 @@ export function createTechTreeItemShaders(): void {
    buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 6 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 6 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 6 * Bytes.Float32, 4 * Bytes.Float32);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 6 * Bytes.Float32, 5 * Bytes.Float32);
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);

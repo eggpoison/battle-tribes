@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, EntityType, Packet, AttackEffectiveness, Point } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { getEntityType } from "../world.js";
 import { HealthComponentArray, canDamageEntity, addLocalInvulnerabilityHash, damageEntity } from "./HealthComponent.js";
@@ -13,7 +14,7 @@ export const SpikesComponentArray = new ComponentArray<SpikesComponent>(ServerCo
 SpikesComponentArray.onHitboxCollision = onHitboxCollision;
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

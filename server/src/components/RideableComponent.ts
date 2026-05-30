@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, Packet, _point, Point, rotatePoint, rotatePointAroundOrigin } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { Hitbox, translateHitbox } from "../hitboxes.js";
 import { entityExists } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -30,7 +31,7 @@ export function createCarrySlot(parentHitbox: Hitbox, offset: Point, dismountOff
 
 function getDataLength(entity: Entity): number {
    const rideableComponent = RideableComponentArray.getComponent(entity);
-   return Float32Array.BYTES_PER_ELEMENT + 6 * Float32Array.BYTES_PER_ELEMENT * rideableComponent.carrySlots.length;
+   return Bytes.Float32 + 6 * Bytes.Float32 * rideableComponent.carrySlots.length;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

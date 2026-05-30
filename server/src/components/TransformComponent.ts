@@ -1,4 +1,5 @@
 import { PathfindingNodeIndex, Settings, getEntityCollisionGroup, _point, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin, Entity, EntityType, EntityTypeString, ServerComponentType, Packet, Box, boxIsCircular, getBoxArea, updateBox, TILE_PHYSICS_INFO_RECORD, TileType, getSubtileIndex, _bounds, angle, distance, calculateBoxBounds, HitboxTag } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import Layer from "../Layer.js";
 import Chunk from "../Chunk.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -717,10 +718,10 @@ function getDataLength(entity: Entity): number {
    const transformComponent = TransformComponentArray.getComponent(entity);
 
    // Traction
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = Bytes.Float32;
    
    // Hitboxes
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const hitbox of transformComponent.hitboxes) {
       lengthBytes += getHitboxDataLength(hitbox);
    }

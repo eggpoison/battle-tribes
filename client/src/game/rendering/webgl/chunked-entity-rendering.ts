@@ -1,6 +1,7 @@
 import { Entity, EntityTypeString } from "../../../../../shared/src/entities";
 import { _point, assert } from "../../../../../shared/src/utils";
 import { Settings } from "../../../../../shared/src/settings";
+import { Bytes } from "../../../../../shared/src/constants";
 import { RenderLayer } from "../../render-layers";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { clearEntityInVertexData, createEntityRenderData, EntityRenderingVar, setRenderObjectInVertexData, setupEntityRendering } from "./entity-rendering";
@@ -234,6 +235,8 @@ export function updateChunkRenderedEntity(renderObject: EntityRenderObject, rend
 
 /** Registers the changes accumulated across all buffer modifications */
 export function refreshChunkedEntityRenderingBuffers(layer: Layer): void {
+   gl.bindVertexArray(null);
+
    for (let renderLayer = 0; renderLayer < layer.modifiedChunkIndicesArray.length; renderLayer++) {
       const renderLayerModifyInfo = layer.modifiedChunkIndicesArray[renderLayer];
       if (renderLayerModifyInfo.modifiedChunkIndices.size === 0) {
@@ -248,7 +251,7 @@ export function refreshChunkedEntityRenderingBuffers(layer: Layer): void {
          
          const chunkData = layer.renderLayerChunkDataRecord[renderLayer as ChunkedRenderLayer][chunkIdx]!;
 
-         const dstByteOffset = modifyInfo.firstModifiedRenderPartIdx * EntityRenderingVar.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
+         const dstByteOffset = modifyInfo.firstModifiedRenderPartIdx * EntityRenderingVar.ATTRIBUTES_PER_VERTEX * Bytes.Float32;
          const srcOffset = modifyInfo.firstModifiedRenderPartIdx * EntityRenderingVar.ATTRIBUTES_PER_VERTEX;
          const length = (modifyInfo.lastModifiedRenderPartIdx - modifyInfo.firstModifiedRenderPartIdx + 1) * EntityRenderingVar.ATTRIBUTES_PER_VERTEX;
          

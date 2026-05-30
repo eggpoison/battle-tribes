@@ -1,4 +1,5 @@
 import { ScarInfo, ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class TribeWarriorComponent {
@@ -13,7 +14,7 @@ export const TribeWarriorComponentArray = new ComponentArray<TribeWarriorCompone
 
 function getDataLength(entity: Entity): number {
    const tribeWarriorComponent = TribeWarriorComponentArray.getComponent(entity);
-   return Float32Array.BYTES_PER_ELEMENT + 4 * Float32Array.BYTES_PER_ELEMENT * tribeWarriorComponent.scars.length;
+   return Bytes.Float32 + 4 * Bytes.Float32 * tribeWarriorComponent.scars.length;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

@@ -1,3 +1,4 @@
+import { Bytes } from "../../../../shared/src/constants";
 import { gl } from "../webgl";
 
 /** Stores a group of buffers for use in instanced rendering */
@@ -11,7 +12,7 @@ class ObjectBufferContainer {
 
    private readonly emptyBufferDatas: Array<Float32Array> = [];
 
-   private readonly objectEntryIndexes: Record<number, number> = {};
+   private readonly objectEntryIndexes: Partial<Record<number, number>> = {};
 
    private readonly availableIndexes: Array<number> = [];
    
@@ -37,6 +38,8 @@ class ObjectBufferContainer {
       // Make the data empty for now
       const dataLength = this.dataLengths[bufferType];
       const data = new Float32Array(this.objectsPerBuffer * dataLength);
+
+      gl.bindVertexArray(null);
       
       // Create buffer
       const buffer = gl.createBuffer();
@@ -60,7 +63,7 @@ class ObjectBufferContainer {
    }
 
    public setData(objectID: number, bufferType: number, data: Float32Array): void {
-      if (!this.objectEntryIndexes.hasOwnProperty(objectID)) {
+      if (this.objectEntryIndexes[objectID] === undefined) {
          throw new Error("No index for entity with ID " + objectID + ".");
       }
 
@@ -68,13 +71,15 @@ class ObjectBufferContainer {
          throw new Error("No buffer type '" + bufferType + "'.");
       }
       
-      if (data.byteLength !== this.dataLengths[bufferType] * Float32Array.BYTES_PER_ELEMENT) {
-         throw new Error("Object data length (" + (data.byteLength / Float32Array.BYTES_PER_ELEMENT) + ") didn't match objectSize (" + this.dataLengths[bufferType] + ").");
+      if (data.byteLength !== this.dataLengths[bufferType] * Bytes.Float32) {
+         throw new Error("Object data length (" + (data.byteLength / Bytes.Float32) + ") didn't match objectSize (" + this.dataLengths[bufferType] + ").");
       }
       
       const index = this.objectEntryIndexes[objectID];
       const bufferIndex = Math.floor(index / this.objectsPerBuffer);
       const indexInBuffer = index % this.objectsPerBuffer;
+      
+      gl.bindVertexArray(null);
       
       const buffer = this.bufferArrays[bufferType][bufferIndex];
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -82,11 +87,13 @@ class ObjectBufferContainer {
    }
 
    public removeObject(objectID: number) {
-      if (!this.objectEntryIndexes.hasOwnProperty(objectID)) {
+      if (this.objectEntryIndexes[objectID] === undefined) {
          throw new Error("No index for entity with ID " + objectID + ".");
       }
       
       const index = this.objectEntryIndexes[objectID];
+
+      gl.bindVertexArray(null);
 
       // Remove the object from all buffer types
       const bufferIndex = Math.floor(index / this.objectsPerBuffer);
@@ -95,7 +102,7 @@ class ObjectBufferContainer {
 
          gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
          const indexInBuffer = index % this.objectsPerBuffer;
-         gl.bufferSubData(gl.ARRAY_BUFFER, indexInBuffer * this.dataLengths[bufferType] * Float32Array.BYTES_PER_ELEMENT, this.emptyBufferDatas[bufferType]);
+         gl.bufferSubData(gl.ARRAY_BUFFER, indexInBuffer * this.dataLengths[bufferType] * Bytes.Float32, this.emptyBufferDatas[bufferType]);
       }
 
       delete this.objectEntryIndexes[objectID];

@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, Packet, assert, randInt } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { entityExists } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TreeRootBaseComponentArray } from "./TreeRootBaseComponent.js";
@@ -17,7 +18,7 @@ TreeRootSegmentComponentArray.onJoin = onJoin;
 TreeRootSegmentComponentArray.onRemove = onRemove;
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

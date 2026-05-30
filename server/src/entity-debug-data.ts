@@ -1,4 +1,5 @@
 import { CircleDebugData, EntityDebugData, LineDebugData, PathData, TileHighlightData, TribesmanAIType, Entity, EntityTypeString, ItemTypeString, getStringLengthBytes, Packet, AIPlanType, getTileX, getTileY } from "battletribes-shared";
+import { Bytes } from "../../shared/src/constants.js";
 import { TRIBESMAN_COMMUNICATION_RANGE } from "./entities/tribes/tribesman-ai/tribesman-ai.js";
 import { TribeComponentArray } from "./components/TribeComponent.js";
 import { TribesmanAIComponentArray } from "./components/TribesmanAIComponent.js";
@@ -139,30 +140,30 @@ export function createEntityDebugData(entity: Entity): EntityDebugData {
 }
 
 export function getEntityDebugDataLength(debugData: EntityDebugData): number {
-   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 6 * Float32Array.BYTES_PER_ELEMENT * debugData.lines.length;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 5 * Float32Array.BYTES_PER_ELEMENT * debugData.circles.length;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 5 * Float32Array.BYTES_PER_ELEMENT * debugData.tileHighlights.length;
+   let lengthBytes = 2 * Bytes.Float32;
+   lengthBytes += 6 * Bytes.Float32 * debugData.lines.length;
+   lengthBytes += Bytes.Float32;
+   lengthBytes += 5 * Bytes.Float32 * debugData.circles.length;
+   lengthBytes += Bytes.Float32;
+   lengthBytes += 5 * Bytes.Float32 * debugData.tileHighlights.length;
    
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const debugEntry of debugData.debugEntries) {
       lengthBytes += getStringLengthBytes(debugEntry);
    }
 
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    if (debugData.pathData !== undefined) {
-      lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 2 * Bytes.Float32;
       
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT * debugData.pathData.pathNodes.length;
+      lengthBytes += Bytes.Float32;
+      lengthBytes += Bytes.Float32 * debugData.pathData.pathNodes.length;
 
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT * debugData.pathData.rawPathNodes.length;
+      lengthBytes += Bytes.Float32;
+      lengthBytes += Bytes.Float32 * debugData.pathData.rawPathNodes.length;
       
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT * debugData.pathData.visitedNodes.length;
+      lengthBytes += Bytes.Float32;
+      lengthBytes += Bytes.Float32 * debugData.pathData.visitedNodes.length;
    }
 
    return lengthBytes;

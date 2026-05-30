@@ -1,3 +1,4 @@
+import { Bytes } from "../../../../../shared/src/constants";
 import { angle } from "../../../../../shared/src/utils";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { getTexture } from "../../textures";
@@ -103,14 +104,16 @@ export function renderDebugImages(): void {
 
    gl.activeTexture(gl.TEXTURE0);
    gl.bindTexture(gl.TEXTURE_2D, getTexture("debug/spring.png"));
+
+   gl.bindVertexArray(null);
    
    // @Speed
    const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 4 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 4 * Bytes.Float32, 2 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);

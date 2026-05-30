@@ -1,4 +1,5 @@
 import { Packet, Entity, BuildingMaterial, ServerComponentType } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { HealthComponentArray } from "./HealthComponent.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
@@ -28,7 +29,7 @@ export function upgradeMaterial(structure: Entity, materialComponent: BuildingMa
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

@@ -1,4 +1,5 @@
 import { lerp } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLCanvas, createWebGLProgram, createWebGLRenderingContext } from "../../webgl";
 import { frameGraph } from "../../../ui-state/frame-graph-funcs";
 
@@ -228,12 +229,14 @@ function renderFrameGraph(renderTime: number): void {
    
    gl.useProgram(program);
 
+   gl.bindVertexArray(null);
+
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 6 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 6 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 6 * Bytes.Float32, 5 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);

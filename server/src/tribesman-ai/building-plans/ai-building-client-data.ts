@@ -1,4 +1,5 @@
 import { SafetyNodeData, PotentialPlanSafetyData, WallSideNodeData, TribeWallData, WallConnectionData, VisibleChunkBounds, RestrictedBuildingAreaData, EntityType, Settings, AIPlanType, Packet, CRAFTING_RECIPES, _bounds, calculateBoxBounds } from "battletribes-shared";
+import { Bytes } from "../../../../shared/src/constants.js";
 import Layer from "../../Layer.js";
 import Tribe from "../../Tribe.js";
 import { SafetyNode, getSafetyNode } from "../ai-building.js";
@@ -187,13 +188,13 @@ const virtualStructureIsSentToPlayer = (playerClient: PlayerClient, virtualBuild
 export function getTribeBuildingSafetyDataLength(playerClient: PlayerClient): number {
    const virtualStructures = playerClient.tribe.virtualStructures;
    
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = Bytes.Float32;
    for (const virtualStructure of virtualStructures) {
       if (!virtualStructureIsSentToPlayer(playerClient, virtualStructure)) {
          continue;
       }
 
-      lengthBytes += 6 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 6 * Bytes.Float32;
    }
    return lengthBytes;
 }
@@ -343,7 +344,7 @@ const addBaseAssignmentData = (packet: Packet, assignment: AIPlanAssignment): vo
    packet.writeBool(assignment.plan.isCompletable);
 }
 const getBasePlanDataLength = (): number => {
-   return 4 * Float32Array.BYTES_PER_ELEMENT;
+   return 4 * Bytes.Float32;
 }
 
 const addCraftRecipePlanData = (packet: Packet, plan: AICraftRecipePlan): void => {
@@ -352,28 +353,28 @@ const addCraftRecipePlanData = (packet: Packet, plan: AICraftRecipePlan): void =
    packet.writeNumber(plan.productAmount);
 }
 const getCraftRecipePlanDataLength = (): number => {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 const addPlaceBuildingPlanData = (packet: Packet, plan: AIPlaceBuildingPlan): void => {
    packet.writeNumber(plan.virtualBuilding.entityType);
 }
 const getPlaceBuildingPlanDataLength = (): number => {
-   return 1 * Float32Array.BYTES_PER_ELEMENT;
+   return 1 * Bytes.Float32;
 }
 
 const addUpgradeBuildingPlanData = (packet: Packet, plan: AIUpgradeBuildingPlan): void => {
    packet.writeNumber(plan.blueprintType);
 }
 const getUpgradeBuildingPlanDataLength = (): number => {
-   return 1 * Float32Array.BYTES_PER_ELEMENT;
+   return 1 * Bytes.Float32;
 }
 
 const addTechStudyPlanData = (packet: Packet, plan: AITechStudyPlan): void => {
    packet.writeNumber(plan.tech.id);
 }
 const getTechStudyPlanDataLength = (): number => {
-   return 1 * Float32Array.BYTES_PER_ELEMENT;
+   return 1 * Bytes.Float32;
 }
 
 const addTechItemPlanData = (packet: Packet, plan: AITechItemPlan): void => {
@@ -381,14 +382,14 @@ const addTechItemPlanData = (packet: Packet, plan: AITechItemPlan): void => {
    packet.writeNumber(plan.itemType);
 }
 const getTechItemPlanDataLength = (): number => {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 const addTechCompletePlanData = (packet: Packet, plan: AITechCompletePlan): void => {
    packet.writeNumber(plan.tech.id);
 }
 const getTechCompletePlanDataLength = (): number => {
-   return 1 * Float32Array.BYTES_PER_ELEMENT;
+   return 1 * Bytes.Float32;
 }
 
 const addGatherItemPlanData = (packet: Packet, plan: AIGatherItemPlan): void => {
@@ -396,7 +397,7 @@ const addGatherItemPlanData = (packet: Packet, plan: AIGatherItemPlan): void => 
    packet.writeNumber(plan.amount);
 }
 const getGatherItemPlanDataLength = (): number => {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 const addAssignmentData = (packet: Packet, assignment: AIPlanAssignment): void => {
@@ -432,7 +433,7 @@ const getAssignmentDataLength = (assignment: AIPlanAssignment): number => {
       case AIPlanType.gatherItem:      dataLength += getGatherItemPlanDataLength(); break;
    }
    
-   dataLength += Float32Array.BYTES_PER_ELEMENT;
+   dataLength += Bytes.Float32;
    for (const childAssignment of assignment.children) {
       dataLength += getAssignmentDataLength(childAssignment);
    }
@@ -476,7 +477,7 @@ export function getTribeAssignmentDataLength(tribe: Tribe): number {
    let lengthBytes = getAssignmentDataLength(tribe.rootAssignment);
 
    // Tribesman assignments
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    // @Incomplete: won't account for cogwalkers
    for (let i = 0; i < tribe.entities.length; i++) {
       const tribesman = tribe.entities[i];
@@ -484,7 +485,7 @@ export function getTribeAssignmentDataLength(tribe: Tribe): number {
       if (AIAssignmentComponentArray.hasComponent(tribesman)) {
          const aiAssignmentComponent = AIAssignmentComponentArray.getComponent(tribesman);
          if (aiAssignmentComponent.wholeAssignment !== null) {
-            lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+            lengthBytes += Bytes.Float32;
             lengthBytes += getAssignmentDataLength(aiAssignmentComponent.wholeAssignment);
          }
       }

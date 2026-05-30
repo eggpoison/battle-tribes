@@ -1,4 +1,5 @@
 import { Settings, ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { EntityRelationship, getEntityRelationship } from "./TribeComponent.js";
 import { HealthComponentArray, healEntity } from "./HealthComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -110,8 +111,8 @@ function onTick(healingTotem: Entity): void {
 function getDataLength(entity: Entity): number {
    const healingTotemComponent = HealingTotemComponentArray.getComponent(entity);
 
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT * healingTotemComponent.healTargetIDs.length;
+   let lengthBytes = Bytes.Float32;
+   lengthBytes += 3 * Bytes.Float32 * healingTotemComponent.healTargetIDs.length;
 
    return lengthBytes;
 }

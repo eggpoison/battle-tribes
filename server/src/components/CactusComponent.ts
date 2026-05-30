@@ -1,4 +1,5 @@
 import { Settings, Point, polarVec2, randAngle, randInt, AttackEffectiveness, Packet, Entity, EntityType, DamageSource, CactusFlowerSize, ServerComponentType, CircularBox, angle } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { getEntityType, destroyEntity, getEntityLayer, createEntity } from "../world.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
@@ -86,7 +87,7 @@ function onTick(cactus: Entity): void {
 
 function getDataLength(entity: Entity): number {
    const cactusComponent = CactusComponentArray.getComponent(entity);
-   return Float32Array.BYTES_PER_ELEMENT + cactusComponent.flowers.length * 6 * Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32 + cactusComponent.flowers.length * 6 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

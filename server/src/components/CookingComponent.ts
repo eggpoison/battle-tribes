@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, EntityType, Settings, Packet, InventoryName, ItemType, ItemTypeString, CookingIngredientItemType, FuelSourceItemType } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { InventoryComponentArray, getInventory, consumeItemTypeFromInventory, addItemToInventory } from "./InventoryComponent.js";
 import { getEntityType } from "../world.js";
@@ -146,7 +147,7 @@ function onTick(entity: Entity): void {
 }
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

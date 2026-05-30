@@ -31,6 +31,7 @@ import { createBarrelComponentData } from "./entity-components/server-components
 import { cursorWorldPos } from "./camera";
 import { getEntityServerComponentTypes } from "./entity-components/component-types";
 import { ServerComponentData } from "./entity-components/component-registry";
+import { Bytes } from "../../../shared/src/constants";
 
 export interface VirtualBuilding {
    readonly entityType: StructureType;
@@ -56,7 +57,7 @@ export interface GhostBuildingPlan {
 const ghostBuildingPlans = new Map<number, GhostBuildingPlan>();
 
 const padVirtualBuildingData = (reader: PacketReader): void => {
-   reader.padOffset(5 * Float32Array.BYTES_PER_ELEMENT);
+   reader.padOffset(5 * Bytes.Float32);
 
    const numHitboxes = reader.readNumber();
    for (let i = 0; i < numHitboxes; i++) {
@@ -233,9 +234,9 @@ export function readGhostVirtualBuildings(reader: PacketReader): void {
 
          const numPotentialPlans = reader.readNumber();
          for (let i = 0; i < numPotentialPlans; i++) {
-            reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+            reader.padOffset(Bytes.Float32);
             padVirtualBuildingData(reader);
-            reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+            reader.padOffset(Bytes.Float32);
          }
 
          existingGhostBuildingPlan.lastUpdateTicks = currentSnapshot.tick;

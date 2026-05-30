@@ -1,3 +1,4 @@
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 
 let program: WebGLProgram;
@@ -46,7 +47,7 @@ export function createDarkeningShaders(): void {
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
    gl.enableVertexAttribArray(0);
 
    gl.bindVertexArray(null);

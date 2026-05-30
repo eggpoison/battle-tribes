@@ -1,4 +1,5 @@
 import { Settings } from "../../../../../shared/src/settings";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY } from "../../camera";
@@ -217,10 +218,12 @@ export function renderWorldBorder(): void {
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+   gl.bindVertexArray(null);
+
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
 
    // Enable the attributes
    gl.enableVertexAttribArray(0);

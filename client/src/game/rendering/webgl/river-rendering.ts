@@ -2,6 +2,7 @@ import { WaterRockSize, WaterRockData } from "../../../../../shared/src/client-s
 import { Settings } from "../../../../../shared/src/settings";
 import { TileType } from "../../../../../shared/src/tiles";
 import { tileIsInWorldIncludingEdges, getTileIndexIncludingEdges, rotatePointAroundPoint, _point, lerp, randFloat } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getTexture } from "../../textures";
 import { RenderChunkRiverInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "../render-chunks";
@@ -1131,12 +1132,12 @@ const createBaseVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(5, 1, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 7 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 8 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 8 * Bytes.Float32, 4 * Bytes.Float32);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 8 * Bytes.Float32, 5 * Bytes.Float32);
+   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 8 * Bytes.Float32, 6 * Bytes.Float32);
+   gl.vertexAttribPointer(5, 1, gl.FLOAT, false, 8 * Bytes.Float32, 7 * Bytes.Float32);
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -1156,10 +1157,10 @@ const createRockVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 6 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 6 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 6 * Bytes.Float32, 4 * Bytes.Float32);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 6 * Bytes.Float32, 5 * Bytes.Float32);
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -1177,9 +1178,9 @@ const createHighlightsVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 5 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 5 * Bytes.Float32, 4 * Bytes.Float32);
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -1196,11 +1197,11 @@ const createNoiseVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 7 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 8 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 8 * Bytes.Float32, 4 * Bytes.Float32);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 8 * Bytes.Float32, 6 * Bytes.Float32);
+   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 8 * Bytes.Float32, 7 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -1219,16 +1220,16 @@ const createTransitionVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 12 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 12 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 12 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 12 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 12 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(5, 1, gl.FLOAT, false, 12 * Float32Array.BYTES_PER_ELEMENT, 7 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(6, 1, gl.FLOAT, false, 12 * Float32Array.BYTES_PER_ELEMENT, 8 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(7, 1, gl.FLOAT, false, 12 * Float32Array.BYTES_PER_ELEMENT, 9 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(8, 1, gl.FLOAT, false, 12 * Float32Array.BYTES_PER_ELEMENT, 10 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(9, 1, gl.FLOAT, false, 12 * Float32Array.BYTES_PER_ELEMENT, 11 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 12 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 12 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 12 * Bytes.Float32, 4 * Bytes.Float32);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 12 * Bytes.Float32, 5 * Bytes.Float32);
+   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 12 * Bytes.Float32, 6 * Bytes.Float32);
+   gl.vertexAttribPointer(5, 1, gl.FLOAT, false, 12 * Bytes.Float32, 7 * Bytes.Float32);
+   gl.vertexAttribPointer(6, 1, gl.FLOAT, false, 12 * Bytes.Float32, 8 * Bytes.Float32);
+   gl.vertexAttribPointer(7, 1, gl.FLOAT, false, 12 * Bytes.Float32, 9 * Bytes.Float32);
+   gl.vertexAttribPointer(8, 1, gl.FLOAT, false, 12 * Bytes.Float32, 10 * Bytes.Float32);
+   gl.vertexAttribPointer(9, 1, gl.FLOAT, false, 12 * Bytes.Float32, 11 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -1252,10 +1253,10 @@ const createFoamVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => {
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 7 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 7 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 7 * Bytes.Float32, 4 * Bytes.Float32);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 7 * Bytes.Float32, 6 * Bytes.Float32);
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -1273,9 +1274,9 @@ const createSteppingStoneVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => 
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 5 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 5 * Bytes.Float32, 4 * Bytes.Float32);
    
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -1363,6 +1364,8 @@ export function calculateRiverRenderChunkData(layer: Layer, renderChunkX: number
    if (waterTiles.length === 0 && !renderChunkHasBorderingWaterTiles(layer, renderChunkX, renderChunkY)) {
       return null;
    }
+
+   gl.bindVertexArray(null);
    
    const baseVertexData = calculateBaseVertexData(layer, waterTiles);
    const baseBuffer = gl.createBuffer();

@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, Packet, Settings } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { getPlantGrowthSpeed, plantIsFertilised } from "./PlanterBoxComponent.js";
@@ -49,7 +50,7 @@ function onTick(entity: Entity): void {
 }
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

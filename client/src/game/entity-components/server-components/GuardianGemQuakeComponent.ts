@@ -11,6 +11,7 @@ import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { Bytes } from "../../../../../shared/src/constants";
 
 export interface GuardianGemQuakeComponentData {}
 
@@ -28,7 +29,7 @@ declare module "../component-registry" {
 
 class _GuardianGemQuakeComponentArray extends _ServerComponentArray<GuardianGemQuakeComponent, GuardianGemQuakeComponentData> {
    public decodeData(reader: PacketReader): GuardianGemQuakeComponentData {
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      reader.padOffset(Bytes.Float32);
       return {};
    }
 

@@ -1,4 +1,5 @@
 import { GameDataPacketOptions, Packet, ServerPacketType, Settings, AIPlanType, clamp, clampToBoardDimensions, getTileIndexIncludingEdges, TileIndex } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { getSubtileSupport, getVisibleSubtileSupports } from "../collapses.js";
 import { addEntityDebugDataToPacket, createEntityDebugData, getEntityDebugDataLength } from "../entity-debug-data.js";
 import {getSpawnInfoForEntityType, SpawnDistribution } from "../entity-spawn-info.js";
@@ -76,7 +77,7 @@ const getVisibleLocalBiomeInfo = (playerClient: PlayerClient): VisibleLocalBiome
 const getLocalBiomeDataLength = (playerClient: PlayerClient, localBiome: LocalBiome): number => {
    const tileToLocalBiomeMap = createTileToLocalBiomeMap(playerClient, localBiome);
    
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = Bytes.Float32;
    
    let numTiles = 0;
    for (const pair of tileToLocalBiomeMap) {
@@ -84,9 +85,9 @@ const getLocalBiomeDataLength = (playerClient: PlayerClient, localBiome: LocalBi
          numTiles++;
       }
    }
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * numTiles;
+   lengthBytes += Bytes.Float32 + Bytes.Float32 * numTiles;
 
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 4 * Float32Array.BYTES_PER_ELEMENT * localBiome.entityCensus.size;
+   lengthBytes += Bytes.Float32 + 4 * Bytes.Float32 * localBiome.entityCensus.size;
    return lengthBytes;
 }
 
@@ -139,14 +140,14 @@ const addLocalBiomeDataToPacket = (packet: Packet, playerClient: PlayerClient, l
 const getVirtualBuildingGhostEntitiesLength = (assignment: AIPlanAssignment): number => {
    let lengthBytes = 0;
    if (assignment.plan.type === AIPlanType.placeBuilding) {
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += Bytes.Float32;
       
       lengthBytes += getVirtualBuildingDataLength(assignment.plan.virtualBuilding);
 
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += Bytes.Float32;
       for (const potentialPlan of assignment.plan.potentialPlans) {
          lengthBytes += getVirtualBuildingDataLength(potentialPlan.virtualBuilding);
-         lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += Bytes.Float32;
       }
    }
 
@@ -187,7 +188,7 @@ const getViewedSpawnDistributionDataLength = (playerClient: PlayerClient, distri
    const maxBlockY = clamp(Math.floor(playerClient.maxVisibleY / Settings.TILE_SIZE / distribution.blockSize), 0, BLOCKS_IN_BOARD_DIMENSIONS - 1);
 
    const numVisibleBlocks = (maxBlockX + 1 - minBlockX) * (maxBlockY + 1 - minBlockY);
-   return Float32Array.BYTES_PER_ELEMENT + 4 * Float32Array.BYTES_PER_ELEMENT * numVisibleBlocks;
+   return Bytes.Float32 + 4 * Bytes.Float32 * numVisibleBlocks;
 }
 
 const addViewedSpawnDistributionData = (packet: Packet, playerClient: PlayerClient, distribution: SpawnDistribution): void => {
@@ -228,49 +229,49 @@ export function createDevGameDataPacket(playerClient: PlayerClient): Packet {
    let lengthBytes = 0;
    
    // Subtile supports
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    if (playerClient.hasPacketOption(GameDataPacketOptions.sendSubtileSupports)) {
       // @Speed: called twice
       const visibleSubtileSupports = getVisibleSubtileSupports(playerClient);
-      lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * visibleSubtileSupports.length;
+      lengthBytes += 2 * Bytes.Float32 * visibleSubtileSupports.length;
    }
 
    // Pathfinding node occupances
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    if (playerClient.hasPacketOption(GameDataPacketOptions.sendVisiblePathfindingNodeOccupances)) {
       // @Speed: called twice
       const visiblePathfindingNodeOccupances = getVisiblePathfindingNodeOccupances(playerClient);
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT * visiblePathfindingNodeOccupances.length;
+      lengthBytes += Bytes.Float32 * visiblePathfindingNodeOccupances.length;
    }
 
    // AI building safety nodes
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    if (playerClient.hasPacketOption(GameDataPacketOptions.sendVisibleSafetyNodes)) {
       // @Speed: called twice
       const visibleSafetyNodes = getVisibleSafetyNodesData(playerClient);
-      lengthBytes += visibleSafetyNodes.length * 4 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += visibleSafetyNodes.length * 4 * Bytes.Float32;
    }
 
    // Light levels
    if (playerClient.hasPacketOption(GameDataPacketOptions.sendLightLevels)) {
       lengthBytes += getPlayerLightLevelsDataLength(playerClient);
    } else {
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += Bytes.Float32;
    }
 
    // Tribe assignments and virtual buildings
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    if (playerClient.isDev) {
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += Bytes.Float32;
       for (const tribe of tribes) {
-         lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += Bytes.Float32;
 
          // Tribe assignments
          lengthBytes += getTribeAssignmentDataLength(tribe);
 
          // Virtual buildings
          lengthBytes += getVirtualBuildingGhostEntitiesLength(tribe.rootAssignment);
-         lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += Bytes.Float32;
 
          // Building safeties
          lengthBytes += getTribeBuildingSafetyDataLength(playerClient);
@@ -278,18 +279,18 @@ export function createDevGameDataPacket(playerClient: PlayerClient): Packet {
    }
 
    // Local biomes
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const localBiome of visibleLocalBiomeInfo.visibleLocalBiomes) {
       lengthBytes += getLocalBiomeDataLength(playerClient, localBiome);
    }
    
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    if (distribution !== undefined) {
       lengthBytes += getViewedSpawnDistributionDataLength(playerClient, distribution);
    }
    
    // Debug data
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT; // Has debug data boolean
+   lengthBytes += Bytes.Float32; // Has debug data boolean
    lengthBytes += debugData !== null ? getEntityDebugDataLength(debugData) : 0;
 
    const packet = new Packet(ServerPacketType.devGameData, lengthBytes);

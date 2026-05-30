@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, getStringLengthBytes, Packet, Point, polarVec2, getTamingSkill, TamingSkill, TamingSkillID, TamingTier } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import Tribe from "../Tribe.js";
 import { entityExists } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -59,19 +60,19 @@ export const TamingComponentArray = new ComponentArray<TamingComponent>(ServerCo
 
 function getDataLength(entity: Entity): number {
    const tamingComponent = TamingComponentArray.getComponent(entity);
-   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT + getStringLengthBytes(tamingComponent.name);
+   let lengthBytes = 2 * Bytes.Float32 + getStringLengthBytes(tamingComponent.name);
 
    // Acquired skills
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * tamingComponent.acquiredSkills.length;
+   lengthBytes += Bytes.Float32 + Bytes.Float32 * tamingComponent.acquiredSkills.length;
 
    // Skill learnings
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const skillLearning of tamingComponent.skillLearningArray) {
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT * skillLearning.requirementProgressArray.length;
+      lengthBytes += Bytes.Float32;
+      lengthBytes += Bytes.Float32 * skillLearning.requirementProgressArray.length;
    }
 
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 2 * Bytes.Float32;
    
    return lengthBytes;
 }

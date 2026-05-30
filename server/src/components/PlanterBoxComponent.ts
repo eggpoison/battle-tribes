@@ -1,4 +1,5 @@
 import { ServerComponentType, Settings, Entity, EntityType, PlantedEntityType, Packet, randAngle } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType } from "../world.js";
@@ -46,7 +47,7 @@ function onTick(entity: Entity): void {
 }
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToComponent(packet: Packet, entity: Entity): void {

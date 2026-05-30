@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, DamageSource, StatusEffect, STATUS_EFFECT_MODIFIERS, customTickIntervalHasPassed, AttackEffectiveness, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { damageEntity } from "./HealthComponent.js";
 import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent.js";
@@ -170,7 +171,7 @@ function onTick(entity: Entity): void {
 
 function getDataLength(entity: Entity): number {
    const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
-   return Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * statusEffectComponent.activeStatusEffectTypes.length;
+   return Bytes.Float32 + 2 * Bytes.Float32 * statusEffectComponent.activeStatusEffectTypes.length;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

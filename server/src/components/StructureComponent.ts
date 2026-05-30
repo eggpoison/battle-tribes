@@ -1,4 +1,5 @@
 import { StructureType, Entity, ServerComponentType, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { createStructureGrassBlockers } from "../grass-blockers.js";
 import { BlueprintComponentArray } from "./BlueprintComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -98,8 +99,8 @@ function onRemove(entity: Entity): void {
 function getDataLength(entity: Entity): number {
    const structureComponent = StructureComponentArray.getComponent(entity);
    
-   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * structureComponent.connections.length;
+   let lengthBytes = 2 * Bytes.Float32;
+   lengthBytes += 2 * Bytes.Float32 * structureComponent.connections.length;
    return lengthBytes;
 }
 

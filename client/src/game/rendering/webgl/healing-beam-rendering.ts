@@ -1,6 +1,7 @@
 import { Entity } from "../../../../../shared/src/entities";
 import { Settings } from "../../../../../shared/src/settings";
 import { angle, distance, rotatePointAroundPoint, _point } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { HealingTotemComponentArray } from "../../entity-components/server-components/HealingTotemComponent";
@@ -106,10 +107,10 @@ export function createHealingBeamShaders(): void {
    vertexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 7 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 7 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 7 * Bytes.Float32, 4 * Bytes.Float32);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 7 * Bytes.Float32, 6 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);

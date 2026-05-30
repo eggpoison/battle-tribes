@@ -78,7 +78,7 @@ export function createSnobeConfig(x: number, y: number, angle: number): EntityCo
    const idealButtDistance = 20;
    const buttOffset = new Point(0, -idealButtDistance);
    const buttHitbox = createHitbox(transformComponent, null, createCircularBox(x + buttOffset.x, y + buttOffset.y, 0, 0, 0, 12), 0.15, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);
-   setHitboxTag(bodyHitbox, HitboxTag.snobeButt);
+   setHitboxTag(buttHitbox, HitboxTag.snobeButt);
    addHitboxToTransformComponent(transformComponent, buttHitbox);
    
    tetherHitboxes(buttHitbox, bodyHitbox, idealButtDistance, 25, 1);

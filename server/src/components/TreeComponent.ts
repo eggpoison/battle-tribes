@@ -1,4 +1,5 @@
 import { Entity, TreeSize, ServerComponentType, Packet, createCircularBox } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 
@@ -30,7 +31,7 @@ function onJoin(entity: Entity): void {
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

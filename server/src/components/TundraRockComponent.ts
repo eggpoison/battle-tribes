@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class TundraRockComponent {
@@ -12,7 +13,7 @@ export class TundraRockComponent {
 export const TundraRockComponentArray = new ComponentArray<TundraRockComponent>(ServerComponentType.tundraRock, true, getDataLength, addDataToPacket);
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

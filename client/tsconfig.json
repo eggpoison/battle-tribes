@@ -16,7 +16,7 @@
       "sourceMap": true,
       "moduleResolution": "bundler",
       "declaration": true,
-      "isolatedModules": true
+      "isolatedModules": false
    },
    "references": [
      { "path": "../shared" }

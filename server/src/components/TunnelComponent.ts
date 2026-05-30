@@ -1,4 +1,5 @@
 import { ServerComponentType, DoorToggleType, Entity, Settings, angle, lerp, CollisionBit, DEFAULT_COLLISION_MASK, Packet, HitboxCollisionType, RectangularBox, createRectangularBox } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { addHitboxToEntity, TransformComponentArray } from "./TransformComponent.js";
 import { createHitbox, getHitboxCollisionType, } from "../hitboxes.js";
@@ -186,7 +187,7 @@ export function toggleTunnelDoor(tunnel: Entity, doorBit: number): void {
 }
 
 function getDataLength(): number {
-   return 3 * Float32Array.BYTES_PER_ELEMENT;
+   return 3 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

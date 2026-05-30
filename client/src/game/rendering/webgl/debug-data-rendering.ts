@@ -1,5 +1,6 @@
 import { EntityDebugData } from "../../../../../shared/src/client-server-types";
 import { Settings } from "../../../../../shared/src/settings";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, generateLine, generateThickCircleWireframeVertices, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { entityExists } from "../../world";
@@ -116,12 +117,14 @@ export function renderLineDebugData(debugData: EntityDebugData): void {
    addCircleVertices(vertices, debugData, hitbox.box.posX, hitbox.box.posY);
    addLineVertices(vertices, debugData, hitbox.box.posX, hitbox.box.posY);
 
+   gl.bindVertexArray(null);
+
    const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 5 * Bytes.Float32, 2 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
@@ -158,12 +161,14 @@ export function renderTriangleDebugData(debugData: EntityDebugData): void {
 
    addTileHighlightVertices(vertices, debugData);
 
+   gl.bindVertexArray(null);
+
    const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 5 * Bytes.Float32, 2 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);

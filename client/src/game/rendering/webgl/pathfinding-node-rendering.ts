@@ -1,6 +1,7 @@
 import { angle } from "../../../../../shared/src/utils";
 import { PathfindingNodeIndex, PathData, EntityDebugData } from "../../../../../shared/src/client-server-types";
 import { PathfindingSettings } from "../../../../../shared/src/settings";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { entityExists } from "../../world";
@@ -170,11 +171,13 @@ const renderConnectors = (pathData: PathData): void => {
 
    gl.useProgram(connectorProgram);
 
+   gl.bindVertexArray(null);
+
    const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
 
    gl.enableVertexAttribArray(0);
 
@@ -184,12 +187,14 @@ const renderConnectors = (pathData: PathData): void => {
 const renderNodes = (vertexData: Float32Array): void => {
    gl.useProgram(nodeProgram);
 
+   gl.bindVertexArray(null);
+
    const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 3 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 3 * Bytes.Float32, 2 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);

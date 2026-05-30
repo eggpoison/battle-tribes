@@ -1,4 +1,5 @@
 import { Box, cloneBox, RectangularBox, Entity, EntityType, NUM_ENTITY_TYPES, Packet, Settings, STRUCTURE_TYPES, StructureType, angle, clampAngleA, Point, createRectangularBox } from "battletribes-shared";
+import { Bytes } from "../../../../shared/src/constants.js";
 import { getConfigTransformComponent } from "../../components.js";
 import { Hitbox } from "../../hitboxes.js";
 import Layer from "../../Layer.js";
@@ -211,9 +212,9 @@ export function addVirtualBuildingData(packet: Packet, virtualBuilding: VirtualS
    }
 }
 export function getVirtualBuildingDataLength(virtualBuilding: VirtualStructure): number {
-   let lengthBytes = 6 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 6 * Bytes.Float32;
 
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const box of virtualBuilding.boxes) {
       lengthBytes += getBoxDataLength(box);
    }

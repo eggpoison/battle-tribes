@@ -1,4 +1,5 @@
 import { AMMO_INFO_RECORD, ServerComponentType, TURRET_AMMO_TYPES, TurretAmmoType, TurretEntityType, Entity, InventoryName, ItemType, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { consumeItemTypeFromInventory, getFirstOccupiedItemSlotInInventory, getInventory, InventoryComponentArray } from "./InventoryComponent.js";
 import { getEntityType } from "../world.js";
@@ -57,7 +58,7 @@ function onTick(entity: Entity): void {
 }
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entityID: number): void {

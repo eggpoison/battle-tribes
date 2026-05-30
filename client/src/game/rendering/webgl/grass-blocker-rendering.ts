@@ -1,5 +1,6 @@
 import { boxIsCircular } from "../../../../../shared/src/boxes";
 import { rotatePointAroundOrigin, _point } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createTexture, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../../webgl";
 import { getTexture } from "../../textures";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
@@ -361,7 +362,7 @@ export function renderGrassBlockers(): void {
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer2);
    gl.bufferData(gl.ARRAY_BUFFER, framebufferVertexData, gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
 
    gl.enableVertexAttribArray(0);
 

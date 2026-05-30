@@ -1,4 +1,5 @@
 import { ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, Packet, Settings, getSubtileIndex, clampToSubtileBoardDimensions, distance, getAbsAngleDiff, Point, positionIsInWorld, randFloat, randInt, secondsToTicks, angle, HitboxTag, getCircleRectangleCollisionResult } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared.js";
 import { getOkrenPreyTarget, getOkrenThreatTarget, runOkrenCombatAI } from "../ai/OkrenCombatAI.js";
 import { runSandBallingAI, updateSandBallingAI } from "../ai/SandBallingAI.js";
@@ -571,7 +572,7 @@ function onTick(okren: Entity): void {
 }
 
 function getDataLength(): number {
-   return 3 * Float32Array.BYTES_PER_ELEMENT;
+   return 3 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, okren: Entity): void {

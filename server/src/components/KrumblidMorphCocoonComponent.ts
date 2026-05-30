@@ -1,4 +1,5 @@
 import { CircularBox, ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { getConfigComponent } from "../components.js";
 import { createOkrenConfig } from "../entities/desert/okren.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
@@ -70,7 +71,7 @@ function onTick(cocoon: Entity): void {
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

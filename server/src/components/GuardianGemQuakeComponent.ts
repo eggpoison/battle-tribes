@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, Point, CircularBox } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { destroyEntity, getEntityAgeTicks } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
@@ -56,7 +57,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

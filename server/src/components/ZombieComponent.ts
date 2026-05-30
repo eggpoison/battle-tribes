@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, EntityType, DamageSource, Packet, Settings, StatusEffect, InventoryName, ItemType, Point, polarVec2, randFloat, UtilVar, AttackEffectiveness, entityIsStructure, distance, angle } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { moveEntityToPosition, runHerdAI } from "../ai-shared.js";
 import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent.js";
@@ -326,7 +327,7 @@ function onTick(zombie: Entity): void {
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

@@ -1,4 +1,5 @@
 import { ServerComponentType, DoorToggleType, Entity, Settings, angle, lerp, Point, Packet, HitboxCollisionType } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { EntityConfig, getConfigComponent, getConfigTransformComponent } from "../components.js";
 import { TransformComponentArray } from "./TransformComponent.js";
@@ -102,7 +103,7 @@ function onInitialise(config: EntityConfig): void {
 }
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

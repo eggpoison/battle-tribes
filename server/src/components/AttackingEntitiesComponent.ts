@@ -1,4 +1,5 @@
 import { ServerComponentType, DamageSource, Entity, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { Hitbox } from "../hitboxes.js";
 import { entityExists } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -27,7 +28,7 @@ AttackingEntitiesComponentArray.onTakeDamage = onTakeDamage;
 
 function getDataLength(entity: Entity): number {
    const attackingEntitiesComponent = AttackingEntitiesComponentArray.getComponent(entity);
-   return Float32Array.BYTES_PER_ELEMENT + 3 * attackingEntitiesComponent.attackingEntities.size * Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32 + 3 * attackingEntitiesComponent.attackingEntities.size * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

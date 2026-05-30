@@ -1,4 +1,5 @@
 import { Box, boxIsCircular, CircularBox, RectangularBox, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { Hitbox } from "../hitboxes.js";
 import { getHitboxTethers } from "../tethers.js";
 
@@ -16,7 +17,7 @@ const addBaseBoxData = (packet: Packet, box: Box): void => {
    packet.writeNumber(box.flags);
 }
 const getBaseBoxDataLength = (): number => {
-   return 9 * Float32Array.BYTES_PER_ELEMENT;
+   return 9 * Bytes.Float32;
 }
 
 const addCircularBoxData = (packet: Packet, box: CircularBox): void => {
@@ -24,7 +25,7 @@ const addCircularBoxData = (packet: Packet, box: CircularBox): void => {
    packet.writeNumber(box.radius);
 }
 const getCircularBoxDataLength = (): number => {
-   return getBaseBoxDataLength() + Float32Array.BYTES_PER_ELEMENT;
+   return getBaseBoxDataLength() + Bytes.Float32;
 }
 
 const addRectangularBoxData = (packet: Packet, box: RectangularBox): void => {
@@ -33,7 +34,7 @@ const addRectangularBoxData = (packet: Packet, box: RectangularBox): void => {
    packet.writeNumber(box.height);
 }
 const getRectangularBoxDataLength = (): number => {
-   return getBaseBoxDataLength() + 2 * Float32Array.BYTES_PER_ELEMENT;
+   return getBaseBoxDataLength() + 2 * Bytes.Float32;
 }
 
 export function addBoxDataToPacket(packet: Packet, box: Box): void {
@@ -47,7 +48,7 @@ export function addBoxDataToPacket(packet: Packet, box: Box): void {
    }
 }
 export function getBoxDataLength(box: Box): number {
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = Bytes.Float32;
    if (boxIsCircular(box)) {
       lengthBytes += getCircularBoxDataLength();
    } else {
@@ -111,27 +112,27 @@ export function addHitboxDataToPacket(packet: Packet, hitbox: Hitbox): void {
    }
 }
 export function getHitboxDataLength(hitbox: Hitbox): number {
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = Bytes.Float32;
    lengthBytes += getBoxDataLength(hitbox.box);
-   lengthBytes += 4 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 4 * Bytes.Float32;
 
    // Tethers
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    const tethers = getHitboxTethers(hitbox);
    if (tethers !== undefined) {
       for (const tether of tethers) {
          const otherHitbox = tether.getOtherHitbox(hitbox);
          lengthBytes += getBoxDataLength(otherHitbox.box);
-         lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 3 * Bytes.Float32;
       }
    }
    
    // angle shit
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT; // flags
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT; // entity, rootEntity
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT; // parent hitbox entity, local id
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * hitbox.children.length; // children
+   lengthBytes += 2 * Bytes.Float32;
+   lengthBytes += 3 * Bytes.Float32;
+   lengthBytes += Bytes.Float32; // flags
+   lengthBytes += 2 * Bytes.Float32; // entity, rootEntity
+   lengthBytes += 2 * Bytes.Float32; // parent hitbox entity, local id
+   lengthBytes += Bytes.Float32 + 2 * Bytes.Float32 * hitbox.children.length; // children
    return lengthBytes;
 }

@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, Packet, randInt } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class MossComponent {
@@ -14,7 +15,7 @@ export class MossComponent {
 export const MossComponentArray = new ComponentArray<MossComponent>(ServerComponentType.moss, true, getDataLength, addDataToPacket);
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

@@ -1,4 +1,5 @@
 import { ServerComponentType, CraftingRecipe, ItemTally2, tallyInventoryItems, InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize, Entity, Packet, randAngle } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { createItemEntityConfig } from "../entities/item-entity.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { createItem } from "../items.js";
@@ -434,7 +435,7 @@ export function craftRecipe(entity: Entity, inventoryComponent: InventoryCompone
 function getDataLength(entity: Entity): number {
    const inventoryComponent = InventoryComponentArray.getComponent(entity);
 
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = Bytes.Float32;
    for (let i = 0; i < inventoryComponent.inventories.length; i++) {
       const inventory = inventoryComponent.inventories[i];
       lengthBytes += getInventoryDataLength(inventory);

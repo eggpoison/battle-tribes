@@ -1,4 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
+import { Bytes } from "../../../../../shared/src/constants";
 import { PacketReader } from "../../../../../shared/src/packets";
 import _ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
@@ -13,7 +14,7 @@ declare module "../component-registry" {
 
 class _AIHelperComponentArray extends _ServerComponentArray<AIHelperComponent, AIHelperComponentData> {
    public decodeData(reader: PacketReader): AIHelperComponentData {
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      reader.padOffset(Bytes.Float32);
       return {};
    }
 

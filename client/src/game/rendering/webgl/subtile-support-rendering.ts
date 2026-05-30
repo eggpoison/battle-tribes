@@ -1,3 +1,4 @@
+import { Bytes } from "../../../../../shared/src/constants";
 import { Settings } from "../../../../../shared/src/settings";
 import { getSubtileX, getSubtileY } from "../../../../../shared/src/subtiles";
 import { createWebGLProgram, gl } from "../../webgl";
@@ -66,8 +67,6 @@ export function renderSubtileSupports(): void {
       return;
    }
    
-   gl.useProgram(nodeProgram);
-
    // Calculate vertices
    let trigIdx = 0;
    const vertexData = new Float32Array(visibleSubtileSupports.length * NODE_CIRCLE_VERTEX_COUNT * 6 * 3);
@@ -126,12 +125,16 @@ export function renderSubtileSupports(): void {
       }
    }
 
+   gl.useProgram(nodeProgram);
+
+   gl.bindVertexArray(null);
+
    const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 3 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 3 * Bytes.Float32, 2 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);

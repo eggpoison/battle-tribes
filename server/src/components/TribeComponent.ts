@@ -1,4 +1,5 @@
 import { Entity, EntityType, ServerComponentType, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import Tribe from "../Tribe.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TribesmanAIComponentArray, getTribesmanRelationship } from "./TribesmanAIComponent.js";
@@ -163,7 +164,7 @@ export function getEntityRelationship(entity: Entity, comparingEntity: Entity): 
 }
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

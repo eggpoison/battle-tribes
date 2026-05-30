@@ -1,3 +1,4 @@
+import { Bytes } from "../../../../../shared/src/constants";
 import { Settings } from "../../../../../shared/src/settings";
 import { getSubtileX, getSubtileY } from "../../../../../shared/src/subtiles";
 import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY } from "../../camera";
@@ -101,6 +102,8 @@ export function renderTileBreakProgress(layer: Layer): void {
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+   gl.bindVertexArray(null);
+
    // @Speed
    const vertices: Array<number> = [];
    for (const pair of layer.wallSubtileDamageTakenMap) {
@@ -162,9 +165,9 @@ export function renderTileBreakProgress(layer: Layer): void {
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
    
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 5 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 5 * Bytes.Float32, 4 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);

@@ -1,4 +1,5 @@
 import { ServerComponentType, DamageSource, Entity, Packet, Settings, randFloat, lerp, randInt, Point, polarVec2, randAngle, CircularBox, AttackEffectiveness, angle } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS, GolemVars } from "../entities/mobs/golem.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { createPebblumConfig } from "../entities/mobs/pebblum.js";
@@ -264,7 +265,7 @@ function onTick(golem: Entity): void {
 }
 
 function getDataLength(): number {
-   return 3 * Float32Array.BYTES_PER_ELEMENT;
+   return 3 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

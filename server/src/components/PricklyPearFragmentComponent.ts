@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Point, polarVec2, randInt, angle } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { Hitbox, applyKnockback, getHitboxVelocity } from "../hitboxes.js";
 import { destroyEntity } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -31,7 +32,7 @@ function onTick(fragment: Entity): void {
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, fragment: Entity): void {

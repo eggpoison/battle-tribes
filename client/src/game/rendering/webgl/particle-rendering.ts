@@ -366,6 +366,8 @@ export function createParticleShaders(): void {
    vertPositionData[10] = 1;
    vertPositionData[11] = 1;
 
+   gl.bindVertexArray(null);
+
    vertPositionBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, vertPositionBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertPositionData, gl.STATIC_DRAW);
@@ -585,6 +587,8 @@ export function renderMonocolourParticles(renderLayer: ParticleRenderLayer): voi
    
    gl.useProgram(monocolourProgram);
 
+   gl.bindVertexArray(null);
+
    gl.enable(gl.BLEND);
    // @Hack :DarkTransparencyBug
    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -721,6 +725,8 @@ export function renderTexturedParticles(renderLayer: ParticleRenderLayer): void 
    gl.activeTexture(gl.TEXTURE0);
    const texture = getTexture("miscellaneous/particle-texture-atlas.png");
    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+   gl.bindVertexArray(null);
 
    const bufferContainer = renderLayer === ParticleRenderLayer.low ? lowTexturedBufferContainer : highTexturedBufferContainer;
 

@@ -1,4 +1,5 @@
 import { GuardianAttackType, ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVar, angle, HitboxTag } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { moveEntityToPosition } from "../ai-shared.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
 import { AIHelperComponentArray, AIType } from "./AIHelperComponent.js";
@@ -326,7 +327,7 @@ function onTick(guardian: Entity): void {
 }
 
 function getDataLength(): number {
-   return 9 * Float32Array.BYTES_PER_ELEMENT;
+   return 9 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {
@@ -367,7 +368,7 @@ function addDataToPacket(packet: Packet, entity: Entity): void {
          break;
       }
       default: {
-         packet.padOffset(Float32Array.BYTES_PER_ELEMENT);
+         packet.padOffset(Bytes.Float32);
          stageProgress = 0;
          break;
       }

@@ -2,6 +2,7 @@ import { Entity } from "../../../../../shared/src/entities";
 import { _point, Point, polarVec2, rotatePointAroundOrigin } from "../../../../../shared/src/utils";
 import { Box, boxIsCircular, getRelativePivotPos, HitboxCollisionType } from "../../../../../shared/src/boxes";
 import { CollisionGroup, getEntityCollisionGroup } from "../../../../../shared/src/collision-groups";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
@@ -220,12 +221,14 @@ const addBoxVertices = (vertices: Array<number>, box: Box, adjustment: Point, r:
 
 const renderVertices = (vertices: Array<number>): void => {
    gl.useProgram(program);
+   
+   gl.bindVertexArray(null);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 5 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 5 * Bytes.Float32, 2 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);

@@ -2,6 +2,7 @@ import { Settings } from "../../../../../shared/src/settings";
 import { getSubtileIndex } from "../../../../../shared/src/subtiles";
 import { TileType, NUM_TILE_TYPES, SubtileType, TileTypeString } from "../../../../../shared/src/tiles";
 import { getTileIndexIncludingEdges, assert, getTileX, getTileY } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { gl, createWebGLProgram, createTextureArray } from "../../webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkX, getRenderChunkY } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
@@ -374,15 +375,15 @@ const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, rend
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.DYNAMIC_DRAW);
    
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32, 0);
    gl.vertexAttribDivisor(0, 1);
-   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32, 2 * Bytes.Float32);
    gl.vertexAttribDivisor(1, 1);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32, 3 * Bytes.Float32);
    gl.vertexAttribDivisor(2, 1);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32, 4 * Bytes.Float32);
    gl.vertexAttribDivisor(3, 1);
-   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32, 5 * Bytes.Float32);
    gl.vertexAttribDivisor(4, 1);
 
    gl.enableVertexAttribArray(0);
@@ -442,7 +443,7 @@ const recalculateChunkData = (info: RenderInfo, layer: Layer, renderChunkX: numb
       }
    }
 
-   // Not binding a VAO is ok here, as long as before all the chunks are recalculated whatever VAO was there was unbound.
+   // Not binding a VAO is ok here, as long as before all the chunks are recalculated the VAO is unbound
 
    gl.bindBuffer(gl.ARRAY_BUFFER, info.buffer);
    gl.bufferSubData(gl.ARRAY_BUFFER, 0, vertexData);

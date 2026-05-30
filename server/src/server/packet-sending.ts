@@ -1,4 +1,5 @@
 import { ServerComponentTypeString, Settings, Inventory, alignLengthBytes, getStringLengthBytes, Packet, ServerPacketType, getSubtileIndex, Point, Entity, EntityTypeString } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import Layer from "../Layer.js";
 import { getComponentArrayRecord } from "../components/ComponentArray.js";
 import PlayerClient from "./PlayerClient.js";
@@ -14,8 +15,8 @@ import { getPlayerClients } from "./player-clients.js";
 import { ENTITY_COMPONENT_TYPES, getEntityComponentTypes } from "../entity-component-types.js";
 
 export function getInventoryDataLength(inventory: Inventory): number {
-   let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 4 * Float32Array.BYTES_PER_ELEMENT * inventory.items.length;
+   let lengthBytes = 4 * Bytes.Float32;
+   lengthBytes += 4 * Bytes.Float32 * inventory.items.length;
    for (const item of inventory.items) {
       lengthBytes += getStringLengthBytes(item.nickname);
       lengthBytes += getStringLengthBytes(item.namer);
@@ -43,7 +44,7 @@ export function addInventoryDataToPacket(packet: Packet, inventory: Inventory): 
 }
 
 export function getEntityDataLength(entity: Entity, player: Entity | null): number {
-   let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 4 * Bytes.Float32;
 
    const componentTypes = getEntityComponentTypes(getEntityType(entity));
    const componentArrayRecord = getComponentArrayRecord();
@@ -80,7 +81,7 @@ export function addEntityDataToPacket(packet: Packet, entity: Entity, player: En
 
       // @Speed
       if (packet.currentByteOffset - start !== componentArray.getDataLength(entity, player)) {
-         throw new Error(`Component type '${ServerComponentTypeString[componentType]}' has wrong data length for entity type '${EntityTypeString[getEntityType(entity)]}'. (getDataLength returned ${Float32Array.BYTES_PER_ELEMENT + componentArray.getDataLength(entity, player)}, while the length of the added data was ${packet.currentByteOffset - start})`)
+         throw new Error(`Component type '${ServerComponentTypeString[componentType]}' has wrong data length for entity type '${EntityTypeString[getEntityType(entity)]}'. (getDataLength returned ${Bytes.Float32 + componentArray.getDataLength(entity, player)}, while the length of the added data was ${packet.currentByteOffset - start})`)
       }
    }
 }
@@ -145,21 +146,21 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    const visibleGrassBlockers = getVisibleGrassBlockers(playerClient);
    
    // Ticks, time
-   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 2 * Bytes.Float32;
    // Layer
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
 
    // Entities
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const entity of entitiesToSend) {
       lengthBytes += getEntityDataLength(entity, player);
    }
 
    // Removed entities
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * removedEntities.length;
+   lengthBytes += Bytes.Float32 + 2 * Bytes.Float32 * removedEntities.length;
 
    // Tribes
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const tribe of tribes) {
       if (shouldAddTribeExtendedData(playerClient, tribe)) {
          lengthBytes += getExtendedTribeDataLength(tribe);
@@ -169,11 +170,11 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    }
    
    // Player instance and camera subject
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 2 * Bytes.Float32;
 
    // Lights
    let numVisibleLights = 0;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const entity of playerClient.visibleEntities) {
       const hitboxLights = getEntityHitboxLights(entity);
       if (hitboxLights !== null) {
@@ -185,47 +186,47 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    }
 
    // Visible hits
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 8 * Float32Array.BYTES_PER_ELEMENT * playerClient.visibleHits.length;
+   lengthBytes += Bytes.Float32 + 8 * Bytes.Float32 * playerClient.visibleHits.length;
    // Player knockback
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * playerClient.playerKnockbacks.length;
+   lengthBytes += Bytes.Float32 + 2 * Bytes.Float32 * playerClient.playerKnockbacks.length;
    // Player heals
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 5 * Float32Array.BYTES_PER_ELEMENT * playerClient.heals.length;
+   lengthBytes += Bytes.Float32 + 5 * Bytes.Float32 * playerClient.heals.length;
    // Visible entity deaths
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * playerClient.visibleDestroyedEntities.length;
+   lengthBytes += Bytes.Float32 + Bytes.Float32 * playerClient.visibleDestroyedEntities.length;
    // Orb completes
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * playerClient.orbCompletes.length;
+   lengthBytes += Bytes.Float32 + 3 * Bytes.Float32 * playerClient.orbCompletes.length;
    // Tile updates
    for (const layer of layers) {
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * layer.tileUpdateCoordinates.size;
+      lengthBytes += Bytes.Float32 + 3 * Bytes.Float32 * layer.tileUpdateCoordinates.size;
    }
 
    // Wall subtile updates
    for (const layer of layers) {
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * layer.wallSubtileUpdates.length * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += Bytes.Float32 + 3 * layer.wallSubtileUpdates.length * Bytes.Float32;
    }
    
    // hasPickedUpItem
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
 
    // Title offer
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    if (titleOffer !== null) {
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += Bytes.Float32;
    }
 
    // Tick events
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * playerClient.entityTickEvents.length;
+   lengthBytes += Bytes.Float32 + 3 * Bytes.Float32 * playerClient.entityTickEvents.length;
 
    // Mined subtiles
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 4 * Float32Array.BYTES_PER_ELEMENT * minedSubtiles.length;
+   lengthBytes += Bytes.Float32;
+   lengthBytes += 4 * Bytes.Float32 * minedSubtiles.length;
 
    // Collapses
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * nearbyCollapses.length;
+   lengthBytes += Bytes.Float32;
+   lengthBytes += 2 * Bytes.Float32 * nearbyCollapses.length;
 
    // Grass blockers
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const blocker of visibleGrassBlockers) {
       lengthBytes += getGrassBlockerLengthBytes(blocker);
    }
@@ -440,29 +441,29 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Point): ArrayBufferLike {
    const tamingSpecsMap = getTamingSpecsMap();
 
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 4;
+   let lengthBytes = Bytes.Float32 * 4;
    // Layer idx
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    // Per-tile data
-   lengthBytes += layers.length * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 7 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += layers.length * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 7 * Bytes.Float32;
    // Subtile data
-   lengthBytes += layers.length * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += layers.length * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16 * Bytes.Float32;
    // Subtile damage taken
    for (const layer of layers) {
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT + layer.wallSubtileDamageTakenMap.size * 2 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += Bytes.Float32 + layer.wallSubtileDamageTakenMap.size * 2 * Bytes.Float32;
    }
    // Water rocks
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + spawnLayer.waterRocks.length * 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32 + spawnLayer.waterRocks.length * 5 * Bytes.Float32;
    // Taming specs
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const pair of tamingSpecsMap) {
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += Bytes.Float32;
       lengthBytes += getTamingSpecDataLength(pair[1]);
    }
    // Entity component types
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    for (const componentTypes of ENTITY_COMPONENT_TYPES) {
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT + componentTypes.length * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += Bytes.Float32 + componentTypes.length * Bytes.Float32;
    }
    lengthBytes = alignLengthBytes(lengthBytes);
    const packet = new Packet(ServerPacketType.initialGameData, lengthBytes);
@@ -535,7 +536,7 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
 export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBufferLike {
    const player = playerClient.instance;
 
-   const packet = new Packet(ServerPacketType.syncGameData, 8 * Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(ServerPacketType.syncGameData, 8 * Bytes.Float32);
 
    let pos: Point;
    let angle: number;
@@ -566,7 +567,7 @@ export function createSyncGameDataPacket(playerClient: PlayerClient): ArrayBuffe
 }
 
 const createSimulationStatusUpdatePacket = (isSimulating: boolean): Packet => {
-   const packet = new Packet(ServerPacketType.simulationStatusUpdate, Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(ServerPacketType.simulationStatusUpdate, Bytes.Float32);
    packet.writeBool(isSimulating);
    return packet;
 }

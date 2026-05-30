@@ -162,6 +162,9 @@ export function recalculateRenderObjectVertexData(renderObject: EntityRenderObje
    
    setRenderObjectInVertexData(renderObject, renderObject.vertexData, 0);
 
+   // @Speed! !
+   gl.bindVertexArray(null);
+   
    gl.bindBuffer(gl.ARRAY_BUFFER, renderObject.vertexBuffer);
    gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderObject.vertexData);
 }

@@ -1,4 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
+import { Bytes } from "../../../../../shared/src/constants";
 import { PacketReader } from "../../../../../shared/src/packets";
 import _ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
@@ -14,7 +15,7 @@ declare module "../component-registry" {
 class _AttackingEntitiesComponentArray extends _ServerComponentArray<AttackingEntitiesComponent, AttackingEntitiesComponentData> {
    public decodeData(reader: PacketReader): AttackingEntitiesComponentData {
       const numAttackingEntities = reader.readNumber();
-      reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT * numAttackingEntities);
+      reader.padOffset(3 * Bytes.Float32 * numAttackingEntities);
       return {};
    }
 

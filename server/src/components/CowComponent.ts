@@ -1,4 +1,5 @@
 import { CowSpecies, DamageSource, Entity, EntityType, Settings, getAbsAngleDiff, Point, polarVec2, randAngle, randFloat, randInt, randItem, UtilVar, EntityTickEvent, EntityTickEventType, ServerComponentType, ItemType, Packet, AttackEffectiveness, TamingSkillID, distance, angle, createCircularBox, HitboxTag } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { getHitboxByTag, TransformComponentArray } from "./TransformComponent.js";
@@ -639,7 +640,7 @@ function onTick(cow: Entity): void {
 }
 
 function getDataLength(): number {
-   return 4 * Float32Array.BYTES_PER_ELEMENT;
+   return 4 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

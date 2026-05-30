@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, Packet, Settings, randInt } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { getEntityLayer } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { createIceShardExplosion } from "./IceSpikesComponent.js";
@@ -35,7 +36,7 @@ function onTick(entity: Entity): void {
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

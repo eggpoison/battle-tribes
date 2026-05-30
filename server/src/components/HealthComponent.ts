@@ -1,4 +1,5 @@
 import { ServerComponentType, DamageSource, EntityType, Entity, Settings, Point, clamp, AttackEffectiveness, HitFlags, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { onZombieVisibleEntityHurt } from "../entities/mobs/zombie.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { registerDirtyEntity, registerEntityHeal, registerEntityHit } from "../server/player-clients.js";
@@ -240,7 +241,7 @@ export function removeDefence(healthComponent: HealthComponent, name: string): v
 }
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entityID: number): void {

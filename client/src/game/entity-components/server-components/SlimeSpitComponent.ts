@@ -13,6 +13,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { Bytes } from "../../../../../shared/src/constants";
 
 export interface SlimeSpitComponentData {}
 
@@ -24,7 +25,7 @@ declare module "../component-registry" {
 
 class _SlimeSpitComponentArray extends _ServerComponentArray<SlimeSpitComponent, SlimeSpitComponentData> {
    public decodeData(reader: PacketReader): SlimeSpitComponentData {
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      reader.padOffset(Bytes.Float32);
       return {};
    }
 

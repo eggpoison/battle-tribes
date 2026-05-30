@@ -1,4 +1,5 @@
 import { Entity, LightLevelNode, LightLevelVar, Packet, Settings, assert, distance, lerp, Point } from "battletribes-shared";
+import { Bytes } from "../../shared/src/constants.js";
 import { Hitbox } from "./hitboxes.js";
 import Layer from "./Layer.js";
 import PlayerClient from "./server/PlayerClient.js";
@@ -225,10 +226,10 @@ export function getPlayerLightLevelsDataLength(playerClient: PlayerClient): numb
    const minNodeY = Math.floor(playerClient.minVisibleY / LightLevelVar.LIGHT_NODE_SIZE);
    const maxNodeY = Math.floor(playerClient.maxVisibleY / LightLevelVar.LIGHT_NODE_SIZE);
 
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = Bytes.Float32;
 
    const numNodes = (maxNodeX + 1 - minNodeX) * (maxNodeY + 1 - minNodeY);
-   lengthBytes += 2 * numNodes * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 2 * numNodes * Bytes.Float32;
 
    return lengthBytes;
 }
@@ -255,7 +256,7 @@ export function addPlayerLightLevelsData(packet: Packet, playerClient: PlayerCli
 
 // @Speed: useless function
 export function getLightDataLength(): number {
-   return 11 * Float32Array.BYTES_PER_ELEMENT;
+   return 11 * Bytes.Float32;
 }
 
 export function addLightData(packet: Packet, hitbox: Hitbox, light: Light): void {

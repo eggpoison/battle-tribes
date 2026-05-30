@@ -1,4 +1,5 @@
 import { BlockType, ServerComponentType, Entity, EntityType, getItemAttackInfo, InventoryName, ITEM_TYPE_RECORD, ItemType, Packet, Point } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { applyKnockback, getHitboxMomentum, Hitbox } from "../hitboxes.js";
 import { createShieldKnockPacket } from "../server/packet-sending.js";
 import { getEntityType, getGameTicks } from "../world.js";
@@ -35,7 +36,7 @@ export const HeldItemComponentArray = new ComponentArray<HeldItemComponent>(Serv
 HeldItemComponentArray.onHitboxCollision = onHitboxCollision;
 
 export function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 export function addDataToPacket(packet: Packet, entity: Entity): void {

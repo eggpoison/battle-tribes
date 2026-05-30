@@ -1,4 +1,5 @@
 import { Entity, EntityType, Packet, EntityTamingSpec, TamingTier, assert } from "battletribes-shared";
+import { Bytes } from "../../shared/src/constants.js";
 import { getEntityType } from "./world.js";
 
 const tamingSpecsMap = new Map<EntityType, EntityTamingSpec>();
@@ -29,13 +30,13 @@ export function getTamingSpec(entity: Entity): EntityTamingSpec {
 }
 
 export function getTamingSpecDataLength(tamingSpec: EntityTamingSpec): number {
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = Bytes.Float32;
 
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 5 * Float32Array.BYTES_PER_ELEMENT * tamingSpec.skillNodes.length;
+   lengthBytes += Bytes.Float32 + 5 * Bytes.Float32 * tamingSpec.skillNodes.length;
 
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
 
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT * (tamingSpec.maxTamingTier + 1);
+   lengthBytes += Bytes.Float32 * (tamingSpec.maxTamingTier + 1);
 
    return lengthBytes;
 }

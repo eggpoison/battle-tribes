@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, TribeTotemBanner, randInt, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export interface TotemBannerPosition {
@@ -54,7 +55,7 @@ function getDataLength(entity: Entity): number {
    const totemBannerComponent = TotemBannerComponentArray.getComponent(entity);
 
    const numBanners = Object.keys(totemBannerComponent.banners).length;
-   return Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * numBanners;
+   return Bytes.Float32 + 3 * Bytes.Float32 * numBanners;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

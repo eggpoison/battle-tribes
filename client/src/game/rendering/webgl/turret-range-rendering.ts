@@ -1,6 +1,7 @@
 import { Entity, EntityType } from "../../../../../shared/src/entities";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "../../../../../shared/src/items/items";
 import { Point } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { getEntityLayer, getEntityType } from "../../world";
@@ -189,6 +190,8 @@ export function renderTurretRange(): void {
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+   gl.bindVertexArray(null);
+
    // @Speed: should only be calculated once when the player first selects the item, with the result cached
    const vertices = calculateVertices(renderingInfo);
 
@@ -196,7 +199,7 @@ export function renderTurretRange(): void {
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
    gl.enableVertexAttribArray(0);
 
    const rangeLocation = gl.getUniformLocation(program, "u_range")!;

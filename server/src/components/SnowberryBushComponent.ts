@@ -1,4 +1,5 @@
 import { Entity, Packet, ServerComponentType } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class SnowberryBushComponent {
@@ -14,7 +15,7 @@ export class SnowberryBushComponent {
 export const SnowberryBushComponentArray = new ComponentArray<SnowberryBushComponent>(ServerComponentType.snowberryBush, true, getDataLength, addDataToPacket);
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, snowberryBush: Entity): void {

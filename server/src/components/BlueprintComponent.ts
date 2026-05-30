@@ -1,4 +1,5 @@
 import { Entity, BlueprintType, BuildingMaterial, ServerComponentType, HitboxTag, ITEM_INFO_RECORD, HammerItemType, Packet, Point } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { getBlueprintEntityType } from "../entities/blueprint-entity.js";
 import { StructureComponentArray } from "./StructureComponent.js";
@@ -216,7 +217,7 @@ export function doBlueprintWork(blueprintEntity: Entity, itemType: HammerItemTyp
 }
 
 function getDataLength(): number {
-   return 3 * Float32Array.BYTES_PER_ELEMENT;
+   return 3 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

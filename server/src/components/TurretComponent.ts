@@ -1,4 +1,5 @@
 import { AMMO_INFO_RECORD, ServerComponentType, TurretAmmoType, TurretEntityType, Entity, EntityType, Packet, ItemType, polarVec2, randAngle, UtilVar, boxIsCircular, Settings, calculateDistanceSquared, angle } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from "../entities/structures/sling-turret.js";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent.js";
@@ -348,7 +349,7 @@ const getReloadProgress = (turret: Entity): number => {
 }
 
 function getDataLength(): number {
-   return 3 * Float32Array.BYTES_PER_ELEMENT;
+   return 3 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

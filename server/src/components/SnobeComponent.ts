@@ -1,4 +1,5 @@
 import { Entity, EntityType, ServerComponentType, TileType, Settings, ItemType, Packet, DEFAULT_COLLISION_MASK, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randFloat, randInt, randSign, secondsToTicks, EntityTickEvent, EntityTickEventType, distance, HitboxTag } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { runEscapeAI } from "../ai/EscapeAI.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -259,7 +260,7 @@ function onTick(snobe: Entity): void {
 }
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, snobe: Entity): void {

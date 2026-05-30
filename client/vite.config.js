@@ -1,4 +1,5 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from "vite";
+import path from "path";
 import TextureAtlasStitchingPlugin from "./tools/vite-plugin-texture-atlas";
 import InlineConstEnumPlugin from "unplugin-inline-const-enum/vite";
 
@@ -28,7 +29,8 @@ try {
 
 const inlineConstEnumPlugin = InlineConstEnumPlugin({
    sourceDir: "..",
-   sourcePattern: "{client/src,shared/src}/**/*.{ts,cts,mts}",
+   sourcePattern: "{src,../shared/src}/**/*.{ts,cts,mts}",
+   debug: true,
    tsConfig: "./tsconfig.json"
 });
 inlineConstEnumPlugin.apply = undefined;
@@ -55,8 +57,8 @@ export default defineConfig(env => {
             // This is necessary if your linked library is in a sibling directory.
             // e.g., ../my-shared-library
             // Adjust the path based on where your library is located.
-            allow: [".", "../shared"],
+            allow: [__dirname, path.resolve(__dirname, '../shared')],
          },
-      },
+      }
    };
 });

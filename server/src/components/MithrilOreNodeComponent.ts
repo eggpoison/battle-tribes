@@ -1,6 +1,7 @@
 import { ServerComponentType, Entity, Packet } from "battletribes-shared";
 import { destroyEntity, entityExists } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
+import { Bytes } from "../../../shared/src/constants.js";
 
 export class MithrilOreNodeComponent {
    public readonly size: number;
@@ -21,7 +22,7 @@ export const MithrilOreNodeComponentArray = new ComponentArray<MithrilOreNodeCom
 MithrilOreNodeComponentArray.preRemove = preRemove;
 
 function getDataLength(): number {
-   return 3 * Float32Array.BYTES_PER_ELEMENT;
+   return 3 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

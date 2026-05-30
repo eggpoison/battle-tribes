@@ -1,4 +1,5 @@
 import { Box, boxIsCircular, cloneBox, Entity, EntityType, Settings, Packet, Point, unitsToChunksClamped, _bounds, calculateBoxBounds, getBoxCollisionResult, circleCollidesWithBox } from "battletribes-shared";
+import { Bytes } from "../../shared/src/constants.js";
 import Chunk from "./Chunk.js";
 import { TransformComponentArray } from "./components/TransformComponent.js";
 import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType, surfaceLayer } from "./world.js";
@@ -192,9 +193,9 @@ export function createStructureGrassBlockers(structure: Entity): void {
 }
 
 export function getGrassBlockerLengthBytes(blocker: GrassBlocker): number {
-   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 2 * Bytes.Float32;
    lengthBytes += getBoxDataLength(blocker.box);
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 2 * Bytes.Float32;
    return lengthBytes;
 }
 

@@ -1,4 +1,5 @@
 import { getStringLengthBytes, Packet, PacketReader, ServerPacketType, Entity, EntityType, LimbAction, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, TribeType, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, assert, Point, randAngle, CRAFTING_RECIPES, ItemRequirements, TileType, getTamingSkill, TamingSkillID, TamingTier, Tech, TechID, getTechByID, BLOCKING_LIMB_STATE, copyLimbState, RESTING_LIMB_STATES, SHIELD_BLOCKING_LIMB_STATE, updateBox, TribesmanTitle, Settings, angle } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import PlayerClient from "./PlayerClient.js";
 import Layer from "../Layer.js";
 import { getCurrentLimbState, getHeldItem, getHeldItemEntity, getLimbConfiguration, InventoryUseComponentArray, setLimbActions } from "../components/InventoryUseComponent.js";
@@ -574,7 +575,7 @@ export function processTPToEntityPacket(playerClient: PlayerClient, reader: Pack
    const targetTransformComponent = TransformComponentArray.getComponent(targetEntity);
    const targetHitbox = targetTransformComponent.hitboxes[0];
 
-   const packet = new Packet(ServerPacketType.forcePositionUpdate, 2 * Float32Array.BYTES_PER_ELEMENT);
+   const packet = new Packet(ServerPacketType.forcePositionUpdate, 2 * Bytes.Float32);
    packet.writeNumber(targetHitbox.box.posX);
    packet.writeNumber(targetHitbox.box.posY);
    playerClient.socket.send(packet.buffer);

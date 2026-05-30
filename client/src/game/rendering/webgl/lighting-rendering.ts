@@ -1,3 +1,6 @@
+import { Settings } from "../../../../../shared/src/settings";
+import { distance, getTileX, getTileY, lerp } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getLightPositionMatrix } from "../../lights";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
@@ -7,8 +10,6 @@ import { currentSnapshot } from "../../networking/snapshots";
 import { cameraPosition } from "../../camera";
 import { gameFramebufferTexture } from "../render";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
-import { Settings } from "../../../../../shared/src/settings";
-import { distance, getTileX, getTileY, lerp } from "../../../../../shared/src/utils";
 
 const enum Var {
    MAX_LIGHTS = 64,
@@ -298,7 +299,7 @@ export function createNightShaders(): void {
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
    gl.enableVertexAttribArray(0);
 
    gl.bindVertexArray(null);

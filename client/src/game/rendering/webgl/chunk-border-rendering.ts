@@ -1,3 +1,4 @@
+import { Bytes } from "../../../../../shared/src/constants";
 import { Settings } from "../../../../../shared/src/settings";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
@@ -77,10 +78,12 @@ export function renderChunkBorders(minX: number, maxX: number, minY: number, max
       );
    }
 
+   gl.bindVertexArray(null);
+
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
 
    gl.enableVertexAttribArray(0);
 

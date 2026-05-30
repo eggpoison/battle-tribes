@@ -1,4 +1,5 @@
 import { assertBoxIsRectangular, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Packet, Settings, Point, polarVec2, angle, HitboxTag } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { getOkrenClawBigArmSegmentOffset, getOkrenClawBigArmSegmentSize, getOkrenClawMediumArmSegmentOffset, getOkrenClawMediumArmSegmentSize, getOkrenClawSlashingArmSegmentOffset, getOkrenClawSlashingArmSegmentSize } from "../entities/desert/okren-claw.js";
 import { Hitbox, getHitboxVelocity, applyAbsoluteKnockback, getHitboxTag } from "../hitboxes.js";
 import { getEntityType } from "../world.js";
@@ -94,7 +95,7 @@ export function switchOkrenClawGrowthStage(okrenClaw: Entity, growthStage: Okren
 }
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, okrenClaw: Entity): void {

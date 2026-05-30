@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, EntityType, Settings, Tech, TribesmanTitle, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize, InventoryName, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { InventoryUseComponentArray } from "./InventoryUseComponent.js";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation.js";
@@ -132,7 +133,7 @@ export function continueResearching(researchBench: Entity, researcher: Entity, t
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

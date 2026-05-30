@@ -1,4 +1,5 @@
 import { BlockType, ServerComponentType, DamageSource, Entity, EntityType, LimbAction, Settings, BowItemInfo, getItemAttackInfo, getItemType, HammerItemType, Inventory, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, itemTypeIsHammer, QUIVER_PULL_TIME_TICKS, RETURN_FROM_BOW_USE_TIME_TICKS, Packet, customTickIntervalHasPassed, lerp, Point, polarVec2, randAngle, assertBoxIsCircular, Box, HitboxTag, AttackVar, BLOCKING_LIMB_STATE, copyLimbState, LimbConfiguration, LimbState, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES, interpolateLimbState, RectangularBox, getSubtileIndex, EntityTickEvent, EntityTickEventType, HitFlags, AttackEffectiveness, calculateAttackEffectiveness, StatusEffect, TribesmanTitle, _bounds, angle, createRectangularBox, getBoxCollisionResult, calculateBoxBounds } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { getInventory, hasInventory, InventoryComponentArray } from "./InventoryComponent.js";
 import { getHitboxesByTag, TransformComponentArray } from "./TransformComponent.js";
@@ -560,8 +561,8 @@ function onTick(entity: Entity): void {
 }
 
 export function getCrossbowLoadProgressRecordLength(useInfo: LimbInfo): number {
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.crossbowLoadProgressRecord).length;
+   let lengthBytes = Bytes.Float32;
+   lengthBytes += 2 * Bytes.Float32 * Object.keys(useInfo.crossbowLoadProgressRecord).length;
    return lengthBytes;
 }
 
@@ -579,15 +580,15 @@ export function addCrossbowLoadProgressRecordToPacket(packet: Packet, useInfo: L
 function getDataLength(entity: Entity): number {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = Bytes.Float32;
    for (const useInfo of inventoryUseComponent.limbInfos) {
-      lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
-      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-      lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.spearWindupCooldowns).length;
+      lengthBytes += 3 * Bytes.Float32;
+      lengthBytes += Bytes.Float32;
+      lengthBytes += 2 * Bytes.Float32 * Object.keys(useInfo.spearWindupCooldowns).length;
       lengthBytes += getCrossbowLoadProgressRecordLength(useInfo);
-      lengthBytes += 20 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 20 * Bytes.Float32;
       // Limb states
-      lengthBytes += 2 * 5 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 2 * 5 * Bytes.Float32;
    }
 
    return lengthBytes;

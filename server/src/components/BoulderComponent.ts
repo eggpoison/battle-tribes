@@ -1,4 +1,5 @@
 import { Packet, Entity, ServerComponentType, randInt } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class BoulderComponent {
@@ -8,7 +9,7 @@ export class BoulderComponent {
 export const BoulderComponentArray = new ComponentArray<BoulderComponent>(ServerComponentType.boulder, true, getDataLength, addDataToPacket);
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

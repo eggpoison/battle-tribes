@@ -1,4 +1,5 @@
 import { PotentialBuildingPlanData, ServerComponentType, Entity, EntityType, Settings, TechID, TechTreeUnlockProgress, Tech, getTechByID, TECHS, TechUnlockProgress, TribeType, TRIBE_INFO_RECORD, Point, randItem, clampToBoardDimensions, TileIndex, getTileIndexIncludingEdges, getTileX, getTileY, assert, ItemType, InventoryName, getStringLengthBytes, Packet } from "battletribes-shared";
+import { Bytes } from "../../shared/src/constants.js";
 import Chunk from "./Chunk.js";
 import { TotemBannerComponentArray, addBannerToTotem, removeBannerFromTotem } from "./components/TotemBannerComponent.js";
 import { InventoryComponentArray, getInventory } from "./components/InventoryComponent.js";
@@ -620,45 +621,45 @@ export function shouldAddTribeExtendedData(playerClient: PlayerClient, tribe: Tr
 }
 
 export function getShortTribeDataLength(tribe: Tribe): number {
-   return getStringLengthBytes(tribe.name) + 3 * Float32Array.BYTES_PER_ELEMENT;
+   return getStringLengthBytes(tribe.name) + 3 * Bytes.Float32;
 }
 
 export function getExtendedTribeDataLength(tribe: Tribe): number {
    let lengthBytes = getShortTribeDataLength(tribe);
    
    // Has totem, num huts, tribesman cap
-   lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 3 * Bytes.Float32;
 
    // Tribe area
    const area = tribe.getArea();
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * area.length;
+   lengthBytes += Bytes.Float32 + 2 * Bytes.Float32 * area.length;
 
    // Selected tech id
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
 
    // Unlocked techs
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * tribe.unlockedTechs.length;
+   lengthBytes += Bytes.Float32 + Bytes.Float32 * tribe.unlockedTechs.length;
    
    // Tech tree unlock progress
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    // @Copynpaste
    const unlockProgressEntries = Object.entries(tribe.techTreeUnlockProgress).map(([a, b]) => [Number(a), b]) as Array<[number, TechUnlockProgress]>;
    for (const [, unlockProgress] of unlockProgressEntries) {
-      lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 3 * Bytes.Float32;
       
       const numItemRequirements = Object.keys(unlockProgress.itemProgress).length;
-      lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * numItemRequirements;
+      lengthBytes += 2 * Bytes.Float32 * numItemRequirements;
    }
 
    // Tribesmen
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Bytes.Float32;
    // @Speed
    for (const tribesman of tribe.entities) {
       if (!TribesmanComponentArray.hasComponent(tribesman)) {
          continue;
       }
       
-      lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 2 * Bytes.Float32;
       // Name
       const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesman);
       lengthBytes += getStringLengthBytes(tribeMemberComponent.name);

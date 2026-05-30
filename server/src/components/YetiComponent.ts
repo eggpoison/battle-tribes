@@ -1,4 +1,5 @@
 import { ServerComponentType, DamageSource, Entity, EntityType, Settings, Biome, Packet, ItemType, TribeType, getTileIndexIncludingEdges, getTileX, getTileY, Point, polarVec2, randAngle, randFloat, randItem, TileIndex, tileIsInWorld, UtilVar, AttackEffectiveness, EntityTickEvent, EntityTickEventType, angle, distance, HitboxTag } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { SnowThrowStage, YETI_SNOW_THROW_COOLDOWN } from "../entities/mobs/yeti.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
@@ -418,7 +419,7 @@ function onRemove(yeti: Entity): void {
 }
 
 function getDataLength(): number {
-   return 2 * Float32Array.BYTES_PER_ELEMENT;
+   return 2 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

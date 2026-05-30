@@ -1,4 +1,5 @@
 import { ServerComponentType, EntityType, Entity, LimbAction, BackpackItemInfo, ConsumableItemInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, Packet, Settings, TileType, TitleGenerationInfo, TRIBESMAN_TITLE_RECORD, TribesmanTitle, TribeType, Point, randInt } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { EntityConfig, getConfigComponent } from "../components.js";
 import { onFishLeaderHurt } from "../entities/mobs/fish.js";
 import { useItem } from "../entities/tribes/tribe-member.js";
@@ -71,9 +72,9 @@ function onInitialise(config: EntityConfig): void {
 function getDataLength(entity: Entity): number {
    const tribesmanComponent = TribesmanComponentArray.getComponent(entity);
 
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * tribesmanComponent.titles.length;
+   let lengthBytes = Bytes.Float32;
+   lengthBytes += Bytes.Float32;
+   lengthBytes += 2 * Bytes.Float32 * tribesmanComponent.titles.length;
 
    return lengthBytes;
 }

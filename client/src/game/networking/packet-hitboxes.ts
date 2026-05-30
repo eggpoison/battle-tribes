@@ -5,6 +5,7 @@ import { assert } from "../../../../shared/src/utils";
 import { currentSnapshot } from "../networking/snapshots";
 import { Hitbox, HitboxTether, createHitbox, getHitboxByLocalID } from "../hitboxes";
 import { findEntityHitbox } from "../entity-components/server-components/TransformComponent";
+import { Bytes } from "../../../../shared/src/constants";
 
 const readCircularBoxFromData = (reader: PacketReader): CircularBox => {
    const x = reader.readNumber();
@@ -28,7 +29,7 @@ const readCircularBoxFromData = (reader: PacketReader): CircularBox => {
    return box;
 }
 const padCircularBoxData = (reader: PacketReader): void => {
-   reader.padOffset(10 * Float32Array.BYTES_PER_ELEMENT);
+   reader.padOffset(10 * Bytes.Float32);
 }
 
 const readRectangularBoxFromData = (reader: PacketReader): RectangularBox => {
@@ -54,7 +55,7 @@ const readRectangularBoxFromData = (reader: PacketReader): RectangularBox => {
    return box;
 }
 const padRectangularBoxData = (reader: PacketReader): void => {
-   reader.padOffset(11 * Float32Array.BYTES_PER_ELEMENT);
+   reader.padOffset(11 * Bytes.Float32);
 }
 
 export function readBoxFromData(reader: PacketReader): Box {

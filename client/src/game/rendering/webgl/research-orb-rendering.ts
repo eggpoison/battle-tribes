@@ -1,3 +1,4 @@
+import { Bytes } from "../../../../../shared/src/constants";
 import { rotatePointAroundPoint, _point } from "../../../../../shared/src/utils";
 import { RESEARCH_ORB_SIZES, ResearchOrb, getResearchOrb, getResearchOrbCompleteProgress } from "../../research";
 import { createWebGLProgram, gl } from "../../webgl";
@@ -122,6 +123,8 @@ export function renderResearchOrb(): void {
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+   gl.bindVertexArray(null);
+   
    const buffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
@@ -135,7 +138,7 @@ export function renderResearchOrb(): void {
    const lo3 = gl.getUniformLocation(program, "u_complete_progress")!;
    gl.uniform1f(lo3, getResearchOrbCompleteProgress());
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
    gl.enableVertexAttribArray(0);
 
    gl.drawArrays(gl.TRIANGLES, 0, 6);

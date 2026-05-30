@@ -219,6 +219,7 @@ export function createEntityShaders(): void {
    indicesData[4] = 1;
    indicesData[5] = 3;
 
+   gl.bindVertexArray(null);
    indexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);

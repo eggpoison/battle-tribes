@@ -1,4 +1,5 @@
 import { CircularBox, ServerComponentType, Entity, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { createKrumblidConfig } from "../entities/mobs/krumblid.js";
 import { Hitbox } from "../hitboxes.js";
 import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, ticksToGameHours } from "../world.js";
@@ -44,7 +45,7 @@ function onTick(cocoon: Entity): void {
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

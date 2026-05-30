@@ -1,4 +1,5 @@
 import { _point } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { cleanupEntityRendering, renderEntity, setEntityRenderingOverrideAlphaWithOne, setupEntityRendering } from "./entity-rendering";
@@ -233,12 +234,14 @@ export function renderEntitySelection(renderObject: EntityRenderObject, clientIn
    // @Hack :DarkTransparencyBug
    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
+   gl.bindVertexArray(null);
+
    // @Speed
    const buffer2 = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer2);
    gl.bufferData(gl.ARRAY_BUFFER, framebufferVertexData, gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
 
    gl.enableVertexAttribArray(0);
 

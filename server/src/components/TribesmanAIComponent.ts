@@ -1,4 +1,5 @@
 import { ServerComponentType, TribesmanAIType, Settings, CRAFTING_RECIPES, ItemType, Entity, Packet } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import Tribe from "../Tribe.js";
 import { EntityRelationship, TribeComponentArray } from "./TribeComponent.js";
@@ -181,7 +182,7 @@ function onJoin(entity: Entity): void {
 }
 
 function getDataLength(): number {
-   return 4 * Float32Array.BYTES_PER_ELEMENT;
+   return 4 * Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity, player: Entity | null): void {

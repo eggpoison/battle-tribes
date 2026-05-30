@@ -1,5 +1,6 @@
 import { TECHS, Tech, getTechByID, TechID } from "../../../../../shared/src/techs";
 import { angle } from "../../../../../shared/src/utils";
+import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "../../webgl";
 import { playerTribe } from "../../tribes";
 import { techTreeState } from "../../../ui-state/tech-tree-state";
@@ -269,6 +270,8 @@ const renderBackground = (): void => {
 
    gl.useProgram(backgroundProgram);
 
+   gl.bindVertexArray(null);
+
    const screenWidthUniformLocation = gl.getUniformLocation(backgroundProgram, "u_screenSize");
    gl.uniform2f(screenWidthUniformLocation, windowWidth, windowHeight);
 
@@ -293,7 +296,7 @@ const renderBackground = (): void => {
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
    gl.enableVertexAttribArray(0);
 
    gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -423,6 +426,8 @@ const renderConnectors = (): void => {
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+   gl.bindVertexArray(null);
+
    const screenWidthUniformLocation = gl.getUniformLocation(connectorProgram, "u_screenSize");
    gl.uniform2f(screenWidthUniformLocation, windowWidth, windowHeight);
 
@@ -441,10 +446,10 @@ const renderConnectors = (): void => {
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 7 * Bytes.Float32, 0);
+   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 7 * Bytes.Float32, 2 * Bytes.Float32);
+   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 7 * Bytes.Float32, 3 * Bytes.Float32);
+   gl.vertexAttribPointer(3, 2, gl.FLOAT, false, 7 * Bytes.Float32, 5 * Bytes.Float32);
 
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);

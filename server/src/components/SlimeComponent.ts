@@ -1,4 +1,5 @@
 import { ServerComponentType, Entity, EntityType, DamageSource, SlimeSize, Packet, Settings, TileType, lerp, Point, polarVec2, randAngle, UtilVar, Biome, AttackEffectiveness, calculateDistanceSquared, angle, distance } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { SLIME_MAX_MERGE_WANT, SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_SPEED_MULTIPLIERS, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger, createSlimeConfig } from "../entities/mobs/slime.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { turnAngle, getEntitiesInRange, moveEntityToPosition } from "../ai-shared.js";
@@ -294,9 +295,9 @@ function onTick(slime: Entity): void {
 function getDataLength(entity: Entity): number {
    const slimeComponent = SlimeComponentArray.getComponent(entity);
 
-   let lengthBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT * slimeComponent.orbSizes.length;
+   let lengthBytes = 3 * Bytes.Float32;
+   lengthBytes += 2 * Bytes.Float32;
+   lengthBytes += Bytes.Float32 * slimeComponent.orbSizes.length;
 
    return lengthBytes;
 }

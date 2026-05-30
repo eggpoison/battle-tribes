@@ -1,4 +1,5 @@
 import { Entity, EntityType, FishColour, DamageSource, ServerComponentType, Packet, AttackEffectiveness, InventoryName, ItemType, Settings, TileType, customTickIntervalHasPassed, Point, polarVec2, randAngle, randFloat, randSign, UtilVar, angle } from "battletribes-shared";
+import { Bytes } from "../../../shared/src/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { runHerdAI } from "../ai-shared.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
@@ -208,7 +209,7 @@ function onRemove(entity: Entity): void {
 }
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT;
+   return Bytes.Float32;
 }
 
 function addDataToPacket(packet: Packet, entity: Entity): void {

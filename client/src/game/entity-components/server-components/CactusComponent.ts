@@ -2,7 +2,6 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { CactusFlowerSize, Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { assert, randInt, randAngle } from "../../../../../shared/src/utils";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { createCactusSpineParticle, createFlowerParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
@@ -14,6 +13,7 @@ import { getHitboxByLocalID } from "../../hitboxes";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface CactusFlower {
    readonly parentHitboxLocalID: number;
@@ -39,11 +39,11 @@ declare module "../component-registry" {
 
 export const CACTUS_RADIUS = 40;
 
-const getFlowerTextureSource = (type: number, size: CactusFlowerSize): string => {
+const getFlowerTextureIndex = (type: number, size: CactusFlowerSize): TextureIndex => {
    if (type === 4) {
-      return "entities/cactus/cactus-flower-5.png";
+      return TextureIndex.entities_cactus_cactusFlower5;
    } else {
-      return `entities/cactus/cactus-flower-${size === CactusFlowerSize.small ? "small" : "large"}-${type + 1}.png`;
+      return TextureIndex.entities_cactus_cactusFlower1Large + type * 2 + (size === CactusFlowerSize.small ? 1 : 0);
    }
 }
 
@@ -85,7 +85,7 @@ class CactusComponentArray extends _ServerComponentArray<CactusComponent, Cactus
             i === 0 ? 2 : Math.random(),
             0,
             0, 0,
-            getTextureArrayIndex(i === 0 ? "entities/cactus/cactus.png" : "entities/cactus/cactus-limb.png")
+            i === 0 ? TextureIndex.entities_cactus_cactus : TextureIndex.entities_cactus_cactusLimb
          );
          renderObject.attachRenderPart(baseRenderPart);
       }
@@ -102,7 +102,7 @@ class CactusComponentArray extends _ServerComponentArray<CactusComponent, Cactus
             3 + Math.random(),
             flower.rotation,
             flower.offsetX, flower.offsetY,
-            getTextureArrayIndex(getFlowerTextureSource(flower.flowerType, flower.size))
+            getFlowerTextureIndex(flower.flowerType, flower.size)
          );
          renderObject.attachRenderPart(renderPart);
       }

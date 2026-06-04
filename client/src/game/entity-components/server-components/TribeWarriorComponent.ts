@@ -3,12 +3,12 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TribeWarriorComponentData {
    readonly scars: Array<ScarInfo>;
@@ -59,7 +59,7 @@ class _TribeWarriorComponentArray extends _ServerComponentArray<TribeWarriorComp
             2.5,
             scarInfo.rotation,
             scarInfo.offsetX, scarInfo.offsetY,
-            getTextureArrayIndex("scars/scar-" + (scarInfo.type + 1) + ".png")
+            TextureIndex.scars_scar1 + scarInfo.type
          );
 
          renderObject.attachRenderPart(renderPart);

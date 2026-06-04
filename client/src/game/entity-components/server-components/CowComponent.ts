@@ -11,7 +11,6 @@ import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { RenderPart } from "../../render-parts/render-parts";
 import { getHitboxTag, getHitboxTileIndex, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -20,6 +19,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface CowComponentData {
    readonly species: CowSpecies;
@@ -66,7 +66,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
       
       const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
       const cowComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cow);
-      const cowNum = cowComponentData.species === CowSpecies.brown ? 1 : 2;
+      const cowNum = cowComponentData.species === CowSpecies.brown ? 0 : 1;
 
       let headRenderPart!: RenderPart;
       for (const hitbox of transformComponentData.hitboxes) {
@@ -77,7 +77,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
                0,
                0,
                0, 0,
-               getTextureArrayIndex(`entities/cow/cow-body-${cowNum}.png`)
+               TextureIndex.entities_cow_cowBody1 + cowNum
             );
             renderObject.attachRenderPart(bodyRenderPart);
          } else if (tag === HitboxTag.cowHead) {
@@ -87,7 +87,7 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
                1,
                0,
                0, 0,
-               getTextureArrayIndex(`entities/cow/cow-head-${cowNum}.png`)
+               TextureIndex.entities_cow_cowHead1 + cowNum
             );
             addRenderPartTag(headRenderPart, "tamingComponent:head");
             renderObject.attachRenderPart(headRenderPart);

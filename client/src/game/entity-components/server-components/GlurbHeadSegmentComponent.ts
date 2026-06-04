@@ -1,12 +1,12 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface GlurbHeadSegmentComponentData {}
 
@@ -31,7 +31,7 @@ class _GlurbHeadSegmentComponentArray extends _ServerComponentArray<GlurbHeadSeg
          0.1,
          0,
          0, 0,
-         getTextureArrayIndex("entities/glurb/glurb-head-segment.png")
+         TextureIndex.entities_glurb_glurbHeadSegment
       );
       addRenderPartTag(renderPart, "tamingComponent:head");
       renderObject.attachRenderPart(renderPart);
@@ -43,7 +43,7 @@ class _GlurbHeadSegmentComponentArray extends _ServerComponentArray<GlurbHeadSeg
             0,
             0.3,
             16, 14,
-            getTextureArrayIndex("entities/glurb/glurb-eye.png")
+            TextureIndex.entities_glurb_glurbEye
          );
          if (j === 1) {
             eyeRenderPart.setFlipX(true);

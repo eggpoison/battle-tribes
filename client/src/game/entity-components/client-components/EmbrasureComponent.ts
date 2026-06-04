@@ -6,7 +6,6 @@ import { Hitbox } from "../../hitboxes";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
@@ -38,7 +37,7 @@ class _EmbrasureComponentArray extends _ClientComponentArray<EmbrasureComponent,
          0,
          0,
          0, 0,
-         getTextureArrayIndex(EMBRASURE_TEXTURE_SOURCES[buildingMaterialComponentData.material])
+         EMBRASURE_TEXTURE_SOURCES[buildingMaterialComponentData.material]
       );
       addRenderPartTag(renderPart, "buildingMaterialComponent:material");
 

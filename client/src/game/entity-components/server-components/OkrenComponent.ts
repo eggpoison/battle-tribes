@@ -5,7 +5,6 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { Point, randFloat, angle, randAngle } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
 import { createOkrenEyeParticle } from "../../particles";
@@ -15,6 +14,7 @@ import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 // @Copynpaste from server
 export const enum OkrenAgeStage {
@@ -39,6 +39,17 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.okren, _OkrenComponentArray> {}
 }
 
+const getBodyTextureIndex = (size: number): TextureIndex => {
+   switch (size) {
+      case 0: return TextureIndex.entities_okren_juvenile_body;
+      case 1: return TextureIndex.entities_okren_youth_body;
+      case 2: return TextureIndex.entities_okren_adult_body;
+      case 3: return TextureIndex.entities_okren_elder_body;
+      case 4: return TextureIndex.entities_okren_ancient_body;
+      default: throw new Error();
+   }
+}
+
 class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenComponentData> {
    public decodeData(reader: PacketReader): OkrenComponentData {
       const size = reader.readNumber();
@@ -55,16 +66,8 @@ class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenCo
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
       const okrenComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.okren);
-      
-      let sizeString: string;
-      switch (okrenComponentData.size) {
-         case 0: sizeString = "juvenile"; break;
-         case 1: sizeString = "youth"; break;
-         case 2: sizeString = "adult"; break;
-         case 3: sizeString = "elder"; break;
-         case 4: sizeString = "ancient"; break;
-         default: throw new Error();
-      }
+
+      const bodyTextureIndex = getBodyTextureIndex(okrenComponentData.size);
       
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       for (const hitbox of transformComponentData.hitboxes) {
@@ -75,7 +78,7 @@ class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenCo
                   3,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/okren/" + sizeString + "/body.png")
+                  bodyTextureIndex
                );
                addRenderPartTag(bodyRenderPart, "tamingComponent:head");
                renderObject.attachRenderPart(bodyRenderPart);
@@ -89,7 +92,7 @@ class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenCo
                      5,
                      0,
                      0, 0,
-                     getTextureArrayIndex(getEyeTextureSource(okrenComponentData.size, hardenTimer))
+                     bodyTextureIndex + (hardenTimer > 0 ? 1 : 2)
                   )
                );
                break;
@@ -101,7 +104,7 @@ class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenCo
                      2,
                      0,
                      0, 0,
-                     getTextureArrayIndex("entities/okren/" + sizeString + "/mandible.png")
+                     bodyTextureIndex + 3
                   )
                );
                break;
@@ -133,10 +136,12 @@ class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenCo
       const rightEyeHardenTimer = data.rightEyeHardenTimer;
       const leftEyeHardenTimer = data.leftEyeHardenTimer;
 
+      const bodyTextureIndex = getBodyTextureIndex(okrenComponent.size);
+
       const leftEye = getEyeRenderPart(okren, true);
-      leftEye.switchTextureSource(getEyeTextureSource(size, leftEyeHardenTimer));
+      leftEye.switchTextureSource(bodyTextureIndex + (leftEyeHardenTimer > 0 ? 1 : 2));
       const rightEye = getEyeRenderPart(okren, false);
-      rightEye.switchTextureSource(getEyeTextureSource(size, rightEyeHardenTimer));
+      rightEye.switchTextureSource(bodyTextureIndex + (rightEyeHardenTimer > 0 ? 1 : 2));
    }
 
    public onHit(_okren: Entity, hitbox: Hitbox, hitPosition: Point): void {
@@ -154,25 +159,6 @@ class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenCo
 
 export const OkrenComponentArray = registerServerComponentArray(ServerComponentType.okren, _OkrenComponentArray, true);
 
-const getEyeTextureSource = (okrenSize: number, eyeHardenTimer: number): string => {
-   // @Copynpaste @Speed
-   let sizeString: string;
-   switch (okrenSize) {
-      case 0: sizeString = "juvenile"; break;
-      case 1: sizeString = "youth"; break;
-      case 2: sizeString = "adult"; break;
-      case 3: sizeString = "elder"; break;
-      case 4: sizeString = "ancient"; break;
-      default: throw new Error();
-   }
-   
-   if (eyeHardenTimer > 0) {
-      return "entities/okren/" + sizeString + "/eye-crust.png";
-   } else {
-      return "entities/okren/" + sizeString + "/eye.png";
-   }
-}
-   
 const getEyeRenderPart = (okren: Entity, flipX: boolean): TexturedRenderPart => {
    const renderObject = getEntityRenderObject(okren);
    for (const renderPart of renderObject.renderPartsByZIndex) {

@@ -5,13 +5,13 @@ import { customTickIntervalHasPassed } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { createPaperParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityAgeTicks } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface ResearchBenchComponentData {
    readonly isOccupied: boolean;
@@ -43,7 +43,7 @@ class _ResearchBenchComponentArray extends _ServerComponentArray<ResearchBenchCo
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/research-bench/research-bench.png")
+            TextureIndex.entities_researchBench_researchBench
          )
       );
    }

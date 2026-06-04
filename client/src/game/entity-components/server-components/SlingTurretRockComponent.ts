@@ -6,12 +6,12 @@ import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SlingTurretRockComponentData {}
 
@@ -36,7 +36,7 @@ class _SlingTurretRockComponentArray extends _ServerComponentArray<SlingTurretRo
             0,
             0,
             0, 0,
-            getTextureArrayIndex("projectiles/sling-rock.png")
+            TextureIndex.projectiles_slingRock
          )
       );
    }

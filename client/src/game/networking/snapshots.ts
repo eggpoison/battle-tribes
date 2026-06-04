@@ -61,7 +61,7 @@ export function onGameDataPacket(reader: PacketReader): void {
    measuredServerPacketIntervalMS = measuredServerPacketIntervalMS * (1 - smoothingFactor) + smoothingFactor * deltaMS;
 
    // First game packet
-   // @SPEED @Hack only needed for the first packet.
+   // @SPEED @Hack only needed for the first packet, pointless from then on.
    if ((currentSnapshot as TickSnapshot | undefined) === undefined) {
       // Set currentSnapshot, and the game state, to the first game packet received.
       updateGameStateToSnapshot(snapshot);

@@ -4,7 +4,7 @@ import { Settings } from "../../../../../shared/src/settings";
 import { _point, Point, polarVec2, randAngle, randFloat, randSign, rotatePointAroundPoint } from "../../../../../shared/src/utils";
 import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth } from "../../webgl";
-import { getEntityTextureAtlasInfo, getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases";
+import { getEntityTextureAtlasInfo, getTechTreeEntityTextureAtlas } from "../../texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import { getTechTreeGL } from "./tech-tree-rendering";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
@@ -224,11 +224,11 @@ export function renderTechTreeItems(): void {
       const vertexDataOffset = i * 4 * 6;
 
       const clientItemInfo = CLIENT_ITEM_INFO_RECORD[item.itemType];
-      const textureArrayIndex = getTextureArrayIndex(clientItemInfo.entityTextureSource);
+      const textureIndex = clientItemInfo.entityTextureIndex;
 
       // @Cleanup: constant
-      const width = textureAtlas.textureWidths[textureArrayIndex] * 0.015 * a;
-      const height = textureAtlas.textureHeights[textureArrayIndex] * 0.015 * a;
+      const width = textureAtlas.textureWidths[textureIndex] * 0.015 * a;
+      const height = textureAtlas.textureHeights[textureIndex] * 0.015 * a;
 
       let opacity = item.age / item.lifetime;
       opacity = 1 - opacity * opacity;
@@ -264,28 +264,28 @@ export function renderTechTreeItems(): void {
       vertexData[vertexDataOffset + 1] = bottomLeftY;
       vertexData[vertexDataOffset + 2] = 0;
       vertexData[vertexDataOffset + 3] = 0;
-      vertexData[vertexDataOffset + 4] = textureArrayIndex;
+      vertexData[vertexDataOffset + 4] = textureIndex;
       vertexData[vertexDataOffset + 5] = opacity;
 
       vertexData[vertexDataOffset + 6] = bottomRightX;
       vertexData[vertexDataOffset + 7] = bottomRightY;
       vertexData[vertexDataOffset + 8] = 1;
       vertexData[vertexDataOffset + 9] = 0;
-      vertexData[vertexDataOffset + 10] = textureArrayIndex;
+      vertexData[vertexDataOffset + 10] = textureIndex;
       vertexData[vertexDataOffset + 11] = opacity;
 
       vertexData[vertexDataOffset + 12] = topLeftX;
       vertexData[vertexDataOffset + 13] = topLeftY;
       vertexData[vertexDataOffset + 14] = 0;
       vertexData[vertexDataOffset + 15] = 1;
-      vertexData[vertexDataOffset + 16] = textureArrayIndex;
+      vertexData[vertexDataOffset + 16] = textureIndex;
       vertexData[vertexDataOffset + 17] = opacity;
 
       vertexData[vertexDataOffset + 18] = topRightX;
       vertexData[vertexDataOffset + 19] = topRightY;
       vertexData[vertexDataOffset + 20] = 1;
       vertexData[vertexDataOffset + 21] = 1;
-      vertexData[vertexDataOffset + 22] = textureArrayIndex;
+      vertexData[vertexDataOffset + 22] = textureIndex;
       vertexData[vertexDataOffset + 23] = opacity;
 
       const indicesDataOffset = i * 6;

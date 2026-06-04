@@ -3,11 +3,11 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { getHitboxTag } from "../../hitboxes";
+import { TextureIndex } from "../../../texture-index";
 
 export interface InguYetuksnoglurblidokowfleaSeekerHeadComponentData {}
 
@@ -34,7 +34,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                4.7,
                0,
                0, 0,
-               getTextureArrayIndex("entities/tukmok-trunk/middle-segment.png")
+               TextureIndex.entities_tukmokTrunk_middleSegment
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukTrunkHead) {
@@ -43,7 +43,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                4.7,
                0,
                0, 0,
-               getTextureArrayIndex("entities/tukmok-trunk/head-segment.png")
+               TextureIndex.entities_tukmokTrunk_headSegment
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.cowHead) {
@@ -52,7 +52,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                4.7,
                0,
                0, 0,
-               getTextureArrayIndex("entities/cow/cow-head-1.png")
+               TextureIndex.entities_cow_cowHead1
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.tukmokHead) {
@@ -61,7 +61,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                4.7,
                0,
                0, 0,
-               getTextureArrayIndex("entities/tukmok/head.png")
+               TextureIndex.entities_tukmok_head
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukMandibleBig) {
@@ -70,7 +70,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                4.6,
                0,
                0, 0,
-               getTextureArrayIndex("entities/okren/adult/mandible.png")
+               TextureIndex.entities_okren_adult_mandible
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukMandibleMedium) {
@@ -79,7 +79,7 @@ class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends _ServerCompo
                4.6,
                0,
                0, 0,
-               getTextureArrayIndex("entities/okren/juvenile/mandible.png")
+               TextureIndex.entities_okren_juvenile_mandible
             );
             renderObject.attachRenderPart(renderPart);
          }

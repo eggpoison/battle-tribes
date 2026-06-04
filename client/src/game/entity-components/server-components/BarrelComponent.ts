@@ -3,7 +3,6 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
@@ -12,6 +11,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface BarrelComponentData {
    readonly isOpened: boolean;
@@ -50,7 +50,7 @@ class _BarrelComponentArray extends _ServerComponentArray<BarrelComponent, Barre
          0,
          0,
          0, 0,
-         getTextureArrayIndex(getTextureSource(barrelComponentData.isOpened))
+         getTextureIndex(barrelComponentData.isOpened)
       );
       renderObject.attachRenderPart(renderPart);
 
@@ -71,7 +71,7 @@ class _BarrelComponentArray extends _ServerComponentArray<BarrelComponent, Barre
 
    public updateFromData(data: BarrelComponentData, entity: Entity): void {
       const barrelComponent = BarrelComponentArray.getComponent(entity);
-      const textureSource = getTextureSource(data.isOpened);
+      const textureSource = getTextureIndex(data.isOpened);
       barrelComponent.renderPart.switchTextureSource(textureSource);
    }
 
@@ -88,8 +88,8 @@ class _BarrelComponentArray extends _ServerComponentArray<BarrelComponent, Barre
 
 export const BarrelComponentArray = registerServerComponentArray(ServerComponentType.barrel, _BarrelComponentArray, true);
 
-const getTextureSource = (isOpened: boolean): string => {
-   return isOpened ? "entities/barrel/barrel-open.png" : "entities/barrel/barrel.png";
+const getTextureIndex = (isOpened: boolean): TextureIndex => {
+   return isOpened ? TextureIndex.entities_barrel_barrelOpen : TextureIndex.entities_barrel_barrel;
 }
 
 export function createBarrelComponentData(): BarrelComponentData {

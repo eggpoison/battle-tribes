@@ -22,6 +22,17 @@ const ATLAS_SLOT_SIZE = 16;
 let unavailableSlots = new Set<number>();
 let textureSlotIndexes: Array<number>;
 
+const textureSourceToEnumMemberName = (textureSource: string): string => {
+   const dotIdx = textureSource.indexOf(".");
+
+   const pieces = textureSource.slice(0, dotIdx).replaceAll("/", "_").split("-");
+   for (let i = 1; i < pieces.length; i++) {
+      const piece = pieces[i];
+      pieces[i] = piece[0].toUpperCase() + piece.slice(1);
+   }
+   return pieces.join("");
+}
+
 /** Attempts to find an available space for a texture, returning -1 if no available space can be found. */
 const getAvailableSlotIndex = (slotWidth: number, slotHeight: number, atlasSize: number): number => {
    for (let x = 0; x <= atlasSize - slotWidth; x++) {
@@ -75,14 +86,14 @@ export default function TextureAtlasStitchingPlugin(): Plugin {
       name: "texture-atlas-stitching",
       enforce: "pre",
       async buildStart() {
-         const srcDir = path.resolve("src/images");
+         const imageDir = path.resolve("src/images");
          const outDir = path.resolve("public");
 
          const files = new Array<Dirent<string>>();
-         const includedSubdirs = ["entities", "items", "armour", "gloves", "decorations", "projectiles"];
+         const includedSubdirs = ["entities", "items", "armour", "gloves", "decorations", "projectiles", "miscellaneous/bow-charge-states", "scars"];
 
          for (const subdirectory of includedSubdirs) {
-            const subdirFiles = fs.readdirSync(path.join(srcDir, subdirectory), { recursive: true, withFileTypes: true })
+            const subdirFiles = fs.readdirSync(path.join(imageDir, subdirectory), { recursive: true, withFileTypes: true })
             for (const file of subdirFiles) {
                if (!file.isDirectory()) {
                   files.push(file);
@@ -166,13 +177,20 @@ export default function TextureAtlasStitchingPlugin(): Plugin {
          // Write metadata json
          const meta = {
             atlasSize: atlasSize,
-            textureSources: imageFiles.map(file => path.relative(srcDir, path.join(file.parentPath, file.name))),
+            textureSources: imageFiles.map(file => path.relative(imageDir, path.join(file.parentPath, file.name))),
             textureWidths: textureWidths,
             textureHeights: textureHeights,
             textureSlotIndexes: textureSlotIndexes,
             atlasSlotSize: ATLAS_SLOT_SIZE
          };
          fs.writeFileSync(path.join(outDir, "atlas-meta.json"), JSON.stringify(meta));
+
+         // Write the const enum file
+         const enumMembers = meta.textureSources.map(src => `  ${textureSourceToEnumMemberName(src)},`).join("\n");
+          // Remove the final comma
+         const enumMembersSane = enumMembers.slice(0, enumMembers.length - 1);
+         const enumSource = `// Automatically generated - do not edit!\nexport const enum TextureIndex {\n${enumMembersSane}\n}\n`;
+         fs.writeFileSync(path.join(path.resolve("src"), "texture-index.ts"), enumSource);
 
          console.log(`[texture-atlas] Built atlas: ${canvas.width}x${canvas.height}, ${textureImages.length} sprites`);
       }

@@ -2,12 +2,12 @@ import { HitboxTag } from "../../../../../shared/src/boxes";
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { getHitboxTag } from "../../hitboxes";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TukmokTrunkComponentData {}
 
@@ -28,15 +28,13 @@ class _TukmokTrunkComponentArray extends _ServerComponentArray<TukmokTrunkCompon
       for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
          const hitbox = transformComponentData.hitboxes[i];
 
-         const textureSource = getHitboxTag(hitbox) === HitboxTag.tukmokTrunkHead ? "entities/tukmok-trunk/head-segment.png" : "entities/tukmok-trunk/middle-segment.png";
-         
          renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                i * 0.02,
                0,
                0, 0,
-               getTextureArrayIndex(textureSource)
+               getHitboxTag(hitbox) === HitboxTag.tukmokTrunkHead ? TextureIndex.entities_tukmokTrunk_headSegment : TextureIndex.entities_tukmokTrunk_middleSegment
             )
          );
       }

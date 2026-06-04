@@ -5,7 +5,6 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { Point, randAngle, randFloat, angle, randItem, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH, createWoodSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";
@@ -16,6 +15,11 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
+
+const enum Var {
+   NUM_SAPLING_STAGES = 11
+}
 
 export interface TreePlantedComponentData {
    readonly growthProgress: number;
@@ -33,8 +37,6 @@ export interface TreePlantedComponent {
 declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treePlanted, TreePlantedComponentArray> {}
 }
-
-const TEXTURE_SOURCES = ["entities/plant/tree-sapling-1.png", "entities/plant/tree-sapling-2.png", "entities/plant/tree-sapling-3.png", "entities/plant/tree-sapling-4.png", "entities/plant/tree-sapling-5.png", "entities/plant/tree-sapling-6.png", "entities/plant/tree-sapling-7.png", "entities/plant/tree-sapling-8.png", "entities/plant/tree-sapling-9.png", "entities/plant/tree-sapling-10.png", "entities/plant/tree-sapling-11.png"];
 
 class TreePlantedComponentArray extends _ServerComponentArray<TreePlantedComponent, TreePlantedComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): TreePlantedComponentData {
@@ -56,7 +58,7 @@ class TreePlantedComponentArray extends _ServerComponentArray<TreePlantedCompone
          9,
          0,
          0, 0,
-         getTextureArrayIndex(getTextureSource(growthProgress))
+         getTextureIndex(growthProgress)
       );
       renderObject.attachRenderPart(renderPart);
 
@@ -81,7 +83,7 @@ class TreePlantedComponentArray extends _ServerComponentArray<TreePlantedCompone
    public updateFromData(data: TreePlantedComponentData, entity: Entity): void {
       const treePlantedComponent = treePlantedComponentArray.getComponent(entity);
       treePlantedComponent.growthProgress = data.growthProgress;
-      treePlantedComponent.renderPart.switchTextureSource(getTextureSource(treePlantedComponent.growthProgress));
+      treePlantedComponent.renderPart.switchTextureSource(getTextureIndex(treePlantedComponent.growthProgress));
    }
 
    public onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point, hitFlags: number): void {
@@ -136,7 +138,7 @@ class TreePlantedComponentArray extends _ServerComponentArray<TreePlantedCompone
 
 export const treePlantedComponentArray = registerServerComponentArray(ServerComponentType.treePlanted, TreePlantedComponentArray, true);
 
-const getTextureSource = (growthProgress: number): string => {
-   const idx = Math.floor(growthProgress * (TEXTURE_SOURCES.length - 1))
-   return TEXTURE_SOURCES[idx];
+const getTextureIndex = (growthProgress: number): TextureIndex => {
+   const idx = Math.floor(growthProgress * (Var.NUM_SAPLING_STAGES - 1))
+   return TextureIndex.entities_plant_treeSapling01 + idx;
 }

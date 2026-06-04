@@ -19,7 +19,6 @@ import { sendMountCarrySlotPacket, sendPickUpEntityPacket, sendStructureInteract
 import { EntityRenderObject } from "./EntityRenderObject";
 import { RideableComponentArray } from "./entity-components/server-components/RideableComponent";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "./texture-atlases";
 import { playerInstance } from "./player";
 import { HealthComponentArray } from "./entity-components/server-components/HealthComponent";
 import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "./entity-components/server-components/TamingComponent";
@@ -33,6 +32,7 @@ import { AnimalStaffCommandType, createControlCommandParticles } from "./particl
 import { BuildMenuOption, buildMenuState, getBuildMenuOptions } from "../ui-state/build-menu-state";
 import { setActiveResearchBench } from "./research";
 import { getEntityComponentArrays } from "./entity-components/component-types";
+import { TextureIndex } from "../texture-index";
 
 const enum InteractActionType {
    openBuildMenu,
@@ -485,7 +485,7 @@ const createInteractRenderObject = (interactAction: InteractAction): EntityRende
             0,
             0,
             carrySlot.offsetX, carrySlot.offsetY,
-            getTextureArrayIndex("entities/miscellaneous/carry-slot.png")
+            TextureIndex.entities_miscellaneous_carrySlot
          );
          renderObject.attachRenderPart(renderPart);
          

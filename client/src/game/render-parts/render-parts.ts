@@ -9,8 +9,8 @@ export type RenderPart = VisualRenderPart | RenderAttachPoint;
 // @HACK: changing this from Hitbox to HitboxReference.
 export type RenderPartParent = Hitbox | RenderPart;
 
-export function renderPartIsTextured(renderPart: VisualRenderPart): renderPart is TexturedRenderPart {
-   return (renderPart as TexturedRenderPart).textureArrayIndex !== undefined;
+export function renderPartIsTextured(renderPart: RenderPart): renderPart is TexturedRenderPart {
+   return (renderPart as TexturedRenderPart).textureIndex !== undefined;
 }
 
 export function thingIsVisualRenderPart(thing: Readonly<RenderPart>): thing is VisualRenderPart {
@@ -18,5 +18,5 @@ export function thingIsVisualRenderPart(thing: Readonly<RenderPart>): thing is V
 }
 
 export function renderParentIsHitbox(parent: RenderPartParent): parent is Hitbox {
-   return parent !== null && (parent as Hitbox).mass !== undefined;
+   return (parent as Hitbox).mass !== undefined;
 }

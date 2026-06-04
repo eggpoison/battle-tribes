@@ -9,7 +9,6 @@ import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -17,6 +16,7 @@ import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface FishComponentData {
    readonly colour: FishColour;
@@ -31,11 +31,11 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fish, _FishComponentArray> {}
 }
 
-const TEXTURE_SOURCES: Record<FishColour, string> = {
-   [FishColour.blue]: "entities/fish/fish-blue.png",
-   [FishColour.gold]: "entities/fish/fish-gold.png",
-   [FishColour.red]: "entities/fish/fish-red.png",
-   [FishColour.lime]: "entities/fish/fish-lime.png"
+const TEXTURE_INDEXES: Record<FishColour, TextureIndex> = {
+   [FishColour.blue]: TextureIndex.entities_fish_fishBlue,
+   [FishColour.gold]: TextureIndex.entities_fish_fishGold,
+   [FishColour.red]: TextureIndex.entities_fish_fishRed,
+   [FishColour.lime]: TextureIndex.entities_fish_fishLime
 };
 
 class _FishComponentArray extends _ServerComponentArray<FishComponent, FishComponentData> {
@@ -59,7 +59,7 @@ class _FishComponentArray extends _ServerComponentArray<FishComponent, FishCompo
             0,
             0,
             0, 0,
-            getTextureArrayIndex(TEXTURE_SOURCES[fishComponentData.colour])
+            TEXTURE_INDEXES[fishComponentData.colour]
          )
       );
    }

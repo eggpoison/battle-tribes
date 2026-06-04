@@ -5,13 +5,13 @@ import { randInt, randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getCurrentLayer } from "../../world";
 import { playSound } from "../../sound";
 import { cameraPosition } from "../../camera";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { getHitboxTag } from "../../hitboxes";
+import { TextureIndex } from "../../../texture-index";
 
 export interface InguYetuksnoglurblidokowfleaComponentData {}
 
@@ -38,7 +38,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                4,
                0,
                0, 0,
-               getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/body-1.png")
+               TextureIndex.entities_inguYetuksnoglurblidokowflea_body1
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukBody2) {
@@ -47,7 +47,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                3,
                0,
                0, 0,
-               getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/body-2.png")
+               TextureIndex.entities_inguYetuksnoglurblidokowflea_body2
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukBody3) {
@@ -56,7 +56,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                2,
                0,
                0, 0,
-               getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/body-3.png")
+               TextureIndex.entities_inguYetuksnoglurblidokowflea_body3
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukBody4) {
@@ -65,7 +65,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                1,
                0,
                0, 0,
-               getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/body-4.png")
+               TextureIndex.entities_inguYetuksnoglurblidokowflea_body4
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukSnobeTail) {
@@ -74,7 +74,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                1.1,
                0,
                0, 0,
-               getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/snobe-tail.png")
+               TextureIndex.entities_inguYetuksnoglurblidokowflea_snobeTail
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukGlurbSegment) {
@@ -83,7 +83,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                0,
                0,
                0, 0,
-               getTextureArrayIndex("entities/glurb/glurb-middle-segment.png")
+               TextureIndex.entities_glurb_glurbMiddleSegment
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetiHead) {
@@ -92,7 +92,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                5,
                0,
                0, 0,
-               getTextureArrayIndex("entities/yeti/yeti-head.png")
+               TextureIndex.entities_yeti_yetiHead
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukMandibleBig) {
@@ -101,7 +101,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                4.8,
                0,
                0, 0,
-               getTextureArrayIndex("entities/okren/adult/mandible.png")
+               TextureIndex.entities_okren_adult_mandible
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukMandibleMedium) {
@@ -110,7 +110,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                4.7,
                0,
                0, 0,
-               getTextureArrayIndex("entities/okren/juvenile/mandible.png")
+               TextureIndex.entities_okren_juvenile_mandible
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.yetukDustfleaDispensionPort) {
@@ -119,7 +119,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                4.1,
                0,
                0, 0,
-               getTextureArrayIndex("entities/ingu-yetuksnoglurblidokowflea/dustflea-dispension-port.png")
+               TextureIndex.entities_inguYetuksnoglurblidokowflea_dustfleaDispensionPort
             );
             renderObject.attachRenderPart(renderPart);
          } else if (tag === HitboxTag.tukmokTailMiddleSegmentSmall) {
@@ -129,7 +129,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                   i * 0.02,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/tukmok/tail-segment-small.png")
+                  TextureIndex.entities_tukmok_tailSegmentSmall
                )
             );
          } else if (tag === HitboxTag.tukmokTailMiddleSegmentMedium) {
@@ -139,7 +139,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                   i * 0.02,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/tukmok/tail-segment-medium.png")
+                  TextureIndex.entities_tukmok_tailSegmentMedium
                )
             );
          } else {
@@ -149,7 +149,7 @@ class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<
                   i * 0.02,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/tukmok/tail-segment-big.png")
+                  TextureIndex.entities_tukmok_tailSegmentBig
                )
             );
          }

@@ -239,13 +239,7 @@ const getTileEdgeInfo = (edgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, tileInde
    return edgeInfos[idx];
 }
 
-let a = 0;
-let n = 0;
-
 const addEdge = (edgeInfo: RenderChunkEdgeInfo, index: number, marker: EdgeMarkerBit) => {
-   a += edgeInfo.length;
-   n++;
-   
    for (let i = 0; i < edgeInfo.length; i++) {
       const data = edgeInfo[i];
       const currentIndex = data >> 8;
@@ -270,9 +264,6 @@ const clearEdges = (edgeInfo: RenderChunkEdgeInfo, index: number) => {
 }
 
 const removeEdge = (edgeInfo: RenderChunkEdgeInfo, index: number, marker: EdgeMarkerBit) => {
-   a += edgeInfo.length;
-   n++;
-
    for (let i = 0; i < edgeInfo.length; i++) {
       const data = edgeInfo[i];
       const currentIndex = data >> 8;
@@ -282,14 +273,7 @@ const removeEdge = (edgeInfo: RenderChunkEdgeInfo, index: number, marker: EdgeMa
       }
    }
 
-   // @HACK
-   // throw new Error();
-}
-
-export function AAA() {
-   console.log(a / n)
-   a = 0
-   n = 0
+   throw new Error();
 }
 
 const addSubtileToEdgeInfosPartial = (wallSubtileTypes: Uint8Array, floorEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, wallEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subtileIndex: number, subtileType: SubtileType): void => {
@@ -616,12 +600,6 @@ export function processRenderChunkSubtileUpdates(snapshot: TickSnapshot): void {
          const subtileIndex = subtileUpdateData.subtileIndex;
          const subtileType = subtileUpdateData.subtileType;
 
-         // @HACK i have absolutely no idea why  this is happening
-         const prev = layer.getSubtileType(subtileIndex);
-         if (prev === subtileType) {
-            continue;
-         }
-         
          layer.setSubtile(subtileIndex, subtileType, subtileUpdateData.damageTaken);
 
          const subtileX = getSubtileX(subtileIndex);

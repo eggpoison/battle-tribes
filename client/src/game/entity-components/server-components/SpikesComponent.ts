@@ -2,7 +2,6 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { randFloat, randAngle } from "../../../../../shared/src/utils";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../../particles";
 import { VisualRenderPart } from "../../render-parts/render-parts";
@@ -15,6 +14,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SpikesComponentData {
    readonly isCovered: boolean;
@@ -138,11 +138,11 @@ export function createSpikesComponentData(): SpikesComponentData {
 }
 
 const createLeafRenderPart = (isSmall: boolean, parentHitbox: Hitbox): VisualRenderPart => {
-   let textureSource: string;
+   let textureIndex: TextureIndex;
    if (isSmall) {
-      textureSource = "entities/miscellaneous/cover-leaf-small.png";
+      textureIndex = TextureIndex.entities_miscellaneous_coverLeafSmall;
    } else {
-      textureSource = "entities/miscellaneous/cover-leaf-large.png";
+      textureIndex = TextureIndex.entities_miscellaneous_coverLeafLarge;
    }
 
    const spawnRange = isSmall ? 24 : 18;
@@ -152,7 +152,7 @@ const createLeafRenderPart = (isSmall: boolean, parentHitbox: Hitbox): VisualRen
       1 + Math.random() * 0.5,
       randAngle(),
       randFloat(-spawnRange, spawnRange), randFloat(-spawnRange, spawnRange),
-      getTextureArrayIndex(textureSource)
+      textureIndex
    );
 
    return renderPart;

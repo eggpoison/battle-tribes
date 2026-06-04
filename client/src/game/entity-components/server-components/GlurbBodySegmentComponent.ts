@@ -1,11 +1,11 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface GlurbBodySegmentComponentData {}
 
@@ -30,7 +30,7 @@ class _GlurbBodySegmentComponentArray extends _ServerComponentArray<GlurbBodySeg
          0.1,
          0,
          0, 0,
-         getTextureArrayIndex("entities/glurb/glurb-middle-segment.png")
+         TextureIndex.entities_glurb_glurbMiddleSegment
       );
       renderObject.attachRenderPart(renderPart);
    }

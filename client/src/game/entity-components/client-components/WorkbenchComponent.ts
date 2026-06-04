@@ -1,11 +1,11 @@
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface WorkbenchComponentData {}
 
@@ -26,7 +26,7 @@ class _WorkbenchComponentArray extends _ClientComponentArray<WorkbenchComponent,
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/workbench/workbench.png")
+            TextureIndex.entities_workbench_workbench
          )
       );
    }

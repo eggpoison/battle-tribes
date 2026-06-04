@@ -5,12 +5,12 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface DesertBushLivelyComponentData {}
 
@@ -34,7 +34,7 @@ class DesertBushLivelyComponentArray extends _ServerComponentArray<DesertBushLiv
          0,
          0,
          0, 0,
-         getTextureArrayIndex("entities/desert-bush-lively/desert-bush-lively.png")
+         TextureIndex.entities_desertBushLively_desertBushLively
       );
       renderPart.tintR = randFloat(-0.03, 0.03);
       renderPart.tintG = randFloat(-0.03, 0.03);

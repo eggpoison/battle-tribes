@@ -8,7 +8,6 @@ import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain } from "../../particles";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { EntityComponentData } from "../../world";
@@ -18,6 +17,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface ZombieComponentData {
    readonly zombieType: number;
@@ -33,8 +33,8 @@ declare module "../component-registry" {
 
 const RADIUS = 32;
 
-const ZOMBIE_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/zombie1.png", "entities/zombie/zombie2.png", "entities/zombie/zombie3.png", "entities/zombie/zombie-golden.png"];
-const ZOMBIE_HAND_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/fist-1.png", "entities/zombie/fist-2.png", "entities/zombie/fist-3.png", "entities/zombie/fist-4.png"];
+const ZOMBIE_TEXTURE_INDEXES: ReadonlyArray<TextureIndex> = [TextureIndex.entities_zombie_zombie1, TextureIndex.entities_zombie_zombie2, TextureIndex.entities_zombie_zombie3, TextureIndex.entities_zombie_zombieGolden];
+
 
 class _ZombieComponentArray extends _ServerComponentArray<ZombieComponent, ZombieComponentData> {
    public decodeData(reader: PacketReader): ZombieComponentData {
@@ -57,14 +57,13 @@ class _ZombieComponentArray extends _ServerComponentArray<ZombieComponent, Zombi
          2,
          0,
          0, 0,
-         getTextureArrayIndex(ZOMBIE_TEXTURE_SOURCES[zombieComponentData.zombieType])
+         ZOMBIE_TEXTURE_INDEXES[zombieComponentData.zombieType]
       );
       renderObject.attachRenderPart(bodyRenderPart);
 
       // @Hack @Copynpaste
 
       // Hand render parts
-      const handTextureSource = ZOMBIE_HAND_TEXTURE_SOURCES[zombieComponentData.zombieType];
       const handRenderParts: Array<VisualRenderPart> = [];
       for (let i = 0; i < inventoryUseComponentData.limbInfos.length; i++) {
          const attachPoint = new RenderAttachPoint(
@@ -84,7 +83,7 @@ class _ZombieComponentArray extends _ServerComponentArray<ZombieComponent, Zombi
             1.2,
             0,
             0, 0,
-            getTextureArrayIndex(handTextureSource)
+            TextureIndex.entities_zombie_fist1 + zombieComponentData.zombieType
          );
          addRenderPartTag(renderPart, "inventoryUseComponent:hand");
          renderObject.attachRenderPart(renderPart);

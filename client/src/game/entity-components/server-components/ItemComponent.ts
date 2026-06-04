@@ -7,7 +7,6 @@ import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -46,7 +45,7 @@ class _ItemComponentArray extends _ServerComponentArray<ItemComponent, ItemCompo
          0,
          0,
          0, 0,
-         getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[itemComponentData.itemType].entityTextureSource)
+         CLIENT_ITEM_INFO_RECORD[itemComponentData.itemType].entityTextureIndex
       )
       renderObject.attachRenderPart(renderPart);
    }

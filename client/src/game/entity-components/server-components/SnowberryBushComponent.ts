@@ -3,12 +3,12 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SnowberryBushComponentData {
    readonly numBerries: number;
@@ -46,7 +46,7 @@ class _SnowberryBushComponentArray extends _ServerComponentArray<SnowberryBushCo
          0,
          0,
          0, 0,
-         getTextureArrayIndex(getTextureSource(snowberryBushComponentData.numBerries))
+         getTextureIndex(snowberryBushComponentData.numBerries)
       )
       renderObject.attachRenderPart(renderPart);
 
@@ -69,13 +69,13 @@ class _SnowberryBushComponentArray extends _ServerComponentArray<SnowberryBushCo
       const snowberryBushComponent = SnowberryBushComponentArray.getComponent(snowberryBush);
 
       const numBerries = data.numBerries;
-      snowberryBushComponent.renderPart.switchTextureSource(getTextureSource(numBerries));
+      snowberryBushComponent.renderPart.switchTextureSource(getTextureIndex(numBerries));
    }
 }
 
 export const SnowberryBushComponentArray = registerServerComponentArray(ServerComponentType.snowberryBush, _SnowberryBushComponentArray, true);
 
 
-const getTextureSource = (numBerries: number): string => {
-   return "entities/snowberry-bush/stage-" + numBerries + ".png";
+const getTextureIndex = (numBerries: number): TextureIndex => {
+   return TextureIndex.entities_snowberryBush_stage0 + numBerries;
 }

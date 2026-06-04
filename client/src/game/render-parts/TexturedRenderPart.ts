@@ -1,19 +1,18 @@
-import { getTextureArrayIndex } from "../texture-atlases";
+import { TextureIndex } from "../../texture-index";
 import { RenderPartParent } from "./render-parts";
 import VisualRenderPart from "./VisualRenderPart";
 
 class TexturedRenderPart extends VisualRenderPart {
-   public textureArrayIndex: number;
+   public textureIndex: number;
 
-   constructor(parent: RenderPartParent, zIndex: number, rotation: number, offsetX: number, offsetY: number, textureArrayIndex: number) {
+   constructor(parent: RenderPartParent, zIndex: number, rotation: number, offsetX: number, offsetY: number, textureIndex: number) {
       super(parent, zIndex, rotation, offsetX, offsetY);
-      
-      this.textureArrayIndex = textureArrayIndex;
+      this.textureIndex = textureIndex;
    }
 
-   public switchTextureSource(textureSource: string): void {
-      this.textureArrayIndex = getTextureArrayIndex(textureSource);
+   public switchTextureSource(textureIndex: TextureIndex): void {
       // @Incomplete: should dirty the render part here??
+      this.textureIndex = textureIndex;
    }
 }
 

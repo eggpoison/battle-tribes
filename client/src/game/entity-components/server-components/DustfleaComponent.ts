@@ -3,7 +3,6 @@ import { Entity } from "../../../../../shared/src/entities";
 import { randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { playSoundOnHitbox } from "../../sound";
@@ -11,6 +10,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface DustfleaComponentData {}
 
@@ -35,7 +35,7 @@ class _DustfleaComponentArray extends _ServerComponentArray<DustfleaComponent, D
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/dustflea/dustflea.png")
+            TextureIndex.entities_dustflea_dustflea
          )
       );
    }

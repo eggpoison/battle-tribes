@@ -6,7 +6,6 @@ import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { DOOR_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
@@ -53,7 +52,7 @@ class _DoorComponentArray extends _ServerComponentArray<DoorComponent, DoorCompo
          0,
          0,
          0, 0,
-         getTextureArrayIndex(DOOR_TEXTURE_SOURCES[buildingMaterialComponentData.material])
+         DOOR_TEXTURE_SOURCES[buildingMaterialComponentData.material]
       );
       addRenderPartTag(renderPart, "buildingMaterialComponent:material");
 

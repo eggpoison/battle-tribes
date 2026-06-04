@@ -4,7 +4,6 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
@@ -13,6 +12,11 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
+
+const enum Var {
+   NUM_GROWTH_STAGES = 9
+}
 
 export interface IceSpikesPlantedComponentData {
    readonly growthProgress: number;
@@ -29,8 +33,6 @@ export interface IceSpikesPlantedComponent {
 declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceSpikesPlanted, _IceSpikesPlantedComponentArray> {}
 }
-
-const TEXTURE_SOURCES = ["entities/plant/ice-spikes-sapling-1.png", "entities/plant/ice-spikes-sapling-2.png", "entities/plant/ice-spikes-sapling-3.png", "entities/plant/ice-spikes-sapling-4.png", "entities/plant/ice-spikes-sapling-5.png", "entities/plant/ice-spikes-sapling-6.png", "entities/plant/ice-spikes-sapling-7.png", "entities/plant/ice-spikes-sapling-8.png", "entities/plant/ice-spikes-sapling-9.png"];
 
 class _IceSpikesPlantedComponentArray extends _ServerComponentArray<IceSpikesPlantedComponent, IceSpikesPlantedComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): IceSpikesPlantedComponentData {
@@ -53,7 +55,7 @@ class _IceSpikesPlantedComponentArray extends _ServerComponentArray<IceSpikesPla
          9,
          0,
          0, 0,
-         getTextureArrayIndex(getTextureSource(iceSpikesPlantedComponentData.growthProgress))
+         getTextureIndex(iceSpikesPlantedComponentData.growthProgress)
       );
       renderObject.attachRenderPart(renderPart);
 
@@ -74,7 +76,7 @@ class _IceSpikesPlantedComponentArray extends _ServerComponentArray<IceSpikesPla
 
    public updateFromData(data: IceSpikesPlantedComponentData, entity: Entity): void {
       const iceSpikesPlantedComponent = IceSpikesPlantedComponentArray.getComponent(entity);
-      iceSpikesPlantedComponent.renderPart.switchTextureSource(getTextureSource(data.growthProgress));
+      iceSpikesPlantedComponent.renderPart.switchTextureSource(getTextureIndex(data.growthProgress));
    }
 
    public onHit(entity: Entity, hitbox: Hitbox): void {
@@ -92,7 +94,7 @@ class _IceSpikesPlantedComponentArray extends _ServerComponentArray<IceSpikesPla
 
 export const IceSpikesPlantedComponentArray = registerServerComponentArray(ServerComponentType.iceSpikesPlanted, _IceSpikesPlantedComponentArray, true);
 
-const getTextureSource = (growthProgress: number): string => {
-   const idx = Math.floor(growthProgress * (TEXTURE_SOURCES.length - 1))
-   return TEXTURE_SOURCES[idx];
+const getTextureIndex = (growthProgress: number): TextureIndex => {
+   const idx = Math.floor(growthProgress * (Var.NUM_GROWTH_STAGES - 1))
+   return TextureIndex.entities_plant_iceSpikesSapling1 + idx;
 }

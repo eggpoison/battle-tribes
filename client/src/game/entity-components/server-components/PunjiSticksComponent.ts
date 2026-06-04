@@ -7,11 +7,11 @@ import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface PunjiSticksComponentData {}
 
@@ -31,11 +31,11 @@ class _PunjiSticksComponentArray extends _ServerComponentArray<PunjiSticksCompon
 
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const isAttachedToWall = entityComponentData.entityType === EntityType.wallPunjiSticks;
-      let textureArrayIndex: number;
+      let textureIndex: number;
       if (isAttachedToWall) {
-         textureArrayIndex = getTextureArrayIndex("entities/wall-punji-sticks/wall-punji-sticks.png");
+         textureIndex = TextureIndex.entities_wallPunjiSticks_wallPunjiSticks;
       } else {
-         textureArrayIndex = getTextureArrayIndex("entities/floor-punji-sticks/floor-punji-sticks.png");
+         textureIndex = TextureIndex.entities_floorPunjiSticks_floorPunjiSticks;
       }
 
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
@@ -46,7 +46,7 @@ class _PunjiSticksComponentArray extends _ServerComponentArray<PunjiSticksCompon
          0,
          0,
          0, 0,
-         textureArrayIndex
+         textureIndex
       );
       renderObject.attachRenderPart(renderPart);
    }

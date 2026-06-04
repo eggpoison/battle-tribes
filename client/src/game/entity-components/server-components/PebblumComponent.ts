@@ -2,11 +2,11 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { randAngle } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface PebblumComponentData {}
 
@@ -31,7 +31,7 @@ class _PebblumComponentArray extends _ServerComponentArray<PebblumComponent, Peb
          0,
          randAngle(),
          0, 12,
-         getTextureArrayIndex("entities/pebblum/pebblum-nose.png")
+         TextureIndex.entities_pebblum_pebblumNose
       )
       renderObject.attachRenderPart(nose);
 
@@ -41,7 +41,7 @@ class _PebblumComponentArray extends _ServerComponentArray<PebblumComponent, Peb
          1,
          randAngle(),
          0, -8,
-         getTextureArrayIndex("entities/pebblum/pebblum-body.png")
+         TextureIndex.entities_pebblum_pebblumBody
       )
       renderObject.attachRenderPart(body);
    }

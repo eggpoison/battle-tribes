@@ -4,12 +4,12 @@ import { randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface InguYetukLaserComponentData {}
 
@@ -33,7 +33,7 @@ class _InguYetukLaserComponentArray extends _ServerComponentArray<InguYetukLaser
          0,
          0,
          0, 0,
-         getTextureArrayIndex("entities/ingu-yetuk-laser/laser.png")
+         TextureIndex.entities_inguYetukLaser_laser
       );
       renderObject.attachRenderPart(renderPart);
    }

@@ -4,7 +4,6 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { OkrenAgeStage } from "./OkrenComponent";
@@ -12,6 +11,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { getHitboxTag } from "../../hitboxes";
+import { TextureIndex } from "../../../texture-index";
 
 export interface OkrenClawComponentData {
    readonly size: OkrenAgeStage;
@@ -51,8 +51,8 @@ class _OkrenClawComponentArray extends _ServerComponentArray<OkrenClawComponent,
       const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
       const okrenClawComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.okrenClaw);
 
-      const sizeString = getSizeString(okrenClawComponentData.size);
-      const growthStageString = getGrowthStageString(okrenClawComponentData.growthStage);
+      const size = okrenClawComponentData.size;
+      const growthStage = okrenClawComponentData.growthStage;
       
       let bigArmSegment!: TexturedRenderPart;
       let mediumArmSegment!: TexturedRenderPart;
@@ -67,7 +67,7 @@ class _OkrenClawComponentArray extends _ServerComponentArray<OkrenClawComponent,
                   2,
                   0,
                   0, 0,
-                  getTextureArrayIndex(getBigArmSegmentTextureSource(sizeString, growthStageString))
+                  getBigArmSegmentTextureIndex(size, growthStage)
                );
                renderObject.attachRenderPart(bigArmSegment);
                break;
@@ -78,8 +78,8 @@ class _OkrenClawComponentArray extends _ServerComponentArray<OkrenClawComponent,
                   1,
                   0,
                   0, 0,
-                  getTextureArrayIndex(getMediumArmSegmentTextureSource(sizeString, growthStageString))
-               )
+                  getMediumArmSegmentTextureIndex(size, growthStage)
+               );
                renderObject.attachRenderPart(mediumArmSegment);
                break;
             }
@@ -89,8 +89,8 @@ class _OkrenClawComponentArray extends _ServerComponentArray<OkrenClawComponent,
                   0,
                   0,
                   0, 0,
-                  getTextureArrayIndex(getSlashingArmSegmentTextureSource(sizeString, growthStageString))
-               )
+                  getSlashingArmSegmentTextureIndex(size, growthStage)
+               );
                renderObject.attachRenderPart(slashingArmSegment);
                break;
             }
@@ -128,39 +128,33 @@ class _OkrenClawComponentArray extends _ServerComponentArray<OkrenClawComponent,
       if (growthStage !== okrenClawComponent.growthStage) {
          okrenClawComponent.growthStage = growthStage;
          
-         const sizeString = getSizeString(size);
-         const growthStageString = getGrowthStageString(growthStage);
-         okrenClawComponent.bigArmSegment.switchTextureSource(getBigArmSegmentTextureSource(sizeString, growthStageString));
-         okrenClawComponent.mediumArmSegment.switchTextureSource(getMediumArmSegmentTextureSource(sizeString, growthStageString));
-         okrenClawComponent.slashingArmSegment.switchTextureSource(getSlashingArmSegmentTextureSource(sizeString, growthStageString));
+         okrenClawComponent.bigArmSegment.switchTextureSource(getBigArmSegmentTextureIndex(size, growthStage));
+         okrenClawComponent.mediumArmSegment.switchTextureSource(getMediumArmSegmentTextureIndex(size, growthStage));
+         okrenClawComponent.slashingArmSegment.switchTextureSource(getSlashingArmSegmentTextureIndex(size, growthStage));
       }
    }
 }
 
 export const OkrenClawComponentArray = registerServerComponentArray(ServerComponentType.okrenClaw, _OkrenClawComponentArray, true);
 
-const getSizeString = (size: OkrenAgeStage): string => {
+const getSizeTextureIndex = (size: OkrenAgeStage): TextureIndex => {
    switch (size) {
-      case OkrenAgeStage.juvenile: return "juvenile";
-      case OkrenAgeStage.youth:    return "youth";
-      case OkrenAgeStage.adult:    return "adult";
-      case OkrenAgeStage.elder:    return "elder";
-      case OkrenAgeStage.ancient:  return "ancient";
+      case OkrenAgeStage.juvenile: return TextureIndex.entities_okren_juvenile_armSegmentOfSlashingAndDestruction1;
+      case OkrenAgeStage.youth:    return TextureIndex.entities_okren_youth_armSegmentOfSlashingAndDestruction1;
+      case OkrenAgeStage.adult:    return TextureIndex.entities_okren_adult_armSegmentOfSlashingAndDestruction1;
+      case OkrenAgeStage.elder:    return TextureIndex.entities_okren_elder_armSegmentOfSlashingAndDestruction1;
+      case OkrenAgeStage.ancient:  return TextureIndex.entities_okren_ancient_armSegmentOfSlashingAndDestruction1;
    }
 }
 
-const getGrowthStageString = (growthStage: number): string => {
-   return (growthStage + 1).toString();
+const getBigArmSegmentTextureIndex = (size: OkrenAgeStage, growthStage: number): TextureIndex => {
+   return getSizeTextureIndex(size) + 4 + growthStage;
 }
 
-const getBigArmSegmentTextureSource = (sizeString: string, growthStageString: string): string => {
-   return "entities/okren/" + sizeString + "/big-arm-segment-" + growthStageString + ".png";
+const getMediumArmSegmentTextureIndex = (size: OkrenAgeStage, growthStage: number): TextureIndex => {
+   return getSizeTextureIndex(size) + 12 + growthStage;
 }
 
-const getMediumArmSegmentTextureSource = (sizeString: string, growthStageString: string): string => {
-   return "entities/okren/" + sizeString + "/medium-arm-segment-" + growthStageString + ".png";
-}
-
-const getSlashingArmSegmentTextureSource = (sizeString: string, growthStageString: string): string => {
-   return "entities/okren/" + sizeString + "/arm-segment-of-slashing-and-destruction-" + growthStageString + ".png";
+const getSlashingArmSegmentTextureIndex = (size: OkrenAgeStage, growthStage: number): TextureIndex => {
+   return getSizeTextureIndex(size) + growthStage;
 }

@@ -9,7 +9,6 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
@@ -18,6 +17,7 @@ import { getEntityServerComponentTypes } from "../component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 import { registerServerComponentArray } from "../component-registry";
 import { getHitboxTag } from "../../hitboxes";
+import { TextureIndex } from "../../../texture-index";
 
 export interface GuardianComponentData {
    readonly rubyGemActivation: number;
@@ -124,7 +124,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
          1,
          0,
          0, 0,
-         getTextureArrayIndex("entities/guardian/guardian-body.png")
+         TextureIndex.entities_guardian_guardianBody
       );
       renderObject.attachRenderPart(bodyRenderPart);
 
@@ -133,7 +133,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
          1.1,
          0,
          0, 0,
-         getTextureArrayIndex("entities/guardian/guardian-body-amethysts.png")
+         TextureIndex.entities_guardian_guardianBodyAmethysts
       );
       renderObject.attachRenderPart(bodyAmethystsRenderPart);
       amethystRenderParts.push(bodyAmethystsRenderPart);
@@ -143,7 +143,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
          1.1,
          0,
          0, 0,
-         getTextureArrayIndex("entities/guardian/guardian-body-emeralds.png")
+         TextureIndex.entities_guardian_guardianBodyEmeralds
       );
       renderObject.attachRenderPart(bodyEmeraldsRenderPart);
       emeraldRenderParts.push(bodyEmeraldsRenderPart);
@@ -155,7 +155,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
          2,
          0,
          0, 28,
-         getTextureArrayIndex("entities/guardian/guardian-head.png")
+         TextureIndex.entities_guardian_guardianHead
       );
       renderObject.attachRenderPart(headRenderPart);
       
@@ -164,7 +164,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
          2.1,
          0,
          0, 0,
-         getTextureArrayIndex("entities/guardian/guardian-head-rubies.png")
+         TextureIndex.entities_guardian_guardianHeadRubies
       );
       renderObject.attachRenderPart(headRubies);
       rubyRenderParts.push(headRubies);
@@ -184,7 +184,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
                0,
                0,
                0, 0,
-               getTextureArrayIndex("entities/guardian/guardian-limb.png")
+               TextureIndex.entities_guardian_guardianLimb
             );
             renderObject.attachRenderPart(limbRenderPart);
             limbRenderParts.push(limbRenderPart);
@@ -194,7 +194,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
                0,
                0,
                0, 0,
-               getTextureArrayIndex("entities/guardian/guardian-limb-gem-cracks.png")
+               TextureIndex.entities_guardian_guardianLimbGemCracks
             );
             renderObject.attachRenderPart(cracksRenderPart);
             limbCrackRenderParts.push(cracksRenderPart);

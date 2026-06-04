@@ -7,13 +7,13 @@ import { getRandomPositionInBox, Hitbox } from "../../hitboxes";
 import { createColouredParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface MithrilOreNodeComponentData {
    readonly size: number;
@@ -48,18 +48,18 @@ class _MithrilOreNodeComponentArray extends _ServerComponentArray<MithrilOreNode
       const size = mithrilOreNodeComponentData.size;
       const variant = mithrilOreNodeComponentData.variant;
 
-      let textureSource: string;
+      let textureIndex: TextureIndex;
       switch (size) {
          case 0: {
-            textureSource = "entities/mithril-ore-node/mithril-ore-node-large-" + (variant + 1) + ".png";
+            textureIndex = TextureIndex.entities_mithrilOreNode_mithrilOreNodeLarge1 + variant;
             break;
          }
          case 1: {
-            textureSource = "entities/mithril-ore-node/mithril-ore-node-medium-" + (variant + 1) + ".png";
+            textureIndex = TextureIndex.entities_mithrilOreNode_mithrilOreNodeMedium1 + variant;
             break;
          }
          case 2: {
-            textureSource = "entities/mithril-ore-node/mithril-ore-node-small-" + (variant + 1) + ".png";
+            textureIndex = TextureIndex.entities_mithrilOreNode_mithrilOreNodeSmall1 + variant;
             break;
          }
          default: {
@@ -72,7 +72,7 @@ class _MithrilOreNodeComponentArray extends _ServerComponentArray<MithrilOreNode
          0,
          0,
          0, 0,
-         getTextureArrayIndex(textureSource)
+         textureIndex
       );
       renderObject.attachRenderPart(renderPart);
    }

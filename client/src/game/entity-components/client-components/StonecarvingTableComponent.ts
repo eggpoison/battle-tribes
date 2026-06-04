@@ -1,11 +1,11 @@
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface StonecarvingTableComponentData {}
 
@@ -26,7 +26,7 @@ class _StonecarvingTableComponentArray extends _ClientComponentArray<Stonecarvin
             1,
             0,
             0, 0,
-            getTextureArrayIndex("entities/stonecarving-table/stonecarving-table.png")
+            TextureIndex.entities_stonecarvingTable_stonecarvingTable
          )
       );
    }

@@ -4,12 +4,12 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { createGenericGemParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface GuardianSpikyBallComponentData {}
 
@@ -33,7 +33,7 @@ class _GuardianSpikyBallComponentArray extends _ServerComponentArray<GuardianSpi
          0,
          0,
          0, 0,
-         getTextureArrayIndex("entities/guardian-spiky-ball/guardian-spiky-ball.png")
+         TextureIndex.entities_guardianSpikyBall_guardianSpikyBall
       );
       renderObject.attachRenderPart(renderPart);
    }

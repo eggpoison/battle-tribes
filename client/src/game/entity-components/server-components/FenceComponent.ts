@@ -2,7 +2,6 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { assert } from "../../../../../shared/src/utils";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { RenderPart } from "../../render-parts/render-parts";
@@ -13,6 +12,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface FenceComponentData {}
 
@@ -44,7 +44,7 @@ class _FenceComponentArray extends _ServerComponentArray<FenceComponent, FenceCo
             1,
             0,
             0, 0,
-            getTextureArrayIndex("entities/fence/fence-node.png")
+            TextureIndex.entities_fence_fenceNode
          )
       );
 
@@ -120,7 +120,7 @@ const createConnectingRenderPart = (connection: StructureConnection, parentHitbo
       0,
       relativeOffsetDirection,
       offsetMagnitude * Math.sin(relativeOffsetDirection), offsetMagnitude * Math.cos(relativeOffsetDirection),
-      getTextureArrayIndex("entities/fence/fence-top-rail.png")
+      TextureIndex.entities_fence_fenceTopRail
    );
    
    return renderPart;

@@ -4,7 +4,6 @@ import { Settings } from "../../../../../shared/src/settings";
 import { randAngle, randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { TransformComponentArray } from "./TransformComponent";
 import { createEmberParticle, createSmokeParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
@@ -12,6 +11,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface FireTorchComponentData {}
 
@@ -35,7 +35,7 @@ class _FireTorchComponentArray extends _ServerComponentArray<FireTorchComponent,
          0,
          0,
          0, 0,
-         getTextureArrayIndex("entities/fire-torch/fire-torch.png")
+         TextureIndex.entities_fireTorch_fireTorch
       );
       renderObject.attachRenderPart(renderPart);
    }

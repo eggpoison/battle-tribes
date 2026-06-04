@@ -3,12 +3,12 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { randFloat } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { getHitboxTag } from "../../hitboxes";
+import { TextureIndex } from "../../../texture-index";
 
 export interface RiverSteppingStoneComponentData {}
 
@@ -29,13 +29,13 @@ class _RiverSteppingStoneComponentArray extends _ServerComponentArray<RiverStepp
       
       const tag = getHitboxTag(hitbox);
       
-      let textureSource: string;
+      let textureIndex: TextureIndex;
       if (tag === HitboxTag.riverSteppingStoneSmall) {
-         textureSource = "entities/river-stepping-stone/stone-small.png";
+         textureIndex = TextureIndex.entities_riverSteppingStone_stoneSmall;
       } else if (tag === HitboxTag.riverSteppingStoneMedium) {
-         textureSource = "entities/river-stepping-stone/stone-medium.png";
+         textureIndex = TextureIndex.entities_riverSteppingStone_stoneMedium;
       } else {
-         textureSource = "entities/river-stepping-stone/stone-large.png";
+         textureIndex = TextureIndex.entities_riverSteppingStone_stoneLarge;
       }
       
       const renderPart = new TexturedRenderPart(
@@ -43,7 +43,7 @@ class _RiverSteppingStoneComponentArray extends _ServerComponentArray<RiverStepp
          0,
          0,
          0, 0,
-         getTextureArrayIndex(textureSource)
+         textureIndex
       );
       renderPart.tintR = randFloat(-0.03, 0.03);
       renderPart.tintG = randFloat(-0.03, 0.03);

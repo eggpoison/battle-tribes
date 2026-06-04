@@ -49,14 +49,6 @@ export function getEntityTextureAtlasInfo(): TextureAtlas {
    return textureAtlasInfo;
 }
 
-export function getTextureArrayIndex(textureSource: string): number {
-   const textureIndex = textureAtlasInfo.textureSources.indexOf(textureSource);
-   if (textureIndex === -1) {
-      throw new Error(`Texture source '${textureSource}' does not exist in the TEXTURE_SOURCES array.`);
-   }
-   return textureIndex;
-}
-
 export function getEntityTextureAtlas(): WebGLTexture {
    return entityTextureAtlasTexture;
 }

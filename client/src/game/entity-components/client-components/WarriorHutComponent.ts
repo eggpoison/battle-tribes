@@ -3,7 +3,6 @@ import { Hitbox } from "../../hitboxes";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
@@ -12,6 +11,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerClientComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface WarriorHutComponentData {}
 
@@ -32,7 +32,7 @@ class _WarriorHutComponentArray extends _ClientComponentArray<WarriorHutComponen
          2,
          0,
          0, 0,
-         getTextureArrayIndex("entities/warrior-hut/warrior-hut.png")
+         TextureIndex.entities_warriorHut_warriorHut
       );
       renderObject.attachRenderPart(hutRenderPart);
 
@@ -44,7 +44,7 @@ class _WarriorHutComponentArray extends _ClientComponentArray<WarriorHutComponen
             1,
             0,
             0, 0,
-            getTextureArrayIndex("entities/warrior-hut/warrior-hut-door.png")
+            TextureIndex.entities_warriorHut_warriorHutDoor
          );
          addRenderPartTag(doorRenderPart, "hutComponent:door");
          renderObject.attachRenderPart(doorRenderPart);

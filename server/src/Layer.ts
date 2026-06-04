@@ -170,17 +170,15 @@ export default class Layer {
    }
 
    public restoreWallSubtile(subtileIndex: number, subtileType: SubtileType): void {
-      this.wallSubtileTypes[subtileIndex] = subtileType;
+      this.setSubtileType(subtileIndex, subtileType);
       this.minedSubtileInfoMap.delete(subtileIndex);
-      
-      this.wallSubtileUpdates.add(subtileIndex);
    }
 
    public setSubtileType(subtileIndex: number, subtileType: SubtileType): void {
       if (this.wallSubtileTypes[subtileIndex] === subtileType) {
          return;
       }
-      
+
       this.wallSubtileTypes[subtileIndex] = subtileType;
 
       assert(!this.wallSubtileUpdates.has(subtileIndex));
@@ -260,10 +258,10 @@ export default class Layer {
       const startSubtileX = tileX * 4;
       const startSubtileY = tileY * 4;
       
-      for (let subtileX = startSubtileX; subtileX < startSubtileX + 4; subtileX++) {
-         for (let subtileY = startSubtileY; subtileY < startSubtileY + 4; subtileY++) {
+      for (let subtileY = startSubtileY; subtileY < startSubtileY + 4; subtileY++) {
+         for (let subtileX = startSubtileX; subtileX < startSubtileX + 4; subtileX++) {
             const idx = getSubtileIndex(subtileX, subtileY);
-            if (this.wallSubtileTypes[idx] !== SubtileType.none) {
+            if (this.getSubtileType(idx) !== SubtileType.none) {
                return true;
             }
          }

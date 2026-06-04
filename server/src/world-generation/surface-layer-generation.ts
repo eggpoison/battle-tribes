@@ -4,7 +4,7 @@ import { ServerComponentType } from "../../../shared/dist/components.js";
 import { EntityType, TreeSize } from "../../../shared/dist/entities.js";
 import { Biome } from "../../../shared/dist/biomes.js";
 import { createRectangularBox } from "../../../shared/dist/boxes.js";
-import { TileType } from "../../../shared/dist/tiles.js";
+import { SubtileType, TileType } from "../../../shared/dist/tiles.js";
 import { TribeType } from "../../../shared/dist/tribes.js";
 import { generateOctavePerlinNoise, generatePerlinNoise, generatePointPerlinNoise } from "../perlin-noise.js";
 import BIOME_GENERATION_INFO, { BiomeGenerationInfo, BiomeSpawnRequirements, TileGenerationInfo } from "./terrain-generation-info.js";
@@ -54,6 +54,7 @@ import { createOkrenConfig } from "../entities/desert/okren.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
 import SRandom from "../SRandom.js";
 import { getBoxesCollidingEntities } from "../collision-detection.js";
+import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
 
 const enum Vars {
    TRIBESMAN_SPAWN_EXCLUSION_RANGE = 1200
@@ -292,8 +293,11 @@ const getTileGenerationInfo = <T extends TileGenerationInfo>(biomeDists: Uint8Ar
    }
 }
 
+let a = false;
+
 /** Generate the tile array's tile types based on their biomes */
 const generateTileTypes = (tileBiomes: Uint8Array, biomeDists: Uint8Array, tileTypes: Uint8Array, subtileTypes: Uint8Array, heightMap: Float32Array, temperatures: Float32Array, humidities: Float32Array, thung: number): void => {
+   const poops = [];
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -316,8 +320,25 @@ const generateTileTypes = (tileBiomes: Uint8Array, biomeDists: Uint8Array, tileT
          if (OPTIONS.generateWalls && wallTileGenerationInfo !== undefined) {
             setWallInSubtiles(subtileTypes, tileX, tileY, wallTileGenerationInfo.subtileType)
          }
+         // @TEMPORARY
+         // const xo = getGameTicks() / Settings.TICK_RATE * 3;
+         // const minTileX = Math.floor(Settings.WORLD_SIZE_TILES / 2 - xo) - 6;
+         // const maxTileX = Math.floor(Settings.WORLD_SIZE_TILES / 2 - xo);
+         // const minTileY = Math.floor(Settings.WORLD_SIZE_TILES / 2) + 2;
+         // const maxTileY = Math.floor(Settings.WORLD_SIZE_TILES / 2) + 2;
+         // if (tileX >= minTileX && tileX <= maxTileX && tileY >= minTileY && tileY <= maxTileY) {
+         //    // setWallInSubtiles(subtileTypes, tileX, tileY, SubtileType.rockWall);
+         //    const subtileIndex = getSubtileIndex(tileX * 4, tileY * 4);
+         //    subtileTypes[subtileIndex] = SubtileType.rockWall;
+            
+         //    poops.push(subtileIndex);
+         // }
       }
    }
+   if (!a) {
+      console.log("Initial subtiles: " + poops);
+   }
+   a = true;
 }
 
 const getTribeType = (layer: Layer, x: number, y: number): TribeType => {
@@ -1303,6 +1324,7 @@ export function regenerateSurfaceTerrain(): void {
    generateTileTypes(tileBiomes, biomeDists, tileTypes, wallSubtileTypes, heightMap, tileTemperatures, tileHumidities, thung);
 
    // Create flow directions array and create ice rivers
+   console.log("-=-==-=-=--");
    for (const tileInfo of riverTiles) {
       const tileIndex = getTileIndexIncludingEdges(tileInfo.tileX, tileInfo.tileY);
       
@@ -1346,13 +1368,7 @@ export function regenerateSurfaceTerrain(): void {
 
    for (let subtileIndex = 0; subtileIndex < Settings.FULL_WORLD_SIZE_SUBTILES * Settings.FULL_WORLD_SIZE_SUBTILES; subtileIndex++) {
       const subtileType = wallSubtileTypes[subtileIndex];
-
-      const prevType = surfaceLayer.getSubtileType(subtileIndex);
-      
-      if (subtileType !== prevType) {
-         surfaceLayer.setSubtileType(subtileIndex, subtileType);
-         surfaceLayer.wallSubtileUpdates.add(subtileIndex);
-      }
+      surfaceLayer.setSubtileType(subtileIndex, subtileType);
    }
 
    Math.random = builtinRandomFunc;

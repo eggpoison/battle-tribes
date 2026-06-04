@@ -4,7 +4,7 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { randFloat, randAngle, rotatePointAroundOrigin, _point, assertUnreachable } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../../particles";
-import { getEntityTextureAtlasInfo, getTextureArrayIndex } from "../../texture-atlases";
+import { getEntityTextureAtlasInfo } from "../../texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
@@ -18,6 +18,7 @@ import { Hitbox } from "../../hitboxes";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface BlueprintComponentData {
    readonly blueprintType: BlueprintType;
@@ -34,9 +35,9 @@ export interface BlueprintComponent {
 }
 
 interface ProgressTextureInfo {
-   readonly progressTextureSources: ReadonlyArray<string>;
+   readonly progressTextureIndexes: ReadonlyArray<TextureIndex>;
    // @Cleanup: Just use the last element of the progress textures
-   readonly completedTextureSource: string;
+   readonly completedTextureIndex: TextureIndex;
    readonly offsetX: number;
    readonly offsetY: number;
    readonly rotation: number;
@@ -52,8 +53,8 @@ declare module "../component-registry" {
 export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyArray<ProgressTextureInfo>> = {
    [BlueprintType.woodenDoor]: [
       {
-         progressTextureSources: ["entities/door/wooden-door-blueprint-1.png", "entities/door/wooden-door-blueprint-2.png"],
-         completedTextureSource: "entities/door/wooden-door.png",
+         progressTextureIndexes: [TextureIndex.entities_door_woodenDoorBlueprint1, TextureIndex.entities_door_woodenDoorBlueprint2],
+         completedTextureIndex: TextureIndex.entities_door_woodenDoor,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -62,8 +63,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.stoneDoor]: [
       {
-         progressTextureSources: ["entities/door/stone-door-blueprint-1.png", "entities/door/stone-door-blueprint-2.png"],
-         completedTextureSource: "entities/door/stone-door.png",
+         progressTextureIndexes: [TextureIndex.entities_door_stoneDoorBlueprint1, TextureIndex.entities_door_stoneDoorBlueprint2],
+         completedTextureIndex: TextureIndex.entities_door_stoneDoor,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -73,8 +74,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    // @Cleanup
    [BlueprintType.stoneDoorUpgrade]: [
       {
-         progressTextureSources: ["entities/door/stone-door-blueprint-1.png", "entities/door/stone-door-blueprint-2.png"],
-         completedTextureSource: "entities/door/stone-door.png",
+         progressTextureIndexes: [TextureIndex.entities_door_stoneDoorBlueprint1, TextureIndex.entities_door_stoneDoorBlueprint2],
+         completedTextureIndex: TextureIndex.entities_door_stoneDoor,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -83,8 +84,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.woodenEmbrasure]: [
       {
-         progressTextureSources: ["entities/embrasure/wooden-embrasure-blueprint-1.png", "entities/embrasure/wooden-embrasure-blueprint-2.png", "entities/embrasure/wooden-embrasure-blueprint-3.png"],
-         completedTextureSource: "entities/embrasure/wooden-embrasure.png",
+         progressTextureIndexes: [TextureIndex.entities_embrasure_woodenEmbrasureBlueprint1, TextureIndex.entities_embrasure_woodenEmbrasureBlueprint2, TextureIndex.entities_embrasure_woodenEmbrasureBlueprint3],
+         completedTextureIndex: TextureIndex.entities_embrasure_woodenEmbrasure,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -93,8 +94,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.stoneEmbrasure]: [
       {
-         progressTextureSources: ["entities/embrasure/stone-embrasure-blueprint-1.png", "entities/embrasure/stone-embrasure-blueprint-2.png", "entities/embrasure/stone-embrasure-blueprint-3.png"],
-         completedTextureSource: "entities/embrasure/stone-embrasure.png",
+         progressTextureIndexes: [TextureIndex.entities_embrasure_stoneEmbrasureBlueprint1, TextureIndex.entities_embrasure_stoneEmbrasureBlueprint2, TextureIndex.entities_embrasure_stoneEmbrasureBlueprint3],
+         completedTextureIndex: TextureIndex.entities_embrasure_stoneEmbrasure,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -104,8 +105,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    // @Cleanup
    [BlueprintType.stoneEmbrasureUpgrade]: [
       {
-         progressTextureSources: ["entities/embrasure/stone-embrasure-blueprint-1.png", "entities/embrasure/stone-embrasure-blueprint-2.png", "entities/embrasure/stone-embrasure-blueprint-3.png"],
-         completedTextureSource: "entities/embrasure/stone-embrasure.png",
+         progressTextureIndexes: [TextureIndex.entities_embrasure_stoneEmbrasureBlueprint1, TextureIndex.entities_embrasure_stoneEmbrasureBlueprint2, TextureIndex.entities_embrasure_stoneEmbrasureBlueprint3],
+         completedTextureIndex: TextureIndex.entities_embrasure_stoneEmbrasure,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -114,8 +115,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.woodenTunnel]: [
       {
-         progressTextureSources: ["entities/tunnel/wooden-tunnel-blueprint-1.png", "entities/tunnel/wooden-tunnel-blueprint-2.png"],
-         completedTextureSource: "entities/tunnel/wooden-tunnel.png",
+         progressTextureIndexes: [TextureIndex.entities_tunnel_woodenTunnelBlueprint1, TextureIndex.entities_tunnel_woodenTunnelBlueprint2],
+         completedTextureIndex: TextureIndex.entities_tunnel_woodenTunnel,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -124,8 +125,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.stoneTunnel]: [
       {
-         progressTextureSources: ["entities/tunnel/stone-tunnel-blueprint-1.png", "entities/tunnel/stone-tunnel-blueprint-2.png"],
-         completedTextureSource: "entities/tunnel/stone-tunnel.png",
+         progressTextureIndexes: [TextureIndex.entities_tunnel_stoneTunnelBlueprint1, TextureIndex.entities_tunnel_stoneTunnelBlueprint2],
+         completedTextureIndex: TextureIndex.entities_tunnel_stoneTunnel,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -135,8 +136,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    // @Cleanup
    [BlueprintType.stoneTunnelUpgrade]: [
       {
-         progressTextureSources: ["entities/tunnel/stone-tunnel-blueprint-1.png", "entities/tunnel/stone-tunnel-blueprint-2.png"],
-         completedTextureSource: "entities/tunnel/stone-tunnel.png",
+         progressTextureIndexes: [TextureIndex.entities_tunnel_stoneTunnelBlueprint1, TextureIndex.entities_tunnel_stoneTunnelBlueprint2],
+         completedTextureIndex: TextureIndex.entities_tunnel_stoneTunnel,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -146,8 +147,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    [BlueprintType.ballista]: [
       // Base
       {
-         progressTextureSources: ["entities/ballista/base-blueprint-1.png", "entities/ballista/base-blueprint-2.png", "entities/ballista/base-blueprint-3.png", "entities/ballista/base-blueprint-4.png", "entities/ballista/base-blueprint-5.png", "entities/ballista/base-blueprint-6.png", "entities/ballista/base.png"],
-         completedTextureSource: "entities/ballista/base.png",
+         progressTextureIndexes: [TextureIndex.entities_ballista_baseBlueprint1, TextureIndex.entities_ballista_baseBlueprint2, TextureIndex.entities_ballista_baseBlueprint3, TextureIndex.entities_ballista_baseBlueprint4, TextureIndex.entities_ballista_baseBlueprint5, TextureIndex.entities_ballista_baseBlueprint6, TextureIndex.entities_ballista_base],
+         completedTextureIndex: TextureIndex.entities_ballista_base,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -155,8 +156,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       },
       // Plate
       {
-         progressTextureSources: ["entities/ballista/plate-blueprint-1.png", "entities/ballista/plate-blueprint-2.png", "entities/ballista/plate.png"],
-         completedTextureSource: "entities/ballista/plate.png",
+         progressTextureIndexes: [TextureIndex.entities_ballista_plateBlueprint1, TextureIndex.entities_ballista_plateBlueprint2, TextureIndex.entities_ballista_plate],
+         completedTextureIndex: TextureIndex.entities_ballista_plate,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -164,8 +165,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       },
       // Shaft
       {
-         progressTextureSources: ["entities/ballista/shaft-blueprint-1.png", "entities/ballista/shaft-blueprint-2.png", "entities/ballista/shaft-blueprint-3.png", "entities/ballista/shaft-blueprint-4.png", "entities/ballista/shaft.png"],
-         completedTextureSource: "entities/ballista/shaft.png",
+         progressTextureIndexes: [TextureIndex.entities_ballista_shaftBlueprint1, TextureIndex.entities_ballista_shaftBlueprint2, TextureIndex.entities_ballista_shaftBlueprint3, TextureIndex.entities_ballista_shaftBlueprint4, TextureIndex.entities_ballista_shaft],
+         completedTextureIndex: TextureIndex.entities_ballista_shaft,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -173,8 +174,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       },
       // Crossbow
       {
-         progressTextureSources: ["entities/ballista/crossbow-blueprint-1.png", "entities/ballista/crossbow-blueprint-2.png", "entities/ballista/crossbow-blueprint-3.png", "entities/ballista/crossbow-blueprint-4.png", "entities/ballista/crossbow.png"],
-         completedTextureSource: "entities/ballista/crossbow.png",
+         progressTextureIndexes: [TextureIndex.entities_ballista_crossbowBlueprint1, TextureIndex.entities_ballista_crossbowBlueprint2, TextureIndex.entities_ballista_crossbowBlueprint3, TextureIndex.entities_ballista_crossbowBlueprint4, TextureIndex.entities_ballista_crossbow],
+         completedTextureIndex: TextureIndex.entities_ballista_crossbow,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -182,8 +183,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       },
       // Left gear
       {
-         progressTextureSources: ["entities/ballista/gear.png"],
-         completedTextureSource: "entities/ballista/gear.png",
+         progressTextureIndexes: [TextureIndex.entities_ballista_gear],
+         completedTextureIndex: TextureIndex.entities_ballista_gear,
          offsetX: BALLISTA_GEAR_X,
          offsetY: BALLISTA_GEAR_Y,
          rotation: 0,
@@ -191,8 +192,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       },
       // Right gear
       {
-         progressTextureSources: ["entities/ballista/gear.png"],
-         completedTextureSource: "entities/ballista/gear.png",
+         progressTextureIndexes: [TextureIndex.entities_ballista_gear],
+         completedTextureIndex: TextureIndex.entities_ballista_gear,
          offsetX: -BALLISTA_GEAR_X,
          offsetY: BALLISTA_GEAR_Y,
          rotation: 0,
@@ -200,8 +201,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       },
       // Ammo box
       {
-         progressTextureSources: ["entities/ballista/ammo-box-blueprint-1.png", "entities/ballista/ammo-box-blueprint-2.png", "entities/ballista/ammo-box.png"],
-         completedTextureSource: "entities/ballista/ammo-box.png",
+         progressTextureIndexes: [TextureIndex.entities_ballista_ammoBoxBlueprint1, TextureIndex.entities_ballista_ammoBoxBlueprint2, TextureIndex.entities_ballista_ammoBox],
+         completedTextureIndex: TextureIndex.entities_ballista_ammoBox,
          offsetX: BALLISTA_AMMO_BOX_OFFSET_X,
          offsetY: BALLISTA_AMMO_BOX_OFFSET_Y,
          rotation: Math.PI / 2,
@@ -211,8 +212,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    [BlueprintType.slingTurret]: [
       // Base
       {
-         progressTextureSources: ["entities/sling-turret/base-blueprint-1.png", "entities/sling-turret/base-blueprint-2.png", "entities/sling-turret/base-blueprint-3.png", "entities/sling-turret/base-blueprint-4.png", "entities/sling-turret/sling-turret-base.png"],
-         completedTextureSource: "entities/sling-turret/sling-turret-base.png",
+         progressTextureIndexes: [TextureIndex.entities_slingTurret_baseBlueprint1, TextureIndex.entities_slingTurret_baseBlueprint2, TextureIndex.entities_slingTurret_baseBlueprint3, TextureIndex.entities_slingTurret_baseBlueprint4, TextureIndex.entities_slingTurret_slingTurretBase],
+         completedTextureIndex: TextureIndex.entities_slingTurret_slingTurretBase,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -220,8 +221,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       },
       // Plate
       {
-         progressTextureSources: ["entities/sling-turret/plate-blueprint-1.png", "entities/sling-turret/plate-blueprint-2.png", "entities/sling-turret/sling-turret-plate.png"],
-         completedTextureSource: "entities/sling-turret/sling-turret-plate.png",
+         progressTextureIndexes: [TextureIndex.entities_slingTurret_plateBlueprint1, TextureIndex.entities_slingTurret_plateBlueprint2, TextureIndex.entities_slingTurret_slingTurretPlate],
+         completedTextureIndex: TextureIndex.entities_slingTurret_slingTurretPlate,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -229,8 +230,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       },
       // Sling
       {
-         progressTextureSources: ["entities/sling-turret/sling-blueprint-1.png", "entities/sling-turret/sling-blueprint-2.png"],
-         completedTextureSource: "entities/sling-turret/sling-blueprint-2.png",
+         progressTextureIndexes: [TextureIndex.entities_slingTurret_slingBlueprint1, TextureIndex.entities_slingTurret_slingBlueprint2],
+         completedTextureIndex: TextureIndex.entities_slingTurret_slingBlueprint2,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -239,8 +240,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.stoneWall]: [
       {
-         progressTextureSources: ["entities/wall/stone-wall-blueprint-1.png", "entities/wall/stone-wall-blueprint-2.png", "entities/wall/stone-wall-blueprint-3.png"],
-         completedTextureSource: "entities/wall/stone-wall.png",
+         progressTextureIndexes: [TextureIndex.entities_wall_stoneWallBlueprint1, TextureIndex.entities_wall_stoneWallBlueprint2, TextureIndex.entities_wall_stoneWallBlueprint3],
+         completedTextureIndex: TextureIndex.entities_wall_stoneWall,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -249,8 +250,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.stoneFloorSpikes]: [
       {
-         progressTextureSources: ["entities/spikes/stone-floor-spikes-blueprint-1.png", "entities/spikes/stone-floor-spikes-blueprint-2.png"],
-         completedTextureSource: "entities/spikes/stone-floor-spikes.png",
+         progressTextureIndexes: [TextureIndex.entities_spikes_stoneFloorSpikesBlueprint1, TextureIndex.entities_spikes_stoneFloorSpikesBlueprint2],
+         completedTextureIndex: TextureIndex.entities_spikes_stoneFloorSpikes,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -259,8 +260,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.stoneWallSpikes]: [
       {
-         progressTextureSources: ["entities/spikes/stone-wall-spikes-blueprint-1.png", "entities/spikes/stone-wall-spikes-blueprint-2.png"],
-         completedTextureSource: "entities/spikes/stone-wall-spikes.png",
+         progressTextureIndexes: [TextureIndex.entities_spikes_stoneWallSpikesBlueprint1, TextureIndex.entities_spikes_stoneWallSpikesBlueprint2],
+         completedTextureIndex: TextureIndex.entities_spikes_stoneWallSpikes,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -269,8 +270,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.warriorHutUpgrade]: [
       {
-         progressTextureSources: ["entities/warrior-hut/warrior-hut-blueprint-1.png", "entities/warrior-hut/warrior-hut-blueprint-2.png", "entities/warrior-hut/warrior-hut-blueprint-3.png", "entities/warrior-hut/warrior-hut-blueprint-4.png", "entities/warrior-hut/warrior-hut-blueprint-5.png", "entities/warrior-hut/warrior-hut-blueprint-6.png"],
-         completedTextureSource: "entities/warrior-hut/warrior-hut.png",
+         progressTextureIndexes: [TextureIndex.entities_warriorHut_warriorHutBlueprint1, TextureIndex.entities_warriorHut_warriorHutBlueprint2, TextureIndex.entities_warriorHut_warriorHutBlueprint3, TextureIndex.entities_warriorHut_warriorHutBlueprint4, TextureIndex.entities_warriorHut_warriorHutBlueprint5, TextureIndex.entities_warriorHut_warriorHutBlueprint6],
+         completedTextureIndex: TextureIndex.entities_warriorHut_warriorHut,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -278,8 +279,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       },
       // Left door
       {
-         progressTextureSources: ["entities/warrior-hut/warrior-hut-door.png"],
-         completedTextureSource: "entities/warrior-hut/warrior-hut-door.png",
+         progressTextureIndexes: [TextureIndex.entities_warriorHut_warriorHutDoor],
+         completedTextureIndex: TextureIndex.entities_warriorHut_warriorHutDoor,
          offsetX: -20,
          offsetY: WARRIOR_HUT_SIZE / 2,
          rotation: Math.PI/2,
@@ -287,8 +288,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       },
       // Right door
       {
-         progressTextureSources: ["entities/warrior-hut/warrior-hut-door.png"],
-         completedTextureSource: "entities/warrior-hut/warrior-hut-door.png",
+         progressTextureIndexes: [TextureIndex.entities_warriorHut_warriorHutDoor],
+         completedTextureIndex: TextureIndex.entities_warriorHut_warriorHutDoor,
          offsetX: 20,
          offsetY: WARRIOR_HUT_SIZE / 2,
          rotation: Math.PI*3/2,
@@ -297,24 +298,24 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.fenceGate]: [
       {
-         progressTextureSources: ["entities/fence-gate/side-blueprint-1.png"],
-         completedTextureSource: "entities/fence-gate/side.png",
+         progressTextureIndexes: [TextureIndex.entities_fenceGate_sideBlueprint1],
+         completedTextureIndex: TextureIndex.entities_fenceGate_side,
          offsetX: -32,
          offsetY: 0,
          rotation: 0,
          zIndex: 1
       },
       {
-         progressTextureSources: ["entities/fence-gate/side-blueprint-1.png"],
-         completedTextureSource: "entities/fence-gate/side.png",
+         progressTextureIndexes: [TextureIndex.entities_fenceGate_sideBlueprint1],
+         completedTextureIndex: TextureIndex.entities_fenceGate_side,
          offsetX: 32,
          offsetY: 0,
          rotation: 0,
          zIndex: 1
       },
       {
-         progressTextureSources: ["entities/fence-gate/door-blueprint-1.png"],
-         completedTextureSource: "entities/fence-gate/door.png",
+         progressTextureIndexes: [TextureIndex.entities_fenceGate_doorBlueprint1],
+         completedTextureIndex: TextureIndex.entities_fenceGate_door,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
@@ -323,8 +324,8 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.stoneBracings]: [
       {
-         progressTextureSources: ["entities/bracings/stone-vertical-post.png"],
-         completedTextureSource: "entities/bracings/stone-vertical-post.png",
+         progressTextureIndexes: [TextureIndex.entities_bracings_stoneVerticalPost],
+         completedTextureIndex: TextureIndex.entities_bracings_stoneVerticalPost,
          offsetX: 0,
          offsetY: 28,
          rotation: 0,
@@ -333,16 +334,16 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.scrappy]: [
       {
-         progressTextureSources: ["entities/scrappy/body.png"],
-         completedTextureSource: "entities/scrappy/body.png",
+         progressTextureIndexes: [TextureIndex.entities_scrappy_body],
+         completedTextureIndex: TextureIndex.entities_scrappy_body,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
          zIndex: 0
       },
       {
-         progressTextureSources: ["entities/scrappy/hand.png"],
-         completedTextureSource: "entities/scrappy/hand.png",
+         progressTextureIndexes: [TextureIndex.entities_scrappy_hand],
+         completedTextureIndex: TextureIndex.entities_scrappy_hand,
          offsetX: 0,
          offsetY: 20,
          rotation: 0,
@@ -351,24 +352,24 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
    ],
    [BlueprintType.cogwalker]: [
       {
-         progressTextureSources: ["entities/cogwalker/body.png"],
-         completedTextureSource: "entities/cogwalker/body.png",
+         progressTextureIndexes: [TextureIndex.entities_cogwalker_body],
+         completedTextureIndex: TextureIndex.entities_cogwalker_body,
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
          zIndex: 0
       },
       {
-         progressTextureSources: ["entities/cogwalker/hand.png"],
-         completedTextureSource: "entities/cogwalker/hand.png",
+         progressTextureIndexes: [TextureIndex.entities_cogwalker_hand],
+         completedTextureIndex: TextureIndex.entities_cogwalker_hand,
          offsetX: 28 * Math.sin(0.4 * Math.PI),
          offsetY: 28 * Math.cos(0.4 * Math.PI),
          rotation: 0,
          zIndex: 0
       },
       {
-         progressTextureSources: ["entities/cogwalker/hand.png"],
-         completedTextureSource: "entities/cogwalker/hand.png",
+         progressTextureIndexes: [TextureIndex.entities_cogwalker_hand],
+         completedTextureIndex: TextureIndex.entities_cogwalker_hand,
          offsetX: -28 * Math.sin(0.4 * Math.PI),
          offsetY: 28 * Math.cos(0.4 * Math.PI),
          rotation: 0,
@@ -471,7 +472,7 @@ class BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent, 
             progressTextureInfo.rotation,
             // @HACK, this shittery is cuz the fence gate doesn't have its first hitbox at the 'core' position
             progressTextureInfo.offsetX + (blueprintComponent.blueprintType === BlueprintType.fenceGate ? 32 : 0), progressTextureInfo.offsetY,
-            getTextureArrayIndex(progressTextureInfo.completedTextureSource)
+            progressTextureInfo.completedTextureIndex
          );
          renderPart.opacity = 0.5;
          if (tribeComponent.tribeID === playerTribe.id) {
@@ -513,9 +514,9 @@ class BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent, 
          
          // @Cleanup
          const textureAtlas = getEntityTextureAtlasInfo();
-         const textureArrayIndex = getTextureArrayIndex(progressTexture.completedTextureSource);
-         const xShift = textureAtlas.textureWidths[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
-         const yShift = textureAtlas.textureHeights[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
+         const textureIndex = progressTexture.completedTextureIndex;
+         const xShift = textureAtlas.textureWidths[textureIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
+         const yShift = textureAtlas.textureHeights[textureIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
          rotatePointAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
          const particleOriginX = hitbox.box.posX + _point.x;
          const particleOriginY = hitbox.box.posY + _point.y;
@@ -646,11 +647,11 @@ const updatePartialTexture = (entity: Entity): void => {
       const progressTextureInfo = progressTextureInfoArray[i];
 
       let localTextureIndex = lastTextureIndex - currentIndexStart;
-      if (localTextureIndex >= progressTextureInfo.progressTextureSources.length) {
-         localTextureIndex = progressTextureInfo.progressTextureSources.length - 1;
+      if (localTextureIndex >= progressTextureInfo.progressTextureIndexes.length) {
+         localTextureIndex = progressTextureInfo.progressTextureIndexes.length - 1;
       }
 
-      const textureSource = progressTextureInfo.progressTextureSources[localTextureIndex];
+      const textureIndex = progressTextureInfo.progressTextureIndexes[localTextureIndex];
       if (blueprintComponent.partialRenderParts.length <= i) {
          const transformComponent = TransformComponentArray.getComponent(entity);
          // @HACK @COPYNPASTE since fence gates don't have their first hitbox at its actual 'position'
@@ -668,7 +669,7 @@ const updatePartialTexture = (entity: Entity): void => {
             progressTextureInfo.zIndex + 0.01,
             progressTextureInfo.rotation,
             progressTextureInfo.offsetX, progressTextureInfo.offsetY,
-            getTextureArrayIndex(textureSource)
+            textureIndex
          );
 
          const renderObject = getEntityRenderObject(entity);
@@ -676,10 +677,10 @@ const updatePartialTexture = (entity: Entity): void => {
          blueprintComponent.partialRenderParts.push(renderPart);
       } else {
          // Existing render part
-         blueprintComponent.partialRenderParts[i].switchTextureSource(textureSource);
+         blueprintComponent.partialRenderParts[i].switchTextureSource(textureIndex);
       }
 
-      currentIndexStart += progressTextureInfo.progressTextureSources.length;
+      currentIndexStart += progressTextureInfo.progressTextureIndexes.length;
 
       // If the last texture index hasn't reached the next set of progress textures, then break
       if (lastTextureIndex < currentIndexStart) {
@@ -693,7 +694,7 @@ const countProgressTextures = (blueprintType: BlueprintType): number => {
    const progressTextureInfoArray = BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintType];
    for (let i = 0; i < progressTextureInfoArray.length; i++) {
       const progressTextureInfo = progressTextureInfoArray[i];
-      numTextures += progressTextureInfo.progressTextureSources.length;
+      numTextures += progressTextureInfo.progressTextureIndexes.length;
    }
    return numTextures;
 }
@@ -710,7 +711,7 @@ const getCurrentBlueprintProgressTexture = (blueprintType: BlueprintType, bluepr
    for (let i = 0; i < progressTextureInfoArray.length; i++) {
       const progressTextureInfo = progressTextureInfoArray[i];
 
-      currentIndexStart += progressTextureInfo.progressTextureSources.length;
+      currentIndexStart += progressTextureInfo.progressTextureIndexes.length;
 
       if (currentIndexStart >= lastTextureIndex) {
          return progressTextureInfo;

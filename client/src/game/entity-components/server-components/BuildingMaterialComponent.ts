@@ -8,6 +8,7 @@ import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface BuildingMaterialComponentData {
    readonly material: BuildingMaterial;
@@ -21,14 +22,14 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.buildingMaterial, BuildingMaterialComponentArray> {}
 }
 
-export const WALL_TEXTURE_SOURCES = ["entities/wall/wooden-wall.png", "entities/wall/stone-wall.png"];
-export const DOOR_TEXTURE_SOURCES = ["entities/door/wooden-door.png", "entities/door/stone-door.png"];
-export const EMBRASURE_TEXTURE_SOURCES = ["entities/embrasure/wooden-embrasure.png", "entities/embrasure/stone-embrasure.png"];
-export const TUNNEL_TEXTURE_SOURCES = ["entities/tunnel/wooden-tunnel.png", "entities/tunnel/stone-tunnel.png"];
-export const FLOOR_SPIKE_TEXTURE_SOURCES = ["entities/spikes/wooden-floor-spikes.png", "entities/spikes/stone-floor-spikes.png"];
-export const WALL_SPIKE_TEXTURE_SOURCES = ["entities/spikes/wooden-wall-spikes.png", "entities/spikes/stone-wall-spikes.png"];
+export const WALL_TEXTURE_SOURCES = [TextureIndex.entities_wall_woodenWall, TextureIndex.entities_wall_stoneWall];
+export const DOOR_TEXTURE_SOURCES = [TextureIndex.entities_door_woodenDoor, TextureIndex.entities_door_stoneDoor];
+export const EMBRASURE_TEXTURE_SOURCES = [TextureIndex.entities_embrasure_woodenEmbrasure, TextureIndex.entities_embrasure_stoneEmbrasure];
+export const TUNNEL_TEXTURE_SOURCES = [TextureIndex.entities_tunnel_woodenTunnel, TextureIndex.entities_tunnel_stoneTunnel];
+export const FLOOR_SPIKE_TEXTURE_SOURCES = [TextureIndex.entities_spikes_woodenFloorSpikes, TextureIndex.entities_spikes_stoneFloorSpikes];
+export const WALL_SPIKE_TEXTURE_SOURCES = [TextureIndex.entities_spikes_woodenWallSpikes, TextureIndex.entities_spikes_stoneWallSpikes];
 
-const getMaterialTextureSources = (entityType: EntityType): ReadonlyArray<string> => {
+const getMaterialTextureSources = (entityType: EntityType): ReadonlyArray<TextureIndex> => {
    // @Robustness
    switch (entityType) {
       case EntityType.wall: return WALL_TEXTURE_SOURCES;
@@ -84,11 +85,11 @@ class BuildingMaterialComponentArray extends _ServerComponentArray<BuildingMater
          } else {
             const verticals = getRenderThingsByTag(renderObject, "bracingsComponent:vertical", 2) as Array<TexturedRenderPart>;
             for (const renderPart of verticals) {
-               renderPart.switchTextureSource("entities/bracings/stone-vertical-post.png");
+               renderPart.switchTextureSource(TextureIndex.entities_bracings_stoneVerticalPost);
             }
 
             const horizontal = getRenderThingByTag(renderObject, "bracingsComponent:horizontal") as TexturedRenderPart;
-            horizontal.switchTextureSource("entities/bracings/stone-horizontal-post.png");
+            horizontal.switchTextureSource(TextureIndex.entities_bracings_stoneHorizontalPost);
          }
       }
       

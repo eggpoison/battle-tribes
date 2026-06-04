@@ -6,13 +6,13 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface DesertBushSandyComponentData {
    readonly size: number;
@@ -39,11 +39,11 @@ class _DesertBushSandyComponentArray extends _ServerComponentArray<DesertBushSan
       const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
       const desertBushSandyComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.desertBushSandy);
       
-      let textureSource: string;
+      let textureIndex: TextureIndex;
       if (desertBushSandyComponentData.size === 0) {
-         textureSource = "entities/desert-bush-sandy/desert-bush-sandy.png";
+         textureIndex = TextureIndex.entities_desertBushSandy_desertBushSandy;
       } else {
-         textureSource = "entities/desert-bush-sandy/desert-bush-sandy-large.png";
+         textureIndex = TextureIndex.entities_desertBushSandy_desertBushSandyLarge;
       }
       
       const renderPart = new TexturedRenderPart(
@@ -51,7 +51,7 @@ class _DesertBushSandyComponentArray extends _ServerComponentArray<DesertBushSan
          0,
          0,
          0, 0,
-         getTextureArrayIndex(textureSource)
+         textureIndex
       );
       renderPart.tintR = randFloat(-0.02, 0.02);
       renderPart.tintG = randFloat(-0.02, 0.02);

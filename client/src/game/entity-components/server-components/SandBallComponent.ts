@@ -8,13 +8,13 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createSandParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SandBallComponentData {
    readonly size: number;
@@ -52,7 +52,7 @@ class _SandBallComponentArray extends _ServerComponentArray<SandBallComponent, S
          0,
          0,
          0, 0,
-         getTextureArrayIndex(getTextureSource(sandBallComponentData.size))
+         getTextureIndex(sandBallComponentData.size)
       );
       renderObject.attachRenderPart(renderPart);
 
@@ -99,7 +99,7 @@ class _SandBallComponentArray extends _ServerComponentArray<SandBallComponent, S
 
       const size = data.size;
       if (size !== sandBallComponent.size) {
-         sandBallComponent.renderPart.switchTextureSource(getTextureSource(size));
+         sandBallComponent.renderPart.switchTextureSource(getTextureIndex(size));
          sandBallComponent.size = size;
       }
    }
@@ -113,6 +113,6 @@ export function createSandBallComponentData(size: number): SandBallComponentData
    };
 }
 
-const getTextureSource = (size: number): string => {
-   return "entities/sand-ball/size-" + size + ".png";
+const getTextureIndex = (size: number): TextureIndex => {
+   return TextureIndex.entities_sandBall_size1 + size - 1;
 }

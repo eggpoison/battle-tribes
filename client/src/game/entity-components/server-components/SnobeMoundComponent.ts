@@ -1,11 +1,11 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SnobeMoundComponentData {}
 
@@ -30,7 +30,7 @@ class _SnobeMoundComponentArray extends _ServerComponentArray<SnobeMoundComponen
             1,
             0,
             0, 0,
-            getTextureArrayIndex("entities/snobe-mound/snobe-mound.png")
+            TextureIndex.entities_snobeMound_snobeMound
          )
       );
    }

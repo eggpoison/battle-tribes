@@ -1,11 +1,11 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface IceShardComponentData {}
 
@@ -30,7 +30,7 @@ class _IceShardComponentArray extends _ServerComponentArray<IceShardComponent, I
             0,
             0,
             0, 0,
-            getTextureArrayIndex("projectiles/ice-shard.png")
+            TextureIndex.projectiles_iceShard
          )
       );
    }

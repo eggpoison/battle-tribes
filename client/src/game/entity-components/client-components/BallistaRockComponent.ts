@@ -4,13 +4,13 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
 import _ClientComponentArray from "../ClientComponentArray";
+import { TextureIndex } from "../../../texture-index";
 
 export interface BallistaRockComponentData {}
 
@@ -31,7 +31,7 @@ class _BallistaRockComponentArray extends _ClientComponentArray<BallistaRockComp
             0,
             0,
             0, 0,
-            getTextureArrayIndex("projectiles/ballista-rock.png")
+            TextureIndex.projectiles_ballistaRock
          )
       );
    }

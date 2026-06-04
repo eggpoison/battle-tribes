@@ -10,13 +10,13 @@ import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData, getEntityAgeTicks, getEntityLayer } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TombstoneComponentData {
    readonly tombstoneType: number;
@@ -50,7 +50,7 @@ class _TombstoneComponentArray extends _ServerComponentArray<TombstoneComponent,
       let deathInfo: DeathInfo | null;
       if (hasDeathInfo) {
          const username = reader.readString();
-         const damageSource = reader.readNumber() as DamageSource;
+         const damageSource: DamageSource = reader.readNumber();
          deathInfo = {
             username: username,
             damageSource: damageSource
@@ -93,7 +93,7 @@ class _TombstoneComponentArray extends _ServerComponentArray<TombstoneComponent,
             0,
             0,
             0, 0,
-            getTextureArrayIndex(`entities/tombstone/tombstone${tombstoneComponentData.tombstoneType + 1}.png`)
+            TextureIndex.entities_tombstone_tombstone1 + tombstoneComponentData.tombstoneType
          )
       );
    }

@@ -6,7 +6,6 @@ import { createPoisonParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -14,6 +13,7 @@ import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { Bytes } from "../../../../../shared/src/constants";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SlimeSpitComponentData {}
 
@@ -40,7 +40,7 @@ class _SlimeSpitComponentArray extends _ServerComponentArray<SlimeSpitComponent,
          1,
          0,
          0, 0,
-         getTextureArrayIndex("projectiles/slime-spit-medium.png")
+         TextureIndex.projectiles_slimeSpitMedium
       );
       renderPart1.opacity = 0.75;
       renderObject.attachRenderPart(renderPart1);
@@ -50,7 +50,7 @@ class _SlimeSpitComponentArray extends _ServerComponentArray<SlimeSpitComponent,
          0,
          Math.PI/4,
          0, 0,
-         getTextureArrayIndex("projectiles/slime-spit-medium.png")
+         TextureIndex.projectiles_slimeSpitMedium
       );
       renderPart2.opacity = 0.75;
       renderObject.attachRenderPart(renderPart2);

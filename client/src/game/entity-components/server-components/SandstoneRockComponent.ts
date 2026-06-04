@@ -2,12 +2,12 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { PacketReader } from "../../../../../shared/src/packets";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SandstoneRockComponentData {
    readonly size: number;
@@ -34,11 +34,11 @@ class _SandstoneRockComponentArray extends _ServerComponentArray<SandstoneRockCo
       const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
       const sandstoneRockComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.sandstoneRock);
 
-      let typeString: string;
+      let textureIndexOffset: number;
       switch (sandstoneRockComponentData.size) {
-         case 0: typeString = "small"; break;
-         case 1: typeString = "medium"; break;
-         case 2: typeString = "large"; break;
+         case 0: textureIndexOffset = 2; break;
+         case 1: textureIndexOffset = 1; break;
+         case 2: textureIndexOffset = 0; break;
          default: throw new Error();
       }
       
@@ -48,7 +48,7 @@ class _SandstoneRockComponentArray extends _ServerComponentArray<SandstoneRockCo
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/sandstone-rock/sandstone-rock-" + typeString + ".png")
+            TextureIndex.entities_sandstoneRock_sandstoneRockLarge + textureIndexOffset
          )
       );
    }

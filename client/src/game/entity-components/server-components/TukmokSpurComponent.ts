@@ -6,11 +6,11 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TukmokSpurComponentData {}
 
@@ -31,17 +31,17 @@ class _TukmokSpurComponentArray extends _ServerComponentArray<TukmokSpurComponen
 
       const tag = getHitboxTag(hitbox);
       
-      let textureSource: string;
+      let textureIndex: TextureIndex;
       if (tag === HitboxTag.tukmokSpurHead) {
-         textureSource = "entities/tukmok-spur/spur-head.png";
+         textureIndex = TextureIndex.entities_tukmokSpur_spurHead;
       } else if (tag === HitboxTag.tukmokSpurShoulderLeftFront) {
-         textureSource = "entities/tukmok-spur/spur-shoulder-left-front.png";
+         textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderLeftFront;
       } else if (tag === HitboxTag.tukmokSpurShoulderLeftBack) {
-         textureSource = "entities/tukmok-spur/spur-shoulder-left-back.png";
+         textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderLeftBack;
       } else if (tag === HitboxTag.tukmokSpurShoulderRightFront) {
-         textureSource = "entities/tukmok-spur/spur-shoulder-right-front.png";
+         textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderRightFront;
       } else {
-         textureSource = "entities/tukmok-spur/spur-shoulder-right-back.png";
+         textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderRightBack;
       }
       
       renderObject.attachRenderPart(
@@ -50,7 +50,7 @@ class _TukmokSpurComponentArray extends _ServerComponentArray<TukmokSpurComponen
             0,
             0,
             0, 0,
-            getTextureArrayIndex(textureSource)
+            textureIndex
          )
       );
    }

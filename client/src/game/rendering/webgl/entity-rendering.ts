@@ -38,7 +38,7 @@ export function createEntityShaders(): void {
    ${getEntityTextureAtlasUBO()}
    
    layout(location = 0) in float a_depth;
-   layout(location = 1) in float a_textureArrayIndex;
+   layout(location = 1) in float a_textureIndex;
    layout(location = 2) in vec3 a_tint;
    // @SPEED This attribute is here only so that the snobe can dig down into snow through the illusion of its opacity decreasing. But a far better and actually better gameplay-wise too method is to have it actually dig down, and have snow stuff above it obscure it naturally.
    layout(location = 3) in float a_opacity;
@@ -65,7 +65,7 @@ export function createEntityShaders(): void {
 
       float textureSlotIndex;
       vec2 textureSize;
-      if (a_textureArrayIndex == -1.0) {
+      if (a_textureIndex == -1.0) {
          // Non-textured render parts
 
          uint hash = pcg_hash(uint(vertexID));
@@ -75,7 +75,7 @@ export function createEntityShaders(): void {
          textureSize = vec2(size, size);
          textureSlotIndex = -1.0;
       } else {
-         int idx = int(a_textureArrayIndex);
+         int idx = int(a_textureIndex);
 
          uvec4 slotIndexGroup = u_textureSlotIndices[idx / 8];
          switch (idx % 8) {
@@ -302,7 +302,7 @@ export function setRenderObjectInVertexData(renderObject: EntityRenderObject, ve
       
       const depth = calculateRenderPartDepth(renderPart, renderObject);
       
-      const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
+      const textureIndex = renderPartIsTextured(renderPart) ? renderPart.textureIndex : -1;
 
       const tintR = baseTintR + renderPart.tintR;
       const tintG = baseTintG + renderPart.tintG;
@@ -311,7 +311,7 @@ export function setRenderObjectInVertexData(renderObject: EntityRenderObject, ve
       const modelMatrix = renderPart.modelMatrix;
 
       vertexData[vertexDataOffset] = depth;
-      vertexData[vertexDataOffset + 1] = textureArrayIndex;
+      vertexData[vertexDataOffset + 1] = textureIndex;
       vertexData[vertexDataOffset + 2] = tintR;
       vertexData[vertexDataOffset + 3] = tintG;
       vertexData[vertexDataOffset + 4] = tintB;

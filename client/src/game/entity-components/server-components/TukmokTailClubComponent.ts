@@ -1,11 +1,11 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TukmokTailClubComponentData {}
 
@@ -30,7 +30,7 @@ class _TukmokTailClubComponentArray extends _ServerComponentArray<TukmokTailClub
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/tukmok-tail-club/club-segment.png")
+            TextureIndex.entities_tukmokTailClub_clubSegment
          )
       );
    }

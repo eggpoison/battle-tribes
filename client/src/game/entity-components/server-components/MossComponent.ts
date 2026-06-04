@@ -3,12 +3,12 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { randFloat } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface MossComponentData {
    readonly size: number;
@@ -38,31 +38,25 @@ class _MossComponentArray extends _ServerComponentArray<MossComponent, MossCompo
       const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
       const mossComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.moss);
 
-      let colourString: string;
+      let colourTextureIndex: TextureIndex;
       switch (mossComponentData.colour) {
-         case 0: colourString = "light-green"; break;
-         case 1: colourString = "dark-green"; break;
-         case 2: colourString = "aqua"; break;
-         case 3: colourString = "red"; break;
-         case 4: colourString = "purple"; break;
-         case 5: colourString = "gold"; break;
+         case 0: colourTextureIndex = TextureIndex.entities_moss_lightGreen_mossLarge; break;
+         case 1: colourTextureIndex = TextureIndex.entities_moss_darkGreen_mossLarge; break;
+         case 2: colourTextureIndex = TextureIndex.entities_moss_aqua_mossLarge; break;
+         case 3: colourTextureIndex = TextureIndex.entities_moss_red_mossLarge; break;
+         case 4: colourTextureIndex = TextureIndex.entities_moss_purple_mossLarge; break;
+         case 5: colourTextureIndex = TextureIndex.entities_moss_gold_mossLarge; break;
          default: throw new Error();
       }
-      
-      let textureSource: string;
-      switch (mossComponentData.size) {
-         case 0: textureSource = "entities/moss/" + colourString + "/moss-small.png"; break;
-         case 1: textureSource = "entities/moss/" + colourString + "/moss-medium.png"; break;
-         case 2: textureSource = "entities/moss/" + colourString + "/moss-large.png"; break;
-         default: throw new Error();
-      }
+
+      const textureIndex = colourTextureIndex + mossComponentData.size;
 
       const renderPart = new TexturedRenderPart(
          hitbox,
          0,
          0,
          0, 0,
-         getTextureArrayIndex(textureSource)
+         textureIndex
       );
       renderPart.tintR = randFloat(-0.04, 0.04);
       renderPart.tintG = randFloat(-0.04, 0.04);

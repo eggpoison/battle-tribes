@@ -5,7 +5,6 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { Point, randAngle, randFloat, angle, randItem, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, createWoodSpeckParticle, LEAF_SPECK_COLOUR_HIGH, LEAF_SPECK_COLOUR_LOW } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
@@ -15,6 +14,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TreeComponentData {
    readonly treeSize: TreeSize;
@@ -28,9 +28,9 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tree, _TreeComponentArray> {}
 }
 
-const treeTextures: { [T in TreeSize]: string } = {
-   [TreeSize.small]: "entities/tree/tree-small.png",
-   [TreeSize.large]: "entities/tree/tree-large.png"
+const treeTextures: Record<TreeSize, TextureIndex> = {
+   [TreeSize.small]: TextureIndex.entities_tree_treeSmall,
+   [TreeSize.large]: TextureIndex.entities_tree_treeLarge
 };
 
 export const TREE_HIT_SOUNDS: ReadonlyArray<string> = ["tree-hit-1.mp3", "tree-hit-2.mp3", "tree-hit-3.mp3", "tree-hit-4.mp3"];
@@ -61,7 +61,7 @@ class _TreeComponentArray extends _ServerComponentArray<TreeComponent, TreeCompo
             0,
             0,
             0, 0,
-            getTextureArrayIndex(treeTextures[treeComponentData.treeSize])
+            treeTextures[treeComponentData.treeSize]
          )
       );
    }

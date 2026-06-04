@@ -4,7 +4,6 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
@@ -32,11 +31,11 @@ class _RegularSpikesComponentArray extends _ClientComponentArray<RegularSpikesCo
       const materialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
 
       const isAttachedToWall = entityComponentData.entityType === EntityType.wallSpikes;
-      let textureArrayIndex: number;
+      let textureIndex: number;
       if (isAttachedToWall) {
-         textureArrayIndex = getTextureArrayIndex(WALL_SPIKE_TEXTURE_SOURCES[materialComponentData.material]);
+         textureIndex = WALL_SPIKE_TEXTURE_SOURCES[materialComponentData.material];
       } else {
-         textureArrayIndex = getTextureArrayIndex(FLOOR_SPIKE_TEXTURE_SOURCES[materialComponentData.material]);
+         textureIndex = FLOOR_SPIKE_TEXTURE_SOURCES[materialComponentData.material];
       }
 
       const mainRenderPart = new TexturedRenderPart(
@@ -44,7 +43,7 @@ class _RegularSpikesComponentArray extends _ClientComponentArray<RegularSpikesCo
          0,
          0,
          0, 0,
-         textureArrayIndex
+         textureIndex
       )
       addRenderPartTag(mainRenderPart, "buildingMaterialComponent:material");
 

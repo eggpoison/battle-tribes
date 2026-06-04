@@ -193,8 +193,8 @@ export function generateUndergroundTerrain(depth: number, surfaceLayer: Layer): 
    // @MEMORY: humidity and temperature are useless here kinda..?
    const undergroundLayer = new Layer(depth, new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES), new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES));
 
-   for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
-      for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
+   for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
+      for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          if (surfaceLayer.getTileXYType(tileX, tileY) === TileType.dropdown) {
             for (let nodeX = tileX * 4; nodeX < (tileX + 1) * 4; nodeX++) {
                for (let nodeY = tileY * 4; nodeY < (tileY + 1) * 4; nodeY++) {

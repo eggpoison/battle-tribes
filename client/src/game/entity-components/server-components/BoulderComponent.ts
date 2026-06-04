@@ -4,7 +4,6 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { randAngle, randFloat, randItem } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createRockParticle, createRockSpeckParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -16,6 +15,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface BoulderComponentData {
    readonly boulderType: number;
@@ -25,9 +25,9 @@ export interface BoulderComponent {
    readonly boulderType: number;
 }
 
-const TEXTURE_SOURCES = [
-   "entities/boulder/boulder1.png",
-   "entities/boulder/boulder2.png"
+const TEXTURE_INDEXES = [
+   TextureIndex.entities_boulder_boulder1,
+   TextureIndex.entities_boulder_boulder2
 ];
 
 declare module "../component-registry" {
@@ -55,7 +55,7 @@ class BoulderComponentArray extends _ServerComponentArray<BoulderComponent, Boul
             0,
             0,
             0, 0,
-            getTextureArrayIndex(TEXTURE_SOURCES[boulderComponentData.boulderType])
+            TEXTURE_INDEXES[boulderComponentData.boulderType]
          )
       );
    }

@@ -1,5 +1,4 @@
 import { InventoryUseComponentArray, LimbInfo } from "./entity-components/server-components/InventoryUseComponent";
-import { getTextureArrayIndex } from "./texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
 import { ParticleColour } from "./rendering/webgl/particle-rendering";
 import { createColouredParticle, createSawdustCloud } from "./particles";
@@ -15,6 +14,7 @@ import { ConsumableItemInfo, ITEM_INFO_RECORD, ItemType } from "../../../shared/
 import { Entity, LimbAction } from "../../../shared/src/entities";
 import { getItemRecipe } from "../../../shared/src/items/crafting-recipes";
 import { Settings } from "../../../shared/src/settings";
+import { TextureIndex } from "../texture-index";
 
 enum CustomItemState {
    usingMedicine,
@@ -102,7 +102,7 @@ const createBandageRenderPart = (entity: Entity): void => {
       6,
       randAngle(),
       offsetMagnitude * Math.sin(offsetDirection), offsetMagnitude * Math.cos(offsetDirection),
-      getTextureArrayIndex("entities/miscellaneous/bandage.png")
+      TextureIndex.entities_miscellaneous_bandage
    );
 
    const renderObject = getEntityRenderObject(entity);
@@ -153,14 +153,14 @@ export function createMedicineAnimationParticles(entity: Entity, limbIdx: number
    }
 }
 
-const getCustomItemRenderPartTextureSource = (entity: Entity, state: CustomItemState): string => {
+const getCustomItemRenderPartTextureIndex = (entity: Entity, state: CustomItemState): TextureIndex => {
    switch (state) {
       case CustomItemState.usingMedicine: {
-         return CLIENT_ITEM_INFO_RECORD[ItemType.herbal_medicine].entityTextureSource;
+         return CLIENT_ITEM_INFO_RECORD[ItemType.herbal_medicine].entityTextureIndex;
       }
       case CustomItemState.crafting: {
          const tribesmanComponent = tribesmanAIComponentArray.getComponent(entity);
-         return CLIENT_ITEM_INFO_RECORD[tribesmanComponent.craftingItemType].entityTextureSource;
+         return CLIENT_ITEM_INFO_RECORD[tribesmanComponent.craftingItemType].entityTextureIndex;
       }
    }
 }
@@ -221,16 +221,16 @@ export function updateCustomItemRenderPart(entity: Entity): void {
          
          inventoryUseComponent.customItemRenderPart = new TexturedRenderPart(
             hitbox,
-            getTextureArrayIndex(getCustomItemRenderPartTextureSource(entity, customItemState)),
             9,
+            0,
             0, 38,
-            0
+            getCustomItemRenderPartTextureIndex(entity, customItemState),
          );
 
          const renderObject = getEntityRenderObject(entity);
          renderObject.attachRenderPart(inventoryUseComponent.customItemRenderPart);
       } else {
-         inventoryUseComponent.customItemRenderPart.switchTextureSource(getCustomItemRenderPartTextureSource(entity, customItemState));
+         inventoryUseComponent.customItemRenderPart.switchTextureSource(getCustomItemRenderPartTextureIndex(entity, customItemState));
       }
       
       inventoryUseComponent.customItemRenderPart.opacity = getCustomItemRenderPartOpacity(entity, customItemState);

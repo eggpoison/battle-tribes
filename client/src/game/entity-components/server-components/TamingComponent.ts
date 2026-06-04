@@ -11,7 +11,6 @@ import { Hitbox } from "../../hitboxes";
 import { getPlayerSelectedItem } from "../../player-action-handling";
 import { RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { playerTribe } from "../../tribes";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
@@ -21,6 +20,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { getRenderThingByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TamingSkillLearning {
    readonly skill: TamingSkill;
@@ -63,10 +63,10 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.taming, _TamingComponentArray> {}
 }
 
-const TAMING_TIER_TEXTURE_SOURCES: Record<number, string> = {
-   1: "entities/miscellaneous/taming-tier-1.png",
-   2: "entities/miscellaneous/taming-tier-2.png",
-   3: "entities/miscellaneous/taming-tier-3.png"
+const TAMING_TIER_TEXTURE_INDEXES: Record<number, TextureIndex> = {
+   1: TextureIndex.entities_miscellaneous_tamingTier1,
+   2: TextureIndex.entities_miscellaneous_tamingTier2,
+   3: TextureIndex.entities_miscellaneous_tamingTier3
 };
 
 // @HACK!! could potentially collide with others. and is just generally shit. ALso might mess with z-indexes!!! if its large enough
@@ -221,7 +221,7 @@ class _TamingComponentArray extends _ServerComponentArray<TamingComponent, Tamin
             const renderObject = getHeadRenderObject(entity);
             renderObject.attachRenderPart(tamingComponent.tamingTierRenderPart);
          } else {
-            tamingComponent.tamingTierRenderPart.textureArrayIndex = getTextureArrayIndex(TAMING_TIER_TEXTURE_SOURCES[tamingTier]);
+            tamingComponent.tamingTierRenderPart.textureIndex = TAMING_TIER_TEXTURE_INDEXES[tamingTier];
          }
       }
       tamingComponent.tamingTier = tamingTier;
@@ -290,7 +290,7 @@ const createFollowHalo = (headRenderPart: RenderPart): RenderPart => {
       HALO_RENDER_PART_Z_INDEX,
       0,
       0, 0,
-      getTextureArrayIndex("entities/miscellaneous/follow-halo.png")
+      TextureIndex.entities_miscellaneous_followHalo
    );
    followHalo.inheritParentRotation = false;
    return followHalo;
@@ -302,7 +302,7 @@ const createAttackHalo = (headRenderPart: RenderPart): RenderPart => {
       HALO_RENDER_PART_Z_INDEX,
       0,
       0, 0,
-      getTextureArrayIndex("entities/miscellaneous/attack-halo.png")
+      TextureIndex.entities_miscellaneous_attackHalo
    );
    attackHalo.inheritParentRotation = false;
    return attackHalo;
@@ -322,7 +322,7 @@ const createTamingTierRenderPart = (tamingTier: number, parentHitbox: Hitbox): T
       TAMING_TIER_RENDER_PART_Z_INDEX,
       0,
       0, 0,
-      getTextureArrayIndex(TAMING_TIER_TEXTURE_SOURCES[tamingTier])
+      TAMING_TIER_TEXTURE_INDEXES[tamingTier]
    );
    renderPart.inheritParentRotation = false;
    renderPart.opacity = getTamingTierRenderPartOpacity();

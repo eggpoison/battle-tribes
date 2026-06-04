@@ -6,12 +6,12 @@ import { Hitbox } from "../../hitboxes";
 import { createWoodSpeckParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TreeRootBaseComponentData {}
 
@@ -36,7 +36,7 @@ class _TreeRootBaseComponentArray extends _ServerComponentArray<TreeRootBaseComp
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/tree-root-base/tree-root-base.png")
+            TextureIndex.entities_treeRootBase_treeRootBase
          )
       );
    }

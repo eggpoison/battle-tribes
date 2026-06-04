@@ -3,7 +3,6 @@ import { EntityType, Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { Settings } from "../../../../../shared/src/settings";
 import { secondsToTicks, lerp, Point } from "../../../../../shared/src/utils";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
@@ -17,6 +16,7 @@ import { getEntityServerComponentTypes } from "../component-types";
 import { getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { currentSnapshot } from "../../networking/snapshots";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 type HutType = EntityType.workerHut | EntityType.warriorHut;
 
@@ -180,7 +180,7 @@ const createRecallMarker = (parentHitbox: Hitbox): TexturedRenderPart => {
       9,
       0,
       0, 0,
-      getTextureArrayIndex("entities/recall-marker.png")
+      TextureIndex.entities_recallMarker
    );
    recallMarker.inheritParentRotation = false;
 

@@ -1,11 +1,11 @@
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface GlurbTailSegmentComponentData {}
 
@@ -22,15 +22,13 @@ class GlurbTailSegmentComponentArray extends _ClientComponentArray<GlurbTailSegm
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
 
-      const textureSource = "entities/glurb/glurb-tail-segment.png";
-      
       const renderPart = new TexturedRenderPart(
          hitbox,
          // @Hack: 0.1 so that the moss ball can be z-index 0
          0.1,
          0,
          0, 0,
-         getTextureArrayIndex(textureSource)
+         TextureIndex.entities_glurb_glurbTailSegment
       );
       renderObject.attachRenderPart(renderPart);
    }

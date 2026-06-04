@@ -6,7 +6,6 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TUNNEL_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
@@ -14,6 +13,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TunnelComponentData {
    readonly doorBitset: number;
@@ -84,7 +84,7 @@ class _TunnelComponentArray extends _ServerComponentArray<TunnelComponent, Tunne
          1,
          0,
          0, 0,
-         getTextureArrayIndex(TUNNEL_TEXTURE_SOURCES[buildingMaterialComponentData.material])
+         TUNNEL_TEXTURE_SOURCES[buildingMaterialComponentData.material]
       );
 
       renderObject.attachRenderPart(renderPart);
@@ -164,7 +164,7 @@ const addDoor = (tunnelComponent: TunnelComponent, entity: Entity, doorBit: numb
       0,
       doorBit === 0b10 ? Math.PI : 0,
       0, doorBit === 0b10 ? -32 : 32,
-      getTextureArrayIndex("entities/tunnel/tunnel-door.png")
+      TextureIndex.entities_tunnel_tunnelDoor
    );
    
    tunnelComponent.doorRenderParts[doorBit] = renderPart;

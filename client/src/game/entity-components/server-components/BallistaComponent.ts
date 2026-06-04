@@ -3,7 +3,6 @@ import { Entity } from "../../../../../shared/src/entities";
 import { randItem } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../../utils";
 import { ROCK_HIT_SOUNDS, ROCK_DESTROY_SOUNDS, playSoundOnHitbox } from "../../sound";
 import { RenderPart } from "../../render-parts/render-parts";
@@ -14,6 +13,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface BallistaComponentData {}
 
@@ -39,7 +39,7 @@ class _BallistaComponentArray extends _ServerComponentArray<BallistaComponent, B
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/ballista/base.png")
+            TextureIndex.entities_ballista_base
          )
       );
 
@@ -49,7 +49,7 @@ class _BallistaComponentArray extends _ServerComponentArray<BallistaComponent, B
          1,
          Math.PI / 2,
          BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y,
-         getTextureArrayIndex("entities/ballista/ammo-box.png")
+         TextureIndex.entities_ballista_ammoBox
       );
       renderObject.attachRenderPart(ammoBoxRenderPart);
 
@@ -59,7 +59,7 @@ class _BallistaComponentArray extends _ServerComponentArray<BallistaComponent, B
          2,
          0,
          0, 0,
-         getTextureArrayIndex("entities/ballista/plate.png")
+         TextureIndex.entities_ballista_plate
       );
       addRenderPartTag(plateRenderPart, "turretComponent:pivoting");
       renderObject.attachRenderPart(plateRenderPart);
@@ -70,7 +70,7 @@ class _BallistaComponentArray extends _ServerComponentArray<BallistaComponent, B
          3,
          0,
          0, 0,
-         getTextureArrayIndex("entities/ballista/shaft.png")
+         TextureIndex.entities_ballista_shaft
       );
       renderObject.attachRenderPart(shaftRenderPart);
 
@@ -82,7 +82,7 @@ class _BallistaComponentArray extends _ServerComponentArray<BallistaComponent, B
             2.5 + i * 0.1,
             0,
             i === 0 ? BALLISTA_GEAR_X : -BALLISTA_GEAR_X, BALLISTA_GEAR_Y,
-            getTextureArrayIndex("entities/ballista/gear.png")
+            TextureIndex.entities_ballista_gear
          );
          addRenderPartTag(renderPart, "turretComponent:gear");
          renderObject.attachRenderPart(renderPart);
@@ -95,7 +95,7 @@ class _BallistaComponentArray extends _ServerComponentArray<BallistaComponent, B
          5,
          0,
          0, 0,
-         getTextureArrayIndex("entities/ballista/crossbow-1.png")
+         TextureIndex.entities_ballista_crossbow01
       );
       addRenderPartTag(crossbowRenderPart, "turretComponent:aiming");
       renderObject.attachRenderPart(crossbowRenderPart);

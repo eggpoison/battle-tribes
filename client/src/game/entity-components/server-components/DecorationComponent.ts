@@ -2,12 +2,12 @@ import { DecorationType, ServerComponentType } from "../../../../../shared/src/c
 import { PacketReader } from "../../../../../shared/src/packets";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface DecorationComponentData {
    readonly decorationType: DecorationType;
@@ -21,19 +21,19 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.decoration, _DecorationComponentArray> {}
 }
 
-const DECORATION_RENDER_INFO: Record<DecorationType, string> = {
-   [DecorationType.pebble]: "decorations/pebble.png",
-   [DecorationType.rock]: "decorations/rock1.png",
-   [DecorationType.sandstoneRock]: "decorations/sandstone-rock.png",
-   [DecorationType.sandstoneRockBig1]: "decorations/sandstone-rock-big1.png",
-   [DecorationType.sandstoneRockBig2]: "decorations/sandstone-rock-big2.png",
-   [DecorationType.sandstoneRockDark]: "decorations/sandstone-rock-dark.png",
-   [DecorationType.sandstoneRockDarkBig1]: "decorations/sandstone-rock-dark-big1.png",
-   [DecorationType.sandstoneRockDarkBig2]: "decorations/sandstone-rock-dark-big2.png",
-   [DecorationType.flower1]: "decorations/flower1.png",
-   [DecorationType.flower2]: "decorations/flower2.png",
-   [DecorationType.flower3]: "decorations/flower3.png",
-   [DecorationType.flower4]: "decorations/flower4.png"
+const DECORATION_RENDER_INFO: Record<DecorationType, TextureIndex> = {
+   [DecorationType.pebble]: TextureIndex.decorations_pebble,
+   [DecorationType.rock]: TextureIndex.decorations_rock1,
+   [DecorationType.sandstoneRock]: TextureIndex.decorations_sandstoneRock,
+   [DecorationType.sandstoneRockBig1]: TextureIndex.decorations_sandstoneRockBig1,
+   [DecorationType.sandstoneRockBig2]: TextureIndex.decorations_sandstoneRockBig2,
+   [DecorationType.sandstoneRockDark]: TextureIndex.decorations_sandstoneRockDark,
+   [DecorationType.sandstoneRockDarkBig1]: TextureIndex.decorations_sandstoneRockDarkBig1,
+   [DecorationType.sandstoneRockDarkBig2]: TextureIndex.decorations_sandstoneRockDarkBig2,
+   [DecorationType.flower1]: TextureIndex.decorations_flower1,
+   [DecorationType.flower2]: TextureIndex.decorations_flower2,
+   [DecorationType.flower3]: TextureIndex.decorations_flower3,
+   [DecorationType.flower4]: TextureIndex.decorations_flower4
 };
 
 class _DecorationComponentArray extends _ServerComponentArray<DecorationComponent, DecorationComponentData> {
@@ -58,7 +58,7 @@ class _DecorationComponentArray extends _ServerComponentArray<DecorationComponen
             0,
             0,
             0, 0,
-            getTextureArrayIndex(DECORATION_RENDER_INFO[decorationComponentData.decorationType])
+            DECORATION_RENDER_INFO[decorationComponentData.decorationType]
          )
       );
    }

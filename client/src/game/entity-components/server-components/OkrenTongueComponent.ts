@@ -3,11 +3,11 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { getHitboxTag } from "../../hitboxes";
+import { TextureIndex } from "../../../texture-index";
 
 export interface OkrenTongueComponentData {}
 
@@ -33,7 +33,7 @@ class _OkrenTongueComponentArray extends _ServerComponentArray<OkrenTongueCompon
                   0,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/okren/tongue-segment.png")
+                  TextureIndex.entities_okren_tongueSegment
                );
                renderObject.attachRenderPart(renderPart);
                break;
@@ -44,7 +44,7 @@ class _OkrenTongueComponentArray extends _ServerComponentArray<OkrenTongueCompon
                   0,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/okren/tongue-tip.png")
+                  TextureIndex.entities_okren_tongueTip
                );
                renderObject.attachRenderPart(renderPart);
                break;

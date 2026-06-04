@@ -5,12 +5,12 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TumbleweedLiveComponentData {}
 
@@ -34,7 +34,7 @@ class _TumbleweedLiveComponentArray extends _ServerComponentArray<TumbleweedLive
          0,
          0,
          0, 0,
-         getTextureArrayIndex("entities/tumbleweed-live/tumbleweed-live.png")
+         TextureIndex.entities_tumbleweedLive_tumbleweedLive
       );
       renderPart.tintR = randFloat(-0.03, 0.03);
       renderPart.tintG = randFloat(-0.03, 0.03);

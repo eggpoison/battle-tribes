@@ -2,7 +2,6 @@ import { LimbConfiguration } from "../../../../../shared/src/attack-patterns";
 import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { updateLimb_TEMP } from "./InventoryUseComponent";
 import { EntityComponentData } from "../../world";
@@ -10,6 +9,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface ScrappyComponentData {}
 
@@ -35,7 +35,7 @@ class _ScrappyComponentArray extends _ServerComponentArray<ScrappyComponent, Scr
             2,
             0,
             0, 0,
-            getTextureArrayIndex("entities/scrappy/body.png")
+            TextureIndex.entities_scrappy_body
          )
       );
 
@@ -54,8 +54,8 @@ class _ScrappyComponentArray extends _ServerComponentArray<ScrappyComponent, Scr
          attachPoint,
          1.2,
          0,
-         getTextureArrayIndex("entities/scrappy/hand.png"),
-         0, 0
+         0, 0,
+         TextureIndex.entities_scrappy_hand
       );
       addRenderPartTag(handRenderPart, "inventoryUseComponent:hand");
       renderObject.attachRenderPart(handRenderPart);

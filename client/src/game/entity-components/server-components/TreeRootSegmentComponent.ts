@@ -7,13 +7,13 @@ import { Hitbox } from "../../hitboxes";
 import { createWoodSpeckParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TreeRootSegmentComponentData {
    readonly variant: number;
@@ -47,7 +47,7 @@ class _TreeRootSegmentComponentArray extends _ServerComponentArray<TreeRootSegme
          0,
          0,
          0, 0,
-         getTextureArrayIndex("entities/tree-root-segment/tree-root-segment-" + (treeRootSegmentComponentData.variant + 1) + ".png")
+         TextureIndex.entities_treeRootSegment_treeRootSegment1 + treeRootSegmentComponentData.variant
       );
       if (Math.random() < 0.5) {
          renderPart.setFlipX(true);

@@ -1,7 +1,6 @@
 import { TurretAmmoType, ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
@@ -13,6 +12,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { currentSnapshot } from "../../networking/snapshots";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface AmmoBoxComponentData {
    readonly ammoType: TurretAmmoType | null;
@@ -40,7 +40,7 @@ const createAmmoWarningRenderPart = (parentHitbox: Hitbox): VisualRenderPart => 
       999,
       0,
       0, 0,
-      getTextureArrayIndex("entities/ballista/ammo-warning.png")
+      TextureIndex.entities_ballista_ammoWarning
    );
    // @Incomplete? What is this supposed to be doing and does it achieve it?
    // I think it's just supposed to be going over the ammo box but without copying its rotation
@@ -125,7 +125,7 @@ const updateAmmoType = (ammoBoxComponent: AmmoBoxComponent, entity: Entity, ammo
             999,
             0,
             0, 0,
-            getTextureArrayIndex("entities/ballista/ammo-warning.png")
+            TextureIndex.entities_ballista_ammoWarning
          );
          // @Temporary @Incomplete
          // ammoBoxComponent.ammoWarningRenderPart.offset.x = rotateXAroundOrigin(BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, transformComponent.rotation);

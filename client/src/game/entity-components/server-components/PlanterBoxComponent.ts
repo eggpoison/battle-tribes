@@ -8,13 +8,13 @@ import { createGrowthParticle } from "../../particles";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { getEntityRenderObject, getEntityAgeTicks, EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponent, TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface PlanterBoxComponentData {
    readonly plantedEntityType: PlantedEntityType | -1;
@@ -37,13 +37,12 @@ declare module "../component-registry" {
 }
 
 const createMoundRenderPart = (plantedEntityType: PlantedEntityType, parentHitbox: Hitbox): TexturedRenderPart => {
-   const textureSource = plantedEntityType === EntityType.iceSpikesPlanted ? "entities/plant/snow-clump.png" : "entities/plant/dirt-clump.png";
    return new TexturedRenderPart(
       parentHitbox,
       1,
       Math.PI / 2 * randInt(0, 3),
       0, 0,
-      getTextureArrayIndex(textureSource)
+      plantedEntityType === EntityType.iceSpikesPlanted ? TextureIndex.entities_plant_snowClump : TextureIndex.entities_plant_dirtClump
    );
 }
 
@@ -67,7 +66,7 @@ class _PlanterBoxComponentArray extends _ServerComponentArray<PlanterBoxComponen
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/planter-box/planter-box.png")
+            TextureIndex.entities_planterBox_planterBox
          )
       );
       

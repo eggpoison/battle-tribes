@@ -1,12 +1,12 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SlingTurretComponentData {}
 
@@ -32,7 +32,7 @@ class _SlingTurretComponentArray extends _ServerComponentArray<SlingTurretCompon
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/sling-turret/sling-turret-base.png")
+            TextureIndex.entities_slingTurret_slingTurretBase
          )
       );
 
@@ -42,7 +42,7 @@ class _SlingTurretComponentArray extends _ServerComponentArray<SlingTurretCompon
          1,
          0,
          0, 0,
-         getTextureArrayIndex("entities/sling-turret/sling-turret-plate.png")
+         TextureIndex.entities_slingTurret_slingTurretPlate
       );
       addRenderPartTag(plateRenderPart, "turretComponent:pivoting");
       renderObject.attachRenderPart(plateRenderPart);
@@ -53,7 +53,7 @@ class _SlingTurretComponentArray extends _ServerComponentArray<SlingTurretCompon
          2,
          0,
          0, 0,
-         getTextureArrayIndex("entities/sling-turret/sling-turret-sling.png")
+         TextureIndex.entities_slingTurret_slingTurretSling
       );
       addRenderPartTag(slingRenderPart, "turretComponent:aiming");
       renderObject.attachRenderPart(slingRenderPart);

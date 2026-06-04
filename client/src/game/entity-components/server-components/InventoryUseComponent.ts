@@ -5,7 +5,6 @@ import { _point, lerp, Point, randAngle, randFloat, randItem } from "../../../..
 import { BlockType, ServerComponentType } from "../../../../../shared/src/components";
 import { Settings } from "../../../../../shared/src/settings";
 import { PacketReader } from "../../../../../shared/src/packets";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import Particle from "../../Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, lowMonocolourParticles } from "../../rendering/webgl/particle-rendering";
@@ -31,6 +30,7 @@ import { getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 import { currentSnapshot } from "../../networking/snapshots";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -110,40 +110,40 @@ const HAND_RESTING_ROTATION = 0;
 
 const ITEM_RESTING_ROTATION = 0;
 
-const BOW_CHARGE_TEXTURE_SOURCES: ReadonlyArray<string> = [
-   "items/large/wooden-bow.png",
-   "miscellaneous/wooden-bow-charge-1.png",
-   "miscellaneous/wooden-bow-charge-2.png",
-   "miscellaneous/wooden-bow-charge-3.png",
-   "miscellaneous/wooden-bow-charge-4.png",
-   "miscellaneous/wooden-bow-charge-5.png"
+const BOW_CHARGE_TEXTURE_SOURCES: ReadonlyArray<TextureIndex> = [
+   TextureIndex.items_large_woodenBow,
+   TextureIndex.miscellaneous_bowChargeStates_woodenBowCharge1,
+   TextureIndex.miscellaneous_bowChargeStates_woodenBowCharge2,
+   TextureIndex.miscellaneous_bowChargeStates_woodenBowCharge3,
+   TextureIndex.miscellaneous_bowChargeStates_woodenBowCharge4,
+   TextureIndex.miscellaneous_bowChargeStates_woodenBowCharge5
 ];
 
-const REINFORCED_BOW_CHARGE_TEXTURE_SOURCES: ReadonlyArray<string> = [
-   "items/large/reinforced-bow.png",
-   "miscellaneous/reinforced-bow-charge-1.png",
-   "miscellaneous/reinforced-bow-charge-2.png",
-   "miscellaneous/reinforced-bow-charge-3.png",
-   "miscellaneous/reinforced-bow-charge-4.png",
-   "miscellaneous/reinforced-bow-charge-5.png"
+const REINFORCED_BOW_CHARGE_TEXTURE_SOURCES: ReadonlyArray<TextureIndex> = [
+   TextureIndex.items_large_reinforcedBow,
+   TextureIndex.miscellaneous_bowChargeStates_reinforcedBowCharge1,
+   TextureIndex.miscellaneous_bowChargeStates_reinforcedBowCharge2,
+   TextureIndex.miscellaneous_bowChargeStates_reinforcedBowCharge3,
+   TextureIndex.miscellaneous_bowChargeStates_reinforcedBowCharge4,
+   TextureIndex.miscellaneous_bowChargeStates_reinforcedBowCharge5
 ];
 
-const ICE_BOW_CHARGE_TEXTURE_SOURCES: ReadonlyArray<string> = [
-   "items/large/ice-bow.png",
-   "miscellaneous/ice-bow-charge-1.png",
-   "miscellaneous/ice-bow-charge-2.png",
-   "miscellaneous/ice-bow-charge-3.png",
-   "miscellaneous/ice-bow-charge-4.png",
-   "miscellaneous/ice-bow-charge-5.png"
+const ICE_BOW_CHARGE_TEXTURE_SOURCES: ReadonlyArray<TextureIndex> = [
+   TextureIndex.items_large_iceBow,
+   TextureIndex.miscellaneous_bowChargeStates_iceBowCharge1,
+   TextureIndex.miscellaneous_bowChargeStates_iceBowCharge2,
+   TextureIndex.miscellaneous_bowChargeStates_iceBowCharge3,
+   TextureIndex.miscellaneous_bowChargeStates_iceBowCharge4,
+   TextureIndex.miscellaneous_bowChargeStates_iceBowCharge5
 ];
 
-const CROSSBOW_CHARGE_TEXTURE_SOURCES: ReadonlyArray<string> = [
-   "items/large/crossbow.png",
-   "miscellaneous/crossbow-charge-1.png",
-   "miscellaneous/crossbow-charge-2.png",
-   "miscellaneous/crossbow-charge-3.png",
-   "miscellaneous/crossbow-charge-4.png",
-   "miscellaneous/crossbow-charge-5.png"
+const CROSSBOW_CHARGE_TEXTURE_SOURCES: ReadonlyArray<TextureIndex> = [
+   TextureIndex.items_large_crossbow,
+   TextureIndex.miscellaneous_bowChargeStates_crossbowCharge1,
+   TextureIndex.miscellaneous_bowChargeStates_crossbowCharge2,
+   TextureIndex.miscellaneous_bowChargeStates_crossbowCharge3,
+   TextureIndex.miscellaneous_bowChargeStates_crossbowCharge4,
+   TextureIndex.miscellaneous_bowChargeStates_crossbowCharge5
 ];
 
 type FilterHealingItemTypes<T extends ItemType> = (typeof ITEM_TYPE_RECORD)[T] extends "healing" ? never : T;
@@ -424,7 +424,7 @@ const updateHeldItemRenderPart = (inventoryUseComponent: InventoryUseComponent, 
          limbIdx === 0 ? 1.15 : 1.1,
          0,
          0, 0,
-         getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[heldItemType].entityTextureSource)
+         CLIENT_ITEM_INFO_RECORD[heldItemType].entityTextureIndex
       );
 
       const renderObject = getEntityRenderObject(entity);
@@ -440,7 +440,7 @@ const updateHeldItemRenderPart = (inventoryUseComponent: InventoryUseComponent, 
    
    // Render part texture
    const clientItemInfo = CLIENT_ITEM_INFO_RECORD[heldItemType];
-   const textureSource = showLargeTexture ? clientItemInfo.toolTextureSource : clientItemInfo.entityTextureSource;
+   const textureSource = showLargeTexture ? clientItemInfo.toolTextureIndex : clientItemInfo.entityTextureIndex;
    heldItemRenderPart.switchTextureSource(textureSource);
 }
 
@@ -987,7 +987,7 @@ const updateLimbTorch = (limb: LimbInfo, heldItemRenderPart: RenderPart, entity:
    
    // If selecting an item with a torch trait, create a light
    // @Hack: The check for undefined
-   if (heldItemType !== null && heldItemRenderPart !== undefined) {
+   if (heldItemType !== null && (heldItemRenderPart as RenderPart | undefined) !== undefined) {
       let hasLight: boolean;
       let lightIntensity!: number;
       let lightStrength!: number;
@@ -1290,9 +1290,9 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
 
          if (limb.action === LimbAction.moveLimbFromQuiver) {
             // @Cleanup @Hack @Robustness
-            let arrowTextureSource: string;
+            let arrowTextureIndex: TextureIndex;
             // @Hack @Incomplete
-            arrowTextureSource = "projectiles/wooden-arrow.png";
+            arrowTextureIndex = TextureIndex.projectiles_woodenArrow;
             // switch (heldItemType) {
             //    case ItemType.wooden_bow: {
             //       textureSourceArray = BOW_CHARGE_TEXTURE_SOURCES;
@@ -1329,7 +1329,7 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
                   attachPoint.zIndex + 0.15,
                   0,
                   0, 6,
-                  getTextureArrayIndex(arrowTextureSource)
+                  arrowTextureIndex
                );
 
                const renderObject = getEntityRenderObject(entity);
@@ -1337,24 +1337,24 @@ const updateLimbVisuals = (inventoryUseComponent: InventoryUseComponent, entity:
             }
          } else if (limb.action === LimbAction.chargeBow) {
             // @Cleanup @Hack @Robustness
-            let textureSourceArray: ReadonlyArray<string>;
+            let textureIndexArray: ReadonlyArray<TextureIndex>;
             // @Hack @Incomplete
-            textureSourceArray = BOW_CHARGE_TEXTURE_SOURCES;
+            textureIndexArray = BOW_CHARGE_TEXTURE_SOURCES;
 
-            let textureIdx = Math.floor(progress * textureSourceArray.length);
-            if (textureIdx >= textureSourceArray.length) {
-               textureIdx = textureSourceArray.length - 1;
+            let textureIdx = Math.floor(progress * textureIndexArray.length);
+            if (textureIdx >= textureIndexArray.length) {
+               textureIdx = textureIndexArray.length - 1;
             }
             // @HACK
             if (inventoryUseComponent.activeItemRenderParts[limbIdx] !== undefined) {
-               inventoryUseComponent.activeItemRenderParts[limbIdx].switchTextureSource(textureSourceArray[textureIdx]);
+               inventoryUseComponent.activeItemRenderParts[limbIdx].switchTextureSource(textureIndexArray[textureIdx]);
             }
          } else if (limb.action === LimbAction.mainArrowReleased) {
             // @Cleanup @Hack @Robustness
-            let textureSourceArray: ReadonlyArray<string>;
+            let textureIndexArray: ReadonlyArray<TextureIndex>;
             // @Hack @Incomplete
-            textureSourceArray = BOW_CHARGE_TEXTURE_SOURCES;
-            inventoryUseComponent.activeItemRenderParts[limbIdx]!.switchTextureSource(textureSourceArray[0]);
+            textureIndexArray = BOW_CHARGE_TEXTURE_SOURCES;
+            inventoryUseComponent.activeItemRenderParts[limbIdx]!.switchTextureSource(textureIndexArray[0]);
          } else if (limb.action === LimbAction.arrowReleased) {
             removeArrowRenderPart(inventoryUseComponent, entity, limbIdx);
          }

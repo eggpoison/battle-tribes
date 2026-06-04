@@ -5,7 +5,6 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { Settings } from "../../../../../shared/src/settings";
 import { randAngle, _point, randItem } from "../../../../../shared/src/utils";
 import { createRockSpeckParticle } from "../../particles";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { Light } from "../../lights";
 import { playSoundOnHitbox, ROCK_HIT_SOUNDS } from "../../sound";
@@ -21,6 +20,7 @@ import { getEntityServerComponentTypes } from "../component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 import { registerServerComponentArray } from "../component-registry";
 import { Bytes } from "../../../../../shared/src/constants";
+import { TextureIndex } from "../../../texture-index";
 
 enum GolemRockSize {
    massive,
@@ -72,22 +72,22 @@ const getHitboxSize = (hitboxBox: CircularBox): GolemRockSize => {
    return GolemRockSize.small;
 }
 
-const getTextureSource = (size: GolemRockSize): string => {
+const getTextureIndex = (size: GolemRockSize): TextureIndex => {
    switch (size) {
       case GolemRockSize.massive: {
-         return "entities/golem/golem-body-massive.png";
+         return TextureIndex.entities_golem_golemBodyMassive;
       }
       case GolemRockSize.large: {
-         return "entities/golem/golem-body-large.png";
+         return TextureIndex.entities_golem_golemBodyLarge;
       }
       case GolemRockSize.medium: {
-         return "entities/golem/golem-body-medium.png";
+         return TextureIndex.entities_golem_golemBodyMedium;
       }
       case GolemRockSize.small: {
-         return "entities/golem/golem-body-small.png";
+         return TextureIndex.entities_golem_golemBodySmall;
       }
       case GolemRockSize.tiny: {
-         return "entities/golem/golem-body-tiny.png";
+         return TextureIndex.entities_golem_golemBodyTiny;
       }
    }
 }
@@ -145,7 +145,7 @@ class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemCo
             getZIndex(size),
             randAngle(),
             0, 0,
-            getTextureArrayIndex(getTextureSource(size))
+            getTextureIndex(size)
          );
          renderObject.attachRenderPart(renderPart);
          rockRenderParts.push(renderPart);
@@ -157,7 +157,7 @@ class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemCo
                   6,
                   0,
                   20 * (i === 0 ? -1 : 1), 17,
-                  getTextureArrayIndex("entities/golem/eye.png")
+                  TextureIndex.entities_golem_eye
                );
                eyeRenderPart.opacity = 0;
                eyeRenderPart.inheritParentRotation = false;
@@ -257,9 +257,9 @@ class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemCo
       // @CLEANUP
       const shakeAmount = golemComponent.wakeProgress > 0 && golemComponent.wakeProgress < 1 ? 1 : 0;
       for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-         const hitbox = transformComponent.hitboxes[i];
+         // const hitbox = transformComponent.hitboxes[i];
          
-         const box = hitbox.box;
+         // const box = hitbox.box;
          const renderPart = golemComponent.rockRenderParts[i];
 
          // renderPart.offset.x = box.offset.x;

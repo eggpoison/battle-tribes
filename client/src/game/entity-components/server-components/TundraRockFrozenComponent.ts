@@ -2,12 +2,12 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { PacketReader } from "../../../../../shared/src/packets";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TundraRockFrozenComponentData {
    readonly variant: number;
@@ -41,8 +41,8 @@ class _TundraRockFrozenComponentArray extends _ServerComponentArray<TundraRockFr
          0,
          0,
          0, 0,
-         getTextureArrayIndex("entities/tundra-rock-frozen/rock-" + (tundraRockFrozenComponentData.variant + 1) + ".png")
-      )
+         TextureIndex.entities_tundraRockFrozen_rock1 + tundraRockFrozenComponentData.variant
+      );
       if (tundraRockFrozenComponentData.variant === 0) {
          renderPart.angle = -Math.PI * 0.25;
       } else if (tundraRockFrozenComponentData.variant === 1) {

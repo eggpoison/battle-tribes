@@ -33,7 +33,8 @@ class PlayerClient {
    public instance: Entity;
    /** The entity currently being viewed by the player. Typically the player instance. */
    public cameraSubject: Entity;
-   public isActive = false;
+   // Initially true, as packets need to be sent immediately after the initialisation packet to be kept up-to-date.
+   public isActive = true;
    
    public isSpectating: boolean;
    

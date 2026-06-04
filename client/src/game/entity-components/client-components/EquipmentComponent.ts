@@ -1,7 +1,6 @@
 import { EntityType, Entity } from "../../../../../shared/src/entities";
-import { ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName } from "../../../../../shared/src/items/items";
+import { ArmourItemType, ItemType, GloveItemType, InventoryName } from "../../../../../shared/src/items/items";
 import { TribeType } from "../../../../../shared/src/tribes";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getInventory, InventoryComponentArray } from "../server-components/InventoryComponent";
 import { getEntityRenderObject, getEntityType } from "../../world";
@@ -11,13 +10,12 @@ import { ClientComponentType } from "../client-component-types";
 import { tribeComponentArray } from "../server-components/TribeComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { registerClientComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 const enum ArmourPixelSize {
    _12x12,
    _14x14,
-   _16x16,
-
-   __LENGTH
+   _16x16
 }
 
 export interface EquipmentComponentData {}
@@ -32,31 +30,23 @@ declare module "../component-registry" {
 }
 
 // @Cleanup: copy the file name frmo the client item info thing
-const ARMOUR_TEXTURE_SOURCE_ENDINGS: Record<ArmourItemType, string> = {
-   [ItemType.leather_armour]: "leather-armour.png",
-   [ItemType.frostArmour]: "frost-armour.png",
-   [ItemType.meat_suit]: "meat-suit.png",
-   [ItemType.fishlord_suit]: "fishlord-suit.png",
-   [ItemType.leaf_suit]: "leaf-suit.png",
-   [ItemType.mithrilArmour]: "mithril-armour.png",
-   [ItemType.crabplateArmour]: "crabplate-armour.png",
-   [ItemType.winterskinArmour]: "winterskin-armour.png",
+const ARMOUR_TEXTURE_INDEXES_12x12: Record<ArmourItemType, TextureIndex> = {
+   [ItemType.leather_armour]: TextureIndex.armour_leatherArmour12x12,
+   [ItemType.frostArmour]: TextureIndex.armour_frostArmour12x12,
+   [ItemType.meat_suit]: TextureIndex.armour_meatSuit12x12,
+   [ItemType.fishlord_suit]: TextureIndex.armour_fishlordSuit12x12,
+   [ItemType.leaf_suit]: TextureIndex.armour_leafSuit12x12,
+   [ItemType.mithrilArmour]: TextureIndex.armour_mithrilArmour12x12,
+   [ItemType.crabplateArmour]: TextureIndex.armour_crabplateArmour12x12,
+   [ItemType.winterskinArmour]: TextureIndex.armour_winterskinArmour12x12,
 };
 
-const GLOVES_TEXTURE_SOURCE_RECORD: Record<GloveItemType, string> = {
-   [ItemType.gathering_gloves]: "gloves/gathering-gloves.png",
-   [ItemType.gardening_gloves]: "gloves/gardening-gloves.png"
+const GLOVES_TEXTURE_INDEX_RECORD: Record<GloveItemType, TextureIndex> = {
+   [ItemType.gathering_gloves]: TextureIndex.gloves_gatheringGloves,
+   [ItemType.gardening_gloves]: TextureIndex.gloves_gardeningGloves
 };
 
-const PIXEL_SIZE_STRINGS: Record<Exclude<ArmourPixelSize, ArmourPixelSize.__LENGTH>, string> = {
-   [ArmourPixelSize._12x12]: "12x12",
-   [ArmourPixelSize._14x14]: "14x14",
-   [ArmourPixelSize._16x16]: "16x16"
-};
-
-const getArmourTextureSource = (entityType: EntityType, tribeType: TribeType, armourItemType: ArmourItemType): string => {
-   let textureSource = "armour/";
-
+const getArmourTextureIndex = (entityType: EntityType, tribeType: TribeType, itemType: ArmourItemType): TextureIndex => {
    let pixelSize: ArmourPixelSize;
    switch (entityType) {
       case EntityType.tribeWorker: pixelSize = ArmourPixelSize._14x14; break;
@@ -73,20 +63,7 @@ const getArmourTextureSource = (entityType: EntityType, tribeType: TribeType, ar
       pixelSize--;
    }
 
-   textureSource += PIXEL_SIZE_STRINGS[pixelSize as Exclude<ArmourPixelSize, ArmourPixelSize.__LENGTH>] + "/";
-
-   textureSource += ARMOUR_TEXTURE_SOURCE_ENDINGS[armourItemType];
-
-   return textureSource;
-}
-
-const getGloveTextureSource = (gloveType: ItemType): string => {
-   if (!GLOVES_TEXTURE_SOURCE_RECORD.hasOwnProperty(gloveType)) {
-      console.warn("Can't find glove info for item type '" + ItemTypeString[gloveType] + ".");
-      return "";
-   }
-
-   return GLOVES_TEXTURE_SOURCE_RECORD[gloveType as GloveItemType];
+   return ARMOUR_TEXTURE_INDEXES_12x12[itemType] + pixelSize;
 }
 
 class _EquipmentComponentArray extends _ClientComponentArray<EquipmentComponent, EquipmentComponentData> {
@@ -131,7 +108,7 @@ const updateArmourRenderPart = (equipmentComponent: EquipmentComponent, entity: 
    if (armour !== undefined) {
       const entityType = getEntityType(entity);
       const tribeComponent = tribeComponentArray.getComponent(entity);
-      const textureSource = getArmourTextureSource(entityType, tribeComponent.tribeType, armour.type as ArmourItemType);
+      const textureIndex = getArmourTextureIndex(entityType, tribeComponent.tribeType, armour.type as ArmourItemType);
       
       if (equipmentComponent.armourRenderPart === null) {
          const transformComponent = TransformComponentArray.getComponent(entity);
@@ -142,13 +119,13 @@ const updateArmourRenderPart = (equipmentComponent: EquipmentComponent, entity: 
             5,
             0,
             0, 0,
-            getTextureArrayIndex(textureSource)
+            textureIndex
          );
 
          const renderObject = getEntityRenderObject(entity);
          renderObject.attachRenderPart(equipmentComponent.armourRenderPart);
       } else {
-         equipmentComponent.armourRenderPart.switchTextureSource(textureSource);
+         equipmentComponent.armourRenderPart.switchTextureSource(textureIndex);
       }
    } else if (equipmentComponent.armourRenderPart !== null) {
       const renderObject = getEntityRenderObject(entity);
@@ -173,7 +150,7 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent, entity: 
                1.3,
                0,
                0, 0,
-               getTextureArrayIndex(getGloveTextureSource(glove.type))
+               GLOVES_TEXTURE_INDEX_RECORD[glove.type as GloveItemType]
             );
             equipmentComponent.gloveRenderParts.push(gloveRenderPart);
 
@@ -182,7 +159,7 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent, entity: 
          }
       } else {
          for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
-            equipmentComponent.gloveRenderParts[limbIdx].switchTextureSource(getGloveTextureSource(glove.type));
+            equipmentComponent.gloveRenderParts[limbIdx].switchTextureSource(GLOVES_TEXTURE_INDEX_RECORD[glove.type as GloveItemType]);
          }
       }
    } else {

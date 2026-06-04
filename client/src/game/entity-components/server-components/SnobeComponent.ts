@@ -6,7 +6,6 @@ import { Settings } from "../../../../../shared/src/settings";
 import { Point, randAngle, randFloat, angle, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
 import { TransformComponentArray } from "./TransformComponent";
@@ -19,6 +18,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 const AMBIENT_SOUNDS: ReadonlyArray<string> = ["snobe-ambient-1.mp3", "snobe-ambient-2.mp3", "snobe-ambient-3.mp3", "snobe-ambient-4.mp3"];
 
@@ -56,7 +56,7 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
                   2,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/snobe/body.png")
+                  TextureIndex.entities_snobe_body
                );
                addRenderPartTag(renderPart, "tamingComponent:head")
                renderObject.attachRenderPart(renderPart);
@@ -69,7 +69,7 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
                      1,
                      0,
                      0, 0,
-                     getTextureArrayIndex("entities/snobe/butt.png")
+                     TextureIndex.entities_snobe_butt
                   )
                );
                break;
@@ -81,7 +81,7 @@ class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeCo
                      3,
                      0,
                      0, 0,
-                     getTextureArrayIndex("entities/snobe/ear.png")
+                     TextureIndex.entities_snobe_ear
                   )
                );
                break;

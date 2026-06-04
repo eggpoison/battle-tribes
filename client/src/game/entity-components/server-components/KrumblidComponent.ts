@@ -4,7 +4,6 @@ import { Entity } from "../../../../../shared/src/entities";
 import { Point, angle, randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain, createKrumblidChitinParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
@@ -14,6 +13,7 @@ import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface KrumblidComponentData {}
 
@@ -38,7 +38,7 @@ class _KrumblidComponentArray extends _ServerComponentArray<KrumblidComponent, K
                   1,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/krumblid/krumblid.png")
+                  TextureIndex.entities_krumblid_krumblid
                )
             );
          } else {
@@ -48,7 +48,7 @@ class _KrumblidComponentArray extends _ServerComponentArray<KrumblidComponent, K
                   0,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/krumblid/mandible.png")
+                  TextureIndex.entities_krumblid_mandible
                )
             );
          }

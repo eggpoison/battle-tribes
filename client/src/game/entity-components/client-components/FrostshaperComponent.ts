@@ -1,6 +1,6 @@
+import { TextureIndex } from "../../../texture-index";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
@@ -26,7 +26,7 @@ class _FrostshaperComponentArray extends _ClientComponentArray<FrostshaperCompon
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/frostshaper/frostshaper.png")
+            TextureIndex.entities_frostshaper_frostshaper
          )
       );
    }

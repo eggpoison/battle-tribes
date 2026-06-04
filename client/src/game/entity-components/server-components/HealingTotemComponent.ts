@@ -8,12 +8,12 @@ import { Light, removeLight } from "../../lights";
 import { TransformComponentArray } from "./TransformComponent";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface HealingTotemComponentData {
    readonly healingTargetsData: ReadonlyArray<HealingTotemTargetData>;
@@ -67,7 +67,7 @@ class _HealingTotemComponentArray extends _ServerComponentArray<HealingTotemComp
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/healing-totem/healing-totem.png")
+            TextureIndex.entities_healingTotem_healingTotem
          )
       );
    }

@@ -6,13 +6,13 @@ import { createGenericGemParticle } from "../../particles";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface GuardianGemFragmentProjectileComponentData {
    readonly fragmentShape: number;
@@ -28,10 +28,10 @@ export interface GuardianGemFragmentProjectileComponent {
    readonly renderPart: VisualRenderPart;
 }
 
-const TEXTURE_SOURCES = [
-   "entities/guardian-gem-fragment-projectile/fragment-1.png",
-   "entities/guardian-gem-fragment-projectile/fragment-2.png",
-   "entities/guardian-gem-fragment-projectile/fragment-3.png"
+const TEXTURE_INDEXES = [
+   TextureIndex.entities_guardianGemFragmentProjectile_fragment1,
+   TextureIndex.entities_guardianGemFragmentProjectile_fragment2,
+   TextureIndex.entities_guardianGemFragmentProjectile_fragment3
 ];
 
 declare module "../component-registry" {
@@ -63,7 +63,7 @@ class _GuardianGemFragmentProjectileComponentArray extends _ServerComponentArray
          0,
          0,
          0, 0,
-         getTextureArrayIndex(TEXTURE_SOURCES[guardianGemFragmentProjectileComponentData.fragmentShape])
+         TEXTURE_INDEXES[guardianGemFragmentProjectileComponentData.fragmentShape]
       );
 
       // Flip half of them

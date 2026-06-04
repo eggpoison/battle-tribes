@@ -6,7 +6,6 @@ import { Settings } from "../../../../../shared/src/settings";
 import { randAngle, randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
@@ -15,6 +14,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface DustfleaMorphCocoonComponentData {
    readonly stage: number;
@@ -52,7 +52,7 @@ class _DustfleaMorphCocoonComponentArray extends _ServerComponentArray<DustfleaM
          0,
          0,
          0, 0,
-         getTextureArrayIndex(getTextureSource(dustfleaMorphCocoonComponentData.stage))
+         getTextureIndex(dustfleaMorphCocoonComponentData.stage)
       );
       renderObject.attachRenderPart(renderPart);
 
@@ -95,7 +95,7 @@ class _DustfleaMorphCocoonComponentArray extends _ServerComponentArray<DustfleaM
       const stage = data.stage;
 
       if (stage !== dustfleaMorphComponent.stage) {
-         dustfleaMorphComponent.renderPart.switchTextureSource(getTextureSource(stage));
+         dustfleaMorphComponent.renderPart.switchTextureSource(getTextureIndex(stage));
          dustfleaMorphComponent.stage = stage;
       }
    }
@@ -123,8 +123,8 @@ class _DustfleaMorphCocoonComponentArray extends _ServerComponentArray<DustfleaM
 
 export const DustfleaMorphCocoonComponentArray = registerServerComponentArray(ServerComponentType.dustfleaMorphCocoon, _DustfleaMorphCocoonComponentArray, true);
 
-const getTextureSource = (stage: number): string => {
-   return "entities/dustflea-morph-cocoon/stage-" + stage + ".png";
+const getTextureIndex = (stage: number): TextureIndex => {
+   return TextureIndex.entities_dustfleaMorphCocoon_stage1 + (stage - 1);
 }
 
 export function createDustfleaMorphCocoonComponentData(stage: number): DustfleaMorphCocoonComponentData {

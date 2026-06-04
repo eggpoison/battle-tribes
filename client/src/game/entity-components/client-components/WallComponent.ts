@@ -6,7 +6,6 @@ import { Hitbox } from "../../hitboxes";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
@@ -17,6 +16,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerClientComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 // @Speed: Could make damage render part an overlay instead of a whole render part
 
@@ -45,7 +45,7 @@ class _WallComponentArray extends _ClientComponentArray<WallComponent, WallCompo
          0,
          0,
          0, 0,
-         getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponentData.material])
+         WALL_TEXTURE_SOURCES[buildingMaterialComponentData.material]
       );
       addRenderPartTag(renderPart, "buildingMaterialComponent:material");
 
@@ -65,6 +65,9 @@ class _WallComponentArray extends _ClientComponentArray<WallComponent, WallCompo
 }
 
 export const WallComponentArray = registerClientComponentArray(ClientComponentType.wall, _WallComponentArray, true);
+WallComponentArray.onTick = onTick;
+WallComponentArray.onHit = onHit;
+WallComponentArray.onDie = onDie;
 
 export function createWallComponentData(): WallComponentData {
    return {};
@@ -88,7 +91,7 @@ const updateDamageRenderPart = (entity: Entity, health: number, maxHealth: numbe
       damageStage = NUM_DAMAGE_STAGES;
    }
    
-   const textureSource = "entities/wall/wooden-wall-damage-" + damageStage + ".png";
+   const textureIndex = TextureIndex.entities_wall_woodenWallDamage1 + (damageStage - 1);
    if (wallComponent.damageRenderPart === null) {
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
@@ -98,12 +101,12 @@ const updateDamageRenderPart = (entity: Entity, health: number, maxHealth: numbe
          1,
          0,
          0, 0,
-         getTextureArrayIndex(textureSource)
+         textureIndex
       );
       const renderObject = getEntityRenderObject(entity);
       renderObject.attachRenderPart(wallComponent.damageRenderPart);
    } else {
-      wallComponent.damageRenderPart.switchTextureSource(textureSource);
+      wallComponent.damageRenderPart.switchTextureSource(textureIndex);
    }
 }
 

@@ -9,7 +9,6 @@ import { TitleGenerationInfo, TribesmanTitle } from "../../../../../shared/src/t
 import { TribeType } from "../../../../../shared/src/tribes";
 import { assert, veryBadHash, lerp, randFloat, randAngle, _point, Point, angle, randItem, randInt } from "../../../../../shared/src/utils";
 import { Light } from "../../lights";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle, createSprintParticle, createTitleObtainParticle, LeafParticleSize } from "../../particles";
 import { createRenderPartOverlayGroup } from "../../rendering/webgl/overlay-rendering";
 import { VisualRenderPart } from "../../render-parts/render-parts";
@@ -31,6 +30,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag, getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TribesmanComponentData {
    readonly warpaintType: number | null;
@@ -275,7 +275,7 @@ class TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, 
          2,
          0,
          0, 0,
-         getTextureArrayIndex(getBodyTextureSource(entityComponentData.entityType, tribeComponentData.tribeType))
+         getBodyTextureIndex(entityComponentData.entityType, tribeComponentData.tribeType)
       );
       renderObject.attachRenderPart(bodyRenderPart);
 
@@ -284,11 +284,11 @@ class TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, 
          const warPaintType = tribesmanComponentData.warpaintType;
          assert(warPaintType !== null);
          
-         let textureSource: string;
+         let textureIndex: TextureIndex;
          if (entityComponentData.entityType === EntityType.tribeWarrior) {
-            textureSource = `entities/goblins/warrior-warpaint-${warPaintType}.png`;
+            textureIndex = TextureIndex.entities_goblins_warriorWarpaint1 + warPaintType - 1;
          } else {
-            textureSource = `entities/goblins/goblin-warpaint-${warPaintType}.png`;
+            textureIndex = TextureIndex.entities_goblins_goblinWarpaint1 + warPaintType - 1;
          }
          
          // Goblin warpaint
@@ -297,7 +297,7 @@ class TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, 
             4,
             0,
             0, 0,
-            getTextureArrayIndex(textureSource)
+            textureIndex
          );
          addRenderPartTag(warpaintRenderPart, "tribeMemberComponent:warpaint");
          renderObject.attachRenderPart(warpaintRenderPart);
@@ -308,7 +308,7 @@ class TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, 
             3,
             -Math.PI/2 + GOBLIN_EAR_ANGLE,
             (radius + GOBLIN_EAR_OFFSET) * Math.sin(GOBLIN_EAR_ANGLE), (radius + GOBLIN_EAR_OFFSET) * Math.cos(GOBLIN_EAR_ANGLE),
-            getTextureArrayIndex("entities/goblins/goblin-ear.png")
+            TextureIndex.entities_goblins_goblinEar
          );
          addRenderPartTag(leftEarRenderPart, "tribeMemberComponent:ear");
          leftEarRenderPart.setFlipX(true);
@@ -320,7 +320,7 @@ class TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, 
             3,
             -Math.PI/2 + GOBLIN_EAR_ANGLE,
             (radius + GOBLIN_EAR_OFFSET) * Math.sin(GOBLIN_EAR_ANGLE), (radius + GOBLIN_EAR_OFFSET) * Math.cos(GOBLIN_EAR_ANGLE),
-            getTextureArrayIndex("entities/goblins/goblin-ear.png")
+            TextureIndex.entities_goblins_goblinEar
          );
          addRenderPartTag(rightEarRenderPart, "tribeMemberComponent:ear");
          renderObject.attachRenderPart(rightEarRenderPart);
@@ -346,7 +346,7 @@ class TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, 
             1.2,
             0,
             0, 0,
-            getTextureArrayIndex(getFistTextureSource(entityComponentData.entityType, tribeComponentData.tribeType))
+            getFistTextureIndex(entityComponentData.entityType, tribeComponentData.tribeType)
          );
          limbRenderParts.push(handRenderPart);
          addRenderPartTag(handRenderPart, "inventoryUseComponent:hand");
@@ -399,7 +399,7 @@ tribesmanComponentArray.updatePlayerFromData = updatePlayerFromData;
 tribesmanComponentArray.onHit = onHit;
 tribesmanComponentArray.onDie = onDie;
 
-const getFistTextureSource = (entityType: EntityType, tribeType: TribeType): string => {
+const getFistTextureIndex = (entityType: EntityType, tribeType: TribeType): TextureIndex => {
    switch (entityType) {
       // @Robustness
       case EntityType.player:
@@ -407,19 +407,19 @@ const getFistTextureSource = (entityType: EntityType, tribeType: TribeType): str
       case EntityType.tribeWarrior: {
          switch (tribeType) {
             case TribeType.plainspeople: {
-               return "entities/plainspeople/fist.png";
+               return TextureIndex.entities_plainspeople_fist;
             }
             case TribeType.goblins: {
-               return "entities/goblins/fist.png";
+               return TextureIndex.entities_goblins_fist;
             }
             case TribeType.frostlings: {
-               return "entities/frostlings/fist.png";
+               return TextureIndex.entities_frostlings_fist;
             }
             case TribeType.barbarians: {
-               return "entities/barbarians/fist.png";
+               return TextureIndex.entities_barbarians_fist;
             }
             case TribeType.dwarves: {
-               return "entities/dwarves/fist.png";
+               return TextureIndex.entities_dwarves_fist;
             }
             default: {
                const unreachable: never = tribeType;
@@ -427,60 +427,60 @@ const getFistTextureSource = (entityType: EntityType, tribeType: TribeType): str
             }
          }
       }
-      case EntityType.scrappy: return "entities/scrappy/hand.png";
+      case EntityType.scrappy: return TextureIndex.entities_scrappy_hand;
       default: throw new Error();
    }
 }
 
-const getBodyTextureSource = (entityType: EntityType, tribeType: TribeType): string => {
+const getBodyTextureIndex = (entityType: EntityType, tribeType: TribeType): TextureIndex => {
    if (entityType === EntityType.scrappy) {
-      return "entities/scrappy/body.png";
+      return TextureIndex.entities_scrappy_body;
    }
    
    switch (tribeType) {
       case TribeType.plainspeople: {
          if (entityType === EntityType.tribeWarrior) {
-            return "entities/plainspeople/warrior.png";
+            return TextureIndex.entities_plainspeople_warrior;
          } else if (entityType === EntityType.player) {
-            return "entities/plainspeople/player.png";
+            return TextureIndex.entities_plainspeople_player;
          } else {
-            return "entities/plainspeople/worker.png";
+            return TextureIndex.entities_plainspeople_worker;
          }
       }
       case TribeType.goblins: {
          if (entityType === EntityType.tribeWarrior) {
-            return "entities/goblins/warrior.png";
+            return TextureIndex.entities_goblins_warrior;
          } else if (entityType === EntityType.player) {
-            return "entities/goblins/player.png";
+            return TextureIndex.entities_goblins_player;
          } else {
-            return "entities/goblins/worker.png";
+            return TextureIndex.entities_goblins_worker;
          }
       }
       case TribeType.frostlings: {
          if (entityType === EntityType.tribeWarrior) {
-            return "entities/frostlings/warrior.png";
+            return TextureIndex.entities_frostlings_warrior;
          } else if (entityType === EntityType.player) {
-            return "entities/frostlings/player.png";
+            return TextureIndex.entities_frostlings_player;
          } else {
-            return "entities/frostlings/worker.png";
+            return TextureIndex.entities_frostlings_worker;
          }
       }
       case TribeType.barbarians: {
          if (entityType === EntityType.tribeWarrior) {
-            return "entities/barbarians/warrior.png";
+            return TextureIndex.entities_barbarians_warrior;
          } else if (entityType === EntityType.player) {
-            return "entities/barbarians/player.png";
+            return TextureIndex.entities_barbarians_player;
          } else {
-            return "entities/barbarians/worker.png";
+            return TextureIndex.entities_barbarians_worker;
          }
       }
       case TribeType.dwarves: {
          if (entityType === EntityType.tribeWarrior) {
-            return "entities/dwarves/warrior.png";
+            return TextureIndex.entities_dwarves_warrior;
          } else if (entityType === EntityType.player) {
-            return "entities/dwarves/player.png";
+            return TextureIndex.entities_dwarves_player;
          } else {
-            return "entities/dwarves/worker.png";
+            return TextureIndex.entities_dwarves_worker;
          }
       }
    }
@@ -549,7 +549,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
                2.2,
                0,
                offsetX, offsetY,
-               getTextureArrayIndex("entities/miscellaneous/eye-scar.png")
+               TextureIndex.entities_miscellaneous_eyeScar
             );
             addRenderPartTag(renderPart, "tribeMemberComponent:fromTitle");
             renderPart.setFlipX(true);
@@ -580,7 +580,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
                   0,
                   (xo - 5 * 4 / 2) * (i === 1 ? 1 : -1), yo - 5 * 4 / 2,
                   // @Incomplete
-                  getTextureArrayIndex("entities/plainspeople/shrewd-eye.png")
+                  TextureIndex.entities_plainspeople_shrewdEye
                );
                addRenderPartTag(renderPart, "tribeMemberComponent:fromTitle");
 
@@ -611,7 +611,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
                   0,
                   angle + Math.PI/2 + randFloat(-0.5, 0.5),
                   (radius + radiusAdd) * Math.sin(angle), (radius + radiusAdd) * Math.cos(angle),
-                  getTextureArrayIndex("entities/miscellaneous/tribesman-leaf.png")
+                  TextureIndex.entities_miscellaneous_tribesmanLeaf
                );
                addRenderPartTag(renderPart, "tribeMemberComponent:fromTitle");
 
@@ -630,7 +630,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
                0,
                0,
                0, radius - 2,
-               getTextureArrayIndex("entities/miscellaneous/tribesman-fangs.png")
+               TextureIndex.entities_miscellaneous_tribesmanFangs
             );
             addRenderPartTag(renderPart, "tribeMemberComponent:fromTitle");
 
@@ -664,7 +664,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
                2.1,
                0,
                0, 0,
-               getTextureArrayIndex("entities/miscellaneous/tribesman-health-patch.png")
+               TextureIndex.entities_miscellaneous_tribesmanHealthPatch
             );
             addRenderPartTag(renderPart, "tribeMemberComponent:fromTitle");
             renderObject.attachRenderPart(renderPart);

@@ -5,13 +5,13 @@ import { getHitboxVelocity } from "../../hitboxes";
 import { createArrowDestroyParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { registerClientComponentArray } from "../component-registry";
 import { getTransformComponentData } from "../component-types";
+import { TextureIndex } from "../../../texture-index";
 
 export interface BallistaFrostcicleComponentData {}
 
@@ -32,7 +32,7 @@ class _BallistaFrostcicleComponentArray extends _ClientComponentArray<BallistaFr
             0,
             0,
             0, 0,
-            getTextureArrayIndex("projectiles/ballista-frostcicle.png")
+            TextureIndex.projectiles_ballistaFrostcicle
          )
       );
    }

@@ -5,7 +5,6 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { randFloat, Point, randAngle, angle, randItem, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, createWoodSpeckParticle, LEAF_SPECK_COLOUR_HIGH, LEAF_SPECK_COLOUR_LOW } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
@@ -15,6 +14,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SpruceTreeComponentData {
    readonly treeSize: TreeSize;
@@ -29,9 +29,9 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spruceTree, _SpruceTreeComponentArray> {}
 }
 
-const treeTextures: { [T in TreeSize]: string } = {
-   [TreeSize.small]: "entities/spruce-tree/tree-small.png",
-   [TreeSize.large]: "entities/spruce-tree/tree-large.png"
+const treeTextures: Record<TreeSize, TextureIndex> = {
+   [TreeSize.small]: TextureIndex.entities_spruceTree_treeSmall,
+   [TreeSize.large]: TextureIndex.entities_spruceTree_treeLarge
 };
 
 export const TREE_HIT_SOUNDS: ReadonlyArray<string> = ["tree-hit-1.mp3", "tree-hit-2.mp3", "tree-hit-3.mp3", "tree-hit-4.mp3"];
@@ -63,7 +63,7 @@ class _SpruceTreeComponentArray extends _ServerComponentArray<SpruceTreeComponen
          0,
          0,
          0, 0,
-         getTextureArrayIndex(treeTextures[spruceTreeComponentData.treeSize])
+         treeTextures[spruceTreeComponentData.treeSize]
       )
       renderPart.tintR = randFloat(-0.05, 0.05);
       renderPart.tintG = randFloat(-0.05, 0.05);
@@ -73,14 +73,14 @@ class _SpruceTreeComponentArray extends _ServerComponentArray<SpruceTreeComponen
       // Snow overlay
       const snowVariant = spruceTreeComponentData.snowVariant;
       if (snowVariant !== 0) {
-         const sizeStr = spruceTreeComponentData.treeSize === TreeSize.large ? "large" : "small";
+         const sizeOffset = spruceTreeComponentData.treeSize === TreeSize.large ? 0 : 2;
          renderObject.attachRenderPart(
             new TexturedRenderPart(
                hitbox,
                1,
                0,
                0, 0,
-               getTextureArrayIndex("entities/spruce-tree/snow-overlay-" + sizeStr + "-" + snowVariant + ".png")
+               TextureIndex.entities_spruceTree_snowOverlayLarge1 + sizeOffset + snowVariant - 1
             )
          );
       }

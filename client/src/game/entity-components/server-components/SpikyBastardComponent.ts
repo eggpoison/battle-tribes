@@ -2,11 +2,11 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SpikyBastardComponentData {}
 
@@ -30,7 +30,8 @@ class _SpikyBastardComponentArray extends _ServerComponentArray<SpikyBastardComp
          0,
          0,
          0, 0,
-         getTextureArrayIndex("entities/spiky-bastard/spiky-bastard-" + randInt(1, 3) + ".png")
+         // @Parity
+         TextureIndex.entities_spikyBastard_spikyBastard1 + randInt(0, 2)
       );
       if (Math.random() < 0.5) {
          renderPart.setFlipX(true);

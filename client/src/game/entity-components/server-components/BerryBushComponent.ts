@@ -4,7 +4,6 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
@@ -16,6 +15,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface BerryBushComponentData {
    readonly numBerries: number;
@@ -35,12 +35,12 @@ declare module "../component-registry" {
 }
 
 const BERRY_BUSH_TEXTURE_SOURCES = [
-   "entities/berry-bush1.png",
-   "entities/berry-bush2.png",
-   "entities/berry-bush3.png",
-   "entities/berry-bush4.png",
-   "entities/berry-bush5.png",
-   "entities/berry-bush6.png"
+   TextureIndex.entities_berryBush1,
+   TextureIndex.entities_berryBush2,
+   TextureIndex.entities_berryBush3,
+   TextureIndex.entities_berryBush4,
+   TextureIndex.entities_berryBush5,
+   TextureIndex.entities_berryBush6
 ];
 
 const LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
@@ -66,7 +66,7 @@ class _BerryBushComponentArray extends _ServerComponentArray<BerryBushComponent,
          0,
          0,
          0, 0,
-         getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponentData.numBerries])
+         BERRY_BUSH_TEXTURE_SOURCES[berryBushComponentData.numBerries]
       );
       addRenderPartTag(renderPart, "berryBushComponent:renderPart");
       renderObject.attachRenderPart(renderPart)

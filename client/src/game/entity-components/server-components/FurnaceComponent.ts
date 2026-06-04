@@ -5,7 +5,6 @@ import { Settings } from "../../../../../shared/src/settings";
 import { randAngle, randFloat, angle } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { TransformComponentArray } from "./TransformComponent";
@@ -16,6 +15,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface FurnaceComponentData {}
 
@@ -40,7 +40,7 @@ class _FurnaceComponentArray extends _ServerComponentArray<FurnaceComponent, Fur
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/furnace/furnace.png")
+            TextureIndex.entities_furnace_furnace
          )
       );
    }

@@ -3,12 +3,12 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface FloorSignComponentData {
    readonly message: string;
@@ -39,7 +39,7 @@ class _FloorSignComponentArray extends _ServerComponentArray<FloorSignComponent,
          0,
          0,
          0, 0,
-         getTextureArrayIndex("entities/floor-sign/floor-sign.png")
+         TextureIndex.entities_floorSign_floorSign
       );
       renderObject.attachRenderPart(renderPart);
    }

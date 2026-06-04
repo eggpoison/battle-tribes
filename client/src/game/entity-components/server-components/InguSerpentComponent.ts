@@ -8,13 +8,13 @@ import Particle from "../../Particle";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { addMonocolourParticleToBufferContainer, highMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 const ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];
 const SIZE = 80;
@@ -43,7 +43,7 @@ class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentCompon
                3,
                0,
                0, 0,
-               getTextureArrayIndex("entities/ingu-serpent/head.png")
+               TextureIndex.entities_inguSerpent_head
             );
             addRenderPartTag(renderPart, "tamingComponent:head");
             renderObject.attachRenderPart(renderPart);
@@ -54,7 +54,7 @@ class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentCompon
                   2,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/ingu-serpent/body-1.png")
+                  TextureIndex.entities_inguSerpent_body1
                )
             );
          } else if (tag === HitboxTag.inguSerpentBody2) {
@@ -64,7 +64,7 @@ class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentCompon
                   1,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/ingu-serpent/body-2.png")
+                  TextureIndex.entities_inguSerpent_body2
                )
             );
          } else if (tag === HitboxTag.inguSerpentTail) {
@@ -74,7 +74,7 @@ class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentCompon
                   0,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/ingu-serpent/tail.png")
+                  TextureIndex.entities_inguSerpent_tail
                )
             );
          }

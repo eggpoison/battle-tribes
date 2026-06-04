@@ -1,11 +1,11 @@
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface LilypadComponentData {}
 
@@ -26,7 +26,7 @@ class _LilypadComponentArray extends _ClientComponentArray<LilypadComponent, Lil
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/lilypad/lilypad.png")
+            TextureIndex.entities_lilypad_lilypad
          )
       );
    }

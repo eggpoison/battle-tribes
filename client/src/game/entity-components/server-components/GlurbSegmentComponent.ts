@@ -9,13 +9,13 @@ import { createSlurbParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { coatSlimeTrails } from "../../rendering/webgl/slime-trail-rendering";
 import { playSound, playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData, getEntityLayer, getEntityRenderObject } from "../../world";
 import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import _ServerComponentArray from "../ServerComponentArray";
+import { TextureIndex } from "../../../texture-index";
 
 export interface GlurbSegmentComponentData {
    readonly mossBallCompleteness: number;
@@ -91,7 +91,7 @@ class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComp
             const renderObject = getEntityRenderObject(glurbSegment);
             renderObject.attachRenderPart(glurbSegmentComponent.mossBallRenderPart);
          } else {
-            glurbSegmentComponent.mossBallRenderPart.switchTextureSource(getMossBallTextureSource(mossBallCompleteness));
+            glurbSegmentComponent.mossBallRenderPart.switchTextureSource(getMossBallTextureIndex(mossBallCompleteness));
          }
       }
    }
@@ -136,14 +136,14 @@ class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComp
 
 export const GlurbSegmentComponentArray = registerServerComponentArray(ServerComponentType.glurbSegment, _GlurbSegmentComponentArray, true);
 
-const getMossBallTextureSource = (mossBallCompleteness: number): string => {
+const getMossBallTextureIndex = (mossBallCompleteness: number): TextureIndex => {
    switch (mossBallCompleteness) {
-      case 1: return "entities/glurb/moss-ball/moss-ball-1.png";
-      case 2: return "entities/glurb/moss-ball/moss-ball-2.png";
-      case 3: return "entities/glurb/moss-ball/moss-ball-3.png";
-      case 4: return "entities/glurb/moss-ball/moss-ball-4.png";
-      case 5: return "entities/glurb/moss-ball/moss-ball-5.png";
-      case 6: return "entities/glurb/moss-ball/moss-ball-6.png";
+      case 1: return TextureIndex.entities_glurb_mossBall_mossBall1;
+      case 2: return TextureIndex.entities_glurb_mossBall_mossBall2;
+      case 3: return TextureIndex.entities_glurb_mossBall_mossBall3;
+      case 4: return TextureIndex.entities_glurb_mossBall_mossBall4;
+      case 5: return TextureIndex.entities_glurb_mossBall_mossBall5;
+      case 6: return TextureIndex.entities_glurb_mossBall_mossBall6;
       default: throw new Error();
    }
 }
@@ -154,7 +154,7 @@ const createMossBallRenderPart = (mossBallCompleteness: number, parentHitbox: Hi
       0,
       0,
       0, 0,
-      getTextureArrayIndex(getMossBallTextureSource(mossBallCompleteness))
+      getMossBallTextureIndex(mossBallCompleteness)
    );
    return renderPart;
 }

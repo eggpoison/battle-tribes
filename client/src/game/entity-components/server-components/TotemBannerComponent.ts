@@ -2,7 +2,6 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { TribeTotemBanner, Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { TribeType } from "../../../../../shared/src/tribes";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
@@ -15,6 +14,7 @@ import { Hitbox } from "../../hitboxes";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TotemBannerComponentData {
    readonly banners: Record<number, TribeTotemBanner>;
@@ -25,7 +25,7 @@ interface IntermediateInfo {
 }
 
 export interface TotemBannerComponent {
-   readonly banners: Record<number, TribeTotemBanner>;
+   readonly banners: Partial<Record<number, TribeTotemBanner>>;
    readonly bannerRenderParts: Record<number, VisualRenderPart>;
 }
 
@@ -68,7 +68,7 @@ class _TotemBannerComponentArray extends _ServerComponentArray<TotemBannerCompon
             1,
             0,
             0, 0,
-            getTextureArrayIndex(`entities/tribe-totem/tribe-totem.png`)
+            TextureIndex.entities_tribeTotem_tribeTotem
          )
       );
       
@@ -112,7 +112,7 @@ class _TotemBannerComponentArray extends _ServerComponentArray<TotemBannerCompon
       
       // Add new banners
       for (const banner of Object.values(data.banners)) {
-         if (!totemBannerComponent.banners.hasOwnProperty(banner.hutNum)) {
+         if (totemBannerComponent.banners[banner.hutNum] === undefined) {
             const transformComponent = TransformComponentArray.getComponent(entity);
             const hitbox = transformComponent.hitboxes[0];
             
@@ -156,26 +156,26 @@ export function createTotemBannerComponentData(): TotemBannerComponentData {
 }
 
 const createBannerRenderPart = (tribeType: TribeType, renderObject: EntityRenderObject, parentHitbox: Hitbox, banner: TribeTotemBanner): TexturedRenderPart => {
-   let totemTextureSourceID: string;
+   let textureIndexOffset: number;
    switch (tribeType) {
       case TribeType.plainspeople: {
-         totemTextureSourceID = "plainspeople-banner.png";
+         textureIndexOffset = 4;
          break;
       }
       case TribeType.goblins: {
-         totemTextureSourceID = "goblin-banner.png";
+         textureIndexOffset = 3;
          break;
       }
       case TribeType.barbarians: {
-         totemTextureSourceID = "barbarian-banner.png";
+         textureIndexOffset = 0;
          break;
       }
       case TribeType.frostlings: {
-         totemTextureSourceID = "frostling-banner.png";
+         textureIndexOffset = 2;
          break;
       }
       case TribeType.dwarves: {
-         totemTextureSourceID = "dwarf-banner.png";
+         textureIndexOffset = 1;
          break;
       }
    }
@@ -187,7 +187,7 @@ const createBannerRenderPart = (tribeType: TribeType, renderObject: EntityRender
       2,
       banner.direction,
       bannerOffsetAmount * Math.sin(banner.direction), bannerOffsetAmount * Math.cos(banner.direction),
-      getTextureArrayIndex(`entities/tribe-totem/${totemTextureSourceID}`)
+      TextureIndex.entities_tribeTotem_barbarianBanner + textureIndexOffset
    );
 
    renderObject.attachRenderPart(renderPart);

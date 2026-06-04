@@ -2,12 +2,12 @@ import { HitboxTag } from "../../../../../shared/src/boxes";
 import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { getHitboxTag } from "../../hitboxes";
+import { TextureIndex } from "../../../texture-index";
 
 export interface FenceGateComponentData {}
 
@@ -33,7 +33,7 @@ class _FenceGateComponentArray extends _ServerComponentArray<FenceGateComponent,
                   1,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/fence-gate/door.png")
+                  TextureIndex.entities_fenceGate_door
                )
             );
          } else {
@@ -43,7 +43,7 @@ class _FenceGateComponentArray extends _ServerComponentArray<FenceGateComponent,
                   0,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/fence-gate/side.png")
+                  TextureIndex.entities_fenceGate_side
                )
             );
          }

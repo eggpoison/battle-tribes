@@ -3,7 +3,6 @@ import { SlimeSize, Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { Settings } from "../../../../../shared/src/settings";
 import { lerp, randInt, randFloat, randAngle } from "../../../../../shared/src/utils";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
@@ -16,6 +15,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { setRenderPartShakeAmount } from "../../render-parts/render-part-shake-amounts";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SlimeComponentData {
    readonly size: SlimeSize;
@@ -60,8 +60,6 @@ interface SlimeOrbInfo {
    angularVelocity: number;
 }
 
-const SIZE_STRINGS: ReadonlyArray<string> = ["small", "medium", "large"];
-
 const EYE_OFFSETS: ReadonlyArray<number> = [16, 24, 34];
 
 const EYE_SHAKE_START_FREQUENCY = 0.5;
@@ -80,7 +78,7 @@ const getBodyShakeAmount = (spitProgress: number): number => {
 
 class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): SlimeComponentData {
-      const size = reader.readNumber() as SlimeSize;
+      const size: SlimeSize = reader.readNumber();
       const eyeRotation = reader.readNumber();
       const anger = reader.readNumber();
       const spitChargeProgress = reader.readNumber();
@@ -88,7 +86,7 @@ class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeCo
       const orbSizes: Array<SlimeSize> = [];
       const numOrbs = reader.readNumber();
       for (let i = 0; i < numOrbs; i++) {
-         const orbSize = reader.readNumber() as SlimeSize;
+         const orbSize: SlimeSize = reader.readNumber();
          orbSizes.push(orbSize);
       }
 
@@ -107,15 +105,22 @@ class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeCo
 
       const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
       const slimeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.slime);
-      const sizeString = SIZE_STRINGS[slimeComponentData.size];
 
+      let textureIndexOffset: number;
+      switch (slimeComponentData.size) {
+         case 0: textureIndexOffset = 2; break;
+         case 1: textureIndexOffset = 1; break;
+         case 2: textureIndexOffset = 0; break;
+         default: throw new Error();
+      }
+      
       // Body
       const bodyRenderPart = new TexturedRenderPart(
          hitbox,
          2,
          0,
          0, 0,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
+         TextureIndex.entities_slime_slimeBodyLarge + textureIndexOffset
       );
       renderObject.attachRenderPart(bodyRenderPart);
 
@@ -125,7 +130,7 @@ class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeCo
          0,
          0,
          0, 0,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`)
+         TextureIndex.entities_slime_slimeShadingLarge + textureIndexOffset
       ));
 
       // Eye
@@ -134,7 +139,7 @@ class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeCo
          3,
          0,
          0, 0,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
+         TextureIndex.entities_slime_slimeEyeLarge + textureIndexOffset
       );
       eyeRenderPart.inheritParentRotation = false;
       renderObject.attachRenderPart(eyeRenderPart);
@@ -289,8 +294,6 @@ const createOrb = (slimeComponent: SlimeComponent, entity: Entity, size: SlimeSi
    };
    slimeComponent.orbs.push(orbInfo);
 
-   const sizeString = SIZE_STRINGS[size];
-   
    // Calculate the orb's offset from the center of the slime
    const spriteSize = SLIME_SIZES[slimeComponent.size];
    const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orbInfo.offset);
@@ -298,12 +301,21 @@ const createOrb = (slimeComponent: SlimeComponent, entity: Entity, size: SlimeSi
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
 
+   // @Copynpaste
+   let textureIndexOffset: number;
+   switch (size) {
+      case 0: textureIndexOffset = 2; break;
+      case 1: textureIndexOffset = 1; break;
+      case 2: textureIndexOffset = 0; break;
+      default: throw new Error();
+   }
+
    const renderPart = new TexturedRenderPart(
       hitbox,
       1,
       orbInfo.rotation,
       offsetMagnitude * Math.sin(orbInfo.rotation), offsetMagnitude * Math.cos(orbInfo.rotation),
-      getTextureArrayIndex(`entities/slime/slime-orb-${sizeString}.png`)
+      TextureIndex.entities_slime_slimeOrbLarge + textureIndexOffset
    );
    slimeComponent.orbRenderParts.push(renderPart);
 

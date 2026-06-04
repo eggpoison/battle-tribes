@@ -3,7 +3,6 @@ import { Entity } from "../../../../../shared/src/entities";
 import { randFloat, randAngle } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { playSoundOnHitbox } from "../../sound";
@@ -12,6 +11,7 @@ import { HealthComponentArray } from "./HealthComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface PricklyPearComponentData {}
 
@@ -36,7 +36,7 @@ class _PricklyPearComponentArray extends _ServerComponentArray<PricklyPearCompon
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/prickly-pear/prickly-pear.png")
+            TextureIndex.entities_pricklyPear_pricklyPear
          )
       );
    }

@@ -7,13 +7,13 @@ import { getHitboxTag, Hitbox } from "../../hitboxes";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface TukmokComponentData {}
 
@@ -42,7 +42,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
                   1,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/tukmok/body.png")
+                  TextureIndex.entities_tukmok_body
                )
             );
          } else if (tag === HitboxTag.tukmokHead) {
@@ -51,7 +51,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
                2,
                0,
                0, 0,
-               getTextureArrayIndex("entities/tukmok/head.png")
+               TextureIndex.entities_tukmok_head
             );
             addRenderPartTag(renderPart, "tamingComponent:head");
             renderObject.attachRenderPart(renderPart);
@@ -62,7 +62,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
                   i * 0.02,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/tukmok/tail-segment-small.png")
+                  TextureIndex.entities_tukmok_tailSegmentSmall
                )
             );
          } else if (tag === HitboxTag.tukmokTailMiddleSegmentMedium) {
@@ -72,7 +72,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
                   i * 0.02,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/tukmok/tail-segment-medium.png")
+                  TextureIndex.entities_tukmok_tailSegmentMedium
                )
             );
          } else {
@@ -82,7 +82,7 @@ class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, Tukmo
                   i * 0.02,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/tukmok/tail-segment-big.png")
+                  TextureIndex.entities_tukmok_tailSegmentBig
                )
             );
          }

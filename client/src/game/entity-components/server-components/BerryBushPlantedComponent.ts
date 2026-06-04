@@ -5,7 +5,6 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
@@ -15,6 +14,7 @@ import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPE
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface BerryBushPlantedComponentData {
    readonly growthProgress: number;
@@ -33,14 +33,14 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.berryBushPlanted, _BerryBushPlantedComponentArray> {}
 }
 
-const TEXTURE_SOURCES = ["entities/plant/berry-bush-sapling-1.png", "entities/plant/berry-bush-sapling-2.png", "entities/plant/berry-bush-sapling-3.png", "entities/plant/berry-bush-sapling-4.png", "entities/plant/berry-bush-sapling-5.png", "entities/plant/berry-bush-sapling-6.png", "entities/plant/berry-bush-sapling-7.png", "entities/plant/berry-bush-sapling-8.png", "entities/plant/berry-bush-sapling-9.png", ""];
+const TEXTURE_INDEXES = [TextureIndex.entities_plant_berryBushSapling1, TextureIndex.entities_plant_berryBushSapling2, TextureIndex.entities_plant_berryBushSapling3, TextureIndex.entities_plant_berryBushSapling4, TextureIndex.entities_plant_berryBushSapling5, TextureIndex.entities_plant_berryBushSapling6, TextureIndex.entities_plant_berryBushSapling7, TextureIndex.entities_plant_berryBushSapling8, TextureIndex.entities_plant_berryBushSapling9, 0];
 
-const FULLY_GROWN_TEXTURE_SOURCES: ReadonlyArray<string> = [
-   "entities/plant/berry-bush-plant-1.png",
-   "entities/plant/berry-bush-plant-2.png",
-   "entities/plant/berry-bush-plant-3.png",
-   "entities/plant/berry-bush-plant-4.png",
-   "entities/plant/berry-bush-plant-5.png"
+const FULLY_GROWN_TEXTURE_SOURCES: ReadonlyArray<TextureIndex> = [
+   TextureIndex.entities_plant_berryBushPlant1,
+   TextureIndex.entities_plant_berryBushPlant2,
+   TextureIndex.entities_plant_berryBushPlant3,
+   TextureIndex.entities_plant_berryBushPlant4,
+   TextureIndex.entities_plant_berryBushPlant5
 ];
 
 class _BerryBushPlantedComponentArray extends _ServerComponentArray<BerryBushPlantedComponent, BerryBushPlantedComponentData, IntermediateInfo> {
@@ -66,7 +66,7 @@ class _BerryBushPlantedComponentArray extends _ServerComponentArray<BerryBushPla
          9,
          0,
          0, 0,
-         getTextureArrayIndex(getTextureSource(berryBushPlantedComponentData.growthProgress, berryBushPlantedComponentData.numFruits))
+         getTextureIndex(berryBushPlantedComponentData.growthProgress, berryBushPlantedComponentData.numFruits)
       );
       renderObject.attachRenderPart(renderPart);
 
@@ -87,7 +87,7 @@ class _BerryBushPlantedComponentArray extends _ServerComponentArray<BerryBushPla
 
    public updateFromData(data: BerryBushPlantedComponentData, entity: Entity): void {
       const berryBushPlantedComponent = BerryBushPlantedComponentArray.getComponent(entity);
-      berryBushPlantedComponent.renderPart.switchTextureSource(getTextureSource(data.growthProgress, data.numFruits));
+      berryBushPlantedComponent.renderPart.switchTextureSource(getTextureIndex(data.growthProgress, data.numFruits));
    }
 
    public onHit(entity: Entity, hitbox: Hitbox): void {
@@ -136,10 +136,10 @@ class _BerryBushPlantedComponentArray extends _ServerComponentArray<BerryBushPla
 
 export const BerryBushPlantedComponentArray = registerServerComponentArray(ServerComponentType.berryBushPlanted, _BerryBushPlantedComponentArray, true);
 
-const getTextureSource = (growthProgress: number, numFruits: number): string => {
+const getTextureIndex = (growthProgress: number, numFruits: number): TextureIndex => {
    if (growthProgress < 1) {
-      const idx = Math.floor(growthProgress * (TEXTURE_SOURCES.length - 1))
-      return TEXTURE_SOURCES[idx];
+      const idx = Math.floor(growthProgress * (TEXTURE_INDEXES.length - 1))
+      return TEXTURE_INDEXES[idx];
    } else {
       // @Cleanup
       const maxNumFruits = 4;

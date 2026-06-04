@@ -3,7 +3,6 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData } from "../../world";
@@ -11,6 +10,7 @@ import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SlimewispComponentData {}
 
@@ -34,7 +34,7 @@ class _SlimewispComponentArray extends _ServerComponentArray<SlimewispComponent,
          0,
          0,
          0, 0,
-         getTextureArrayIndex(`entities/slimewisp/slimewisp.png`)
+         TextureIndex.entities_slimewisp_slimewisp
       );
       renderPart.opacity = 0.8;
       renderObject.attachRenderPart(renderPart);

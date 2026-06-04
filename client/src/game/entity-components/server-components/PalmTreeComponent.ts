@@ -5,7 +5,6 @@ import { Entity } from "../../../../../shared/src/entities";
 import { Point, randAngle, randFloat, angle, randItem, randInt } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH, createWoodSpeckParticle } from "../../particles";
@@ -15,6 +14,7 @@ import { TREE_HIT_SOUNDS, TREE_DESTROY_SOUNDS } from "./TreeComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface PalmTreeComponentData {}
 
@@ -39,7 +39,7 @@ class _PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, P
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/palm-tree/palm-tree.png")
+            TextureIndex.entities_palmTree_palmTree
          )
       );
    }

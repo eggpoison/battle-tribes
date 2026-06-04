@@ -6,7 +6,6 @@ import { Settings } from "../../../../../shared/src/settings";
 import { randAngle, randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
 import { createCocoonAmbientParticle, createCocoonFragmentParticle } from "../../particles";
@@ -15,6 +14,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface KrumblidMorphCocoonComponentData {
    readonly stage: number;
@@ -52,7 +52,7 @@ class _KrumblidMorphCocoonComponentArray extends _ServerComponentArray<KrumblidM
          0,
          0,
          0, 0,
-         getTextureArrayIndex(getTextureSource(krumblidMorphCocoonComponentData.stage))
+         getTextureIndex(krumblidMorphCocoonComponentData.stage)
       );
       renderObject.attachRenderPart(renderPart);
 
@@ -94,7 +94,7 @@ class _KrumblidMorphCocoonComponentArray extends _ServerComponentArray<KrumblidM
 
       const stage = data.stage;
       if (stage !== krumblidMorphComponent.stage) {
-         krumblidMorphComponent.renderPart.switchTextureSource(getTextureSource(stage));
+         krumblidMorphComponent.renderPart.switchTextureSource(getTextureIndex(stage));
          krumblidMorphComponent.stage = stage;
       }
    }
@@ -122,8 +122,8 @@ class _KrumblidMorphCocoonComponentArray extends _ServerComponentArray<KrumblidM
 
 export const KrumblidMorphCocoonComponentArray = registerServerComponentArray(ServerComponentType.krumblidMorphCocoon, _KrumblidMorphCocoonComponentArray, true);
 
-const getTextureSource = (stage: number): string => {
-   return "entities/krumblid-morph-cocoon/stage-" + stage + ".png";
+const getTextureIndex = (stage: number): TextureIndex => {
+   return TextureIndex.entities_krumblidMorphCocoon_stage1 + (stage - 1);
 }
 
 export function createKrumblidMorphCocoonComponentData(stage: number): KrumblidMorphCocoonComponentData {

@@ -3,7 +3,6 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
 import _ClientComponentArray from "../ClientComponentArray";
@@ -11,6 +10,7 @@ import { TransformComponentArray } from "../server-components/TransformComponent
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerClientComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface WorkerHutComponentData {}
 
@@ -31,7 +31,7 @@ class _WorkerHutComponentArray extends _ClientComponentArray<WorkerHutComponent,
          2,
          0,
          0, 0,
-         getTextureArrayIndex("entities/worker-hut/worker-hut.png")
+         TextureIndex.entities_workerHut_workerHut
       );
       renderObject.attachRenderPart(hutRenderPart);
 
@@ -41,7 +41,7 @@ class _WorkerHutComponentArray extends _ClientComponentArray<WorkerHutComponent,
          1,
          0,
          0, 0,
-         getTextureArrayIndex("entities/worker-hut/worker-hut-door.png")
+         TextureIndex.entities_workerHut_workerHutDoor
       );
       addRenderPartTag(doorRenderPart, "hutComponent:door");
       renderObject.attachRenderPart(doorRenderPart);

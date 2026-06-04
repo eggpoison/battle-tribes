@@ -5,22 +5,22 @@ import { randItem } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { createGemQuakeProjectile } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { Bytes } from "../../../../../shared/src/constants";
+import { TextureIndex } from "../../../texture-index";
 
 export interface GuardianGemQuakeComponentData {}
 
 export interface GuardianGemQuakeComponent {}
 
-const TEXTURE_SOURCES: ReadonlyArray<string> = [
-   "entities/guardian-gem-quake/gem-1.png",
-   "entities/guardian-gem-quake/gem-2.png",
-   "entities/guardian-gem-quake/gem-3.png"
+const TEXTURE_INDEXES: ReadonlyArray<TextureIndex> = [
+   TextureIndex.entities_guardianGemQuake_gem1,
+   TextureIndex.entities_guardianGemQuake_gem2,
+   TextureIndex.entities_guardianGemQuake_gem3
 ];
 
 declare module "../component-registry" {
@@ -42,7 +42,7 @@ class _GuardianGemQuakeComponentArray extends _ServerComponentArray<GuardianGemQ
          0,
          0,
          0, 0,
-         getTextureArrayIndex(randItem(TEXTURE_SOURCES))
+         randItem(TEXTURE_INDEXES)
       );
       renderObject.attachRenderPart(renderPart);
    }

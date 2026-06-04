@@ -1,11 +1,11 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface AutomatonAssemblerComponentData {}
 
@@ -30,7 +30,7 @@ class _AutomatonAssemblerComponentArray extends _ServerComponentArray<AutomatonA
             2,
             0,
             0, 0,
-            getTextureArrayIndex("entities/automaton-assembler/automaton-assembler.png")
+            TextureIndex.entities_automatonAssembler_automatonAssembler
          )
       );
 
@@ -40,7 +40,7 @@ class _AutomatonAssemblerComponentArray extends _ServerComponentArray<AutomatonA
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/automaton-assembler/back.png")
+            TextureIndex.entities_automatonAssembler_back
          )
       );
 
@@ -50,7 +50,7 @@ class _AutomatonAssemblerComponentArray extends _ServerComponentArray<AutomatonA
          1,
          Math.PI / 4,
          -64, 28,
-         getTextureArrayIndex("entities/automaton-assembler/gear.png")
+         TextureIndex.entities_automatonAssembler_gear
       );
       renderObject.attachRenderPart(gearRenderPart);
 
@@ -60,7 +60,7 @@ class _AutomatonAssemblerComponentArray extends _ServerComponentArray<AutomatonA
          1.5,
          Math.PI / 8,
          -24, 28,
-         getTextureArrayIndex("entities/automaton-assembler/gear-2.png")
+         TextureIndex.entities_automatonAssembler_gear2
       );
       renderObject.attachRenderPart(gear2RenderPart);
 
@@ -70,7 +70,7 @@ class _AutomatonAssemblerComponentArray extends _ServerComponentArray<AutomatonA
          1,
          -Math.PI / 8,
          20, -32,
-         getTextureArrayIndex("entities/automaton-assembler/gear.png")
+         TextureIndex.entities_automatonAssembler_gear
       );
       renderObject.attachRenderPart(bottomGearRenderPart);
    }

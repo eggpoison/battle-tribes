@@ -4,13 +4,13 @@ import { Settings } from "../../../../../shared/src/settings";
 import { randFloat, randAngle } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { TransformComponentArray } from "./TransformComponent";
 import { createSlurbParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 const enum Var {
    MIN_PARTICLE_CREATION_INTERVAL_SECONDS = 0.45,
@@ -41,7 +41,7 @@ class _SlurbTorchComponentArray extends _ServerComponentArray<SlurbTorchComponen
          0,
          0,
          0, 0,
-         getTextureArrayIndex("entities/slurb-torch/slurb-torch.png")
+         TextureIndex.entities_slurbTorch_slurbTorch
       );
       renderObject.attachRenderPart(renderPart);
    }

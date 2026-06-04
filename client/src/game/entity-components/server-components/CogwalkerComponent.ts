@@ -2,7 +2,6 @@ import { LimbConfiguration } from "../../../../../shared/src/attack-patterns";
 import { ServerComponentType } from "../../../../../shared/src/components";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { updateLimb_TEMP } from "./InventoryUseComponent";
 import { EntityComponentData } from "../../world";
@@ -10,6 +9,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface CogwalkerComponentData {}
 
@@ -35,7 +35,7 @@ class CogwalkerComponentArray extends _ServerComponentArray<CogwalkerComponent, 
             2,
             0,
             0, 0,
-            getTextureArrayIndex("entities/cogwalker/body.png")
+            TextureIndex.entities_cogwalker_body
          )
       );
 
@@ -59,7 +59,7 @@ class CogwalkerComponentArray extends _ServerComponentArray<CogwalkerComponent, 
             1.2,
             0,
             0, 0,
-            getTextureArrayIndex("entities/cogwalker/hand.png")
+            TextureIndex.entities_cogwalker_hand
          );
          addRenderPartTag(handRenderPart, "inventoryUseComponent:hand");
          renderObject.attachRenderPart(handRenderPart);

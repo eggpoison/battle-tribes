@@ -10,7 +10,6 @@ import { playSoundOnHitbox } from "../../sound";
 import { randomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import _ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
@@ -19,6 +18,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 const enum Var {
    SNOW_THROW_OFFSET = 64
@@ -80,7 +80,7 @@ class YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompon
                1,
                0,
                0, 0,
-               getTextureArrayIndex("entities/yeti/yeti.png")
+               TextureIndex.entities_yeti_yeti
             );
             renderObject.attachRenderPart(bodyRenderPart);
 
@@ -90,7 +90,7 @@ class YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompon
                   0,
                   0,
                   0, 0,
-                  getTextureArrayIndex("entities/yeti/yeti-paw.png")
+                  TextureIndex.entities_yeti_yetiPaw
                );
                pawRenderParts.push(paw);
                renderObject.attachRenderPart(paw);
@@ -101,7 +101,7 @@ class YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompon
                1,
                0,
                0, 0,
-               getTextureArrayIndex("entities/yeti/yeti-head.png")
+               TextureIndex.entities_yeti_yetiHead
             );
             addRenderPartTag(headRenderPart, "tamingComponent:head");
             renderObject.attachRenderPart(headRenderPart);

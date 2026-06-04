@@ -3,12 +3,12 @@ import { Entity } from "../../../../../shared/src/entities";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface SpearProjectileComponentData {}
 
@@ -34,7 +34,7 @@ class _SpearProjectileComponentArray extends _ServerComponentArray<SpearProjecti
             0,
             0, 0,
             // @HACK
-            getTextureArrayIndex("items/misc/ivory-spear.png")
+            TextureIndex.items_misc_ivorySpear
          )
       );
    }

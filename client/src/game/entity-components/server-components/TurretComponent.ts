@@ -4,7 +4,6 @@ import { ItemType } from "../../../../../shared/src/items/items";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { lerp, randAngle } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
@@ -16,6 +15,7 @@ import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 // @Cleanup: can make this a whole lot better by having the projectile not be a render part, but the actual projectile pre-created, and then just un-carried from the turret once fired.
 
@@ -47,53 +47,53 @@ const NUM_SLING_TURRET_CHARGE_TEXTURES = 5;
 const NUM_BALLISTA_CHARGE_TEXTURES = 11;
 
 interface AmmoRenderObject {
-   readonly projectileTextureSource: string;
+   readonly projectileTextureIndex: TextureIndex;
    readonly drawOffset: number;
 }
 
 const AMMO_RENDER_INFO_RECORD: Record<TurretAmmoType, AmmoRenderObject> = {
    [ItemType.wood]: {
-      projectileTextureSource: "projectiles/wooden-bolt.png",
+      projectileTextureIndex: TextureIndex.projectiles_woodenBolt,
       drawOffset: 0
    },
    [ItemType.rock]: {
-      projectileTextureSource: "projectiles/ballista-rock.png",
+      projectileTextureIndex: TextureIndex.projectiles_ballistaRock,
       drawOffset: -20
    },
    [ItemType.frostcicle]: {
-      projectileTextureSource: "projectiles/ballista-frostcicle.png",
+      projectileTextureIndex: TextureIndex.projectiles_ballistaFrostcicle,
       drawOffset: -10
    },
    [ItemType.slimeball]: {
-      projectileTextureSource: "projectiles/ballista-slimeball.png",
+      projectileTextureIndex: TextureIndex.projectiles_ballistaSlimeball,
       drawOffset: -20
    }
 };
 
-const getSlingTurretChargeTextureSource = (chargeProgress: number): string => {
+const getSlingTurretChargeTextureIndex = (chargeProgress: number): TextureIndex => {
    let textureIdx = Math.floor(chargeProgress * NUM_SLING_TURRET_CHARGE_TEXTURES);
    if (textureIdx >= NUM_SLING_TURRET_CHARGE_TEXTURES) {
       textureIdx = NUM_SLING_TURRET_CHARGE_TEXTURES - 1;
    }
 
    if (textureIdx === 0) {
-      return "entities/sling-turret/sling-turret-sling.png";
+      return TextureIndex.entities_slingTurret_slingTurretSling;
    }
-   return "entities/sling-turret/sling-charge-" + textureIdx + ".png";
+   return TextureIndex.entities_slingTurret_slingCharge1 + textureIdx - 1;
 }
 
-const getBallistaCrossbarTextureSource = (chargeProgress: number): string => {
+const getBallistaCrossbarTextureIndex = (chargeProgress: number): TextureIndex => {
    let textureIdx = Math.floor(chargeProgress * NUM_BALLISTA_CHARGE_TEXTURES);
    if (textureIdx >= NUM_BALLISTA_CHARGE_TEXTURES) {
       textureIdx = NUM_BALLISTA_CHARGE_TEXTURES - 1;
    }
-   return "entities/ballista/crossbow-" + (textureIdx + 1) + ".png";
+   return TextureIndex.entities_ballista_crossbow01 + textureIdx;
 }
 
-const getChargeTextureSource = (entityType: TurretType, chargeProgress: number): string => {
+const getChargeTextureIndex = (entityType: TurretType, chargeProgress: number): TextureIndex => {
    switch (entityType) {
-      case EntityType.slingTurret: return getSlingTurretChargeTextureSource(chargeProgress);
-      case EntityType.ballista: return getBallistaCrossbarTextureSource(chargeProgress);
+      case EntityType.slingTurret: return getSlingTurretChargeTextureIndex(chargeProgress);
+      case EntityType.ballista: return getBallistaCrossbarTextureIndex(chargeProgress);
    }
 }
 
@@ -126,15 +126,15 @@ const playFireSound = (entity: Entity): void => {
    }
 }
 
-const getProjectileTextureSource = (entity: Entity): string => {
+const getProjectileTextureIndex = (entity: Entity): TextureIndex => {
    switch (getEntityType(entity) as TurretType) {
       case EntityType.slingTurret: {
-         return "projectiles/sling-rock.png";
+         return TextureIndex.projectiles_slingRock;
       }
       case EntityType.ballista: {
          const ammoBoxComponent = AmmoBoxComponentArray.getComponent(entity);
          const ammoRenderObject = AMMO_RENDER_INFO_RECORD[ammoBoxComponent.ammoType!];
-         return ammoRenderObject.projectileTextureSource;
+         return ammoRenderObject.projectileTextureIndex;
       }
    }
 }
@@ -187,7 +187,7 @@ class _TurretComponentArray extends _ServerComponentArray<TurretComponent, Turre
       }
       turretComponent.chargeProgress = chargeProgress;
 
-      turretComponent.aimingRenderPart.switchTextureSource(getChargeTextureSource(getEntityType(entity) as TurretType, chargeProgress));
+      turretComponent.aimingRenderPart.switchTextureSource(getChargeTextureIndex(getEntityType(entity) as TurretType, chargeProgress));
       
       updateAimDirection(turretComponent, aimDirection, chargeProgress);
       updateProjectileRenderPart(turretComponent, entity, chargeProgress, reloadProgress);
@@ -241,14 +241,14 @@ const projectileHasRandomRotation = (entity: Entity): boolean => {
 
 const updateProjectileRenderPart = (turretComponent: TurretComponent, entity: Entity, chargeProgress: number, reloadProgress: number): void => {
    if (shouldShowProjectile(entity, chargeProgress, reloadProgress)) {
-      const textureSource = getProjectileTextureSource(entity);
+      const textureIndex = getProjectileTextureIndex(entity);
       if (turretComponent.projectileRenderPart === null) {
          turretComponent.projectileRenderPart = new TexturedRenderPart(
             turretComponent.pivotingRenderPart,
             getProjectileZIndex(getEntityType(entity) as TurretType),
             0,
             0, 0,
-            getTextureArrayIndex(textureSource)
+            textureIndex
          );
 
          if (projectileHasRandomRotation(entity)) {
@@ -258,7 +258,7 @@ const updateProjectileRenderPart = (turretComponent: TurretComponent, entity: En
          const renderObject = getEntityRenderObject(entity);
          renderObject.attachRenderPart(turretComponent.projectileRenderPart);
       } else {
-         turretComponent.projectileRenderPart.switchTextureSource(textureSource);
+         turretComponent.projectileRenderPart.switchTextureSource(textureIndex);
       }
    
       turretComponent.projectileRenderPart.offsetY = getProjectilePullbackAmount(entity, chargeProgress);

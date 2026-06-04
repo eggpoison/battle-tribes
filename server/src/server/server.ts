@@ -3,7 +3,7 @@ import { Entity } from "../../../shared/dist/entities.js";
 import { PacketReader, ClientPacketType } from "../../../shared/dist/packets.js";
 import { Settings } from "../../../shared/dist/settings.js";
 import { TribeType } from "../../../shared/dist/tribes.js";
-import { assert, Point } from "../../../shared/dist/utils.js";
+import { Point } from "../../../shared/dist/utils.js";
 import WebSocket, { WebSocketServer } from "ws";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning.js";
 import Tribe from "../Tribe.js";
@@ -32,7 +32,6 @@ import { generateGrassStrands } from "../world-generation/grass-generation.js";
 import { Hitbox } from "../hitboxes.js";
 import { generateDecorations } from "../world-generation/decoration-generation.js";
 import { createDevGameDataPacket } from "./dev-packets.js";
-import Layer from "../Layer.js";
 
 /*
 
@@ -432,6 +431,7 @@ class GameServer {
       
       // @Cleanup: should this all be in this file?
       
+      console.log("server tick " + getGameTicks());
       const playerClients = getPlayerClients();
       for (let i = 0; i < playerClients.length; i++) {
          const playerClient = playerClients[i];

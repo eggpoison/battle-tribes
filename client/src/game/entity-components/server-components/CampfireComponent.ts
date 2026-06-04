@@ -4,7 +4,6 @@ import { Settings } from "../../../../../shared/src/settings";
 import { randAngle, randFloat } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { createSmokeParticle, createEmberParticle } from "../../particles";
 import { cookingComponentArray } from "./CookingComponent";
 import { TransformComponentArray } from "./TransformComponent";
@@ -13,6 +12,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface CampfireComponentData {}
 
@@ -37,7 +37,7 @@ class CampfireComponentArray extends _ServerComponentArray<CampfireComponent, Ca
             0,
             0,
             0, 0,
-            getTextureArrayIndex("entities/campfire/campfire.png")
+            TextureIndex.entities_campfire_campfire
          )
       );
    }

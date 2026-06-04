@@ -2,11 +2,11 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { randAngle } from "../../../../../shared/src/utils";
 import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import { getTextureArrayIndex } from "../../texture-atlases";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
+import { TextureIndex } from "../../../texture-index";
 
 export interface DustfleaEggComponentData {}
 
@@ -26,7 +26,7 @@ class _DustfleaEggComponentArray extends _ServerComponentArray<DustfleaEggCompon
          1,
          0,
          0, 0,
-         getTextureArrayIndex("entities/dustflea-egg/dustflea-egg.png")
+         TextureIndex.entities_dustfleaEgg_dustfleaEgg
       );
       renderObject.attachRenderPart(renderPart);
 
@@ -35,7 +35,7 @@ class _DustfleaEggComponentArray extends _ServerComponentArray<DustfleaEggCompon
          0,
          randAngle(), // @Sync
          0, 0,
-         getTextureArrayIndex("entities/dustflea/dustflea.png")
+         TextureIndex.entities_dustflea_dustflea
       );
       dustfleaRenderPart.inheritParentRotation = false;
       renderObject.attachRenderPart(dustfleaRenderPart);

@@ -1,4 +1,10 @@
-import { ServerComponentType, Entity, EntityType, getStringLengthBytes, Packet, Settings, lerp, polarVec2, ArmourItemInfo, InventoryName, ITEM_INFO_RECORD, ItemType, CollisionBit, distance, angle } from "battletribes-shared";
+import { CollisionBit } from "../../../shared/dist/collision.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { InventoryName, ITEM_INFO_RECORD, ArmourItemInfo, ItemType } from "../../../shared/dist/items/items.js";
+import { getStringLengthBytes, Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { distance, lerp, angle, polarVec2 } from "../../../shared/dist/utils.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { getEntityLayer, getEntityType } from "../world.js";

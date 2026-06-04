@@ -1,4 +1,3 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, Settings, PathfindingSettings, Point, angleToPoint, assert, distance, polarVec2, secondsToTicks, InventoryName, ITEM_TYPE_RECORD, getItemAttackInfo, Item, ITEM_INFO_RECORD, itemInfoIsBow, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, ARROW_RELEASE_WAIT_TIME_TICKS, ItemType, RETURN_FROM_BOW_USE_TIME_TICKS, BLOCKING_LIMB_STATE, copyLimbState, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, SHIELD_BLOCKING_LIMB_STATE, TribeType, calculateAttackEffectiveness, angle } from "battletribes-shared";
 import { getDistanceFromPointToEntity, entityIsInLineOfSight, willStopAtDesiredDistance } from "../../../ai-shared.js";
 import { InventoryComponentArray, countItemType, getInventory } from "../../../components/InventoryComponent.js";
 import { getCurrentLimbState, getLimbConfiguration, InventoryUseComponentArray, limbHeldItemCanBeSwitched, setLimbActions } from "../../../components/InventoryUseComponent.js";
@@ -15,6 +14,14 @@ import { beginSwing } from "../limb-use.js";
 import { applyAccelerationFromGround, turnHitboxToAngle } from "../../../hitboxes.js";
 import { clearPathfinding, pathfindTribesman, pathToEntityExists } from "../../../components/AIPathfindingComponent.js";
 import { AIHelperComponent, AIHelperComponentArray } from "../../../components/AIHelperComponent.js";
+import { LimbState, copyLimbState, RESTING_LIMB_STATES, QUIVER_PULL_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, BLOCKING_LIMB_STATE } from "../../../../../shared/dist/attack-patterns.js";
+import { TribesmanAIType } from "../../../../../shared/dist/components.js";
+import { EntityType, Entity, LimbAction } from "../../../../../shared/dist/entities.js";
+import { calculateAttackEffectiveness } from "../../../../../shared/dist/entity-damage-types.js";
+import { InventoryName, Item, getItemAttackInfo, ITEM_TYPE_RECORD, ItemType, ITEM_INFO_RECORD, itemInfoIsBow, RETURN_FROM_BOW_USE_TIME_TICKS, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, ARROW_RELEASE_WAIT_TIME_TICKS } from "../../../../../shared/dist/items/items.js";
+import { Settings, PathfindingSettings } from "../../../../../shared/dist/settings.js";
+import { TribeType } from "../../../../../shared/dist/tribes.js";
+import { secondsToTicks, Point, distance, angleToPoint, angle, polarVec2, assert } from "../../../../../shared/dist/utils.js";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TICK_RATE,

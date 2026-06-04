@@ -1,8 +1,11 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, EntityType, Colour, randInt, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
 import { LayeredRodComponent } from "../components/LayeredRodComponent.js";
 import { createHitbox, setHitboxIsStatic } from "../hitboxes.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/dist/collision.js";
+import { EntityType } from "../../../shared/dist/entities.js";
+import { Colour, randInt } from "../../../shared/dist/utils.js";
 
 export function createReedConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();

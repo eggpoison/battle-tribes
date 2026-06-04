@@ -1,4 +1,9 @@
-import { CollisionGroup, getEntityCollisionGroup, Entity, Settings, getSubtileIndex, clampToSubtileBoardDimensions, distance, Point, positionIsInWorld, randAngle, randFloat, getCircleRectangleCollisionResult } from "battletribes-shared";
+import { getEntityCollisionGroup, CollisionGroup } from "../../../shared/dist/collision-groups.js";
+import { getCircleRectangleCollisionResult } from "../../../shared/dist/collision.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
+import { Point, randFloat, distance, positionIsInWorld, clampToSubtileBoardDimensions, randAngle } from "../../../shared/dist/utils.js";
 import { getEntitiesInRange } from "../ai-shared.js";
 import { AIHelperComponent } from "../components/AIHelperComponent.js";
 import { detachHitbox, TransformComponentArray } from "../components/TransformComponent.js";

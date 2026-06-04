@@ -1,4 +1,7 @@
-import { EntityType, LightLevelVar, Settings, assert, distance } from "battletribes-shared";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { LightLevelVar } from "../../../../shared/dist/light-levels.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { distance, assert } from "../../../../shared/dist/utils.js";
 import { createSlurbTorchConfig } from "../../entities/structures/slurb-torch.js";
 import Layer from "../../Layer.js";
 import { calculateLightRangeNodes, getLightIntensityAtNode, getLightLevelNode } from "../../lights.js";

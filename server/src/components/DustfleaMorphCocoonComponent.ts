@@ -1,5 +1,8 @@
-import { CircularBox, ServerComponentType, Entity, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { CircularBox } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
 import { createKrumblidConfig } from "../entities/mobs/krumblid.js";
 import { Hitbox } from "../hitboxes.js";
 import { createEntity, destroyEntity, getEntityAgeTicks, getEntityLayer, ticksToGameHours } from "../world.js";

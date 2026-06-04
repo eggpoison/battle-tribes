@@ -1,4 +1,6 @@
-import { EntityType, Inventory, InventoryName, ItemType, Settings } from "battletribes-shared";
+import { EntityType } from "../../shared/dist/entities.js";
+import { Inventory, InventoryName, ItemType } from "../../shared/dist/items/items.js";
+import { Settings } from "../../shared/dist/settings.js";
 import { addInventoryToInventoryComponent, InventoryComponent } from "./components/InventoryComponent.js";
 import { InventoryUseComponent } from "./components/InventoryUseComponent.js";
 import { createItem } from "./items.js";

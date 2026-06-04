@@ -1,7 +1,6 @@
 import { getTileIndexIncludingEdges, Point, tileIsInWorld } from "../../../shared/src/utils";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
-import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
-import Chunk from "./Chunk";
+import { RenderChunkVars } from "./rendering/render-chunks";
 import Layer from "./Layer";
 import { entityExists, getCurrentLayer } from "./world";
 import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
@@ -57,42 +56,42 @@ export const cursorWorldPos = new Point(0, 0);
 //    // removeEntityRenderedChunkData(chunk.x, chunk.y);
 // }
 
-function registerVisibleRenderChunk(renderChunkX: number, renderChunkY: number): void {
+// function registerVisibleRenderChunk(renderChunkX: number, renderChunkY: number): void {
 
-}
+// }
 
 // @Incomplete: unused
-const getChunksFromRange = (layer: Layer, minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number): ReadonlyArray<Chunk> => {
-   const chunks: Array<Chunk> = [];
+// const getChunksFromRange = (layer: Layer, minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number): ReadonlyArray<Chunk> => {
+//    const chunks: Array<Chunk> = [];
    
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = layer.getChunk(chunkX, chunkY);
-         chunks.push(chunk);
-      }
-   }
+//    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+//       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+//          const chunk = layer.getChunk(chunkX, chunkY);
+//          chunks.push(chunk);
+//       }
+//    }
 
-   return chunks;
-}
+//    return chunks;
+// }
 
 // @Incomplete: unused
 /** Gets all the chunks in chunks B missing from chunks A */
-const getMissingChunks = (chunksA: ReadonlyArray<Chunk>, chunksB: ReadonlyArray<Chunk>): ReadonlyArray<Chunk> => {
-   const missing: Array<Chunk> = [];
-   for (const chunk of chunksB) {
-      if (!chunksA.includes(chunk)) {
-         missing.push(chunk);
-      }
-   }
-   return missing;
-}
+// const getMissingChunks = (chunksA: ReadonlyArray<Chunk>, chunksB: ReadonlyArray<Chunk>): ReadonlyArray<Chunk> => {
+//    const missing: Array<Chunk> = [];
+//    for (const chunk of chunksB) {
+//       if (!chunksA.includes(chunk)) {
+//          missing.push(chunk);
+//       }
+//    }
+//    return missing;
+// }
 
 export function setCameraZoom(zoom: number): void {
    cameraZoom = zoom;
    debugDisplayState.cameraZoom = zoom;
 }
 
-export function setCameraSubject(cameraSubject: Entity | 0): void {
+export function setCameraSubject(cameraSubject: Entity): void {
    const transformComponent = TransformComponentArray.tryGetComponent(cameraSubject);
    if (transformComponent !== null) {
       cameraSubjectHitbox = transformComponent.hitboxes[0];
@@ -113,7 +112,7 @@ const updateCursorWorldPos = (): void => {
 
    const layer = getCurrentLayer();
    // @Hack? @Cleanup If the player moves their mouse before the layers are initialised, this function is called with currentLayer as undefined.
-   if (layer !== undefined) {
+   if ((layer as Layer | undefined) !== undefined) {
       const tileX = Math.floor(cursorWorldPos.x / Settings.TILE_SIZE);
       const tileY = Math.floor(cursorWorldPos.y / Settings.TILE_SIZE);
 
@@ -185,11 +184,11 @@ export function refreshCameraView(): void {
    // }
 
    // Update visible render chunk bounds
-   const RENDER_CHUNK_UNITS = Settings.TILE_SIZE * RENDER_CHUNK_SIZE;
-   minVisibleRenderChunkX = Math.max(Math.floor(minVisibleX / RENDER_CHUNK_UNITS), -RENDER_CHUNK_EDGE_GENERATION);
-   maxVisibleRenderChunkX = Math.min(Math.floor(maxVisibleX / RENDER_CHUNK_UNITS), WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION - 1);
-   minVisibleRenderChunkY = Math.max(Math.floor(minVisibleY / RENDER_CHUNK_UNITS), -RENDER_CHUNK_EDGE_GENERATION);
-   maxVisibleRenderChunkY = Math.min(Math.floor(maxVisibleY / RENDER_CHUNK_UNITS), WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION - 1);
+   const RENDER_CHUNK_UNITS = Settings.TILE_SIZE * RenderChunkVars.RENDER_CHUNK_SIZE;
+   minVisibleRenderChunkX = Math.max(Math.floor(minVisibleX / RENDER_CHUNK_UNITS), -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
+   maxVisibleRenderChunkX = Math.min(Math.floor(maxVisibleX / RENDER_CHUNK_UNITS), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION - 1);
+   minVisibleRenderChunkY = Math.max(Math.floor(minVisibleY / RENDER_CHUNK_UNITS), -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
+   maxVisibleRenderChunkY = Math.min(Math.floor(maxVisibleY / RENDER_CHUNK_UNITS), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION - 1);
 }
 
 /** X position in the screen (0, 0) = bottom left, (windowWidth, windowHeight) = top right) */

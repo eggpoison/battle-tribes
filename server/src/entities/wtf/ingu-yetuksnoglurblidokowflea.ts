@@ -1,4 +1,8 @@
-import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, getAbsAngleDiff, lerp, Point, polarVec2, rotatePoint, angle, PivotPointType, setBoxFlipX, setBoxPivotType, createCircularBox, createRectangularBox, HitboxTag } from "battletribes-shared";
+import { HitboxTag, createCircularBox, HitboxCollisionType, createRectangularBox, setBoxFlipX, setBoxPivotType, PivotPointType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { angle, polarVec2, Point, getAbsAngleDiff, rotatePoint, lerp } from "../../../../shared/dist/utils.js";
 import { ChildConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../../components.js";
 import { AIHelperComponent } from "../../components/AIHelperComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";

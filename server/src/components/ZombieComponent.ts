@@ -1,5 +1,4 @@
-import { ServerComponentType, Entity, EntityType, DamageSource, Packet, Settings, StatusEffect, InventoryName, ItemType, Point, polarVec2, randFloat, UtilVar, AttackEffectiveness, entityIsStructure, distance, angle } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { moveEntityToPosition, runHerdAI } from "../ai-shared.js";
 import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent.js";
@@ -17,6 +16,15 @@ import { destroyEntity, entityExists, getEntityType, getGameTicks, isNight } fro
 import { TombstoneComponentArray } from "./TombstoneComponent.js";
 import { applyAbsoluteKnockback, applyAccelerationFromGround, applyKnockback, Hitbox } from "../hitboxes.js";
 import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { InventoryName, ItemType } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { StatusEffect } from "../../../shared/dist/status-effects.js";
+import { UtilVar, distance, randFloat, angle, polarVec2, Point } from "../../../shared/dist/utils.js";
+import { entityIsStructure } from "../structure-placement.js";
 
 const enum Vars {
    TURN_SPEED = 3 * UtilVar.PI,

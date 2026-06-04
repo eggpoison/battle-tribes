@@ -1,4 +1,3 @@
-import { EntityType, StatusEffect, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createCircularBox } from "battletribes-shared";
 import { TotemBannerComponent } from "../../components/TotemBannerComponent.js";
 import { EntityConfig } from "../../components.js";
 import Tribe from "../../Tribe.js";
@@ -10,6 +9,10 @@ import { TribeComponent } from "../../components/TribeComponent.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 export function createTribeTotemConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();

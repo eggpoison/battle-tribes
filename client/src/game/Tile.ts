@@ -2,9 +2,6 @@ import { Biome } from "../../../shared/src/biomes";
 import { TileType } from "../../../shared/src/tiles";
 
 export class Tile {
-   public readonly x: number;
-   public readonly y: number;
-
    public type: TileType;
    public biome: Biome;
 
@@ -15,10 +12,7 @@ export class Tile {
 
    public readonly mithrilRichness: number;
 
-   constructor(x: number, y: number, tileType: TileType, biome: Biome, mithrilRichness: number) {
-      this.x = x;
-      this.y = y;
-
+   constructor(tileType: TileType, biome: Biome, mithrilRichness: number) {
       this.type = tileType;
       this.biome = biome;
 

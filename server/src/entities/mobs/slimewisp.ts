@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, StatusEffect, HitboxCollisionType, Biome, createCircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
 import WanderAI from "../../ai/WanderAI.js";
@@ -9,6 +8,11 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { SlimewispComponent } from "../../components/SlimewispComponent.js";
 import { createHitbox } from "../../hitboxes.js";
 import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared.js";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 function positionIsValidCallback(_entity: Entity, layer: Layer, x: number, y: number): boolean {
    return layer.getBiomeAtPosition(x, y) === Biome.swamp;

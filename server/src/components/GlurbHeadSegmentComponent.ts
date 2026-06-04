@@ -1,4 +1,3 @@
-import { ServerComponentType, Entity, EntityType, ItemType, Settings, assert, Point, randAngle, EntityTickEvent, EntityTickEventType, distance, angle } from "battletribes-shared";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
 import { Hitbox } from "../hitboxes.js";
 import { destroyEntity, entityExists, getEntityType } from "../world.js";
@@ -17,6 +16,12 @@ import { registerEntityTickEvent } from "../server/player-clients.js";
 import { GlurbSegmentComponentArray } from "./GlurbSegmentComponent.js";
 import { tetherGlurbSegments } from "../entities/mobs/glurb.js";
 import { getHitboxTethers } from "../tethers.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { ItemType } from "../../../shared/dist/items/items.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { distance, assert, angle, randAngle } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    // @Temporary

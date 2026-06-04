@@ -1,4 +1,8 @@
-import { ServerComponentType, Entity, EntityType, SlimeSize, Settings, TileType, Point, randAngle, UtilVar } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType, SlimeSize } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { UtilVar, randAngle } from "../../../shared/dist/utils.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { moveEntityToPosition } from "../ai-shared.js";
 import { createSlimeConfig } from "../entities/mobs/slime.js";

@@ -1,5 +1,9 @@
-import { ServerComponentType, Settings, Item, Entity, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Item } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { destroyEntity, getEntityAgeTicks } from "../world.js";
 

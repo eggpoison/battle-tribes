@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, ScarInfo, EntityType, TRIBE_INFO_RECORD, TribeType, randInt, Point, randAngle, HitboxCollisionType, CircularBox, createCircularBox } from "battletribes-shared";
 import { TribesmanAIComponent } from "../../components/TribesmanAIComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -17,6 +16,12 @@ import { generateTribesmanName } from "../../tribesman-names.js";
 import { TribesmanComponent } from "../../components/TribesmanComponent.js";
 import { createHitbox, Hitbox } from "../../hitboxes.js";
 import { AIPathfindingComponent } from "../../components/AIPathfindingComponent.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { ScarInfo } from "../../../../shared/dist/components.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { TribeType, TRIBE_INFO_RECORD } from "../../../../shared/dist/tribes.js";
+import { randAngle, randInt } from "../../../../shared/dist/utils.js";
 
 const moveFunc = () => {
    throw new Error();

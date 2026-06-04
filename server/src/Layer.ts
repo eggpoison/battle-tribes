@@ -1,4 +1,12 @@
-import { WaterRockData, Entity, PathfindingSettings, Settings, NUM_TILE_TYPES, SubtileType, TileType, assert, distance, getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, Biome, CollisionGroup, getSubtileIndex, LightLevelNode } from "battletribes-shared";
+import { Biome } from "../../shared/dist/biomes.js";
+import { WaterRockData } from "../../shared/dist/client-server-types.js";
+import { CollisionGroup } from "../../shared/dist/collision-groups.js";
+import { Entity } from "../../shared/dist/entities.js";
+import { LightLevelNode } from "../../shared/dist/light-levels.js";
+import { PathfindingSettings, Settings } from "../../shared/dist/settings.js";
+import { getSubtileIndex } from "../../shared/dist/subtiles.js";
+import { SubtileType, TileType, NUM_TILE_TYPES } from "../../shared/dist/tiles.js";
+import { TileIndex, getTileIndexIncludingEdges, assert, getTileX, getTileY, distance } from "../../shared/dist/utils.js";
 import Chunk from "./Chunk.js";
 import { EntityPairCollisionInfo, GlobalCollisionInfo } from "./collision-detection.js";
 import { MinedSubtileInfo } from "./collapses.js";
@@ -116,7 +124,7 @@ export default class Layer {
    public readonly waterRocks: Array<WaterRockData> = [];
 
    public tileUpdateCoordinates = new Set<number>();
-   public wallSubtileUpdates: Array<WallSubtileUpdate> = [];
+   public wallSubtileUpdates = new Set<number>();
 
    /** Stores all entities collectively in each chunk */
    public chunks = createInitialChunksArray();
@@ -163,14 +171,20 @@ export default class Layer {
 
    public restoreWallSubtile(subtileIndex: number, subtileType: SubtileType): void {
       this.wallSubtileTypes[subtileIndex] = subtileType;
-      
       this.minedSubtileInfoMap.delete(subtileIndex);
       
-      this.wallSubtileUpdates.push({
-         subtileIndex: subtileIndex,
-         subtileType: subtileType,
-         damageTaken: 0
-      });
+      this.wallSubtileUpdates.add(subtileIndex);
+   }
+
+   public setSubtileType(subtileIndex: number, subtileType: SubtileType): void {
+      if (this.wallSubtileTypes[subtileIndex] === subtileType) {
+         return;
+      }
+      
+      this.wallSubtileTypes[subtileIndex] = subtileType;
+
+      assert(!this.wallSubtileUpdates.has(subtileIndex));
+      this.wallSubtileUpdates.add(subtileIndex);
    }
 
    public getTileType(tileIndex: TileIndex): TileType {

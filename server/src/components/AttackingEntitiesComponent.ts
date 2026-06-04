@@ -1,5 +1,7 @@
-import { ServerComponentType, DamageSource, Entity, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity, DamageSource } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
 import { Hitbox } from "../hitboxes.js";
 import { entityExists } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";

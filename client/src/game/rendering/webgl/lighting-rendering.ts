@@ -301,8 +301,6 @@ export function createNightShaders(): void {
 
    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Bytes.Float32, 0);
    gl.enableVertexAttribArray(0);
-
-   gl.bindVertexArray(null);
 }
 
 /** Returns the minimum light level for the layer */

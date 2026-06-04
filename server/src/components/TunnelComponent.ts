@@ -1,8 +1,14 @@
-import { ServerComponentType, DoorToggleType, Entity, Settings, angle, lerp, CollisionBit, DEFAULT_COLLISION_MASK, Packet, HitboxCollisionType, RectangularBox, createRectangularBox } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { addHitboxToEntity, TransformComponentArray } from "./TransformComponent.js";
 import { createHitbox, getHitboxCollisionType, } from "../hitboxes.js";
+import { HitboxCollisionType, createRectangularBox, RectangularBox } from "../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/dist/collision.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { DoorToggleType, Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { angle, lerp } from "../../../shared/dist/utils.js";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts}
 

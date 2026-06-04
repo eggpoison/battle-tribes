@@ -1,5 +1,9 @@
-import { ServerComponentType, Entity, getStringLengthBytes, Packet, Settings, Point, randAngle, randInt } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { getStringLengthBytes, Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randInt, Point, randAngle } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { createZombieConfig } from "../entities/mobs/zombie.js";
 import { TransformComponentArray } from "./TransformComponent.js";

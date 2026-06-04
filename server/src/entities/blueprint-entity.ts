@@ -1,4 +1,3 @@
-import { BlueprintType, Entity, EntityType, HitboxCollisionType } from "battletribes-shared";
 import { EntityConfig, getConfigTransformComponent } from "../components.js";
 import { addHitboxToTransformComponent, TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
 import { HealthComponent } from "../components/HealthComponent.js";
@@ -9,6 +8,9 @@ import { StructureComponent } from "../components/StructureComponent.js";
 import { VirtualStructure } from "../tribesman-ai/building-plans/TribeBuildingLayer.js";
 import { cloneHitbox, setHitboxCollisionType } from "../hitboxes.js";
 import { createStructureConfig, StructureConnection } from "../structure-placement.js";
+import { HitboxCollisionType } from "../../../shared/dist/boxes.js";
+import { BlueprintType } from "../../../shared/dist/components.js";
+import { EntityType, Entity } from "../../../shared/dist/entities.js";
 
 // @Incomplete: Remove if the associated entity is removed
 

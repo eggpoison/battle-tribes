@@ -1,4 +1,8 @@
-import { assertBoxIsCircular, Entity, EntityType, AttackEffectiveness, getAbsAngleDiff, Point, Settings, distance, angle } from "battletribes-shared";
+import { assertBoxIsCircular } from "../../../shared/dist/boxes.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { angle, getAbsAngleDiff, distance, Point } from "../../../shared/dist/utils.js";
 import { getDistanceFromPointToHitbox } from "../ai-shared.js";
 import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
 import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";

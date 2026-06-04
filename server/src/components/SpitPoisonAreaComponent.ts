@@ -1,4 +1,7 @@
-import { ServerComponentType, Entity, Settings, CircularBox } from "battletribes-shared";
+import { CircularBox } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { destroyEntity } from "../world.js";

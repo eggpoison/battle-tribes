@@ -1,4 +1,12 @@
-import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, ItemType, Settings, StatusEffect, getTamingSkill, TamingSkillID, TileType, getAbsAngleDiff, Point, polarVec2, rotatePoint, angle, createCircularBox, HitboxTag } from "battletribes-shared";
+import { HitboxTag, createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
+import { getTamingSkill, TamingSkillID } from "../../../../shared/dist/taming.js";
+import { TileType } from "../../../../shared/dist/tiles.js";
+import { angle, polarVec2, Point, getAbsAngleDiff, rotatePoint } from "../../../../shared/dist/utils.js";
 import WanderAI from "../../ai/WanderAI.js";
 import { EntityConfig, LightCreationInfo } from "../../components.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";

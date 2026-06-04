@@ -1,4 +1,3 @@
-import { ServerComponentType, EntityType } from "battletribes-shared";
 import { AmmoBoxComponent } from "./components/AmmoBoxComponent.js";
 import { BerryBushComponent } from "./components/BerryBushComponent.js";
 import { BlueprintComponent } from "./components/BlueprintComponent.js";
@@ -132,6 +131,8 @@ import { InguYetukLaserComponent } from "./components/InguYetukLaserComponent.js
 import { RiverSteppingStoneComponent } from "./components/RiverSteppingStoneComponent.js";
 import { HeldItemComponent } from "./components/HeldItemComponent.js";
 import { HitboxAngularTether } from "./tethers.js";
+import { ServerComponentType } from "../../shared/dist/components.js";
+import { EntityType } from "../../shared/dist/entities.js";
 
 // @Cleanup @Robustness: find better way to do this
 // @Cleanup: see if you can remove the arrow functions

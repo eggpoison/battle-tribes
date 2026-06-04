@@ -1,9 +1,12 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, EntityType, StatusEffect, HitboxCollisionType, createCircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 export function createFibrePlantConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();

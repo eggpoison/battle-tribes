@@ -1,5 +1,9 @@
-import { BlockType, ServerComponentType, Entity, EntityType, getItemAttackInfo, InventoryName, ITEM_TYPE_RECORD, ItemType, Packet, Point } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { BlockType, ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { ItemType, getItemAttackInfo, ITEM_TYPE_RECORD, InventoryName } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Point } from "../../../shared/dist/utils.js";
 import { applyKnockback, getHitboxMomentum, Hitbox } from "../hitboxes.js";
 import { createShieldKnockPacket } from "../server/packet-sending.js";
 import { getEntityType, getGameTicks } from "../world.js";

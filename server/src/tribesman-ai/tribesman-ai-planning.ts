@@ -1,4 +1,9 @@
-import { BlueprintType, Entity, EntityType, CraftingRecipe, getItemRecipe, InventoryName, ITEM_INFO_RECORD, ItemType, NUM_ITEM_TYPES, PlaceableItemInfo, ToolType, StructureType, getTechRequiredForItem, Tech, AIPlanType, Point } from "battletribes-shared";
+import { BlueprintType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { CraftingRecipe, getItemRecipe } from "../../../shared/dist/items/crafting-recipes.js";
+import { ItemType, ToolType, NUM_ITEM_TYPES, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "../../../shared/dist/items/items.js";
+import { StructureType } from "../../../shared/dist/structures.js";
+import { AIPlanType, Point } from "../../../shared/dist/utils.js";
 import { AIAssignmentComponentArray, clearAssignment } from "../components/AIAssignmentComponent.js";
 import { getInventory, InventoryComponentArray, inventoryHasItemType } from "../components/InventoryComponent.js";
 import { TribeComponentArray } from "../components/TribeComponent.js";
@@ -13,6 +18,7 @@ import { findIdealWallPlacePosition, WallPlaceCandidate } from "./ai-building-pl
 import { generateBuildingCandidate } from "./building-plans/ai-building-utils.js";
 import { generateLightPosition, structureLightLevelIsValid } from "./building-plans/ai-buildling-lights.js";
 import { createVirtualStructure, VirtualStructure, VirtualUnidentifiedBuilding } from "./building-plans/TribeBuildingLayer.js";
+import { Tech, getTechRequiredForItem } from "../../../shared/dist/techs.js";
 
 /*
 This file contains the logic for planning what AI tribes should do.

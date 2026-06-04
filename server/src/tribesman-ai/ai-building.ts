@@ -1,7 +1,12 @@
-import { EntityType, Settings, StructureType, Point, assert, distBetweenPointAndRectangle, Box, boxIsCircular, getSubtileIndex, CircularBox, _bounds, calculateCircularBoxBounds, calculateBoxBounds } from "battletribes-shared";
 import { TribeRoom, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas.js";
 import Layer from "../Layer.js";
 import TribeBuildingLayer, { getNumWallConnections, updateTribeWalls } from "./building-plans/TribeBuildingLayer.js";
+import { CircularBox, calculateCircularBoxBounds, _bounds, Box, boxIsCircular, calculateBoxBounds } from "../../../shared/dist/boxes.js";
+import { EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { StructureType } from "../../../shared/dist/structures.js";
+import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
+import { distBetweenPointAndRectangle, assert } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    /** How much safety increases when moving in a node */

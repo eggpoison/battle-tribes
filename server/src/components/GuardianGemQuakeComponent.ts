@@ -1,5 +1,11 @@
-import { ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, Point, CircularBox } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { CircularBox } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { destroyEntity, getEntityAgeTicks } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";

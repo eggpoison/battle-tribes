@@ -1,4 +1,8 @@
-import { Biome, ServerComponentType, Entity, EntityType, Settings, Point } from "battletribes-shared";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point } from "../../../shared/dist/utils.js";
 import { applyAccelerationFromGround, getHitboxTile, Hitbox } from "../hitboxes.js";
 import { getWindVector } from "../wind.js";
 import { destroyEntity, getEntityLayer, getEntityType } from "../world.js";

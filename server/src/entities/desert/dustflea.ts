@@ -1,4 +1,9 @@
-import { Biome, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, getAbsAngleDiff, polarVec2, angle, createCircularBox } from "battletribes-shared";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { angle, polarVec2, getAbsAngleDiff } from "../../../../shared/dist/utils.js";
 import { turnToPosition } from "../../ai-shared.js";
 import { DustfleaHibernateAI } from "../../ai/DustfleaHibernateAI.js";
 import { EscapeAI } from "../../ai/EscapeAI.js";

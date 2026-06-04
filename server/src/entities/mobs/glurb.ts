@@ -1,4 +1,5 @@
-import { Point, CircularBox } from "battletribes-shared";
+import { CircularBox } from "../../../../shared/dist/boxes.js";
+import { Point } from "../../../../shared/dist/utils.js";
 import { EntityConfig, getConfigTransformComponent } from "../../components.js";
 import { createGlurbHeadSegmentConfig } from "./glurb-head-segment.js";
 import { createGlurbBodySegmentConfig } from "./glurb-body-segment.js";

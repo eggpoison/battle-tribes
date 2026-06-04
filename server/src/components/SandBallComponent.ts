@@ -1,5 +1,9 @@
-import { ServerComponentType, Entity, Packet, Settings, TileType } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { destroyEntity, getEntityLayer } from "../world.js";
 import { AIHelperComponentArray, AIType } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";

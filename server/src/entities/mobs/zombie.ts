@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Settings, randInt, Inventory, InventoryName, ItemType, HitboxCollisionType, Biome, CircularBox, createCircularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { ZombieComponent, ZombieComponentArray } from "../../components/ZombieComponent.js";
 import { addInventoryToInventoryComponent, InventoryComponent } from "../../components/InventoryComponent.js";
@@ -11,6 +10,13 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { InventoryUseComponent } from "../../components/InventoryUseComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { createHitbox } from "../../hitboxes.js";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity } from "../../../../shared/dist/entities.js";
+import { ItemType, Inventory, InventoryName } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { randInt } from "../../../../shared/dist/utils.js";
 
 export const enum ZombieVars {
    CHASE_PURSUE_TIME_TICKS = 5 * Settings.TICK_RATE,

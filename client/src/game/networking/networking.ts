@@ -49,8 +49,8 @@ function onInitialGameDataPacket(reader: PacketReader): void {
    setLoadingScreenStateToInitialising();
    
    // Initialise game
-   processInitialGameDataPacket(reader);
-   setupRendering().then(() => {
+   const intermediateInitialisationInfo = processInitialGameDataPacket(reader);
+   setupRendering(intermediateInitialisationInfo).then(() => {
       sendActivatePacket();
       requestAnimationFrame(monitorPacketBuffer);
    });
@@ -83,7 +83,6 @@ function onPacket(msg: MessageEvent): void {
       case ServerPacketType.simulationStatusUpdate: onSimulationStatusUpdatePacket(reader); break;
       case ServerPacketType.shieldKnock:            onShieldKnockPacket(); break;
       default: {
-         // @Wire: need to fully strip the whole default for production
          if (__DEV__) console.warn(`Received unknown packet type: ${packetType}`);
       }
    }

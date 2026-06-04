@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, HitboxCollisionType, createCircularBox } from "battletribes-shared";
 import { ThrowingProjectileComponent } from "../../components/ThrowingProjectileComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -6,6 +5,9 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import Tribe from "../../Tribe.js";
 import { BattleaxeProjectileComponent } from "../../components/BattleaxeProjectileComponent.js";
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
 
 export function createBattleaxeProjectileConfig(x: number, y: number, rotation: number, tribe: Tribe, tribeMember: Entity, itemID: number | null): EntityConfig {
    const transformComponent = new TransformComponent();

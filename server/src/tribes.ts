@@ -1,4 +1,4 @@
-import { Settings } from "battletribes-shared";
+import { Settings } from "../../shared/dist/settings.js";
 import { updateBuildingLayer } from "./tribesman-ai/ai-building.js";
 import { updateTribePlans } from "./tribesman-ai/tribesman-ai-planning.js";
 import { getGameTicks, getTribes } from "./world.js";

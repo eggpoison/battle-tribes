@@ -1,4 +1,11 @@
-import { Biome, HitboxCollisionType, HitboxTag, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, ItemType, Settings, getTamingSkill, TamingSkillID, lerp, Point, polarVec2, randInt, rotatePoint, angle, distance, createRectangularBox, createCircularBox } from "battletribes-shared";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createRectangularBox, HitboxCollisionType, HitboxTag, createCircularBox } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { getTamingSkill, TamingSkillID } from "../../../../shared/dist/taming.js";
+import { randInt, angle, lerp, polarVec2, distance, Point, rotatePoint } from "../../../../shared/dist/utils.js";
 import { findAngleAlignment } from "../../ai-shared.js";
 import WanderAI from "../../ai/WanderAI.js";
 import { ChildConfigAttachInfo, EntityConfig, getConfigTransformComponent } from "../../components.js";

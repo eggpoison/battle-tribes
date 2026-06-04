@@ -1,8 +1,11 @@
-import { DecorationType, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
 import { DecorationComponent } from "../components/DecorationComponent.js";
 import { createHitbox, setHitboxIsStatic } from "../hitboxes.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/dist/collision.js";
+import { DecorationType } from "../../../shared/dist/components.js";
+import { EntityType } from "../../../shared/dist/entities.js";
 
 export function createDecorationConfig(x: number, y: number, angle: number, decorationType: DecorationType): EntityConfig {
    const transformComponent = new TransformComponent();

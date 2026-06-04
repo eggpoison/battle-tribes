@@ -1,4 +1,3 @@
-import { GuardianCrystalBurstStage, Entity, Settings, lerp, polarVec2, randAngle, randFloat, randSign, UtilVar } from "battletribes-shared";
 import { turnToPosition } from "../ai-shared.js";
 import { GuardianComponent, GuardianComponentArray, GuardianVars } from "../components/GuardianComponent.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
@@ -6,6 +5,10 @@ import { createGuardianGemFragmentProjectileConfig } from "../entities/projectil
 import { createEntity, getEntityLayer } from "../world.js";
 import { Hitbox, addHitboxAngularVelocity, addHitboxVelocity } from "../hitboxes.js";
 import { getConfigTransformComponent } from "../components.js";
+import { GuardianCrystalBurstStage } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { UtilVar, randFloat, polarVec2, randAngle, randSign, lerp } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    WINDUP_TIME_TICKS = (1.5 * Settings.TICK_RATE) | 0,

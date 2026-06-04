@@ -1,5 +1,4 @@
-import { ServerComponentType, Settings, Entity, EntityType, Packet, Box, boxIsCircular, getCircleCircleCollisionResult, getCircleRectangleCollisionResult } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import Chunk from "../Chunk.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent.js";
@@ -19,6 +18,12 @@ import { VegetationConsumeAI } from "../ai/VegetationConsumeAI.js";
 import { KrumblidCombatAI } from "../ai/KrumblidCombatAI.js";
 import { KrumblidHibernateAI } from "../ai/KrumblidHibernateAI.js";
 import { OkrenCombatAI } from "../ai/OkrenCombatAI.js";
+import { Box, boxIsCircular } from "../../../shared/dist/boxes.js";
+import { getCircleCircleCollisionResult, getCircleRectangleCollisionResult } from "../../../shared/dist/collision.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
 
 // @CLEANUP @ROBUSTNESS: whole 'ai class' system is ass and weird. idk why i made this in the first place
 

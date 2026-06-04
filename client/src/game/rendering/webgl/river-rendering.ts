@@ -1,12 +1,11 @@
 import { WaterRockSize, WaterRockData } from "../../../../../shared/src/client-server-types";
 import { Settings } from "../../../../../shared/src/settings";
 import { TileType } from "../../../../../shared/src/tiles";
-import { tileIsInWorldIncludingEdges, getTileIndexIncludingEdges, rotatePointAroundPoint, _point, lerp, randFloat } from "../../../../../shared/src/utils";
+import { tileIsInWorldIncludingEdges, getTileIndexIncludingEdges, rotatePointAroundPoint, _point, lerp, randFloat, TileIndex, getTileX, getTileY } from "../../../../../shared/src/utils";
 import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getTexture } from "../../textures";
 import { RenderChunkRiverInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "../render-chunks";
-import { Tile } from "../../Tile";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 import Layer from "../../Layer";
 import { undergroundLayer } from "../../world";
@@ -734,7 +733,7 @@ const tileIsWaterInt = (layer: Layer, tileX: number, tileY: number): number => {
       return 0;
    }
    
-   const tile = layer.getTileFromCoords(tileX, tileY);
+   const tile = layer.getTileXY(tileX, tileY);
    return tile.type === TileType.water ? 1 : 0;
 }
 
@@ -745,35 +744,37 @@ const calculateTransitionVertexData = (layer: Layer, renderChunkX: number, rende
    const maxTileY = getRenderChunkMaxTileY(renderChunkY);
 
    // Find all tiles neighbouring water in the render chunk
-   const edgeTiles: Array<Tile> = [];
+   const edgeTiles: Array<TileIndex> = [];
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          const tile = layer.getTile(tileIndex);
          if (tile.type !== TileType.water && tile.type !== TileType.ice && tile.bordersWater) {
-            edgeTiles.push(tile);
+            edgeTiles.push(tileIndex);
          }
       }
    }
 
    const vertexData = new Float32Array(edgeTiles.length * 6 * 12);
    for (let i = 0; i < edgeTiles.length; i++) {
-      const tile = edgeTiles[i];
+      const tileIndex = edgeTiles[i];
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
 
-      const x1 = tile.x;
-      const x2 = tile.x + 1;
-      const y1 = tile.y;
-      const y2 = tile.y + 1;
+      const x1 = tileX;
+      const x2 = tileX + 1;
+      const y1 = tileY;
+      const y2 = tileY + 1;
 
-      const topLeftWaterDistance = 1 - tileIsWaterInt(layer, tile.x - 1, tile.y + 1);
-      const topRightWaterDistance = 1 - tileIsWaterInt(layer, tile.x + 1, tile.y + 1);
-      const bottomLeftWaterDistance = 1 - tileIsWaterInt(layer, tile.x - 1, tile.y - 1);
-      const bottomRightWaterDistance = 1 - tileIsWaterInt(layer, tile.x + 1, tile.y - 1);
+      const topLeftWaterDistance = 1 - tileIsWaterInt(layer, tileX - 1, tileY + 1);
+      const topRightWaterDistance = 1 - tileIsWaterInt(layer, tileX + 1, tileY + 1);
+      const bottomLeftWaterDistance = 1 - tileIsWaterInt(layer, tileX - 1, tileY - 1);
+      const bottomRightWaterDistance = 1 - tileIsWaterInt(layer, tileX + 1, tileY - 1);
 
-      const topMarker = 1 - tileIsWaterInt(layer, tile.x, tile.y + 1);
-      const rightMarker = 1 - tileIsWaterInt(layer, tile.x - 1, tile.y);
-      const leftMarker = 1 - tileIsWaterInt(layer, tile.x + 1, tile.y);
-      const bottomMarker = 1 - tileIsWaterInt(layer, tile.x, tile.y - 1);
+      const topMarker = 1 - tileIsWaterInt(layer, tileX, tileY + 1);
+      const rightMarker = 1 - tileIsWaterInt(layer, tileX - 1, tileY);
+      const leftMarker = 1 - tileIsWaterInt(layer, tileX + 1, tileY);
+      const bottomMarker = 1 - tileIsWaterInt(layer, tileX, tileY - 1);
 
       const dataOffset = i * 6 * 12;
 
@@ -888,7 +889,7 @@ const calculateRockVertexData = (waterRocks: ReadonlyArray<WaterRockData>): Floa
 
       const opacity = lerp(0.15, 0.4, waterRock.opacity);
 
-      const textureIdx = waterRock.size as number;
+      const textureIdx = waterRock.size;
       
       vertexData[dataOffset] = bottomLeftX;
       vertexData[dataOffset + 1] = bottomLeftY;
@@ -938,24 +939,27 @@ const calculateRockVertexData = (waterRocks: ReadonlyArray<WaterRockData>): Floa
    return vertexData;
 }
 
-const calculateBaseVertexData = (layer: Layer, waterTiles: ReadonlyArray<Tile>): Float32Array => {
+const calculateBaseVertexData = (layer: Layer, waterTiles: ReadonlyArray<TileIndex>): Float32Array => {
    const vertexData = new Float32Array(waterTiles.length * 6 * 8);
 
    for (let i = 0; i < waterTiles.length; i++) {
-      const tile = waterTiles[i];
-      const x1 = tile.x * Settings.TILE_SIZE;
-      const x2 = (tile.x + 1) * Settings.TILE_SIZE;
-      const y1 = tile.y * Settings.TILE_SIZE;
-      const y2 = (tile.y + 1) * Settings.TILE_SIZE;
+      const tileIndex = waterTiles[i];
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
+      
+      const x1 = tileX * Settings.TILE_SIZE;
+      const x2 = (tileX + 1) * Settings.TILE_SIZE;
+      const y1 = tileY * Settings.TILE_SIZE;
+      const y2 = (tileY + 1) * Settings.TILE_SIZE;
 
-      const topIsWater = 1 - tileIsWaterInt(layer, tile.x, tile.y + 1);
-      const topRightIsWater = 1 - tileIsWaterInt(layer, tile.x + 1, tile.y + 1);
-      const rightIsWater = 1 - tileIsWaterInt(layer, tile.x + 1, tile.y);
-      const bottomRightIsWater = 1 - tileIsWaterInt(layer, tile.x + 1, tile.y - 1);
-      const bottomIsWater = 1 - tileIsWaterInt(layer, tile.x, tile.y - 1);
-      const bottomLeftIsWater = 1 - tileIsWaterInt(layer, tile.x - 1, tile.y - 1);
-      const leftIsWater = 1 - tileIsWaterInt(layer, tile.x - 1, tile.y);
-      const topLeftIsWater = 1 - tileIsWaterInt(layer, tile.x - 1, tile.y + 1);
+      const topIsWater = 1 - tileIsWaterInt(layer, tileX, tileY + 1);
+      const topRightIsWater = 1 - tileIsWaterInt(layer, tileX + 1, tileY + 1);
+      const rightIsWater = 1 - tileIsWaterInt(layer, tileX + 1, tileY);
+      const bottomRightIsWater = 1 - tileIsWaterInt(layer, tileX + 1, tileY - 1);
+      const bottomIsWater = 1 - tileIsWaterInt(layer, tileX, tileY - 1);
+      const bottomLeftIsWater = 1 - tileIsWaterInt(layer, tileX - 1, tileY - 1);
+      const leftIsWater = 1 - tileIsWaterInt(layer, tileX - 1, tileY);
+      const topLeftIsWater = 1 - tileIsWaterInt(layer, tileX - 1, tileY + 1);
 
       const bottomLeftLandDistance = 1 - (bottomLeftIsWater || bottomIsWater || leftIsWater);
       const bottomRightLandDistance = 1 - (bottomRightIsWater || bottomIsWater || rightIsWater);
@@ -1287,18 +1291,19 @@ const createSteppingStoneVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => 
    return vao;
 }
 
-const getRenderChunkWaterTiles = (layer: Layer, renderChunkX: number, renderChunkY: number): ReadonlyArray<Tile> => {
+const getRenderChunkWaterTiles = (layer: Layer, renderChunkX: number, renderChunkY: number): ReadonlyArray<TileIndex> => {
    const minTileX = getRenderChunkMinTileX(renderChunkX);
    const maxTileX = getRenderChunkMaxTileX(renderChunkX);
    const minTileY = getRenderChunkMinTileY(renderChunkY);
    const maxTileY = getRenderChunkMaxTileY(renderChunkY);
 
-   const tiles: Array<Tile> = [];
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = layer.getTileFromCoords(tileX, tileY);
+   const tiles: Array<TileIndex> = [];
+   for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         const tile = layer.getTile(tileIndex);
          if (tile.type === TileType.water) {
-            tiles.push(tile);
+            tiles.push(tileIndex);
          }
       }
    }
@@ -1315,7 +1320,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
    // Left border tiles
    for (let tileY = bottomTileY - 1; tileY <= topTileY + 1; tileY++) {
       if (tileIsInWorldIncludingEdges(leftTileX - 1, tileY)) {
-         const tile = layer.getTileFromCoords(leftTileX - 1, tileY);
+         const tile = layer.getTileXY(leftTileX - 1, tileY);
          if (tile.type === TileType.water) {
             return true;
          }
@@ -1325,7 +1330,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
    // Right border tiles
    for (let tileY = bottomTileY - 1; tileY <= topTileY + 1; tileY++) {
       if (tileIsInWorldIncludingEdges(rightTileX + 1, tileY)) {
-         const tile = layer.getTileFromCoords(rightTileX + 1, tileY);
+         const tile = layer.getTileXY(rightTileX + 1, tileY);
          if (tile.type === TileType.water) {
             return true;
          }
@@ -1335,7 +1340,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
    // Top border tiles
    for (let tileX = leftTileX; tileX <= rightTileX; tileX++) {
       if (tileIsInWorldIncludingEdges(tileX, topTileY + 1)) {
-         const tile = layer.getTileFromCoords(tileX, topTileY + 1);
+         const tile = layer.getTileXY(tileX, topTileY + 1);
          if (tile.type === TileType.water) {
             return true;
          }
@@ -1345,7 +1350,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
    // Bottom border tiles
    for (let tileX = leftTileX; tileX <= rightTileX; tileX++) {
       if (tileIsInWorldIncludingEdges(tileX, bottomTileY - 1)) {
-         const tile = layer.getTileFromCoords(tileX, bottomTileY - 1);
+         const tile = layer.getTileXY(tileX, bottomTileY - 1);
          if (tile.type === TileType.water) {
             return true;
          }
@@ -1430,10 +1435,10 @@ export function calculateRiverRenderChunkData(layer: Layer, renderChunkX: number
    };
 }
 
-const calculateNoiseVertexData = (layer: Layer, waterTiles: ReadonlyArray<Tile>): Float32Array => {
+const calculateNoiseVertexData = (layer: Layer, waterTiles: ReadonlyArray<TileIndex>): Float32Array => {
    let numInstances = 0;
-   for (const tile of waterTiles) {
-      const flowDirectionIdx = layer.getRiverFlowDirection(tile.x, tile.y);
+   for (const tileIndex of waterTiles) {
+      const flowDirectionIdx = layer.getRiverFlowDirection(tileIndex);
       if (flowDirectionIdx > 0) {
          numInstances++;
       }
@@ -1442,17 +1447,20 @@ const calculateNoiseVertexData = (layer: Layer, waterTiles: ReadonlyArray<Tile>)
    const vertexData = new Float32Array(numInstances * 6 * 8);
    
    for (let i = 0; i < waterTiles.length; i++) {
-      const tile = waterTiles[i];
-      const flowDirectionIdx = layer.getRiverFlowDirection(tile.x, tile.y);
+      const tileIndex = waterTiles[i];
+      const flowDirectionIdx = layer.getRiverFlowDirection(tileIndex);
       if (flowDirectionIdx === 0) {
          continue;
       }
       const flowDirection = flowDirectionIdx - 1;
       
-      const x1 = (tile.x - 0.5) * Settings.TILE_SIZE;
-      const x2 = (tile.x + 1.5) * Settings.TILE_SIZE;
-      const y1 = (tile.y - 0.5) * Settings.TILE_SIZE;
-      const y2 = (tile.y + 1.5) * Settings.TILE_SIZE;
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
+      
+      const x1 = (tileX - 0.5) * Settings.TILE_SIZE;
+      const x2 = (tileX + 1.5) * Settings.TILE_SIZE;
+      const y1 = (tileY - 0.5) * Settings.TILE_SIZE;
+      const y2 = (tileY + 1.5) * Settings.TILE_SIZE;
 
       const animationOffset = Math.random();
       const animationSpeed = randFloat(1, 1.67);
@@ -1588,15 +1596,18 @@ const calculateNoiseVertexData = (layer: Layer, waterTiles: ReadonlyArray<Tile>)
 //    return vertexData;
 // }
 
-const calculateHighlightsVertexData = (waterTiles: ReadonlyArray<Tile>): Float32Array => {
+const calculateHighlightsVertexData = (waterTiles: ReadonlyArray<TileIndex>): Float32Array => {
    const vertexData = new Float32Array(waterTiles.length * 6 * 5);
    
    for (let i = 0; i < waterTiles.length; i++) {
-      const tile = waterTiles[i];
-      const x1 = tile.x * Settings.TILE_SIZE;
-      const x2 = (tile.x + 1) * Settings.TILE_SIZE;
-      const y1 = tile.y * Settings.TILE_SIZE;
-      const y2 = (tile.y + 1) * Settings.TILE_SIZE;
+      const tileIndex = waterTiles[i];
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
+
+      const x1 = tileX * Settings.TILE_SIZE;
+      const x2 = (tileX + 1) * Settings.TILE_SIZE;
+      const y1 = tileY * Settings.TILE_SIZE;
+      const y2 = (tileY + 1) * Settings.TILE_SIZE;
 
       const fadeOffset = Math.random() * 3;
 

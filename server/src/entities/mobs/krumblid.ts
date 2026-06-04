@@ -1,4 +1,3 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, getAbsAngleDiff, Point, randInt, HitboxCollisionType, Biome, Settings, ItemType, getTamingSkill, TamingSkillID, angle, PivotPointType, setBoxFlipX, setBoxPivotType, createCircularBox, createRectangularBox, HitboxTag } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import WanderAI from "../../ai/WanderAI.js";
 import Layer from "../../Layer.js";
@@ -22,6 +21,14 @@ import { getEntityType } from "../../world.js";
 import { EnergyStoreComponent } from "../../components/EnergyStoreComponent.js";
 import { TamingComponent } from "../../components/TamingComponent.js";
 import { registerEntityTamingSpec } from "../../taming-specs.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createCircularBox, HitboxCollisionType, HitboxTag, createRectangularBox, setBoxFlipX, setBoxPivotType, PivotPointType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { getTamingSkill, TamingSkillID } from "../../../../shared/dist/taming.js";
+import { randInt, angle, Point, getAbsAngleDiff } from "../../../../shared/dist/utils.js";
 
 registerEntityTamingSpec(EntityType.krumblid, {
    maxTamingTier: 3,

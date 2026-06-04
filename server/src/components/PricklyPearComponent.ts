@@ -1,4 +1,8 @@
-import { CircularBox, ServerComponentType, Entity, ItemType, assert, Point, polarVec2, randAngle, randFloat, randSign, angle } from "battletribes-shared";
+import { CircularBox } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { ItemType } from "../../../shared/dist/items/items.js";
+import { assert, randFloat, randAngle, polarVec2, randSign, angle } from "../../../shared/dist/utils.js";
 import { getConfigTransformComponent } from "../components.js";
 import { createPricklyPearFragmentProjectileConfig } from "../entities/desert/prickly-pear-fragment-projectile.js";
 import { createItemEntityConfig } from "../entities/item-entity.js";

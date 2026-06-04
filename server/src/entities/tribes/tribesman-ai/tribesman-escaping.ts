@@ -1,4 +1,3 @@
-import { angle, polarVec2, Entity, EntityType, EntityTypeString, distance } from "battletribes-shared";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai.js";
 import { getTribesmanAcceleration } from "./tribesman-ai-utils.js";
 import { HealthComponent } from "../../../components/HealthComponent.js";
@@ -6,6 +5,8 @@ import { TransformComponentArray } from "../../../components/TransformComponent.
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent.js";
 import { applyAccelerationFromGround, turnHitboxToAngle } from "../../../hitboxes.js";
 import { clearPathfinding } from "../../../components/AIPathfindingComponent.js";
+import { EntityType, EntityTypeString, Entity } from "../../../../../shared/dist/entities.js";
+import { distance, angle, polarVec2 } from "../../../../../shared/dist/utils.js";
 
 export function tribeMemberShouldEscape(entityType: EntityType, healthComponent: HealthComponent): boolean {
    const remainingHealthRatio = healthComponent.health / healthComponent.maxHealth;

@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, AMMO_INFO_RECORD, ServerComponentType, EntityType, DamageSource, Entity, Point, AttackEffectiveness, HitboxCollisionType, RectangularBox, ItemType, createRectangularBox } from "battletribes-shared";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent.js";
 import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent.js";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
@@ -8,6 +7,9 @@ import { ProjectileComponent, ProjectileComponentArray } from "../../components/
 import { destroyEntity, getEntityType, validateEntity } from "../../world.js";
 import Tribe from "../../Tribe.js";
 import { createHitbox, Hitbox, setHitboxIsStatic } from "../../hitboxes.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
 
 export function createBallistaSlimeballConfig(x: number, y: number, rotation: number, tribe: Tribe, creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

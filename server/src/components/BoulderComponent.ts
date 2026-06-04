@@ -1,5 +1,8 @@
-import { Packet, Entity, ServerComponentType, randInt } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { randInt } from "../../../shared/dist/utils.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class BoulderComponent {

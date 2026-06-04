@@ -1,4 +1,7 @@
-import { ServerComponentType, Entity, EntityType, Settings, randFloat, randInt, randSign } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randInt, randFloat, randSign } from "../../../shared/dist/utils.js";
 import { createDustfleaConfig } from "../entities/desert/dustflea.js";
 import { addHitboxAngularVelocity, Hitbox } from "../hitboxes.js";
 import { getHitboxTethers, tetherHitboxes } from "../tethers.js";

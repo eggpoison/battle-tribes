@@ -1,4 +1,3 @@
-import { HitboxCollisionType, HitboxTag, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, ItemType, Point, randInt, getTamingSkill, TamingSkillID, Biome, PivotPointType, setBoxFlipX, setBoxPivotType, createCircularBox, createRectangularBox } from "battletribes-shared";
 import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared.js";
 import { OkrenCombatAI } from "../../ai/OkrenCombatAI.js";
 import { SandBallingAI } from "../../ai/SandBallingAI.js";
@@ -19,6 +18,13 @@ import { TamingComponent } from "../../components/TamingComponent.js";
 import WanderAI from "../../ai/WanderAI.js";
 import Layer from "../../Layer.js";
 import { createCarrySlot, RideableComponent } from "../../components/RideableComponent.js";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createCircularBox, HitboxCollisionType, HitboxTag, setBoxFlipX, createRectangularBox, setBoxPivotType, PivotPointType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { getTamingSkill, TamingSkillID } from "../../../../shared/dist/taming.js";
+import { randInt, Point } from "../../../../shared/dist/utils.js";
 
 const HEALTHS = [50, 80, 115, 150, 200];
 const VISION_RANGES = [500, 550, 600, 650, 700];

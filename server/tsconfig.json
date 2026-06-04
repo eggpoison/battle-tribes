@@ -8,10 +8,7 @@
       "sourceMap": false,
       "removeComments": false,
       "outDir": "./dist",
-      "rootDir": "./src",
-      "paths": {
-         "battletribes-shared": ["../shared/dist/index.d.ts"]
-      }
+      "rootDir": "./src"
    },
    "references": [
      { "path": "../shared" }

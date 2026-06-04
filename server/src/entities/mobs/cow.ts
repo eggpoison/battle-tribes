@@ -1,4 +1,11 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, CowSpecies, Entity, EntityType, Settings, lerp, Point, polarVec2, randInt, HitboxCollisionType, ItemType, Biome, getTamingSkill, TamingSkillID, angle, PivotPointType, setBoxPivotType, createRectangularBox, createCircularBox, HitboxTag } from "battletribes-shared";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createRectangularBox, HitboxCollisionType, HitboxTag, createCircularBox, setBoxPivotType, PivotPointType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity, CowSpecies } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { getTamingSkill, TamingSkillID } from "../../../../shared/dist/taming.js";
+import { randInt, angle, lerp, polarVec2, Point } from "../../../../shared/dist/utils.js";
 import { EntityConfig } from "../../components.js";
 import WanderAI from "../../ai/WanderAI.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
@@ -14,7 +21,7 @@ import { createCarrySlot, RideableComponent } from "../../components/RideableCom
 import { TamingComponent } from "../../components/TamingComponent.js";
 import { registerEntityTamingSpec } from "../../taming-specs.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
-import { applyAcceleration, applyAccelerationFromGround, createHitbox, getRootHitbox, Hitbox, setHitboxTag, turnHitboxToAngle } from "../../hitboxes.js";
+import { applyAcceleration, applyAccelerationFromGround, createHitbox, setHitboxTag, turnHitboxToAngle } from "../../hitboxes.js";
 import { addHitboxAngularTether, tetherHitboxes } from "../../tethers.js";
 import { findAngleAlignment } from "../../ai-shared.js";
 import { DustfleaHibernateAI } from "../../ai/DustfleaHibernateAI.js";

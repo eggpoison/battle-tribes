@@ -62,7 +62,7 @@ export function onGameDataPacket(reader: PacketReader): void {
 
    // First game packet
    // @SPEED @Hack only needed for the first packet.
-   if (currentSnapshot === undefined) {
+   if ((currentSnapshot as TickSnapshot | undefined) === undefined) {
       // Set currentSnapshot, and the game state, to the first game packet received.
       updateGameStateToSnapshot(snapshot);
       clientTick = snapshot.tick; // Start the client tick off at the tick of the very first packet received.

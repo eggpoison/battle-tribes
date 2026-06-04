@@ -1,4 +1,3 @@
-import { DamageSource, Entity, parseCommand, AttackEffectiveness, InventoryName, ItemType, getItemTypeFromString, Biome } from "battletribes-shared";
 import { damageEntity, healEntity } from "./components/HealthComponent.js";
 import { InventoryComponentArray, addItem } from "./components/InventoryComponent.js";
 import { getPlayerFromUsername } from "./server/player-clients.js";
@@ -7,6 +6,11 @@ import { getRandomPositionInEntity, TransformComponentArray } from "./components
 import { getHeldItem, InventoryUseComponentArray } from "./components/InventoryUseComponent.js";
 import { createItem } from "./items.js";
 import PlayerClient from "./server/PlayerClient.js";
+import { Biome } from "../../shared/dist/biomes.js";
+import { Entity, DamageSource } from "../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../shared/dist/entity-damage-types.js";
+import { ItemType, getItemTypeFromString, InventoryName } from "../../shared/dist/items/items.js";
+import { parseCommand } from "../../shared/dist/commands.js";
 
 const ENTITY_SPAWN_RANGE = 200;
 

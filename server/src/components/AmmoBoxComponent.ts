@@ -1,5 +1,8 @@
-import { AMMO_INFO_RECORD, ServerComponentType, TURRET_AMMO_TYPES, TurretAmmoType, TurretEntityType, Entity, InventoryName, ItemType, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { TurretAmmoType, ServerComponentType, TurretEntityType, TURRET_AMMO_TYPES, AMMO_INFO_RECORD } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { ItemType, InventoryName } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { consumeItemTypeFromInventory, getFirstOccupiedItemSlotInInventory, getInventory, InventoryComponentArray } from "./InventoryComponent.js";
 import { getEntityType } from "../world.js";

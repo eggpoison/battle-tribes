@@ -1,5 +1,8 @@
-import { Entity, EntityType, Packet, EntityTamingSpec, TamingTier, assert } from "battletribes-shared";
-import { Bytes } from "../../shared/src/constants.js";
+import { Bytes } from "../../shared/dist/constants.js";
+import { EntityType, Entity } from "../../shared/dist/entities.js";
+import { Packet } from "../../shared/dist/packets.js";
+import { EntityTamingSpec, TamingTier } from "../../shared/dist/taming.js";
+import { assert } from "../../shared/dist/utils.js";
 import { getEntityType } from "./world.js";
 
 const tamingSpecsMap = new Map<EntityType, EntityTamingSpec>();

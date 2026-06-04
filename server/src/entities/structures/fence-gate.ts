@@ -1,4 +1,3 @@
-import { EntityType, StatusEffect, Point, rotatePoint, CollisionBit, DEFAULT_COLLISION_MASK, HitboxCollisionType, HitboxTag, PivotPointType, setBoxPivotType, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import Tribe from "../../Tribe.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
@@ -10,6 +9,11 @@ import { FenceGateComponent } from "../../components/FenceGateComponent.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 import { createHitbox, Hitbox, setHitboxIsNonGrassBlocking, setHitboxIsStatic, setHitboxTag } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
+import { createRectangularBox, HitboxCollisionType, HitboxTag, setBoxPivotType, PivotPointType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
+import { Point, rotatePoint } from "../../../../shared/dist/utils.js";
 
 export function createFenceGateConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();

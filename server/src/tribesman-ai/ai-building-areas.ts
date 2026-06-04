@@ -1,4 +1,7 @@
-import { PotentialBuildingPlanData, BlueprintType, EntityType, Settings } from "battletribes-shared";
+import { PotentialBuildingPlanData } from "../../../shared/dist/ai-building-types.js";
+import { BlueprintType } from "../../../shared/dist/components.js";
+import { EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
 import { SafetyNode, getSafetyNode } from "./ai-building.js";
 import TribeBuildingLayer, { TribeDoorType, VirtualStructure, VirtualDoor, VirtualWall } from "./building-plans/TribeBuildingLayer.js";
 import { createUpgradeBuildingPlanAssignment, AIPlanAssignment, AIUpgradeBuildingPlan } from "./tribesman-ai-planning.js";

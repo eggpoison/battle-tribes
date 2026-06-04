@@ -1,4 +1,9 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, Settings, PathfindingSettings, getTechByID, InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, getAbsAngleDiff, polarVec2, distance, angle } from "battletribes-shared";
+import { TribesmanAIType } from "../../../../../shared/dist/components.js";
+import { Entity, EntityType, LimbAction } from "../../../../../shared/dist/entities.js";
+import { InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo } from "../../../../../shared/dist/items/items.js";
+import { Settings, PathfindingSettings } from "../../../../../shared/dist/settings.js";
+import { distance, polarVec2, angle, getAbsAngleDiff } from "../../../../../shared/dist/utils.js";
+import { getTechByID } from "../../../../../shared/dist/techs.js";
 import { willStopAtDesiredDistance, getDistanceFromPointToEntity, getClosestAccessibleEntity } from "../../../ai-shared.js";
 import { HealthComponentArray } from "../../../components/HealthComponent.js";
 import { getInventory, addItemToInventory, consumeItemFromSlot, inventoryIsFull, InventoryComponentArray, hasInventory } from "../../../components/InventoryComponent.js";

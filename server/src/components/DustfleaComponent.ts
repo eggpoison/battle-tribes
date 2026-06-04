@@ -1,4 +1,9 @@
-import { randInt, Settings, EntityTickEvent, EntityTickEventType, ServerComponentType, Entity, EntityType, AttackEffectiveness, distance, Point } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randInt, distance, Point } from "../../../shared/dist/utils.js";
 import { runHibernateAI } from "../ai/DustfleaHibernateAI.js";
 import { runEscapeAI } from "../ai/EscapeAI.js";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";

@@ -1,9 +1,13 @@
-import { EntityType, Settings, SubtileType, TileType, getTileIndexIncludingEdges, getTileX, getTileY, lerp, randAngle, randItem, TileIndex, tileIsInWorldIncludingEdges, Biome } from "battletribes-shared";
 import { getEntitiesInRange } from "../ai-shared.js";
 import { createGuardianConfig } from "../entities/mobs/guardian.js";
 import { createEntity, getEntityType, surfaceLayer } from "../world.js";
 import { tileHasWallSubtile, setWallInSubtiles } from "./terrain-generation-utils.js";
 import Layer from "../Layer.js";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { SubtileType, TileType } from "../../../shared/dist/tiles.js";
+import { TileIndex, getTileX, getTileY, randAngle, tileIsInWorldIncludingEdges, getTileIndexIncludingEdges, lerp, randItem } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    /** Minimum number of tiles in a mountain biome that will allow a cave to be generated */

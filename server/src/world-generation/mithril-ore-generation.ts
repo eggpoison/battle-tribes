@@ -1,4 +1,8 @@
-import { Entity, EntityType, Settings, getSubtileIndex, subtileIsInWorldIncludingEdges, SubtileType, angle, Point, randFloat, randInt, randSign } from "battletribes-shared";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { getSubtileIndex, subtileIsInWorldIncludingEdges } from "../../../shared/dist/subtiles.js";
+import { SubtileType } from "../../../shared/dist/tiles.js";
+import { randInt, randFloat, randSign, angle } from "../../../shared/dist/utils.js";
 import { getEntitiesInRange } from "../ai-shared.js";
 import { createMithrilOreNodeConfig } from "../entities/resources/mithril-ore-node.js";
 import Layer from "../Layer.js";

@@ -1,4 +1,3 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, Settings, PathfindingSettings, CRAFTING_RECIPES, InventoryName, distance } from "battletribes-shared";
 import Tribe from "../../../Tribe.js";
 import { turnEntityToEntity } from "../../../ai-shared.js";
 import { InventoryComponentArray, craftRecipe, InventoryComponent, countItemType } from "../../../components/InventoryComponent.js";
@@ -12,6 +11,12 @@ import { AICraftRecipePlan, planToPlaceStructure } from "../../../tribesman-ai/t
 import { addAssignmentPart, AIAssignmentComponentArray } from "../../../components/AIAssignmentComponent.js";
 import { TribeComponentArray } from "../../../components/TribeComponent.js";
 import { clearPathfinding, pathfindTribesman } from "../../../components/AIPathfindingComponent.js";
+import { TribesmanAIType } from "../../../../../shared/dist/components.js";
+import { Entity, EntityType, LimbAction } from "../../../../../shared/dist/entities.js";
+import { CRAFTING_RECIPES } from "../../../../../shared/dist/items/crafting-recipes.js";
+import { InventoryName } from "../../../../../shared/dist/items/items.js";
+import { Settings, PathfindingSettings } from "../../../../../shared/dist/settings.js";
+import { distance } from "../../../../../shared/dist/utils.js";
 
 const getClosestCraftingStation = (tribesman: Entity, tribe: Tribe, craftingStation: EntityType): Entity | null => {
    // @Incomplete: Shouldn't just look for this tribe's crafting stations, if possible should check for visible non-tribe crafting stations.

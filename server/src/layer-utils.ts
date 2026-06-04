@@ -1,4 +1,7 @@
-import { boxIsWithinRange, Entity, Settings, Point, positionIsInWorld, distance } from "battletribes-shared";
+import { boxIsWithinRange } from "../../shared/dist/boxes.js";
+import { Entity } from "../../shared/dist/entities.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { distance, positionIsInWorld } from "../../shared/dist/utils.js";
 import { TransformComponentArray } from "./components/TransformComponent.js";
 import Layer from "./Layer.js";
 

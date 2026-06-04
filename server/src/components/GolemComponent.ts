@@ -1,5 +1,4 @@
-import { ServerComponentType, DamageSource, Entity, Packet, Settings, randFloat, lerp, randInt, Point, polarVec2, randAngle, CircularBox, AttackEffectiveness, angle } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS, GolemVars } from "../entities/mobs/golem.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { createPebblumConfig } from "../entities/mobs/pebblum.js";
@@ -10,6 +9,13 @@ import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity, HealthCompo
 import { applyAccelerationFromGround, applyKnockback, Hitbox, turnHitboxToAngle } from "../hitboxes.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
 import { getConfigComponent } from "../components.js";
+import { CircularBox } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randAngle, randFloat, lerp, randInt, angle, polarVec2, Point } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    TARGET_ENTITY_FORGET_TIME = 20,

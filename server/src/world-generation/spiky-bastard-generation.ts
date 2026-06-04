@@ -1,4 +1,7 @@
-import { Settings, getSubtileIndex, subtileIsInWorldIncludingEdges, SubtileType, angle, getTileIndexIncludingEdges, Point, randSign } from "battletribes-shared";
+import { Settings } from "../../../shared/dist/settings.js";
+import { getSubtileIndex, subtileIsInWorldIncludingEdges } from "../../../shared/dist/subtiles.js";
+import { SubtileType } from "../../../shared/dist/tiles.js";
+import { getTileIndexIncludingEdges, randSign, angle } from "../../../shared/dist/utils.js";
 import { createSpikyBastardConfig } from "../entities/spiky-bastard.js";
 import Layer from "../Layer.js";
 import { generatePerlinNoise } from "../perlin-noise.js";

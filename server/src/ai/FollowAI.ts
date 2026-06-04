@@ -1,4 +1,6 @@
-import { Settings, Entity, EntityType, Point, randInt, angle } from "battletribes-shared";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randInt, angle } from "../../../shared/dist/utils.js";
 import { getDistanceFromPointToEntity } from "../ai-shared.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
 import { entityExists, getEntityType } from "../world.js";

@@ -1,4 +1,9 @@
-import { HitboxTag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Settings, Point, polarVec2, randFloat, angle } from "battletribes-shared";
+import { HitboxTag } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { angle, randFloat, Point, polarVec2 } from "../../../shared/dist/utils.js";
 import { getConfigTransformComponent } from "../components.js";
 import { createInguYetukLaserConfig } from "../entities/wtf/ingu-yetuk-laser.js";
 import { addHitboxVelocity, applyAbsoluteKnockback, applyAcceleration, getHitboxTag, getHitboxVelocity, Hitbox, turnHitboxToAngle } from "../hitboxes.js";

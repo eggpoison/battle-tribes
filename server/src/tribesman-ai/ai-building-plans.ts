@@ -1,9 +1,9 @@
-import { EntityType } from "battletribes-shared";
 import Tribe from "../Tribe.js";
 import { updateBuildingLayer } from "./ai-building.js";
 import { getBuildingSafety, getTribeSafety } from "./ai-building-heuristics.js";
 import { createVirtualStructure, VirtualStructure } from "./building-plans/TribeBuildingLayer.js";
 import { getWallCandidates } from "./building-plans/ai-building-walls.js";
+import { EntityType } from "../../../shared/dist/entities.js";
 
 export interface WallPlaceSearchResult {
    readonly virtualBuilding: VirtualStructure;

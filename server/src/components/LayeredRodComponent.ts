@@ -1,5 +1,8 @@
-import { Colour, Point, polarVec2, randAngle, randFloat, ServerComponentType, Entity, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { polarVec2, randFloat, randAngle, Colour } from "../../../shared/dist/utils.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class LayeredRodComponent {

@@ -1,4 +1,9 @@
-import { Entity, EntityType, ItemType, InventoryName, ItemTypeString, ITEM_INFO_RECORD, itemInfoIsConsumable, assert, distance, getTileIndexIncludingEdges, getTileX, getTileY, randItem, Biome, TribesmanAIType, PathfindingSettings, Settings } from "battletribes-shared";
+import { Biome } from "../../../../../shared/dist/biomes.js";
+import { TribesmanAIType } from "../../../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../../../shared/dist/entities.js";
+import { InventoryName, ItemType, ITEM_INFO_RECORD, itemInfoIsConsumable, ItemTypeString } from "../../../../../shared/dist/items/items.js";
+import { PathfindingSettings, Settings } from "../../../../../shared/dist/settings.js";
+import { distance, getTileIndexIncludingEdges, assert, randItem, getTileX, getTileY } from "../../../../../shared/dist/utils.js";
 import { HealthComponentArray } from "../../../components/HealthComponent.js";
 import { VACUUM_RANGE, tribeMemberCanPickUpItem } from "../tribe-member.js";
 import { InventoryComponent, InventoryComponentArray, addItem, countItemType, getInventory, inventoryHasItemType } from "../../../components/InventoryComponent.js";
@@ -18,7 +23,7 @@ import { entityDropsFoodItem, entityDropsItem, getEntityTypesWhichDropItem } fro
 import { getSpawnInfoForEntityType } from "../../../entity-spawn-info.js";
 import { LocalBiome } from "../../../world-generation/terrain-generation-utils.js";
 import Layer from "../../../Layer.js";
-import { getHitboxTile, Hitbox } from "../../../hitboxes.js";
+import { getHitboxTile } from "../../../hitboxes.js";
 import { pathToEntityExists, pathfindTribesman, getFinalPath, continueCurrentPath, AIPathfindingComponentArray } from "../../../components/AIPathfindingComponent.js";
 import { createItem } from "../../../items.js";
 

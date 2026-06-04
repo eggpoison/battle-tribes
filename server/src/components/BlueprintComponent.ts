@@ -1,5 +1,10 @@
-import { Entity, BlueprintType, BuildingMaterial, ServerComponentType, HitboxTag, ITEM_INFO_RECORD, HammerItemType, Packet, Point } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { HitboxTag } from "../../../shared/dist/boxes.js";
+import { BlueprintType, ServerComponentType, BuildingMaterial } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { HammerItemType, ITEM_INFO_RECORD } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Point } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { getBlueprintEntityType } from "../entities/blueprint-entity.js";
 import { StructureComponentArray } from "./StructureComponent.js";

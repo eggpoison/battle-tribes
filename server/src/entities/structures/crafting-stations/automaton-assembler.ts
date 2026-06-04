@@ -1,4 +1,3 @@
-import { EntityType, StatusEffect, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../../components.js";
 import { CraftingStationComponent } from "../../../components/CraftingStationComponent.js";
 import { HealthComponent } from "../../../components/HealthComponent.js";
@@ -11,6 +10,10 @@ import { VirtualStructure } from "../../../tribesman-ai/building-plans/TribeBuil
 import { AutomatonAssemblerComponent } from "../../../components/AutomatonAssemblerComponent.js";
 import { createHitbox, setHitboxIsNonGrassBlocking, setHitboxIsStatic } from "../../../hitboxes.js";
 import { StructureConnection } from "../../../structure-placement.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../../shared/dist/status-effects.js";
 
 export function createAutomatonAssemblerConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();

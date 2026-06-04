@@ -1,4 +1,7 @@
-import { HitboxCollisionType, DEFAULT_COLLISION_MASK, CollisionBit, EntityType, StatusEffect, createRectangularBox } from "battletribes-shared";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 import { EntityConfig } from "../../components.js";
 import { FloorSignComponent } from "../../components/FloorSignComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";

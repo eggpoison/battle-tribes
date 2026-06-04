@@ -1,5 +1,7 @@
-import { Entity, EntityType, ServerComponentType, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import Tribe from "../Tribe.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TribesmanAIComponentArray, getTribesmanRelationship } from "./TribesmanAIComponent.js";
@@ -9,7 +11,7 @@ import { StructureComponentArray } from "./StructureComponent.js";
 import { getEntityType } from "../world.js";
 import { PlantedComponentArray } from "./PlantedComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";
-import { getHitboxTile, Hitbox } from "../hitboxes.js";
+import { getHitboxTile } from "../hitboxes.js";
 import { PlayerComponentArray } from "./PlayerComponent.js";
 
 /** Relationships a tribe member can have, in increasing order of threat */

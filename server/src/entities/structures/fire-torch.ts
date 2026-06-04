@@ -1,4 +1,3 @@
-import { EntityType, StatusEffect, Point, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createCircularBox } from "battletribes-shared";
 import { EntityConfig, LightCreationInfo } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
@@ -11,6 +10,11 @@ import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildin
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 import { createLight } from "../../lights.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
+import { Point } from "../../../../shared/dist/utils.js";
 
 // @Cleanup: shouldn't be globally exported!
 export const FIRE_TORCH_RADIUS = 10;

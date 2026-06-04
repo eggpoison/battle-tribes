@@ -1,4 +1,5 @@
-import { distance, Entity } from "battletribes-shared";
+import { Entity } from "../../../shared/dist/entities.js";
+import { distance } from "../../../shared/dist/utils.js";
 import { moveEntityToEntity } from "../ai-shared.js";
 import { AIHelperComponent, AIHelperComponentArray } from "../components/AIHelperComponent.js";
 import { GuardianComponent, GuardianComponentArray } from "../components/GuardianComponent.js";

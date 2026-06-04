@@ -1,4 +1,6 @@
-import { PotentialPlanSafetyData, EntityType, EntityTypeString, Settings } from "battletribes-shared";
+import { EntityType, EntityTypeString } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { PotentialPlanSafetyData } from "../../../shared/dist/ai-building-types.js";
 import Tribe from "../Tribe.js";
 import { SafetyNode, getSafetyNode, safetyNodeIsInWall } from "./ai-building.js";
 import TribeBuildingLayer, { VirtualStructure } from "./building-plans/TribeBuildingLayer.js";

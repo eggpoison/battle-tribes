@@ -1,4 +1,3 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, PathfindingSettings, TribesmanTitle, angle, assert, getAbsAngleDiff, getAngleDiff, polarVec2, StructureType, Inventory, InventoryName, ITEM_INFO_RECORD, itemInfoIsPlaceable, ItemType, distance } from "battletribes-shared";
 import Tribe from "../../../Tribe.js";
 import { getDistanceFromPointToEntity, willStopAtDesiredDistance } from "../../../ai-shared.js";
 import { HealthComponentArray } from "../../../components/HealthComponent.js";
@@ -22,6 +21,13 @@ import { getBoxesCollidingEntities } from "../../../collision-detection.js";
 import { calculateEntityPlaceInfo, createStructureConfig } from "../../../structure-placement.js";
 import { applyAccelerationFromGround, Hitbox, turnHitboxToAngle } from "../../../hitboxes.js";
 import { clearPathfinding, pathfindTribesman } from "../../../components/AIPathfindingComponent.js";
+import { TribesmanAIType } from "../../../../../shared/dist/components.js";
+import { Entity, EntityType, LimbAction } from "../../../../../shared/dist/entities.js";
+import { Inventory, ITEM_INFO_RECORD, itemInfoIsPlaceable, InventoryName, ItemType } from "../../../../../shared/dist/items/items.js";
+import { PathfindingSettings } from "../../../../../shared/dist/settings.js";
+import { StructureType } from "../../../../../shared/dist/structures.js";
+import { TribesmanTitle } from "../../../../../shared/dist/titles.js";
+import { assert, angle, polarVec2, getAngleDiff, distance, getAbsAngleDiff } from "../../../../../shared/dist/utils.js";
 
 const enum Vars {
    BUILDING_PLACE_DISTANCE = 80

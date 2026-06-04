@@ -1,5 +1,4 @@
-import { ServerComponentType, Settings, Entity, EntityType, PlantedEntityType, Packet, randAngle } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType } from "../world.js";
@@ -8,6 +7,11 @@ import { createEntityConfigAttachInfo, EntityConfig, getConfigTransformComponent
 import { createTreePlantedConfig } from "../entities/resources/tree-planted.js";
 import { createIceSpikesPlantedConfig } from "../entities/resources/ice-spikes-planted.js";
 import { createBerryBushPlantedConfig } from "../entities/resources/berry-bush-planted.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, PlantedEntityType, EntityType } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randAngle } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    FERTILISER_DURATION_TICKS = 300 * Settings.TICK_RATE

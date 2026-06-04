@@ -1,4 +1,7 @@
-import { TribesmanTitle, ServerComponentType, DamageSource, Entity, getStringLengthBytes, Packet } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, DamageSource } from "../../../shared/dist/entities.js";
+import { getStringLengthBytes, Packet } from "../../../shared/dist/packets.js";
+import { TribesmanTitle } from "../../../shared/dist/titles.js";
 import PlayerClient from "../server/PlayerClient.js";
 import TombstoneDeathManager from "../tombstone-deaths.js";
 import { ComponentArray } from "./ComponentArray.js";

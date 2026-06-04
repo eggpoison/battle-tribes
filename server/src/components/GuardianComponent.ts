@@ -1,5 +1,11 @@
-import { GuardianAttackType, ServerComponentType, Entity, DamageSource, AttackEffectiveness, Packet, Settings, getAngleDiff, lerp, Point, polarVec2, randInt, TileIndex, UtilVar, angle, HitboxTag } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { HitboxTag } from "../../../shared/dist/boxes.js";
+import { GuardianAttackType, ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { UtilVar, TileIndex, randInt, getAngleDiff, lerp, Point, angle, polarVec2 } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { moveEntityToPosition } from "../ai-shared.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
 import { AIHelperComponentArray, AIType } from "./AIHelperComponent.js";

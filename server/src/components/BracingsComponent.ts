@@ -1,4 +1,5 @@
-import { Entity, ServerComponentType } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
 import { deregisterEntitySupports, registerEntitySupports } from "../collapses.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";

@@ -1,4 +1,5 @@
-import { ServerComponentType, Entity } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
 import { entityExists } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { PlanterBoxComponentArray } from "./PlanterBoxComponent.js";

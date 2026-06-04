@@ -1,22 +1,21 @@
 import { Settings } from "../../../../../shared/src/settings";
-import { subtileIsInWorldIncludingEdges } from "../../../../../shared/src/subtiles";
+import { getSubtileX, getSubtileY } from "../../../../../shared/src/subtiles";
 import { Bytes } from "../../../../../shared/src/constants";
 import { maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY } from "../../camera";
 import { createWebGLProgram, gl } from "../../webgl";
-import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo, setRenderChunkWallBorderInfo } from "../render-chunks";
+import { EdgeMarkerBit, RenderChunkEdgeInfo, RenderChunkWallBorderInfo, getRenderChunkIndex, getRenderChunkWallBorderInfo, setRenderChunkWallBorderInfo } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import Layer from "../../Layer";
 
 const enum Var {
-   ATTRIBUTES_PER_VERTEX = 3
+   ATTRIBUTES_PER_VERTEX = 3,
+   BORDER_THICKNESS = 4
 }
-
-const BORDER_THICKNESS = 4;
 
 let program: WebGLProgram;
 
 // @INCOMPLETE!
-const visibleWallBorderInfos: Array<RenderChunkWallBorderInfo> = [];
+// const visibleWallBorderInfos: Array<RenderChunkWallBorderInfo> = [];
 
 export function createWallBorderShaders(): void {
    const vertexShaderText = `#version 300 es
@@ -64,78 +63,101 @@ export function createWallBorderShaders(): void {
    bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 }
 
-const addVertices = (vertices: Array<number>, tlX: number, tlY: number, trX: number, trY: number, blX: number, blY: number, brX: number, brY: number, isBackColour: boolean): void => {
+const setVertices = (vertexData: Float32Array, dataOffset: number, tlX: number, tlY: number, trX: number, trY: number, blX: number, blY: number, brX: number, brY: number, isBackColour: boolean): void => {
    const isBackColourInt = isBackColour ? 1 : 0;
-   vertices.push(
-      blX, blY, isBackColourInt,
-      brX, brY, isBackColourInt,
-      tlX, tlY, isBackColourInt,
-      tlX, tlY, isBackColourInt,
-      brX, brY, isBackColourInt,
-      trX, trY, isBackColourInt
-   );
+
+   vertexData[dataOffset] = blX;
+   vertexData[dataOffset + 1] = blY;
+   vertexData[dataOffset + 2] = isBackColourInt;
+
+   vertexData[dataOffset + 3] = brX;
+   vertexData[dataOffset + 4] = brY;
+   vertexData[dataOffset + 5] = isBackColourInt;
+
+   vertexData[dataOffset + 6] = tlX;
+   vertexData[dataOffset + 7] = tlY;
+   vertexData[dataOffset + 8] = isBackColourInt;
+
+   vertexData[dataOffset + 9] = tlX;
+   vertexData[dataOffset + 10] = tlY;
+   vertexData[dataOffset + 11] = isBackColourInt;
+
+   vertexData[dataOffset + 12] = brX;
+   vertexData[dataOffset + 13] = brY;
+   vertexData[dataOffset + 14] = isBackColourInt;
+
+   vertexData[dataOffset + 15] = trX;
+   vertexData[dataOffset + 16] = trY;
+   vertexData[dataOffset + 17] = isBackColourInt;
 }
 
-const addTopVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
-   const leftOvershoot = subtileIsInWorldIncludingEdges(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : 0;
-   const rightOvershoot = subtileIsInWorldIncludingEdges(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : 0;
+const addTopVertices = (vertexData: Float32Array, dataOffset: number, floorMarkers: number, subtileX: number, subtileY: number, isBackColour: boolean): number => {
+   const hasLeftWall = (floorMarkers & EdgeMarkerBit.left) === 0;
+   const hasRightWall = (floorMarkers & EdgeMarkerBit.right) === 0;
+
+   const leftOvershoot = hasLeftWall ? Var.BORDER_THICKNESS : 0;
+   const rightOvershoot = hasRightWall ? Var.BORDER_THICKNESS : 0;
 
    let tlX = subtileX * Settings.SUBTILE_SIZE - leftOvershoot;
    let blX = tlX;
    let trX = (subtileX + 1) * Settings.SUBTILE_SIZE + rightOvershoot;
    let brX = trX
-   let blY = (subtileY + 1) * Settings.SUBTILE_SIZE - BORDER_THICKNESS;
+   let blY = (subtileY + 1) * Settings.SUBTILE_SIZE - Var.BORDER_THICKNESS;
    let brY = blY;
    let tlY = (subtileY + 1) * Settings.SUBTILE_SIZE;
    let trY = tlY;
 
    if (isBackColour) {
-      const leftOvershoot = subtileIsInWorldIncludingEdges(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const rightOvershoot = subtileIsInWorldIncludingEdges(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const leftOvershoot = hasLeftWall ? Var.BORDER_THICKNESS :-Var.BORDER_THICKNESS;
+      const rightOvershoot = hasRightWall ? Var.BORDER_THICKNESS : -Var.BORDER_THICKNESS
 
       tlX -= leftOvershoot;
       blX -= leftOvershoot;
       trX += rightOvershoot;
       brX += rightOvershoot;
-      blY -= BORDER_THICKNESS;
-      brY -= BORDER_THICKNESS;
-      tlY -= BORDER_THICKNESS;
-      trY -= BORDER_THICKNESS;
+      blY -= Var.BORDER_THICKNESS;
+      brY -= Var.BORDER_THICKNESS;
+      tlY -= Var.BORDER_THICKNESS;
+      trY -= Var.BORDER_THICKNESS;
 
       // If no wall to the left, create an indent
-      if (!layer.subtileIsWall(subtileX - 1, subtileY)) {
-         blX += BORDER_THICKNESS;
+      if (!hasLeftWall) {
+         blX += Var.BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the left
-      } else if (!layer.subtileIsWall(subtileX - 1, subtileY + 1)) {
+      } else if ((floorMarkers & EdgeMarkerBit.topLeft) !== 0) {
          // Don't overlap with wall to the left
-         blX += BORDER_THICKNESS * 2;
-         tlX += BORDER_THICKNESS * 2;
+         blX += Var.BORDER_THICKNESS * 2;
+         tlX += Var.BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
       } else {
-         tlX += BORDER_THICKNESS;
+         tlX += Var.BORDER_THICKNESS;
       }
 
       // If no wall to the right, create an indent
-      if (!layer.subtileIsWall(subtileX + 1, subtileY)) {
-         brX -= BORDER_THICKNESS;
+      if (!hasRightWall) {
+         brX -= Var.BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the right
-      } else if (!layer.subtileIsWall(subtileX + 1, subtileY + 1)) {
+      } else if ((floorMarkers & EdgeMarkerBit.topRight) !== 0) {
          // Don't overlap with wall to the right
-         brX -= BORDER_THICKNESS * 2;
-         trX -= BORDER_THICKNESS * 2;
+         brX -= Var.BORDER_THICKNESS * 2;
+         trX -= Var.BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
       } else {
-         trX -= BORDER_THICKNESS;
+         trX -= Var.BORDER_THICKNESS;
       }
    }
-   addVertices(vertices, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
+   setVertices(vertexData, dataOffset, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
+   return dataOffset + 6 * Var.ATTRIBUTES_PER_VERTEX;
 }
 
-const addRightVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
-   const topOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : 0;
-   const bottomOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : 0;
+const addRightVertices = (vertexData: Float32Array, dataOffset: number, floorMarkers: number, subtileX: number, subtileY: number, isBackColour: boolean): number => {
+   const hasTopWall = (floorMarkers & EdgeMarkerBit.top) === 0;
+   const hasBottomWall = (floorMarkers & EdgeMarkerBit.bottom) === 0;
+   
+   const topOvershoot = hasTopWall ? Var.BORDER_THICKNESS : 0;
+   const bottomOvershoot = hasBottomWall ? Var.BORDER_THICKNESS : 0;
 
-   let tlX = (subtileX + 1) * Settings.SUBTILE_SIZE - BORDER_THICKNESS;
+   let tlX = (subtileX + 1) * Settings.SUBTILE_SIZE - Var.BORDER_THICKNESS;
    let blX = tlX;
    let trX = (subtileX + 1) * Settings.SUBTILE_SIZE;
    let brX = trX;
@@ -144,48 +166,52 @@ const addRightVertices = (vertices: Array<number>, layer: Layer, subtileX: numbe
    let tlY = (subtileY + 1) * Settings.SUBTILE_SIZE + topOvershoot;
    let trY = tlY;
    if (isBackColour) {
-      const topOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const bottomOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const topOvershoot = hasTopWall ? Var.BORDER_THICKNESS : -Var.BORDER_THICKNESS;
+      const bottomOvershoot = hasBottomWall ? Var.BORDER_THICKNESS : -Var.BORDER_THICKNESS;
 
-      tlX -= BORDER_THICKNESS;
-      blX -= BORDER_THICKNESS;
-      trX -= BORDER_THICKNESS;
-      brX -= BORDER_THICKNESS;
+      tlX -= Var.BORDER_THICKNESS;
+      blX -= Var.BORDER_THICKNESS;
+      trX -= Var.BORDER_THICKNESS;
+      brX -= Var.BORDER_THICKNESS;
       blY -= bottomOvershoot;
       brY -= bottomOvershoot;
       tlY += topOvershoot;
       trY += topOvershoot;
 
       // If no wall to the bottom, create an indent
-      if (!layer.subtileIsWall(subtileX, subtileY - 1)) {
-         blY += BORDER_THICKNESS;
+      if (!hasBottomWall) {
+         blY += Var.BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the bottom
-      } else if (!layer.subtileIsWall(subtileX + 1, subtileY - 1)) {
-         blY += BORDER_THICKNESS * 2;
-         brY += BORDER_THICKNESS * 2;
+      } else if ((floorMarkers & EdgeMarkerBit.bottomRight) !== 0) {
+         blY += Var.BORDER_THICKNESS * 2;
+         brY += Var.BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
       } else {
-         brY += BORDER_THICKNESS;
+         brY += Var.BORDER_THICKNESS;
       }
 
       // If no wall to the top, create an indent
-      if (!layer.subtileIsWall(subtileX, subtileY + 1)) {
-         tlY -= BORDER_THICKNESS;
+      if (!hasTopWall) {
+         tlY -= Var.BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the top
-      } else if (!layer.subtileIsWall(subtileX + 1, subtileY + 1)) {
-         tlY -= BORDER_THICKNESS * 2;
-         trY -= BORDER_THICKNESS * 2;
+      } else if ((floorMarkers & EdgeMarkerBit.topRight) !== 0) {
+         tlY -= Var.BORDER_THICKNESS * 2;
+         trY -= Var.BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
       } else {
-         trY -= BORDER_THICKNESS;
+         trY -= Var.BORDER_THICKNESS;
       }
    }
-   addVertices(vertices, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
+   setVertices(vertexData, dataOffset, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
+   return dataOffset + 6 * Var.ATTRIBUTES_PER_VERTEX;
 }
 
-const addBottomVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
-   const leftOvershoot = subtileIsInWorldIncludingEdges(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : 0;
-   const rightOvershoot = subtileIsInWorldIncludingEdges(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : 0;
+const addBottomVertices = (vertexData: Float32Array, dataOffset: number, floorMarkers: number, subtileX: number, subtileY: number, isBackColour: boolean): number => {
+   const hasLeftWall = (floorMarkers & EdgeMarkerBit.left) === 0;
+   const hasRightWall = (floorMarkers & EdgeMarkerBit.right) === 0;
+   
+   const leftOvershoot = hasLeftWall ? Var.BORDER_THICKNESS : 0;
+   const rightOvershoot = hasRightWall ? Var.BORDER_THICKNESS : 0;
 
    let tlX = subtileX * Settings.SUBTILE_SIZE - leftOvershoot;
    let blX = tlX;
@@ -193,147 +219,147 @@ const addBottomVertices = (vertices: Array<number>, layer: Layer, subtileX: numb
    let brX = trX;
    let blY = subtileY * Settings.SUBTILE_SIZE;
    let brY = blY;
-   let tlY = subtileY * Settings.SUBTILE_SIZE + BORDER_THICKNESS;
+   let tlY = subtileY * Settings.SUBTILE_SIZE + Var.BORDER_THICKNESS;
    let trY = tlY;
    if (isBackColour) {
-      const leftOvershoot = subtileIsInWorldIncludingEdges(subtileX - 1, subtileY) && layer.subtileIsWall(subtileX - 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const rightOvershoot = subtileIsInWorldIncludingEdges(subtileX + 1, subtileY) && layer.subtileIsWall(subtileX + 1, subtileY) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const leftOvershoot = hasLeftWall ? Var.BORDER_THICKNESS : -Var.BORDER_THICKNESS;
+      const rightOvershoot = hasRightWall ? Var.BORDER_THICKNESS : -Var.BORDER_THICKNESS;
 
       tlX -= leftOvershoot;
       blX -= leftOvershoot;
       trX += rightOvershoot;
       brX += rightOvershoot;
-      blY += BORDER_THICKNESS;
-      brY += BORDER_THICKNESS;
-      tlY += BORDER_THICKNESS;
-      trY += BORDER_THICKNESS;
+      blY += Var.BORDER_THICKNESS;
+      brY += Var.BORDER_THICKNESS;
+      tlY += Var.BORDER_THICKNESS;
+      trY += Var.BORDER_THICKNESS;
 
       // If no wall to the left, create an indent
-      if (!layer.subtileIsWall(subtileX - 1, subtileY)) {
-         tlX += BORDER_THICKNESS;
+      if (!hasLeftWall) {
+         tlX += Var.BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the left
-      } else if (!layer.subtileIsWall(subtileX - 1, subtileY - 1)) {
-         tlX += BORDER_THICKNESS * 2;
-         blX += BORDER_THICKNESS * 2;
+      } else if ((floorMarkers & EdgeMarkerBit.bottomLeft) !== 0) {
+         tlX += Var.BORDER_THICKNESS * 2;
+         blX += Var.BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
       } else {
-         blX += BORDER_THICKNESS;
+         blX += Var.BORDER_THICKNESS;
       }
 
       // If no wall to the right, create an indent
-      if (!layer.subtileIsWall(subtileX + 1, subtileY)) {
-         trX -= BORDER_THICKNESS;
+      if (!hasRightWall) {
+         trX -= Var.BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the right
-      } else if (!layer.subtileIsWall(subtileX + 1, subtileY - 1)) {
-         trX -= BORDER_THICKNESS * 2;
-         brX -= BORDER_THICKNESS * 2;
+      } else if ((floorMarkers & EdgeMarkerBit.bottomRight) !== 0) {
+         trX -= Var.BORDER_THICKNESS * 2;
+         brX -= Var.BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
       } else {
-         brX -= BORDER_THICKNESS;
+         brX -= Var.BORDER_THICKNESS;
       }
    }
-   addVertices(vertices, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
+   setVertices(vertexData, dataOffset, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
+   return dataOffset + 6 * Var.ATTRIBUTES_PER_VERTEX;
 }
 
-const addLeftVertices = (vertices: Array<number>, layer: Layer, subtileX: number, subtileY: number, isBackColour: boolean): void => {
-   const topOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : 0;
-   const bottomOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : 0;
+const addLeftVertices = (vertexData: Float32Array, dataOffset: number, floorMarkers: number, subtileX: number, subtileY: number, isBackColour: boolean): number => {
+   const hasTopWall = (floorMarkers & EdgeMarkerBit.top) === 0;
+   const hasBottomWall = (floorMarkers & EdgeMarkerBit.bottom) === 0;
+   
+   const topOvershoot = hasTopWall ? Var.BORDER_THICKNESS : 0;
+   const bottomOvershoot = hasBottomWall ? Var.BORDER_THICKNESS : 0;
 
    let tlX = subtileX * Settings.SUBTILE_SIZE;
    let blX = tlX;
-   let trX = subtileX * Settings.SUBTILE_SIZE + BORDER_THICKNESS;
+   let trX = subtileX * Settings.SUBTILE_SIZE + Var.BORDER_THICKNESS;
    let brX = trX;
    let blY = subtileY * Settings.SUBTILE_SIZE - bottomOvershoot;
    let brY = blY;
    let tlY = (subtileY + 1) * Settings.SUBTILE_SIZE + topOvershoot;
    let trY = tlY;
    if (isBackColour) {
-      const topOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY + 1) && layer.subtileIsWall(subtileX, subtileY + 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
-      const bottomOvershoot = subtileIsInWorldIncludingEdges(subtileX, subtileY - 1) && layer.subtileIsWall(subtileX, subtileY - 1) ? BORDER_THICKNESS : -BORDER_THICKNESS;
+      const topOvershoot = hasTopWall ? Var.BORDER_THICKNESS : -Var.BORDER_THICKNESS;
+      const bottomOvershoot = hasBottomWall ? Var.BORDER_THICKNESS : -Var.BORDER_THICKNESS;
 
-      tlX += BORDER_THICKNESS;
-      blX += BORDER_THICKNESS;
-      trX += BORDER_THICKNESS;
-      brX += BORDER_THICKNESS;
+      tlX += Var.BORDER_THICKNESS;
+      blX += Var.BORDER_THICKNESS;
+      trX += Var.BORDER_THICKNESS;
+      brX += Var.BORDER_THICKNESS;
       blY -= bottomOvershoot;
       brY -= bottomOvershoot;
       tlY += topOvershoot;
       trY += topOvershoot;
 
       // If no wall to the bottom, create an indent
-      if (!layer.subtileIsWall(subtileX, subtileY - 1)) {
-         brY += BORDER_THICKNESS;
+      if (!hasBottomWall) {
+         brY += Var.BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the bottom
-      } else if (!layer.subtileIsWall(subtileX - 1, subtileY - 1)) {
-         brY += BORDER_THICKNESS * 2;
-         blY += BORDER_THICKNESS * 2;
+      } else if ((floorMarkers & EdgeMarkerBit.bottomLeft) !== 0) {
+         brY += Var.BORDER_THICKNESS * 2;
+         blY += Var.BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
       } else {
-         blY += BORDER_THICKNESS;
+         blY += Var.BORDER_THICKNESS;
       }
 
       // If no wall to the top, create an indent
-      if (!layer.subtileIsWall(subtileX, subtileY + 1)) {
-         trY -= BORDER_THICKNESS;
+      if (!hasTopWall) {
+         trY -= Var.BORDER_THICKNESS;
       // If continuing straight, don't overlap with the wall to the top
-      } else if (!layer.subtileIsWall(subtileX - 1, subtileY + 1)) {
-         trY -= BORDER_THICKNESS * 2;
-         tlY -= BORDER_THICKNESS * 2;
+      } else if ((floorMarkers & EdgeMarkerBit.topLeft) !== 0) {
+         trY -= Var.BORDER_THICKNESS * 2;
+         tlY -= Var.BORDER_THICKNESS * 2;
       // If creating an internal corner, add an indent
       } else {
-         tlY -= BORDER_THICKNESS;
+         tlY -= Var.BORDER_THICKNESS;
       }
    }
-   addVertices(vertices, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
+   setVertices(vertexData, dataOffset, tlX, tlY, trX, trY, blX, blY, brX, brY, isBackColour);
+   return dataOffset + 6 * Var.ATTRIBUTES_PER_VERTEX;
 }
 
-const calculateVertexData = (layer: Layer, renderChunkX: number, renderChunkY: number): Float32Array => {
-   const minTileX = getRenderChunkMinTileX(renderChunkX);
-   const maxTileX = getRenderChunkMaxTileX(renderChunkX);
-   const minTileY = getRenderChunkMinTileY(renderChunkY);
-   const maxTileY = getRenderChunkMaxTileY(renderChunkY);
+const calculateVertexData = (info: RenderChunkEdgeInfo): Float32Array => {
+   const subtiles = info.indexes;
+   const chunkMarkers = info.markers;
    
-   const minSubtileX = minTileX * 4;
-   const maxSubtileX = maxTileX * 4 + 3;
-   const minSubtileY = minTileY * 4;
-   const maxSubtileY = maxTileY * 4 + 3;
+   // @SPEEDD!! waaay overshoot this (hacky * 8) cuz currently can't tell the actual number of edges
+   const vertexData = new Float32Array(subtiles.length * 6 * Var.ATTRIBUTES_PER_VERTEX * 8);
+   
+   let dataOffset = 0;
+   for (let i = 0; i < subtiles.length; i++) {
+      const subtileIndex = subtiles[i];
+      const floorMarkers = chunkMarkers[i];
 
-   // Find all wall tiles in the render chunk, and categorise them based on what borders they have
-   const vertices: Array<number> = [];
-   for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
-      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
-         if (!layer.subtileIsWall(subtileX, subtileY)) {
-            continue;
-         }
+      const subtileX = getSubtileX(subtileIndex);
+      const subtileY = getSubtileY(subtileIndex);
 
-         // Top border
-         if (subtileIsInWorldIncludingEdges(subtileX, subtileY + 1) && !layer.subtileIsWall(subtileX, subtileY + 1)) {
-            addTopVertices(vertices, layer, subtileX, subtileY, true);
-            addTopVertices(vertices, layer, subtileX, subtileY, false);
-         }
-         // Right border
-         if (subtileIsInWorldIncludingEdges(subtileX + 1, subtileY) && !layer.subtileIsWall(subtileX + 1, subtileY)) {
-            addRightVertices(vertices, layer, subtileX, subtileY, true);
-            addRightVertices(vertices, layer, subtileX, subtileY, false);
-         }
-         // Bottom border
-         if (subtileIsInWorldIncludingEdges(subtileX, subtileY - 1) && !layer.subtileIsWall(subtileX, subtileY - 1)) {
-            addBottomVertices(vertices, layer, subtileX, subtileY, true);
-            addBottomVertices(vertices, layer, subtileX, subtileY, false);
-         }
-         // Left border
-         if (subtileIsInWorldIncludingEdges(subtileX - 1, subtileY) && !layer.subtileIsWall(subtileX - 1, subtileY)) {
-            addLeftVertices(vertices, layer, subtileX, subtileY, true);
-            addLeftVertices(vertices, layer, subtileX, subtileY, false);
-         }
+      // Top border
+      if ((floorMarkers & EdgeMarkerBit.top) !== 0) {
+         dataOffset = addTopVertices(vertexData, dataOffset, floorMarkers, subtileX, subtileY, true);
+         dataOffset = addTopVertices(vertexData, dataOffset, floorMarkers, subtileX, subtileY, false);
+      }
+      // Right border
+      if ((floorMarkers & EdgeMarkerBit.right) !== 0) {
+         dataOffset = addRightVertices(vertexData, dataOffset, floorMarkers, subtileX, subtileY, true);
+         dataOffset = addRightVertices(vertexData, dataOffset, floorMarkers, subtileX, subtileY, false);
+      }
+      // Bottom border
+      if ((floorMarkers & EdgeMarkerBit.bottom) !== 0) {
+         dataOffset = addBottomVertices(vertexData, dataOffset, floorMarkers, subtileX, subtileY, true);
+         dataOffset = addBottomVertices(vertexData, dataOffset, floorMarkers, subtileX, subtileY, false);
+      }
+      // Left border
+      if ((floorMarkers & EdgeMarkerBit.left) !== 0) {
+         dataOffset = addLeftVertices(vertexData, dataOffset, floorMarkers, subtileX, subtileY, true);
+         dataOffset = addLeftVertices(vertexData, dataOffset, floorMarkers, subtileX, subtileY, false);
       }
    }
 
-   return new Float32Array(vertices);
+   return vertexData;
 }
 
-export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo | null {
-   const vertexData = calculateVertexData(layer, renderChunkX, renderChunkY);
+export function calculateWallBorderInfo(edgeInfo: RenderChunkEdgeInfo): RenderChunkWallBorderInfo | null {
+   const vertexData = calculateVertexData(edgeInfo);
    if (vertexData.length === 0) {
       return null;
    }
@@ -359,10 +385,10 @@ export function calculateWallBorderInfo(layer: Layer, renderChunkX: number, rend
    };
 }
 
-export function recalculateWallBorders(layer: Layer, renderChunkX: number, renderChunkY: number): void {
-   const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY);
+export function recalculateWallBorders(layer: Layer, renderChunkIdx: number, edgeInfo: RenderChunkEdgeInfo): void {
+   const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkIdx);
    if (wallBorderInfo !== null) {
-      wallBorderInfo.vertexData = calculateVertexData(layer, renderChunkX, renderChunkY);
+      wallBorderInfo.vertexData = calculateVertexData(edgeInfo);
       
       gl.bindVertexArray(wallBorderInfo.vao);
       
@@ -372,9 +398,9 @@ export function recalculateWallBorders(layer: Layer, renderChunkX: number, rende
       
       gl.bindVertexArray(null);
    } else {
-      const data = calculateWallBorderInfo(layer, renderChunkX, renderChunkY);
+      const data = calculateWallBorderInfo(edgeInfo);
       if (data !== null) {
-         setRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY, data);
+         setRenderChunkWallBorderInfo(layer, renderChunkIdx, data);
       }
    }
 }
@@ -383,9 +409,11 @@ export function renderWallBorders(layer: Layer): void {
    // @Hack @Speed
    let hasVisibleWallBorder = false;
    
-   for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
-      for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
-         const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY);
+   for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
+      for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
+         const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
+
+         const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkIdx);
          if (wallBorderInfo !== null) {
             hasVisibleWallBorder = true;
             break;
@@ -402,9 +430,11 @@ export function renderWallBorders(layer: Layer): void {
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
    
    // @Speed: Lots of continues!
-   for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
-      for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
-         const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkX, renderChunkY);
+   for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
+      for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
+         const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
+
+         const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkIdx);
          if (wallBorderInfo === null) {
             continue;
          }

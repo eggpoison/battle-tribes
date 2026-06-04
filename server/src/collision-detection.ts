@@ -1,8 +1,13 @@
-import { CollisionGroup, collisionGroupsCanCollide, Entity, collisionBitsAreCompatible, Settings, Box, CollisionResult, _bounds, getBoxCollisionResult, calculateBoxBounds } from "battletribes-shared";
 import { collide } from "./collision-resolution.js";
 import { TransformComponentArray } from "./components/TransformComponent.js";
 import Layer from "./Layer.js";
 import { Hitbox } from "./hitboxes.js";
+import { getBoxCollisionResult, Box, calculateBoxBounds, _bounds } from "../../shared/dist/boxes.js";
+import { CollisionGroup, collisionGroupsCanCollide } from "../../shared/dist/collision-groups.js";
+import { CollisionResult } from "../../shared/dist/collision.js";
+import { Entity } from "../../shared/dist/entities.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { collisionBitsAreCompatible } from "../../shared/dist/hitbox-collision.js";
 
 export const enum CollisionVars {
    NO_COLLISION = 0xFFFF

@@ -216,8 +216,6 @@ export async function createEntityOverlayShaders(): Promise<void> {
 
    indexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-
-   gl.bindVertexArray(null);
 }
 
 export function renderEntityOverlay(overlay: RenderPartOverlayGroup): void {

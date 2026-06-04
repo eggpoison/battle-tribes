@@ -1,5 +1,10 @@
-import { ServerComponentType, TribesmanAIType, Settings, CRAFTING_RECIPES, ItemType, Entity, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { TribesmanAIType, ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { ItemType } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { CRAFTING_RECIPES } from "../../../shared/dist/items/crafting-recipes.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import Tribe from "../Tribe.js";
 import { EntityRelationship, TribeComponentArray } from "./TribeComponent.js";

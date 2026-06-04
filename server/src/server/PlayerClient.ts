@@ -1,8 +1,13 @@
-import { PlayerKnockbackData, HealData, ResearchOrbCompleteData, GameDataPacketOptions, EntityTickEvent, Entity, Settings, Point, AttackEffectiveness } from "battletribes-shared";
 import Tribe from "../Tribe.js";
 import WebSocket from "ws";
 import Layer from "../Layer.js";
 import { Hitbox } from "../hitboxes.js";
+import { PlayerKnockbackData, HealData, ResearchOrbCompleteData, GameDataPacketOptions } from "../../../shared/dist/client-server-types.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { EntityTickEvent } from "../../../shared/dist/entity-events.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point } from "../../../shared/dist/utils.js";
 
 export const enum PlayerClientVars {
    VIEW_PADDING = 128

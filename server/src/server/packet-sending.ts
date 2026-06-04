@@ -1,11 +1,16 @@
-import { ServerComponentTypeString, Settings, Inventory, alignLengthBytes, getStringLengthBytes, Packet, ServerPacketType, getSubtileIndex, Point, Entity, EntityTypeString } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentTypeString } from "../../../shared/dist/components.js";
+import { Entity, EntityTypeString } from "../../../shared/dist/entities.js";
+import { Inventory } from "../../../shared/dist/items/items.js";
+import { getStringLengthBytes, Packet, alignLengthBytes, ServerPacketType } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import Layer from "../Layer.js";
 import { getComponentArrayRecord } from "../components/ComponentArray.js";
 import PlayerClient from "./PlayerClient.js";
 import { PlayerComponentArray } from "../components/PlayerComponent.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
-import { entityExists, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes, layers } from "../world.js";
+import { entityExists, getEntityLayer, getEntitySpawnTicks, getEntityType, getGameTicks, getGameTime, getTribes, layers, surfaceLayer } from "../world.js";
 import { getPlayerNearbyCollapses, getSubtileSupport, subtileIsCollapsing } from "../collapses.js";
 import { addExtendedTribeData, addShortTribeData, getExtendedTribeDataLength, getShortTribeDataLength, shouldAddTribeExtendedData } from "../Tribe.js";
 import { addGrassBlockerToData, getGrassBlockerLengthBytes, GrassBlocker } from "../grass-blockers.js";
@@ -13,6 +18,7 @@ import { addTamingSpecToData, getTamingSpecDataLength, getTamingSpecsMap } from 
 import { addLightData, getEntityHitboxLights, getLightDataLength } from "../lights.js";
 import { getPlayerClients } from "./player-clients.js";
 import { ENTITY_COMPONENT_TYPES, getEntityComponentTypes } from "../entity-component-types.js";
+import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Bytes.Float32;
@@ -202,7 +208,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    // Wall subtile updates
    for (const layer of layers) {
-      lengthBytes += Bytes.Float32 + 3 * layer.wallSubtileUpdates.length * Bytes.Float32;
+      lengthBytes += Bytes.Float32 + 3 * layer.wallSubtileUpdates.size * Bytes.Float32;
    }
    
    // hasPickedUpItem
@@ -349,11 +355,14 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    // Wall subtile updates
    for (const layer of layers) {
-      packet.writeNumber(layer.wallSubtileUpdates.length);
-      for (const subtileUpdate of layer.wallSubtileUpdates) {
-         packet.writeNumber(subtileUpdate.subtileIndex);
-         packet.writeNumber(subtileUpdate.subtileType);
-         packet.writeNumber(subtileUpdate.damageTaken);
+      packet.writeNumber(layer.wallSubtileUpdates.size);
+      for (const subtileIndex of layer.wallSubtileUpdates) {
+         const subtileType = layer.getSubtileType(subtileIndex);
+         const damageTaken = layer.wallSubtileDamageTakenMap.get(subtileIndex) || 0;
+         
+         packet.writeNumber(subtileIndex);
+         packet.writeNumber(subtileType);
+         packet.writeNumber(damageTaken);
       }
    }
 
@@ -451,6 +460,8 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
    // Subtile damage taken
    for (const layer of layers) {
       lengthBytes += Bytes.Float32 + layer.wallSubtileDamageTakenMap.size * 2 * Bytes.Float32;
+
+      console.log(layer.wallSubtileUpdates.size);
    }
    // Water rocks
    lengthBytes += Bytes.Float32 + spawnLayer.waterRocks.length * 5 * Bytes.Float32;

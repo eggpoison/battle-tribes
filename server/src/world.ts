@@ -1,4 +1,7 @@
-import { Entity, EntityType, Settings, assert, ServerComponentType } from "battletribes-shared";
+import { ServerComponentType } from "../../shared/dist/components.js";
+import { Entity, EntityType } from "../../shared/dist/entities.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { assert } from "../../shared/dist/utils.js";
 import Layer from "./Layer.js";
 import { removeEntityFromCensus, runTileCensuses } from "./census.js";
 import { ComponentArray, ComponentArrays, getComponentArrayRecord } from "./components/ComponentArray.js";

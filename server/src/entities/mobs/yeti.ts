@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, getTileIndexIncludingEdges, Point, randInt, TileIndex, Settings, ItemType, Biome, HitboxCollisionType, HitboxTag, createCircularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { YetiComponent, YetiComponentArray } from "../../components/YetiComponent.js";
 import Layer from "../../Layer.js";
@@ -11,6 +10,13 @@ import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesCo
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared.js";
 import { createHitbox, setHitboxTag } from "../../hitboxes.js";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createCircularBox, HitboxCollisionType, HitboxTag } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { randInt, getTileIndexIncludingEdges, TileIndex, Point } from "../../../../shared/dist/utils.js";
 
 export const YETI_SNOW_THROW_COOLDOWN = 7;
 

@@ -1,10 +1,14 @@
-import { TileType, Settings, Entity, EntityType, CircularBox, RectangularBox, boxIsCircular, angle, curveWeight, Point, lerp, rotatePointAroundPoint, distance, distBetweenPointAndRectangle, TileIndex, getTileIndexIncludingEdges, polarVec2, clamp, _point, getRectangularBoxTopLeftVertexOffset, circleCollidesWithBox } from "battletribes-shared";
 import Layer from "./Layer.js";
 import { getEntityPathfindingGroupID } from "./pathfinding.js";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
 import { ProjectileComponentArray } from "./components/ProjectileComponent.js";
 import { getEntityLayer, getEntityType } from "./world.js";
 import { addHitboxAngularAcceleration, applyAccelerationFromGround, getHitboxVelocity, Hitbox, hitboxIsPartOfParent, turnHitboxToAngle } from "./hitboxes.js";
+import { circleCollidesWithBox, CircularBox, RectangularBox, getRectangularBoxTopLeftVertexOffset, boxIsCircular } from "../../shared/dist/boxes.js";
+import { Entity, EntityType } from "../../shared/dist/entities.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { TileType } from "../../shared/dist/tiles.js";
+import { distance, angle, polarVec2, Point, curveWeight, TileIndex, getTileIndexIncludingEdges, lerp, rotatePointAroundPoint, _point, clamp, distBetweenPointAndRectangle } from "../../shared/dist/utils.js";
 
 const TURN_CONSTANT = Math.PI * Settings.DT_S;
 const WALL_AVOIDANCE_MULTIPLIER = 1.5;

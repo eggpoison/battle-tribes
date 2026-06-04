@@ -1,8 +1,10 @@
-import { Packet, Entity, BuildingMaterial, ServerComponentType } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { HealthComponentArray } from "./HealthComponent.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
+import { BuildingMaterial, ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
 
 export class BuildingMaterialComponent {
    public material: BuildingMaterial;

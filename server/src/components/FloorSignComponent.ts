@@ -1,4 +1,6 @@
-import { ServerComponentType, Entity, getStringLengthBytes, Packet } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { getStringLengthBytes, Packet } from "../../../shared/dist/packets.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class FloorSignComponent {

@@ -1,4 +1,4 @@
-import { Point, randAngle } from "battletribes-shared";
+import { Point, randAngle } from "../../shared/dist/utils.js";
 
 const lerp = (start: number, end: number, amount: number): number => {
    return start * (1 - amount) + end * amount;
@@ -148,14 +148,14 @@ const calculatePointCornerDotProduct = (grid: Partial<Record<string, Point>>, sa
    return corner.x * directionVectorX + corner.y * directionVectorY;
 }
 
-export function generatePointPerlinNoise(x: number, y: number, scale: number, name: string): number {
+export function generatePointPerlinNoise(x: number, y: number, scale: number, name: string, thung?: number, width?: number): number {
    let grid = pointPerlinNoiseGrids[name];
    if (grid === undefined) {
       grid = {};
       pointPerlinNoiseGrids[name] = grid;
    }
 
-   const sampleX = x / scale;
+   const sampleX = thung !== undefined && width !== undefined ? ((x + thung) % width) / scale : x / scale;
    const sampleY = y / scale;
 
    const x0 = Math.floor(sampleX);

@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, EntityTypeString, LimbAction, PlantedEntityType, rotatePoint, InventoryName, ItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, HitboxCollisionType, CircularBox, TRIBE_INFO_RECORD, TribeType, LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES, angle, setBoxFlipX, createCircularBox, HitboxTag } from "battletribes-shared";
 import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, InventoryComponentArray, InventoryComponent } from "../../components/InventoryComponent.js";
 import { getCurrentLimbState, getLimbStateOffset, InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent.js";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent.js";
@@ -17,6 +16,13 @@ import { PlayerComponent } from "../../components/PlayerComponent.js";
 import PlayerClient from "../../server/PlayerClient.js";
 import { TribesmanComponent } from "../../components/TribesmanComponent.js";
 import { createHitbox, setHitboxIgnoresWallCollisions, setHitboxTag } from "../../hitboxes.js";
+import { LimbState, LimbConfiguration, RESTING_LIMB_STATES, QUIVER_PULL_LIMB_STATE } from "../../../../shared/dist/attack-patterns.js";
+import { createCircularBox, HitboxCollisionType, CircularBox, HitboxTag, setBoxFlipX } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity, LimbAction, PlantedEntityType, EntityTypeString } from "../../../../shared/dist/entities.js";
+import { InventoryName, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, ItemType } from "../../../../shared/dist/items/items.js";
+import { TribeType, TRIBE_INFO_RECORD } from "../../../../shared/dist/tribes.js";
+import { rotatePoint, angle } from "../../../../shared/dist/utils.js";
 
 // @COPYNPASTE a rare triple!!!!
 export const BOW_HOLDING_LIMB_STATE: LimbState = {

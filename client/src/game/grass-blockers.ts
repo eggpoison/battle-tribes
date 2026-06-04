@@ -66,21 +66,16 @@ const createGrassBlockerFromData = (data: GrassBlockerData): GrassBlocker => {
    gl.enableVertexAttribArray(0);
    gl.enableVertexAttribArray(1);
 
-   // @Speed
-   gl.bindVertexArray(null);
-
    return blocker;
 }
 
 const updateGrassBlockerVertices = (blocker: GrassBlocker): void => {
-   gl.bindVertexArray(blocker.vao);
-
    const newVertexData = calculateGrassBlockerVertexData(blocker);
+   
+   gl.bindVertexArray(blocker.vao);
    
    gl.bindBuffer(gl.ARRAY_BUFFER, blocker.vertexBuffer);
    gl.bufferSubData(gl.ARRAY_BUFFER, 0, newVertexData);
-   
-   gl.bindVertexArray(null);
 }
 
 export function readGrassBlockers(reader: PacketReader): ReadonlyArray<GrassBlockerData> {

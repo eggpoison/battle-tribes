@@ -1,4 +1,3 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, Tech, Inventory, ItemType, assert, polarVec2, PathfindingSettings, distance, angle } from "battletribes-shared";
 import { getDistanceFromPointToEntity } from "../../../ai-shared.js";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent.js";
 import { continueResearching, markPreemptiveMoveToBench, attemptToOccupyResearchBench, canResearchAtBench, shouldMoveToResearchBench } from "../../../components/ResearchBenchComponent.js";
@@ -13,6 +12,12 @@ import { getEntityLayer } from "../../../world.js";
 import { PathfindFailureDefault } from "../../../pathfinding.js";
 import { applyAccelerationFromGround, turnHitboxToAngle } from "../../../hitboxes.js";
 import { pathfindTribesman } from "../../../components/AIPathfindingComponent.js";
+import { TribesmanAIType } from "../../../../../shared/dist/components.js";
+import { Entity, EntityType, LimbAction } from "../../../../../shared/dist/entities.js";
+import { ItemType, Inventory } from "../../../../../shared/dist/items/items.js";
+import { PathfindingSettings } from "../../../../../shared/dist/settings.js";
+import { Tech } from "../../../../../shared/dist/techs.js";
+import { distance, assert, angle, polarVec2 } from "../../../../../shared/dist/utils.js";
 
 const getOccupiedResearchBenchID = (tribesman: Entity, tribe: Tribe): Entity => {
    for (const bench of tribe.getEntitiesByType(EntityType.researchBench)) {

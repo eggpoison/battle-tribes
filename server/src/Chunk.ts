@@ -1,4 +1,4 @@
-import { Entity } from "battletribes-shared";
+import { Entity } from "../../shared/dist/entities.js";
 import { GrassBlocker } from "./grass-blockers.js";
 
 // @Cleanup @Memory: A lot of these properties aren't used by collision chunks

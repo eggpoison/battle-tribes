@@ -1,5 +1,14 @@
-import { PathfindingNodeIndex, Settings, getEntityCollisionGroup, _point, assert, getAngleDiff, Point, polarVec2, randAngle, randFloat, rotatePointAroundOrigin, Entity, EntityType, EntityTypeString, ServerComponentType, Packet, Box, boxIsCircular, getBoxArea, updateBox, TILE_PHYSICS_INFO_RECORD, TileType, getSubtileIndex, _bounds, angle, distance, calculateBoxBounds, HitboxTag } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { assert, Point, getAngleDiff, rotatePointAroundOrigin, _point, polarVec2, randAngle, randFloat } from "../../../shared/dist/utils.js";
+import { calculateBoxBounds, _bounds, HitboxTag, updateBox, Box, boxIsCircular, getBoxArea } from "../../../shared/dist/boxes.js";
+import { PathfindingNodeIndex } from "../../../shared/dist/client-server-types.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityTypeString, EntityType } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
+import { TILE_PHYSICS_INFO_RECORD, TileType } from "../../../shared/dist/tiles.js";
+import { getEntityCollisionGroup } from "../../../shared/dist/collision-groups.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import Layer from "../Layer.js";
 import Chunk from "../Chunk.js";
 import { ComponentArray } from "./ComponentArray.js";

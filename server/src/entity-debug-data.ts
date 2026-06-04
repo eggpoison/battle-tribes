@@ -1,5 +1,4 @@
-import { CircleDebugData, EntityDebugData, LineDebugData, PathData, TileHighlightData, TribesmanAIType, Entity, EntityTypeString, ItemTypeString, getStringLengthBytes, Packet, AIPlanType, getTileX, getTileY } from "battletribes-shared";
-import { Bytes } from "../../shared/src/constants.js";
+import { Bytes } from "../../shared/dist/constants.js";
 import { TRIBESMAN_COMMUNICATION_RANGE } from "./entities/tribes/tribesman-ai/tribesman-ai.js";
 import { TribeComponentArray } from "./components/TribeComponent.js";
 import { TribesmanAIComponentArray } from "./components/TribesmanAIComponent.js";
@@ -12,6 +11,11 @@ import { EnergyStoreComponentArray } from "./components/EnergyStoreComponent.js"
 import { EnergyStomachComponentArray } from "./components/EnergyStomachComponent.js";
 import { OkrenComponentArray } from "./components/OkrenComponent.js";
 import { AIPathfindingComponentArray } from "./components/AIPathfindingComponent.js";
+import { EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData } from "../../shared/dist/client-server-types.js";
+import { EntityTypeString, Entity } from "../../shared/dist/entities.js";
+import { ItemTypeString } from "../../shared/dist/items/items.js";
+import { getStringLengthBytes, Packet } from "../../shared/dist/packets.js";
+import { AIPlanType, getTileX, getTileY } from "../../shared/dist/utils.js";
 
 const getPlanDebugString = (plan: AIPlan): string => {
    switch (plan.type) {

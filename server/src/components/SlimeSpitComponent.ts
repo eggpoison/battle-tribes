@@ -1,5 +1,4 @@
-import { ServerComponentType, Entity, EntityType, DamageSource, Packet, AttackEffectiveness, Settings, StatusEffect, Point, polarVec2, randAngle, angle } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { createEntity, destroyEntity, getEntityLayer, getEntityType } from "../world.js";
 import { TransformComponentArray } from "./TransformComponent.js";
@@ -7,6 +6,13 @@ import { createSpitPoisonAreaConfig } from "../entities/projectiles/spit-poison-
 import { HealthComponentArray, damageEntity } from "./HealthComponent.js";
 import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent.js";
 import { applyKnockback, getHitboxVelocity, Hitbox } from "../hitboxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { StatusEffect } from "../../../shared/dist/status-effects.js";
+import { randAngle, Point, angle, polarVec2 } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    BREAK_VELOCITY = 100

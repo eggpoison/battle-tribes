@@ -19,7 +19,8 @@ export const enum EntityTickEventType {
    foodBurp,
    inguSerpentAngry,
    inguSerpentLeap,
-   tukmokAngry
+   tukmokAngry,
+   collapse
 }
 
 const EventDataTypes = {
@@ -38,6 +39,7 @@ const EventDataTypes = {
    [EntityTickEventType.inguSerpentAngry]: (): unknown => 0 as any,
    [EntityTickEventType.inguSerpentLeap]: (): unknown => 0 as any,
    [EntityTickEventType.tukmokAngry]: (): unknown => 0 as any,
+   [EntityTickEventType.collapse]: (): unknown => 0 as any,
 } satisfies Record<EntityTickEventType, () => unknown>;
 
 export type EntityEventData<T extends EntityTickEventType> = ReturnType<typeof EventDataTypes[T]>;

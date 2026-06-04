@@ -1,4 +1,9 @@
-import { SubtileType, TileType, getSubtileIndex, Biome, getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, tileIsInWorld, Settings, EntityType } from "battletribes-shared";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
+import { TileType, SubtileType } from "../../../shared/dist/tiles.js";
+import { TileIndex, getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld } from "../../../shared/dist/utils.js";
 import Layer from "../Layer.js";
 
 export interface LocalBiome {

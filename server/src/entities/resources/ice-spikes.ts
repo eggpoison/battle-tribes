@@ -1,4 +1,3 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, StatusEffect, HitboxCollisionType, ItemType, createCircularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -6,6 +5,11 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import { IceSpikesComponent } from "../../components/IceSpikesComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 registerEntityLootOnDeath(EntityType.iceSpikes, {
    itemType: ItemType.frostcicle,

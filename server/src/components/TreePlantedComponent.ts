@@ -1,5 +1,8 @@
-import { ServerComponentType, Entity, Packet, Settings } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { getPlantGrowthSpeed } from "./PlanterBoxComponent.js";
 

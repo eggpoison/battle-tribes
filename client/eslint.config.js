@@ -43,7 +43,8 @@ export default defineConfig([
          "@typescript-eslint/prefer-optional-chain": "off", // Explicitly typing it is more performant
          "@typescript-eslint/no-duplicate-enum-values": "off", // CONST ENUMS!!!
          "@typescript-eslint/no-empty-object-type": "off", // the reason it says that this warning exists is stupid
-         "no-fallthrough": "off"
+         "no-fallthrough": "off",
+         "@typescript-eslint/no-dynamic-delete": "off" // this is sometimes faster than maps lole
       },
    },
 ]);

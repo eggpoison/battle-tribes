@@ -1,4 +1,3 @@
-import { ServerComponentType, Entity, EntityType, polarVec2, UtilVar, Biome, ItemType, EntityTickEvent, EntityTickEventType, Settings, TamingSkillID, distance } from "battletribes-shared";
 import { moveEntityToPosition, runHerdAI } from "../ai-shared.js";
 import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent.js";
 import { runEscapeAI } from "../ai/EscapeAI.js";
@@ -18,6 +17,14 @@ import { ItemComponentArray } from "./ItemComponent.js";
 import { InventoryUseComponentArray } from "./InventoryUseComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { ItemType } from "../../../shared/dist/items/items.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TamingSkillID } from "../../../shared/dist/taming.js";
+import { UtilVar, distance, polarVec2 } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    TURN_SPEED = UtilVar.PI * 2

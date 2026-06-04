@@ -1,20 +1,38 @@
 import { Settings } from "../../../../shared/src/settings";
 import { WaterRockData } from "../../../../shared/src/client-server-types";
-import { assert } from "../../../../shared/src/utils";
-import { createTileRenderChunks } from "./webgl/solid-tile-rendering";
+import { assert, getTileX, getTileY } from "../../../../shared/src/utils";
+import { createTileRenderChunks, updateRenderChunkTileData } from "./webgl/solid-tile-rendering";
 import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
-import { calculateShadowInfo, TileShadowType } from "./webgl/tile-shadow-rendering";
-import { calculateWallBorderInfo } from "./webgl/wall-border-rendering";
+import { calculateShadowInfo, recalculateTileShadows, TileShadowType } from "./webgl/tile-shadow-rendering";
+import { calculateWallBorderInfo, recalculateWallBorders } from "./webgl/wall-border-rendering";
 import Layer from "../Layer";
 import { layers } from "../world";
+import { TickSnapshot } from "../networking/snapshot-processing";
+import { getSubtileX, getSubtileY } from "../../../../shared/src/subtiles";
+import { PacketReader } from "../../../../shared/src/packets";
+import { SubtileType, TileType } from "../../../../shared/src/tiles";
+import { gl } from "../webgl";
+import { Tile } from "../Tile";
 
-/** Width and height of a render chunk in tiles */
-export const RENDER_CHUNK_SIZE = 8;
-export const RENDER_CHUNK_UNITS = RENDER_CHUNK_SIZE * Settings.TILE_SIZE;
+export const enum RenderChunkVars {
+   /** Width and height of a render chunk in tiles */
+   RENDER_CHUNK_SIZE = 8,
+   RENDER_CHUNK_UNITS = RENDER_CHUNK_SIZE * Settings.TILE_SIZE,
+   WORLD_RENDER_CHUNK_SIZE = Settings.WORLD_SIZE_TILES / RENDER_CHUNK_SIZE,
+   FULL_WORLD_RENDER_CHUNK_SIZE = Settings.FULL_WORLD_SIZE_TILES / RENDER_CHUNK_SIZE,
+   RENDER_CHUNK_EDGE_GENERATION = ((Settings.EDGE_GENERATION_DISTANCE / RENDER_CHUNK_SIZE) + 0.99999) | 0
+}
 
-export const WORLD_RENDER_CHUNK_SIZE = Settings.WORLD_SIZE_TILES / RENDER_CHUNK_SIZE;
-
-export const RENDER_CHUNK_EDGE_GENERATION = Math.ceil(Settings.EDGE_GENERATION_DISTANCE / RENDER_CHUNK_SIZE);
+export const enum EdgeMarkerBit {
+   top = 1,
+   bottom = 2,
+   left = 4,
+   right = 8,
+   topLeft = 16,
+   topRight = 32,
+   bottomLeft = 64,
+   bottomRight = 128
+}
 
 export interface RenderChunkRiverInfo {
    readonly baseVAO: WebGLVertexArrayObject;
@@ -33,12 +51,23 @@ export interface RenderChunkRiverInfo {
    readonly waterRocks: Array<WaterRockData>;
 }
 
-export interface RenderChunkTileShadowInfo {
+export const enum EdgeType {
+   floor,
+   wall,
+   dropdown
+}
+
+export interface RenderChunkEdgeInfo {
+   readonly indexes: Array<number>;
+   readonly markers: Array<number>;
+}
+
+export interface RenderChunkShadowInfo {
    readonly vao: WebGLVertexArrayObject;
    readonly buffer: WebGLBuffer;
    // @Hack: make readonly
-   vertexData: ArrayBuffer;
-   vertexCount: number;
+   vertexData: Uint32Array;
+   numElements: number;
 }
 
 export interface RenderChunkWallBorderInfo {
@@ -48,24 +77,28 @@ export interface RenderChunkWallBorderInfo {
    vertexData: Float32Array;
 }
 
+export type EdgeInfoArrays = Array<Record<EdgeType, ReadonlyArray<RenderChunkEdgeInfo>>>;
+
 // @Hack
 // @Speed: Polymorphism
-const tileShadowInfoArrays: Array<Record<TileShadowType, Array<RenderChunkTileShadowInfo | null>>> = [];
+const tileShadowInfoArrays: Array<Record<TileShadowType, Array<RenderChunkShadowInfo | null>>> = [];
+let edgeInfoArrays: EdgeInfoArrays;
+
 const wallBorderInfoArrays: Array<Array<RenderChunkWallBorderInfo | null>> = [];
 
 export function getRenderChunkIndex(renderChunkX: number, renderChunkY: number): number {
-   return (renderChunkY + RENDER_CHUNK_EDGE_GENERATION) * (WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION * 2) + renderChunkX + RENDER_CHUNK_EDGE_GENERATION;
+   return (renderChunkY + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION) * (RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION * 2) + renderChunkX + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION;
 }
 
 export function getRenderChunkX(renderChunkIdx: number): number {
-   const renderChunkX = renderChunkIdx % (WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION * 2) - RENDER_CHUNK_EDGE_GENERATION;
-   assert(renderChunkX >= -RENDER_CHUNK_EDGE_GENERATION && renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION);
+   const renderChunkX = renderChunkIdx % (RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION * 2) - RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION;
+   assert(renderChunkX >= -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION && renderChunkX < RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
    return renderChunkX;
 }
 
 export function getRenderChunkY(renderChunkIdx: number): number {
-   const renderChunkY = Math.floor(renderChunkIdx / (WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION * 2)) - RENDER_CHUNK_EDGE_GENERATION;
-   assert(renderChunkY >= -RENDER_CHUNK_EDGE_GENERATION && renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION);
+   const renderChunkY = Math.floor(renderChunkIdx / (RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION * 2)) - RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION;
+   assert(renderChunkY >= -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION && renderChunkY < RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
    return renderChunkY;
 }
 
@@ -73,28 +106,36 @@ export function getRenderChunkRiverInfo(layer: Layer, renderChunkX: number, rend
    return layer.riverInfoArray[getRenderChunkIndex(renderChunkX, renderChunkY)];
 }
 
-export function getRenderChunkWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo | null {
+export function getRenderChunkWallBorderInfo(layer: Layer, renderChunkIdx: number): RenderChunkWallBorderInfo | null {
    // @Hack
    const layerIdx = layers.indexOf(layer);
-   return wallBorderInfoArrays[layerIdx][getRenderChunkIndex(renderChunkX, renderChunkY)];
+   return wallBorderInfoArrays[layerIdx][renderChunkIdx];
 }
 
-export function setRenderChunkWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number, data: RenderChunkWallBorderInfo): void {
-   const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
-   
+export function setRenderChunkWallBorderInfo(layer: Layer, renderChunkIdx: number, data: RenderChunkWallBorderInfo): void {
    // @Hack
    const layerIdx = layers.indexOf(layer);
    assert(wallBorderInfoArrays[layerIdx][renderChunkIdx] === null);
    wallBorderInfoArrays[layerIdx][renderChunkIdx] = data;
 }
 
-export function getRenderChunkTileShadowInfo(layer: Layer, renderChunkX: number, renderChunkY: number, tileShadowType: TileShadowType): RenderChunkTileShadowInfo | null {
-   // @Hack
-   const layerIdx = layers.indexOf(layer);
-   return tileShadowInfoArrays[layerIdx][tileShadowType][getRenderChunkIndex(renderChunkX, renderChunkY)];
+export function getRenderChunkTileShadowInfo(layer: Layer, renderChunkIdx: number, tileShadowType: TileShadowType): RenderChunkShadowInfo | null {
+   // @HACk not rly necessary only for finding 1 bug
+   assert(renderChunkIdx >= 0 && renderChunkIdx < RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE * RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE);
+   return tileShadowInfoArrays[layer.idx][tileShadowType][renderChunkIdx];
 }
 
-export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<WaterRockData>): void {
+export function setRenderChunkTileShadowInfo(layer: Layer, renderChunkIdx: number, tileShadowType: TileShadowType, newInfo: RenderChunkShadowInfo | null): void {
+   assert(getRenderChunkTileShadowInfo(layer, renderChunkIdx, tileShadowType) === null);
+   tileShadowInfoArrays[layer.idx][tileShadowType][renderChunkIdx] = newInfo;
+}
+
+export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<WaterRockData>, infoArrays: EdgeInfoArrays): void {
+   edgeInfoArrays = infoArrays;
+   const floorEdgeInfos = infoArrays[layer.idx][EdgeType.floor];
+   const wallEdgeInfos = infoArrays[layer.idx][EdgeType.wall];
+   const dropdownEdgeInfos = infoArrays[layer.idx][EdgeType.dropdown];
+   
    // @hack
    const layerIdx = layers.indexOf(layer);
    
@@ -102,8 +143,8 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    // @Speed: Garbage collection
    const waterRocksChunked = new Map<number, Array<WaterRockData>>();
    for (const waterRock of waterRocks) {
-      const renderChunkX = Math.floor(waterRock.position[0] / RENDER_CHUNK_UNITS);
-      const renderChunkY = Math.floor(waterRock.position[1] / RENDER_CHUNK_UNITS);
+      const renderChunkX = Math.floor(waterRock.position[0] / RenderChunkVars.RENDER_CHUNK_UNITS);
+      const renderChunkY = Math.floor(waterRock.position[1] / RenderChunkVars.RENDER_CHUNK_UNITS);
       const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
 
       const waterRocks = waterRocksChunked.get(renderChunkIndex);
@@ -148,8 +189,8 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
 
    // River info
    layer.riverInfoArray = [];
-   for (let renderChunkY = -RENDER_CHUNK_EDGE_GENERATION; renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
-      for (let renderChunkX = -RENDER_CHUNK_EDGE_GENERATION; renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
+   for (let renderChunkY = -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION; renderChunkY < RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
+      for (let renderChunkX = -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION; renderChunkX < RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
          const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
          const waterRocks = waterRocksChunked.get(renderChunkIndex);
          const data = waterRocks !== undefined ? calculateRiverRenderChunkData(layer, renderChunkX, renderChunkY, waterRocks) : null;
@@ -158,33 +199,459 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    }
 
    // Tile shadow info
-   const tileShadowInfoArray: Record<TileShadowType, Array<RenderChunkTileShadowInfo | null>> = {
-      [TileShadowType.dropdownShadow]: [],
-      [TileShadowType.wallShadow]: []
-   };
-   for (let renderChunkY = -RENDER_CHUNK_EDGE_GENERATION; renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
-      for (let renderChunkX = -RENDER_CHUNK_EDGE_GENERATION; renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
-         tileShadowInfoArray[TileShadowType.dropdownShadow].push(calculateShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.dropdownShadow));
-         tileShadowInfoArray[TileShadowType.wallShadow].push(calculateShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.wallShadow));
-      }
+   const dropdownShadowArray: Array<RenderChunkShadowInfo | null> = [];
+   const wallShadowArray: Array<RenderChunkShadowInfo | null> = [];
+   for (let idx = 0; idx < RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE * RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE; idx++) {
+      wallShadowArray.push(calculateShadowInfo(floorEdgeInfos[idx]));
+      dropdownShadowArray.push(calculateShadowInfo(dropdownEdgeInfos[idx]));
    }
-   // @Speed: makes it unpacked
-   tileShadowInfoArrays[layerIdx] = tileShadowInfoArray;
+   
+   const tileShadowInfoArray: Record<TileShadowType, Array<RenderChunkShadowInfo | null>> = {
+      [TileShadowType.dropdownShadow]: dropdownShadowArray,
+      [TileShadowType.wallShadow]: wallShadowArray
+   };
+
+   assert(layerIdx === tileShadowInfoArrays.length);
+   tileShadowInfoArrays.push(tileShadowInfoArray);
 
    // Wall border info
    const wallBorderInfoArray: Array<RenderChunkWallBorderInfo | null> = [];
-   for (let renderChunkY = -RENDER_CHUNK_EDGE_GENERATION; renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
-      for (let renderChunkX = -RENDER_CHUNK_EDGE_GENERATION; renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
-         const data = calculateWallBorderInfo(layer, renderChunkX, renderChunkY);
-         wallBorderInfoArray.push(data);
+   for (let idx = 0; idx < RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE * RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE; idx++) {
+      wallBorderInfoArray.push(calculateWallBorderInfo(wallEdgeInfos[idx]));
+   }
+
+   assert(layerIdx === wallBorderInfoArrays.length);
+   wallBorderInfoArrays.push(wallBorderInfoArray);
+}
+
+const getSubtileEdgeInfo = (edgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subtileIndex: number): RenderChunkEdgeInfo => {
+   const subtileX = getSubtileX(subtileIndex);
+   const subtileY = getSubtileY(subtileIndex);
+   const renderChunkX = Math.floor(subtileX / 4 / RenderChunkVars.RENDER_CHUNK_SIZE);
+   const renderChunkY = Math.floor(subtileY / 4 / RenderChunkVars.RENDER_CHUNK_SIZE);
+   const idx = getRenderChunkIndex(renderChunkX, renderChunkY);
+   return edgeInfos[idx];
+}
+
+const getTileEdgeInfo = (edgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, tileIndex: number): RenderChunkEdgeInfo => {
+   const tileX = getTileX(tileIndex);
+   const tileY = getTileY(tileIndex);
+   const renderChunkX = Math.floor(tileX / RenderChunkVars.RENDER_CHUNK_SIZE);
+   const renderChunkY = Math.floor(tileY / RenderChunkVars.RENDER_CHUNK_SIZE);
+   const idx = getRenderChunkIndex(renderChunkX, renderChunkY);
+   return edgeInfos[idx];
+}
+
+const addEdge = (edgeInfo: RenderChunkEdgeInfo, index: number, marker: EdgeMarkerBit) => {
+   const idx = edgeInfo.indexes.indexOf(index);
+   if (idx === -1) {
+      edgeInfo.indexes.push(index);
+      edgeInfo.markers.push(marker);
+   } else {
+      edgeInfo.markers[idx] |= marker;
+   }
+}
+
+const clearEdges = (edgeInfo: RenderChunkEdgeInfo, index: number) => {
+   const idx = edgeInfo.indexes.indexOf(index);
+   // If a subtile is removed from the very center of a contiguous block, then it won't be present.
+   if (idx !== -1) {
+      edgeInfo.indexes.splice(idx, 1);
+      edgeInfo.markers.splice(idx, 1);
+   }
+}
+
+const removeEdge = (edgeInfo: RenderChunkEdgeInfo, index: number, marker: EdgeMarkerBit) => {
+   const idx = edgeInfo.indexes.indexOf(index);
+   // @HACK
+   // assert(idx !== -1)
+   if (idx === -1) {
+      return;
+   }
+   
+   edgeInfo.markers[idx] &= ~marker;
+}
+
+const addSubtileToEdgeInfosPartial = (wallSubtileTypes: Uint8Array, floorEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, wallEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subtileIndex: number, subtileType: SubtileType): void => {
+   const rowIdx = subtileIndex % Settings.FULL_WORLD_SIZE_SUBTILES;
+   const hasLeft = rowIdx > 0; 
+   const hasRight = rowIdx < Settings.FULL_WORLD_SIZE_SUBTILES - 1;
+   const hasBottom = subtileIndex >= Settings.FULL_WORLD_SIZE_SUBTILES;
+
+   // Left
+   if (hasLeft) {
+      const leftSubtileIndex = subtileIndex - 1;
+      const leftSubtileType = wallSubtileTypes[leftSubtileIndex];
+      if ((leftSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.left);
+         addEdge(getSubtileEdgeInfo(leftSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, leftSubtileIndex), leftSubtileIndex, EdgeMarkerBit.right);
       }
    }
-   // @Speed: makes it unpacked
-   wallBorderInfoArrays[layerIdx] = wallBorderInfoArray;
+
+   // Bottom
+   if (hasBottom) {
+      const bottomSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES;
+      const bottomSubtileType = wallSubtileTypes[bottomSubtileIndex];
+      if ((bottomSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.bottom);
+         addEdge(getSubtileEdgeInfo(bottomSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, bottomSubtileIndex), bottomSubtileIndex, EdgeMarkerBit.top);
+      }
+   }
+
+   // Bottom left
+   if (hasBottom && hasLeft) {
+      const bottomLeftSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES - 1;
+      const bottomLeftSubtileType = wallSubtileTypes[bottomLeftSubtileIndex];
+      if ((bottomLeftSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.bottomLeft);
+         addEdge(getSubtileEdgeInfo(bottomLeftSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, bottomLeftSubtileIndex), bottomLeftSubtileIndex, EdgeMarkerBit.topRight);
+      }
+   }
+
+   // Bottom right
+   if (hasBottom && hasRight) {
+      const bottomRightSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES + 1;
+      const bottomRightSubtileType = wallSubtileTypes[bottomRightSubtileIndex];
+      if ((bottomRightSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.bottomRight);
+         addEdge(getSubtileEdgeInfo(bottomRightSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, bottomRightSubtileIndex), bottomRightSubtileIndex, EdgeMarkerBit.topLeft);
+      }
+   }
+}
+
+const addSubtileToEdgeInfosComplete = (wallSubtileTypes: Uint8Array, floorEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, wallEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subtileIndex: number, subtileType: SubtileType): void => {
+   const rowIdx = subtileIndex % Settings.FULL_WORLD_SIZE_SUBTILES;
+
+   const hasLeft = rowIdx > 0; 
+   const hasRight = rowIdx < Settings.FULL_WORLD_SIZE_SUBTILES - 1;
+   const hasBottom = subtileIndex >= Settings.FULL_WORLD_SIZE_SUBTILES;
+   const hasTop = subtileIndex < Settings.FULL_WORLD_SIZE_SUBTILES * (Settings.FULL_WORLD_SIZE_SUBTILES - 1);
+
+   // Left
+   if (hasLeft) {
+      const leftSubtileIndex = subtileIndex - 1;
+      const leftSubtileType = wallSubtileTypes[leftSubtileIndex];
+      if ((leftSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.left);
+         addEdge(getSubtileEdgeInfo(leftSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, leftSubtileIndex), leftSubtileIndex, EdgeMarkerBit.right);
+      } else if (subtileType !== 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.left);
+         removeEdge(getSubtileEdgeInfo(wallEdgeInfos, leftSubtileIndex), leftSubtileIndex, EdgeMarkerBit.right);
+      }
+   }
+
+   // Right
+   if (hasRight) {
+      const rightSubtileIndex = subtileIndex + 1;
+      const rightSubtileType = wallSubtileTypes[rightSubtileIndex];
+      if ((rightSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.right);
+         addEdge(getSubtileEdgeInfo(rightSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, rightSubtileIndex), rightSubtileIndex, EdgeMarkerBit.left);
+      } else if (subtileType !== 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.right);
+         removeEdge(getSubtileEdgeInfo(wallEdgeInfos, rightSubtileIndex), rightSubtileIndex, EdgeMarkerBit.left);
+      }
+   }
+
+   // Bottom
+   if (hasBottom) {
+      const bottomSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES;
+      const bottomSubtileType = wallSubtileTypes[bottomSubtileIndex];
+      if ((bottomSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.bottom);
+         addEdge(getSubtileEdgeInfo(bottomSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, bottomSubtileIndex), bottomSubtileIndex, EdgeMarkerBit.top);
+      } else if (subtileType !== 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.bottom);
+         removeEdge(getSubtileEdgeInfo(wallEdgeInfos, bottomSubtileIndex), bottomSubtileIndex, EdgeMarkerBit.top);
+      }
+   }
+
+   // Top
+   if (hasTop) {
+      const topSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES;
+      const topSubtileType = wallSubtileTypes[topSubtileIndex];
+      if ((topSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.top);
+         addEdge(getSubtileEdgeInfo(topSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, topSubtileIndex), topSubtileIndex, EdgeMarkerBit.bottom);
+      } else if (subtileType !== 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.top);
+         removeEdge(getSubtileEdgeInfo(wallEdgeInfos, topSubtileIndex), topSubtileIndex, EdgeMarkerBit.bottom);
+      }
+   }
+
+   // Bottom left
+   if (hasBottom && hasLeft) {
+      const bottomLeftSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES - 1;
+      const bottomLeftSubtileType = wallSubtileTypes[bottomLeftSubtileIndex];
+      if ((bottomLeftSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.bottomLeft);
+         addEdge(getSubtileEdgeInfo(bottomLeftSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, bottomLeftSubtileIndex), bottomLeftSubtileIndex, EdgeMarkerBit.topRight);
+      } else if (subtileType !== 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.bottomLeft);
+         removeEdge(getSubtileEdgeInfo(wallEdgeInfos, bottomLeftSubtileIndex), bottomLeftSubtileIndex, EdgeMarkerBit.topRight);
+      }
+   }
+
+   // Bottom right
+   if (hasBottom && hasRight) {
+      const bottomRightSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES + 1;
+      const bottomRightSubtileType = wallSubtileTypes[bottomRightSubtileIndex];
+      if ((bottomRightSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.bottomRight);
+         addEdge(getSubtileEdgeInfo(bottomRightSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, bottomRightSubtileIndex), bottomRightSubtileIndex, EdgeMarkerBit.topLeft);
+      } else if (subtileType !== 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.bottomRight);
+         removeEdge(getSubtileEdgeInfo(wallEdgeInfos, bottomRightSubtileIndex), bottomRightSubtileIndex, EdgeMarkerBit.topLeft);
+      }
+   }
+
+   // Top left
+   if (hasTop && hasLeft) {
+      const topLeftSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES - 1;
+      const topLeftSubtileType = wallSubtileTypes[topLeftSubtileIndex];
+      if ((topLeftSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.topLeft);
+         addEdge(getSubtileEdgeInfo(topLeftSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, topLeftSubtileIndex), topLeftSubtileIndex, EdgeMarkerBit.bottomRight);
+      } else if (subtileType !== 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.topLeft);
+         removeEdge(getSubtileEdgeInfo(wallEdgeInfos, topLeftSubtileIndex), topLeftSubtileIndex, EdgeMarkerBit.bottomRight);
+      }
+   }
+
+   // Topr gith
+   if (hasTop && hasRight) {
+      const topRightSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES + 1;
+      const topRightSubtileType = wallSubtileTypes[topRightSubtileIndex];
+      if ((topRightSubtileType === 0) !== (subtileType === 0)) {
+         addEdge(getSubtileEdgeInfo(subtileType === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.topRight);
+         addEdge(getSubtileEdgeInfo(topRightSubtileType === 0 ? floorEdgeInfos : wallEdgeInfos, topRightSubtileIndex), topRightSubtileIndex, EdgeMarkerBit.bottomLeft);
+      } else if (subtileType !== 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, subtileIndex), subtileIndex, EdgeMarkerBit.topRight);
+         removeEdge(getSubtileEdgeInfo(wallEdgeInfos, topRightSubtileIndex), topRightSubtileIndex, EdgeMarkerBit.bottomLeft);
+      }
+   }
+}
+
+const removeSubtileFromEdgeInfos = (wallSubtileTypes: Uint8Array, floorEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, wallEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subtileIndex: number): void => {
+   const rowIdx = subtileIndex % Settings.FULL_WORLD_SIZE_SUBTILES;
+
+   const hasLeft = rowIdx > 0;
+   const hasRight = rowIdx < Settings.FULL_WORLD_SIZE_SUBTILES - 1;
+   const hasBottom = subtileIndex >= Settings.FULL_WORLD_SIZE_SUBTILES;
+   const hasTop = subtileIndex < Settings.FULL_WORLD_SIZE_SUBTILES * (Settings.FULL_WORLD_SIZE_SUBTILES - 1);
+
+   clearEdges(getSubtileEdgeInfo(wallEdgeInfos, subtileIndex), subtileIndex);
+
+   // Left
+   if (hasLeft) {
+      const leftSubtileIndex = subtileIndex - 1;
+      const leftSubtileType = wallSubtileTypes[leftSubtileIndex];
+      if (leftSubtileType === 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, leftSubtileIndex), leftSubtileIndex, EdgeMarkerBit.right);
+      }
+   }
+
+   // Right
+   if (hasRight) {
+      const rightSubtileIndex = subtileIndex + 1;
+      const rightSubtileType = wallSubtileTypes[rightSubtileIndex];
+      if (rightSubtileType === 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, rightSubtileIndex), rightSubtileIndex, EdgeMarkerBit.left);
+      }
+   }
+
+   // Top
+   if (hasTop) {
+      const topSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES;
+      const topSubtileType = wallSubtileTypes[topSubtileIndex];
+      if (topSubtileType === 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, topSubtileIndex), topSubtileIndex, EdgeMarkerBit.bottom);
+      }
+   }
+
+   // Bottom
+   if (hasBottom) {
+      const bottomSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES;
+      const bottomSubtileType = wallSubtileTypes[bottomSubtileIndex];
+      if (bottomSubtileType === 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, bottomSubtileIndex), bottomSubtileIndex, EdgeMarkerBit.top);
+      }
+   }
+
+   // Bottom left
+   if (hasBottom && hasLeft) {
+      const bottomLeftSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES - 1;
+      const bottomLeftSubtileType = wallSubtileTypes[bottomLeftSubtileIndex];
+      if (bottomLeftSubtileType === 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, bottomLeftSubtileIndex), bottomLeftSubtileIndex, EdgeMarkerBit.topRight);
+      }
+   }
+
+   // Bottom right
+   if (hasBottom && hasRight) {
+      const bottomRightSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES + 1;
+      const bottomRightSubtileType = wallSubtileTypes[bottomRightSubtileIndex];
+      if (bottomRightSubtileType === 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, bottomRightSubtileIndex), bottomRightSubtileIndex, EdgeMarkerBit.topLeft);
+      }
+   }
+
+   // Top left
+   if (hasTop && hasLeft) {
+      const topLeftSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES - 1;
+      const topLeftSubtileType = wallSubtileTypes[topLeftSubtileIndex];
+      if (topLeftSubtileType === 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, topLeftSubtileIndex), topLeftSubtileIndex, EdgeMarkerBit.bottomRight);
+      }
+   }
+
+   // Top right
+   if (hasTop && hasRight) {
+      const topRightSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES + 1;
+      const topRightSubtileType = wallSubtileTypes[topRightSubtileIndex];
+      if (topRightSubtileType === 0) {
+         removeEdge(getSubtileEdgeInfo(floorEdgeInfos, topRightSubtileIndex), topRightSubtileIndex, EdgeMarkerBit.bottomLeft);
+      }
+   }
+}
+
+export function addTileToEdgeInfos(tiles: Array<Tile>, dropdownEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, tileIndex: number, tileType: TileType): void {
+   const rowIdx = tileIndex % Settings.FULL_WORLD_SIZE_TILES;
+   const hasLeft = rowIdx > 0;
+   const hasRight = rowIdx < Settings.FULL_WORLD_SIZE_TILES - 1;
+   const hasBottom = tileIndex >= Settings.FULL_WORLD_SIZE_TILES;
+
+   // Left
+   if (hasLeft) {
+      const leftTileIndex = tileIndex - 1;
+      const leftTileType = tiles[leftTileIndex].type;
+      if ((leftTileType === TileType.dropdown) !== (tileType === TileType.dropdown)) {
+         if (tileType === TileType.dropdown) {
+            addEdge(getTileEdgeInfo(dropdownEdgeInfos, tileIndex), tileIndex, EdgeMarkerBit.left);
+         } else {
+            addEdge(getTileEdgeInfo(dropdownEdgeInfos, leftTileIndex), leftTileIndex, EdgeMarkerBit.right);
+         }
+      }
+   }
+
+   // Bottom
+   if (hasBottom) {
+      const bottomTileIndex = tileIndex - Settings.FULL_WORLD_SIZE_TILES;
+      const bottomTileType = tiles[bottomTileIndex].type;
+      if ((bottomTileType === TileType.dropdown) !== (tileType === TileType.dropdown)) {
+         if (tileType === TileType.dropdown) {
+            addEdge(getTileEdgeInfo(dropdownEdgeInfos, tileIndex), tileIndex, EdgeMarkerBit.bottom);
+         } else {
+            addEdge(getTileEdgeInfo(dropdownEdgeInfos, bottomTileIndex), bottomTileIndex, EdgeMarkerBit.top);
+         }
+      }
+   }
+
+   // Bottom left
+   if (hasBottom && hasLeft) {
+      const bottomLeftTileIndex = tileIndex - Settings.FULL_WORLD_SIZE_TILES - 1;
+      const bottomLeftTileType = tiles[bottomLeftTileIndex].type;
+      if ((bottomLeftTileType === TileType.dropdown) !== (tileType === TileType.dropdown)) {
+         if (tileType === TileType.dropdown) {
+            addEdge(getTileEdgeInfo(dropdownEdgeInfos, tileIndex), tileIndex, EdgeMarkerBit.bottomLeft);
+         } else {
+            addEdge(getTileEdgeInfo(dropdownEdgeInfos, bottomLeftTileIndex), bottomLeftTileIndex, EdgeMarkerBit.topRight);
+         }
+      }
+   }
+
+   // Bottom right
+   if (hasBottom && hasRight) {
+      const bottomRightTileIndex = tileIndex - Settings.FULL_WORLD_SIZE_TILES + 1;
+      const bottomRightTileType = tiles[bottomRightTileIndex].type;
+      if ((bottomRightTileType === TileType.dropdown) !== (tileType === TileType.dropdown)) {
+         if (tileType === TileType.dropdown) {
+            addEdge(getTileEdgeInfo(dropdownEdgeInfos, tileIndex), tileIndex, EdgeMarkerBit.bottomRight);
+         } else {
+            addEdge(getTileEdgeInfo(dropdownEdgeInfos, bottomRightTileIndex), bottomRightTileIndex, EdgeMarkerBit.topLeft);
+         }
+      }
+   }
+}
+
+export function readInitialSubtileData(reader: PacketReader, wallSubtileTypes: Uint8Array, floorEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, wallEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>): void {
+   for (let subtileIndex = 0; subtileIndex < Settings.FULL_WORLD_SIZE_SUBTILES * Settings.FULL_WORLD_SIZE_SUBTILES; subtileIndex++) {
+      const subtileType = reader.readNumber();
+      wallSubtileTypes[subtileIndex] = subtileType;
+
+      addSubtileToEdgeInfosPartial(wallSubtileTypes, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileType);
+   }
+}
+
+export function processRenderChunkSubtileUpdates(snapshot: TickSnapshot): void {
+   for (const layer of layers) {
+      const dirtiedEdgeRenderChunks = new Set<number>();
+      const dirtiedSubtileRenderChunks = new Set<number>();
+      
+      const floorEdgeInfos = edgeInfoArrays[layer.idx][EdgeType.floor];
+      const wallEdgeInfos = edgeInfoArrays[layer.idx][EdgeType.wall];
+
+      const layerSubtileUpdates = snapshot.wallSubtileUpdates.get(layer)!;
+      for (const subtileUpdateData of layerSubtileUpdates) {
+         const subtileIndex = subtileUpdateData.subtileIndex;
+         const subtileType = subtileUpdateData.subtileType;
+
+         // @HACK i have absolutely no idea why  this is happening
+         const prev = layer.getSubtileType(subtileIndex);
+         if (prev === subtileType) {
+            continue;
+         }
+         
+         layer.setSubtile(subtileIndex, subtileType, subtileUpdateData.damageTaken);
+
+         const subtileX = getSubtileX(subtileIndex);
+         const subtileY = getSubtileY(subtileIndex);
+
+         const renderChunkX = Math.floor(subtileX / 4 / RenderChunkVars.RENDER_CHUNK_SIZE);
+         const renderChunkY = Math.floor(subtileY / 4 / RenderChunkVars.RENDER_CHUNK_SIZE);
+         const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
+         dirtiedSubtileRenderChunks.add(renderChunkIdx);
+
+         if (subtileType === 0) {
+            removeSubtileFromEdgeInfos(layer.wallSubtileTypes, floorEdgeInfos, wallEdgeInfos, subtileIndex);
+         }
+         addSubtileToEdgeInfosComplete(layer.wallSubtileTypes, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileType);
+   
+         const minRenderChunkX = Math.max(Math.floor((subtileX - 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), 0);
+         const maxRenderChunkX = Math.min(Math.floor((subtileX + 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE - 1);
+         const minRenderChunkY = Math.max(Math.floor((subtileY - 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), 0);
+         const maxRenderChunkY = Math.min(Math.floor((subtileY + 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE - 1);
+   
+         // @Speed: We can probably batch these together
+         for (let renderChunkY = minRenderChunkY; renderChunkY <= maxRenderChunkY; renderChunkY++) {
+            for (let renderChunkX = minRenderChunkX; renderChunkX <= maxRenderChunkX; renderChunkX++) {
+               const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
+               dirtiedEdgeRenderChunks.add(renderChunkIdx);
+            }
+         }
+      }
+
+      // Recalculate solid tile rendering
+      for (const renderChunkIdx of dirtiedSubtileRenderChunks) {
+         updateRenderChunkTileData(layer, renderChunkIdx, true);
+      }
+
+      // Recalculate render chunks
+      for (const renderChunkIdx of dirtiedEdgeRenderChunks) {
+         const floorEdgeInfo = floorEdgeInfos[renderChunkIdx];
+         const wallEdgeInfo = wallEdgeInfos[renderChunkIdx];
+         
+         // @hack??1? because updateRenderChunkTileData requires it
+         gl.bindVertexArray(null);
+
+         recalculateTileShadows(layer, renderChunkIdx, floorEdgeInfo, TileShadowType.wallShadow);
+         recalculateWallBorders(layer, renderChunkIdx, wallEdgeInfo);
+      }
+   }
 }
 
 export function getRenderChunkMinTileX(renderChunkX: number): number {
-   let tileMinX = renderChunkX * RENDER_CHUNK_SIZE;
+   let tileMinX = renderChunkX * RenderChunkVars.RENDER_CHUNK_SIZE;
    if (tileMinX < -Settings.EDGE_GENERATION_DISTANCE) {
       tileMinX = Settings.EDGE_GENERATION_DISTANCE;
    }
@@ -192,7 +659,7 @@ export function getRenderChunkMinTileX(renderChunkX: number): number {
 }
 
 export function getRenderChunkMaxTileX(renderChunkX: number): number {
-   let tileMaxX = (renderChunkX + 1) * RENDER_CHUNK_SIZE - 1;
+   let tileMaxX = (renderChunkX + 1) * RenderChunkVars.RENDER_CHUNK_SIZE - 1;
    if (tileMaxX >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
       tileMaxX = Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE - 1;
    }
@@ -200,7 +667,7 @@ export function getRenderChunkMaxTileX(renderChunkX: number): number {
 }
 
 export function getRenderChunkMinTileY(renderChunkY: number): number {
-   let tileMinY = renderChunkY * RENDER_CHUNK_SIZE;
+   let tileMinY = renderChunkY * RenderChunkVars.RENDER_CHUNK_SIZE;
    if (tileMinY < -Settings.EDGE_GENERATION_DISTANCE) {
       tileMinY = Settings.EDGE_GENERATION_DISTANCE;
    }
@@ -208,7 +675,7 @@ export function getRenderChunkMinTileY(renderChunkY: number): number {
 }
 
 export function getRenderChunkMaxTileY(renderChunkY: number): number {
-   let tileMaxY = (renderChunkY + 1) * RENDER_CHUNK_SIZE - 1;
+   let tileMaxY = (renderChunkY + 1) * RenderChunkVars.RENDER_CHUNK_SIZE - 1;
    if (tileMaxY >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
       tileMaxY = Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE - 1;
    }

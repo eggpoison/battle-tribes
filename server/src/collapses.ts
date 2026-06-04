@@ -1,8 +1,13 @@
-import { customTickIntervalHasPassed, distance, SubtileType, getSubtileX, getSubtileY, subtileIsInWorldIncludingEdges, getSubtileIndex, Settings } from "battletribes-shared";
 import { TransformComponent } from "./components/TransformComponent.js";
 import Layer from "./Layer.js";
 import PlayerClient, { PlayerClientVars } from "./server/PlayerClient.js";
 import { getGameTicks, layers } from "./world.js";
+import { registerCollapseTickEvent, registerEntityTickEvent } from "./server/player-clients.js";
+import { EntityTickEvent, EntityTickEventType } from "../../shared/dist/entity-events.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { getSubtileX, getSubtileY, subtileIsInWorldIncludingEdges, getSubtileIndex } from "../../shared/dist/subtiles.js";
+import { SubtileType } from "../../shared/dist/tiles.js";
+import { customTickIntervalHasPassed, distance } from "../../shared/dist/utils.js";
 
 const enum Vars {
    MAX_SUPPORT = 100,
@@ -106,6 +111,13 @@ export function registerMinedSubtile(layer: Layer, subtileIndex: number, subtile
       support: support
    };
    layer.minedSubtileInfoMap.set(subtileIndex, minedSubtileInfo);
+
+   const tickEvent: EntityTickEvent = {
+      entityID: 0,
+      type: EntityTickEventType.collapse,
+      data: subtileIndex
+   };
+   registerCollapseTickEvent(subtileX * Settings.SUBTILE_SIZE, subtileY * Settings.SUBTILE_SIZE, tickEvent);
 }
 
 export function damageWallSubtitle(layer: Layer, subtileIndex: number, damage: number): number {
@@ -128,11 +140,7 @@ export function damageWallSubtitle(layer: Layer, subtileIndex: number, damage: n
       registerMinedSubtile(layer, subtileIndex, previousSubtileType);
    }
 
-   layer.wallSubtileUpdates.push({
-      subtileIndex: subtileIndex,
-      subtileType: layer.wallSubtileTypes[subtileIndex],
-      damageTaken: damageTaken
-   });
+   layer.wallSubtileUpdates.add(subtileIndex);
 
    return damageDealt;
 }

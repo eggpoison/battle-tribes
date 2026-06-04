@@ -1,4 +1,6 @@
-import { EntityType, Settings, getAngleDiff, TileIndex } from "battletribes-shared";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { getAngleDiff, TileIndex } from "../../../../shared/dist/utils.js";
 import Tribe from "../../Tribe.js";
 import { SafetyNode } from "../ai-building.js";
 import TribeBuildingLayer from "./TribeBuildingLayer.js";

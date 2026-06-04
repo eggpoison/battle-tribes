@@ -1,4 +1,9 @@
-import { Entity, EntityType, TribesmanTitle, TRIBE_INFO_RECORD, Inventory, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, HammerItemInfo, Settings, PathfindingSettings, CircularBox } from "battletribes-shared";
+import { CircularBox } from "../../../../../shared/dist/boxes.js";
+import { Entity, EntityType } from "../../../../../shared/dist/entities.js";
+import { Inventory, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, HammerItemInfo } from "../../../../../shared/dist/items/items.js";
+import { Settings, PathfindingSettings } from "../../../../../shared/dist/settings.js";
+import { TribesmanTitle } from "../../../../../shared/dist/titles.js";
+import { TRIBE_INFO_RECORD } from "../../../../../shared/dist/tribes.js";
 import { EntityRelationship, getEntityRelationship, TribeComponentArray } from "../../../components/TribeComponent.js";
 import { SpikesComponentArray } from "../../../components/SpikesComponent.js";
 import { TransformComponent, TransformComponentArray } from "../../../components/TransformComponent.js";

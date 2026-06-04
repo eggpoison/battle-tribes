@@ -1,5 +1,12 @@
-import { PotentialBuildingPlanData, ServerComponentType, Entity, EntityType, Settings, TechID, TechTreeUnlockProgress, Tech, getTechByID, TECHS, TechUnlockProgress, TribeType, TRIBE_INFO_RECORD, Point, randItem, clampToBoardDimensions, TileIndex, getTileIndexIncludingEdges, getTileX, getTileY, assert, ItemType, InventoryName, getStringLengthBytes, Packet } from "battletribes-shared";
-import { Bytes } from "../../shared/src/constants.js";
+import { PotentialBuildingPlanData } from "../../shared/dist/ai-building-types.js";
+import { ServerComponentType } from "../../shared/dist/components.js";
+import { EntityType, Entity } from "../../shared/dist/entities.js";
+import { ItemType, InventoryName } from "../../shared/dist/items/items.js";
+import { getStringLengthBytes, Packet } from "../../shared/dist/packets.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { TribeType, TRIBE_INFO_RECORD } from "../../shared/dist/tribes.js";
+import { TileIndex, randItem, Point, assert, clampToBoardDimensions, getTileIndexIncludingEdges, getTileX, getTileY } from "../../shared/dist/utils.js";
+import { Bytes } from "../../shared/dist/constants.js";
 import Chunk from "./Chunk.js";
 import { TotemBannerComponentArray, addBannerToTotem, removeBannerFromTotem } from "./components/TotemBannerComponent.js";
 import { InventoryComponentArray, getInventory } from "./components/InventoryComponent.js";
@@ -19,6 +26,7 @@ import { TribeMemberComponentArray } from "./components/TribeMemberComponent.js"
 import { StructureComponentArray } from "./components/StructureComponent.js";
 import { TribesmanComponentArray } from "./components/TribesmanComponent.js";
 import { getEntityComponentTypes } from "./entity-component-types.js";
+import { TechID, Tech, TechTreeUnlockProgress, getTechByID, TECHS, TechUnlockProgress } from "../../shared/dist/techs.js";
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TICK_RATE;
 const RESPAWN_TIME_TICKS = 5 * Settings.TICK_RATE;

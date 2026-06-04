@@ -11,7 +11,7 @@ import { preloadTextureImages, loadTextures } from "../textures";
 import { gl, windowWidth, windowHeight, createTexture, setupWebGL } from "../webgl";
 import { layers, getCurrentLayer, entityExists, getEntityRenderObject } from "../world";
 import { renderLightLevelsText } from "./light-levels-text-rendering";
-import { createRenderChunks, RENDER_CHUNK_SIZE } from "./render-chunks";
+import { createRenderChunks, RenderChunkVars } from "./render-chunks";
 import { resetRenderOrder, renderNextRenderables } from "./render-loop";
 import { updateRenderPartMatrices } from "./render-part-matrices";
 import { createUBOs, updateUBOs } from "./ubos";
@@ -56,6 +56,7 @@ import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { debugDisplayState } from "../../ui-state/debug-display-state";
 import { nerdVision } from "../../ui-state/nerd-vision-funcs";
 import { MenuType, menuIsOpen } from "../../ui/menus";
+import { IntermediateInitialisationInfo } from "../networking/packet-receiving";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -66,7 +67,7 @@ let lastTextureHeight = 0;
 
 let hasSetupRendering = false;
 
-export async function setupRendering(): Promise<void> {
+export async function setupRendering(intermediateInitialisationInfo: IntermediateInitialisationInfo): Promise<void> {
    if (!hasSetupRendering) {
       return new Promise(async resolve => {
          setupWebGL();
@@ -74,8 +75,9 @@ export async function setupRendering(): Promise<void> {
          createTextCanvasContext();
 
          clearSolidTileRenderingData();
-         for (const layer of layers) {
-            createRenderChunks(layer, layer.waterRocks);
+         for (let i = 0; i < layers.length; i++) {
+            const layer = layers[i];
+            createRenderChunks(layer, layer.waterRocks, intermediateInitialisationInfo.shadowInfoArrays);
          }
 
          await loadTextureAtlas();
@@ -137,7 +139,7 @@ export async function setupRendering(): Promise<void> {
    } else {
       clearSolidTileRenderingData();
       for (const layer of layers) {
-         createRenderChunks(layer, layer.waterRocks);
+         createRenderChunks(layer, layer.waterRocks, intermediateInitialisationInfo.shadowInfoArrays);
       }
    }
 }
@@ -170,7 +172,7 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): 
       renderChunkBorders(minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY, Settings.CHUNK_SIZE, 1);
    }
    if (nerdVision.isVisible() && debugDisplayState.showRenderChunkBorders) {
-      renderChunkBorders(minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY, RENDER_CHUNK_SIZE, 2);
+      renderChunkBorders(minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY, RenderChunkVars.RENDER_CHUNK_SIZE, 2);
    }
 
    // @Incomplete: Not layer specific
@@ -194,8 +196,9 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): 
    renderNextRenderables(layer, RenderLayer.WALL_SEPARATOR);
 
    // Render walls
-   renderTileShadows(layer, TileShadowType.wallShadow);
+   // @TEMPORARY
    renderSolidTiles(layer, true);
+   renderTileShadows(layer, TileShadowType.wallShadow);
    renderMithrilRichTileOverlays(layer, true);
    renderTileBreakProgress(layer);
    renderWallBorders(layer);

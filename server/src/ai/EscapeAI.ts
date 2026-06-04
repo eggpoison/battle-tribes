@@ -1,7 +1,9 @@
-import { distance, Entity, Point, Settings } from "battletribes-shared";
 import { AttackingEntitiesComponentArray } from "../components/AttackingEntitiesComponent.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
 import { AIHelperComponent, AIHelperComponentArray, AIType } from "../components/AIHelperComponent.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point, distance } from "../../../shared/dist/utils.js";
 
 export type ExtraEscapeCondition = (entity: Entity, escapeTarget: Entity) => boolean;
 

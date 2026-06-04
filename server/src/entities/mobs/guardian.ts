@@ -1,4 +1,3 @@
-import { HitboxCollisionType, DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Point, TileIndex, createCircularBox, HitboxTag } from "battletribes-shared";
 import GuardianAI from "../../ai/GuardianAI.js";
 import GuardianCrystalBurstAI from "../../ai/GuardianCrystalBurstAI.js";
 import GuardianCrystalSlamAI from "../../ai/GuardianCrystalSlamAI.js";
@@ -13,6 +12,10 @@ import { addHitboxToTransformComponent, TransformComponent } from "../../compone
 import Layer from "../../Layer.js";
 import { createHitbox, setHitboxIgnoresWallCollisions, setHitboxTag } from "../../hitboxes.js";
 import { createLight } from "../../lights.js";
+import { createCircularBox, HitboxCollisionType, HitboxTag } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
+import { TileIndex, Point } from "../../../../shared/dist/utils.js";
 
 function tileIsValidCallback(entity: Entity, _layer: Layer, tileIndex: TileIndex): boolean {
    const guardianComponent = GuardianComponentArray.getComponent(entity);

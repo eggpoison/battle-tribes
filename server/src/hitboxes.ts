@@ -1,4 +1,9 @@
-import { Box, cloneBox, HitboxCollisionType, CollisionBit, Entity, EntityType, Settings, TILE_PHYSICS_INFO_RECORD, TileType, getAngleDiff, getTileIndexIncludingEdges, Point, TileIndex, HitboxTag, HitboxFlagBit } from "battletribes-shared";
+import { Box, HitboxCollisionType, HitboxFlagBit, HitboxTag, cloneBox } from "../../shared/dist/boxes.js";
+import { CollisionBit } from "../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../shared/dist/entities.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { TILE_PHYSICS_INFO_RECORD, TileType } from "../../shared/dist/tiles.js";
+import { Point, getAngleDiff, TileIndex, getTileIndexIncludingEdges } from "../../shared/dist/utils.js";
 import { CollisionVars, entitiesAreColliding } from "./collision-detection.js";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
 import { registerPlayerKnockback } from "./server/player-clients.js";

@@ -1,4 +1,3 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Point, polarVec2, randInt, HitboxCollisionType, Settings, Biome, ItemType, getTamingSkill, TamingSkillID, angle, setBoxFlipX, createCircularBox, HitboxTag } from "battletribes-shared";
 import { TransformComponent, TransformComponentArray, addHitboxToTransformComponent } from "../../components/TransformComponent.js";
 import { applyAbsoluteKnockback, createHitbox, setHitboxTag } from "../../hitboxes.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -17,6 +16,14 @@ import { LootComponent, registerEntityLootOnDeath } from "../../components/LootC
 import { registerEntityTamingSpec } from "../../taming-specs.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { EntityConfig } from "../../components.js";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createCircularBox, HitboxCollisionType, HitboxTag, setBoxFlipX } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { getTamingSkill, TamingSkillID } from "../../../../shared/dist/taming.js";
+import { randInt, angle, polarVec2, Point } from "../../../../shared/dist/utils.js";
 
 export const SNOBE_EAR_IDEAL_ANGLE = -Math.PI * 0.2;
 

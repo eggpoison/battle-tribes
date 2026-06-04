@@ -1,4 +1,8 @@
-import { ServerComponentType, Entity, EntityType, ITEM_TYPE_RECORD, ItemType, Settings, assert } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { ItemType, ITEM_TYPE_RECORD } from "../../../shared/dist/items/items.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { assert } from "../../../shared/dist/utils.js";
 import { getHitboxTile } from "../hitboxes.js";
 import { getEntityLayer, getEntityType } from "../world.js";
 import { LocalBiome } from "../world-generation/terrain-generation-utils.js";

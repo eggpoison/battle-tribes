@@ -1,5 +1,11 @@
-import { ServerComponentType, Entity, EntityType, Settings, Tech, TribesmanTitle, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize, InventoryName, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { InventoryName } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TribesmanTitle } from "../../../shared/dist/titles.js";
+import { getRandomResearchOrbSize, RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME } from "../../../shared/dist/research.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { InventoryUseComponentArray } from "./InventoryUseComponent.js";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation.js";
@@ -9,7 +15,7 @@ import { TribesmanAIComponentArray } from "./TribesmanAIComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { getEntityType, getGameTicks } from "../world.js";
 import { hasTitle, awardTitle } from "./TribesmanComponent.js";
-import { Hitbox } from "../hitboxes.js";
+import { Tech } from "../../../shared/dist/techs.js";
 
 const ORB_COMPLETE_TICKS = Math.floor(RESEARCH_ORB_COMPLETE_TIME * Settings.TICK_RATE);
 

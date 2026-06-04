@@ -1,5 +1,4 @@
-import { getStringLengthBytes, Packet, PacketReader, ServerPacketType, Entity, EntityType, LimbAction, BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, TribeType, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, assert, Point, randAngle, CRAFTING_RECIPES, ItemRequirements, TileType, getTamingSkill, TamingSkillID, TamingTier, Tech, TechID, getTechByID, BLOCKING_LIMB_STATE, copyLimbState, RESTING_LIMB_STATES, SHIELD_BLOCKING_LIMB_STATE, updateBox, TribesmanTitle, Settings, angle } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import PlayerClient from "./PlayerClient.js";
 import Layer from "../Layer.js";
 import { getCurrentLimbState, getHeldItem, getHeldItemEntity, getLimbConfiguration, InventoryUseComponentArray, setLimbActions } from "../components/InventoryUseComponent.js";
@@ -35,6 +34,20 @@ import Tribe from "../Tribe.js";
 import { broadcastSimulationStatus, createSyncGameDataPacket } from "./packet-sending.js";
 import { BarrelComponentArray } from "../components/BarrelComponent.js";
 import { HeldItemComponentArray } from "../components/HeldItemComponent.js";
+import { copyLimbState, SHIELD_BLOCKING_LIMB_STATE, BLOCKING_LIMB_STATE, RESTING_LIMB_STATES } from "../../../shared/dist/attack-patterns.js";
+import { updateBox } from "../../../shared/dist/boxes.js";
+import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "../../../shared/dist/components.js";
+import { LimbAction, EntityType, Entity } from "../../../shared/dist/entities.js";
+import { CRAFTING_RECIPES, ItemRequirements } from "../../../shared/dist/items/crafting-recipes.js";
+import { InventoryName, ItemType, getItemAttackInfo, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo } from "../../../shared/dist/items/items.js";
+import { PacketReader, Packet, ServerPacketType, getStringLengthBytes } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TamingTier, TamingSkillID, getTamingSkill } from "../../../shared/dist/taming.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { TribesmanTitle } from "../../../shared/dist/titles.js";
+import { TribeType } from "../../../shared/dist/tribes.js";
+import { Point, randAngle, assert, angle } from "../../../shared/dist/utils.js";
+import { Tech, TechID, getTechByID } from "../../../shared/dist/techs.js";
 
 // @Speed: would be much faster in many-spectator cases if spectators instead sent their own kind of packets with only the things they need set
 export function processPlayerDataPacket(playerClient: PlayerClient, reader: PacketReader): void {

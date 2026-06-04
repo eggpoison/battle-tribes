@@ -1,5 +1,8 @@
-import { ServerComponentType, Entity, Packet, assert, randInt } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { randInt, assert } from "../../../shared/dist/utils.js";
 import { entityExists } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TreeRootBaseComponentArray } from "./TreeRootBaseComponent.js";

@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, Settings, StatusEffect, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
 import { EntityRelationship, getEntityRelationship, TribeComponent } from "../../components/TribeComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -9,6 +8,11 @@ import Tribe from "../../Tribe.js";
 import { ProjectileComponent } from "../../components/ProjectileComponent.js";
 import { IceArrowComponent } from "../../components/IceArrowComponent.js";
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 export function createIceArrowConfig(x: number, y: number, rotation: number, tribe: Tribe, creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

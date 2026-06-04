@@ -1,6 +1,10 @@
-import { Biome, ServerComponentType, Entity, EntityType, Settings, angle, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, polarVec2, randItem, TileIndex, distance } from "battletribes-shared";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point, distance, TileIndex, getTileIndexIncludingEdges, angle, lerp, randItem, getTileX, getTileY, polarVec2 } from "../../../shared/dist/utils.js";
 import { entityHasPassedPosition } from "../ai-shared.js";
-import { Hitbox, addHitboxVelocity } from "../hitboxes.js";
+import { addHitboxVelocity } from "../hitboxes.js";
 import { getEntityType, getEntityLayer } from "../world.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";

@@ -1,5 +1,4 @@
-import { Entity, EntityType, FishColour, DamageSource, ServerComponentType, Packet, AttackEffectiveness, InventoryName, ItemType, Settings, TileType, customTickIntervalHasPassed, Point, polarVec2, randAngle, randFloat, randSign, UtilVar, angle } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { runHerdAI } from "../ai-shared.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
@@ -11,6 +10,14 @@ import { entityExists, getEntityLayer, getEntityType } from "../world.js";
 import { TribesmanComponentArray } from "./TribesmanComponent.js";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
 import { applyAccelerationFromGround, applyKnockback, getHitboxTile, Hitbox, addHitboxVelocity, addHitboxAngularVelocity } from "../hitboxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { FishColour, Entity, DamageSource, EntityType } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { InventoryName, ItemType } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { UtilVar, customTickIntervalHasPassed, angle, Point, polarVec2, randAngle, randFloat, randSign } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    TURN_SPEED = UtilVar.PI / 1.5,

@@ -1,4 +1,6 @@
-import { TribesmanTitle, TribeType, randItem } from "battletribes-shared";
+import { TribesmanTitle } from "../../shared/dist/titles.js";
+import { TribeType } from "../../shared/dist/tribes.js";
+import { randItem } from "../../shared/dist/utils.js";
 import { TribeMemberComponentArray } from "./components/TribeMemberComponent.js";
 import Tribe from "./Tribe.js";
 

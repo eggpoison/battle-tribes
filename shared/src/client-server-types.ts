@@ -144,4 +144,4 @@ export interface RestrictedBuildingAreaData {
    readonly rotation: number;
 }
 
-export type RiverFlowDirectionsRecord = Partial<Record<number, Partial<Record<number, number>>>>;
+export type RiverFlowDirectionsRecord = Partial<Record<number, number>>;

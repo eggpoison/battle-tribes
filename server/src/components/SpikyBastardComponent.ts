@@ -1,4 +1,7 @@
-import { ServerComponentType, DamageSource, AttackEffectiveness, Point, polarVec2, angle } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Point, angle, polarVec2 } from "../../../shared/dist/utils.js";
 import { applyKnockback, Hitbox } from "../hitboxes.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { GlurbSegmentComponentArray } from "./GlurbSegmentComponent.js";

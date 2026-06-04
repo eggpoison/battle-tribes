@@ -1,5 +1,8 @@
-import { CircularBox, ServerComponentType, Entity, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { CircularBox } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
 import { getConfigComponent } from "../components.js";
 import { createOkrenConfig } from "../entities/desert/okren.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";

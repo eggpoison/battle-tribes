@@ -1,4 +1,3 @@
-import { ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType, ItemType, Settings, customTickIntervalHasPassed, getAbsAngleDiff, randAngle, randInt, secondsToTicks, angle, distance, Point, getBoxCollisionResult, HitboxTag } from "battletribes-shared";
 import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared.js";
 import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
 import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components.js";
@@ -18,6 +17,13 @@ import { getRiderTargetPosition, TamingComponentArray } from "./TamingComponent.
 import { attachHitbox, detachHitbox, TransformComponent, TransformComponentArray } from "./TransformComponent.js";
 import { TribeComponentArray } from "./TribeComponent.js";
 import { getHitboxTethers } from "../tethers.js";
+import { HitboxTag, getBoxCollisionResult } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { ItemType } from "../../../shared/dist/items/items.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randInt, secondsToTicks, distance, angle, Point, getAbsAngleDiff, customTickIntervalHasPassed, randAngle } from "../../../shared/dist/utils.js";
 
 const enum TrunkCombatState {
    active,

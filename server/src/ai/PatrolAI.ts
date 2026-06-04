@@ -1,6 +1,8 @@
-import { TribesmanAIType, Entity, Settings, distance, getTileX, getTileY, Point, TileIndex } from "battletribes-shared";
+import { TribesmanAIType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point, TileIndex, getTileX, getTileY, distance } from "../../../shared/dist/utils.js";
 import { getHumanoidRadius } from "../entities/tribes/tribesman-ai/tribesman-ai-utils.js";
-import { Hitbox } from "../hitboxes.js";
 import { getEntityFootprint, PathfindFailureDefault, runPathfindingSingleLayer, PathfindOptions } from "../pathfinding.js";
 import { getEntityLayer, getGameTicks } from "../world.js";
 import { TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";

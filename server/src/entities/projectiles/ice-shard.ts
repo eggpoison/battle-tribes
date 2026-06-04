@@ -1,8 +1,10 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, EntityType, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { IceShardComponent } from "../../components/IceShardComponent.js";
 import { createHitbox } from "../../hitboxes.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
 
 export function createIceShardConfig(x: number, y: number, rotation: number): EntityConfig {
    const transformComponent = new TransformComponent();

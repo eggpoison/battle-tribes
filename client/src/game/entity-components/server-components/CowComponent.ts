@@ -3,7 +3,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { CowSpecies, Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { Settings } from "../../../../../shared/src/settings";
-import { randAngle, randInt, Point, angle, randFloat } from "../../../../../shared/src/utils";
+import { randAngle, randInt, Point, angle, randFloat, getTileX, getTileY } from "../../../../../shared/src/utils";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createDirtParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -13,7 +13,7 @@ import _ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../../texture-atlases";
 import { RenderPart } from "../../render-parts/render-parts";
-import { getHitboxTag, getHitboxTile, Hitbox } from "../../hitboxes";
+import { getHitboxTag, getHitboxTileIndex, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -146,10 +146,12 @@ class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponen
       if (grazeProgress < cowComponent.grazeProgress) {
          const hitbox = transformComponent.hitboxes[0];
          
-         const tile = getHitboxTile(hitbox);
+         const tileIndex = getHitboxTileIndex(hitbox);
+         const tileX = getTileX(tileIndex);
+         const tileY = getTileY(tileIndex);
          for (let i = 0; i < 15; i++) {
-            const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
-            const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
+            const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+            const y = (tileY + Math.random()) * Settings.TILE_SIZE;
             createDirtParticle(x, y, ParticleRenderLayer.low);
          }
       }

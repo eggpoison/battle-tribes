@@ -1,4 +1,3 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, TreeSize, randInt, HitboxCollisionType, ItemType, createCircularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
@@ -6,6 +5,11 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { SpruceTreeComponent, SpruceTreeComponentArray } from "../../components/SpruceTreeComponent.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity, TreeSize } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { randInt } from "../../../../shared/dist/utils.js";
 
 const TREE_MAX_HEALTHS = [15, 20];
 

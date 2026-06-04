@@ -1,4 +1,5 @@
-import { TileType, SubtileType, Biome } from "battletribes-shared";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { TileType, SubtileType } from "../../../shared/dist/tiles.js";
 
 export interface CustomTileNoiseInfo {
    readonly scale: number;

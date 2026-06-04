@@ -1,4 +1,3 @@
-import { PlayerKnockbackData, HealData, ResearchOrbCompleteData, Entity, TRIBE_INFO_RECORD, TribeType, getTileX, getTileY, Point, randInt, randItem, Settings, AttackEffectiveness, EntitySummonPacket, InventoryName, ItemType, EntityTickEvent, PacketReader } from "battletribes-shared";
 import Layer from "../Layer.js";
 import { registerCommand } from "../commands.js";
 import PlayerClient, { HitData } from "./PlayerClient.js";
@@ -12,6 +11,16 @@ import { destroyEntity, entityExists, surfaceLayer } from "../world.js";
 import { Hitbox } from "../hitboxes.js";
 import { PlayerComponentArray } from "../components/PlayerComponent.js";
 import { createItem } from "../items.js";
+import { PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "../../../shared/dist/client-server-types.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { EntityTickEvent } from "../../../shared/dist/entity-events.js";
+import { ItemType, InventoryName } from "../../../shared/dist/items/items.js";
+import { PacketReader } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TribeType, TRIBE_INFO_RECORD } from "../../../shared/dist/tribes.js";
+import { Point, randItem, getTileX, getTileY, randInt } from "../../../shared/dist/utils.js";
+import { EntitySummonPacket } from "../../../shared/dist/dev-packets.js";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -316,6 +325,20 @@ export function registerResearchOrbComplete(orbCompleteData: ResearchOrbComplete
 export function registerEntityTickEvent(entity: Entity, tickEvent: EntityTickEvent): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const viewingPlayers = getPlayersViewingPosition(transformComponent.boundingAreaMinX, transformComponent.boundingAreaMaxX, transformComponent.boundingAreaMinY, transformComponent.boundingAreaMaxY);
+   if (viewingPlayers.length === 0) {
+      return;
+   }
+
+   for (let i = 0; i < viewingPlayers.length; i++) {
+      const playerClient = viewingPlayers[i];
+      playerClient.entityTickEvents.push(tickEvent);
+   }
+}
+
+// @HACK!!!!! ONly for collapses
+export function registerCollapseTickEvent(x: number, y: number, tickEvent: EntityTickEvent): void {
+   // @Hack
+   const viewingPlayers = getPlayersViewingPosition(x - 1000, x + 1000, y - 1000, y + 1000);
    if (viewingPlayers.length === 0) {
       return;
    }

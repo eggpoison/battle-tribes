@@ -1,5 +1,10 @@
-import { ServerComponentType, Entity, EntityType, Settings, Packet, InventoryName, ItemType, ItemTypeString, CookingIngredientItemType, FuelSourceItemType } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { EntityType, Entity } from "../../../shared/dist/entities.js";
+import { ItemType, InventoryName, ItemTypeString } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { CookingIngredientItemType, FuelSourceItemType } from "../../../shared/dist/items/cooking-info.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { InventoryComponentArray, getInventory, consumeItemTypeFromInventory, addItemToInventory } from "./InventoryComponent.js";
 import { getEntityType } from "../world.js";

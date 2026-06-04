@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Settings, StatusEffect, distance, Point, randAngle, randInt, HitboxCollisionType, CircularBox, ItemType, createCircularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { GolemComponent } from "../../components/GolemComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
@@ -7,6 +6,13 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { createHitbox, Hitbox } from "../../hitboxes.js";
 import { createLight } from "../../lights.js";
+import { CircularBox, createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
+import { randInt, distance, Point, randAngle } from "../../../../shared/dist/utils.js";
 
 export const enum GolemVars {
    PEBBLUM_SUMMON_COOLDOWN_TICKS = 10 * Settings.TICK_RATE

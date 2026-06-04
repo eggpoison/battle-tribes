@@ -1,4 +1,4 @@
-import { angle, angleToPoint, assert, distance, getAngleDiff } from "battletribes-shared";
+import { assert, angle, getAngleDiff, angleToPoint, distance } from "../../shared/dist/utils.js";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
 import { addHitboxAngularAcceleration, applyForce, getHitboxAngularVelocity, getHitboxTotalMassIncludingChildren, getHitboxVelocity, Hitbox } from "./hitboxes.js";
 

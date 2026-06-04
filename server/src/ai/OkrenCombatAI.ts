@@ -1,4 +1,7 @@
-import { Entity, EntityType, EntityTickEvent, EntityTickEventType, Settings, Point, polarVec2, randFloat, randInt, distance, angle } from "battletribes-shared";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randInt, distance, Point, angle, polarVec2, randFloat } from "../../../shared/dist/utils.js";
 import { getDistanceFromPointToEntity } from "../ai-shared.js";
 import { createEntityConfigAttachInfo, getConfigTransformComponent } from "../components.js";
 import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";

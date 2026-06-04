@@ -1,4 +1,5 @@
-import { Entity, EntityType, InventoryName } from "battletribes-shared";
+import { Entity, EntityType } from "../../../../../shared/dist/entities.js";
+import { InventoryName } from "../../../../../shared/dist/items/items.js";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent.js";
 import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "../../../components/TribeComponent.js";
 import { TribeMemberComponentArray } from "../../../components/TribeMemberComponent.js";

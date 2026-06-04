@@ -47,20 +47,22 @@ let entityTextureAtlasData: Uint32Array;
 let entityTextureAtlasBuffer: WebGLBuffer;
 
 export function createUBOs(): void {
+   gl.bindVertexArray(null);
+   
    // Camera uniform buffer
-   cameraBuffer = gl.createBuffer();
+   cameraBuffer = gl.createBuffer(); // @speed? @garbage?
    gl.bindBufferBase(gl.UNIFORM_BUFFER, UBOBindingIndex.CAMERA, cameraBuffer);
    gl.bufferData(gl.UNIFORM_BUFFER, cameraData.byteLength, gl.DYNAMIC_DRAW);
 
    // Time uniform buffer
-   timeBuffer = gl.createBuffer();
+   timeBuffer = gl.createBuffer(); // @speed? @garbage?
    gl.bindBufferBase(gl.UNIFORM_BUFFER, UBOBindingIndex.TIME, timeBuffer);
    gl.bufferData(gl.UNIFORM_BUFFER, timeData.byteLength, gl.DYNAMIC_DRAW);
 
    // Camera uniform buffer (for the tech tree)
    {
       const gl = getTechTreeGL();
-      cameraBufferTechTree = gl.createBuffer();
+      cameraBufferTechTree = gl.createBuffer(); // @speed? @garbage?
       gl.bindBufferBase(gl.UNIFORM_BUFFER, UBOBindingIndex.CAMERA, cameraBufferTechTree);
       gl.bufferData(gl.UNIFORM_BUFFER, cameraDataTechTree.byteLength, gl.DYNAMIC_DRAW);
    }
@@ -74,7 +76,8 @@ export function createUBOs(): void {
    const textureAtlas = getEntityTextureAtlasInfo();
    const textureSources = textureAtlas.textureSources;
 
-   if (entityTextureAtlasData === undefined) {
+   // @HACK
+   if ((entityTextureAtlasData as Uint32Array | undefined) === undefined) {
       entityTextureAtlasData = new Uint32Array(4 + Math.ceil(textureSources.length / 8) * 4 + Math.ceil(textureSources.length / 4) * 4);
    }
 
@@ -112,6 +115,8 @@ export function createUBOs(): void {
 // @Speed
 export function updateUBOs(): void {
    // @Speed: don't do these calls if the values haven't changed
+
+   gl.bindVertexArray(null);
    
    // Update the camera buffer
    if (cameraData[0] !== cameraPosition.x ||

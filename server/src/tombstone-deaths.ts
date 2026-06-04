@@ -1,4 +1,4 @@
-import { DeathInfo, Entity, DamageSource } from "battletribes-shared";
+import { DeathInfo, Entity, DamageSource } from "../../shared/dist/entities.js";
 import { PlayerComponentArray } from "./components/PlayerComponent.js";
 
 // @Cleanup: don't use singletons!

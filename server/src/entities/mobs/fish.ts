@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, Entity, EntityType, FishColour, customTickIntervalHasPassed, polarVec2, UtilVar, HitboxCollisionType, TileType, Settings, Biome, ItemType, angle, createRectangularBox } from "battletribes-shared";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent.js";
 import { FishComponent, FishComponentArray } from "../../components/FishComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -12,6 +11,14 @@ import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesCo
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { applyAccelerationFromGround, getHitboxTile, addHitboxVelocity, turnHitboxToAngle, createHitbox } from "../../hitboxes.js";
 import { getEntityLayer } from "../../world.js";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity, FishColour } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { TileType } from "../../../../shared/dist/tiles.js";
+import { UtilVar, angle, polarVec2, customTickIntervalHasPassed } from "../../../../shared/dist/utils.js";
 
 const enum Vars {
    TURN_SPEED = UtilVar.PI / 1.5,

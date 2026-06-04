@@ -1,4 +1,4 @@
-import { assert, Point } from "./utils.js";
+import { assert, assertMsg, Point } from "./utils.js";
 
 /** Client-to-server packet types */
 export const enum ClientPacketType {
@@ -94,13 +94,8 @@ abstract class BasePacketObject {
    }
 
    public readNumber(): number {
-      // this.cleanByteOffset();
-      if (this.currentByteOffset >= this.buffer.byteLength) {
-         throw new Error("Exceeded length of buffer (max buffer length is " + this.buffer.byteLength + " bytes.)");
-      }
-      if ((this.currentByteOffset - this.startPaddingBytes) % 4 !== 0) {
-         throw new Error("Misaligned");
-      }
+      assertMsg(this.currentByteOffset < this.buffer.byteLength, "Exceeded length of buffer (max buffer length is " + this.buffer.byteLength + " bytes.)");
+      assertMsg((this.currentByteOffset - this.startPaddingBytes) % 4 === 0, "Misaligned");
 
       // const number = this.buffer.readFloatLE(this.currentByteOffset);
       // const number = this.floatView[this.currentByteOffset / 4];
@@ -161,18 +156,11 @@ export class Packet extends BasePacketObject {
       this.currentByteOffset = PACKET_TYPE_SIZE_BYTES;
    }
 
+   // @Bandwidth: writeUint8, writeInt32, etc etc etc
    public writeNumber(number: number): void {
-      if (isNaN(number)) {
-         throw new Error("Tried to write NaN to a packet.");
-      }
-      
-      // Make sure there is room for 4 bytes for the number
-      if (this.currentByteOffset + 4 > this.buffer.byteLength) {
-         throw new Error("Exceeded length of buffer");
-      }
-      if (this.currentByteOffset % 4 !== 0) {
-         throw new Error("Misaligned");
-      }
+      assertMsg(!isNaN(number), "Tried to write NaN to a packet.");
+      assertMsg(this.currentByteOffset < this.buffer.byteLength, "Exceeded length of buffer");
+      assertMsg(this.currentByteOffset % 4 === 0, "Misaligned");
 
       this.floatView[this.currentByteOffset / 4] = number;
       
@@ -189,9 +177,7 @@ export class Packet extends BasePacketObject {
       const encodedUsername = utf8Encoder.encode(str);
       const lengthBytes = encodedUsername.length;
       
-      if (this.currentByteOffset + lengthBytes > this.buffer.byteLength) {
-         throw new Error("Exceeded length of buffer");
-      }
+      assertMsg(this.currentByteOffset + lengthBytes < this.buffer.byteLength, "Exceeded length of buffer");
 
       this.writeNumber(lengthBytes);
       this.uint8View.set(encodedUsername, this.currentByteOffset);
@@ -199,9 +185,7 @@ export class Packet extends BasePacketObject {
    }
 
    public writeBool(boolean: boolean): void {
-      if (this.currentByteOffset >= this.buffer.byteLength) {
-         throw new Error("Exceeded length of buffer");
-      }
+      assertMsg(this.currentByteOffset < this.buffer.byteLength, "Exceeded length of buffer");
 
       this.uint8View[this.currentByteOffset] = boolean ? 1 : 0;
       this.currentByteOffset++;

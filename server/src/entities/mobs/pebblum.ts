@@ -1,10 +1,13 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, StatusEffect, HitboxCollisionType, createCircularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { PebblumComponent } from "../../components/PebblumComponent.js";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { createHitbox } from "../../hitboxes.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 export function createPebblumConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();

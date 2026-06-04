@@ -1,5 +1,11 @@
-import { assertBoxIsRectangular, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Packet, Settings, Point, polarVec2, angle, HitboxTag } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { HitboxTag, assertBoxIsRectangular } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point, angle, polarVec2 } from "../../../shared/dist/utils.js";
 import { getOkrenClawBigArmSegmentOffset, getOkrenClawBigArmSegmentSize, getOkrenClawMediumArmSegmentOffset, getOkrenClawMediumArmSegmentSize, getOkrenClawSlashingArmSegmentOffset, getOkrenClawSlashingArmSegmentSize } from "../entities/desert/okren-claw.js";
 import { Hitbox, getHitboxVelocity, applyAbsoluteKnockback, getHitboxTag } from "../hitboxes.js";
 import { getEntityType } from "../world.js";

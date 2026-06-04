@@ -6,7 +6,7 @@ import { EntityTickEventType } from "../../../../shared/src/entity-events";
 import { TribesmanTitle } from "../../../../shared/src/titles";
 import { PacketReader } from "../../../../shared/src/packets";
 import { HitFlags } from "../../../../shared/src/client-server-types";
-import { STRUCTURE_TYPES } from "../../../../shared/src/structures";
+import { STRUCTURE_TYPES, StructureType } from "../../../../shared/src/structures";
 import { setCameraSubject } from "../camera";
 import { currentSnapshot, setCurrentSnapshot, setNextSnapshot } from "../networking/snapshots";
 import Layer from "../Layer";
@@ -31,6 +31,7 @@ import { EntityServerComponentData, getEntityComponentArrays, getEntityServerCom
 import { getSelectedEntity } from "../entity-selection";
 import { COMPONENT_ARRAYS, ServerComponentData } from "../entity-components/component-registry";
 import { processTileUpdates } from "../rendering/webgl/solid-tile-rendering";
+import { processRenderChunkSubtileUpdates } from "../rendering/render-chunks";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
@@ -279,13 +280,11 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       const numTileUpdates = reader.readNumber();
       for (let i = 0; i < numTileUpdates; i++) {
          const layerIdx = reader.readNumber();
-         const layer = layers[layerIdx];
-         
          const tileIndex = reader.readNumber();
          const tileType: TileType = reader.readNumber();
          
          layerTileUpdates.push({
-            layer: layer,
+            layer: layers[layerIdx],
             tileIndex: tileIndex,
             tileType: tileType
          });
@@ -300,7 +299,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       const numUpdates = reader.readNumber();
       for (let i = 0; i < numUpdates; i++) {
          const subtileIndex = reader.readNumber();
-         const subtileType: SubtileType = reader.readNumber();
+         const subtileType = reader.readNumber();
          const damageTaken = reader.readNumber();
 
          layerSubtileUpdates.push({
@@ -460,7 +459,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
    updateParticles();
 
    // @HACKY! So that initial chunk-rendered-entities can fill their render object without crashing, because that requires currentSnapshot and nextSnapshot when interpolating
-   if (currentSnapshot === undefined) {
+   if ((currentSnapshot as TickSnapshot | undefined) === undefined) {
       setNextSnapshot(snapshot);
    }
    setCurrentSnapshot(snapshot);
@@ -588,8 +587,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
          const playerHitbox = transformComponent.hitboxes[0];
 
          getHitboxVelocity(playerHitbox);
-         const previousVelocity = _point;
-         setHitboxVelocity(playerHitbox, previousVelocity.x * 0.5, previousVelocity.y * 0.5);
+         setHitboxVelocity(playerHitbox, _point.x * 0.5, _point.y * 0.5);
 
          addHitboxVelocity(playerHitbox, knockbackData.knockback * Math.sin(knockbackData.knockbackDirection), knockbackData.knockback * Math.cos(knockbackData.knockbackDirection));
       }
@@ -624,7 +622,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
          }
 
          // @Hack @Incomplete: This will trigger the repair sound effect even if a hammer isn't the one healing the structure
-         if (STRUCTURE_TYPES.includes(getEntityType(healedEntity) as any)) { // @Cleanup
+         if (STRUCTURE_TYPES.includes(getEntityType(healedEntity) as StructureType)) {
             playSound("repair.mp3", 0.4, 1, healData.position.x, healData.position.y, getEntityLayer(healedEntity));
          }
       }
@@ -638,12 +636,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
       processTileUpdates(layers[i], snapshot.tileUpdates[i]);
    }
 
-   for (const layer of layers) {
-      const layerSubtileUpdates = snapshot.wallSubtileUpdates.get(layer)!;
-      for (const subtileUpdateData of layerSubtileUpdates) {
-         layer.registerSubtileUpdate(subtileUpdateData.subtileIndex, subtileUpdateData.subtileType, subtileUpdateData.damageTaken);
-      }
-   }
+   processRenderChunkSubtileUpdates(snapshot);
 
    // @Cleanup (this'll go away when i do the sound server-to-client)
    if (snapshot.hasPickedUpItem) {

@@ -1,5 +1,12 @@
-import { ServerComponentType, Entity, EntityType, DamageSource, SlimeSize, Packet, Settings, TileType, lerp, Point, polarVec2, randAngle, UtilVar, Biome, AttackEffectiveness, calculateDistanceSquared, angle, distance } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { SlimeSize, Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { UtilVar, randAngle, calculateDistanceSquared, angle, polarVec2, Point, distance, lerp } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { SLIME_MAX_MERGE_WANT, SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_SPEED_MULTIPLIERS, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger, createSlimeConfig } from "../entities/mobs/slime.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { turnAngle, getEntitiesInRange, moveEntityToPosition } from "../ai-shared.js";

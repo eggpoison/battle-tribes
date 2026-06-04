@@ -1,5 +1,10 @@
-import { Entity, EntityType, DamageSource, ServerComponentType, Point, polarVec2, randFloat, secondsToTicks, Settings, AttackEffectiveness, Packet, angle } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { secondsToTicks, randFloat, Point, angle, polarVec2 } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";

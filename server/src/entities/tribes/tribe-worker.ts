@@ -1,4 +1,9 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, TRIBE_INFO_RECORD, TribeType, rotatePoint, LimbConfiguration, RESTING_LIMB_STATES, CircularBox, HitboxCollisionType, HitboxTag, setBoxFlipX, createCircularBox } from "battletribes-shared";
+import { LimbConfiguration, RESTING_LIMB_STATES } from "../../../../shared/dist/attack-patterns.js";
+import { createCircularBox, HitboxCollisionType, CircularBox, HitboxTag, setBoxFlipX } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { TribeType, TRIBE_INFO_RECORD } from "../../../../shared/dist/tribes.js";
+import { rotatePoint } from "../../../../shared/dist/utils.js";
 import Tribe from "../../Tribe.js";
 import { TribesmanAIComponent } from "../../components/TribesmanAIComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";

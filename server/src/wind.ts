@@ -1,4 +1,5 @@
-import { Settings, Point } from "battletribes-shared";
+import { Settings } from "../../shared/dist/settings.js";
+import { Point } from "../../shared/dist/utils.js";
 import { generatePointPerlinNoise } from "./perlin-noise.js";
 import { getGameTicks } from "./world.js";
 

@@ -1,4 +1,7 @@
-import { ServerComponentType, EntityType, Settings, StatusEffect } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { StatusEffect } from "../../../shared/dist/status-effects.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { Hitbox } from "../hitboxes.js";
 import { getEntityType } from "../world.js";

@@ -1,6 +1,6 @@
 import { _bounds, calculateBoxBounds, updateBox } from "../../../../../shared/src/boxes";
 import { Entity, EntityType } from "../../../../../shared/src/entities";
-import { _point, assert, customTickIntervalHasPassed, getAngleDiff, getTileIndexIncludingEdges, lerp, Point, randAngle, randInt } from "../../../../../shared/src/utils";
+import { _point, assert, customTickIntervalHasPassed, getAngleDiff, lerp, Point, randAngle, randInt } from "../../../../../shared/src/utils";
 import { getEntityCollisionGroup } from "../../../../../shared/src/collision-groups";
 import { Settings } from "../../../../../shared/src/settings";
 import { PacketReader } from "../../../../../shared/src/packets";
@@ -10,7 +10,7 @@ import Chunk from "../../Chunk";
 import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityRenderObject, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../../world";
 import _ServerComponentArray from "../ServerComponentArray";
 import { playerInstance } from "../../player";
-import { getDistanceFromPointToHitboxIncludingChildren, getHitboxByLocalID, getHitboxTile, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, hitboxIsPartOfParent, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../../hitboxes";
+import { getDistanceFromPointToHitboxIncludingChildren, getHitboxByLocalID, getHitboxTile, getHitboxTileIndex, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, hitboxIsPartOfParent, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../../hitboxes";
 import Particle from "../../Particle";
 import { createWaterSplashParticle } from "../../particles";
 import { addTexturedParticleToBufferContainer, lowTexturedParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -262,12 +262,13 @@ const applyHitboxKinematics = (hitbox: Hitbox): void => {
    }
 
    const layer = getEntityLayer(hitbox.entity);
-   const tile = getHitboxTile(hitbox);
+   const tileIndex = getHitboxTileIndex(hitbox);
+   const tile = layer.getTile(tileIndex);
 
    // @Incomplete: here goes fish suit exception
    // Apply river flow to external velocity
    if (hitboxIsInWater(hitbox)) {
-      const flowDirection = layer.getRiverFlowDirection(tile.x, tile.y);
+      const flowDirection = layer.getRiverFlowDirection(tileIndex);
       if (flowDirection > 0) {
          applyAccelerationFromGround(hitbox, 240 * Settings.DT_S * Math.sin(flowDirection - 1), 240 * Settings.DT_S * Math.cos(flowDirection - 1));
       }
@@ -665,8 +666,7 @@ class _TransformComponentArray extends _ServerComponentArray<TransformComponent,
       let canAscendLayer = false;
       if (getCurrentLayer() === undergroundLayer) {
          const hitbox = transformComponent.hitboxes[0];
-         const tile = getHitboxTile(hitbox);
-         const tileIndex = getTileIndexIncludingEdges(tile.x, tile.y);
+         const tileIndex = getHitboxTileIndex(hitbox);
          const tileAbove = surfaceLayer.getTile(tileIndex);
          if (tileAbove.type === TileType.dropdown) {
             canAscendLayer = true;
@@ -675,43 +675,44 @@ class _TransformComponentArray extends _ServerComponentArray<TransformComponent,
       gameUIState.setCanAscendLayer(canAscendLayer);
    }
 
-   public updateSelectedEntityState(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
+   // public updateSelectedEntityState(entity: Entity): void {
+   //    const transformComponent = TransformComponentArray.getComponent(entity);
+   //    const hitbox = transformComponent.hitboxes[0];
 
-      // @Incomplete @SQUEAM: do this camera logic with the entity-selection-funcs
+   //    // @Incomplete @SQUEAM: do this camera logic with the entity-selection-funcs
 
-      // const screenPos = worldToScreenPos(hitbox.box.position);
-      // entitySelectionState.setSelectedEntityScreenPosX(screenPos.x);
-      // entitySelectionState.setSelectedEntityScreenPosY(screenPos.y);
-   }
+   //    // const screenPos = worldToScreenPos(hitbox.box.position);
+   //    // entitySelectionState.setSelectedEntityScreenPosX(screenPos.x);
+   //    // entitySelectionState.setSelectedEntityScreenPosY(screenPos.y);
+   // }
 }
 
 export const TransformComponentArray = registerServerComponentArray(ServerComponentType.transform, _TransformComponentArray, false);
 
-const entityShouldInterpolate = (newTransformData: TransformComponentData, previousTransformData: TransformComponentData): boolean => {
-   // If any hitboxes' positions or angles have changed
-   for (const newHitbox of newTransformData.hitboxes) {
-      // Find the previous hitbox
-      // @Speed
-      let previousHitbox: Hitbox | undefined;
-      for (const hitbox of previousTransformData.hitboxes) {
-         if (hitbox.localID === newHitbox.localID) {
-            previousHitbox = hitbox;
-         }
-      }
+// @Cleanup: unused?
+// const entityShouldInterpolate = (newTransformData: TransformComponentData, previousTransformData: TransformComponentData): boolean => {
+//    // If any hitboxes' positions or angles have changed
+//    for (const newHitbox of newTransformData.hitboxes) {
+//       // Find the previous hitbox
+//       // @Speed
+//       let previousHitbox: Hitbox | undefined;
+//       for (const hitbox of previousTransformData.hitboxes) {
+//          if (hitbox.localID === newHitbox.localID) {
+//             previousHitbox = hitbox;
+//          }
+//       }
       
-      if (previousHitbox !== undefined) {
-         if (newHitbox.box.posX !== previousHitbox.box.posX
-            || newHitbox.box.posY !== previousHitbox.box.posY
-            || newHitbox.box.angle !== previousHitbox.box.angle) {
-            return true;
-         }
-      }
-   }
+//       if (previousHitbox !== undefined) {
+//          if (newHitbox.box.posX !== previousHitbox.box.posX
+//             || newHitbox.box.posY !== previousHitbox.box.posY
+//             || newHitbox.box.angle !== previousHitbox.box.angle) {
+//             return true;
+//          }
+//       }
+//    }
 
-   return false;
-}
+//    return false;
+// }
 
 const countHitboxesIncludingChildren = (hitbox: Hitbox): number => {
    let numHitboxes = 1;
@@ -806,7 +807,7 @@ export function entityIsVisibleToCamera(entity: Entity): boolean {
    const maxTileY = Math.floor(transformComponent.boundingAreaMaxY / Settings.TILE_SIZE);
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = surfaceLayer.getTileFromCoords(tileX, tileY);
+         const tile = surfaceLayer.getTileXY(tileX, tileY);
          if (tile.type === TileType.dropdown) {
             return true;
          }

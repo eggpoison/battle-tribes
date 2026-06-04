@@ -6,6 +6,7 @@ export enum UtilVar {
 }
 
 export type TileIndex = number;
+export type SubtileIndex = number;
 
 export interface TileCoordinates {
    readonly x: number;
@@ -402,10 +403,14 @@ export function assertUnreachable(x: never): never {
    console.warn(x);
    throw new Error("Why must I exist?");
 }
-
 export function assert(condition: unknown): asserts condition {
    if (!condition) {
       throw new Error("Assertion failed");
+   }
+}
+export function assertMsg(condition: unknown, errorMsg: string): asserts condition {
+   if (!condition) {
+      throw new Error(errorMsg);
    }
 }
 

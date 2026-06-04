@@ -1,4 +1,9 @@
-import { _bounds, Box, RectangularBox, boxIsCollidingWithSubtile, Settings, StructureType, getSubtileIndex, getTileIndexIncludingEdges, Point, randAngle, randFloat, calculateBoxBounds, createRectangularBox, getBoxCollisionResult } from "battletribes-shared";
+import { Box, calculateBoxBounds, _bounds, createRectangularBox, getBoxCollisionResult } from "../../../../shared/dist/boxes.js";
+import { boxIsCollidingWithSubtile } from "../../../../shared/dist/collision.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { StructureType } from "../../../../shared/dist/structures.js";
+import { getSubtileIndex } from "../../../../shared/dist/subtiles.js";
+import { Point, getTileIndexIncludingEdges, randFloat, randAngle } from "../../../../shared/dist/utils.js";
 import { boxArraysAreColliding, boxHasCollisionWithBoxes } from "../../collision-detection.js";
 import { getConfigTransformComponent } from "../../components.js";
 import { createStructureConfig } from "../../structure-placement.js";

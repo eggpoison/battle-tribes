@@ -1,5 +1,4 @@
-import { ServerComponentType, DamageSource, Entity, EntityType, Settings, Biome, Packet, ItemType, TribeType, getTileIndexIncludingEdges, getTileX, getTileY, Point, polarVec2, randAngle, randFloat, randItem, TileIndex, tileIsInWorld, UtilVar, AttackEffectiveness, EntityTickEvent, EntityTickEventType, angle, distance, HitboxTag } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { SnowThrowStage, YETI_SNOW_THROW_COOLDOWN } from "../entities/mobs/yeti.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
@@ -17,6 +16,17 @@ import { applyAbsoluteKnockback, applyKnockback, getHitboxTile, Hitbox, addHitbo
 import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { getConfigTransformComponent } from "../components.js";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { HitboxTag } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { ItemType } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TribeType } from "../../../shared/dist/tribes.js";
+import { UtilVar, TileIndex, getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld, randItem, randFloat, randAngle, polarVec2, angle, distance, Point } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    SMALL_SNOWBALL_THROW_SPEED_MIN = 550,

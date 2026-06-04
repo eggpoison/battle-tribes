@@ -1,4 +1,7 @@
-import { lerp, Settings, Entity, ServerComponentType, angle } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { lerp, angle } from "../../../shared/dist/utils.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { ThrowingProjectileComponentArray } from "./ThrowingProjectileComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";

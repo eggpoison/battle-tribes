@@ -1,10 +1,13 @@
-import { GuardianSpikyBallSummonStage, Entity, Settings, Point, UtilVar, randAngle, randFloat, randInt } from "battletribes-shared";
 import { turnToPosition } from "../ai-shared.js";
 import { GuardianComponentArray } from "../components/GuardianComponent.js";
 import { createGuardianSpikyBallConfig } from "../entities/projectiles/guardian-spiky-ball.js";
 import { createEntity, getEntityLayer, getGameTicks } from "../world.js";
 import { addHitboxAngularVelocity, setHitboxVelocity } from "../hitboxes.js";
 import { getConfigTransformComponent } from "../components.js";
+import { GuardianSpikyBallSummonStage } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { UtilVar, randFloat, randAngle, randInt } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    WINDUP_TIME_TICKS = (1.5 * Settings.TICK_RATE) | 0,

@@ -1,4 +1,6 @@
-import { TribesmanAIType, Entity, LimbAction, Inventory, InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory } from "battletribes-shared";
+import { TribesmanAIType } from "../../../../../shared/dist/components.js";
+import { Entity, LimbAction } from "../../../../../shared/dist/entities.js";
+import { Inventory, InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory } from "../../../../../shared/dist/items/items.js";
 import { InventoryUseComponentArray } from "../../../components/InventoryUseComponent.js";
 import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent.js";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent.js";

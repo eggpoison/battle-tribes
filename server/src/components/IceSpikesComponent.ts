@@ -1,4 +1,10 @@
-import { Point, polarVec2, positionIsInWorld, randAngle, randInt, ServerComponentType, Entity, EntityType, DamageSource, Settings, Biome, AttackEffectiveness, StatusEffect, angle } from "battletribes-shared";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { StatusEffect } from "../../../shared/dist/status-effects.js";
+import { randInt, randAngle, positionIsInWorld, polarVec2, Point, angle } from "../../../shared/dist/utils.js";
 import { ComponentArray } from "./ComponentArray.js";
 import Layer from "../Layer.js";
 import { createIceSpikesConfig } from "../entities/resources/ice-spikes.js";

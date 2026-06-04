@@ -1,5 +1,4 @@
-import { AMMO_INFO_RECORD, ServerComponentType, TurretAmmoType, TurretEntityType, Entity, EntityType, Packet, ItemType, polarVec2, randAngle, UtilVar, boxIsCircular, Settings, calculateDistanceSquared, angle } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from "../entities/structures/sling-turret.js";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent.js";
@@ -17,6 +16,13 @@ import { registerDirtyEntity } from "../server/player-clients.js";
 import { createSlingTurretRockConfig } from "../entities/projectiles/sling-turret-rock.js";
 import { HealthComponentArray } from "./HealthComponent.js";
 import { addHitboxVelocity } from "../hitboxes.js";
+import { boxIsCircular } from "../../../shared/dist/boxes.js";
+import { ServerComponentType, TurretEntityType, TurretAmmoType, AMMO_INFO_RECORD } from "../../../shared/dist/components.js";
+import { EntityType, Entity } from "../../../shared/dist/entities.js";
+import { ItemType } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { UtilVar, calculateDistanceSquared, randAngle, polarVec2, angle } from "../../../shared/dist/utils.js";
 
 export class TurretComponent {
    public aimDirection = 0;

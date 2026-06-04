@@ -1,4 +1,8 @@
-import { Settings, TileType, distance, getTileIndexIncludingEdges, Point, Biome, EntityType } from "battletribes-shared";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { distance, getTileIndexIncludingEdges } from "../../../shared/dist/utils.js";
 import { createReedConfig } from "../entities/reed.js";
 import { WaterTileGenerationInfo } from "./river-generation.js";
 import { generateOctavePerlinNoise } from "../perlin-noise.js";

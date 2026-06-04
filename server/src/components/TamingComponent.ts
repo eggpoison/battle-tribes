@@ -1,9 +1,12 @@
-import { ServerComponentType, Entity, getStringLengthBytes, Packet, Point, polarVec2, getTamingSkill, TamingSkill, TamingSkillID, TamingTier } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { getTamingSkill, TamingSkill, TamingSkillID, TamingTier } from "../../../shared/dist/taming.js";
+import { getStringLengthBytes, Packet } from "../../../shared/dist/packets.js";
+import { Point, polarVec2 } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import Tribe from "../Tribe.js";
 import { entityExists } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
-import { PlayerComponentArray } from "./PlayerComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { TribesmanComponentArray } from "./TribesmanComponent.js";
 import PlayerClient from "../server/PlayerClient.js";

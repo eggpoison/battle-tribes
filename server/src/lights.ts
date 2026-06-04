@@ -1,5 +1,9 @@
-import { Entity, LightLevelNode, LightLevelVar, Packet, Settings, assert, distance, lerp, Point } from "battletribes-shared";
-import { Bytes } from "../../shared/src/constants.js";
+import { Bytes } from "../../shared/dist/constants.js";
+import { Entity } from "../../shared/dist/entities.js";
+import { Packet } from "../../shared/dist/packets.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { Point, assert, distance, lerp } from "../../shared/dist/utils.js";
+import { LightLevelNode, LightLevelVar } from "../../shared/dist/light-levels.js";
 import { Hitbox } from "./hitboxes.js";
 import Layer from "./Layer.js";
 import PlayerClient from "./server/PlayerClient.js";

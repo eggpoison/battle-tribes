@@ -1,4 +1,6 @@
-import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, createCircularBox } from "battletribes-shared";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
 import { EntityConfig } from "../../components.js";
 import { DustfleaEggComponent } from "../../components/DustfleaEggComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";

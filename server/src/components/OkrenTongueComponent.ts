@@ -1,4 +1,9 @@
-import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType, assert, customTickIntervalHasPassed, Point, polarVec2, randInt, angle, distance, createRectangularBox, HitboxTag } from "battletribes-shared";
+import { createRectangularBox, HitboxCollisionType, HitboxTag } from "../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/dist/collision.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { Point, polarVec2, angle, distance, assert, randInt, customTickIntervalHasPassed } from "../../../shared/dist/utils.js";
 import { MIN_TONGUE_COOLDOWN_TICKS, MAX_TONGUE_COOLDOWN_TICKS } from "../ai/OkrenCombatAI.js";
 import { addHitboxVelocity, applyAcceleration, createHitbox, hitboxIsStatic, getHitboxTag, getHitboxTotalMassIncludingChildren, Hitbox, setHitboxTag, turnHitboxToAngle } from "../hitboxes.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";

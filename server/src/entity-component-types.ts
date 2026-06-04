@@ -1,6 +1,9 @@
-import { ServerComponentType, EntityType, NUM_ENTITY_TYPES, assert } from "battletribes-shared";
+import { ServerComponentType } from "../../shared/dist/components.js";
+import { NUM_ENTITY_TYPES, EntityType } from "../../shared/dist/entities.js";
+import { assert } from "../../shared/dist/utils.js";
 
 // @ROBUSTNESS! doesn't show any compiler warnings when a new entity type is added. generally very unwieldy
+
 // @Speed: just assume that all entities have the transform component and handle that separately
 export const ENTITY_COMPONENT_TYPES: ReadonlyArray<ReadonlyArray<ServerComponentType>> = [
    // cow

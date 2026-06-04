@@ -248,6 +248,11 @@ export function getRandomPositionOnBoxEdge(box: Box): Point {
    }
 }
 
+export function getHitboxTileIndex(hitbox: Hitbox): number {
+   const tileX = Math.floor(hitbox.box.posX / Settings.TILE_SIZE);
+   const tileY = Math.floor(hitbox.box.posY / Settings.TILE_SIZE);
+   return getTileIndexIncludingEdges(tileX, tileY);
+}
 export function getHitboxTile(hitbox: Hitbox): Tile {
    const tileX = Math.floor(hitbox.box.posX / Settings.TILE_SIZE);
    const tileY = Math.floor(hitbox.box.posY / Settings.TILE_SIZE);

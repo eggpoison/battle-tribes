@@ -1,4 +1,7 @@
-import { ServerComponentType, DamageSource, Entity, EntityType, Packet, assert, Point } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, DamageSource, EntityType } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Point, assert } from "../../../shared/dist/utils.js";
 import { EntityConfig } from "../components.js";
 import Layer from "../Layer.js";
 import { HitboxCollisionPair } from "../collision-detection.js";

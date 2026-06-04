@@ -1,4 +1,6 @@
-import { Settings, TileType, getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld } from "battletribes-shared";
+import { Settings } from "../../shared/dist/settings.js";
+import { TileType } from "../../shared/dist/tiles.js";
+import { getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld } from "../../shared/dist/utils.js";
 import Layer from "./Layer.js";
 import { surfaceLayer } from "./world.js";
 

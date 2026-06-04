@@ -1,4 +1,9 @@
-import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, ItemType, StatusEffect, randInt, createCircularBox } from "battletribes-shared";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
+import { randInt } from "../../../../shared/dist/utils.js";
 import { EntityConfig } from "../../components.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";

@@ -1,5 +1,8 @@
-import { StructureType, Entity, ServerComponentType, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { StructureType } from "../../../shared/dist/structures.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { createStructureGrassBlockers } from "../grass-blockers.js";
 import { BlueprintComponentArray } from "./BlueprintComponent.js";
 import { ComponentArray } from "./ComponentArray.js";

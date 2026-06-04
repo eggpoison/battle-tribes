@@ -1,4 +1,3 @@
-import { Settings, SubtileType, TileType, assert, clampToBoardDimensions, distance, getTileIndexIncludingEdges, getTileX, getTileY, lerp, Point, randFloat, randInt, smoothstep, TileIndex, Biome, EntityType, LightLevelVar, ServerComponentType, getSubtileIndex } from "battletribes-shared";
 import Layer from "../Layer.js";
 import { generateOctavePerlinNoise, generatePerlinNoise } from "../perlin-noise.js";
 import { groupLocalBiomes, setWallInSubtiles } from "./terrain-generation-utils.js";
@@ -12,6 +11,14 @@ import { createRawSpawnDistribution, registerNewSpawnInfo, SpawnDistribution } f
 import { EntityConfig, getConfigComponent } from "../components.js";
 import { createMossConfig } from "../entities/moss.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { EntityType } from "../../../shared/dist/entities.js";
+import { LightLevelVar } from "../../../shared/dist/light-levels.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
+import { TileType, SubtileType } from "../../../shared/dist/tiles.js";
+import { distance, smoothstep, getTileIndexIncludingEdges, TileIndex, getTileX, getTileY, assert, clampToBoardDimensions, lerp, randFloat, randInt } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    DROPDOWN_TILE_WEIGHT_REDUCTION_RANGE = 9,

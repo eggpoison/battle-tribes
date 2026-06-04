@@ -1,4 +1,3 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, Settings, Point, randAngle, getSubtileIndex, Item, ItemType, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { ItemComponent } from "../components/ItemComponent.js";
 import { EntityConfig, LightCreationInfo } from "../components.js";
 import { addHitboxToTransformComponent, getRandomPositionInBox, getRandomWeightedHitbox, TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
@@ -7,6 +6,13 @@ import { createEntity, getEntityLayer } from "../world.js";
 import { createHitbox, Hitbox } from "../hitboxes.js";
 import { createLight } from "../lights.js";
 import { createItem } from "../items.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { Item, ItemType } from "../../../shared/dist/items/items.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
+import { Point, randAngle } from "../../../shared/dist/utils.js";
 
 export function createItemEntityConfig(x: number, y: number, angle: number, item: Item, throwingEntity: Entity | null): EntityConfig {
    const transformComponent = new TransformComponent();

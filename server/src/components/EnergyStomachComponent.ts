@@ -1,4 +1,7 @@
-import { ServerComponentType, Entity, AttackEffectiveness, Settings } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Settings } from "../../../shared/dist/settings.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { damageEntity } from "./HealthComponent.js";
 import { getRandomPositionInBox, TransformComponentArray } from "./TransformComponent.js";

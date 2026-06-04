@@ -1,4 +1,3 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, randInt, StatusEffect, HitboxCollisionType, ItemType, createCircularBox } from "battletribes-shared";
 import { PlantedComponent } from "../../components/PlantedComponent.js";
 import { plantedTreeIsFullyGrown, TreePlantedComponent } from "../../components/TreePlantedComponent.js";
 import { EntityConfig } from "../../components.js";
@@ -7,6 +6,12 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType, Entity } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
+import { randInt } from "../../../../shared/dist/utils.js";
 
 registerEntityLootOnDeath(EntityType.treePlanted, {
    itemType: ItemType.wood,

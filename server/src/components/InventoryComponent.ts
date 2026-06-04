@@ -1,5 +1,4 @@
-import { ServerComponentType, CraftingRecipe, ItemTally2, tallyInventoryItems, InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize, Entity, Packet, randAngle } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { createItemEntityConfig } from "../entities/item-entity.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { createItem } from "../items.js";
@@ -8,6 +7,13 @@ import { getRandomPositionInEntity, TransformComponentArray } from "./TransformC
 import { addInventoryDataToPacket, getInventoryDataLength } from "../server/packet-sending.js";
 import { createEntity, destroyEntity, getEntityLayer } from "../world.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { CraftingRecipe } from "../../../shared/dist/items/crafting-recipes.js";
+import { InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize } from "../../../shared/dist/items/items.js";
+import { ItemTally2, tallyInventoryItems } from "../../../shared/dist/items/ItemTally.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { randAngle } from "../../../shared/dist/utils.js";
 
 export interface InventoryOptions {
    readonly acceptsPickedUpItems: boolean;

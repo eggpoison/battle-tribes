@@ -1,4 +1,8 @@
-import { TribesmanAIType, Entity, EntityType, LimbAction, PlantedEntityType, Inventory, InventoryName, ItemType, PathfindingSettings, distance } from "battletribes-shared";
+import { TribesmanAIType } from "../../../../../shared/dist/components.js";
+import { PlantedEntityType, EntityType, Entity, LimbAction } from "../../../../../shared/dist/entities.js";
+import { ItemType, Inventory, InventoryName } from "../../../../../shared/dist/items/items.js";
+import { PathfindingSettings } from "../../../../../shared/dist/settings.js";
+import { distance } from "../../../../../shared/dist/utils.js";
 import { getDistanceFromPointToEntity, willStopAtDesiredDistance } from "../../../ai-shared.js";
 import { AIHelperComponent } from "../../../components/AIHelperComponent.js";
 import { pathfindTribesman } from "../../../components/AIPathfindingComponent.js";

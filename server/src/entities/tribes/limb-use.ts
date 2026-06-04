@@ -1,4 +1,6 @@
-import { Entity, LimbAction, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ItemType, AttackVar, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, RESTING_LIMB_STATES } from "battletribes-shared";
+import { AttackVar, copyLimbState, SHIELD_BLOCKING_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, RESTING_LIMB_STATES } from "../../../../shared/dist/attack-patterns.js";
+import { Entity, LimbAction } from "../../../../shared/dist/entities.js";
+import { ItemType, ITEM_INFO_RECORD, itemInfoIsTool, InventoryName, getItemAttackInfo } from "../../../../shared/dist/items/items.js";
 import { getHeldItem, getLimbConfiguration, InventoryUseComponentArray } from "../../components/InventoryUseComponent.js";
 import { TransformComponentArray } from "../../components/TransformComponent.js";
 import { getHitboxVelocity } from "../../hitboxes.js";

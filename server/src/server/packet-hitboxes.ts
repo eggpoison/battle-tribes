@@ -1,5 +1,6 @@
-import { Box, boxIsCircular, CircularBox, RectangularBox, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Box, CircularBox, RectangularBox, boxIsCircular } from "../../../shared/dist/boxes.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Packet } from "../../../shared/dist/packets.js";
 import { Hitbox } from "../hitboxes.js";
 import { getHitboxTethers } from "../tethers.js";
 

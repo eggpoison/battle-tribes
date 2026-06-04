@@ -1,4 +1,3 @@
-import { PathfindingNodeIndex, Entity, EntityType, PathfindingSettings, Settings, distance, distBetweenPointAndRectangularBox, getTileX, getTileY, Point, TileIndex, _bounds, TileType, CollisionGroup, getEntityCollisionGroup, CircularBox, boxIsCircular, HitboxCollisionType, RectangularBox, angle, calculateBoxBounds, assert } from "battletribes-shared";
 import PathfindingHeap from "./PathfindingHeap.js";
 import { TribeComponentArray } from "./components/TribeComponent.js";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
@@ -11,6 +10,13 @@ import { getTilesOfType } from "./census.js";
 import { TribeMemberComponentArray } from "./components/TribeMemberComponent.js";
 import { getHitboxCollisionType, Hitbox } from "./hitboxes.js";
 import { getDistanceFromPointToEntity } from "./ai-shared.js";
+import { CircularBox, calculateBoxBounds, _bounds, HitboxCollisionType, RectangularBox, boxIsCircular } from "../../shared/dist/boxes.js";
+import { PathfindingNodeIndex } from "../../shared/dist/client-server-types.js";
+import { getEntityCollisionGroup, CollisionGroup } from "../../shared/dist/collision-groups.js";
+import { Entity, EntityType } from "../../shared/dist/entities.js";
+import { PathfindingSettings, Settings } from "../../shared/dist/settings.js";
+import { TileType } from "../../shared/dist/tiles.js";
+import { assert, distBetweenPointAndRectangularBox, Point, angle, TileIndex, getTileX, getTileY, distance } from "../../shared/dist/utils.js";
 
 const enum Var {
    NODE_ACCESSIBILITY_RESOLUTION = 3,

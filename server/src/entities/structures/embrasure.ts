@@ -1,4 +1,3 @@
-import { BuildingMaterial, Entity, EntityType, StatusEffect, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createRectangularBox } from "battletribes-shared";
 import { EntityConfig } from "../../components.js";
 import { destroyEntity, getEntityType } from "../../world.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
@@ -11,6 +10,11 @@ import { BuildingMaterialComponent } from "../../components/BuildingMaterialComp
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { BuildingMaterial } from "../../../../shared/dist/components.js";
+import { EntityType, Entity } from "../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 const HEALTHS = [15, 45];
 

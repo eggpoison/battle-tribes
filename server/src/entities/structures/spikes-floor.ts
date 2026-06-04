@@ -1,4 +1,3 @@
-import { BuildingMaterial, EntityType, StatusEffect, HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, createRectangularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { TribeComponent } from "../../components/TribeComponent.js";
 import { SpikesComponent } from "../../components/SpikesComponent.js";
@@ -11,6 +10,11 @@ import { BuildingMaterialComponent } from "../../components/BuildingMaterialComp
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 import { createHitbox, setHitboxIsNonGrassBlocking, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { BuildingMaterial } from "../../../../shared/dist/components.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 // @HACK @MEMORY: COPYNPASTE BETWEEN FLOOR AND WALLS
 const HEALTHS = [15, 45];

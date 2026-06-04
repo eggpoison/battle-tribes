@@ -1,10 +1,13 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, StatusEffect, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
 import { EntityConfig } from "../components.js";
 import { HealthComponent } from "../components/HealthComponent.js";
 import { StatusEffectComponent } from "../components/StatusEffectComponent.js";
 import { TombstoneComponent } from "../components/TombstoneComponent.js";
 import { createHitbox } from "../hitboxes.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/dist/collision.js";
+import { EntityType } from "../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../shared/dist/status-effects.js";
 
 export function createTombstoneConfig(x: number, y: number, angle: number): EntityConfig {
    const transformComponent = new TransformComponent();

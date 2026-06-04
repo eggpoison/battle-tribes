@@ -1,4 +1,7 @@
-import { ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, Point, polarVec2, angle } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Point, angle, polarVec2 } from "../../../shared/dist/utils.js";
 import { applyAbsoluteKnockback, getHitboxVelocity, Hitbox } from "../hitboxes.js";
 import { destroyEntity, getEntityType } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";

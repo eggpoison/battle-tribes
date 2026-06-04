@@ -1,4 +1,6 @@
 export const enum TileType {
+   // Index 0, because that probably maybe speeds up comparisons
+   dropdown,
    grass,
    dirt,
    water,
@@ -13,7 +15,6 @@ export const enum TileType {
    permafrost,
    magma,
    lava,
-   dropdown,
    stone,
    stoneWallFloor,
    fimbultur

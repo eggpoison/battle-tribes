@@ -1,5 +1,10 @@
-import { Settings, Point, polarVec2, randAngle, randInt, AttackEffectiveness, Packet, Entity, EntityType, DamageSource, CactusFlowerSize, ServerComponentType, CircularBox, angle } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { CactusFlowerSize, EntityType, Entity, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randInt, Point, angle, polarVec2 } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { getEntityType, destroyEntity, getEntityLayer, createEntity } from "../world.js";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";

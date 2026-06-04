@@ -1,5 +1,14 @@
-import { ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, Packet, Settings, getSubtileIndex, clampToSubtileBoardDimensions, distance, getAbsAngleDiff, Point, positionIsInWorld, randFloat, randInt, secondsToTicks, angle, HitboxTag, getCircleRectangleCollisionResult } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { HitboxTag } from "../../../shared/dist/boxes.js";
+import { getCircleRectangleCollisionResult } from "../../../shared/dist/collision.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
+import { randInt, Point, getAbsAngleDiff, randFloat, distance, positionIsInWorld, clampToSubtileBoardDimensions, angle, secondsToTicks } from "../../../shared/dist/utils.js";
 import { getDistanceFromPointToHitbox, willStopAtDesiredDistance } from "../ai-shared.js";
 import { getOkrenPreyTarget, getOkrenThreatTarget, runOkrenCombatAI } from "../ai/OkrenCombatAI.js";
 import { runSandBallingAI, updateSandBallingAI } from "../ai/SandBallingAI.js";

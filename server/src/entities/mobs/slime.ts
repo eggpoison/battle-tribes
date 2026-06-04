@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, SlimeSize, EntityType, Entity, Settings, StatusEffect, randInt, secondsToTicks, HitboxCollisionType, Biome, ItemType, createCircularBox } from "battletribes-shared";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { SlimeComponent, SlimeComponentArray } from "../../components/SlimeComponent.js";
 import Layer from "../../Layer.js";
@@ -11,6 +10,14 @@ import { CraftingStationComponent } from "../../components/CraftingStationCompon
 import { registerEntityLootOnDeath } from "../../components/LootComponent.js";
 import { accelerateEntityToPosition, turnToPosition } from "../../ai-shared.js";
 import { createHitbox, Hitbox } from "../../hitboxes.js";
+import { Biome } from "../../../../shared/dist/biomes.js";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType, SlimeSize } from "../../../../shared/dist/entities.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
+import { secondsToTicks, randInt } from "../../../../shared/dist/utils.js";
 
 export interface SlimeEntityAnger {
    angerAmount: number;

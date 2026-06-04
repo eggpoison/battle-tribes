@@ -1,4 +1,3 @@
-import { WaterRockData, Settings, Point, TileCoordinates, lerp, randAngle, randFloat, randInt, tileIsInWorld, CircularBox } from "battletribes-shared";
 import { generateOctavePerlinNoise } from "../perlin-noise.js";
 import { Hitbox } from "../hitboxes.js";
 import { createRiverSteppingStoneConfig, RiverSteppingStoneSize } from "../entities/plains/river-stepping-stone.js";
@@ -6,6 +5,10 @@ import { createEntityImmediate } from "../world.js";
 import Layer from "../Layer.js";
 import { getDistanceFromPointToHitbox } from "../ai-shared.js";
 import { getConfigTransformComponent } from "../components.js";
+import { CircularBox } from "../../../shared/dist/boxes.js";
+import { WaterRockData } from "../../../shared/dist/client-server-types.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TileCoordinates, Point, tileIsInWorld, randFloat, randAngle, randInt, lerp } from "../../../shared/dist/utils.js";
 
 // Kinda hacky, used to be just set to 20, but that meant the density of rivers changed with the world size, no good.
 const NUM_RIVERS = 20 * ((Settings.WORLD_SIZE_CHUNKS / 64) ** 2);

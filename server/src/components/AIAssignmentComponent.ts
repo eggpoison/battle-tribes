@@ -1,4 +1,7 @@
-import { ServerComponentType, Entity, InventoryName, AIPlanType, assert } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { InventoryName } from "../../../shared/dist/items/items.js";
+import { assert, AIPlanType } from "../../../shared/dist/utils.js";
 import { throwItem } from "../entities/tribes/tribe-member.js";
 import { goCraftItem, craftGoalIsComplete } from "../entities/tribes/tribesman-ai/tribesman-crafting.js";
 import { goResearchTech, techStudyIsComplete, useItemsInResearch } from "../entities/tribes/tribesman-ai/tribesman-researching.js";

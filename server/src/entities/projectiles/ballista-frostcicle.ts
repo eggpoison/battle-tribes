@@ -1,10 +1,12 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, EntityType, Entity, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { TribeComponent } from "../../components/TribeComponent.js";
 import { EntityConfig } from "../../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { ProjectileComponent } from "../../components/ProjectileComponent.js";
 import Tribe from "../../Tribe.js";
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
 
 export function createBallistaFrostcicleConfig(x: number, y: number, rotation: number, tribe: Tribe, creator: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

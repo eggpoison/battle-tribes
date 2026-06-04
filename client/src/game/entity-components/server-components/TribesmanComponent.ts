@@ -508,31 +508,31 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
 
       switch (title) {
          // Create 2 glowing red eyes
-         case TribesmanTitle.deathbringer: {
-            for (let i = 0; i < 2; i++) {
-               const offsetX = 16 * (i === 0 ? -1 : 1);
-               const offsetY = 20;
+         // case TribesmanTitle.deathbringer: {
+         //    for (let i = 0; i < 2; i++) {
+         //       const offsetX = 16 * (i === 0 ? -1 : 1);
+         //       const offsetY = 20;
                
-               // @INCOMPLETE
+         //       // @INCOMPLETE
                
-               // const light = createLight(
-               //    new Point(offsetX, offsetY),
-               //    0.4,
-               //    0.4,
-               //    0,
-               //    1.75,
-               //    0,
-               //    0
-               // );
-               // tribeMemberComponent.deathbringerEyeLights.push(light);
+         //       // const light = createLight(
+         //       //    new Point(offsetX, offsetY),
+         //       //    0.4,
+         //       //    0.4,
+         //       //    0,
+         //       //    1.75,
+         //       //    0,
+         //       //    0
+         //       // );
+         //       // tribeMemberComponent.deathbringerEyeLights.push(light);
 
-               // // @Hack
-               // const renderObject = getEntityRenderObject(entity);
-               // attachLightToRenderPart(light, renderObject.renderPartsByZIndex[0], entity);
-            }
+         //       // // @Hack
+         //       // const renderObject = getEntityRenderObject(entity);
+         //       // attachLightToRenderPart(light, renderObject.renderPartsByZIndex[0], entity);
+         //    }
             
-            break;
-         }
+         //    break;
+         // }
          // Create an eye scar
          case TribesmanTitle.bloodaxe: {
             const hash = veryBadHash(entity.toString());

@@ -1,5 +1,14 @@
-import { Entity, EntityType, ServerComponentType, TileType, Settings, ItemType, Packet, DEFAULT_COLLISION_MASK, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, randAngle, randFloat, randInt, randSign, secondsToTicks, EntityTickEvent, EntityTickEventType, distance, HitboxTag } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { HitboxTag } from "../../../shared/dist/boxes.js";
+import { DEFAULT_COLLISION_MASK } from "../../../shared/dist/collision.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { ItemType } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { secondsToTicks, Point, randInt, randFloat, randSign, getAbsAngleDiff, customTickIntervalHasPassed, randAngle, polarVec2, distance } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { runEscapeAI } from "../ai/EscapeAI.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";

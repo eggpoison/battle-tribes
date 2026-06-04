@@ -1,4 +1,3 @@
-import { AttackEffectiveness, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, EntityType, Entity, LimbAction, Settings, TribesmanTitle, TribeType, Point, dotAngles, lerp, polarVec2, randAngle, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize, ARROW_RELEASE_WAIT_TIME_TICKS, EntityTickEvent, EntityTickEventType, copyLimbState, angle } from "battletribes-shared";
 import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull } from "../../components/InventoryComponent.js";
 import { getEntitiesInRange } from "../../ai-shared.js";
 import { HealthComponentArray, healEntity } from "../../components/HealthComponent.js";
@@ -22,6 +21,16 @@ import { awardTitle, hasTitle, TribesmanComponentArray } from "../../components/
 import { calculateEntityPlaceInfo, createStructureConfig } from "../../structure-placement.js";
 import { getHitboxVelocity, addHitboxVelocity } from "../../hitboxes.js";
 import { createItem } from "../../items.js";
+import { copyLimbState } from "../../../../shared/dist/attack-patterns.js";
+import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "../../../../shared/dist/components.js";
+import { Entity, EntityType, LimbAction } from "../../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../../shared/dist/entity-damage-types.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../../shared/dist/entity-events.js";
+import { ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, Item, InventoryName, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, ARROW_RELEASE_WAIT_TIME_TICKS, itemIsStackable, getItemStackSize } from "../../../../shared/dist/items/items.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { TribesmanTitle } from "../../../../shared/dist/titles.js";
+import { TribeType } from "../../../../shared/dist/tribes.js";
+import { Point, polarVec2, lerp, angle, dotAngles, randAngle } from "../../../../shared/dist/utils.js";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,

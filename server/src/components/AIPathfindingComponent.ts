@@ -1,4 +1,9 @@
-import { ServerComponentType, Entity, EntityType, InventoryName, Settings, PathfindingSettings, TileType, angleToPoint, assert, curveWeight, distance, Point, polarVec2, angle } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { InventoryName } from "../../../shared/dist/items/items.js";
+import { Settings, PathfindingSettings } from "../../../shared/dist/settings.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { distance, polarVec2, Point, curveWeight, angle, angleToPoint, assert } from "../../../shared/dist/utils.js";
 import { getEntitiesInRange, getVelocityClosenessAdjustmentFactor } from "../ai-shared.js";
 import { TRIBESMAN_TURN_SPEED } from "../entities/tribes/tribesman-ai/tribesman-ai.js";
 import { getHumanoidRadius, getTribesmanAcceleration } from "../entities/tribes/tribesman-ai/tribesman-ai-utils.js";

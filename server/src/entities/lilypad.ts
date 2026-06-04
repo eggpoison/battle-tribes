@@ -1,4 +1,6 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, HitboxCollisionType, EntityType, createCircularBox } from "battletribes-shared";
+import { createCircularBox, HitboxCollisionType } from "../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/dist/collision.js";
+import { EntityType } from "../../../shared/dist/entities.js";
 import { EntityConfig } from "../components.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";
 import { createHitbox, setHitboxIsStatic } from "../hitboxes.js";

@@ -1,6 +1,11 @@
-import { ServerComponentType, Entity, EntityTickEvent, EntityTickEventType, InventoryName, Settings, randFloat } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { InventoryName } from "../../../shared/dist/items/items.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randFloat } from "../../../shared/dist/utils.js";
 import { throwItem } from "../entities/tribes/tribe-member.js";
-import { getHitboxVelocity, Hitbox, setHitboxVelocity } from "../hitboxes.js";
+import { getHitboxVelocity, setHitboxVelocity } from "../hitboxes.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { getInventory, InventoryComponentArray } from "./InventoryComponent.js";

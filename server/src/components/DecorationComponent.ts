@@ -1,5 +1,7 @@
-import { Packet, Entity, DecorationType, ServerComponentType } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { DecorationType, ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class DecorationComponent {

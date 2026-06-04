@@ -1,10 +1,13 @@
-import { CollisionBit, DEFAULT_COLLISION_MASK, EntityType, randInt, Box, HitboxCollisionType, createRectangularBox } from "battletribes-shared";
 import { TundraRockComponent } from "../../components/TundraRockComponent.js";
 import { EntityConfig } from "../../components.js";
 import { TransformComponent, addHitboxToTransformComponent } from "../../components/TransformComponent.js";
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
+import { Box, createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { randInt } from "../../../../shared/dist/utils.js";
 
 const HEALTHS = [15, 35, 55];
 const MASSES = [1, 2, 3];

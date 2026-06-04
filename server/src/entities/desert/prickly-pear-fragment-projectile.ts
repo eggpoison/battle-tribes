@@ -1,4 +1,7 @@
-import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, Entity, EntityType, StatusEffect, createCircularBox } from "battletribes-shared";
+import { createCircularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { Entity, EntityType } from "../../../../shared/dist/entities.js";
+import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 import { EntityConfig } from "../../components.js";
 import { PricklyPearFragmentProjectileComponent } from "../../components/PricklyPearFragmentComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";

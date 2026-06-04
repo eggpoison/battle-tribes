@@ -1,4 +1,6 @@
-import { HitboxCollisionType, DEFAULT_COLLISION_MASK, CollisionBit, EntityType, createRectangularBox } from "battletribes-shared";
+import { createRectangularBox, HitboxCollisionType } from "../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/dist/collision.js";
+import { EntityType } from "../../../shared/dist/entities.js";
 import { EntityConfig } from "../components.js";
 import { MossComponent } from "../components/MossComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../components/TransformComponent.js";

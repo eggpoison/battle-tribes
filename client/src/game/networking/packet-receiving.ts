@@ -3,7 +3,7 @@ import { RiverFlowDirectionsRecord, WaterRockData, WaterRockSize } from "../../.
 import { Settings } from "../../../../shared/src/settings";
 import { TileType } from "../../../../shared/src/tiles";
 import { Biome } from "../../../../shared/src/biomes";
-import { getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorldIncludingEdges } from "../../../../shared/src/utils";
+import { getTileIndexIncludingEdges, tileIsInWorldIncludingEdges } from "../../../../shared/src/utils";
 import { InventoryName } from "../../../../shared/src/items/items";
 import { AttackVar } from "../../../../shared/src/attack-patterns";
 import { refreshCameraView, setCameraPosition } from "../camera";
@@ -19,6 +19,11 @@ import { getSelectedItemInfo } from "../player-action-handling";
 import { playerActionState } from "../../ui-state/player-action-state";
 import { registerEntityComponentTypesFromData } from "../entity-components/component-types";
 import { addMessageToChat } from "../../ui/game/Chat";
+import { readInitialSubtileData, RenderChunkVars, RenderChunkEdgeInfo, EdgeInfoArrays, EdgeType, addTileToEdgeInfos } from "../rendering/render-chunks";
+
+export interface IntermediateInitialisationInfo {
+   readonly shadowInfoArrays: EdgeInfoArrays;
+}
 
 const NEIGHBOUR_OFFSETS = [
    [1, 0],
@@ -31,14 +36,40 @@ const NEIGHBOUR_OFFSETS = [
    [1, -1]
 ];
 
-export function processInitialGameDataPacket(reader: PacketReader): void {
+// @CLEANUP would love to have this not return an intermediate thing :(
+export function processInitialGameDataPacket(reader: PacketReader): IntermediateInitialisationInfo {
    const layerIdx = reader.readNumber();
    
    const spawnPosition = reader.readPoint();
+
+   const shadowInfoArrays: EdgeInfoArrays = [];
    
    // Create layers
    const numLayers = reader.readNumber();
    for (let i = 0; i < numLayers; i++) {
+      const floorEdgeInfos: Array<RenderChunkEdgeInfo> = [];
+      const wallEdgeInfos: Array<RenderChunkEdgeInfo> = [];
+      const dropdownEdgeInfos: Array<RenderChunkEdgeInfo> = [];
+      for (let i = 0; i < RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE * RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE; i++) {
+         floorEdgeInfos.push({
+            indexes: [],
+            markers: []
+         });
+         wallEdgeInfos.push({
+            indexes: [],
+            markers: []
+         });
+         dropdownEdgeInfos.push({
+            indexes: [],
+            markers: []
+         });
+      }
+      shadowInfoArrays.push({
+         [EdgeType.floor]: floorEdgeInfos,
+         [EdgeType.wall]: wallEdgeInfos,
+         [EdgeType.dropdown]: dropdownEdgeInfos
+      });
+
       const tiles: Array<Tile> = [];
       const flowDirections: RiverFlowDirectionsRecord = {};
       const tileTemperatures = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
@@ -50,27 +81,23 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
          const temperature = reader.readNumber();
          const humidity = reader.readNumber();
          const mithrilRichness = reader.readNumber();
-   
-         const tileX = getTileX(tileIndex);
-         const tileY = getTileY(tileIndex);
 
-         const tile = new Tile(tileX, tileY, tileType, tileBiome, mithrilRichness);
+         const tile = new Tile(tileType, tileBiome, mithrilRichness);
          tiles.push(tile);
+
+         addTileToEdgeInfos(tiles, dropdownEdgeInfos, tileIndex, tileType);
    
-         if (flowDirections[tileX] === undefined) {
-            flowDirections[tileX] = {};
+         if (flowDirections[tileIndex] === undefined) {
+            flowDirections[tileIndex] = flowDirection;
          }
-         flowDirections[tileX][tileY] = flowDirection;
    
          tileTemperatures[tileIndex] = temperature;
          tileHumidities[tileIndex] = humidity;
       }
 
       // Read in subtiles
-      const wallSubtileTypes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16);
-      for (let i = 0; i < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16; i++) {
-         wallSubtileTypes[i] = reader.readNumber();
-      }
+      const wallSubtileTypes = new Uint8Array(Settings.FULL_WORLD_SIZE_SUBTILES * Settings.FULL_WORLD_SIZE_SUBTILES);
+      readInitialSubtileData(reader, wallSubtileTypes, floorEdgeInfos, wallEdgeInfos);
 
       // Read subtile damages taken
       const numEntries = reader.readNumber();
@@ -139,6 +166,10 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
    registerTamingSpecsFromData(reader);
 
    registerEntityComponentTypesFromData(reader);
+
+   return {
+      shadowInfoArrays: shadowInfoArrays
+   };
 }
 
 

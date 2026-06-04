@@ -1,5 +1,4 @@
-import { SafetyNodeData, PotentialPlanSafetyData, WallSideNodeData, TribeWallData, WallConnectionData, VisibleChunkBounds, RestrictedBuildingAreaData, EntityType, Settings, AIPlanType, Packet, CRAFTING_RECIPES, _bounds, calculateBoxBounds } from "battletribes-shared";
-import { Bytes } from "../../../../shared/src/constants.js";
+import { Bytes } from "../../../../shared/dist/constants.js";
 import Layer from "../../Layer.js";
 import Tribe from "../../Tribe.js";
 import { SafetyNode, getSafetyNode } from "../ai-building.js";
@@ -10,6 +9,14 @@ import { AICraftRecipePlan, AIGatherItemPlan, AIPlaceBuildingPlan, AITechComplet
 import PlayerClient from "../../server/PlayerClient.js";
 import { getTribes } from "../../world.js";
 import { AIAssignmentComponentArray } from "../../components/AIAssignmentComponent.js";
+import { SafetyNodeData, PotentialPlanSafetyData, WallSideNodeData, TribeWallData, WallConnectionData } from "../../../../shared/dist/ai-building-types.js";
+import { calculateBoxBounds, _bounds } from "../../../../shared/dist/boxes.js";
+import { VisibleChunkBounds, RestrictedBuildingAreaData } from "../../../../shared/dist/client-server-types.js";
+import { EntityType } from "../../../../shared/dist/entities.js";
+import { CRAFTING_RECIPES } from "../../../../shared/dist/items/crafting-recipes.js";
+import { Packet } from "../../../../shared/dist/packets.js";
+import { Settings } from "../../../../shared/dist/settings.js";
+import { AIPlanType } from "../../../../shared/dist/utils.js";
 
 // @Cleanup: should this be here?
 export function getVisibleTribes(playerLayer: Layer, chunkBounds: VisibleChunkBounds): ReadonlyArray<Tribe> {

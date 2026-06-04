@@ -1,11 +1,9 @@
 import { Settings } from "../../../../../shared/src/settings";
 import { getTileX, getTileY } from "../../../../../shared/src/utils";
 import { Bytes } from "../../../../../shared/src/constants";
-import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY, minVisibleTileX, maxVisibleTileX, minVisibleTileY, maxVisibleTileY } from "../../camera";
 import { createWebGLProgram, gl } from "../../webgl";
-import { getCurrentLayer } from "../../world";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { DROPDOWN_TILE_BUILDING_BLOCK_RANGE, getVisibleLayerBlockingTiles } from "../../structure-placement";
+import { getVisibleLayerBlockingTiles } from "../../structure-placement";
 import Layer from "../../Layer";
 
 let program: WebGLProgram;

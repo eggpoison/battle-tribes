@@ -1,4 +1,3 @@
-import { DEFAULT_COLLISION_MASK, CollisionBit, AMMO_INFO_RECORD, EntityType, DamageSource, Entity, Point, polarVec2, AttackEffectiveness, ItemType, HitboxCollisionType, angle, createRectangularBox } from "battletribes-shared";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent.js";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent.js";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent.js";
@@ -8,6 +7,13 @@ import { ProjectileComponent, ProjectileComponentArray } from "../../components/
 import { entityExists, getEntityType } from "../../world.js";
 import Tribe from "../../Tribe.js";
 import { applyKnockback, createHitbox, getHitboxVelocity, Hitbox } from "../../hitboxes.js";
+import { createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
+import { AMMO_INFO_RECORD } from "../../../../shared/dist/components.js";
+import { Entity, EntityType, DamageSource } from "../../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../../shared/dist/entity-damage-types.js";
+import { ItemType } from "../../../../shared/dist/items/items.js";
+import { Point, angle, polarVec2 } from "../../../../shared/dist/utils.js";
 
 export function createWoodenArrowConfig(x: number, y: number, angle: number, tribe: Tribe, owner: Entity): EntityConfig {
    const transformComponent = new TransformComponent();

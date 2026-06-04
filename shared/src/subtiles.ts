@@ -1,14 +1,15 @@
 import { Settings } from "./settings.js";
+import { SubtileIndex } from "./utils.js";
 
 export function getSubtileIndex(subtileX: number, subtileY: number): number {
    return (subtileY + Settings.EDGE_GENERATION_DISTANCE * 4) * Settings.FULL_WORLD_SIZE_TILES * 4 + subtileX + Settings.EDGE_GENERATION_DISTANCE * 4;
 }
 
-export function getSubtileX(subtileIndex: number): number {
+export function getSubtileX(subtileIndex: SubtileIndex): number {
    return subtileIndex % (Settings.FULL_WORLD_SIZE_TILES * 4) - Settings.EDGE_GENERATION_DISTANCE * 4;
 }
 
-export function getSubtileY(subtileIndex: number): number {
+export function getSubtileY(subtileIndex: SubtileIndex): number {
    return Math.floor(subtileIndex / (Settings.FULL_WORLD_SIZE_TILES * 4)) - Settings.EDGE_GENERATION_DISTANCE * 4;
 }
 

@@ -104,7 +104,7 @@ export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText:
 
    gl.attachShader(program, vertexShader);
    gl.attachShader(program, fragmentShader);
-
+   
    gl.linkProgram(program);
    if (__DEV__ && !gl.getProgramParameter(program, gl.LINK_STATUS)) {
       if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {

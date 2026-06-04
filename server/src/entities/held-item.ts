@@ -1,4 +1,8 @@
-import { HitboxCollisionType, CollisionBit, DEFAULT_COLLISION_MASK, EntityType, getItemAttackInfo, ItemType, Point, rotatePoint, createRectangularBox } from "battletribes-shared";
+import { createRectangularBox, HitboxCollisionType } from "../../../shared/dist/boxes.js";
+import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../shared/dist/collision.js";
+import { EntityType } from "../../../shared/dist/entities.js";
+import { ItemType, getItemAttackInfo } from "../../../shared/dist/items/items.js";
+import { Point, rotatePoint } from "../../../shared/dist/utils.js";
 import { createEntityConfigAttachInfo, EntityConfig } from "../components.js";
 import { HeldItemComponent } from "../components/HeldItemComponent.js";
 import { StatusEffectComponent } from "../components/StatusEffectComponent.js";

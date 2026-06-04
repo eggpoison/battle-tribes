@@ -1,4 +1,4 @@
-import { assert, distance, randInt } from "../../../shared/src/utils";
+import { assert, distance, getTileIndexIncludingEdges, randInt } from "../../../shared/src/utils";
 import { Entity } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
 import { TileType } from "../../../shared/src/tiles";
@@ -51,8 +51,19 @@ export function getNumSounds(): number {
    return activeSounds.length;
 }
 
-export async function beginLoadingSounds(): Promise<void> {
-   const AUDIO_FILE_PATHS = [
+async function loadSound(audioFiles: ReadonlyArray<string>, idx: number): Promise<void> {
+   const filePath = audioFiles[idx];
+   
+   const sound = soundFiles["../sounds/" + filePath] as string;
+   
+   const response = await fetch(sound);
+   const arrayBuffer = await response.arrayBuffer();
+   const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+   audioBuffers[filePath] = audioBuffer;
+}
+
+export function beginLoadingSounds(): void {
+   const AUDIO_FILES = [
       "item-pickup.mp3",
       "rock-hit-1.mp3",
       "rock-hit-2.mp3",
@@ -339,21 +350,10 @@ export async function beginLoadingSounds(): Promise<void> {
 
    let idx = 0;
 
-   async function loadSound(): Promise<void> {
-      const filePath = AUDIO_FILE_PATHS[idx];
-      
-      const sound = soundFiles["../sounds/" + filePath] as string;
-      
-      const response = await fetch(sound);
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      audioBuffers[filePath] = audioBuffer;
-   }
-
    function scheduleLoad(): void {
-      loadSound();
+      loadSound(AUDIO_FILES, idx);
       
-      if (++idx < AUDIO_FILE_PATHS.length) {
+      if (++idx < AUDIO_FILES.length) {
          requestIdleCallback(scheduleLoad);
       }
    }
@@ -412,18 +412,18 @@ export function playSound(filePath: string, volume: number, pitchMultiplier: num
    }
    
    // Only play sounds from the current layer
-   if (layer !== null && layer !== getCurrentLayer()) {
+   if (layer !== getCurrentLayer()) {
       return null;
    }
 
    assert(Number.isFinite(volume));
    
    const audioBuffer = audioBuffers[filePath];
-   // @TEMPORARY @HACK
+   // @TEMPORARY @HACK!!!!! gotta do the prioritisation thing!!
    if (audioBuffer === undefined) {
       return null;
    }
-   assert(audioBuffer !== undefined);
+   // assert(audioBuffer !== undefined);
 
    const gainNode = audioContext.createGain();
    gainNode.gain.value = calculateSoundVolume(volume, x, y);
@@ -562,13 +562,11 @@ export function playRiverSounds(): void {
    for (let i = 0; i < numSamples; i++) {
       const tileX = randInt(minTileX, maxTileX);
       const tileY = randInt(minTileY, maxTileY);
-      const tile = layer.getTileFromCoords(tileX, tileY);
-      if (tile === null) {
-         throw new Error();
-      }
+      const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+      const tile = layer.getTile(tileIndex);
 
       if (tile.type === TileType.water && Math.random() < 0.1 * Settings.DT_S) {
-         const flowDirection = layer.getRiverFlowDirection(tileX, tileY);
+         const flowDirection = layer.getRiverFlowDirection(tileIndex);
          if (flowDirection > 0) {
             const x = (tileX + Math.random()) * Settings.TILE_SIZE;
             const y = (tileY + Math.random()) * Settings.TILE_SIZE;

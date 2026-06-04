@@ -1,4 +1,7 @@
-import { ServerComponentType, Entity, EntityType, Settings, Point } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point } from "../../../shared/dist/utils.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { destroyEntity, getEntityAgeTicks, getEntityType } from "../world.js";
 import { onWoodenArrowHitboxCollision } from "../entities/projectiles/wooden-arrow.js";

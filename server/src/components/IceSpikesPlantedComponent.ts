@@ -1,5 +1,9 @@
-import { ServerComponentType, Entity, Packet, Settings, randInt } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randInt } from "../../../shared/dist/utils.js";
 import { getEntityLayer } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { createIceShardExplosion } from "./IceSpikesComponent.js";

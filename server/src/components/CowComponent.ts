@@ -1,5 +1,4 @@
-import { CowSpecies, DamageSource, Entity, EntityType, Settings, getAbsAngleDiff, Point, polarVec2, randAngle, randFloat, randInt, randItem, UtilVar, EntityTickEvent, EntityTickEventType, ServerComponentType, ItemType, Packet, AttackEffectiveness, TamingSkillID, distance, angle, createCircularBox, HitboxTag } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { getHitboxByTag, TransformComponentArray } from "./TransformComponent.js";
@@ -20,6 +19,16 @@ import { addHitboxVelocity, applyKnockback, getHitboxVelocity, Hitbox } from "..
 import { entityWantsToFollow, FollowAI, followAISetFollowTarget, updateFollowAIComponent } from "../ai/FollowAI.js";
 import { runEscapeAI } from "../ai/EscapeAI.js";
 import { createItem } from "../items.js";
+import { HitboxTag, createCircularBox } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { CowSpecies, Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { ItemType } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TamingSkillID } from "../../../shared/dist/taming.js";
+import { UtilVar, randInt, Point, randFloat, randAngle, distance, randItem, angle, getAbsAngleDiff, polarVec2 } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    SLOW_ACCELERATION = 200,

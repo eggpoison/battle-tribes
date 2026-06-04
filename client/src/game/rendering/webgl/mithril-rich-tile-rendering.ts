@@ -115,7 +115,7 @@ const getWallVertices = (layer: Layer): Array<number> => {
          
          const tileX = Math.floor(subtileX / 4);
          const tileY = Math.floor(subtileY / 4);
-         const tile = layer.getTileFromCoords(tileX, tileY);
+         const tile = layer.getTileXY(tileX, tileY);
          const mithrilRichness = tile.mithrilRichness;
          if (mithrilRichness === 0) {
             continue;

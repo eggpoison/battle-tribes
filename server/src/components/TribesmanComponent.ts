@@ -1,5 +1,13 @@
-import { ServerComponentType, EntityType, Entity, LimbAction, BackpackItemInfo, ConsumableItemInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, Packet, Settings, TileType, TitleGenerationInfo, TRIBESMAN_TITLE_RECORD, TribesmanTitle, TribeType, Point, randInt } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Bytes } from "../../../shared/dist/constants.js";
+import { EntityType, Entity, LimbAction } from "../../../shared/dist/entities.js";
+import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, InventoryName, BackpackItemInfo, ItemType } from "../../../shared/dist/items/items.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { TitleGenerationInfo, TribesmanTitle, TRIBESMAN_TITLE_RECORD } from "../../../shared/dist/titles.js";
+import { TribeType } from "../../../shared/dist/tribes.js";
+import { randInt } from "../../../shared/dist/utils.js";
 import { EntityConfig, getConfigComponent } from "../components.js";
 import { onFishLeaderHurt } from "../entities/mobs/fish.js";
 import { useItem } from "../entities/tribes/tribe-member.js";

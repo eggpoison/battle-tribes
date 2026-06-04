@@ -1,4 +1,7 @@
-import { ServerComponentType, Entity, Settings, randFloat } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randFloat } from "../../../shared/dist/utils.js";
 import { FIRE_TORCH_RADIUS } from "../entities/structures/fire-torch.js";
 import { Light } from "../lights.js";
 import { destroyEntity, getEntityAgeTicks, tickIntervalHasPassed } from "../world.js";

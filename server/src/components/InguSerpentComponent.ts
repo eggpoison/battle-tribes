@@ -1,4 +1,3 @@
-import { Biome, HitboxTag, ServerComponentType, DamageSource, Entity, EntityType, AttackEffectiveness, EntityTickEvent, EntityTickEventType, ItemType, Settings, StatusEffect, TileType, customTickIntervalHasPassed, getAbsAngleDiff, Point, polarVec2, secondsToTicks, distance, angle } from "battletribes-shared";
 import { getDistanceFromPointToHitbox } from "../ai-shared.js";
 import { hitboxIsCollidingWithEntity } from "../collision-detection.js";
 import { addHitboxVelocity, applyAbsoluteKnockback, getHitboxTag, getHitboxTile, Hitbox } from "../hitboxes.js";
@@ -14,6 +13,17 @@ import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectCom
 import { TamingComponentArray } from "./TamingComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { TribeComponentArray } from "./TribeComponent.js";
+import { Biome } from "../../../shared/dist/biomes.js";
+import { HitboxTag } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType, DamageSource } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { ItemType } from "../../../shared/dist/items/items.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { StatusEffect } from "../../../shared/dist/status-effects.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { secondsToTicks, distance, angle, getAbsAngleDiff, polarVec2, customTickIntervalHasPassed, Point } from "../../../shared/dist/utils.js";
 
 interface TribesmanTruce {
    readonly tribe: Tribe;

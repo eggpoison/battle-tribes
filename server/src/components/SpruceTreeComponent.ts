@@ -1,5 +1,9 @@
-import { Entity, TreeSize, ServerComponentType, Packet, randInt, createCircularBox } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { createCircularBox } from "../../../shared/dist/boxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { TreeSize, Entity } from "../../../shared/dist/entities.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { randInt } from "../../../shared/dist/utils.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { getEntityLayer } from "../world.js";

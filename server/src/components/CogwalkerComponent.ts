@@ -1,5 +1,8 @@
-import { Settings, ServerComponentType, Entity, EntityType, EntityTickEvent, EntityTickEventType } from "battletribes-shared";
-import { getHitboxVelocity, Hitbox, setHitboxVelocity } from "../hitboxes.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { EntityTickEvent, EntityTickEventType } from "../../../shared/dist/entity-events.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { getHitboxVelocity, setHitboxVelocity } from "../hitboxes.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { getEntityAgeTicks, getEntityType } from "../world.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";

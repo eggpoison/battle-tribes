@@ -1,4 +1,8 @@
-import { ServerComponentType, Entity, Settings, getSubtileIndex, getAbsAngleDiff, randAngle, randFloat, randInt } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
+import { randAngle, getAbsAngleDiff, randFloat, randInt } from "../../../shared/dist/utils.js";
 import { createTreeRootBaseConfig } from "../entities/resources/tree-root-base.js";
 import { createTreeRootSegmentConfig } from "../entities/resources/tree-root-segment.js";
 import Layer from "../Layer.js";

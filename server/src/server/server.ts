@@ -1,4 +1,9 @@
-import { VisibleChunkBounds, Settings, TribeType, Point, ClientPacketType, PacketReader, Entity } from "battletribes-shared";
+import { VisibleChunkBounds } from "../../../shared/dist/client-server-types.js";
+import { Entity } from "../../../shared/dist/entities.js";
+import { PacketReader, ClientPacketType } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { TribeType } from "../../../shared/dist/tribes.js";
+import { assert, Point } from "../../../shared/dist/utils.js";
 import WebSocket, { WebSocketServer } from "ws";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning.js";
 import Tribe from "../Tribe.js";
@@ -27,6 +32,7 @@ import { generateGrassStrands } from "../world-generation/grass-generation.js";
 import { Hitbox } from "../hitboxes.js";
 import { generateDecorations } from "../world-generation/decoration-generation.js";
 import { createDevGameDataPacket } from "./dev-packets.js";
+import Layer from "../Layer.js";
 
 /*
 
@@ -212,6 +218,10 @@ class GameServer {
                   const config = createPlayerConfig(spawnPosition.x, spawnPosition.y, 0, tribe, playerClient);
                   createEntity(config, layer, 0);
                }
+
+               // setTimeout(() => {
+               //    regenerateSurfaceTerrain();
+               // }, 10000);
 
                // @SQUEAM
                // setTimeout(() => {
@@ -498,7 +508,7 @@ class GameServer {
 
       // @Hack?
       for (const layer of layers) {
-         layer.wallSubtileUpdates = [];
+         layer.wallSubtileUpdates = new Set();
       }
 
       resetDirtyEntities();

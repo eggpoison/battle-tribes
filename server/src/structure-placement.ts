@@ -1,4 +1,3 @@
-import { _bounds, boxIsCircular, RectangularBox, boxIsCollidingWithSubtile, getEntityCollisionGroup, CollisionGroup, BlueprintType, BuildingMaterial, ServerComponentType, Entity, EntityType, Settings, STRUCTURE_TYPES, StructureType, getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, SubtileType, Point, alignAngleToClosestAxis, getAbsAngleDiff, distance, getTileIndexIncludingEdges, polarVec2, angle, calculateBoxBounds, createRectangularBox, getBoxCollisionResult } from "battletribes-shared";
 import { getEntitiesInRange } from "./ai-shared.js";
 import { getHitboxesCollidingEntities } from "./collision-detection.js";
 import { EntityConfig, getConfigTransformComponent } from "./components.js";
@@ -40,6 +39,16 @@ import { Hitbox } from "./hitboxes.js";
 import Layer from "./Layer.js";
 import Tribe from "./Tribe.js";
 import { getEntityType, getTribes } from "./world.js";
+import { calculateBoxBounds, _bounds, createRectangularBox, getBoxCollisionResult, boxIsCircular } from "../../shared/dist/boxes.js";
+import { getEntityCollisionGroup, CollisionGroup } from "../../shared/dist/collision-groups.js";
+import { boxIsCollidingWithSubtile } from "../../shared/dist/collision.js";
+import { BuildingMaterial } from "../../shared/dist/components.js";
+import { Entity, EntityType } from "../../shared/dist/entities.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { StructureType, STRUCTURE_TYPES } from "../../shared/dist/structures.js";
+import { getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY } from "../../shared/dist/subtiles.js";
+import { SubtileType } from "../../shared/dist/tiles.js";
+import { Point, angle, getTileIndexIncludingEdges, polarVec2, alignAngleToClosestAxis, getAbsAngleDiff, distance } from "../../shared/dist/utils.js";
 
 const enum Vars {
    STRUCTURE_PLACE_DISTANCE = 60,

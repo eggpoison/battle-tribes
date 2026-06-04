@@ -1,4 +1,3 @@
-import { assertBoxIsCircular, CircularBox, Entity, EntityType, Settings, polarVec2, randInt } from "battletribes-shared";
 import { createEntityConfigAttachInfoWithTether, getConfigTransformComponent } from "../components.js";
 import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";
 import { HealthComponentArray } from "../components/HealthComponent.js";
@@ -9,6 +8,10 @@ import { createSandBallConfig } from "../entities/desert/sand-ball.js";
 import { applyAccelerationFromGround, turnHitboxToAngle, addHitboxAngularAcceleration } from "../hitboxes.js";
 import { createEntity, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world.js";
 import { addHitboxAngularTether, HitboxAngularTether } from "../tethers.js";
+import { assertBoxIsCircular, CircularBox } from "../../../shared/dist/boxes.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { randInt, polarVec2 } from "../../../shared/dist/utils.js";
 
 const MIN_BALLING_COOLDOWN_TICKS = 30 * Settings.TICK_RATE;
 const MAX_BALLING_COOLDOWN_TICKS = 40 * Settings.TICK_RATE;

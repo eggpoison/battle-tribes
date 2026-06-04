@@ -1,4 +1,8 @@
-import { assertBoxIsCircular, CircularBox, Entity, EntityType, AttackEffectiveness, Point, PathfindingSettings, Settings, distance } from "battletribes-shared";
+import { CircularBox, assertBoxIsCircular } from "../../../shared/dist/boxes.js";
+import { Entity, EntityType } from "../../../shared/dist/entities.js";
+import { PathfindingSettings, Settings } from "../../../shared/dist/settings.js";
+import { distance, Point } from "../../../shared/dist/utils.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
 import { AIHelperComponent, AIType } from "../components/AIHelperComponent.js";
 import { EnergyStoreComponentArray } from "../components/EnergyStoreComponent.js";

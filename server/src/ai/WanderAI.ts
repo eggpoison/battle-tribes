@@ -1,4 +1,6 @@
-import { Entity, Settings, Point, randInt } from "battletribes-shared";
+import { Entity } from "../../../shared/dist/entities.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point, randInt } from "../../../shared/dist/utils.js";
 import { entityHasPassedPosition } from "../ai-shared.js";
 import { AIHelperComponentArray } from "../components/AIHelperComponent.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";

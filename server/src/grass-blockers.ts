@@ -1,5 +1,4 @@
-import { Box, boxIsCircular, cloneBox, Entity, EntityType, Settings, Packet, Point, unitsToChunksClamped, _bounds, calculateBoxBounds, getBoxCollisionResult, circleCollidesWithBox } from "battletribes-shared";
-import { Bytes } from "../../shared/src/constants.js";
+import { Bytes } from "../../shared/dist/constants.js";
 import Chunk from "./Chunk.js";
 import { TransformComponentArray } from "./components/TransformComponent.js";
 import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType, surfaceLayer } from "./world.js";
@@ -7,6 +6,11 @@ import Layer from "./Layer.js";
 import { addBoxDataToPacket, getBoxDataLength } from "./server/packet-hitboxes.js";
 import { createGrassStrandConfig } from "./entities/grass-strand.js";
 import { hitboxIsNonGrassBlocking } from "./hitboxes.js";
+import { Box, calculateBoxBounds, _bounds, getBoxCollisionResult, cloneBox, boxIsCircular, circleCollidesWithBox } from "../../shared/dist/boxes.js";
+import { Entity, EntityType } from "../../shared/dist/entities.js";
+import { Packet } from "../../shared/dist/packets.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { Point, unitsToChunksClamped } from "../../shared/dist/utils.js";
 
 const enum Vars {
    GRASS_FULL_REGROW_TICKS = Settings.TICK_RATE * 120,

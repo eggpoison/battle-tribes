@@ -1,5 +1,4 @@
-import { ServerComponentType, DamageSource, EntityType, Entity, Settings, Point, clamp, AttackEffectiveness, HitFlags, Packet } from "battletribes-shared";
-import { Bytes } from "../../../shared/src/constants.js";
+import { Bytes } from "../../../shared/dist/constants.js";
 import { onZombieVisibleEntityHurt } from "../entities/mobs/zombie.js";
 import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { registerDirtyEntity, registerEntityHeal, registerEntityHit } from "../server/player-clients.js";
@@ -8,6 +7,13 @@ import { TransformComponentArray } from "./TransformComponent.js";
 import { destroyEntity, getEntityType } from "../world.js";
 import { Hitbox } from "../hitboxes.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
+import { HitFlags } from "../../../shared/dist/client-server-types.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { Entity, DamageSource, EntityType } from "../../../shared/dist/entities.js";
+import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
+import { Packet } from "../../../shared/dist/packets.js";
+import { Settings } from "../../../shared/dist/settings.js";
+import { Point, clamp } from "../../../shared/dist/utils.js";
 
 export class HealthComponent {
    public maxHealth: number;

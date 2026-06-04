@@ -1,4 +1,4 @@
-import { ServerComponentType } from "battletribes-shared";
+import { ServerComponentType } from "../../../shared/dist/components.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class SlingTurretComponent {}

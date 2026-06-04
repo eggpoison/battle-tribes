@@ -189,7 +189,7 @@ export default function TextureAtlasStitchingPlugin(): Plugin {
          const enumMembers = meta.textureSources.map(src => `  ${textureSourceToEnumMemberName(src)},`).join("\n");
           // Remove the final comma
          const enumMembersSane = enumMembers.slice(0, enumMembers.length - 1);
-         const enumSource = `// Automatically generated - do not edit!\nexport const enum TextureIndex {\n${enumMembersSane}\n}\n`;
+         const enumSource = `// Automatically generated - do not manually edit!\nexport const enum TextureIndex {\n${enumMembersSane}\n}`;
          fs.writeFileSync(path.join(path.resolve("src"), "texture-index.ts"), enumSource);
 
          console.log(`[texture-atlas] Built atlas: ${canvas.width}x${canvas.height}, ${textureImages.length} sprites`);

@@ -31,7 +31,7 @@ import { EntityServerComponentData, getEntityComponentArrays, getEntityServerCom
 import { getSelectedEntity } from "../entity-selection";
 import { COMPONENT_ARRAYS, ServerComponentData } from "../entity-components/component-registry";
 import { processTileUpdates } from "../rendering/webgl/solid-tile-rendering";
-import { processRenderChunkSubtileUpdates } from "../rendering/render-chunks";
+import { AAA, processRenderChunkSubtileUpdates } from "../rendering/render-chunks";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
@@ -171,6 +171,7 @@ const decodeEntitySnapshot = (reader: PacketReader): EntitySnapshot => {
 }
 
 export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnapshot {
+   AAA();
    const tick = reader.readNumber();
    
    const time = reader.readNumber();

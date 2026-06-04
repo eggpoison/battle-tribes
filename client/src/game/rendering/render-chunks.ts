@@ -57,10 +57,7 @@ export const enum EdgeType {
    dropdown
 }
 
-export interface RenderChunkEdgeInfo {
-   readonly indexes: Array<number>;
-   readonly markers: Array<number>;
-}
+export type RenderChunkEdgeInfo = Array<number>;
 
 export interface RenderChunkShadowInfo {
    readonly vao: WebGLVertexArrayObject;
@@ -242,34 +239,57 @@ const getTileEdgeInfo = (edgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, tileInde
    return edgeInfos[idx];
 }
 
+let a = 0;
+let n = 0;
+
 const addEdge = (edgeInfo: RenderChunkEdgeInfo, index: number, marker: EdgeMarkerBit) => {
-   const idx = edgeInfo.indexes.indexOf(index);
-   if (idx === -1) {
-      edgeInfo.indexes.push(index);
-      edgeInfo.markers.push(marker);
-   } else {
-      edgeInfo.markers[idx] |= marker;
+   a += edgeInfo.length;
+   n++;
+   
+   for (let i = 0; i < edgeInfo.length; i++) {
+      const data = edgeInfo[i];
+      const currentIndex = data >> 8;
+      if (currentIndex === index) {
+         edgeInfo[i] |= marker;
+         return;
+      }
    }
+   
+   edgeInfo.push(index << 8 | marker);
 }
 
 const clearEdges = (edgeInfo: RenderChunkEdgeInfo, index: number) => {
-   const idx = edgeInfo.indexes.indexOf(index);
-   // If a subtile is removed from the very center of a contiguous block, then it won't be present.
-   if (idx !== -1) {
-      edgeInfo.indexes.splice(idx, 1);
-      edgeInfo.markers.splice(idx, 1);
+   for (let i = 0; i < edgeInfo.length; i++) {
+      const data = edgeInfo[i];
+      const currentIndex = data >> 8;
+      if (currentIndex === index) {
+         edgeInfo.splice(i, 1);
+         return;
+      }
    }
 }
 
 const removeEdge = (edgeInfo: RenderChunkEdgeInfo, index: number, marker: EdgeMarkerBit) => {
-   const idx = edgeInfo.indexes.indexOf(index);
-   // @HACK
-   // assert(idx !== -1)
-   if (idx === -1) {
-      return;
+   a += edgeInfo.length;
+   n++;
+
+   for (let i = 0; i < edgeInfo.length; i++) {
+      const data = edgeInfo[i];
+      const currentIndex = data >> 8;
+      if (currentIndex === index) {
+         edgeInfo[i] &= ~marker;
+         return;
+      }
    }
-   
-   edgeInfo.markers[idx] &= ~marker;
+
+   // @HACK
+   // throw new Error();
+}
+
+export function AAA() {
+   console.log(a / n)
+   a = 0
+   n = 0
 }
 
 const addSubtileToEdgeInfosPartial = (wallSubtileTypes: Uint8Array, floorEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, wallEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subtileIndex: number, subtileType: SubtileType): void => {

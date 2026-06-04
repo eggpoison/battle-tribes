@@ -51,18 +51,9 @@ export function processInitialGameDataPacket(reader: PacketReader): Intermediate
       const wallEdgeInfos: Array<RenderChunkEdgeInfo> = [];
       const dropdownEdgeInfos: Array<RenderChunkEdgeInfo> = [];
       for (let i = 0; i < RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE * RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE; i++) {
-         floorEdgeInfos.push({
-            indexes: [],
-            markers: []
-         });
-         wallEdgeInfos.push({
-            indexes: [],
-            markers: []
-         });
-         dropdownEdgeInfos.push({
-            indexes: [],
-            markers: []
-         });
+         floorEdgeInfos.push([]);
+         wallEdgeInfos.push([]);
+         dropdownEdgeInfos.push([]);
       }
       shadowInfoArrays.push({
          [EdgeType.floor]: floorEdgeInfos,

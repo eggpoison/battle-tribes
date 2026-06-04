@@ -52,9 +52,7 @@ export function createWallBorderShaders(): void {
       if (v_colour == 0.0) {
          outputColour = vec4(0.15, 0.15, 0.15, 1.0);
       } else {
-      //  @Temporary
          outputColour = vec4(0.15, 0.15, 0.15, 0.3);
-         // outputColour = vec4(1.0, 0.0, 0.0, 0.);
       }
    }
    `;
@@ -319,16 +317,14 @@ const addLeftVertices = (vertexData: Float32Array, dataOffset: number, floorMark
 }
 
 const calculateVertexData = (info: RenderChunkEdgeInfo): Float32Array => {
-   const subtiles = info.indexes;
-   const chunkMarkers = info.markers;
-   
    // @SPEEDD!! waaay overshoot this (hacky * 8) cuz currently can't tell the actual number of edges
-   const vertexData = new Float32Array(subtiles.length * 6 * Var.ATTRIBUTES_PER_VERTEX * 8);
+   const vertexData = new Float32Array(info.length * 6 * Var.ATTRIBUTES_PER_VERTEX * 8);
    
    let dataOffset = 0;
-   for (let i = 0; i < subtiles.length; i++) {
-      const subtileIndex = subtiles[i];
-      const floorMarkers = chunkMarkers[i];
+   for (let i = 0; i < info.length; i++) {
+      const data = info[i];
+      const subtileIndex = data >> 8;
+      const floorMarkers = data & 0xFF;
 
       const subtileX = getSubtileX(subtileIndex);
       const subtileY = getSubtileY(subtileIndex);

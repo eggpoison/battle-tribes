@@ -7,7 +7,7 @@ import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY,
 import { Settings } from "../../../../../shared/src/settings";
 
 const enum Var {
-   ATTRIBUTES_PER_VERTEX = 2
+   ATTRIBUTES_PER_VERTEX = 1
 }
 
 export const enum TileShadowType {
@@ -30,8 +30,7 @@ export function createTileShadowShaders(): void {
 
    uniform int u_shadowType;
    
-   layout(location = 0) in uint a_index;
-   layout(location = 1) in uint a_markers;
+   layout(location = 0) in uint a_data;
    
    out vec2 v_texCoord;
    flat out uint v_markers;
@@ -58,16 +57,19 @@ export function createTileShadowShaders(): void {
       int v = ((vertexID % 3) + (vertexID / 4)) >> 1;
       vec2 vertPosition = vec2(u, v);
 
+      uint index = a_data >> 8u;
+      uint markers = a_data & 0xFFu;
+
       vec2 tilePosition;
       uint tileSize;
       if (u_shadowType == ${TileShadowType.dropdownShadow}) {
-         uint tileX = getTileX(a_index);
-         uint tileY = getTileY(a_index);
+         uint tileX = getTileX(index);
+         uint tileY = getTileY(index);
          tilePosition = vec2(tileX, tileY);
          tileSize = ${Settings.TILE_SIZE}u;
       } else {
-         uint subtileX = getSubtileX(a_index);
-         uint subtileY = getSubtileY(a_index);
+         uint subtileX = getSubtileX(index);
+         uint subtileY = getSubtileY(index);
          tilePosition = vec2(subtileX, subtileY);
          tileSize = ${Settings.SUBTILE_SIZE}u;
       }
@@ -79,7 +81,7 @@ export function createTileShadowShaders(): void {
       gl_Position = vec4(clipSpacePos, 0.0, 1.0);
    
       v_texCoord = vertPosition;
-      v_markers = a_markers;
+      v_markers = markers;
    }
    `;
    
@@ -151,38 +153,8 @@ export function createTileShadowShaders(): void {
    shadowTypeUniformLocation = gl.getUniformLocation(program, "u_shadowType")!;
 }
 
-const calculateVertexData = (info: RenderChunkEdgeInfo): Uint32Array => {
-   const chunkIndexes = info.indexes;
-   const chunkMarkers = info.markers;
-   
-   const vertexData = new Uint32Array(chunkIndexes.length * 6 * Var.ATTRIBUTES_PER_VERTEX);
-   
-   for (let i = 0; i < chunkIndexes.length; i++) {
-      const index = chunkIndexes[i];
-      const markers = chunkMarkers[i];
-      
-      const dataOffset = i * 6 * Var.ATTRIBUTES_PER_VERTEX;
-      
-      vertexData[dataOffset] = index;
-      vertexData[dataOffset + 1] = markers;
-
-      vertexData[dataOffset + 2] = index;
-      vertexData[dataOffset + 3] = markers;
-
-      vertexData[dataOffset + 4] = index;
-      vertexData[dataOffset + 5] = markers;
-
-      vertexData[dataOffset + 6] = index;
-      vertexData[dataOffset + 7] = markers;
-
-      vertexData[dataOffset + 8] = index;
-      vertexData[dataOffset + 9] = markers;
-
-      vertexData[dataOffset + 10] = index;
-      vertexData[dataOffset + 11] = markers;
-   }
-
-   return vertexData;
+const calculateVertexData = (edgeInfo: RenderChunkEdgeInfo): Uint32Array => {
+   return new Uint32Array(edgeInfo);
 }
 
 export function calculateShadowInfo(info: RenderChunkEdgeInfo): RenderChunkShadowInfo | null {
@@ -199,19 +171,14 @@ export function calculateShadowInfo(info: RenderChunkEdgeInfo): RenderChunkShado
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
    gl.vertexAttribIPointer(0, 1, gl.UNSIGNED_INT, Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32, 0);
-   gl.vertexAttribIPointer(1, 1, gl.UNSIGNED_INT, Var.ATTRIBUTES_PER_VERTEX * Bytes.Float32, 1 * Bytes.Float32);
-   
-   // gl.vertexAttribDivisor(0, 1);
-   // gl.vertexAttribDivisor(1, 1);
-   
+   gl.vertexAttribDivisor(0, 1);
    gl.enableVertexAttribArray(0);
-   gl.enableVertexAttribArray(1);
 
    return {
       vao: vao,
       buffer: vertexBuffer,
       vertexData: vertexData,
-      numElements: info.indexes.length * 6
+      numElements: info.length
    };
 }
 
@@ -223,7 +190,7 @@ export function recalculateTileShadows(layer: Layer, renderChunkIdx: number, inf
    }
 
    renderChunkShadowInfo.vertexData = calculateVertexData(info);
-   renderChunkShadowInfo.numElements = info.indexes.length * 6;
+   renderChunkShadowInfo.numElements = info.length;
 
    gl.bindVertexArray(renderChunkShadowInfo.vao);
    
@@ -248,7 +215,7 @@ export function renderTileShadows(layer: Layer, tileShadowType: TileShadowType):
          }
 
          gl.bindVertexArray(shadowInfo.vao);
-         gl.drawArrays(gl.TRIANGLES, 0, shadowInfo.numElements);
+         gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, shadowInfo.numElements);
       }
    }
 

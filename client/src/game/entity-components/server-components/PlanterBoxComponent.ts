@@ -9,7 +9,7 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getEntityRenderObject, getEntityAgeTicks, EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponent, TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -46,7 +46,7 @@ const createMoundRenderPart = (plantedEntityType: PlantedEntityType, parentHitbo
    );
 }
 
-class _PlanterBoxComponentArray extends _ServerComponentArray<PlanterBoxComponent, PlanterBoxComponentData, IntermediateInfo> {
+class _PlanterBoxComponentArray extends ServerComponentArray<PlanterBoxComponent, PlanterBoxComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): PlanterBoxComponentData {
       const plantedEntityType = reader.readNumber();
       const isFertilised = reader.readBool();

@@ -4,7 +4,7 @@
    import { tabSelectorState } from "../../../../ui-state/tab-selector-state";
    import DevmodeDropdownInput from "../DevmodeDropdownInput.svelte";
 
-   const tribeIDs = new Array<number>();
+   const tribeIDs = new number[]();
    const options = new Array<string>();
    for (const tribe of tribes) {
       tribeIDs.push(tribe.id);

@@ -11,7 +11,7 @@ const enum Vars {
    CELLS_IN_WORLD_WIDTH = Settings.WORLD_SIZE_TILES / CELL_SIZE
 }
 
-const windVectors: Array<Point> = [];
+const windVectors: Point[] = [];
 for (let i = 0; i < Vars.CELLS_IN_WORLD_WIDTH * Vars.CELLS_IN_WORLD_WIDTH; i++) {
    windVectors.push(new Point(0, 0));
 }

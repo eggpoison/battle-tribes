@@ -1,6 +1,6 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { PacketReader } from "../../../../../shared/src/packets";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -21,7 +21,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tundraRock, _TundraRockComponentArray> {}
 }
 
-class _TundraRockComponentArray extends _ServerComponentArray<TundraRockComponent, TundraRockComponentData> {
+class _TundraRockComponentArray extends ServerComponentArray<TundraRockComponent, TundraRockComponentData> {
    public decodeData(reader: PacketReader): TundraRockComponentData {
       const variant = reader.readNumber();
       return {

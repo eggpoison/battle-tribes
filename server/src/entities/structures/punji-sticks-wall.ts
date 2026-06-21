@@ -15,7 +15,7 @@ import { StructureConnection } from "../../structure-placement.js";
 import Tribe from "../../Tribe.js";
 import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildingLayer.js";
 
-export function createWallPunjiSticksConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createWallPunjiSticksConfig(x: number, y: number, angle: number, tribe: Tribe, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
    const box = createRectangularBox(x, y, 0, 0, angle, 56, 32);

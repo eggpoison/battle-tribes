@@ -2,7 +2,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { getHumanoidRadius, tribesmanComponentArray } from "./TribesmanComponent";
 import { createConversionParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { Tribe, tribeExists } from "../../tribes";
 import { playerInstance } from "../../player";
 import { EntityComponentData } from "../../world";
@@ -29,7 +29,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribe, TribeComponentArray> {}
 }
 
-class TribeComponentArray extends _ServerComponentArray<TribeComponent, TribeComponentData> {
+class TribeComponentArray extends ServerComponentArray<TribeComponent, TribeComponentData> {
    public decodeData(reader: PacketReader): TribeComponentData {
       const tribeID = reader.readNumber();
       const tribeType: TribeType = reader.readNumber();

@@ -10,13 +10,13 @@ export interface BuildingSafety {
    readonly safety: number;
 }
 
-let buildingSafeties: Array<BuildingSafety> = [];
+let buildingSafeties: BuildingSafety[] = [];
 
 export function resetBuildingSafeties(): void {
    buildingSafeties = [];
 }
 
-export function getBuildingSafeties(): ReadonlyArray<BuildingSafety> {
+export function getBuildingSafeties(): readonly BuildingSafety[] {
    return buildingSafeties;
 }
 

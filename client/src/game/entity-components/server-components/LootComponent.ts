@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface LootComponentData {}
@@ -10,7 +10,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.loot, _LootComponentArray> {}
 }
 
-class _LootComponentArray extends _ServerComponentArray<LootComponent, LootComponentData> {
+class _LootComponentArray extends ServerComponentArray<LootComponent, LootComponentData> {
    public decodeData(): LootComponentData {
       return {};
    }

@@ -10,9 +10,9 @@ const CONNECTION_HEIGHT = 8;
 
 let program: WebGLProgram;
 
-let wallConnections: ReadonlyArray<WallConnectionData> = [];
+let wallConnections: readonly WallConnectionData[] = [];
 
-export function setVisibleWallConnections(newWallConnections: ReadonlyArray<WallConnectionData>): void {
+export function setVisibleWallConnections(newWallConnections: readonly WallConnectionData[]): void {
    // @Speed: Garbage collection 
    wallConnections = newWallConnections;
 }
@@ -63,7 +63,7 @@ export function renderWallConnections(): void {
    gl.bindVertexArray(null);
 
    // @Speed
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
    for (let i = 0; i < wallConnections.length; i++) {
       const connection = wallConnections[i];
 

@@ -2,7 +2,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import _ClientComponentArray from "../ClientComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
 import { TextureIndex } from "../../../texture-index";
@@ -15,7 +15,7 @@ declare module "../component-registry" {
    interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.lilypad, _LilypadComponentArray> {}
 }
 
-class _LilypadComponentArray extends _ClientComponentArray<LilypadComponent, LilypadComponentData> {
+class _LilypadComponentArray extends ClientComponentArray<LilypadComponent, LilypadComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

@@ -1,0 +1,19 @@
+#held-item {
+   width: var(--item-slot-size);
+   height: var(--item-slot-size);
+   position: absolute;
+   pointer-events: none;
+   z-index: 3;
+   user-select: none;
+   transform: scale(var(--zoom));
+}
+#held-item img {
+   width: var(--item-image-size);
+   height: var(--item-image-size);
+   image-rendering: pixelated;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   z-index: 1;
+}

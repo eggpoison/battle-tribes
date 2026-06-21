@@ -51,7 +51,7 @@ const tribesmanIsElegibleToHarvestEntityType = (tribesman: Entity, entityType: E
 // @Incomplete: when the tribesman wants to gather a resource but there isn't enough space, should make space
 
 // @Incomplete
-// const shouldGatherResource = (tribesman: Entity, healthComponent: HealthComponent, inventoryIsFull: boolean, resource: Entity, resourceProducts: ReadonlyArray<ItemType>): boolean => {
+// const shouldGatherResource = (tribesman: Entity, healthComponent: HealthComponent, inventoryIsFull: boolean, resource: Entity, resourceProducts: readonly ItemType[]): boolean => {
 //    if (resourceProducts.length === 0) {
 //       return false;
 //    }
@@ -79,7 +79,7 @@ const tribesmanIsElegibleToHarvestEntityType = (tribesman: Entity, entityType: E
 //    return true;
 // }
 
-const getGatherTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entity>, gatheredItemType: ItemType): Entity | null => {
+const getGatherTarget = (tribesman: Entity, visibleEntities: readonly Entity[], gatheredItemType: ItemType): Entity | null => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];
    
@@ -111,7 +111,7 @@ const getGatherTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entit
    return closestResource !== undefined ? closestResource : null;
 }
 
-const getFoodTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
+const getFoodTarget = (tribesman: Entity, visibleEntities: readonly Entity[]): Entity | null => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];
 
@@ -146,7 +146,7 @@ const getFoodTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entity>
    return target !== undefined ? target : null;
 }
 
-const tribesmanGetItemPickupTarget = (tribesman: Entity, visibleItemEntities: ReadonlyArray<Entity>, gatheredItemType: ItemType): Entity | null => {
+const tribesmanGetItemPickupTarget = (tribesman: Entity, visibleItemEntities: readonly Entity[], gatheredItemType: ItemType): Entity | null => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];
    
@@ -291,7 +291,7 @@ const isLowOnFood = (entity: Entity): boolean => {
    return totalHealing < 10;
 }
 
-export function workOnGatherPlan(tribesman: Entity, gatherPlan: AIGatherItemPlan, visibleItemEntities: ReadonlyArray<Entity>): void {
+export function workOnGatherPlan(tribesman: Entity, gatherPlan: AIGatherItemPlan, visibleItemEntities: readonly Entity[]): void {
    const gatheredItemType = gatherPlan.itemType;
 
    // If the tribe has autogiveBaseResources enabled, then just give all of the item required

@@ -18,9 +18,6 @@ let isSimulating = true;
 
 let canAscendLayer = false;
 
-let cursorX = 0;
-let cursorY = 0;
-
 let isHoveringOnMenu = true;
 
 export const gameUIState = {
@@ -57,20 +54,6 @@ export const gameUIState = {
    },
    setCanAscendLayer(newCanAscendLayer: boolean): void {
       canAscendLayer = newCanAscendLayer;
-   },
-
-   get cursorX() {
-      return cursorX;
-   },
-   setCursorX(newCursorX: number): void {
-      cursorX = newCursorX;
-   },
-
-   get cursorY() {
-      return cursorY;
-   },
-   setCursorY(newCursorY: number): void {
-      cursorY = newCursorY;
    },
 
    get isHoveringOnMenu() {

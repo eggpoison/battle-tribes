@@ -79,7 +79,7 @@ export function createResearchOrbShaders(): void {
    bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 }
 
-const calculateOrbVertices = (orb: ResearchOrb): ReadonlyArray<number> => {
+const calculateOrbVertices = (orb: ResearchOrb): readonly number[] => {
    const halfSize = RESEARCH_ORB_SIZES[orb.size] / 2;
    
    const x1 = orb.positionX - halfSize;

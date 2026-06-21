@@ -32,7 +32,7 @@ export class AIPathfindingComponent {
     * Stores an array of all paths the entity is going to follow to reach its destination.
     * Once an indiviual path is completed, it is removed from this array.
    */
-   public paths: Array<Path> = [];
+   public paths: Path[] = [];
 }
 
 export const AIPathfindingComponentArray = new ComponentArray<AIPathfindingComponent>(ServerComponentType.aiPathfinding, true, getDataLength, addDataToPacket);
@@ -175,8 +175,8 @@ export function continueCurrentPath(tribesman: Entity): boolean {
          let centerX = 0;
          let centerY = 0;
 
-         const findHerdMembers = (visibleEntities: ReadonlyArray<Entity>): ReadonlyArray<Entity> => {
-            const herdMembers: Array<Entity> = [];
+         const findHerdMembers = (visibleEntities: readonly Entity[]): readonly Entity[] => {
+            const herdMembers: Entity[] = [];
             for (let i = 0; i < visibleEntities.length; i++) {
                const entity = visibleEntities[i];
                const relationship = getEntityRelationship(tribesman, entity);
@@ -281,7 +281,7 @@ export function getFinalPath(aiPathfindingComponent: AIPathfindingComponent): Pa
    return null;
 }
 
-const getPotentialBlockingTribesmen = (tribesman: Entity): ReadonlyArray<Entity> => {
+const getPotentialBlockingTribesmen = (tribesman: Entity): readonly Entity[] => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];
    
@@ -292,7 +292,7 @@ const getPotentialBlockingTribesmen = (tribesman: Entity): ReadonlyArray<Entity>
    const minChunkY = Math.max(Math.min(Math.floor((tribesmanHitbox.box.posY - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkY = Math.max(Math.min(Math.floor((tribesmanHitbox.box.posY + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    
-   const blockingTribesmen: Array<Entity> = [];
+   const blockingTribesmen: Entity[] = [];
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);
@@ -325,7 +325,7 @@ const getPotentialBlockingTribesmen = (tribesman: Entity): ReadonlyArray<Entity>
    return blockingTribesmen;
 }
 
-const preparePathfinding = (targetEntity: Entity, tribe: Tribe, blockingTribesman: ReadonlyArray<Entity>): void => {
+const preparePathfinding = (targetEntity: Entity, tribe: Tribe, blockingTribesman: readonly Entity[]): void => {
    // @Cleanup: why don't we just convert all the entities to 0?
    
    // Ignore the target
@@ -343,7 +343,7 @@ const preparePathfinding = (targetEntity: Entity, tribe: Tribe, blockingTribesma
    }
 }
 
-const cleanupPathfinding = (targetEntity: Entity | 0, tribe: Tribe, blockingTribesman: ReadonlyArray<Entity>): void => {
+const cleanupPathfinding = (targetEntity: Entity | 0, tribe: Tribe, blockingTribesman: readonly Entity[]): void => {
    // Reset the target
    if (targetEntity !== 0) {
       // @Speed: Some places which call this have access to the entity already

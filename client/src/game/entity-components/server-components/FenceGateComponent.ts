@@ -1,6 +1,6 @@
 import { HitboxTag } from "../../../../../shared/src/boxes";
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -17,7 +17,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fenceGate, _FenceGateComponentArray> {}
 }
 
-class _FenceGateComponentArray extends _ServerComponentArray<FenceGateComponent, FenceGateComponentData> {
+class _FenceGateComponentArray extends ServerComponentArray<FenceGateComponent, FenceGateComponentData> {
    public decodeData(): FenceGateComponentData {
       return {};
    }

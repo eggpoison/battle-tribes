@@ -3,7 +3,7 @@ import { HitFlags } from "../../../../../shared/src/client-server-types";
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { Point, randAngle, randFloat, angle, randItem, randInt } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
@@ -24,7 +24,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.palmTree, _PalmTreeComponentArray> {}
 }
 
-class _PalmTreeComponentArray extends _ServerComponentArray<PalmTreeComponent, PalmTreeComponentData> {
+class _PalmTreeComponentArray extends ServerComponentArray<PalmTreeComponent, PalmTreeComponentData> {
    public decodeData(): PalmTreeComponentData {
       return {};
    }

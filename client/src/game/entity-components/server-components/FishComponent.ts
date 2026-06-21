@@ -7,7 +7,7 @@ import { randFloat, randAngle, Point, randInt } from "../../../../../shared/src/
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../../particles";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { getHitboxTile, Hitbox } from "../../hitboxes";
@@ -38,7 +38,7 @@ const TEXTURE_INDEXES: Record<FishColour, TextureIndex> = {
    [FishColour.lime]: TextureIndex.entities_fish_fishLime
 };
 
-class _FishComponentArray extends _ServerComponentArray<FishComponent, FishComponentData> {
+class _FishComponentArray extends ServerComponentArray<FishComponent, FishComponentData> {
    public decodeData(reader: PacketReader): FishComponentData {
       const colour = reader.readNumber();
       return {

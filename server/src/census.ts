@@ -6,7 +6,7 @@ import { TileIndex, getTileX, getTileY, tileIsInWorldIncludingEdges } from "../.
 import Layer from "./Layer.js";
 import { getEntityType, layers } from "./world.js";
 
-const entityCounts: Array<EntityType> = [];
+const entityCounts: EntityType[] = [];
 for (let i = 0; i < NUM_ENTITY_TYPES; i++) {
    entityCounts.push(0);
 }
@@ -67,10 +67,10 @@ export function removeTileFromCensus(layer: Layer, tileIndex: TileIndex): void {
    layer.tileCensus.biomes[biome].splice(layer.tileCensus.biomes[biome].indexOf(tileIndex), 1);
 }
 
-export function getTilesOfType(layer: Layer, tileType: TileType): ReadonlyArray<TileIndex> {
+export function getTilesOfType(layer: Layer, tileType: TileType): readonly TileIndex[] {
    return layer.tileCensus.types[tileType];
 }
 
-export function getTilesOfBiome(layer: Layer, biomeName: Biome): ReadonlyArray<TileIndex> {
+export function getTilesOfBiome(layer: Layer, biomeName: Biome): readonly TileIndex[] {
    return layer.tileCensus.biomes[biomeName];
 }

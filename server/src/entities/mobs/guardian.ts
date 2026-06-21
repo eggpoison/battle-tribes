@@ -26,7 +26,7 @@ const moveFunc = () => {
    throw new Error();
 }
 
-export function createGuardianConfig(x: number, y: number, angle: number, homeTiles: ReadonlyArray<TileIndex>): EntityConfig {
+export function createGuardianConfig(x: number, y: number, angle: number, homeTiles: readonly TileIndex[]): EntityConfig {
    const transformComponent = new TransformComponent();
 
    // Head
@@ -55,7 +55,7 @@ export function createGuardianConfig(x: number, y: number, angle: number, homeTi
    
    const guardianComponent = new GuardianComponent(homeTiles);
 
-   const lights: Array<LightCreationInfo> = [];
+   const lights: LightCreationInfo[] = [];
    
    // Red lights
 

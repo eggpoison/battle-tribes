@@ -226,7 +226,7 @@ export const ItemTypeString: Record<ItemType, string> = {
 
 export const NUM_ITEM_TYPES = Object.keys(ItemTypeString).length;
 
-export const ALL_ITEM_TYPES: Array<ItemType> = [];
+export const ALL_ITEM_TYPES: ItemType[] = [];
 for (let i = 0; i < NUM_ITEM_TYPES; i++) {
    ALL_ITEM_TYPES.push(i);
 }
@@ -1095,7 +1095,7 @@ type ExcludeNonArmourItemTypes<T extends ItemType> = typeof ITEM_TYPE_RECORD[T] 
 export type ArmourItemType = keyof {
    [T in ItemType as ExcludeNonArmourItemTypes<T>]: T;
 }
-export const ARMOUR_ITEM_TYPES = ALL_ITEM_TYPES.filter(itemType => itemTypeIsArmour(itemType)) as ReadonlyArray<ArmourItemType>;
+export const ARMOUR_ITEM_TYPES = ALL_ITEM_TYPES.filter(itemType => itemTypeIsArmour(itemType)) as readonly ArmourItemType[];
 
 type ExcludeNonGloveItemTypes<T extends ItemType> = typeof ITEM_TYPE_RECORD[T] extends "glove" ? T : never;
 export type GloveItemType = keyof {
@@ -1209,7 +1209,7 @@ export class Inventory {
    public readonly name: InventoryName;
 
    public readonly itemSlots: ItemSlots = {};
-   public readonly items: Array<Item> = [];
+   public readonly items: Item[] = [];
 
    constructor(width: number, height: number, name: InventoryName) {
       this.width = width;
@@ -1266,8 +1266,8 @@ export class Inventory {
       return 0;
    }
 
-   public getSlots(): Array<number> {
-      const slots: Array<number> = [];
+   public getSlots(): number[] {
+      const slots: number[] = [];
       for (let itemSlot = 1; itemSlot <= this.width * this.height; itemSlot++) {
          slots.push(itemSlot);
       }

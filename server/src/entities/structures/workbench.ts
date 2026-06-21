@@ -14,7 +14,7 @@ import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/co
 import { EntityType } from "../../../../shared/dist/entities.js";
 import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
-export function createWorkbenchConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createWorkbenchConfig(x: number, y: number, angle: number, tribe: Tribe, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
    // @TEMPORARY @HACKK: So that the structure placement works for placing workbenches in the corner of walls

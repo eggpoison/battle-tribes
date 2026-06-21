@@ -47,9 +47,9 @@ export function processInitialGameDataPacket(reader: PacketReader): Intermediate
    // Create layers
    const numLayers = reader.readNumber();
    for (let i = 0; i < numLayers; i++) {
-      const floorEdgeInfos: Array<RenderChunkEdgeInfo> = [];
-      const wallEdgeInfos: Array<RenderChunkEdgeInfo> = [];
-      const dropdownEdgeInfos: Array<RenderChunkEdgeInfo> = [];
+      const floorEdgeInfos: RenderChunkEdgeInfo[] = [];
+      const wallEdgeInfos: RenderChunkEdgeInfo[] = [];
+      const dropdownEdgeInfos: RenderChunkEdgeInfo[] = [];
       for (let i = 0; i < RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE * RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE; i++) {
          floorEdgeInfos.push([]);
          wallEdgeInfos.push([]);
@@ -61,7 +61,7 @@ export function processInitialGameDataPacket(reader: PacketReader): Intermediate
          [EdgeType.dropdown]: dropdownEdgeInfos
       });
 
-      const tiles: Array<Tile> = [];
+      const tiles: Tile[] = [];
       const flowDirections: RiverFlowDirectionsRecord = {};
       const tileTemperatures = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
       const tileHumidities = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);

@@ -1,7 +1,7 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { randFloat } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
@@ -19,7 +19,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetukLaser, _InguYetukLaserComponentArray> {}
 }
 
-class _InguYetukLaserComponentArray extends _ServerComponentArray<InguYetukLaserComponent, InguYetukLaserComponentData> {
+class _InguYetukLaserComponentArray extends ServerComponentArray<InguYetukLaserComponent, InguYetukLaserComponentData> {
    public decodeData(): InguYetukLaserComponentData {
       return {};
    }

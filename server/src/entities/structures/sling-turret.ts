@@ -28,7 +28,7 @@ const turnFunc = () => {
    throw new Error();
 }
 
-export function createSlingTurretConfig(x: number, y: number, rotation: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createSlingTurretConfig(x: number, y: number, rotation: number, tribe: Tribe, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
    const box = createCircularBox(x, y, 0, 0, rotation, 40);

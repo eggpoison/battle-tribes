@@ -8,7 +8,7 @@ import { openMainMenu } from "../MainMenu";
 
 const RESPAWN_TIME_SECONDS = 8;
 
-const DEATH_TIPS: ReadonlyArray<string> = [
+const DEATH_TIPS: readonly string[] = [
    "Always make sure your monitor is on, as otherwise it will not be on.",
    "Cyberbullying is a quick and effective way to get back at people after losing.",
    "Have you tried not dying?"
@@ -66,6 +66,7 @@ function createDeathScreen(): void {
    deathScreenElem = document.createElement("div");
    deathScreenElem.id = "death-screen";
    deathScreenElem.className = "content";
+   // @Speed
    deathScreenElem.innerHTML = `
       <div class="content">
          <h1 class="title">YOU DIED</h1>
@@ -81,6 +82,7 @@ function createDeathScreen(): void {
    `;
    document.body.appendChild(deathScreenElem);
 
+   // @Speed
    respawnCountdownElem = deathScreenElem.querySelector(".respawn-countdown")!;
    respawnCountdownNode = respawnCountdownElem.firstChild as Text;
 

@@ -5,7 +5,7 @@ import { assert, randInt, randAngle } from "../../../../../shared/src/utils";
 import { createCactusSpineParticle, createFlowerParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -25,12 +25,12 @@ export interface CactusFlower {
 }
 
 export interface CactusComponentData {
-   readonly flowers: Array<CactusFlower>;
+   readonly flowers: CactusFlower[];
 }
 
 export interface CactusComponent {
    // @Memory: we could just infer these frmo the render parts on the cactus... But first will need to make flowers into client entities (?)
-   readonly flowers: ReadonlyArray<CactusFlower>;
+   readonly flowers: readonly CactusFlower[];
 }
 
 declare module "../component-registry" {
@@ -47,9 +47,9 @@ const getFlowerTextureIndex = (type: number, size: CactusFlowerSize): TextureInd
    }
 }
 
-class CactusComponentArray extends _ServerComponentArray<CactusComponent, CactusComponentData> {
+class CactusComponentArray extends ServerComponentArray<CactusComponent, CactusComponentData> {
    public decodeData(reader: PacketReader): CactusComponentData {
-      const flowers: Array<CactusFlower> = [];
+      const flowers: CactusFlower[] = [];
       const numFlowers = reader.readNumber();
       for (let i = 0; i < numFlowers; i++) {
          const parentHitboxLocalID = reader.readNumber();

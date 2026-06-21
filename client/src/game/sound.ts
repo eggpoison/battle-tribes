@@ -12,8 +12,8 @@ import { gameIsFocused } from "./event-handling";
 type SoundID = number;
 
 // @Memory
-export const ROCK_HIT_SOUNDS: ReadonlyArray<string> = ["rock-hit-1.mp3", "rock-hit-2.mp3", "rock-hit-3.mp3", "rock-hit-4.mp3", "rock-hit-5.mp3", "rock-hit-6.mp3"];
-export const ROCK_DESTROY_SOUNDS: ReadonlyArray<string> = ["rock-destroy-1.mp3", "rock-destroy-2.mp3", "rock-destroy-3.mp3"];
+export const ROCK_HIT_SOUNDS: readonly string[] = ["rock-hit-1.mp3", "rock-hit-2.mp3", "rock-hit-3.mp3", "rock-hit-4.mp3", "rock-hit-5.mp3", "rock-hit-6.mp3"];
+export const ROCK_DESTROY_SOUNDS: readonly string[] = ["rock-destroy-1.mp3", "rock-destroy-2.mp3", "rock-destroy-3.mp3"];
 
 let idCounter: SoundID = 0;
 
@@ -35,8 +35,8 @@ interface SoundAttachInfo {
 }
 
 // @Cleanup: remove this once the 'attach to world' thing is in place
-const activeSounds: Array<Sound> = [];
-const soundsAttachedToHitboxes = new Map<Hitbox, Array<SoundAttachInfo>>();
+const activeSounds: Sound[] = [];
+const soundsAttachedToHitboxes = new Map<Hitbox, SoundAttachInfo[]>();
 const soundToHitboxMap = new Map<Sound, Hitbox | null>();
 
 const soundFiles = import.meta.glob("../sounds/**/*", { eager: true, query: "?url", import: "default" });
@@ -51,7 +51,7 @@ export function getNumSounds(): number {
    return activeSounds.length;
 }
 
-async function loadSound(audioFiles: ReadonlyArray<string>, idx: number): Promise<void> {
+async function loadSound(audioFiles: readonly string[], idx: number): Promise<void> {
    const filePath = audioFiles[idx];
    
    const sound = soundFiles["../sounds/" + filePath] as string;

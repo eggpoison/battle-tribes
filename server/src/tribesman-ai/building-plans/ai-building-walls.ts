@@ -10,7 +10,7 @@ import { BuildingCandidate, buildingCandidateIsOnSafeNode, buildingCandidateIsVa
 This file is responsible for finding all potential wall candidates.
 */
 
-const wallCandidateAlreadyExists = (candidate: BuildingCandidate, placeCandidates: ReadonlyArray<BuildingCandidate>): boolean => {
+const wallCandidateAlreadyExists = (candidate: BuildingCandidate, placeCandidates: readonly BuildingCandidate[]): boolean => {
    for (let i = 0; i < placeCandidates.length; i++) {
       const currentCandidate = placeCandidates[i];
       if (candidate.buildingLayer !== currentCandidate.buildingLayer) {
@@ -40,7 +40,7 @@ const convertSafetyNodeToTileIndex = (node: SafetyNode): TileIndex => {
    return tileIndex;
 }
 
-const addGridAlignedWallCandidates = (buildingLayer: TribeBuildingLayer, placeCandidates: Array<BuildingCandidate>): void => {
+const addGridAlignedWallCandidates = (buildingLayer: TribeBuildingLayer, placeCandidates: BuildingCandidate[]): void => {
    const tileIndexes = new Set<number>();
 
    // First, we mark which tiles are occupied by buildings or restricted building areas
@@ -113,7 +113,7 @@ const addGridAlignedWallCandidates = (buildingLayer: TribeBuildingLayer, placeCa
 }
 
 /** Adds the walls off from existing walls */
-const addSnappedWallCandidates = (buildingLayer: TribeBuildingLayer, placeCandidates: Array<BuildingCandidate>): void => {
+const addSnappedWallCandidates = (buildingLayer: TribeBuildingLayer, placeCandidates: BuildingCandidate[]): void => {
    for (let i = 0; i < buildingLayer.virtualStructures.length; i++) {
       const virtualBuilding = buildingLayer.virtualStructures[i];
       if (virtualBuilding.entityType !== EntityType.wall) {
@@ -133,8 +133,8 @@ const addSnappedWallCandidates = (buildingLayer: TribeBuildingLayer, placeCandid
    }
 }
 
-export function getWallCandidates(tribe: Tribe): ReadonlyArray<BuildingCandidate> {
-   const candidates: Array<BuildingCandidate> = [];
+export function getWallCandidates(tribe: Tribe): readonly BuildingCandidate[] {
+   const candidates: BuildingCandidate[] = [];
 
    for (const buildingLayer of tribe.buildingLayers) {
       addGridAlignedWallCandidates(buildingLayer, candidates);

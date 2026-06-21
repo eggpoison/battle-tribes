@@ -29,7 +29,7 @@ export function createCactusConfig(x: number, y: number, angle: number): EntityC
    setHitboxIsStatic(rootHitbox);
    addHitboxToTransformComponent(transformComponent, rootHitbox);
 
-   const flowers: Array<CactusFlower> = [];
+   const flowers: CactusFlower[] = [];
 
    // Root hitbox flowers
    let numFlowers = 1;
@@ -89,7 +89,7 @@ export function createCactusConfig(x: number, y: number, angle: number): EntityC
 
    const lootComponent = new LootComponent();
 
-   const childConfigs: Array<ChildConfigAttachInfo> = [];
+   const childConfigs: ChildConfigAttachInfo[] = [];
    // @SQUEAM: no pears in the clementus shots!
    // if (Math.random() < 0.4) {
    //    const offset = polarVec2((rootHitbox.box as CircularBox).radius, randAngle());

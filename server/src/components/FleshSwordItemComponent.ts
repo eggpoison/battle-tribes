@@ -28,7 +28,7 @@ FleshSwordItemComponentArray.onTick = {
 };
 
 /** Returns the entity the flesh sword should run away from, or null if there are none */
-const getRunTarget = (itemEntity: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
+const getRunTarget = (itemEntity: Entity, visibleEntities: readonly Entity[]): Entity | null => {
    const transformComponent = TransformComponentArray.getComponent(itemEntity);
    const hitbox = transformComponent.hitboxes[0];
 
@@ -52,7 +52,7 @@ const getRunTarget = (itemEntity: Entity, visibleEntities: ReadonlyArray<Entity>
    return runTarget;
 }
 
-const getTileWanderTargets = (itemEntity: Entity): Array<TileIndex> => {
+const getTileWanderTargets = (itemEntity: Entity): TileIndex[] => {
    const transformComponent = TransformComponentArray.getComponent(itemEntity);
    const hitbox = transformComponent.hitboxes[0];
    const layer = getEntityLayer(itemEntity);
@@ -64,7 +64,7 @@ const getTileWanderTargets = (itemEntity: Entity): Array<TileIndex> => {
    const minTileY = Math.max(Math.min(Math.floor((hitbox.box.posY - aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
    const maxTileY = Math.max(Math.min(Math.floor((hitbox.box.posY + aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
 
-   const wanderTargets: Array<TileIndex> = [];
+   const wanderTargets: TileIndex[] = [];
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -146,7 +146,7 @@ function onTick(fleshSword: Entity): void {
 
             let targetTile: TileIndex;
             if (foundSwampTile) {
-               const tiles: Array<TileIndex> = [];
+               const tiles: TileIndex[] = [];
                for (const tileIndex of tileWanderTargets) {
                   if (layer.tileBiomes[tileIndex] === Biome.swamp) {
                      tiles.push(tileIndex);

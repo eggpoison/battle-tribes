@@ -19,7 +19,7 @@ interface AIBasePlan {
    readonly assignedTribesman: Entity | null;
    readonly isComplete: boolean;
    readonly isCompletable: boolean;
-   readonly childPlans: Array<AIPlan>;
+   readonly childPlans: AIPlan[];
 
    // Stuff for displaying the plan node
    displayWidth: number;

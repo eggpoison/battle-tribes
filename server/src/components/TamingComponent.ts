@@ -15,7 +15,7 @@ import { getTamingSpec } from "../taming-specs.js";
 interface TamingSkillLearning {
    readonly skill: TamingSkill;
    /** Indexes will be the same as the requirements on the skill */
-   readonly requirementProgressArray: Array<number>;
+   readonly requirementProgressArray: number[];
 }
 
 export class TamingComponent {
@@ -26,8 +26,8 @@ export class TamingComponent {
 
    public name = "";
 
-   public readonly acquiredSkills: Array<TamingSkill> = [];
-   public readonly skillLearningArray: Array<TamingSkillLearning> = [];
+   public readonly acquiredSkills: TamingSkill[] = [];
+   public readonly skillLearningArray: TamingSkillLearning[] = [];
 
    // @Temporary
    public attackTarget: Entity = 0;

@@ -23,7 +23,7 @@ export interface CraftingRecipe {
    readonly craftingStation?: CraftingStationEntityType;
 }
 
-export const CRAFTING_RECIPES: ReadonlyArray<CraftingRecipe> = [
+export const CRAFTING_RECIPES: readonly CraftingRecipe[] = [
    {
       product: ItemType.workbench,
       yield: 1,
@@ -584,7 +584,7 @@ export function forceGetItemRecipe(itemType: ItemType): CraftingRecipe {
    return recipe;
 }
 
-export function hasEnoughItems(itemSlotRecords: ReadonlyArray<ItemSlots>, requiredItems: ItemRequirements): boolean {
+export function hasEnoughItems(itemSlotRecords: readonly ItemSlots[], requiredItems: ItemRequirements): boolean {
    // Tally the total resources available for crafting
    const availableResources: Partial<Record<ItemType, number>> = {};
    for (const itemSlots of itemSlotRecords) {
@@ -601,7 +601,7 @@ export function hasEnoughItems(itemSlotRecords: ReadonlyArray<ItemSlots>, requir
       }
    }
    
-   for (const [ingredientType, ingredientCount] of Object.entries(requiredItems).map(entry => [Number(entry[0]), entry[1]]) as ReadonlyArray<[ItemType, number]>) {
+   for (const [ingredientType, ingredientCount] of Object.entries(requiredItems).map(entry => [Number(entry[0]), entry[1]]) as readonly [ItemType, number][]) {
       // If there is none of the ingredient available, the recipe cannot be crafted
       if (!availableResources.hasOwnProperty(ingredientType)) {
          return false;
@@ -624,11 +624,11 @@ export interface ProductInfo {
 }
 
 /** Gets the chain of items required to craft a recipe, taking into account how many items are already available */
-export function getRecipeProductChain(recipe: CraftingRecipe, availableItemsTally: Readonly<ItemTally2>): ReadonlyArray<ProductInfo> {
+export function getRecipeProductChain(recipe: CraftingRecipe, availableItemsTally: Readonly<ItemTally2>): readonly ProductInfo[] {
    const currentAvailableItems = availableItemsTally.copy();
    
-   const productChain: Array<ProductInfo> = [];
-   const itemsToCheck: Array<ProductInfo> = [];
+   const productChain: ProductInfo[] = [];
+   const itemsToCheck: ProductInfo[] = [];
    itemsToCheck.push({
       type: recipe.product,
       amountRequired: recipe.yield 

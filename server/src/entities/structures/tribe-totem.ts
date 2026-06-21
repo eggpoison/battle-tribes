@@ -14,7 +14,7 @@ import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/co
 import { EntityType } from "../../../../shared/dist/entities.js";
 import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
-export function createTribeTotemConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createTribeTotemConfig(x: number, y: number, angle: number, tribe: Tribe, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
    const box = createCircularBox(x, y, 0, 0, angle, 60);

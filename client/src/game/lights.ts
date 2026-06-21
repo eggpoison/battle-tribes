@@ -37,7 +37,7 @@ export interface LightIntermediateInfo {
 const lightMap = new Map<LightID, Light>();
 
 const lightToHitboxRecord: Partial<Record<LightID, LightHitboxInfo>> = {};
-const hitboxToLightsMap = new Map<Hitbox, Array<LightID>>();
+const hitboxToLightsMap = new Map<Hitbox, LightID[]>();
 
 export function getNumLights(): number {
    return lightMap.size;
@@ -153,8 +153,8 @@ export interface LightData {
    readonly b: number;
 }
 
-export function readLightsFromData(reader: PacketReader): ReadonlyArray<LightData> {
-   const lightData: Array<LightData> = [];
+export function readLightsFromData(reader: PacketReader): readonly LightData[] {
+   const lightData: LightData[] = [];
    
    const numLights = reader.readNumber();
    for (let i = 0; i < numLights; i++) {
@@ -188,7 +188,7 @@ export function readLightsFromData(reader: PacketReader): ReadonlyArray<LightDat
    return lightData;
 }
 
-export function updateLightsFromData(lightData: ReadonlyArray<LightData>): void {
+export function updateLightsFromData(lightData: readonly LightData[]): void {
    for (const data of lightData) {
       const entity = data.entity;
       const hitboxLocalID = data.hitboxLocalID;

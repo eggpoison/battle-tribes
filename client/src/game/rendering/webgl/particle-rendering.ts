@@ -39,14 +39,14 @@ export const tempFloat32ArrayLength2 = new Float32Array(2);
 export const tempFloat32ArrayLength3 = new Float32Array(3);
 
 // @Cleanup This is too messy. Perhaps combine all into one
-// public static readonly particles: Array<Particle> = [];
-export const lowMonocolourParticles: Array<Particle> = [];
-export const lowTexturedParticles: Array<Particle> = [];
-export const highMonocolourParticles: Array<Particle> = [];
-export const highTexturedParticles: Array<Particle> = [];
+// public static readonly particles: Particle[] = [];
+export const lowMonocolourParticles: Particle[] = [];
+export const lowTexturedParticles: Particle[] = [];
+export const highMonocolourParticles: Particle[] = [];
+export const highTexturedParticles: Particle[] = [];
 
-function updateParticleArray(particles: Array<Particle>, bufferContainer: ObjectBufferContainer): void {
-   const removedParticleIndexes: Array<number> = [];
+function updateParticleArray(particles: Particle[], bufferContainer: ObjectBufferContainer): void {
+   const removedParticleIndexes: number[] = [];
    for (let i = 0; i < particles.length; i++) {
       const particle = particles[i];
 

@@ -27,9 +27,9 @@ let nodeProgram: WebGLProgram;
 
 let connectorProgram: WebGLProgram;
 
-let visiblePathfindingNodeOccupances: ReadonlyArray<PathfindingNodeIndex> = [];
+let visiblePathfindingNodeOccupances: readonly PathfindingNodeIndex[] = [];
 
-export function setVisiblePathfindingNodeOccupances(newVisiblePathfindingNodeOccupances: ReadonlyArray<PathfindingNodeIndex>): void {
+export function setVisiblePathfindingNodeOccupances(newVisiblePathfindingNodeOccupances: readonly PathfindingNodeIndex[]): void {
    // @Speed: Garbage collection
    visiblePathfindingNodeOccupances = newVisiblePathfindingNodeOccupances;
 }
@@ -117,7 +117,7 @@ export function createPathfindNodeShaders(): void {
    bindUBOToProgram(gl, connectorProgram, UBOBindingIndex.CAMERA);
 }
 
-const addConnector = (vertices: Array<number>, startX: number, startY: number, endX: number, endY: number): void => {
+const addConnector = (vertices: number[], startX: number, startY: number, endX: number, endY: number): void => {
    const connectDirection = angle(endX - startX, endY - startY);
       
    // To the left of the start node
@@ -152,7 +152,7 @@ const renderConnectors = (pathData: PathData): void => {
    const transformComponent = TransformComponentArray.getComponent(debugEntity);
    const entityHitbox = transformComponent.hitboxes[0];
    
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
    let lastNodeX = entityHitbox.box.posX;
    let lastNodeY = entityHitbox.box.posY;
    for (let i = 0; i < pathData.pathNodes.length; i++) {

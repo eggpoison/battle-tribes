@@ -9,7 +9,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { RenderPart } from "../../render-parts/render-parts";
 import { getHitboxTag, getHitboxTileIndex, Hitbox } from "../../hitboxes";
@@ -47,7 +47,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cow, _CowComponentArray> {}
 }
 
-class _CowComponentArray extends _ServerComponentArray<CowComponent, CowComponentData, IntermediateInfo> {
+class _CowComponentArray extends ServerComponentArray<CowComponent, CowComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): CowComponentData {
       const species = reader.readNumber();
       const grazeProgress = reader.readNumber();

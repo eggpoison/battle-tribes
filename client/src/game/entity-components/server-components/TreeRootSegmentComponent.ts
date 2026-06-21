@@ -8,7 +8,7 @@ import { createWoodSpeckParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -27,7 +27,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootSegment, _TreeRootSegmentComponentArray> {}
 }
 
-class _TreeRootSegmentComponentArray extends _ServerComponentArray<TreeRootSegmentComponent, TreeRootSegmentComponentData> {
+class _TreeRootSegmentComponentArray extends ServerComponentArray<TreeRootSegmentComponent, TreeRootSegmentComponentData> {
    public decodeData(reader: PacketReader): TreeRootSegmentComponentData {
       const variant = reader.readNumber();
       return {

@@ -1,4 +1,4 @@
-import { Point, randAngle } from "../../shared/dist/utils.js";
+import { mod, murmurHash3, Point, randAngle, randFloat, randInt } from "../../shared/dist/utils.js";
 
 const lerp = (start: number, end: number, amount: number): number => {
    return start * (1 - amount) + end * amount;
@@ -28,8 +28,8 @@ const calculateCornerDotProduct = (gridCoordinates: Float32Array, cornerX: numbe
    return gradientX * offsetX + gradientY * offsetY;
 }
 
-const cosAngles: Array<number> = [];
-const sinAngles: Array<number> = [];
+const cosAngles: number[] = [];
+const sinAngles: number[] = [];
 
 // @HACK!!! Just remove this. Not worth the loss in terrain accuracy.
 for (let i = 0; i < 360; i++) {
@@ -37,18 +37,90 @@ for (let i = 0; i < 360; i++) {
    sinAngles.push(Math.sin(i / 180 * Math.PI));
 }
 
+export function generatePerlinNoise1DContinuous(x: number, noiseOffset: number): number {
+   const sampleX = noiseOffset - x;
+
+   const x0 = Math.floor(sampleX);
+   const x1 = x0 + 1;
+
+   const idx0 = murmurHash3(x0);
+   const gradientX0 = cosAngles[idx0 % 360];
+
+   const idx1 = murmurHash3(x1);
+   const gradientX1 = cosAngles[idx1 % 360];
+
+   const dotProduct0 = gradientX0 * (sampleX - x0);
+   const dotProduct1 = gradientX1 * (sampleX - x1);
+
+   const u = fade(sampleX % 1);
+   let val = lerp(dotProduct0, dotProduct1, u);
+   
+   val = Math.min(Math.max(val, -0.5), 0.5);
+   return val + 0.5;
+}
+
+let mm = 0;
+export function MMM() {
+   mm = randFloat(0, 10000);
+}
+
 // @TEMPORARY: the thung
+let a = 0;
 export function generatePerlinNoise(width: number, height: number, scale: number, thung: number): Float32Array {
    const gridWidth = Math.floor(width / scale) + 2;
    const gridHeight = Math.floor(height / scale) + 2;
    const gridSize = gridWidth * gridHeight * 2;
    
+   // const gridSeed = randFloat(0, 10000);
+   const gridSeed = Math.random() * 1000000 + Math.random();
    const gridCoordinates = new Float32Array(gridSize);
    for (let i = 0; i < gridSize; i += 2) {
-      const degrees = Math.floor(360 * Math.random());
+      // @HACKE!
+      // const degrees = Math.floor(generatePerlinNoise1DContinuous(thung, veryBadHash(i + "")) * 360);
+      const iSeed = murmurHash3(i) / 10000;
+      const degrees = Math.floor(generatePerlinNoise1DContinuous(thung * thungMult, gridSeed + mm + iSeed) * 360);
+      // if(a===0)console.log(i, murmurHash3(i) / 10000, degrees);
+      // if (a === 0) {
+      //    const noiseOffset = murmurHash3(i);
+      //    const x = 0;
+      //    const sampleX = noiseOffset - x;
+
+      
+      //    const x0 = Math.floor(sampleX);
+      //    const x1 = x0 + 1;
+
+      //    const idx0 = murmurHash3(x0);
+      //    const gradientX0 = cosAngles[idx0 % 360];
+
+      //    const idx1 = murmurHash3(x1);
+      //    const gradientX1 = cosAngles[idx1 % 360];
+
+      //    console.log(noiseOffset, gradientX0, gradientX1);
+      //    console.log(generatePerlinNoise1DContinuous(0, murmurHash3(i)))
+
+      //    const dotProduct0 = gradientX0 * (sampleX - x0);
+      //    const dotProduct1 = gradientX1 * (sampleX - x1);
+
+      //    console.log(dotProduct0, dotProduct1);
+         
+      //    const u = fade(sampleX % 1);
+
+      //    console.log(sampleX,u)
+         
+      //    console.log("-==-=-=-- =--=-=-=")
+      // }
+      // if (a++ === 0) {
+      //    for (let i = 0; i < 10; i += 0.1) {
+      //       console.log(i.toFixed(1), murmurHash3(271) / 10000, generatePerlinNoise1DContinuous(i, murmurHash3(271) / 10000), generatePerlinNoise1DContinuous(i, Math.floor(murmurHash3(271) / 10000)));
+      //    }
+      // }
+      
+      // const degrees = Math.floor(murmurHash3(i) % 360);
+      // const degrees = Math.floor((veryBadHash(i + "") + thung) % 360);
+      // const degrees = Math.floor(360 * Math.random());
       gridCoordinates[i] = cosAngles[degrees];
-      gridCoordinates[i + 1] = sinAngles[degrees];
    }
+   a++;
 
    const noise = new Float32Array(width * height);
    let i = 0;
@@ -60,8 +132,7 @@ export function generatePerlinNoise(width: number, height: number, scale: number
       const v = fade(sampleY % 1);
 
       for (let x = 0; x < width; x++) {
-         // @Temporary
-         const sampleX = ((x + thung) % width) / scale;
+         const sampleX = x / scale;
          const x0 = Math.floor(sampleX);
          const x1 = x0 + 1;
          
@@ -131,12 +202,18 @@ export function resetPerlinNoiseCache(): void {
    pointPerlinNoiseGrids = {};
 }
 
-const calculatePointCornerDotProduct = (grid: Partial<Record<string, Point>>, sampleX: number, sampleY: number, cornerX: number, cornerY: number): number => {
+const thungMult = 0.004;
+
+const calculatePointCornerDotProduct = (grid: Partial<Record<string, Point>>, sampleX: number, sampleY: number, cornerX: number, cornerY: number, thung: number, width: number): number => {
    const key = cornerY + "-" + cornerX; // @Speed
    let corner = grid[key];
    
    if (corner === undefined) {
-      const dir = randAngle();
+      const gridSeed = 0;
+      const i = cornerY * width + cornerX;
+      const iSeed = murmurHash3(i) / 10000;
+      const dir = Math.floor(generatePerlinNoise1DContinuous(thung * thungMult, gridSeed + mm + iSeed) * 360);
+      
       corner = new Point(Math.sin(dir), Math.cos(dir));
       grid[key] = corner;
    }
@@ -155,7 +232,7 @@ export function generatePointPerlinNoise(x: number, y: number, scale: number, na
       pointPerlinNoiseGrids[name] = grid;
    }
 
-   const sampleX = thung !== undefined && width !== undefined ? ((x + thung) % width) / scale : x / scale;
+   const sampleX = x / scale;
    const sampleY = y / scale;
 
    const x0 = Math.floor(sampleX);
@@ -163,10 +240,10 @@ export function generatePointPerlinNoise(x: number, y: number, scale: number, na
    const y0 = Math.floor(sampleY);
    const y1 = y0 + 1;
 
-   const dot0 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x0, y0);
-   const dot1 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x1, y0);
-   const dot2 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x0, y1);
-   const dot3 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x1, y1);
+   const dot0 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x0, y0, thung || 0, width || 0);
+   const dot1 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x1, y0, thung || 0, width || 0);
+   const dot2 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x0, y1, thung || 0, width || 0);
+   const dot3 = calculatePointCornerDotProduct(grid, sampleX, sampleY, x1, y1, thung || 0, width || 0);
 
    const u = fade(sampleX % 1);
    const v = fade(sampleY % 1);

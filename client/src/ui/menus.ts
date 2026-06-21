@@ -2,6 +2,7 @@ import { Entity } from "../../../shared/src/entities";
 import { InventoryName } from "../../../shared/src/items/items";
 import { assert } from "../../../shared/src/utils";
 import { createItemsTab, destroyItemsTab } from "./game/dev/tabs/ItemsTab";
+import { createBarrelInventory, destroyBarrelInventory } from "./game/inventories/BarrelInventory";
 import { closeCraftingMenu, openCraftingMenu } from "./game/menus/CraftingMenu";
 
 export enum MenuType {
@@ -41,7 +42,7 @@ export interface Menu {
    readonly inventoryInfo?: MenuInventoryInfo;
 }
 
-const menuStack: Array<Menu> = [];
+const menuStack: Menu[] = [];
 
 const MENU_INFO_RECORD: Record<MenuType, MenuInfo> = {
    [MenuType.buildMenu]: {
@@ -75,8 +76,8 @@ const MENU_INFO_RECORD: Record<MenuType, MenuInfo> = {
       isInventory: false
    },
    [MenuType.barrelInventory]: {
-      openFunction: undefined as unknown as () => void, // @Incomplete
-      closeFunction: undefined as unknown as () => void, // @Incomplete
+      openFunction: createBarrelInventory,
+      closeFunction: destroyBarrelInventory,
       isInventory: true
    },
    [MenuType.tribesmanInventory]: {

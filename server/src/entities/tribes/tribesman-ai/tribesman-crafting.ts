@@ -46,7 +46,7 @@ const getClosestCraftingStation = (tribesman: Entity, tribe: Tribe, craftingStat
    return null;
 }
 
-const getAvailableCraftingStations = (tribeMember: Entity): ReadonlyArray<EntityType> => {
+const getAvailableCraftingStations = (tribeMember: Entity): readonly EntityType[] => {
    const transformComponent = TransformComponentArray.getComponent(tribeMember);
    const tribeMemberHitbox = transformComponent.hitboxes[0];
    
@@ -57,7 +57,7 @@ const getAvailableCraftingStations = (tribeMember: Entity): ReadonlyArray<Entity
    const minChunkY = Math.max(Math.floor((tribeMemberHitbox.box.posY - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), 0);
    const maxChunkY = Math.min(Math.floor((tribeMemberHitbox.box.posY + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
 
-   const availableCraftingStations: Array<EntityType> = [];
+   const availableCraftingStations: EntityType[] = [];
 
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {

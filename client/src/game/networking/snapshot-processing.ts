@@ -8,7 +8,7 @@ import { PacketReader } from "../../../../shared/src/packets";
 import { HitFlags } from "../../../../shared/src/client-server-types";
 import { STRUCTURE_TYPES, StructureType } from "../../../../shared/src/structures";
 import { setCameraSubject } from "../camera";
-import { currentSnapshot, setCurrentSnapshot, setNextSnapshot } from "../networking/snapshots";
+import { setCurrentSnapshot } from "../networking/snapshots";
 import Layer from "../Layer";
 import { playerInstance, setPlayerInstance } from "../player";
 import { playHeadSound, playSound } from "../sound";
@@ -110,24 +110,24 @@ export interface TickSnapshot {
    readonly time: number;
    readonly layer: Layer;
    readonly entities: Map<Entity, EntitySnapshot>;
-   readonly removedEntities: ReadonlyArray<RemovedEntityInfo>;
+   readonly removedEntities: readonly RemovedEntityInfo[];
    readonly playerTribeData: ExtendedTribe;
-   readonly enemyTribeData: ReadonlyArray<Tribe>;
+   readonly enemyTribeData: readonly Tribe[];
    readonly playerInstance: Entity | null;
    readonly cameraSubject: number;
-   readonly lights: ReadonlyArray<LightData>;
-   readonly hits: ReadonlyArray<EntityHitData>;
-   readonly playerKnockbacks: ReadonlyArray<PlayerKnockbackData>;
-   readonly heals: ReadonlyArray<EntityHealData>;
-   readonly researchOrbCompletes: ReadonlyArray<ResearchOrbCompleteData>;
-   readonly tileUpdates: ReadonlyArray<ReadonlyArray<TileUpdateData>>;
-   readonly wallSubtileUpdates: Map<Layer, ReadonlyArray<WallSubtileUpdateData>>;
+   readonly lights: readonly LightData[];
+   readonly hits: readonly EntityHitData[];
+   readonly playerKnockbacks: readonly PlayerKnockbackData[];
+   readonly heals: readonly EntityHealData[];
+   readonly researchOrbCompletes: readonly ResearchOrbCompleteData[];
+   readonly tileUpdates: readonly (readonly TileUpdateData[])[];
+   readonly wallSubtileUpdates: Map<Layer, readonly WallSubtileUpdateData[]>;
    readonly hasPickedUpItem: boolean;
    readonly titleOffer: TribesmanTitle | null;
-   readonly entityTickEvents: ReadonlyArray<EntityTickEventData>;
-   readonly minedSubtiles: ReadonlyArray<MinedSubtileData>;
-   readonly collapses: ReadonlyArray<CollapseData>;
-   readonly grassBlockers: ReadonlyArray<GrassBlockerData>;
+   readonly entityTickEvents: readonly EntityTickEventData[];
+   readonly minedSubtiles: readonly MinedSubtileData[];
+   readonly collapses: readonly CollapseData[];
+   readonly grassBlockers: readonly GrassBlockerData[];
 }
 
 // @Cleanup: when i rework shit this awful existence will go away
@@ -136,7 +136,7 @@ const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
 
 // @Incomplete. Once lived in Board.ts
 /** Updates the client's copy of the tiles array to match any tile updates that have occurred */
-// public static loadTileUpdates(tileUpdates: ReadonlyArray<ServerTileUpdateData>): void {
+// public static loadTileUpdates(tileUpdates: readonly ServerTileUpdateData[]): void {
 //    for (const update of tileUpdates) {
 //       const tileX = update.tileIndex % Settings.WORLD_SIZE_TILES;
 //       const tileY = Math.floor(update.tileIndex / Settings.WORLD_SIZE_TILES);
@@ -154,7 +154,7 @@ const decodeEntitySnapshot = (reader: PacketReader): EntitySnapshot => {
 
    const componentArrays = getEntityServerComponentArrays(entityType);
    
-   const entityServerComponentData: Array<ServerComponentData> = [];
+   const entityServerComponentData: ServerComponentData[] = [];
    
    // Component data
    for (const componentArray of componentArrays) {
@@ -187,7 +187,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
    }
 
    const numRemovedEntities = reader.readNumber();
-   const removedEntities: Array<RemovedEntityInfo> = [];
+   const removedEntities: RemovedEntityInfo[] = [];
    for (let i = 0; i < numRemovedEntities; i++) {
       const entity = reader.readNumber();
       const isDestroyed = reader.readBool();
@@ -201,7 +201,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
    reader.readBool();
    const playerTribeData = readExtendedTribeData(reader);
    
-   const enemyTribeData: Array<Tribe> = [];
+   const enemyTribeData: Tribe[] = [];
    const numEnemyTribes = reader.readNumber();
    for (let i = 0; i < numEnemyTribes; i++) {
       const isExtended = reader.readBool();
@@ -215,7 +215,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
 
    const lightData = readLightsFromData(reader);
 
-   const hits: Array<EntityHitData> = [];
+   const hits: EntityHitData[] = [];
    const numHits = reader.readNumber();
    for (let i = 0; i < numHits; i++) {
       const hitEntity: Entity = reader.readNumber();
@@ -236,7 +236,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       });
    }
 
-   const playerKnockbacks: Array<PlayerKnockbackData> = [];
+   const playerKnockbacks: PlayerKnockbackData[] = [];
    const numKnockbacks = reader.readNumber();
    for (let i = 0; i < numKnockbacks; i++) {
       const knockback = reader.readNumber();
@@ -247,7 +247,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       });
    }
 
-   const heals: Array<EntityHealData> = [];
+   const heals: EntityHealData[] = [];
    const numHeals = reader.readNumber();
    for (let i = 0; i < numHeals; i++) {
       const position = reader.readPoint();
@@ -262,7 +262,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       });
    }
 
-   const researchOrbCompletes: Array<ResearchOrbCompleteData> = [];
+   const researchOrbCompletes: ResearchOrbCompleteData[] = [];
    const numOrbs = reader.readNumber();
    for (let i = 0; i < numOrbs; i++) {
       const position = reader.readPoint();
@@ -274,9 +274,9 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       });
    }
 
-   const tileUpdates: Array<Array<TileUpdateData>> = [];
+   const tileUpdates: TileUpdateData[][] = [];
    for (let i = 0; i < layers.length; i++) {
-      const layerTileUpdates: Array<TileUpdateData> = [];
+      const layerTileUpdates: TileUpdateData[] = [];
       const numTileUpdates = reader.readNumber();
       for (let i = 0; i < numTileUpdates; i++) {
          const layerIdx = reader.readNumber();
@@ -292,9 +292,9 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       tileUpdates.push(layerTileUpdates);
    }
    
-   const wallSubtileUpdates = new Map<Layer, ReadonlyArray<WallSubtileUpdateData>>();
+   const wallSubtileUpdates = new Map<Layer, readonly WallSubtileUpdateData[]>();
    for (const layer of layers) {
-      const layerSubtileUpdates: Array<WallSubtileUpdateData> = [];
+      const layerSubtileUpdates: WallSubtileUpdateData[] = [];
       
       const numUpdates = reader.readNumber();
       for (let i = 0; i < numUpdates; i++) {
@@ -320,7 +320,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       titleOffer = reader.readNumber();
    }
 
-   const entityTickEvents: Array<EntityTickEventData> = [];
+   const entityTickEvents: EntityTickEventData[] = [];
    const numEntityTickEvents = reader.readNumber();
    for (let i = 0; i < numEntityTickEvents; i++) {
       const entity: Entity = reader.readNumber();
@@ -334,7 +334,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       });
    }
 
-   const minedSubtiles: Array<MinedSubtileData> = [];
+   const minedSubtiles: MinedSubtileData[] = [];
    const numMinedSubtiles = reader.readNumber();
    for (let i = 0; i < numMinedSubtiles; i++) {
       const subtile = reader.readNumber();
@@ -351,7 +351,7 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       minedSubtiles.push(minedSubtile);
    }
    
-   const collapses: Array<CollapseData> = [];
+   const collapses: CollapseData[] = [];
    const numCollapses = reader.readNumber();
    assert(Number.isInteger(numCollapses));
    for (let i = 0; i < numCollapses; i++) {
@@ -458,10 +458,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
    // @HACK @CLEANUP impure. Done before so that server data can override particles
    updateParticles();
 
-   // @HACKY! So that initial chunk-rendered-entities can fill their render object without crashing, because that requires currentSnapshot and nextSnapshot when interpolating
-   if ((currentSnapshot as TickSnapshot | undefined) === undefined) {
-      setNextSnapshot(snapshot);
-   }
+   // @HACK shouldnt be here
    setCurrentSnapshot(snapshot);
 
    if (snapshot.layer !== getCurrentLayer()) {

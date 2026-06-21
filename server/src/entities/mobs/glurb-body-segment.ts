@@ -36,7 +36,7 @@ export function createGlurbBodySegmentConfig(x: number, y: number, angle: number
    const glurbBodySegmentComponent = new GlurbBodySegmentComponent();
 
    const light = createLight(new Point(0, 0), 0.4, 0.8, 8, 1, 0.2, 0.9);
-   const lights: Array<LightCreationInfo> = [{
+   const lights: LightCreationInfo[] = [{
       light: light,
       attachedHitbox: hitbox
    }];

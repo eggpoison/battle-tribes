@@ -8,7 +8,7 @@ export interface CustomTileNoiseInfo {
 }
 
 export interface TileGenerationRequirements {
-   readonly customNoise?: ReadonlyArray<CustomTileNoiseInfo>;
+   readonly customNoise?: readonly CustomTileNoiseInfo[];
    /** The minimum number of tiles from the end of the biome */
    readonly minDist?: number;
    /** The maximum number of tiles from the end of the biome */
@@ -47,11 +47,11 @@ export interface BiomeSpawnRequirements {
 export interface BiomeGenerationInfo {
    readonly biome: Biome;
    readonly spawnRequirements: BiomeSpawnRequirements;
-   readonly floorTiles: ReadonlyArray<FloorTileGenerationInfo>;
-   readonly wallTiles: ReadonlyArray<WallTileGenerationInfo>;
+   readonly floorTiles: readonly FloorTileGenerationInfo[];
+   readonly wallTiles: readonly WallTileGenerationInfo[];
 }
 
-const BIOME_GENERATION_INFO: ReadonlyArray<BiomeGenerationInfo> = [
+const BIOME_GENERATION_INFO: readonly BiomeGenerationInfo[] = [
    // {
    //    biome: Biome.magmaFields,
    //    spawnRequirements: null,
@@ -85,75 +85,35 @@ const BIOME_GENERATION_INFO: ReadonlyArray<BiomeGenerationInfo> = [
    //    wallTiles: []
    // },
    // @SQUEAM! old tundra temp
-   {
-      biome: Biome.tundra,
-      spawnRequirements: {
-         maxTemperature: 0.4,
-         maxHumidity: 0.4
-      },
-      floorTiles: [
-         {
-            tileType: TileType.fimbultur,
-            requirements: {
-               customNoise: [
-                  {
-                     scale: 8,
-                     minWeight: 0.2
-                  }
-               ],
-               minDist: 8
-            }
-         },
-         {
-            tileType: TileType.permafrost,
-            requirements: {
-               customNoise: [
-                  {
-                     scale: 7,
-                     minWeight: 0.2,
-                  }
-               ],
-               minDist: 4
-            }
-         },
-         {
-            tileType: TileType.ice,
-            requirements: {
-               customNoise: [
-                  {
-                     scale: 7,
-                     minWeight: 0.65,
-                  }
-               ],
-               minDist: 1
-            },
-         },
-         {
-            tileType: TileType.snow
-         }
-      ],
-      wallTiles: []
-   },
    // {
    //    biome: Biome.tundra,
    //    spawnRequirements: {
-   //       maxTemperature: 0.3
+   //       maxTemperature: 0.4,
+   //       maxHumidity: 0.4
    //    },
    //    floorTiles: [
+   //       {
+   //          tileType: TileType.fimbultur,
+   //          requirements: {
+   //             customNoise: [
+   //                {
+   //                   scale: 8,
+   //                   minWeight: 0.2
+   //                }
+   //             ],
+   //             minDist: 8
+   //          }
+   //       },
    //       {
    //          tileType: TileType.permafrost,
    //          requirements: {
    //             customNoise: [
    //                {
-   //                   scale: 28,
-   //                   minWeight: 0.65,
-   //                },
-   //                {
    //                   scale: 7,
    //                   minWeight: 0.2,
    //                }
    //             ],
-   //             minDist: 12
+   //             minDist: 4
    //          }
    //       },
    //       {
@@ -161,44 +121,84 @@ const BIOME_GENERATION_INFO: ReadonlyArray<BiomeGenerationInfo> = [
    //          requirements: {
    //             customNoise: [
    //                {
-   //                   scale: 8,
+   //                   scale: 7,
    //                   minWeight: 0.65,
-   //                },
-   //                {
-   //                   scale: 9,
-   //                   minWeight: 0.65
    //                }
    //             ],
    //             minDist: 1
-   //          }
+   //          },
    //       },
    //       {
    //          tileType: TileType.snow
    //       }
    //    ],
-   //    wallTiles: [
-   //       {
-   //          subtileType: SubtileType.permafrostWall,
-   //          requirements: {
-   //             customNoise: [
-   //                {
-   //                   scale: 28,
-   //                   minWeight: 0.75
-   //                },
-   //                {
-   //                   scale: 7,
-   //                   minWeight: 0.35,
-   //                },
-   //                {
-   //                   scale: 5,
-   //                   minWeight: 0.6
-   //                }
-   //             ],
-   //             minDist: 12
-   //          }
-   //       }
-   //    ]
+   //    wallTiles: []
    // },
+   {
+      biome: Biome.tundra,
+      spawnRequirements: {
+         maxTemperature: 0.38
+      },
+      floorTiles: [
+         {
+            tileType: TileType.permafrost,
+            requirements: {
+               customNoise: [
+                  {
+                     scale: 28,
+                     minWeight: 0.65,
+                  },
+                  {
+                     scale: 7,
+                     minWeight: 0.2,
+                  }
+               ],
+               minDist: 12
+            }
+         },
+         {
+            tileType: TileType.ice,
+            requirements: {
+               customNoise: [
+                  {
+                     scale: 8,
+                     minWeight: 0.65,
+                  },
+                  {
+                     scale: 9,
+                     minWeight: 0.65
+                  }
+               ],
+               minDist: 1
+            }
+         },
+         {
+            tileType: TileType.snow
+         }
+      ],
+      wallTiles: [
+         {
+            subtileType: SubtileType.permafrostWall,
+            requirements: {
+               customNoise: [
+                  {
+                     scale: 28,
+                     minWeight: 0.75
+                  },
+                  {
+                     scale: 7,
+                     minWeight: 0.35,
+                  },
+                  {
+                     scale: 5,
+                     minWeight: 0.6
+                  }
+               ],
+               minDist: 12
+            }
+         }
+      ]
+   },
    // @SQUEAM: temporarily removed oases
    // {
    //    biome: Biome.desertOasis,
@@ -302,31 +302,32 @@ const BIOME_GENERATION_INFO: ReadonlyArray<BiomeGenerationInfo> = [
          },
       ]
    },
-   {
-      biome: Biome.mountains,
-      spawnRequirements: {
-         minHeight: 0.7
-      },
-      floorTiles: [
-         {
-            tileType: TileType.rock
-         }
-      ],
-      wallTiles: [
-         {
-            subtileType: SubtileType.rockWall,
-            requirements: {
-               customNoise: [
-                  {
-                     scale: 7,
-                     minWeight: 0.8,
-                  }
-               ],
-               minDist: 4
-            }
-         }
-      ]
-   },
+   // @TEMPORARY
+   // {
+   //    biome: Biome.mountains,
+   //    spawnRequirements: {
+   //       minHeight: 0.7
+   //    },
+   //    floorTiles: [
+   //       {
+   //          tileType: TileType.rock
+   //       }
+   //    ],
+   //    wallTiles: [
+   //       {
+   //          subtileType: SubtileType.rockWall,
+   //          requirements: {
+   //             customNoise: [
+   //                {
+   //                   scale: 7,
+   //                   minWeight: 0.8,
+   //                }
+   //             ],
+   //             minDist: 4
+   //          }
+   //       }
+   //    ]
+   // },
    {
       biome: Biome.swamp,
       spawnRequirements: {

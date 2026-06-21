@@ -19,7 +19,7 @@ import { tickIntervalHasPassed } from "./networking/snapshots";
 const BLOOD_COLOUR_LOW: Readonly<ParticleColour> = [150, 0, 0];
 const BLOOD_COLOUR_HIGH: Readonly<ParticleColour> = [212, 0, 0];
 
-const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [
+const BURNING_PARTICLE_COLOURS: readonly ParticleColour[] = [
    [255/255, 102/255, 0],
    [255/255, 184/255, 61/255]
 ];

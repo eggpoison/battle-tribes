@@ -6,7 +6,7 @@ import { Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -20,7 +20,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertShrub, _DesertShrubComponentArray> {}
 }
 
-class _DesertShrubComponentArray extends _ServerComponentArray<DesertShrubComponent, DesertShrubComponentData> {
+class _DesertShrubComponentArray extends ServerComponentArray<DesertShrubComponent, DesertShrubComponentData> {
    public decodeData(): DesertShrubComponentData {
       return {};
    }

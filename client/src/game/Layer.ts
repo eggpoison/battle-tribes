@@ -16,35 +16,35 @@ import { Tile } from "./Tile";
 export default class Layer {
    public readonly idx: number;
    
-   public readonly tiles: ReadonlyArray<Tile>;
+   public readonly tiles: readonly Tile[];
    public readonly wallSubtileTypes: Uint8Array;
    public readonly wallSubtileDamageTakenMap: Map<number, number>;
    public readonly riverFlowDirections: RiverFlowDirectionsRecord;
-   public readonly waterRocks: Array<WaterRockData>;
+   public readonly waterRocks: WaterRockData[];
    public readonly tileTemperatures: Float32Array;
    public readonly tileHumidities: Float32Array;
 
    /** All dropdown tiles in the layer */
-   public readonly dropdownTiles: ReadonlyArray<TileIndex>;
+   public readonly dropdownTiles: readonly TileIndex[];
 
-   public readonly chunks: ReadonlyArray<Chunk>;
+   public readonly chunks: readonly Chunk[];
 
-   public readonly collisionGroupChunks: Array<Array<Array<Entity>>> = [];
+   public readonly collisionGroupChunks: Entity[][][] = [];
 
-   public readonly lights: Array<Light> = [];
+   public readonly lights: Light[] = [];
 
    // For chunked entity rendering
    public readonly renderLayerChunkDataRecord: RenderLayerChunkDataRecord;
-   public readonly visibleEntityChunkDatas: Record<ChunkedRenderLayer, Array<EntityChunkData>>;
+   public readonly visibleEntityChunkDatas: Record<ChunkedRenderLayer, EntityChunkData[]>;
    /** Each render layer contains a set of which chunks have been modified */
-   public readonly modifiedChunkIndicesArray: Array<RenderLayerModifyInfo>;
+   public readonly modifiedChunkIndicesArray: RenderLayerModifyInfo[];
 
    // @Speed: Polymorphism
-   public riverInfoArray: Array<RenderChunkRiverInfo | null> = [];
+   public riverInfoArray: (RenderChunkRiverInfo | null)[] = [];
 
    public readonly slimeTrailPixels = new Map<number, number>();
    
-   constructor(idx: number, tiles: ReadonlyArray<Tile>, wallSubtileTypes: Uint8Array, wallSubtileDamageTakenMap: Map<number, number>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, tileTemperatures: Float32Array, tileHumidities: Float32Array) {
+   constructor(idx: number, tiles: readonly Tile[], wallSubtileTypes: Uint8Array, wallSubtileDamageTakenMap: Map<number, number>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: WaterRockData[], tileTemperatures: Float32Array, tileHumidities: Float32Array) {
       this.idx = idx;
       this.wallSubtileTypes = wallSubtileTypes;
       this.wallSubtileDamageTakenMap = wallSubtileDamageTakenMap;
@@ -55,7 +55,7 @@ export default class Layer {
       this.tileHumidities = tileHumidities;
 
       // Create the chunk array
-      const chunks: Array<Chunk> = [];
+      const chunks: Chunk[] = [];
       for (let x = 0; x < Settings.WORLD_SIZE_CHUNKS; x++) {
          for (let y = 0; y < Settings.WORLD_SIZE_CHUNKS; y++) {
             const chunk = new Chunk(x, y);
@@ -66,14 +66,14 @@ export default class Layer {
 
       const LAYER_NUM_CHUNKS = Settings.WORLD_SIZE_CHUNKS * Settings.WORLD_SIZE_CHUNKS;
       for (let i = 0; i < CollisionGroup._LENGTH_; i++) {
-         const collisionChunks: Array<Array<Entity>> = [];
+         const collisionChunks: Entity[][] = [];
          for (let j = 0; j < LAYER_NUM_CHUNKS; j++) {
             collisionChunks.push([]);
          }
          this.collisionGroupChunks.push(collisionChunks);
       }
 
-      const dropdownTiles: Array<TileIndex> = [];
+      const dropdownTiles: TileIndex[] = [];
       for (let tileY = 0; tileY < Settings.WORLD_SIZE_TILES; tileY++) {
          for (let tileX = 0; tileX < Settings.WORLD_SIZE_TILES; tileX++) {
             const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -98,7 +98,7 @@ export default class Layer {
          });
       }
 
-      this.visibleEntityChunkDatas = {} as Record<ChunkedRenderLayer, Array<EntityChunkData>>;
+      this.visibleEntityChunkDatas = {} as Record<ChunkedRenderLayer, EntityChunkData[]>;
       for (const renderLayer of CHUNKED_RENDER_LAYERS) {
          this.visibleEntityChunkDatas[renderLayer] = [];
       }
@@ -113,7 +113,7 @@ export default class Layer {
       return idx;
    }
 
-   public getCollisionChunkByIndex(collisionGroup: CollisionGroup, chunkIndex: number): Array<Entity> {
+   public getCollisionChunkByIndex(collisionGroup: CollisionGroup, chunkIndex: number): Entity[] {
       return this.collisionGroupChunks[collisionGroup][chunkIndex];
    }
 

@@ -8,7 +8,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import _ClientComponentArray from "../ClientComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 import { EMBRASURE_TEXTURE_SOURCES } from "../server-components/BuildingMaterialComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -24,7 +24,7 @@ declare module "../component-registry" {
    interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.embrasure, _EmbrasureComponentArray> {}
 }
 
-class _EmbrasureComponentArray extends _ClientComponentArray<EmbrasureComponent, EmbrasureComponentData> {
+class _EmbrasureComponentArray extends ClientComponentArray<EmbrasureComponent, EmbrasureComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

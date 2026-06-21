@@ -1,6 +1,6 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { PacketReader } from "../../../../../shared/src/packets";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -19,7 +19,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.sandstoneRock, _SandstoneRockComponentArray> {}
 }
 
-class _SandstoneRockComponentArray extends _ServerComponentArray<SandstoneRockComponent, SandstoneRockComponentData> {
+class _SandstoneRockComponentArray extends ServerComponentArray<SandstoneRockComponent, SandstoneRockComponentData> {
    public decodeData(reader: PacketReader): SandstoneRockComponentData {
       const size = reader.readNumber();
       return {

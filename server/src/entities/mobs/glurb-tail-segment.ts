@@ -34,7 +34,7 @@ export function createGlurbTailSegmentConfig(x: number, y: number, angle: number
    const glurbSegmentComponent = new GlurbSegmentComponent();
 
    const light = createLight(new Point(0, 0), 0.3, 0.8, 4, 1, 0.2, 0.9);
-   const lights: Array<LightCreationInfo> = [{
+   const lights: LightCreationInfo[] = [{
       light: light,
       attachedHitbox: hitbox
    }];

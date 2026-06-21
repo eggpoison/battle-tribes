@@ -26,7 +26,7 @@ const getNumChildren = (currentDepth: number): number => {
 }
 
 const spawnMithrilOre = (layer: Layer, x: number, y: number, direction: number, currentDepth: number): Entity => {
-   const children: Array<Entity> = [];
+   const children: Entity[] = [];
    
    const numChildren = getNumChildren(currentDepth);
 

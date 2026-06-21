@@ -101,6 +101,7 @@
    background-size: 100%;
    image-rendering: pixelated;
    user-select: none;
+   pointer-events: none; /* Necessary otherwise the img will capture layerX/layerY */
 }
 
 .item-slot.selected {

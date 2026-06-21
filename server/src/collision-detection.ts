@@ -23,14 +23,14 @@ export interface HitboxCollisionPair {
 
 export interface EntityPairCollisionInfo {
    readonly collidingEntity: Entity;
-   readonly collidingHitboxPairs: ReadonlyArray<HitboxCollisionPair>;
+   readonly collidingHitboxPairs: readonly HitboxCollisionPair[];
 }
 
 /** For each affected entity, stores info about colliding entities */
-export type GlobalCollisionInfo = Partial<Record<Entity, Array<EntityPairCollisionInfo>>>;
+export type GlobalCollisionInfo = Partial<Record<Entity, EntityPairCollisionInfo[]>>;
 
 // Pair the colliding collision groups
-const collisionGroupPairs: Array<[pushingGroup: CollisionGroup, pushedGroup: CollisionGroup]> = [];
+const collisionGroupPairs: [pushingGroup: CollisionGroup, pushedGroup: CollisionGroup][] = [];
 for (let pushingGroup: CollisionGroup = 0; pushingGroup < CollisionGroup._LENGTH_; pushingGroup++) {
    for (let pushedGroup: CollisionGroup = 0; pushedGroup < CollisionGroup._LENGTH_; pushedGroup++) {
       if (collisionGroupsCanCollide(pushingGroup, pushedGroup)) {
@@ -39,7 +39,7 @@ for (let pushingGroup: CollisionGroup = 0; pushingGroup < CollisionGroup._LENGTH
    }
 }
 
-const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, collisionInfo: GlobalCollisionInfo, affectedEntity: Entity, collidingEntity: Entity): void => {
+const markCollisions = (entityCollisionPairs: EntityCollisionPair[], collisionInfo: GlobalCollisionInfo, affectedEntity: Entity, collidingEntity: Entity): void => {
    const affectedEntityTransformComponent = TransformComponentArray.getComponent(affectedEntity);
    const collidingEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
    
@@ -63,7 +63,7 @@ const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, collis
    }
    
    // Check hitboxes
-   const collidingHitboxPairs: Array<HitboxCollisionPair> = [];
+   const collidingHitboxPairs: HitboxCollisionPair[] = [];
    const numHitboxes = affectedEntityTransformComponent.hitboxes.length;
    const numOtherHitboxes = collidingEntityTransformComponent.hitboxes.length;
    for (let i = 0; i < numHitboxes; i++) {
@@ -123,7 +123,7 @@ export function resolveEntityCollisions(layer: Layer): void {
    
    // @Speed: Collision chunks literally just have an array, so why not just have them be arrays? But do the above optimisation first.
    
-   const entityCollisionPairs: Array<EntityCollisionPair> = [];
+   const entityCollisionPairs: EntityCollisionPair[] = [];
    const globalCollisionInfo: GlobalCollisionInfo = {};
 
    for (let i = 0; i < collisionGroupPairs.length; i++) {
@@ -236,7 +236,7 @@ export function hitboxIsCollidingWithEntity(hitbox: Hitbox, entity: Entity): boo
    return false;
 }
 
-export function boxArraysAreColliding(boxes1: ReadonlyArray<Box>, boxes2: ReadonlyArray<Box>): boolean {
+export function boxArraysAreColliding(boxes1: readonly Box[], boxes2: readonly Box[]): boolean {
    for (const box of boxes1) {
       for (const otherBox of boxes2) {
          if (getBoxCollisionResult(box, otherBox).isColliding) {
@@ -247,7 +247,7 @@ export function boxArraysAreColliding(boxes1: ReadonlyArray<Box>, boxes2: Readon
    return false;
 }
 
-export function boxHasCollisionWithBoxes(box: Box, boxes: ReadonlyArray<Box>, epsilon: number = 0): boolean {
+export function boxHasCollisionWithBoxes(box: Box, boxes: readonly Box[], epsilon: number = 0): boolean {
    for (let i = 0; i < boxes.length; i++) {
       const otherBox = boxes[i];
       if (getBoxCollisionResult(box, otherBox, epsilon).isColliding) {
@@ -257,7 +257,7 @@ export function boxHasCollisionWithBoxes(box: Box, boxes: ReadonlyArray<Box>, ep
    return false;
 }
 
-const boxHasCollisionWithHitboxes = (box: Box, hitboxes: ReadonlyArray<Hitbox>, epsilon: number = 0): boolean => {
+const boxHasCollisionWithHitboxes = (box: Box, hitboxes: readonly Hitbox[], epsilon: number = 0): boolean => {
    for (let i = 0; i < hitboxes.length; i++) {
       const otherHitbox = hitboxes[i];
 
@@ -269,8 +269,8 @@ const boxHasCollisionWithHitboxes = (box: Box, hitboxes: ReadonlyArray<Hitbox>, 
    return false;
 }
 
-export function getBoxesCollidingEntities(layer: Layer, boxes: ReadonlyArray<Box>, epsilon: number = 0): Array<Entity> {
-   const collidingEntities: Array<Entity> = [];
+export function getBoxesCollidingEntities(layer: Layer, boxes: readonly Box[], epsilon: number = 0): Entity[] {
+   const collidingEntities: Entity[] = [];
    const seenEntityIDs = new Set<number>();
    
    for (let i = 0; i < boxes.length; i++) {
@@ -323,8 +323,8 @@ export function getBoxesCollidingEntities(layer: Layer, boxes: ReadonlyArray<Box
 }
 
 // @Copynpaste
-export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArray<Hitbox>, epsilon: number = 0): Array<Entity> {
-   const collidingEntities: Array<Entity> = [];
+export function getHitboxesCollidingEntities(layer: Layer, hitboxes: readonly Hitbox[], epsilon: number = 0): Entity[] {
+   const collidingEntities: Entity[] = [];
    const seenEntityIDs = new Set<number>();
    
    for (let i = 0; i < hitboxes.length; i++) {

@@ -3,9 +3,9 @@ import { commandIsValid, CommandPermissions } from "../../../../../shared/src/co
 import { sendTerminalCommandPacket } from "../../../game/networking/packet-sending/packet-sending";
 import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 
-const terminalLines: Array<string> = [];
+const terminalLines: string[] = [];
 
-const previousCommands: Array<string> = [];
+const previousCommands: string[] = [];
 let selectedCommandIndex = 0;
 
 let terminalElem: HTMLDivElement | null = null;
@@ -142,6 +142,7 @@ export function openTerminal(): void {
    terminalElem.id = "terminal";
    terminalElem.addEventListener("mousedown", focusTerminal);
    
+   // @Speed
    terminalElem.innerHTML = `
    <div class="lines">
       {#each terminalLines as line}

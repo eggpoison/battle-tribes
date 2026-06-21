@@ -15,8 +15,8 @@ const enum Vars {
 }
 
 export class HealingTotemComponent {
-   public readonly healTargetIDs: Array<number> = [];
-   public readonly healTargetsTicksHealed: Array<number> = [];
+   public readonly healTargetIDs: number[] = [];
+   public readonly healTargetsTicksHealed: number[] = [];
 }
 
 export const HealingTotemComponentArray = new ComponentArray<HealingTotemComponent>(ServerComponentType.healingTotem, true, getDataLength, addDataToPacket);
@@ -25,8 +25,8 @@ HealingTotemComponentArray.onTick = {
    func: onTick
 };
 
-const getHealingTargets = (healingTotem: Entity, visibleEntities: ReadonlyArray<Entity>): ReadonlyArray<Entity> => {
-   const targets: Array<Entity> = [];
+const getHealingTargets = (healingTotem: Entity, visibleEntities: readonly Entity[]): readonly Entity[] => {
+   const targets: Entity[] = [];
    for (const entity of visibleEntities) {
       if (targets.indexOf(entity) !== -1) {
          continue;
@@ -52,7 +52,7 @@ const getHealingTargets = (healingTotem: Entity, visibleEntities: ReadonlyArray<
    return targets;
 }
 
-const idIsInHealTargets = (id: number, healTargets: ReadonlyArray<Entity>): boolean => {
+const idIsInHealTargets = (id: number, healTargets: readonly Entity[]): boolean => {
    for (let i = 0; i < healTargets.length; i++) {
       const entity = healTargets[i];
       if (entity === id) {
@@ -62,7 +62,7 @@ const idIsInHealTargets = (id: number, healTargets: ReadonlyArray<Entity>): bool
    return false;
 }
 
-const healTargetIsInIDs = (target: Entity, ids: ReadonlyArray<number>): boolean => {
+const healTargetIsInIDs = (target: Entity, ids: readonly number[]): boolean => {
    for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
       if (id === target) {

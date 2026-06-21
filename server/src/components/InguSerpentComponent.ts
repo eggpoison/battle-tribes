@@ -63,7 +63,7 @@ export class InguSerpentComponent {
 
    public chompersCooldownTicks = EAT_CHOMP_COOLDOWN_TICKS;
 
-   public tribesmanTruces: Array<TribesmanTruce> = [];
+   public tribesmanTruces: TribesmanTruce[] = [];
 }
 
 export const InguSerpentComponentArray = new ComponentArray<InguSerpentComponent>(ServerComponentType.inguSerpent, true, getDataLength, addDataToPacket);

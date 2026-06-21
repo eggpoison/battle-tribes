@@ -113,7 +113,7 @@ export function addAssignmentPart(aiAssignmentComponent: AIAssignmentComponent, 
    assert(aiAssignmentComponent.currentAssignment !== null);
 }
 
-export function runAssignmentAI(entity: Entity, visibleItemEntities: ReadonlyArray<Entity>): boolean {
+export function runAssignmentAI(entity: Entity, visibleItemEntities: readonly Entity[]): boolean {
    const aiAssignmentComponent = AIAssignmentComponentArray.getComponent(entity);
    const tribeComponent = TribeComponentArray.getComponent(entity);
 

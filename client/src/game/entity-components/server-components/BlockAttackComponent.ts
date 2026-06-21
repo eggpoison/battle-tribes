@@ -1,5 +1,5 @@
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 
 // export interface BlockAttackComponentData {
 //    readonly hasBlocked: boolean;

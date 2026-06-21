@@ -2,7 +2,7 @@ import { Entity } from "../../../../../shared/src/entities";
 import { randFloat, randItem } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
 import { ClientComponentType } from "../client-component-types";
-import _ClientComponentArray from "../ClientComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { registerClientComponentArray } from "../component-registry";
 
@@ -16,7 +16,7 @@ export interface RandomSoundComponent {
 
    soundTimerTicks: number;
 
-   sounds: ReadonlyArray<string>;
+   sounds: readonly string[];
 }
 
 declare module "../component-registry" {
@@ -24,7 +24,7 @@ declare module "../component-registry" {
 }
 
 // @Cleanup this system is so shit
-export function updateRandomSoundComponentSounds(randomSoundComponent: RandomSoundComponent, minSoundIntervalTicks: number, maxSoundIntervalTicks: number, sounds: ReadonlyArray<string>, volume: number) {
+export function updateRandomSoundComponentSounds(randomSoundComponent: RandomSoundComponent, minSoundIntervalTicks: number, maxSoundIntervalTicks: number, sounds: readonly string[], volume: number) {
    // Don't update if already updated
    if (randomSoundComponent.sounds === sounds) {
       return;
@@ -42,7 +42,7 @@ export function updateRandomSoundComponentSounds(randomSoundComponent: RandomSou
    }
 }
 
-class RandomSoundComponentArray extends _ClientComponentArray<RandomSoundComponent, RandomSoundComponentData> {
+class RandomSoundComponentArray extends ClientComponentArray<RandomSoundComponent, RandomSoundComponentData> {
    public createComponent(): RandomSoundComponent {
       return {
          minSoundIntervalTicks: 0,

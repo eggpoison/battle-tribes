@@ -113,9 +113,9 @@ const addLimbStateToPacket = (packet: Packet, limbState: LimbState): void => {
 }
 
 export class InventoryUseComponent {
-   public readonly associatedInventoryNames: Array<InventoryName> = [];
+   public readonly associatedInventoryNames: InventoryName[] = [];
    
-   public readonly limbInfos: Array<LimbInfo> = [];
+   public readonly limbInfos: LimbInfo[] = [];
    private readonly inventoryUseInfoRecord: Partial<Record<InventoryName, LimbInfo>> = {};
 
    public globalAttackCooldown = 0;
@@ -250,14 +250,14 @@ const boxIsCollidingWithSubtile = (box: Box, subtileX: number, subtileY: number)
    return getBoxCollisionResult(box, tileBox).isColliding;
 }
 
-const getBoxCollidingWallSubtiles = (layer: Layer, box: Box): ReadonlyArray<number> => {
+const getBoxCollidingWallSubtiles = (layer: Layer, box: Box): readonly number[] => {
    calculateBoxBounds(box);
    const minSubtileX = Math.max(Math.floor(_bounds.minX / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
    const maxSubtileX = Math.min(Math.floor(_bounds.maxX / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
    const minSubtileY = Math.max(Math.floor(_bounds.minY / Settings.SUBTILE_SIZE), -Settings.EDGE_GENERATION_DISTANCE * 4);
    const maxSubtileY = Math.min(Math.floor(_bounds.maxY / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
 
-   const collidingWallSubtiles: Array<number> = [];
+   const collidingWallSubtiles: number[] = [];
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
          const subtileIndex = getSubtileIndex(subtileX, subtileY);
@@ -581,7 +581,7 @@ export function getCrossbowLoadProgressRecordLength(useInfo: LimbInfo): number {
 
 export function addCrossbowLoadProgressRecordToPacket(packet: Packet, useInfo: LimbInfo): void {
    // @Copynpaste
-   const crossbowLoadProgressEntries = Object.entries(useInfo.crossbowLoadProgressRecord).map(([a, b]) => [Number(a), b]) as Array<[number, number]>;
+   const crossbowLoadProgressEntries = Object.entries(useInfo.crossbowLoadProgressRecord).map(([a, b]) => [Number(a), b]) as [number, number][];
    packet.writeNumber(crossbowLoadProgressEntries.length);
    for (let i = 0; i < crossbowLoadProgressEntries.length; i++) {
       const [itemSlot, cooldown] = crossbowLoadProgressEntries[i];
@@ -620,7 +620,7 @@ function addDataToPacket(packet: Packet, entity: Entity): void {
       packet.writeNumber(heldItem !== null ? heldItem.type : -1);
 
       // @Cleanup: Copy and paste
-      const spearWindupCooldownEntries = Object.entries(limb.spearWindupCooldowns).map(([a, b]) => [Number(a), b]) as Array<[number, number]>;
+      const spearWindupCooldownEntries = Object.entries(limb.spearWindupCooldowns).map(([a, b]) => [Number(a), b]) as [number, number][];
       packet.writeNumber(spearWindupCooldownEntries.length);
       for (let i = 0; i < spearWindupCooldownEntries.length; i++) {
          const [itemSlot, cooldown] = spearWindupCooldownEntries[i];

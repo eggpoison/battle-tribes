@@ -43,6 +43,7 @@ export let maxVisibleRenderChunkX = -1;
 export let minVisibleRenderChunkY = -1;
 export let maxVisibleRenderChunkY = -1;
 
+// @SPEED @Cleanup cursorScreenPos is never used?
 export const cursorScreenPos = new Point(0, 0);
 export const cursorWorldPos = new Point(0, 0);
 
@@ -61,8 +62,8 @@ export const cursorWorldPos = new Point(0, 0);
 // }
 
 // @Incomplete: unused
-// const getChunksFromRange = (layer: Layer, minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number): ReadonlyArray<Chunk> => {
-//    const chunks: Array<Chunk> = [];
+// const getChunksFromRange = (layer: Layer, minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number): readonly Chunk[] => {
+//    const chunks: Chunk[] = [];
    
 //    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
 //       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -76,8 +77,8 @@ export const cursorWorldPos = new Point(0, 0);
 
 // @Incomplete: unused
 /** Gets all the chunks in chunks B missing from chunks A */
-// const getMissingChunks = (chunksA: ReadonlyArray<Chunk>, chunksB: ReadonlyArray<Chunk>): ReadonlyArray<Chunk> => {
-//    const missing: Array<Chunk> = [];
+// const getMissingChunks = (chunksA: readonly Chunk[], chunksB: readonly Chunk[]): readonly Chunk[] => {
+//    const missing: Chunk[] = [];
 //    for (const chunk of chunksB) {
 //       if (!chunksA.includes(chunk)) {
 //          missing.push(chunk);

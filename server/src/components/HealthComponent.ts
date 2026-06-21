@@ -23,8 +23,8 @@ export class HealthComponent {
    public defence = 0;
    public readonly defenceFactors: Record<string, number> = {};
 
-   public readonly localIframeHashes: Array<string> = [];
-   public readonly localIframeDurations: Array<number> = [];
+   public readonly localIframeHashes: string[] = [];
+   public readonly localIframeDurations: number[] = [];
 
    constructor(maxHealth: number) {
       this.maxHealth = maxHealth;
@@ -153,7 +153,7 @@ export function damageEntity(hitHitbox: Hitbox, attackingEntity: Entity | null, 
    const transformComponent = TransformComponentArray.getComponent(entity);
    
    // @Speed
-   const alertedEntityIDs: Array<number> = [];
+   const alertedEntityIDs: number[] = [];
    for (let i = 0; i < transformComponent.chunks.length; i++) {
       const chunk = transformComponent.chunks[i];
       for (let j = 0; j < chunk.viewingEntities.length; j++) {

@@ -184,7 +184,7 @@ function onTick(fish: Entity): void {
 
    // Herd AI
    // @Incomplete: Make fish steer away from land
-   const herdMembers: Array<Entity> = [];
+   const herdMembers: Entity[] = [];
    for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
       const entity = aiHelperComponent.visibleEntities[i];
       if (getEntityType(entity) === EntityType.fish) {

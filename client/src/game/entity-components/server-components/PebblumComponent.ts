@@ -1,6 +1,6 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { randAngle } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -16,7 +16,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pebblum, _PebblumComponentArray> {}
 }
 
-class _PebblumComponentArray extends _ServerComponentArray<PebblumComponent, PebblumComponentData> {
+class _PebblumComponentArray extends ServerComponentArray<PebblumComponent, PebblumComponentData> {
    public decodeData(): PebblumComponentData {
       return {};
    }

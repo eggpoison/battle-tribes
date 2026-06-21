@@ -2,7 +2,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { getServerComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -19,7 +19,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribeMember, TribeMemberComponentArray> {}
 }
 
-class TribeMemberComponentArray extends _ServerComponentArray<TribeMemberComponent, TribeMemberComponentData> {
+class TribeMemberComponentArray extends ServerComponentArray<TribeMemberComponent, TribeMemberComponentData> {
    public decodeData(reader: PacketReader): TribeMemberComponentData {
       const name = reader.readString();
       return {

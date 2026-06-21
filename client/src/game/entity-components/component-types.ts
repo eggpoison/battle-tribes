@@ -2,14 +2,14 @@ import { ServerComponentType } from "../../../../shared/src/components";
 import { EntityType } from "../../../../shared/src/entities";
 import { PacketReader } from "../../../../shared/src/packets";
 import { ClientComponentType } from "./client-component-types";
-import { ClientComponentData, ComponentArray, getClientComponentArray, getServerComponentArray, ServerComponentArray, ServerComponentData } from "./component-registry";
+import { ClientComponentData, ComponentArray, getClientComponentArray, getServerComponentArray, ServerComponentArrayByType, ServerComponentData } from "./component-registry";
 import { TransformComponentData } from "./server-components/TransformComponent";
-import _ServerComponentArray from "./ServerComponentArray";
+import ServerComponentArray from "./ServerComponentArray";
 
-export type EntityServerComponentData<T extends ServerComponentType = ServerComponentType> = ReadonlyArray<ServerComponentData<T>>;
-export type EntityClientComponentData<T extends ClientComponentType = ClientComponentType> = ReadonlyArray<ClientComponentData<T>>;
+export type EntityServerComponentData<T extends ServerComponentType = ServerComponentType> = readonly ServerComponentData<T>[];
+export type EntityClientComponentData<T extends ClientComponentType = ClientComponentType> = readonly ClientComponentData<T>[];
 
-const ENTITY_SERVER_COMPONENT_TYPES: Array<Array<ServerComponentType>> = [];
+const ENTITY_SERVER_COMPONENT_TYPES: ServerComponentType[][] = [];
 
 const ENTITY_CLIENT_COMPONENT_TYPES = [
    // cow
@@ -252,7 +252,7 @@ const ENTITY_CLIENT_COMPONENT_TYPES = [
    [],
    // inguYetukLaser
    [],
-] as const satisfies ReadonlyArray<ReadonlyArray<ClientComponentType>>;
+] as const satisfies ClientComponentType[][];
 
 // @Cleanup: name
 type LesserMap<T extends readonly ClientComponentType[]> = {
@@ -263,22 +263,22 @@ export type ClientComponentDataMap = {
    [E in EntityType]: LesserMap<typeof ENTITY_CLIENT_COMPONENT_TYPES[E]>;
 }
 
-const COMPONENT_ARRAYS: Array<Array<ComponentArray>> = [];
-const SERVER_COMPONENT_ARRAYS: Array<Array<ServerComponentArray>> = [];
-const COMPONENT_ARRAYS_HAVE_INTERMEDIATE_INFO: Array<boolean> = [];
+const COMPONENT_ARRAYS: ComponentArray[][] = [];
+const SERVER_COMPONENT_ARRAYS: ServerComponentArrayByType[][] = [];
+const COMPONENT_ARRAYS_HAVE_INTERMEDIATE_INFO: boolean[] = [];
 
 // @Cleanup: the export!!
-export const ENTITY_INTERMEDIATE_INFOS: Array<Array<object>> = [];
+export const ENTITY_INTERMEDIATE_INFOS: object[][] = [];
 
 export function registerEntityComponentTypesFromData(reader: PacketReader): void {
    const numEntityTypes = reader.readNumber();
    for (let entityType = 0; entityType < numEntityTypes; entityType++) {
-      const componentTypes: Array<ServerComponentType> = [];
-      const componentArrays: Array<ComponentArray> = [];
-      const serverComponentArrays: Array<ServerComponentArray> = [];
+      const componentTypes: ServerComponentType[] = [];
+      const componentArrays: ComponentArray[] = [];
+      const serverComponentArrays: ServerComponentArrayByType[] = [];
       
       let hasIntermediateInfo = false;
-      const intermediateInfos: Array<object> = [];
+      const intermediateInfos: object[] = [];
       
       const numComponents = reader.readNumber();
       for (let j = 0; j < numComponents; j++) {
@@ -318,19 +318,19 @@ export function registerEntityComponentTypesFromData(reader: PacketReader): void
    }
 }
 
-export function getEntityServerComponentTypes(entityType: EntityType): ReadonlyArray<ServerComponentType> {
+export function getEntityServerComponentTypes(entityType: EntityType): readonly ServerComponentType[] {
    return ENTITY_SERVER_COMPONENT_TYPES[entityType];
 }
 
-export function getEntityClientComponentTypes(entityType: EntityType): ReadonlyArray<ClientComponentType> {
+export function getEntityClientComponentTypes(entityType: EntityType): readonly ClientComponentType[] {
    return ENTITY_CLIENT_COMPONENT_TYPES[entityType];
 }
 
-export function getEntityServerComponentArrays(entityType: EntityType): ReadonlyArray<_ServerComponentArray<object, object, unknown>> {
+export function getEntityServerComponentArrays(entityType: EntityType): readonly ServerComponentArray<object, object, unknown>[] {
    return SERVER_COMPONENT_ARRAYS[entityType];
 }
 
-export function getEntityComponentArrays(entityType: EntityType): ReadonlyArray<ComponentArray> {
+export function getEntityComponentArrays(entityType: EntityType): readonly ComponentArray[] {
    return COMPONENT_ARRAYS[entityType];
 }
 
@@ -338,7 +338,7 @@ export function hasIntermediateInfo(entityType: EntityType): boolean {
    return COMPONENT_ARRAYS_HAVE_INTERMEDIATE_INFO[entityType];
 }
 
-export function getServerComponentData<T extends ServerComponentType>(entityServerComponentData: EntityServerComponentData, entityComponentTypes: ReadonlyArray<ServerComponentType>, componentType: T): ServerComponentData<T> {
+export function getServerComponentData<T extends ServerComponentType>(entityServerComponentData: EntityServerComponentData, entityComponentTypes: readonly ServerComponentType[], componentType: T): ServerComponentData<T> {
    for (let i = 0; i < entityComponentTypes.length; i++) {
       const currentComponentType = entityComponentTypes[i];
       if (currentComponentType === componentType) {
@@ -355,7 +355,7 @@ export function getTransformComponentData(entityServerComponentData: EntityServe
    return entityServerComponentData[0] as TransformComponentData;
 }
 
-export function getClientComponentData<T extends ClientComponentType>(entityClientComponentData: EntityClientComponentData, entityComponentTypes: ReadonlyArray<ClientComponentType>, componentType: T): ClientComponentData<T> {
+export function getClientComponentData<T extends ClientComponentType>(entityClientComponentData: EntityClientComponentData, entityComponentTypes: readonly ClientComponentType[], componentType: T): ClientComponentData<T> {
    for (let i = 0; i < entityComponentTypes.length; i++) {
       const currentComponentType = entityComponentTypes[i];
       if (currentComponentType === componentType) {

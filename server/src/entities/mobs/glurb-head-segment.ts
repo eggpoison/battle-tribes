@@ -71,7 +71,7 @@ const getAcceleration = (glurb: Entity): number => {
    return lerp(375, 650, u);
 }
 
-const propagateMoveDirective = (glurbSegment: Entity, furtherHitbox: Hitbox | null, x: number, y: number, foundSegments: Array<Entity>): void => {
+const propagateMoveDirective = (glurbSegment: Entity, furtherHitbox: Hitbox | null, x: number, y: number, foundSegments: Entity[]): void => {
    const transformComponent = TransformComponentArray.getComponent(glurbSegment);
    const hitbox = transformComponent.hitboxes[0];
 
@@ -137,7 +137,7 @@ export function createGlurbHeadSegmentConfig(x: number, y: number, rotation: num
    const glurbHeadSegmentComponent = new GlurbHeadSegmentComponent(maxNumSegments);
 
    const light = createLight(new Point(0, 0), 0.35, 0.8, 6, 1, 0.2, 0.9);
-   const lights: Array<LightCreationInfo> = [{
+   const lights: LightCreationInfo[] = [{
       light: light,
       attachedHitbox: hitbox
    }];

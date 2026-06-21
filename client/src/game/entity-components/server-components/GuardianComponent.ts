@@ -10,7 +10,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -34,33 +34,33 @@ export interface GuardianComponentData {
 }
 
 interface IntermediateInfo {
-   rubyRenderParts: Array<VisualRenderPart>,
-   amethystRenderParts: Array<VisualRenderPart>,
-   emeraldRenderParts: Array<VisualRenderPart>,
-   rubyLights: Array<[number, Light]>,
-   emeraldLights: Array<[number, Light]>,
-   amethystLights: Array<[number, Light]>,
-   limbRenderParts: Array<VisualRenderPart>,
-   limbCrackRenderParts: Array<VisualRenderPart>,
-   limbCrackLights: Array<Light>,
+   rubyRenderParts: VisualRenderPart[];
+   amethystRenderParts: VisualRenderPart[];
+   emeraldRenderParts: VisualRenderPart[];
+   rubyLights: [number, Light][];
+   emeraldLights: [number, Light][];
+   amethystLights: [number, Light][];
+   limbRenderParts: VisualRenderPart[];
+   limbCrackRenderParts: VisualRenderPart[];
+   limbCrackLights: Light[];
 }
 
 export interface GuardianComponent {
-   readonly rubyRenderParts: Array<VisualRenderPart>;
-   readonly amethystRenderParts: Array<VisualRenderPart>;
-   readonly emeraldRenderParts: Array<VisualRenderPart>;
+   readonly rubyRenderParts: VisualRenderPart[];
+   readonly amethystRenderParts: VisualRenderPart[];
+   readonly emeraldRenderParts: VisualRenderPart[];
 
-   readonly rubyLights: Array<[number, Light]>;
-   readonly emeraldLights: Array<[number, Light]>;
-   readonly amethystLights: Array<[number, Light]>;
+   readonly rubyLights: [number, Light][];
+   readonly emeraldLights: [number, Light][];
+   readonly amethystLights: [number, Light][];
 
    rubyGemActivation: number;
    emeraldGemActivation: number;
    amethystGemActivation: number;
 
-   readonly limbRenderParts: Array<VisualRenderPart>;
-   readonly limbCrackRenderParts: Array<VisualRenderPart>;
-   readonly limbCrackLights: Array<Light>;
+   readonly limbRenderParts: VisualRenderPart[];
+   readonly limbCrackRenderParts: VisualRenderPart[];
+   readonly limbCrackLights: Light[];
 
    limbRubyGemActivation: number;
    limbEmeraldGemActivation: number;
@@ -78,7 +78,7 @@ const enum Var {
    SPIKY_BALL_SUMMON_SHAKE_AMOUNT = 2
 }
 
-class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, GuardianComponentData, IntermediateInfo> {
+class _GuardianComponentArray extends ServerComponentArray<GuardianComponent, GuardianComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): GuardianComponentData {
       const rubyGemActivation = reader.readNumber();
       const emeraldGemActivation = reader.readNumber();
@@ -109,13 +109,13 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
       const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponent.hitboxes[0];
       
-      const rubyRenderParts: Array<VisualRenderPart> = [];
-      const amethystRenderParts: Array<VisualRenderPart> = [];
-      const emeraldRenderParts: Array<VisualRenderPart> = [];
+      const rubyRenderParts: VisualRenderPart[] = [];
+      const amethystRenderParts: VisualRenderPart[] = [];
+      const emeraldRenderParts: VisualRenderPart[] = [];
 
-      const rubyLights: Array<[number, Light]> = [];
-      const emeraldLights: Array<[number, Light]> = [];
-      const amethystLights: Array<[number, Light]> = [];
+      const rubyLights: [number, Light][] = [];
+      const emeraldLights: [number, Light][] = [];
+      const amethystLights: [number, Light][] = [];
 
       // Body
 
@@ -169,9 +169,9 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
       renderObject.attachRenderPart(headRubies);
       rubyRenderParts.push(headRubies);
 
-      const limbRenderParts: Array<VisualRenderPart> = [];
-      const limbCrackRenderParts: Array<VisualRenderPart> = [];
-      const limbCrackLights: Array<Light> = [];
+      const limbRenderParts: VisualRenderPart[] = [];
+      const limbCrackRenderParts: VisualRenderPart[] = [];
+      const limbCrackLights: Light[] = [];
       
       // Attach limb render parts
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
@@ -428,7 +428,7 @@ class _GuardianComponentArray extends _ServerComponentArray<GuardianComponent, G
 
 export const GuardianComponentArray = registerServerComponentArray(ServerComponentType.guardian, _GuardianComponentArray, true);
    
-const setColours = (renderParts: ReadonlyArray<VisualRenderPart>, lights: ReadonlyArray<[number, Light]>, activation: number, tintR: number, tintG: number, tintB: number): void => {
+const setColours = (renderParts: readonly VisualRenderPart[], lights: readonly [number, Light][], activation: number, tintR: number, tintG: number, tintB: number): void => {
    for (let i = 0; i < renderParts.length; i++) {
       const renderPart = renderParts[i];
       renderPart.tintR = tintR;

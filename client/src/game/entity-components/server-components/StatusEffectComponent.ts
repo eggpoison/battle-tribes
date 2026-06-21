@@ -11,7 +11,7 @@ import { createPoisonBubble, createBloodParticle, BloodParticleSize, createHeatP
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour, lowTexturedParticles, highMonocolourParticles, highTexturedParticles } from "../../rendering/webgl/particle-rendering";
 import { Light, removeLight } from "../../lights";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
 import { playerInstance } from "../../player";
@@ -22,21 +22,21 @@ import { getServerComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface StatusEffectComponentData {
-   readonly statusEffects: Array<StatusEffectData>;
+   readonly statusEffects: StatusEffectData[];
 }
 
 export interface StatusEffectComponent {
    burningLight: Light | null;
    
    // @Cleanup: should be readonly!
-   statusEffects: Array<StatusEffectData>;
+   statusEffects: StatusEffectData[];
 }
 
 declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.statusEffect, _StatusEffectComponentArray> {}
 }
 
-const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [
+const BURNING_PARTICLE_COLOURS: readonly ParticleColour[] = [
    [255/255, 102/255, 0],
    [255/255, 184/255, 61/255]
 ];
@@ -61,12 +61,12 @@ const getStatusEffect = (statusEffectComponent: StatusEffectComponent, type: Sta
    return null;
 }
 
-class _StatusEffectComponentArray extends _ServerComponentArray<StatusEffectComponent, StatusEffectComponentData> {
+class _StatusEffectComponentArray extends ServerComponentArray<StatusEffectComponent, StatusEffectComponentData> {
    public decodeData(reader: PacketReader): StatusEffectComponentData {
-      const statusEffects: Array<StatusEffectData> = [];
+      const statusEffects: StatusEffectData[] = [];
       const numStatusEffects = reader.readNumber();
       for (let i = 0; i < numStatusEffects; i++) {
-         const type = reader.readNumber() as StatusEffect;
+         const type = reader.readNumber();
          const ticksElapsed = reader.readNumber();
 
          const statusEffectData: StatusEffectData = {

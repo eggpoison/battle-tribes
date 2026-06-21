@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -16,7 +16,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slingTurret, _SlingTurretComponentArray> {}
 }
 
-class _SlingTurretComponentArray extends _ServerComponentArray<SlingTurretComponent, SlingTurretComponentData> {
+class _SlingTurretComponentArray extends ServerComponentArray<SlingTurretComponent, SlingTurretComponentData> {
    public decodeData(): SlingTurretComponentData {
       return {};
    }

@@ -3,7 +3,7 @@ import { Entity } from "../../../../../shared/src/entities";
 import { Settings } from "../../../../../shared/src/settings";
 import { createIceSpeckProjectile, createSnowflakeParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface IceArrowComponentData {}
@@ -14,7 +14,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceArrow, _IceArrowComponentArray> {}
 }
 
-class _IceArrowComponentArray extends _ServerComponentArray<IceArrowComponent, IceArrowComponentData> {
+class _IceArrowComponentArray extends ServerComponentArray<IceArrowComponent, IceArrowComponentData> {
    public decodeData(): IceArrowComponentData {
       return {};
    }

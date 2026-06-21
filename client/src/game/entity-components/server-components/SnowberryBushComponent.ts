@@ -1,7 +1,7 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -26,7 +26,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snowberryBush, _SnowberryBushComponentArray> {}
 }
 
-class _SnowberryBushComponentArray extends _ServerComponentArray<SnowberryBushComponent, SnowberryBushComponentData, IntermediateInfo> {
+class _SnowberryBushComponentArray extends ServerComponentArray<SnowberryBushComponent, SnowberryBushComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): SnowberryBushComponentData {
       const numBerries = reader.readNumber();
       return {

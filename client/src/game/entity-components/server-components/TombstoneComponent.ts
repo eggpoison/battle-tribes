@@ -8,7 +8,7 @@ import { createDirtParticle, createRockParticle, createRockSpeckParticle } from 
 import { playSound, playSoundOnHitbox, ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS } from "../../sound";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData, getEntityAgeTicks, getEntityLayer } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
@@ -38,7 +38,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tombstone, _TombstoneComponentArray> {}
 }
 
-class _TombstoneComponentArray extends _ServerComponentArray<TombstoneComponent, TombstoneComponentData> {
+class _TombstoneComponentArray extends ServerComponentArray<TombstoneComponent, TombstoneComponentData> {
    public decodeData(reader: PacketReader): TombstoneComponentData {
       const tombstoneType = reader.readNumber();
       const zombieSpawnProgress = reader.readNumber();

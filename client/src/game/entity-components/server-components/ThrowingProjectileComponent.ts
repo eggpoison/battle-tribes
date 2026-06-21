@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface ThrowingProjectileComponentData {}
@@ -10,7 +10,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.throwingProjectile, _ThrowingProjectileComponentArray> {}
 }
 
-class _ThrowingProjectileComponentArray extends _ServerComponentArray<ThrowingProjectileComponent, ThrowingProjectileComponentData> {
+class _ThrowingProjectileComponentArray extends ServerComponentArray<ThrowingProjectileComponent, ThrowingProjectileComponentData> {
    public decodeData(): ThrowingProjectileComponentData {
       return {};
    }

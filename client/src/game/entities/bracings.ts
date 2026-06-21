@@ -15,7 +15,7 @@ import { EntityComponentData } from "../world";
 import { createHitboxQuick, Hitbox } from "../hitboxes";
 
 export function createBracingsConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {
-   const hitboxes: Array<Hitbox> = [];
+   const hitboxes: Hitbox[] = [];
    let hitboxLocalID = 0;
    
    const hitbox1 = createHitboxQuick(0, hitboxLocalID++, null, createRectangularBox(x, y, 0, Settings.TILE_SIZE * -0.5, angle, 16, 16), 0.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK)

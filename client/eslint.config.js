@@ -32,7 +32,7 @@ export default defineConfig([
          "@typescript-eslint/restrict-plus-operands": "off", // Turn this off because ( number + string ) is often useful and optimal
          "@typescript-eslint/prefer-literal-enum-member": "off", // Let me do my const enum shenanigans!!!
          "@typescript-eslint/prefer-includes": "off", // indexOf is faster than includes!
-         "@typescript-eslint/array-type": ["off"], // Regular code should use Array<T>, while type code should use T[]
+         "@typescript-eslint/array-type": ["warn", { default: "array", readonly: "array" }], // use T[] everywhere
          "@typescript-eslint/no-non-null-assertion": "off", // This is extrememly useful everywhere, e.g. "ComponentArray.getComponent(entity)!"
          "@typescript-eslint/restrict-template-expressions": "off", // Let me use numbers inside string templates!!
          "semi": "off", // Semicolons don't belong on the end of arrow functions.
@@ -43,8 +43,7 @@ export default defineConfig([
          "@typescript-eslint/prefer-optional-chain": "off", // Explicitly typing it is more performant
          "@typescript-eslint/no-duplicate-enum-values": "off", // CONST ENUMS!!!
          "@typescript-eslint/no-empty-object-type": "off", // the reason it says that this warning exists is stupid
-         "no-fallthrough": "off",
-         "@typescript-eslint/no-dynamic-delete": "off" // this is sometimes faster than maps lole
+         "no-fallthrough": "off"
       },
    },
 ]);

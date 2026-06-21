@@ -38,7 +38,7 @@ export function getDistanceToClosestEntity(layer: Layer, x: number, y: number): 
    return minDistance;
 }
 
-export function getEntitiesAtPosition(layer: Layer, x: number, y: number): Array<Entity> {
+export function getEntitiesAtPosition(layer: Layer, x: number, y: number): Entity[] {
    if (!positionIsInWorld(x, y)) {
       throw new Error("Position isn't in the board");
    }
@@ -46,7 +46,7 @@ export function getEntitiesAtPosition(layer: Layer, x: number, y: number): Array
    const chunkX = Math.floor(x / Settings.CHUNK_UNITS);
    const chunkY = Math.floor(y / Settings.CHUNK_UNITS);
 
-   const entities: Array<Entity> = [];
+   const entities: Entity[] = [];
    
    const chunk = layer.getChunk(chunkX, chunkY);
    for (const entity of chunk.entities) {

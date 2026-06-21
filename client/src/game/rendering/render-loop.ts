@@ -17,7 +17,7 @@ export const enum RenderableType {
 
 type Renderable = Entity | Particle | RenderPartOverlayGroup;
 
-type RenderableArrays = Array<Array<RenderableInfo>>;
+type RenderableArrays = RenderableInfo[][];
 
 interface RenderableInfo {
    readonly type: RenderableType;
@@ -26,7 +26,7 @@ interface RenderableInfo {
 }
 
 let currentRenderLayer: RenderLayer = 0;
-const layerRenderableArrays: Array<RenderableArrays> = [];
+const layerRenderableArrays: RenderableArrays[] = [];
 
 export function initialiseRenderables(): void {
    for (let i = 0; i < layers.length; i++) {
@@ -38,7 +38,7 @@ export function initialiseRenderables(): void {
    }
 }
 
-const getRenderableInsertIdx = (renderables: ReadonlyArray<RenderableInfo>, renderHeight: number): number => {
+const getRenderableInsertIdx = (renderables: readonly RenderableInfo[], renderHeight: number): number => {
    let left = 0;
    let right = renderables.length - 1;
    while (left <= right) {
@@ -95,7 +95,7 @@ export function removeRenderable(layer: Layer, renderable: Renderable, renderLay
    }
 }
 
-const renderRenderablesBatch = (renderableType: RenderableType, renderables: ReadonlyArray<Renderable>, layer: Layer, renderLayer: RenderLayer): void => {
+const renderRenderablesBatch = (renderableType: RenderableType, renderables: readonly Renderable[], layer: Layer, renderLayer: RenderLayer): void => {
    if (renderables.length === 0) {
       // @Hack: chunk-rendered entities don't use renderables. The ideal fix for this would be to not create the renderables array for chunk rendered entities
       if (!renderLayerIsChunkRendered(renderLayer)) {
@@ -160,7 +160,7 @@ export function renderNextRenderables(layer: Layer, maxRenderLayer: RenderLayer)
       const renderables = renderableArrays[currentRenderLayer];
 
       let currentRenderableType = RenderableType.entity;
-      let currentRenderables: Array<Renderable> = [];
+      let currentRenderables: Renderable[] = [];
 
       for (let idx = 0; idx < renderables.length; idx++) {
          const renderableInfo = renderables[idx];

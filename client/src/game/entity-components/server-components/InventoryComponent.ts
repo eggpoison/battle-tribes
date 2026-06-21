@@ -6,20 +6,21 @@ import { assert } from "../../../../../shared/src/utils";
 import { playerInstance } from "../../player";
 import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../player-action-handling";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { updateCraftableRecipes } from "../../../ui/game/menus/CraftingMenu";
 import { Hotbar_addItem, Hotbar_removeItem, Hotbar_updateItem } from "../../../ui/game/inventories/Hotbar";
 import { registerServerComponentArray } from "../component-registry";
+import { createHeldItemElem, destroyHeldItemElem } from "../../../ui/game/HeldItem";
 
 export interface InventoryComponentData {
-   readonly inventories: ReadonlyArray<Inventory>;
+   readonly inventories: readonly Inventory[];
 }
 
 export interface InventoryComponent {
-   readonly inventories: ReadonlyArray<Inventory>;
+   readonly inventories: readonly Inventory[];
 }
 
 declare module "../component-registry" {
@@ -95,8 +96,10 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
       inventory.height = inventoryData.height;
    }
 
+   const numSlots = inventory.width * inventory.height;
+
    // Remove any items which have been removed from the inventory
-   for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
+   for (let itemSlot = 1; itemSlot <= numSlots; itemSlot++) {
       const item = inventory.itemSlots[itemSlot];
       if (item === undefined) {
          continue;
@@ -119,13 +122,16 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
             } else if (inventory.name === InventoryName.craftingOutputSlot) {
                // @HACK @CLEANUP
                
+            } else if (inventory.name === InventoryName.heldItemSlot) {
+               // @HACK @CLEANUP
+               destroyHeldItemElem();
             }
          }
       }
    }
 
    // Add all new items from the server data
-   for (let itemSlot = 1; itemSlot <= inventoryData.width * inventoryData.height; itemSlot++) {
+   for (let itemSlot = 1; itemSlot <= numSlots; itemSlot++) {
       const itemData = inventoryData.itemSlots[itemSlot];
       if (itemData === undefined) {
          continue;
@@ -146,6 +152,9 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
                updatePlayerHeldItem(inventory.name, itemSlot);
                
                validatePlayerAction(inventory.name, item);
+            } else if (inventory.name === InventoryName.heldItemSlot) {
+               // @HACK @CLEANUP
+               createHeldItemElem(item);
             }
          }
       } else if (item.count !== itemData.count || item.nickname !== itemData.nickname || item.namer !== itemData.namer) {
@@ -188,9 +197,9 @@ export function getInventory(inventoryComponent: InventoryComponent, inventoryNa
    return null;
 }
 
-class _InventoryComponentArray extends _ServerComponentArray<InventoryComponent, InventoryComponentData> {
+class _InventoryComponentArray extends ServerComponentArray<InventoryComponent, InventoryComponentData> {
    public decodeData(reader: PacketReader): InventoryComponentData {
-      const inventories: Array<Inventory> = [];
+      const inventories: Inventory[] = [];
       const numInventories = reader.readNumber();
       for (let i = 0; i < numInventories; i++) {
          const inventory = readInventory(reader);
@@ -239,7 +248,7 @@ class _InventoryComponentArray extends _ServerComponentArray<InventoryComponent,
 
 export const InventoryComponentArray = registerServerComponentArray(ServerComponentType.inventory, _InventoryComponentArray, true);
 
-export function createInventoryComponentData(inventories: ReadonlyArray<Inventory>): InventoryComponentData {
+export function createInventoryComponentData(inventories: readonly Inventory[]): InventoryComponentData {
    return {
       inventories: inventories
    };

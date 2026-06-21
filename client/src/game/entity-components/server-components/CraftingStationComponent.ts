@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface CraftingStationComponentData {}
@@ -10,7 +10,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.craftingStation, _CraftingStationComponentArray> {}
 }
 
-class _CraftingStationComponentArray extends _ServerComponentArray<CraftingStationComponent, CraftingStationComponentData> {
+class _CraftingStationComponentArray extends ServerComponentArray<CraftingStationComponent, CraftingStationComponentData> {
    public decodeData(): CraftingStationComponentData {
       return {};
    }

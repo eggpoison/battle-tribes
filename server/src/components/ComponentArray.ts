@@ -14,7 +14,7 @@ const enum ComponentArrayPriority {
    high
 }
 
-export const ComponentArrays: Array<ComponentArray> = [];
+export const ComponentArrays: ComponentArray[] = [];
 const ComponentArrayRecord = {} as { [T in ServerComponentType]: ComponentArray<object, T> };
 
 export function getComponentArrayRecord(): typeof ComponentArrayRecord {
@@ -25,26 +25,26 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    public readonly componentType: ServerComponentType;
    private readonly isActiveByDefault: boolean;
    
-   public components: Array<T> = [];
-   private componentBuffer: Array<T> = [];
-   public bufferedComponentJoinTicksRemaining: Array<number> = [];
+   public components: T[] = [];
+   private componentBuffer: T[] = [];
+   public bufferedComponentJoinTicksRemaining: number[] = [];
 
    /** Maps entity IDs to component indexes */
    private entityToIndexMap: Partial<Record<Entity, number>> = {};
    /** Maps component indexes to entity IDs */
    private indexToEntityMap: Partial<Record<number, Entity>> = {};
    
-   public activeComponents: Array<T> = [];
-   public activeEntities: Array<Entity> = [];
+   public activeComponents: T[] = [];
+   public activeEntities: Entity[] = [];
 
    /** Maps entity IDs to component indexes */
    private activeEntityToIndexMap: Record<Entity, number> = {};
    /** Maps component indexes to entity IDs */
    private activeIndexToEntityMap: Record<number, Entity> = {};
 
-   private componentBufferIDs: Array<number> = [];
+   private componentBufferIDs: number[] = [];
 
-   private deactivateBuffer: Array<number> = [];
+   private deactivateBuffer: number[] = [];
 
    // @Cleanup: Layer should probs be in entity config
    // @Bug @Incomplete: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it). solution: make it not crash
@@ -60,7 +60,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    public onWallCollision?(entity: Entity): void;
    /** Groups all collision events with any one colliding entity together.
        Note: Called BEFORE the physics for the collision is applied. */
-   public onEntityCollision?(affectedEntity: Entity, collidingEntity: Entity, collidingHitboxPairs: ReadonlyArray<HitboxCollisionPair>): void;
+   public onEntityCollision?(affectedEntity: Entity, collidingEntity: Entity, collidingHitboxPairs: readonly HitboxCollisionPair[]): void;
    public onHitboxCollision?(affectedHitbox: Hitbox, collidingHitbox: Hitbox, collisionPoint: Point): void;
    /** Called immediately after an entity is marked for removal. */
    public preRemove?(entity: Entity): void;
@@ -171,11 +171,11 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       }
    }
 
-   public getComponentBuffer(): ReadonlyArray<T> {
+   public getComponentBuffer(): readonly T[] {
       return this.componentBuffer;
    }
 
-   public getComponentBufferIDs(): ReadonlyArray<number> {
+   public getComponentBufferIDs(): readonly number[] {
       return this.componentBufferIDs;
    }
 

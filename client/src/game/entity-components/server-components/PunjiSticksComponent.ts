@@ -5,7 +5,7 @@ import { randAngle, randFloat } from "../../../../../shared/src/utils";
 import { createFlyParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -24,7 +24,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.punjiSticks, _PunjiSticksComponentArray> {}
 }
 
-class _PunjiSticksComponentArray extends _ServerComponentArray<PunjiSticksComponent, PunjiSticksComponentData> {
+class _PunjiSticksComponentArray extends ServerComponentArray<PunjiSticksComponent, PunjiSticksComponentData> {
    public decodeData(): PunjiSticksComponentData {
       return {};
    }

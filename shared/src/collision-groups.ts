@@ -31,7 +31,7 @@ export const enum CollisionGroup {
 // Top group: pushed
 
 // @Cleanup: none and decoration are the same? Are there any differences (e.g. where i check collisionGroup == decoration)
-const COLLISION_MATRIX: ReadonlyArray<boolean> = [
+const COLLISION_MATRIX: readonly boolean[] = [
 //                      Default None   Boring Decoration DamagingResource ExclusiveDamaging
 /* Default           */ true,   false, true,  false,     true,            false,
 /* None              */ false,  false, false, false,     false,           false,

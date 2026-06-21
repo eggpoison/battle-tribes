@@ -78,7 +78,7 @@ export function createBuildingBlockingTileShaders(): void {
 export function renderBuildingBlockingTiles(layer: Layer): void {
    const blockingTiles = getVisibleLayerBlockingTiles(layer);
    
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
    for (const tileIndex of blockingTiles) {
       const tileX = getTileX(tileIndex);
       const tileY = getTileY(tileIndex);

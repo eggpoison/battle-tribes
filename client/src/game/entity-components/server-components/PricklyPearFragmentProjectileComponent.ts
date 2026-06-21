@@ -2,7 +2,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { randFloat, randAngle } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { createPricklyPearParticle } from "../../particles";
@@ -24,7 +24,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pricklyPearFragmentProjectile, _PricklyPearFragmentProjectileComponentArray> {}
 }
 
-class _PricklyPearFragmentProjectileComponentArray extends _ServerComponentArray<PricklyPearFragmentProjectileComponent, PricklyPearFragmentProjectileComponentData> {
+class _PricklyPearFragmentProjectileComponentArray extends ServerComponentArray<PricklyPearFragmentProjectileComponent, PricklyPearFragmentProjectileComponentData> {
    public decodeData(reader: PacketReader): PricklyPearFragmentProjectileComponentData {
       const variant = reader.readNumber();
       return {

@@ -11,7 +11,7 @@ import { playSoundOnHitbox, ROCK_HIT_SOUNDS } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -37,17 +37,17 @@ export interface GolemComponentData {
 }
 
 interface IntermediateInfo {
-   readonly rockRenderParts: Array<VisualRenderPart>;
-   readonly eyeRenderParts: Array<VisualRenderPart>;
-   readonly eyeLights: Array<Light>;
+   readonly rockRenderParts: VisualRenderPart[];
+   readonly eyeRenderParts: VisualRenderPart[];
+   readonly eyeLights: Light[];
 }
 
 export interface GolemComponent {
    wakeProgress: number;
    
-   rockRenderParts: Array<VisualRenderPart>;
-   readonly eyeRenderParts: Array<VisualRenderPart>;
-   readonly eyeLights: Array<Light>;
+   rockRenderParts: VisualRenderPart[];
+   readonly eyeRenderParts: VisualRenderPart[];
+   readonly eyeLights: Light[];
 }
 
 declare module "../component-registry" {
@@ -110,7 +110,7 @@ const getZIndex = (size: GolemRockSize): number => {
    }
 }
 
-class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemComponentData, IntermediateInfo> {
+class _GolemComponentArray extends ServerComponentArray<GolemComponent, GolemComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): GolemComponentData {
       const wakeProgress = reader.readNumber();
 
@@ -129,9 +129,9 @@ class _GolemComponentArray extends _ServerComponentArray<GolemComponent, GolemCo
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       
-      const rockRenderParts: Array<VisualRenderPart> = [];
-      const eyeRenderParts: Array<VisualRenderPart> = [];
-      const eyeLights: Array<Light> = [];
+      const rockRenderParts: VisualRenderPart[] = [];
+      const eyeRenderParts: VisualRenderPart[] = [];
+      const eyeLights: Light[] = [];
       
       // Add new rocks
       for (let i = 0; i < transformComponentData.hitboxes.length; i++) {

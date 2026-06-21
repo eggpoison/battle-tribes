@@ -4,7 +4,7 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -51,7 +51,7 @@ const createAmmoWarningRenderPart = (parentHitbox: Hitbox): VisualRenderPart => 
    return renderPart;
 }
 
-class _AmmoBoxComponentArray extends _ServerComponentArray<AmmoBoxComponent, AmmoBoxComponentData, IntermediateInfo> {
+class _AmmoBoxComponentArray extends ServerComponentArray<AmmoBoxComponent, AmmoBoxComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): AmmoBoxComponentData {
       const ammoType = reader.readNumber();
       const ammoRemaining = reader.readNumber();

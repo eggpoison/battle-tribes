@@ -15,16 +15,16 @@
    // This component should only be used for actual entities.
    assert(entityExists(entity));
 
-   const getInventoryRowNums = (): Array<number> => {
-      const rowNums = new Array<number>();
+   const getInventoryRowNums = (): number[] => {
+      const rowNums = new number[]();
       for (let y = 0; y < inventory.height; y++) {
          rowNums.push(y);
       }
       return rowNums;
    }
 
-   const getRowSlots = (y: number): Array<number> => {
-      const itemSlots = new Array<number>();
+   const getRowSlots = (y: number): number[] => {
+      const itemSlots = new number[]();
       for (let x = 0; x < inventory.width; x++) {
          const itemSlotIdx = y * inventory.width + x;
          const itemSlot = itemSlotIdx + 1;

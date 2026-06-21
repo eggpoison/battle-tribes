@@ -13,6 +13,7 @@ export function createHealthBar(): void {
    // @Cleanup: 20 default is strange
    healthBarElem.style.setProperty("--current-health", "20");
    healthBarElem.style.setProperty("--previous-health", "20");
+   // @Speed
    healthBarElem.innerHTML = `
       <div class="health-icon">
          <img alt="" />
@@ -25,7 +26,9 @@ export function createHealthBar(): void {
    `;
    document.body.appendChild(healthBarElem);
 
+   // @Speed
    healthBarElem.querySelector("img")!.src = HealthIcon;
+   // @Speed
    healthCounterNode = healthBarElem.querySelector(".health-counter")!.firstChild as Text;
    // @Cleanup @Copynpaste: use a utils function for this
    healthCounterNode.data = (Math.round((20 + Number.EPSILON) * 100) / 100).toString();

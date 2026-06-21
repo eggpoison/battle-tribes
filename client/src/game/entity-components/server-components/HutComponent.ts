@@ -7,7 +7,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityAgeTicks, getEntityRenderObject, getEntityType } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -26,12 +26,12 @@ export interface HutComponentData {
 }
 
 interface IntermediateInfo {
-   readonly doorRenderParts: ReadonlyArray<VisualRenderPart>;
+   readonly doorRenderParts: readonly VisualRenderPart[];
    readonly recallMarker: VisualRenderPart | null;
 }
 
 export interface HutComponent {
-   readonly doorRenderParts: ReadonlyArray<VisualRenderPart>;
+   readonly doorRenderParts: readonly VisualRenderPart[];
    
    // @Memory: Don't need to store
    /** Amount the door should swing outwards from 0 to 1 */
@@ -86,7 +86,7 @@ const getDoorXOffset = (hutType: HutType, i: number): number => {
    }
 }
 
-class _HutComponentArray extends _ServerComponentArray<HutComponent, HutComponentData, IntermediateInfo> {
+class _HutComponentArray extends ServerComponentArray<HutComponent, HutComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): HutComponentData {
       const doorSwingTicks = reader.readNumber();
       const isRecalling = reader.readBool();
@@ -104,7 +104,7 @@ class _HutComponentArray extends _ServerComponentArray<HutComponent, HutComponen
       const hutComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.hut);
       
       return {
-         doorRenderParts: getRenderThingsByTag(renderObject, "hutComponent:door") as Array<VisualRenderPart>,
+         doorRenderParts: getRenderThingsByTag(renderObject, "hutComponent:door") as VisualRenderPart[],
          recallMarker: hutComponentData.isRecalling ? createRecallMarker(hitbox) : null
       };
    }

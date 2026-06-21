@@ -5,8 +5,8 @@ class Chunk {
    public readonly x: number;
    public readonly y: number;
 
-   public readonly entities: Array<Entity> = [];
-   public readonly nonGrassEntities: Array<Entity> = [];
+   public readonly entities: Entity[] = [];
+   public readonly nonGrassEntities: Entity[] = [];
 
    constructor(x: number, y: number) {
       this.x = x;

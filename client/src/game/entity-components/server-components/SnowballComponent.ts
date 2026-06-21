@@ -6,7 +6,7 @@ import { Settings } from "../../../../../shared/src/settings";
 import { _point, randFloat, randAngle, randInt } from "../../../../../shared/src/utils";
 import { createSnowParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import Particle from "../../Particle";
 import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -29,7 +29,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snowball, _SnowballComponentArray> {}
 }
 
-class _SnowballComponentArray extends _ServerComponentArray<SnowballComponent, SnowballComponentData> {
+class _SnowballComponentArray extends ServerComponentArray<SnowballComponent, SnowballComponentData> {
    public decodeData(reader: PacketReader): SnowballComponentData {
       const size = reader.readNumber();
       return {

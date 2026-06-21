@@ -6,7 +6,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { createGemQuakeProjectile } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -17,7 +17,7 @@ export interface GuardianGemQuakeComponentData {}
 
 export interface GuardianGemQuakeComponent {}
 
-const TEXTURE_INDEXES: ReadonlyArray<TextureIndex> = [
+const TEXTURE_INDEXES: readonly TextureIndex[] = [
    TextureIndex.entities_guardianGemQuake_gem1,
    TextureIndex.entities_guardianGemQuake_gem2,
    TextureIndex.entities_guardianGemQuake_gem3
@@ -27,7 +27,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianGemQuake, _GuardianGemQuakeComponentArray> {}
 }
 
-class _GuardianGemQuakeComponentArray extends _ServerComponentArray<GuardianGemQuakeComponent, GuardianGemQuakeComponentData> {
+class _GuardianGemQuakeComponentArray extends ServerComponentArray<GuardianGemQuakeComponent, GuardianGemQuakeComponentData> {
    public decodeData(reader: PacketReader): GuardianGemQuakeComponentData {
       reader.padOffset(Bytes.Float32);
       return {};

@@ -99,7 +99,7 @@ const entityIsTargetted = (turret: Entity, entity: Entity): boolean => {
    return false;
 }
 
-const getTarget = (turret: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
+const getTarget = (turret: Entity, visibleEntities: readonly Entity[]): Entity | null => {
    const turretTransformComponent = TransformComponentArray.getComponent(turret);
    const turretHitbox = turretTransformComponent.hitboxes[0];
    

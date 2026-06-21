@@ -1,6 +1,6 @@
 import { LimbConfiguration } from "../../../../../shared/src/attack-patterns";
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { updateLimb_TEMP } from "./InventoryUseComponent";
@@ -19,7 +19,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.scrappy, _ScrappyComponentArray> {}
 }
 
-class _ScrappyComponentArray extends _ServerComponentArray<ScrappyComponent, ScrappyComponentData> {
+class _ScrappyComponentArray extends ServerComponentArray<ScrappyComponent, ScrappyComponentData> {
    public decodeData(): ScrappyComponentData {
       return {};
    }

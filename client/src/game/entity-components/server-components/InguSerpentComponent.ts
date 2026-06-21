@@ -9,7 +9,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { addMonocolourParticleToBufferContainer, highMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
@@ -27,7 +27,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguSerpent, _InguSerpentComponentArray> {}
 }
 
-class _InguSerpentComponentArray extends _ServerComponentArray<InguSerpentComponent, InguSerpentComponentData> {
+class _InguSerpentComponentArray extends ServerComponentArray<InguSerpentComponent, InguSerpentComponentData> {
    public decodeData(): InguSerpentComponentData {
       return {};
    }

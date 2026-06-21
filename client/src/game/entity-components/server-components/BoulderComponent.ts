@@ -3,7 +3,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { randAngle, randFloat, randItem } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createRockParticle, createRockSpeckParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -34,7 +34,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.boulder, BoulderComponentArray> {}
 }
 
-class BoulderComponentArray extends _ServerComponentArray<BoulderComponent, BoulderComponentData> {
+class BoulderComponentArray extends ServerComponentArray<BoulderComponent, BoulderComponentData> {
    public decodeData(reader: PacketReader): BoulderComponentData {
       const boulderType = reader.readNumber();
       return {

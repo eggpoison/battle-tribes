@@ -6,7 +6,7 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { angle, Colour, getTileIndexIncludingEdges, lerp } from "../../../../../shared/src/utils";
 import ColouredRenderPart from "../../render-parts/ColouredRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType, surfaceLayer } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -44,7 +44,7 @@ declare module "../component-registry" {
 
 const MAX_BEND = 6;
 
-const REED_COLOURS: ReadonlyArray<Colour> = [
+const REED_COLOURS: readonly Colour[] = [
    {
       r: 219/255,
       g: 215/255,
@@ -143,7 +143,7 @@ const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: Ent
    }
 }
 
-class _LayeredRodComponentArray extends _ServerComponentArray<LayeredRodComponent, LayeredRodComponentData> {
+class _LayeredRodComponentArray extends ServerComponentArray<LayeredRodComponent, LayeredRodComponentData> {
    public decodeData(reader: PacketReader): LayeredRodComponentData {
       const numLayers = reader.readNumber();
       const naturalBendX = reader.readNumber();

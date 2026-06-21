@@ -17,7 +17,7 @@ import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 const HEALTHS = [25, 75];
 
-export function createWallConfig(x: number, y: number, rotation: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualBuilding: VirtualStructure | null): EntityConfig {
+export function createWallConfig(x: number, y: number, rotation: number, tribe: Tribe, material: BuildingMaterial, connections: StructureConnection[], virtualBuilding: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
    const box = createRectangularBox(x, y, 0, 0, rotation, 64, 64);

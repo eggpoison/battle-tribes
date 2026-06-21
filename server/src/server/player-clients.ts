@@ -27,11 +27,11 @@ import { EntitySummonPacket } from "../../../shared/dist/dev-packets.js";
 /** Minimum number of units away from the border that the player will spawn at */
 const PLAYER_SPAWN_POSITION_PADDING = 300;
 
-const playerClients: Array<PlayerClient> = [];
+const playerClients: PlayerClient[] = [];
 
 const dirtyEntities = new Set<Entity>();
 
-export function getPlayerClients(): ReadonlyArray<PlayerClient> {
+export function getPlayerClients(): readonly PlayerClient[] {
    return playerClients;
 }
 
@@ -131,7 +131,7 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
    // if (inventoryComponentSummonData !== undefined) {
    //    config.components[ServerComponentType.inventory].inventories
       
-   //    const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
+   //    const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as InventoryName[];
    //    for (let i = 0; i < inventoryNames.length; i++) {
    //       const inventoryName = inventoryNames[i];
 
@@ -145,7 +145,7 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
    //       }
          
    //       const itemSlots = inventoryComponentSummonData.itemSlots[inventoryName]!;
-   //       for (const [itemSlotString, itemData] of Object.entries(itemSlots) as Array<[string, Item]>) {
+   //       for (const [itemSlotString, itemData] of Object.entries(itemSlots) as [string, Item][]) {
    //          const itemSlot = Number(itemSlotString);
             
    //          const item = createItem(itemData.type, itemData.count);
@@ -207,8 +207,8 @@ const shouldShowDamageNumber = (playerClient: PlayerClient, attackingEntity: Ent
    return false;
 }
 
-const getPlayersViewingEntity = (entity: Entity): ReadonlyArray<PlayerClient> => {
-   const viewingPlayerClients: Array<PlayerClient> = [];
+const getPlayersViewingEntity = (entity: Entity): readonly PlayerClient[] => {
+   const viewingPlayerClients: PlayerClient[] = [];
    // @Speed: will probs become a major source of slowness with 50+ players
    for (let i = 0; i < playerClients.length; i++) {
       const playerClient = playerClients[i];
@@ -219,13 +219,13 @@ const getPlayersViewingEntity = (entity: Entity): ReadonlyArray<PlayerClient> =>
    return viewingPlayerClients;
 }
 
-const getPlayersViewingPosition = (minX: number, maxX: number, minY: number, maxY: number): ReadonlyArray<PlayerClient> => {
+const getPlayersViewingPosition = (minX: number, maxX: number, minY: number, maxY: number): readonly PlayerClient[] => {
    const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
 
-   const viewingPlayerClients: Array<PlayerClient> = [];
+   const viewingPlayerClients: PlayerClient[] = [];
    // @Speed: will probs become a major source of slowness with 50+ players
    for (let i = 0; i < playerClients.length; i++) {
       const playerClient = playerClients[i];

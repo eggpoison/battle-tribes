@@ -284,7 +284,7 @@ function onTick(krumblid: Entity): void {
 
    // Herd AI
    // @Incomplete: Steer the herd away from non-plains biomes
-   let herdMembers: Array<Entity> = [];
+   let herdMembers: Entity[] = [];
    for (const entity of aiHelperComponent.visibleEntities) {
       if (getEntityType(entity) === EntityType.krumblid) {
          herdMembers.push(entity);

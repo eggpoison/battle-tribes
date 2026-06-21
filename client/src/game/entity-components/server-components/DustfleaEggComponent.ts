@@ -1,6 +1,6 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { randAngle } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -16,7 +16,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustfleaEgg, _DustfleaEggComponentArray> {}
 }
 
-class _DustfleaEggComponentArray extends _ServerComponentArray<DustfleaEggComponent, DustfleaEggComponentData> {
+class _DustfleaEggComponentArray extends ServerComponentArray<DustfleaEggComponent, DustfleaEggComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

@@ -17,7 +17,7 @@ import PlayerClient from "./PlayerClient.js";
 import { SERVER } from "./server.js";
 
 interface VisibleLocalBiomeInfo {
-   readonly visibleLocalBiomes: ReadonlyArray<LocalBiome>;
+   readonly visibleLocalBiomes: readonly LocalBiome[];
    readonly tileToLocalBiomeMap: Map<TileIndex, LocalBiome>;
 }
 
@@ -53,7 +53,7 @@ const createTileToLocalBiomeMap = (playerClient: PlayerClient, localBiome: Local
 }
 
 const getVisibleLocalBiomeInfo = (playerClient: PlayerClient): VisibleLocalBiomeInfo => {
-   const localBiomes: Array<LocalBiome> = [];
+   const localBiomes: LocalBiome[] = [];
    const tileToLocalBiomeMap = new Map<TileIndex, LocalBiome>();
    
    const minTileX = clampToBoardDimensions(Math.floor(playerClient.minVisibleX / Settings.TILE_SIZE));

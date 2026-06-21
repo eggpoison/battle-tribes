@@ -48,7 +48,7 @@ export function createChunkBorderShaders(): void {
 export function renderChunkBorders(minX: number, maxX: number, minY: number, maxY: number, chunkSize: number, thickness: number): void {
    gl.useProgram(program);
    
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
 
    const halfThickness = thickness/2;
 

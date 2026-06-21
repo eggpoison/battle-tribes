@@ -14,24 +14,24 @@ export abstract class ComponentArray<
    
    private readonly isActiveByDefault: boolean;
    
-   public entities: Array<Entity> = [];
-   public components: Array<Component> = [];
+   public entities: Entity[] = [];
+   public components: Component[] = [];
 
    /** Maps entity IDs to component indexes */
    private entityToIndexMap: Partial<Record<Entity, number>> = {};
    /** Maps component indexes to entity IDs */
    private indexToEntityMap: Partial<Record<number, Entity>> = {};
    
-   public activeEntities: Array<Entity> = [];
-   public activeComponents: Array<Component> = [];
+   public activeEntities: Entity[] = [];
+   public activeComponents: Component[] = [];
 
    /** Maps entity IDs to component indexes */
    private activeEntityToIndexMap: Partial<Record<Entity, number>> = {};
    /** Maps component indexes to entity IDs */
    private activeIndexToEntityMap: Record<number, Entity> = {};
 
-   private readonly deactivateBuffer: Array<Entity> = [];
-   private readonly removeBuffer: Array<Entity> = [];
+   private readonly deactivateBuffer: Entity[] = [];
+   private readonly removeBuffer: Entity[] = [];
 
    // In reality this is just all information beyond its config which the component wishes to expose to other components
    // This is a separate layer so that, for example, components can immediately get render parts without having to wait for onLoad (introducing polymorphism)

@@ -44,7 +44,7 @@ export const TRIBESMAN_COMMUNICATION_RANGE = 1000;
 
 const MESSAGE_INTERVAL_TICKS = 2 * Settings.TICK_RATE;
 
-const getCommunicationTargets = (tribesman: Entity): ReadonlyArray<Entity> => {
+const getCommunicationTargets = (tribesman: Entity): readonly Entity[] => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];
    
@@ -57,7 +57,7 @@ const getCommunicationTargets = (tribesman: Entity): ReadonlyArray<Entity> => {
 
    const tribeComponent = TribeComponentArray.getComponent(tribesman);
    
-   const communcationTargets: Array<Entity> = [];
+   const communcationTargets: Entity[] = [];
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);
@@ -81,7 +81,7 @@ const getCommunicationTargets = (tribesman: Entity): ReadonlyArray<Entity> => {
 
 // @Cleanup: unused?
 /** Called while fighting an enemy, it calls other tribesman to move to the position of the fighting */
-const sendCallToArmsMessage = (tribesman: Entity, communicationTargets: ReadonlyArray<Entity>, targetEntity: Entity): void => {
+const sendCallToArmsMessage = (tribesman: Entity, communicationTargets: readonly Entity[], targetEntity: Entity): void => {
    const targetTransformComponent = TransformComponentArray.getComponent(targetEntity);
    const targetHitbox = targetTransformComponent.hitboxes[0];
    
@@ -95,7 +95,7 @@ const sendCallToArmsMessage = (tribesman: Entity, communicationTargets: Readonly
    }
 }
 
-const sendHelpMessage = (communicatingTribesman: Entity, communicationTargets: ReadonlyArray<Entity>): void => {
+const sendHelpMessage = (communicatingTribesman: Entity, communicationTargets: readonly Entity[]): void => {
    const transformComponent = TransformComponentArray.getComponent(communicatingTribesman);
    const communicatingTribesmanHitbox = transformComponent.hitboxes[0];
    
@@ -370,10 +370,10 @@ export function tickTribesman(tribesman: Entity): void {
    // @Speed: we could store these arrays on the entity, and then when an entity is added/removed from the
    // visible entities array we could also add/remove them to these.
    // Categorise visible entities
-   const visibleEnemies: Array<Entity> = [];
-   const visibleEnemyBuildings: Array<Entity> = [];
-   const visibleHostileMobs: Array<Entity> = [];
-   const visibleItemEntities: Array<Entity> = [];
+   const visibleEnemies: Entity[] = [];
+   const visibleEnemyBuildings: Entity[] = [];
+   const visibleHostileMobs: Entity[] = [];
+   const visibleItemEntities: Entity[] = [];
    for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
       const entity = aiHelperComponent.visibleEntities[i];
 

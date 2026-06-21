@@ -39,10 +39,10 @@ let transitionProgram: WebGLProgram;
 let foamProgram: WebGLProgram;
 let steppingStoneProgram: WebGLProgram;
 
-const riverFoamVAOs: Array<WebGLVertexArrayObject> = [];
-const riverFoamVertexCounts: Array<number> = [];
-const riverSteppingStoneVAOs: Array<WebGLVertexArrayObject> = [];
-const riverSteppingStoneVertexCounts: Array<number> = [];
+const riverFoamVAOs: readonly WebGLVertexArrayObject[] = [];
+const riverFoamVertexCounts: number[] = [];
+const riverSteppingStoneVAOs: readonly WebGLVertexArrayObject[] = [];
+const riverSteppingStoneVertexCounts: number[] = [];
 
 let baseProgramOpacityUniformLocation: WebGLUniformLocation;
 let baseProgramIsUndergroundUniformLocation: WebGLUniformLocation;
@@ -50,9 +50,9 @@ let baseProgramIsUndergroundUniformLocation: WebGLUniformLocation;
 // @INCOMPLETE: All the stepping stone stuff!
 
 // @SQUEAM
-// export function createRiverSteppingStoneData(riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>): void {
+// export function createRiverSteppingStoneData(riverSteppingStones: readonly RiverSteppingStoneData[]): void {
 //    // Group the stepping stones
-//    const groups: Array<Array<RiverSteppingStoneData>> = [];
+//    const groups: RiverSteppingStoneData[][] = [];
 //    for (const steppingStone of riverSteppingStones) {
 //       if (groups[steppingStone.groupID] === undefined) {
 //          groups[steppingStone.groupID] = [];
@@ -744,7 +744,7 @@ const calculateTransitionVertexData = (layer: Layer, renderChunkX: number, rende
    const maxTileY = getRenderChunkMaxTileY(renderChunkY);
 
    // Find all tiles neighbouring water in the render chunk
-   const edgeTiles: Array<TileIndex> = [];
+   const edgeTiles: TileIndex[] = [];
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -860,7 +860,7 @@ const calculateTransitionVertexData = (layer: Layer, renderChunkX: number, rende
    return vertexData;
 }
 
-const calculateRockVertexData = (waterRocks: ReadonlyArray<WaterRockData>): Float32Array => {
+const calculateRockVertexData = (waterRocks: readonly WaterRockData[]): Float32Array => {
    const numRocks = waterRocks.length;
    
    const vertexData = new Float32Array(numRocks * 6 * 6);
@@ -939,7 +939,7 @@ const calculateRockVertexData = (waterRocks: ReadonlyArray<WaterRockData>): Floa
    return vertexData;
 }
 
-const calculateBaseVertexData = (layer: Layer, waterTiles: ReadonlyArray<TileIndex>): Float32Array => {
+const calculateBaseVertexData = (layer: Layer, waterTiles: readonly TileIndex[]): Float32Array => {
    const vertexData = new Float32Array(waterTiles.length * 6 * 8);
 
    for (let i = 0; i < waterTiles.length; i++) {
@@ -1027,7 +1027,7 @@ const calculateBaseVertexData = (layer: Layer, waterTiles: ReadonlyArray<TileInd
 }
 
 // @SQUEAM
-// const calculateFoamVertexData = (steppingStones: ReadonlyArray<RiverSteppingStoneData>): Float32Array => {
+// const calculateFoamVertexData = (steppingStones: readonly RiverSteppingStoneData[]): Float32Array => {
 //    const vertexData = new Float32Array(steppingStones.length * 6 * 7);
 
 //    let i = 0;
@@ -1291,13 +1291,13 @@ const createSteppingStoneVAO = (buffer: WebGLBuffer): WebGLVertexArrayObject => 
    return vao;
 }
 
-const getRenderChunkWaterTiles = (layer: Layer, renderChunkX: number, renderChunkY: number): ReadonlyArray<TileIndex> => {
+const getRenderChunkWaterTiles = (layer: Layer, renderChunkX: number, renderChunkY: number): readonly TileIndex[] => {
    const minTileX = getRenderChunkMinTileX(renderChunkX);
    const maxTileX = getRenderChunkMaxTileX(renderChunkX);
    const minTileY = getRenderChunkMinTileY(renderChunkY);
    const maxTileY = getRenderChunkMaxTileY(renderChunkY);
 
-   const tiles: Array<TileIndex> = [];
+   const tiles: TileIndex[] = [];
    for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
       for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -1360,7 +1360,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
    return false;
 }
 
-export function calculateRiverRenderChunkData(layer: Layer, renderChunkX: number, renderChunkY: number, waterRocks: ReadonlyArray<WaterRockData>): RenderChunkRiverInfo | null {
+export function calculateRiverRenderChunkData(layer: Layer, renderChunkX: number, renderChunkY: number, waterRocks: readonly WaterRockData[]): RenderChunkRiverInfo | null {
    const waterTiles = getRenderChunkWaterTiles(layer, renderChunkX, renderChunkY);
 
    // If there are no water tiles don't calculate any data
@@ -1399,7 +1399,7 @@ export function calculateRiverRenderChunkData(layer: Layer, renderChunkX: number
 
    // @SQUEAM
    // // Calculate group IDs present in stepping stones in the chunk
-   // const groupIDs: Array<number> = [];
+   // const groupIDs: number[] = [];
    // if (renderChunkX >= 0 && renderChunkX < WORLD_RENDER_CHUNK_SIZE && renderChunkY >= 0 && renderChunkY < WORLD_RENDER_CHUNK_SIZE) {
    //    for (let chunkX = renderChunkX * 2; chunkX <= renderChunkX * 2 + 1; chunkX++) {
    //       for (let chunkY = renderChunkY * 2; chunkY <= renderChunkY * 2 + 1; chunkY++) {
@@ -1435,7 +1435,7 @@ export function calculateRiverRenderChunkData(layer: Layer, renderChunkX: number
    };
 }
 
-const calculateNoiseVertexData = (layer: Layer, waterTiles: ReadonlyArray<TileIndex>): Float32Array => {
+const calculateNoiseVertexData = (layer: Layer, waterTiles: readonly TileIndex[]): Float32Array => {
    let numInstances = 0;
    for (const tileIndex of waterTiles) {
       const flowDirectionIdx = layer.getRiverFlowDirection(tileIndex);
@@ -1529,7 +1529,7 @@ const calculateNoiseVertexData = (layer: Layer, waterTiles: ReadonlyArray<TileIn
 }
 
 // @SQUEAM
-// const calculateSteppingStoneVertexData = (steppingStones: ReadonlyArray<RiverSteppingStoneData>): Float32Array => {
+// const calculateSteppingStoneVertexData = (steppingStones: readonly RiverSteppingStoneData[]): Float32Array => {
 //    const vertexData = new Float32Array(steppingStones.length * 6 * 5);
 
 //    let i = 0;
@@ -1596,7 +1596,7 @@ const calculateNoiseVertexData = (layer: Layer, waterTiles: ReadonlyArray<TileIn
 //    return vertexData;
 // }
 
-const calculateHighlightsVertexData = (waterTiles: ReadonlyArray<TileIndex>): Float32Array => {
+const calculateHighlightsVertexData = (waterTiles: readonly TileIndex[]): Float32Array => {
    const vertexData = new Float32Array(waterTiles.length * 6 * 5);
    
    for (let i = 0; i < waterTiles.length; i++) {
@@ -1653,9 +1653,9 @@ const calculateHighlightsVertexData = (waterTiles: ReadonlyArray<TileIndex>): Fl
    return vertexData;
 }
 
-export function calculateVisibleRiverInfo(layer: Layer): ReadonlyArray<RenderChunkRiverInfo> {
+export function calculateVisibleRiverInfo(layer: Layer): readonly RenderChunkRiverInfo[] {
    // @Speed: Garbage collection
-   const riverInfoArray: Array<RenderChunkRiverInfo> = [];
+   const riverInfoArray: RenderChunkRiverInfo[] = [];
 
    for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
       for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
@@ -1669,7 +1669,7 @@ export function calculateVisibleRiverInfo(layer: Layer): ReadonlyArray<RenderChu
    return riverInfoArray;
 }
 
-export function renderLowerRiverFeatures(layer: Layer, visibleRenderChunks: ReadonlyArray<RenderChunkRiverInfo>): void {
+export function renderLowerRiverFeatures(layer: Layer, visibleRenderChunks: readonly RenderChunkRiverInfo[]): void {
    // 
    // Base program
    // 
@@ -1738,10 +1738,10 @@ export function renderLowerRiverFeatures(layer: Layer, visibleRenderChunks: Read
    gl.bindVertexArray(null);
 }
 
-export function renderUpperRiverFeatures(layer: Layer, visibleRenderChunks: ReadonlyArray<RenderChunkRiverInfo>): void {
+export function renderUpperRiverFeatures(layer: Layer, visibleRenderChunks: readonly RenderChunkRiverInfo[]): void {
    // @SQUEAM
    // // Calculate visible stepping stone groups
-   // const steppingStoneGroupIDs: Array<number> = [];
+   // const steppingStoneGroupIDs: number[] = [];
    // for (const chunk of visibleRenderChunks) {
    //    for (const groupID of chunk.riverSteppingStoneGroupIDs) {
    //       if (!steppingStoneGroupIDs.includes(groupID)) {

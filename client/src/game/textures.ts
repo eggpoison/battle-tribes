@@ -1,4 +1,4 @@
-import { assert } from "../../../shared/src/utils";
+import { assert, assertMsg } from "../../../shared/src/utils";
 import { gl } from "./webgl";
 import { imageIsLoaded } from "./utils";
 import { FLOOR_TILE_TEXTURE_SOURCE_RECORD, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
@@ -10,7 +10,7 @@ const itemImages = import.meta.glob("/src/images/**/*", { eager: true, query: "?
 
 let TEXTURES: { [key: string]: WebGLTexture } = {};
 
-const miscTextureSources: Array<string> = [
+const miscTextureSources: string[] = [
    "miscellaneous/river/gravel.png",
    "miscellaneous/river/water-rock-large.png",
    "miscellaneous/river/water-rock-small.png",
@@ -30,7 +30,7 @@ const miscTextureSources: Array<string> = [
 // @Hack. remove
 export const TEXTURE_IMAGE_RECORD: Record<string, HTMLImageElement> = {};
 
-export function preloadTextureImages(): Array<HTMLImageElement> {
+export function preloadTextureImages(): HTMLImageElement[] {
    // Add floor tile textures
    for (const textureSource of Object.values(FLOOR_TILE_TEXTURE_SOURCE_RECORD)) {
       if (textureSource !== null && !miscTextureSources.includes(textureSource)) {
@@ -48,11 +48,11 @@ export function preloadTextureImages(): Array<HTMLImageElement> {
       }
    }
 
-   const images: Array<HTMLImageElement> = [];
+   const images: HTMLImageElement[] = [];
    for (let i = 0; i < miscTextureSources.length; i++) {
       const textureSource = miscTextureSources[i];
       const texture = itemImages["/src/images/" + textureSource] as string;
-      assert(texture !== undefined);
+      assert(texture);
       
       const image = new Image();
       image.src = texture;
@@ -61,7 +61,7 @@ export function preloadTextureImages(): Array<HTMLImageElement> {
    return images;
 } 
 
-export async function loadTextures(textureImages: Array<HTMLImageElement>): Promise<void> {
+export async function loadTextures(textureImages: HTMLImageElement[]): Promise<void> {
    // Create textures after all images are loaded
    for (let i = 0; i < textureImages.length; i++) {
       const image = textureImages[i];
@@ -90,8 +90,6 @@ export async function loadTextures(textureImages: Array<HTMLImageElement>): Prom
 }
 
 export function getTexture(textureSource: string): WebGLTexture {
-   if (!TEXTURES.hasOwnProperty(textureSource)) {
-      throw new Error(`Couldn't find texture with source '${textureSource}'`);
-   }
+   assertMsg(TEXTURES[textureSource], `Couldn't find texture with source '${textureSource}'`);
    return TEXTURES[textureSource];
 }

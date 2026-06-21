@@ -1,6 +1,6 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { randInt } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -16,7 +16,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spikyBastard, _SpikyBastardComponentArray> {}
 }
 
-class _SpikyBastardComponentArray extends _ServerComponentArray<SpikyBastardComponent, SpikyBastardComponentData> {
+class _SpikyBastardComponentArray extends ServerComponentArray<SpikyBastardComponent, SpikyBastardComponentData> {
    public decodeData(): SpikyBastardComponentData {
       return createSpikyBastardComponentData();
    }

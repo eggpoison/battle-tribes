@@ -8,7 +8,7 @@ import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, create
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
@@ -23,7 +23,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmok, _TukmokComponentArray> {}
 }
 
-class _TukmokComponentArray extends _ServerComponentArray<TukmokComponent, TukmokComponentData> {
+class _TukmokComponentArray extends ServerComponentArray<TukmokComponent, TukmokComponentData> {
    public decodeData(): TukmokComponentData {
       return {};
    }

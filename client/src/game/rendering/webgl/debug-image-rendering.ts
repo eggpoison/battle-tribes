@@ -56,7 +56,7 @@ export function createDebugImageShaders(): void {
 }
 
 export function renderDebugImages(): void {
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
    for (let i = 0; i < TransformComponentArray.components.length; i++) {
       const transformComponent = TransformComponentArray.components[i];
 

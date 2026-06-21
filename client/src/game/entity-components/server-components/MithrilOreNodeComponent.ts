@@ -8,7 +8,7 @@ import { createColouredParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -27,7 +27,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.mithrilOreNode, _MithrilOreNodeComponentArray> {}
 }
 
-class _MithrilOreNodeComponentArray extends _ServerComponentArray<MithrilOreNodeComponent, MithrilOreNodeComponentData> {
+class _MithrilOreNodeComponentArray extends ServerComponentArray<MithrilOreNodeComponent, MithrilOreNodeComponentData> {
    public decodeData(reader: PacketReader): MithrilOreNodeComponentData {
       const size = reader.readNumber();
       const variant = reader.readNumber();

@@ -6,7 +6,7 @@ import { lerp, distance, angle, Point, randInt } from "../../../../../shared/src
 import { createHealingParticle } from "../../particles";
 import { Light, removeLight } from "../../lights";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -16,15 +16,15 @@ import { registerServerComponentArray } from "../component-registry";
 import { TextureIndex } from "../../../texture-index";
 
 export interface HealingTotemComponentData {
-   readonly healingTargetsData: ReadonlyArray<HealingTotemTargetData>;
+   readonly healingTargetsData: readonly HealingTotemTargetData[];
 }
 
 export interface HealingTotemComponent {
    // @Hack @Temporary: make readonly
-   healingTargetsData: ReadonlyArray<HealingTotemTargetData>;
+   healingTargetsData: readonly HealingTotemTargetData[];
 
    ticksSpentHealing: number;
-   readonly eyeLights: Array<Light>;
+   readonly eyeLights: Light[];
 }
 
 declare module "../component-registry" {
@@ -34,9 +34,9 @@ declare module "../component-registry" {
 const EYE_LIGHTS_TRANSFORM_TICKS = Math.floor(0.5 * Settings.DT_S);
 const BASELINE_EYE_LIGHT_INTENSITY = 0.5;
 
-class _HealingTotemComponentArray extends _ServerComponentArray<HealingTotemComponent, HealingTotemComponentData> {
+class _HealingTotemComponentArray extends ServerComponentArray<HealingTotemComponent, HealingTotemComponentData> {
    public decodeData(reader: PacketReader): HealingTotemComponentData {
-      const healTargets: Array<HealingTotemTargetData> = [];
+      const healTargets: HealingTotemTargetData[] = [];
       const numTargets = reader.readNumber();
       for (let i = 0; i < numTargets; i++) {
          const healTarget: Entity = reader.readNumber();

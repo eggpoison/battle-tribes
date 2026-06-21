@@ -4,7 +4,7 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { Settings } from "../../../../../shared/src/settings";
 import { createPoisonParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
@@ -23,7 +23,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimeSpit, _SlimeSpitComponentArray> {}
 }
 
-class _SlimeSpitComponentArray extends _ServerComponentArray<SlimeSpitComponent, SlimeSpitComponentData> {
+class _SlimeSpitComponentArray extends ServerComponentArray<SlimeSpitComponent, SlimeSpitComponentData> {
    public decodeData(reader: PacketReader): SlimeSpitComponentData {
       reader.padOffset(Bytes.Float32);
       return {};

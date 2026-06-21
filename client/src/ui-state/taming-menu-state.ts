@@ -18,6 +18,6 @@ export const tamingMenuState = {
    tamingTier: 0,
    name: "",
    foodEatenInTier: 0,
-   acquiredSkills: new Array<TamingSkillID>(),
-   skillLearningArray: new Array<TamingSkillLearning>()
+   acquiredSkills: [] as TamingSkillID[],
+   skillLearningArray: [] as TamingSkillLearning[]
 };

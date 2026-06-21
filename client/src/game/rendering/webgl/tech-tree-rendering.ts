@@ -260,7 +260,7 @@ export function createTechTreeShaders(): void {
 }
 
 const renderBackground = (): void => {
-   const techPositions: Array<number> = [];
+   const techPositions: number[] = [];
    for (const tech of TECHS) {
       if (techIsDirectlyAccessible(tech)) {
          techPositions.push(tech.positionX);
@@ -322,7 +322,7 @@ const calculateYScreenPos = (y: number): number => {
    return position;
 }
 
-const addConnectorVertices = (vertices: Array<number>, startTech: Tech, endTech: Tech, type: number): void => {
+const addConnectorVertices = (vertices: number[], startTech: Tech, endTech: Tech, type: number): void => {
    const direction = angle(endTech.positionX - startTech.positionX, endTech.positionY - startTech.positionY);
    const perpendicularDirection1 = direction + Math.PI / 2;
    const perpendicularDirection2 = direction - Math.PI / 2;
@@ -379,8 +379,8 @@ export function techIsDirectlyAccessible(tech: Tech): boolean {
    return true;
 }
 
-const calculateConnectorVertices = (): ReadonlyArray<number> => {
-   const vertices: Array<number> = [];
+const calculateConnectorVertices = (): readonly number[] => {
+   const vertices: number[] = [];
    
    // For all unlocked techs, draw the connectors for their dependencies
    for (const tech of playerTribe.unlockedTechs) {
@@ -401,7 +401,7 @@ const calculateConnectorVertices = (): ReadonlyArray<number> => {
    }
 
    // Conflicting connection ids
-   const conflictingConnectionIDs: Array<TechID> = [];
+   const conflictingConnectionIDs: TechID[] = [];
    for (const tech of TECHS) {
       if (!playerTribe.unlockedTechs.includes(tech) && techIsDirectlyAccessible(tech)) {
          for (const conflictingTechID of tech.conflictingTechs) {

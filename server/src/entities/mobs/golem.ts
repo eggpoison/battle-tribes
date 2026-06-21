@@ -34,7 +34,7 @@ registerEntityLootOnDeath(EntityType.golem, {
    getAmount: () => randInt(10, 20)
 });
 
-const hitboxIsTooClose = (existingHitboxes: ReadonlyArray<Hitbox>, hitboxX: number, hitboxY: number): boolean => {
+const hitboxIsTooClose = (existingHitboxes: readonly Hitbox[], hitboxX: number, hitboxY: number): boolean => {
    for (let j = 0; j < existingHitboxes.length; j++) {
       const otherHitbox = existingHitboxes[j];
       const otherBox = otherHitbox.box;
@@ -48,7 +48,7 @@ const hitboxIsTooClose = (existingHitboxes: ReadonlyArray<Hitbox>, hitboxX: numb
    return false;
 }
 
-const getMinSeparationFromOtherHitboxes = (hitboxes: ReadonlyArray<Hitbox>, hitboxX: number, hitboxY: number, hitboxRadius: number): number => {
+const getMinSeparationFromOtherHitboxes = (hitboxes: readonly Hitbox[], hitboxX: number, hitboxY: number, hitboxRadius: number): number => {
    let minSeparation = 999.9;
    for (let i = 0; i < hitboxes.length; i++) {
       const otherHitbox = hitboxes[i].box as CircularBox;
@@ -63,7 +63,7 @@ const getMinSeparationFromOtherHitboxes = (hitboxes: ReadonlyArray<Hitbox>, hitb
 }
 
 export function createGolemConfig(x: number, y: number, rotation: number): EntityConfig {
-   const lights: Array<LightCreationInfo> = [];
+   const lights: LightCreationInfo[] = [];
    
    const transformComponent = new TransformComponent();
    

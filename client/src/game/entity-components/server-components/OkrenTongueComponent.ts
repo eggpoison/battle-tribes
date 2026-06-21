@@ -1,6 +1,6 @@
 import { HitboxTag } from "../../../../../shared/src/boxes";
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
@@ -17,7 +17,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.okrenTongue, _OkrenTongueComponentArray> {}
 }
 
-class _OkrenTongueComponentArray extends _ServerComponentArray<OkrenTongueComponent, OkrenTongueComponentData> {
+class _OkrenTongueComponentArray extends ServerComponentArray<OkrenTongueComponent, OkrenTongueComponentData> {
    public decodeData(): OkrenTongueComponentData {
       return createOkrenTongueComponentData();
    }

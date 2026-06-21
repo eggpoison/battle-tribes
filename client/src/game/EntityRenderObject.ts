@@ -33,11 +33,11 @@ export class EntityRenderObject {
    public readonly renderHeight: number;
 
    /** Stores all render parts attached to the object, sorted ascending based on zIndex. (So that render part with smallest zIndex is rendered first) */
-   public readonly renderPartsByZIndex: Array<RenderPart> = [];
+   public readonly renderPartsByZIndex: RenderPart[] = [];
    /** Render parts attached to hitboxes. */
-   public readonly rootRenderParts: Array<RenderPart> = [];
+   public readonly rootRenderParts: RenderPart[] = [];
 
-   public readonly renderPartOverlayGroups: Array<RenderPartOverlayGroup> = [];
+   public readonly renderPartOverlayGroups: RenderPartOverlayGroup[] = [];
    
    // @Memory: bruh
    /** Amount the entity's render parts will shake */

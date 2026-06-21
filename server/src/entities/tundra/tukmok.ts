@@ -127,8 +127,8 @@ function wanderPositionIsValid(tukmok: Entity, layer: Layer, x: number, y: numbe
    return biome === Biome.tundra;
 }
 
-export function createTukmokConfig(x: number, y: number, angle: number): ReadonlyArray<EntityConfig> {
-   const entityConfigs: Array<EntityConfig> = [];
+export function createTukmokConfig(x: number, y: number, angle: number): readonly EntityConfig[] {
+   const entityConfigs: EntityConfig[] = [];
    
    const transformComponent = new TransformComponent();
 
@@ -162,7 +162,7 @@ export function createTukmokConfig(x: number, y: number, angle: number): Readonl
    // Children
    // 
 
-   const childConfigs: Array<ChildConfigAttachInfo> = [];
+   const childConfigs: ChildConfigAttachInfo[] = [];
 
    // Head spurs
    for (let i = 0; i < 2; i++) {

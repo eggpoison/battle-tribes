@@ -7,6 +7,7 @@
 @import "./game/inventories/barrel-inventory.css";
 @import "./game/inventories/tombstone-epitaph.css";
 @import "./game/inventories/ammo-box-inventory.css";
+@import "./game/inventories/held-item.css";
 @import "./game/charge-meter.css";
 @import "./game/menus/crafting-menu.css";
 @import "./game/nerd-vision/nerd-vision.css";
@@ -62,10 +63,7 @@ canvas {
    width: 100%;
    height: 100%;
    background-color: red;
-   /* top: 0;
-   right: 0;
-   bottom: 0;
-   left: 0; */
+   /* inset: 0; */
 }
 
 #text-canvas {
@@ -74,10 +72,7 @@ canvas {
 
 #game-interactable-layer {
    position: absolute;
-   top: 0;
-   right: 0;
-   bottom: 0;
-   left: 0;
+   inset: 0;
    -webkit-user-drag: none;
    -webkit-user-select: none;
    user-select: none;
@@ -85,10 +80,7 @@ canvas {
 
 #summon-entity-veil {
    position: absolute;
-   top: 0;
-   right: 0;
-   bottom: 0;
-   left: 0;
+   inset: 0;
    box-shadow: 0 0 80px 10px rgba(0, 0, 0, 0.7) inset;
    z-index: 1;
    cursor: pointer;

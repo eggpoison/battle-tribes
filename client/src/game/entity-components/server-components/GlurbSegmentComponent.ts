@@ -14,7 +14,7 @@ import { entityIsVisibleToCamera, TransformComponentArray } from "./TransformCom
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TextureIndex } from "../../../texture-index";
 
 export interface GlurbSegmentComponentData {
@@ -33,7 +33,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbSegment, _GlurbSegmentComponentArray> {}
 }
 
-class _GlurbSegmentComponentArray extends _ServerComponentArray<GlurbSegmentComponent, GlurbSegmentComponentData, IntermediateInfo> {
+class _GlurbSegmentComponentArray extends ServerComponentArray<GlurbSegmentComponent, GlurbSegmentComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): GlurbSegmentComponentData {
       const mossBallCompleteness = reader.readNumber();
       return {

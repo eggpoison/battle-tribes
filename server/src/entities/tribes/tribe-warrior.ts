@@ -31,13 +31,13 @@ const turnFunc = () => {
    throw new Error();
 }
 
-const generateScars = (): ReadonlyArray<ScarInfo> => {
+const generateScars = (): readonly ScarInfo[] => {
    let numScars = 1;
    while (Math.random() < 0.65 / numScars) {
       numScars++;
    }
 
-   const scars: Array<ScarInfo> = [];
+   const scars: ScarInfo[] = [];
    for (let i = 0; i < numScars; i++) {
       const offsetDirection = randAngle();
       const offsetMagnitude = 20 * Math.random();

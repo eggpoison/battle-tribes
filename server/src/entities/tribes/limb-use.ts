@@ -104,7 +104,7 @@ export function beginSwing(attackingEntity: Entity, itemSlot: number, inventoryN
 }
 
 // @Incomplete
-// export function calculateRepairTarget(tribeMember: Entity, targetEntities: ReadonlyArray<Entity>): Entity | null {
+// export function calculateRepairTarget(tribeMember: Entity, targetEntities: readonly Entity[]): Entity | null {
 //    const transformComponent = TransformComponentArray.getComponent(tribeMember);
 
 //    let closestEntity: Entity | null = null;

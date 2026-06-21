@@ -14,7 +14,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createFurnaceConfig(x: number, y: number, angle: number, tribe: Tribe): EntityComponentData {
-   const hitboxes: Array<Hitbox> = [];
+   const hitboxes: Hitbox[] = [];
    let hitboxLocalID = 0;
 
    const box = createRectangularBox(x, y, 0, 0, angle, 64, 64);

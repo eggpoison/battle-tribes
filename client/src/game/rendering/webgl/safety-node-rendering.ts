@@ -21,17 +21,17 @@ const HIGHLIGHTED_NODE_THICKNESS = 3;
 
 let program: WebGLProgram;
 
-let safetyNodes: ReadonlyArray<SafetyNodeData> = [];
+let safetyNodes: readonly SafetyNodeData[] = [];
 
-let visibleWalls: ReadonlyArray<TribeWallData> = [];
-let buildingPlans: ReadonlyArray<BuildingPlanData> = [];
+let visibleWalls: readonly TribeWallData[] = [];
+let buildingPlans: readonly BuildingPlanData[] = [];
 
-export function setVisibleSafetyNodes(newSafetyNodes: ReadonlyArray<SafetyNodeData>): void {
+export function setVisibleSafetyNodes(newSafetyNodes: readonly SafetyNodeData[]): void {
    // @Speed: Garbage collection
    safetyNodes = newSafetyNodes;
 }
 
-export function getVisibleBuildingPlans(): ReadonlyArray<BuildingPlanData> {
+export function getVisibleBuildingPlans(): readonly BuildingPlanData[] {
    return buildingPlans;
 }
 
@@ -95,13 +95,13 @@ export function createSafetyNodeShaders(): void {
    bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 }
 
-const getHighlightedNodes = (): ReadonlyArray<WallSideNodeData> => {
+const getHighlightedNodes = (): readonly WallSideNodeData[] => {
    const hoveredEntity = entitySelectionState.hoveredEntity;
    if (hoveredEntity === null) {
       return [];
    }
 
-   const highlightedNodes: Array<WallSideNodeData> = [];
+   const highlightedNodes: WallSideNodeData[] = [];
    for (const wallData of visibleWalls) {
       if (wallData.wallID === hoveredEntity) {
          for (let k = 0; k < wallData.topSideNodes.length; k++) {

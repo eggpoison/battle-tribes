@@ -35,12 +35,12 @@ interface CollapseInfo {
    readonly layer: Layer;
    age: number;
    readonly originSubtileIndex: number;
-   readonly collapsingSubtiles: Array<number>;
+   readonly collapsingSubtiles: number[];
    // Used to expand the collapse
-   readonly collapsedSubtiles: Array<number>;
+   readonly collapsedSubtiles: number[];
 }
 
-const ongoingCollapses: Array<CollapseInfo> = [];
+const ongoingCollapses: CollapseInfo[] = [];
 
 /** Contains all tiles currently involved in collapsing */
 const collapsingSubtileSet = new Set<number>();
@@ -301,8 +301,8 @@ export function runCollapses(): void {
    }
 }
 
-export function getPlayerNearbyCollapses(playerClient: PlayerClient): ReadonlyArray<[CollapseInfo, number]> {
-   const nearbyCollapses: Array<[CollapseInfo, number]> = [];
+export function getPlayerNearbyCollapses(playerClient: PlayerClient): readonly [CollapseInfo, number][] {
+   const nearbyCollapses: [CollapseInfo, number][] = [];
    
    // @Speed
    for (const collapse of ongoingCollapses) {
@@ -343,14 +343,14 @@ export function deregisterEntitySupports(transformComponent: TransformComponent)
    // @Incomplete
 }
 
-export function getVisibleSubtileSupports(playerClient: PlayerClient): ReadonlyArray<number> {
+export function getVisibleSubtileSupports(playerClient: PlayerClient): readonly number[] {
    // @Copynpaste
    const minVisibleX = playerClient.lastViewedPositionX - playerClient.screenWidth * 0.5 - PlayerClientVars.VIEW_PADDING;
    const maxVisibleX = playerClient.lastViewedPositionX + playerClient.screenWidth * 0.5 + PlayerClientVars.VIEW_PADDING;
    const minVisibleY = playerClient.lastViewedPositionY - playerClient.screenHeight * 0.5 - PlayerClientVars.VIEW_PADDING;
    const maxVisibleY = playerClient.lastViewedPositionY + playerClient.screenHeight * 0.5 + PlayerClientVars.VIEW_PADDING;
 
-   const supports: Array<number> = [];
+   const supports: number[] = [];
    
    const minSubtileX = (minVisibleX / Settings.TILE_SIZE) << 2;
    const maxSubtileX = (maxVisibleX / Settings.TILE_SIZE) << 2;

@@ -38,12 +38,12 @@ interface CommandParameterSpecifications {
 
 export interface CommandSpecifications {
    readonly name: string;
-   readonly parameters: ReadonlyArray<CommandParameterSpecifications>;
-   readonly configurations: ReadonlyArray<CommandConfiguration>;
+   readonly parameters: readonly CommandParameterSpecifications[];
+   readonly configurations: readonly CommandConfiguration[];
 }
 
 interface CommandConfiguration {
-   readonly parameterConfigurations: ReadonlyArray<number>;
+   readonly parameterConfigurations: readonly number[];
    readonly permissions: CommandPermissions;
 }
 
@@ -55,10 +55,10 @@ interface CommandValidityQuery {
 interface CommandParseQuery {
    readonly isValid: boolean;
    readonly errorMessage: string;
-   readonly parts: ReadonlyArray<CommandPart>;
+   readonly parts: readonly CommandPart[];
 }
 
-type Commands = ReadonlyArray<CommandSpecifications>;
+type Commands = readonly CommandSpecifications[];
 
 export const COMMANDS: Commands = [
    /*
@@ -443,7 +443,7 @@ export function findParameterSpecifications(commandSpecifications: CommandSpecif
 
 /** Parses a console command into its parts. */
 export function parseCommand(command: string): CommandParseQuery {
-   const parts: Array<CommandPart> = [];
+   const parts: CommandPart[] = [];
    let isInString = false;
    let currentPartChars = "";
    

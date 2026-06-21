@@ -1,7 +1,7 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { randFloat } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
@@ -20,7 +20,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustflea, _DustfleaComponentArray> {}
 }
 
-class _DustfleaComponentArray extends _ServerComponentArray<DustfleaComponent, DustfleaComponentData> {
+class _DustfleaComponentArray extends ServerComponentArray<DustfleaComponent, DustfleaComponentData> {
    public decodeData(): DustfleaComponentData {
       return {};
    }

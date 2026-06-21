@@ -5,7 +5,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import _ClientComponentArray from "../ClientComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
@@ -21,7 +21,7 @@ declare module "../component-registry" {
    interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.warriorHut, _WarriorHutComponentArray> {}
 }
 
-class _WarriorHutComponentArray extends _ClientComponentArray<WarriorHutComponent, WarriorHutComponentData> {
+class _WarriorHutComponentArray extends ClientComponentArray<WarriorHutComponent, WarriorHutComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
@@ -37,7 +37,7 @@ class _WarriorHutComponentArray extends _ClientComponentArray<WarriorHutComponen
       renderObject.attachRenderPart(hutRenderPart);
 
       // Doors
-      const doorRenderParts: Array<VisualRenderPart> = [];
+      const doorRenderParts: VisualRenderPart[] = [];
       for (let i = 0; i < 2; i++) {
          const doorRenderPart = new TexturedRenderPart(
             hutRenderPart,

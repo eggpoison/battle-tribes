@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface EnergyStoreComponentData {}
@@ -10,7 +10,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.energyStore, _EnergyStoreComponentArray> {}
 }
 
-class _EnergyStoreComponentArray extends _ServerComponentArray<EnergyStoreComponent, EnergyStoreComponentData, never> {
+class _EnergyStoreComponentArray extends ServerComponentArray<EnergyStoreComponent, EnergyStoreComponentData, never> {
    public decodeData(): EnergyStoreComponentData {
       return {};
    }

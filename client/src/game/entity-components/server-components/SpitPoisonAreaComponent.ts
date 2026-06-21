@@ -1,7 +1,7 @@
 import { playSoundOnHitbox, SoundInfo } from "../../sound";
 import { createAcidParticle, createPoisonBubble } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 import { CircularBox } from "../../../../../shared/src/boxes";
 import { ServerComponentType } from "../../../../../shared/src/components";
@@ -23,7 +23,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spitPoisonArea, _SpitPoisonAreaComponentArray> {}
 }
 
-class _SpitPoisonAreaComponentArray extends _ServerComponentArray<SpitPoisonAreaComponent, SpitPoisonAreaComponentData> {
+class _SpitPoisonAreaComponentArray extends ServerComponentArray<SpitPoisonAreaComponent, SpitPoisonAreaComponentData> {
    public decodeData(): SpitPoisonAreaComponentData {
       return {};
    }

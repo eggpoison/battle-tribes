@@ -17,12 +17,12 @@ export class StructureComponent {
    /** The blueprint currently placed on the structure. 0 if none is present */
    public activeBlueprint = 0;
 
-   public readonly connections: Array<StructureConnection> = [];
+   public readonly connections: StructureConnection[] = [];
 
    /** The virtual structure associated with the structure. If null, will automatically create a virtual building for the structure. */
    public virtualStructure: VirtualStructure | null;
 
-   constructor(connections: Array<StructureConnection>, virtualBuilding: VirtualStructure | null) {
+   constructor(connections: StructureConnection[], virtualBuilding: VirtualStructure | null) {
       this.connections = connections;
       this.virtualStructure = virtualBuilding;
    }

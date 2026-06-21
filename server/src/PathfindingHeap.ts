@@ -6,7 +6,7 @@ interface HeapItem {
 }
 
 class PathfindingHeap {
-   private readonly items: Array<HeapItem> = [];
+   private readonly items: HeapItem[] = [];
    public currentItemCount = 0;
 
    public readonly gScore: Record<PathfindingNodeIndex, number>;

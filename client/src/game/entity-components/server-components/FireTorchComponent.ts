@@ -2,7 +2,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { Settings } from "../../../../../shared/src/settings";
 import { randAngle, randFloat } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
 import { createEmberParticle, createSmokeParticle } from "../../particles";
@@ -21,7 +21,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fireTorch, _FireTorchComponentArray> {}
 }
 
-class _FireTorchComponentArray extends _ServerComponentArray<FireTorchComponent, FireTorchComponentData> {
+class _FireTorchComponentArray extends ServerComponentArray<FireTorchComponent, FireTorchComponentData> {
    public decodeData(): FireTorchComponentData {
       return {};
    }

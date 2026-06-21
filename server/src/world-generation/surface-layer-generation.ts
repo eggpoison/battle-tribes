@@ -54,17 +54,16 @@ import { createOkrenConfig } from "../entities/desert/okren.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
 import SRandom from "../SRandom.js";
 import { getBoxesCollidingEntities } from "../collision-detection.js";
-import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
 
 const enum Vars {
    TRIBESMAN_SPAWN_EXCLUSION_RANGE = 1200
 }
 
 const HEIGHT_NOISE_SCALE = 50;
-const TEMPERATURE_NOISE_SCALE = 100;
+const TEMPERATURE_NOISE_SCALE = 150;
 const HUMIDITY_NOISE_SCALE = 30;
 
-export let riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>;
+export let riverMainTiles: readonly WaterTileGenerationInfo[];
 
 const tribesmanSpawnPositionIsValid = (layer: Layer, x: number, y: number): boolean => {
    if (!OPTIONS.spawnTribesmen) {
@@ -206,7 +205,7 @@ const getMaxPossibleTemperature = (biome: Biome, tileGenerationInfo: TileGenerat
    return max;
 }
 
-const getTileGenerationInfo = <T extends TileGenerationInfo>(biomeDists: Uint8Array, biome: Biome, tileGenerationArray: ReadonlyArray<T>, tileX: number, tileY: number, height: number, temperature: number, humidity: number, thung: number): T | undefined => {
+const getTileGenerationInfo = <T extends TileGenerationInfo>(biomeDists: Uint8Array, biome: Biome, tileGenerationArray: readonly T[], tileX: number, tileY: number, height: number, temperature: number, humidity: number, thung: number): T | undefined => {
    const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
    const dist = biomeDists[tileIndex];
    
@@ -293,11 +292,8 @@ const getTileGenerationInfo = <T extends TileGenerationInfo>(biomeDists: Uint8Ar
    }
 }
 
-let a = false;
-
 /** Generate the tile array's tile types based on their biomes */
 const generateTileTypes = (tileBiomes: Uint8Array, biomeDists: Uint8Array, tileTypes: Uint8Array, subtileTypes: Uint8Array, heightMap: Float32Array, temperatures: Float32Array, humidities: Float32Array, thung: number): void => {
-   const poops = [];
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -335,10 +331,6 @@ const generateTileTypes = (tileBiomes: Uint8Array, biomeDists: Uint8Array, tileT
          // }
       }
    }
-   if (!a) {
-      console.log("Initial subtiles: " + poops);
-   }
-   a = true;
 }
 
 const getTribeType = (layer: Layer, x: number, y: number): TribeType => {
@@ -371,7 +363,7 @@ const getTribeType = (layer: Layer, x: number, y: number): TribeType => {
    }
 }
 
-const spreadBiomeDists = (biomeDists: Uint8Array, biomes: Uint8Array, biomeBorderTiles: Array<TileIndex>): void => {
+const spreadBiomeDists = (biomeDists: Uint8Array, biomes: Uint8Array, biomeBorderTiles: TileIndex[]): void => {
    // @Garbage
    const ADJACENT_OFFSETS_X = [0, 0, 1, -1];
    const ADJACENT_OFFSETS_Y = [1, -1, 0, 0];
@@ -409,9 +401,10 @@ const spreadBiomeDists = (biomeDists: Uint8Array, biomes: Uint8Array, biomeBorde
 
 export function generateSurfaceTerrain(depth: number): Layer {
    // @SQUEAM
-   SRandom.seed(2845700342);
+   SRandom.reseed();
 
    const heightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HEIGHT_NOISE_SCALE, 3, 1.5, 0.75);
+   // const tileTemperatures = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, TEMPERATURE_NOISE_SCALE, 3, 1.5, 0.75);
    const tileTemperatures = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, TEMPERATURE_NOISE_SCALE, 0);
    const tileHumidities = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HUMIDITY_NOISE_SCALE, 0);
 
@@ -422,7 +415,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
 
    const biomeDists = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
 
-   const biomeBorderTiles: Array<TileIndex> = [];
+   const biomeBorderTiles: TileIndex[] = [];
 
    // Fill temperature and humidity arrays, calculate biomes, and mark tiles with biomeDist=1.
    let previousBiome = 0;
@@ -461,7 +454,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
    }
 
    // Generate rivers
-   let riverTiles: ReadonlyArray<WaterTileGenerationInfo>;
+   let riverTiles: readonly WaterTileGenerationInfo[];
    if (OPTIONS.generateRivers) {
       const riverGenerationInfo = generateRiverTiles();
       riverTiles = riverGenerationInfo.waterTiles;
@@ -515,7 +508,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
    //    spawnDistribution: createRawSpawnDistribution(16, 0.003),
    //    balanceSpawnDistribution: false,
    //    doStrictTileTypeCheck: false,
-   //    createEntity: (pos: Point, angle: number, firstEntityConfig: ReadonlyArray<EntityConfig> | null): ReadonlyArray<EntityConfig> | null => {
+   //    createEntity: (pos: Point, angle: number, firstEntityConfig: readonly EntityConfig[] | null): readonly EntityConfig[] | null => {
    //       const species = firstEntityConfig === null ? randInt(0, 1) : getConfigComponent(firstEntityConfig[0].components, getEntityComponentTypes(EntityType.cow), ServerComponentType.cow).species;
    //       return [createCowConfig(pos, angle, species)];
    //    }
@@ -531,7 +524,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(8, 0.0025),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createBerryBushConfig(x, y, angle)];
       }
    });
@@ -546,7 +539,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(8, 0.02),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: false,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createTreeConfig(x, y, angle, Math.random() > 1/3 ? TreeSize.large : TreeSize.small)];
       }
    });
@@ -577,7 +570,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(8, 0.025),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createBoulderConfig(x, y, angle)];
       }
    });
@@ -612,7 +605,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(64, 0.00015),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          const tileX = Math.floor(x / Settings.TILE_SIZE);
          const tileY = Math.floor(y / Settings.TILE_SIZE);
          const territory = generateYetiTerritoryTiles(tileX, tileY);
@@ -638,7 +631,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          getPackSize: () => randInt(1, 4),
          spawnRange: 100
       },
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createSpruceTreeConfig(x, y, angle)];
       }
    });
@@ -653,7 +646,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(4, 0.06),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: false,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createIceSpikesConfig(x, y, angle, 0)];
       }
    });
@@ -673,7 +666,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          getPackSize: () => randInt(3, 9),
          spawnRange: 80
       },
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          // @Hack @Copynpaste
          const tileX = Math.floor(x / Settings.TILE_SIZE);
          const tileY = Math.floor(y / Settings.TILE_SIZE);
@@ -702,7 +695,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          getPackSize: () => randInt(3, 9),
          spawnRange: 80
       },
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          // @Hack @Copynpaste
          const tileX = Math.floor(x / Settings.TILE_SIZE);
          const tileY = Math.floor(y / Settings.TILE_SIZE);
@@ -731,7 +724,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          getPackSize: () => randInt(1, 3),
          spawnRange: 80
       },
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createSnowberryBushConfig(x, y, angle)];
       }
    });
@@ -751,7 +744,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          getPackSize: () => Math.random() < 0.5 ? 2 : 4,
          spawnRange: 120
       },
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createSnobeConfig(x, y, angle)];
       }
    });
@@ -767,7 +760,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: false,
       doStrictCollisionCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createInguSerpentConfig(x, y, angle)];
       }
    });
@@ -785,7 +778,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: false,
       doStrictCollisionCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return createTukmokConfig(x, y, angle);
       }
    });
@@ -801,7 +794,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(4, 0.3),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createSlimewispConfig(x, y, angle)];
       }
    });
@@ -818,7 +811,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(4, 0),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createSlimeConfig(x, y, angle, 0)];
       }
    });
@@ -834,7 +827,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(4, 0.013),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createDustfleaConfig(x, y, angle)];
       }
    });
@@ -849,7 +842,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(4, 0.003),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createKrumblidConfig(x, y, angle)];
       }
    });
@@ -865,7 +858,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(4, 0.0007),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createOkrenConfig(x, y, angle, 4)];
       }
    });
@@ -885,7 +878,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(4, 0.03),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number, firstEntityConfigs: ReadonlyArray<EntityConfig> | null): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number, firstEntityConfigs: readonly EntityConfig[] | null): readonly EntityConfig[] | null => {
          const colour = firstEntityConfigs === null ? randInt(0, 3) : getConfigComponent(firstEntityConfigs[0].components, getEntityComponentTypes(EntityType.fish), ServerComponentType.fish).colour;
          return [createFishConfig(x, y, angle, colour)];
       }
@@ -916,7 +909,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          
          return !isTooCloseToReedOrLilypad(spawnInfo.layer, x, y);
       },
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createLilypadConfig(x, y, angle)];
       }
    });
@@ -947,7 +940,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(8, 0.045),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: false,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createCactusConfig(x, y, angle)];
       }
    });
@@ -962,7 +955,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(8, 0.05),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createDesertBushLivelyConfig(x, y, angle)];
       }
    });
@@ -977,7 +970,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(8, 0.028),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createDesertShrubConfig(x, y, angle)];
       }
    });
@@ -996,7 +989,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          getPackSize: () => randInt(2, 3),
          spawnRange: 80
       },
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createDesertBushSandyConfig(x, y, angle)];
       }
    });
@@ -1011,7 +1004,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(4, 0.12),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: false,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createDesertSmallWeedConfig(x, y, angle)];
       }
    });
@@ -1026,7 +1019,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(32, 0.002),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: false,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createTumbleweedLiveConfig(x, y, angle)];
       }
    });
@@ -1041,7 +1034,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(32, 0.003),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: false,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createTumbleweedDeadConfig(x, y, angle)];
       }
    });
@@ -1061,7 +1054,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          getPackSize: () => randInt(3, 9),
          spawnRange: 80
       },
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          const tileX = Math.floor(x / Settings.TILE_SIZE);
          const tileY = Math.floor(y / Settings.TILE_SIZE);
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -1097,7 +1090,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(16, 0.05),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: false,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createPalmTreeConfig(x, y, angle)];
       }
    });
@@ -1112,7 +1105,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(8, 0.15),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createDesertBushLivelyConfig(x, y, angle)];
       }
    });
@@ -1127,7 +1120,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(8, 0.08),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createDesertShrubConfig(x, y, angle)];
       }
    });
@@ -1142,7 +1135,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(4, 0.19),
       balanceSpawnDistribution: true,
       doStrictTileTypeCheck: false,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return [createDesertSmallWeedConfig(x, y, angle)];
       }
    });
@@ -1157,7 +1150,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       spawnDistribution: createRawSpawnDistribution(4, 0.06),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number, firstEntityConfigs: ReadonlyArray<EntityConfig> | null): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number, firstEntityConfigs: readonly EntityConfig[] | null): readonly EntityConfig[] | null => {
          const colour = firstEntityConfigs === null ? randInt(0, 3) : getConfigComponent(firstEntityConfigs[0].components, getEntityComponentTypes(EntityType.fish), ServerComponentType.fish)!.colour;
          return [createFishConfig(x, y, angle, colour)];
       }
@@ -1179,7 +1172,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          customSpawnIsValidFunc(spawnInfo, spawnOriginX, spawnOriginY) {
             return tribesmanSpawnPositionIsValid(spawnInfo.layer, spawnOriginX, spawnOriginY);
          },
-         createEntity: (x: number, y: number, angle: number, _firstEntityConfigs: ReadonlyArray<EntityConfig> | null, layer: Layer): ReadonlyArray<EntityConfig> | null => {
+         createEntity: (x: number, y: number, angle: number, _firstEntityConfigs: readonly EntityConfig[] | null, layer: Layer): readonly EntityConfig[] | null => {
             return [createTribeWorkerConfig(x, y, angle, new Tribe(getTribeType(layer, x, y), true, new Point(x, y)))];
          }
       });
@@ -1198,7 +1191,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          customSpawnIsValidFunc(spawnInfo, spawnOriginX, spawnOriginY) {
             return tribesmanSpawnPositionIsValid(spawnInfo.layer, spawnOriginX, spawnOriginY);
          },
-         createEntity: (x: number, y: number, angle: number, _firstEntityConfigs: ReadonlyArray<EntityConfig> | null, layer: Layer): ReadonlyArray<EntityConfig> | null => {
+         createEntity: (x: number, y: number, angle: number, _firstEntityConfigs: readonly EntityConfig[] | null, layer: Layer): readonly EntityConfig[] | null => {
             return [createTribeWorkerConfig(x, y, angle, new Tribe(getTribeType(layer, x, y), true, new Point(x, y)))];
          }
       });
@@ -1217,7 +1210,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          customSpawnIsValidFunc(spawnInfo, spawnOriginX, spawnOriginY) {
             return tribesmanSpawnPositionIsValid(spawnInfo.layer, spawnOriginX, spawnOriginY);
          },
-         createEntity: (x: number, y: number, angle: number, _firstEntityConfigs: ReadonlyArray<EntityConfig> | null, layer: Layer): ReadonlyArray<EntityConfig> | null => {
+         createEntity: (x: number, y: number, angle: number, _firstEntityConfigs: readonly EntityConfig[] | null, layer: Layer): readonly EntityConfig[] | null => {
             return [createTribeWorkerConfig(x, y, angle, new Tribe(getTribeType(layer, x, y), true, new Point(x, y)))];
          }
       });
@@ -1236,7 +1229,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
          customSpawnIsValidFunc(spawnInfo, spawnOriginX, spawnOriginY) {
             return tribesmanSpawnPositionIsValid(spawnInfo.layer, spawnOriginX, spawnOriginY);
          },
-         createEntity: (x: number, y: number, angle: number, _firstEntityConfigs: ReadonlyArray<EntityConfig> | null, layer: Layer): ReadonlyArray<EntityConfig> | null => {
+         createEntity: (x: number, y: number, angle: number, _firstEntityConfigs: readonly EntityConfig[] | null, layer: Layer): readonly EntityConfig[] | null => {
             return [createTribeWorkerConfig(x, y, angle, new Tribe(getTribeType(layer, x, y), true, new Point(x, y)))];
          }
       });
@@ -1247,7 +1240,8 @@ export function generateSurfaceTerrain(depth: number): Layer {
 
 // @SQUEAM
 export function regenerateSurfaceTerrain(): void {
-   SRandom.seed(2845700342);
+   return;
+   SRandom.reseed();
    
    const builtinRandomFunc = Math.random;
    Math.random = () => SRandom.next();
@@ -1258,6 +1252,7 @@ export function regenerateSurfaceTerrain(): void {
    
    // Generate the noise
    const heightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HEIGHT_NOISE_SCALE, 3, 1.5, 0.75, thung);
+   // const tileTemperatures = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, TEMPERATURE_NOISE_SCALE, 3, 1.5, 0.75, thung);
    const tileTemperatures = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, TEMPERATURE_NOISE_SCALE, thung);
    const tileHumidities = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HUMIDITY_NOISE_SCALE, thung);
 
@@ -1269,7 +1264,7 @@ export function regenerateSurfaceTerrain(): void {
 
    const biomeDists = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
 
-   const biomeBorderTiles: Array<TileIndex> = [];
+   const biomeBorderTiles: TileIndex[] = [];
 
    // Fill temperature and humidity arrays, calculate biomes, and mark tiles with biomeDist=1.
    let previousBiome = 0;
@@ -1308,7 +1303,7 @@ export function regenerateSurfaceTerrain(): void {
    }
 
    // Generate rivers
-   let riverTiles: ReadonlyArray<WaterTileGenerationInfo>;
+   let riverTiles: readonly WaterTileGenerationInfo[];
    if (OPTIONS.generateRivers) {
       const riverGenerationInfo = generateRiverTiles();
       riverTiles = riverGenerationInfo.waterTiles;
@@ -1324,7 +1319,6 @@ export function regenerateSurfaceTerrain(): void {
    generateTileTypes(tileBiomes, biomeDists, tileTypes, wallSubtileTypes, heightMap, tileTemperatures, tileHumidities, thung);
 
    // Create flow directions array and create ice rivers
-   console.log("-=-==-=-=--");
    for (const tileInfo of riverTiles) {
       const tileIndex = getTileIndexIncludingEdges(tileInfo.tileX, tileInfo.tileY);
       
@@ -1356,7 +1350,6 @@ export function regenerateSurfaceTerrain(): void {
             const tileY = getTileY(tileIndex);
             const box = createRectangularBox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0, 0, 0, Settings.TILE_SIZE, Settings.TILE_SIZE);
             const es = getBoxesCollidingEntities(surfaceLayer, [box]);
-            // console.log(es.length);
             for (const e of es) {
                if (getEntityType(e) === EntityType.grassStrand) {
                   destroyEntity(e);

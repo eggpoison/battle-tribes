@@ -17,7 +17,7 @@ export default abstract class BaseRenderPart {
 
    public readonly zIndex: number;
 
-   public readonly children: Array<RenderPart> = [];
+   public readonly children: RenderPart[] = [];
    public readonly parent: RenderPartParent;
 
    // Needed for the tree-like update system regardless of whether the thing will be rendered to the screen

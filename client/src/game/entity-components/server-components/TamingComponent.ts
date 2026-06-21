@@ -13,7 +13,7 @@ import { RenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playerTribe } from "../../tribes";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { tamingMenuState } from "../../../ui-state/taming-menu-state";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -25,15 +25,15 @@ import { TextureIndex } from "../../../texture-index";
 export interface TamingSkillLearning {
    readonly skill: TamingSkill;
    /** Indexes will be the same as the requirements on the skill */
-   readonly requirementProgressArray: Array<number>;
+   readonly requirementProgressArray: number[];
 }
 
 export interface TamingComponentData {
    readonly tamingTier: number;
    readonly foodEatenInTier: number;
    readonly name: string;
-   readonly acquiredSkills: Array<TamingSkill>;
-   readonly skillLearningArray: Array<TamingSkillLearning>;
+   readonly acquiredSkills: TamingSkill[];
+   readonly skillLearningArray: TamingSkillLearning[];
    readonly isAttacking: boolean;
    readonly isFollowing: boolean;
 }
@@ -48,8 +48,8 @@ export interface TamingComponent {
    tamingTier: number;
    foodEatenInTier: number;
    name: string;
-   readonly acquiredSkills: Array<TamingSkill>;
-   readonly skillLearningArray: Array<TamingSkillLearning>;
+   readonly acquiredSkills: TamingSkill[];
+   readonly skillLearningArray: TamingSkillLearning[];
 
    tamingTierRenderPart: TexturedRenderPart | null;
 
@@ -73,14 +73,14 @@ const TAMING_TIER_TEXTURE_INDEXES: Record<number, TextureIndex> = {
 const TAMING_TIER_RENDER_PART_Z_INDEX = 19;
 const HALO_RENDER_PART_Z_INDEX = 20;
 
-class _TamingComponentArray extends _ServerComponentArray<TamingComponent, TamingComponentData, IntermediateInfo> {
+class _TamingComponentArray extends ServerComponentArray<TamingComponent, TamingComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): TamingComponentData {
       const tamingTier = reader.readNumber();
       const berriesEatenInTier = reader.readNumber();
       const name = reader.readString();
 
       const numAcquiredSkills = reader.readNumber();
-      const acquiredSkills: Array<TamingSkill> = [];
+      const acquiredSkills: TamingSkill[] = [];
       for (let i = 0; i < numAcquiredSkills; i++) {
          const skillID: TamingSkillID = reader.readNumber();
          const skill = getTamingSkill(skillID);
@@ -88,12 +88,12 @@ class _TamingComponentArray extends _ServerComponentArray<TamingComponent, Tamin
       }
 
       const numSkillLearnings = reader.readNumber();
-      const skillLearningArray: Array<TamingSkillLearning> = [];
+      const skillLearningArray: TamingSkillLearning[] = [];
       for (let i = 0; i < numSkillLearnings; i++) {
          const skillID: TamingSkillID = reader.readNumber();
          const skill = getTamingSkill(skillID);
 
-         const requirementProgressArray: Array<number> = [];
+         const requirementProgressArray: number[] = [];
          for (let i = 0; i < skill.requirements.length; i++) {
             const requirementProgress = reader.readNumber();
             requirementProgressArray.push(requirementProgress);

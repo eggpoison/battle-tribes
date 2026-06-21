@@ -39,7 +39,7 @@ export interface VirtualBuilding {
    readonly layer: Layer;
    readonly position: Readonly<Point>;
    readonly rotation: number;
-   readonly boxes: ReadonlyArray<Box>;
+   readonly boxes: readonly Box[];
    readonly renderObject: EntityRenderObject;
 }
 
@@ -75,7 +75,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
    const layer = layers[layerDepth];
 
    // Hitboxes
-   const boxes: Array<Box> = [];
+   const boxes: Box[] = [];
    const numHitboxes = reader.readNumber();
    for (let i = 0; i < numHitboxes; i++) {
       const box = readBoxFromData(reader);
@@ -84,7 +84,7 @@ const readVirtualBuildingFromData = (reader: PacketReader, virtualBuildingID: nu
 
    // @Copynpaste @Hack
 
-   const components: Array<ServerComponentData> = [];
+   const components: ServerComponentData[] = [];
 
    const componentTypes = getEntityServerComponentTypes(entityType);
    for (let i = 0; i < componentTypes.length; i++) {

@@ -10,9 +10,9 @@ export interface LocalBiome {
    readonly id: number;
    readonly biome: Biome;
    readonly layer: Layer;
-   readonly tiles: ReadonlyArray<TileIndex>;
+   readonly tiles: readonly TileIndex[];
    /** All tiles which aren't outside the border, which AREN'T WALLS. */
-   readonly tilesInBorder: ReadonlyArray<TileIndex>;
+   readonly tilesInBorder: readonly TileIndex[];
    /** Stores how many tiles of each type there are in the local chunk */
    readonly tileCensus: Partial<Record<TileType, number>>;
    readonly minTileX: number;
@@ -61,7 +61,7 @@ export function tileHasWallSubtile(subtileTypes: Uint8Array, tileX: number, tile
    return false;
 }
 
-const getConnectedBiomeTiles = (layer: Layer, processedTiles: Set<TileIndex>, tileX: number, tileY: number): ReadonlyArray<TileIndex> => {
+const getConnectedBiomeTiles = (layer: Layer, processedTiles: Set<TileIndex>, tileX: number, tileY: number): readonly TileIndex[] => {
    const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
    const targetBiome = layer.getTileBiome(tileIndex);
 

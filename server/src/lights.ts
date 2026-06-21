@@ -8,6 +8,7 @@ import { Hitbox } from "./hitboxes.js";
 import Layer from "./Layer.js";
 import PlayerClient from "./server/PlayerClient.js";
 import { getEntityLayer, getGameTime } from "./world.js";
+import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
 
 const enum Vars {
    /** The minimum light intensity from which the range of the light in nodes will be decided. */
@@ -27,7 +28,7 @@ export interface Light {
    g: number;
    b: number;
    lastNode: LightLevelNode;
-   litNodes: ReadonlyArray<LightLevelNode>;
+   litNodes: readonly LightLevelNode[];
 }
 
 let lightIDCounter = 0;
@@ -92,7 +93,7 @@ const updateLight = (light: Light, nodeX: number, nodeY: number, layer: Layer) =
    
    // @Speed: only run this propagate function on the edge nodes of dropdown zones, and fill in the inside node with 1's
    
-   const litNodes: Array<LightLevelNode> = [];
+   const litNodes: LightLevelNode[] = [];
 
    for (let currentNodeX = minNodeX; currentNodeX <= maxNodeX; currentNodeX++) {
       for (let currentNodeY = minNodeY; currentNodeY <= maxNodeY; currentNodeY++) {

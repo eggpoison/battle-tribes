@@ -7,7 +7,7 @@ import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from ".
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -21,13 +21,13 @@ export interface SpikesComponentData {
 }
 
 interface IntermediateInfo {
-   leafRenderParts: Array<VisualRenderPart>;
+   leafRenderParts: VisualRenderPart[];
 }
 
 export interface SpikesComponent {
    isCovered: boolean;
    // @Incomplete: We should randomise their position every time they are re-covered
-   readonly leafRenderParts: ReadonlyArray<VisualRenderPart>;
+   readonly leafRenderParts: readonly VisualRenderPart[];
 }
 
 declare module "../component-registry" {
@@ -41,7 +41,7 @@ export const NUM_LARGE_COVER_LEAVES = 3;
 const LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
 const LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
 
-class _SpikesComponentArray extends _ServerComponentArray<SpikesComponent, SpikesComponentData, IntermediateInfo> {
+class _SpikesComponentArray extends ServerComponentArray<SpikesComponent, SpikesComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): SpikesComponentData {
       const isCovered = reader.readBool();
       return {
@@ -53,7 +53,7 @@ class _SpikesComponentArray extends _ServerComponentArray<SpikesComponent, Spike
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
       
-      const leafRenderParts: Array<VisualRenderPart> = [];
+      const leafRenderParts: VisualRenderPart[] = [];
       for (let i = 0; i < NUM_SMALL_COVER_LEAVES; i++) {
          const renderPart = createLeafRenderPart(true, hitbox);
          // @TEMPORARY

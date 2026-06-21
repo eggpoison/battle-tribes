@@ -18,7 +18,7 @@ const readTamingSpecFromData = (reader: PacketReader): EntityTamingSpec => {
    const maxTamingTier = reader.readNumber() as TamingTier;
    
    const numSkills = reader.readNumber();
-   const skillNodes: Array<TamingSkillNode> = [];
+   const skillNodes: TamingSkillNode[] = [];
    for (let i = 0; i < numSkills; i++) {
       const skillID: TamingSkillID = reader.readNumber();
       const x = reader.readNumber();

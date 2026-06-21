@@ -2,10 +2,10 @@ import { gl } from "./webgl";
 
 export interface TextureAtlas {
    readonly atlasSize: number;
-   readonly textureSources: Array<string>;
-   readonly textureWidths: Array<number>;
-   readonly textureHeights: Array<number>;
-   readonly textureSlotIndexes: Array<number>;
+   readonly textureSources: string[];
+   readonly textureWidths: number[];
+   readonly textureHeights: number[];
+   readonly textureSlotIndexes: number[];
    readonly atlasSlotSize: number;
 }
 

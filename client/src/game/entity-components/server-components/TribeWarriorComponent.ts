@@ -1,7 +1,7 @@
 import { ScarInfo, ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -11,20 +11,20 @@ import { registerServerComponentArray } from "../component-registry";
 import { TextureIndex } from "../../../texture-index";
 
 export interface TribeWarriorComponentData {
-   readonly scars: Array<ScarInfo>;
+   readonly scars: ScarInfo[];
 }
 
 export interface TribeWarriorComponent {
-   readonly scars: Array<ScarInfo>;
+   readonly scars: ScarInfo[];
 }
 
 declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribeWarrior, _TribeWarriorComponentArray> {}
 }
 
-class _TribeWarriorComponentArray extends _ServerComponentArray<TribeWarriorComponent, TribeWarriorComponentData> {
+class _TribeWarriorComponentArray extends ServerComponentArray<TribeWarriorComponent, TribeWarriorComponentData> {
    public decodeData(reader: PacketReader): TribeWarriorComponentData {
-      const scars: Array<ScarInfo> = [];
+      const scars: ScarInfo[] = [];
       const numScars = reader.readNumber();
       for (let i = 0; i < numScars; i++) {
          const offsetX = reader.readNumber();

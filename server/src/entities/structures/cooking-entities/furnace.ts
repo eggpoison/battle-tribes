@@ -17,7 +17,7 @@ import { EntityType } from "../../../../../shared/dist/entities.js";
 import { Inventory, InventoryName } from "../../../../../shared/dist/items/items.js";
 import { StatusEffect } from "../../../../../shared/dist/status-effects.js";
 
-export function createFurnaceConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createFurnaceConfig(x: number, y: number, angle: number, tribe: Tribe, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
    const box = createRectangularBox(x, y, 0, 0, angle, 80, 80);

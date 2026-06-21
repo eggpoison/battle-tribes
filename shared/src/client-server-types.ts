@@ -119,18 +119,18 @@ export type PathfindingNodeIndex = number;
 export interface PathData {
    readonly goalX: number;
    readonly goalY: number;
-   readonly pathNodes: ReadonlyArray<PathfindingNodeIndex>;
-   readonly rawPathNodes: ReadonlyArray<PathfindingNodeIndex>;
-   readonly visitedNodes: ReadonlyArray<PathfindingNodeIndex>;
+   readonly pathNodes: readonly PathfindingNodeIndex[];
+   readonly rawPathNodes: readonly PathfindingNodeIndex[];
+   readonly visitedNodes: readonly PathfindingNodeIndex[];
 }
 
 export interface EntityDebugData {
    /** ID of the entity being tracked */
    readonly entity: Entity;
-   readonly lines: Array<LineDebugData>;
-   readonly circles: Array<CircleDebugData>;
-   readonly tileHighlights: Array<TileHighlightData>;
-   readonly debugEntries: Array<string>;
+   readonly lines: readonly LineDebugData[];
+   readonly circles: readonly CircleDebugData[];
+   readonly tileHighlights: readonly TileHighlightData[];
+   readonly debugEntries: readonly string[];
    readonly health?: number;
    readonly maxHealth?: number;
    readonly pathData?: PathData;

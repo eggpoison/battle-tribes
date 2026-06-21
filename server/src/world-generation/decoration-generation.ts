@@ -12,8 +12,8 @@ const enum Vars {
 }
 
 interface DecorationGenerationInfo {
-   readonly decorationTypes: ReadonlyArray<DecorationType>;
-   readonly spawnableTileTypes: ReadonlyArray<TileType>;
+   readonly decorationTypes: readonly DecorationType[];
+   readonly spawnableTileTypes: readonly TileType[];
    readonly spawnChancePerTile: number;
    readonly minGroupSize: number;
    readonly maxGroupSize: number;
@@ -65,7 +65,7 @@ const generateRiversideDecorations = (): void => {
 export function generateDecorations(): void {
    const GROUP_SPAWN_RANGE = 256;
    
-   const DECORATION_GENERATION_INFO: ReadonlyArray<DecorationGenerationInfo> = [
+   const DECORATION_GENERATION_INFO: readonly DecorationGenerationInfo[] = [
       {
          decorationTypes: [DecorationType.pebble],
          spawnableTileTypes: [TileType.grass],

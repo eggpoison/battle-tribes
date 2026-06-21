@@ -6,15 +6,15 @@ class ObjectBufferContainer {
    // @Cleanup Access buffers using a string (key) instead of a buffer index
    
    private readonly objectsPerBuffer: number;
-   private readonly dataLengths: Array<number> = [];
+   private readonly dataLengths: number[] = [];
 
-   private readonly bufferArrays: Array<Array<WebGLBuffer>> = [];
+   private readonly bufferArrays: WebGLBuffer[][] = [];
 
-   private readonly emptyBufferDatas: Array<Float32Array> = [];
+   private readonly emptyBufferDatas: Float32Array[] = [];
 
    private readonly objectEntryIndexes: Partial<Record<number, number>> = {};
 
-   private readonly availableIndexes: Array<number> = [];
+   private readonly availableIndexes: number[] = [];
    
    constructor(objectsPerBuffer: number) {
       this.objectsPerBuffer = objectsPerBuffer;
@@ -109,7 +109,7 @@ class ObjectBufferContainer {
       this.availableIndexes.push(index);
    }
 
-   public getBuffers(bufferType: number): ReadonlyArray<WebGLBuffer> {
+   public getBuffers(bufferType: number): readonly WebGLBuffer[] {
       return this.bufferArrays[bufferType];
    }
 

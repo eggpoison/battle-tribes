@@ -5,7 +5,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { getInventory, InventoryComponentArray } from "../server-components/InventoryComponent";
 import { getEntityRenderObject, getEntityType } from "../../world";
 import { InventoryUseComponentArray } from "../server-components/InventoryUseComponent";
-import _ClientComponentArray from "../ClientComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
 import { tribeComponentArray } from "../server-components/TribeComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
@@ -22,7 +22,7 @@ export interface EquipmentComponentData {}
 
 export interface EquipmentComponent {
    armourRenderPart: TexturedRenderPart | null;
-   gloveRenderParts: Array<TexturedRenderPart>;
+   gloveRenderParts: TexturedRenderPart[];
 }
 
 declare module "../component-registry" {
@@ -66,7 +66,7 @@ const getArmourTextureIndex = (entityType: EntityType, tribeType: TribeType, ite
    return ARMOUR_TEXTURE_INDEXES_12x12[itemType] + pixelSize;
 }
 
-class _EquipmentComponentArray extends _ClientComponentArray<EquipmentComponent, EquipmentComponentData> {
+class _EquipmentComponentArray extends ClientComponentArray<EquipmentComponent, EquipmentComponentData> {
    public createComponent(): EquipmentComponent {
       return {
          armourRenderPart: null,

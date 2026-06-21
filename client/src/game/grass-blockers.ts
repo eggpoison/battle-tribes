@@ -78,8 +78,8 @@ const updateGrassBlockerVertices = (blocker: GrassBlocker): void => {
    gl.bufferSubData(gl.ARRAY_BUFFER, 0, newVertexData);
 }
 
-export function readGrassBlockers(reader: PacketReader): ReadonlyArray<GrassBlockerData> {
-   const grassBlockerData: Array<GrassBlockerData> = [];
+export function readGrassBlockers(reader: PacketReader): readonly GrassBlockerData[] {
+   const grassBlockerData: GrassBlockerData[] = [];
    const numBlockers = reader.readNumber();
    for (let i = 0; i < numBlockers; i++) {
       const id = reader.readNumber();
@@ -103,7 +103,7 @@ export function readGrassBlockers(reader: PacketReader): ReadonlyArray<GrassBloc
    return grassBlockerData;
 }
 
-export function updateGrassBlockersFromData(grassBlockerData: ReadonlyArray<GrassBlockerData>): void {
+export function updateGrassBlockersFromData(grassBlockerData: readonly GrassBlockerData[]): void {
    for (const data of grassBlockerData) {
       const existingGrassBlocker = grassBlockers.get(data.id);
       if (existingGrassBlocker !== undefined) {

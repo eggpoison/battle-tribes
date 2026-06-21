@@ -47,10 +47,10 @@ const getPlanDebugString = (plan: AIPlan): string => {
 }
 
 export function createEntityDebugData(entity: Entity): EntityDebugData {
-   const lines: Array<LineDebugData> = [];
-   const circles: Array<CircleDebugData> = [];
-   const tileHighlights: Array<TileHighlightData> = [];
-   const debugEntries: Array<string> = [];
+   const lines: LineDebugData[] = [];
+   const circles: CircleDebugData[] = [];
+   const tileHighlights: TileHighlightData[] = [];
+   const debugEntries: string[] = [];
    let pathData: PathData | undefined;
 
    if (AIHelperComponentArray.hasComponent(entity)) {

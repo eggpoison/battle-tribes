@@ -2,7 +2,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
@@ -16,7 +16,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.bracings, BracingsComponentArray> {}
 }
 
-class BracingsComponentArray extends _ServerComponentArray<BracingsComponent, BracingsComponentData> {
+class BracingsComponentArray extends ServerComponentArray<BracingsComponent, BracingsComponentData> {
    public decodeData(): BracingsComponentData {
       return {};
    }

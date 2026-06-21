@@ -86,7 +86,7 @@ export function createDebugDataShaders(): void {
    bindUBOToProgram(gl, triangleProgram, UBOBindingIndex.CAMERA);
 }
 
-const addCircleVertices = (vertices: Array<number>, debugData: EntityDebugData, x: number, y: number): void => {
+const addCircleVertices = (vertices: number[], debugData: EntityDebugData, x: number, y: number): void => {
    for (const circle of debugData.circles) {
       vertices.push(
          ...generateThickCircleWireframeVertices(x, y, circle.radius, circle.thickness, circle.colour[0], circle.colour[1], circle.colour[2])
@@ -94,7 +94,7 @@ const addCircleVertices = (vertices: Array<number>, debugData: EntityDebugData, 
    }
 }
 
-const addLineVertices = (vertices: Array<number>, debugData: EntityDebugData, x: number, y: number): void => {
+const addLineVertices = (vertices: number[], debugData: EntityDebugData, x: number, y: number): void => {
    for (const line of debugData.lines) {
       vertices.push(
          ...generateLine(x, y, line.targetPosition[0], line.targetPosition[1], line.thickness, line.colour[0], line.colour[1], line.colour[2])
@@ -113,7 +113,7 @@ export function renderLineDebugData(debugData: EntityDebugData): void {
    const transformComponent = TransformComponentArray.getComponent(debugData.entity);
    const hitbox = transformComponent.hitboxes[0];
    
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
    addCircleVertices(vertices, debugData, hitbox.box.posX, hitbox.box.posY);
    addLineVertices(vertices, debugData, hitbox.box.posX, hitbox.box.posY);
 
@@ -132,7 +132,7 @@ export function renderLineDebugData(debugData: EntityDebugData): void {
    gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 5);
 }
 
-const addTileHighlightVertices = (vertices: Array<number>, debugData: EntityDebugData): void => {
+const addTileHighlightVertices = (vertices: number[], debugData: EntityDebugData): void => {
    for (const tileHighlight of debugData.tileHighlights) {
       const x1 = tileHighlight.tilePosition[0] * Settings.TILE_SIZE;
       const x2 = (tileHighlight.tilePosition[0] + 1) * Settings.TILE_SIZE;
@@ -152,7 +152,7 @@ const addTileHighlightVertices = (vertices: Array<number>, debugData: EntityDebu
 }
 
 export function renderTriangleDebugData(debugData: EntityDebugData): void {
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
    
    gl.useProgram(triangleProgram);
 

@@ -1,6 +1,6 @@
 import { ItemType, NUM_ITEM_TYPES } from "../../../../../../shared/src/items/items";
 import CLIENT_ITEM_INFO_RECORD from "../../../../game/client-item-info";
-import { createInventoryContainer } from "../../inventories/Inventory";
+import { createInventoryContainer, getClickedItemSlotIdx } from "../../inventories/Inventory";
 import { addItemToItemSlot, createItemSlot } from "../../inventories/ItemSlot";
 import { closeCurrentMenu } from "../../../menus";
 
@@ -8,7 +8,7 @@ const enum Var {
    WIDTH = 6
 }
 
-const updateFilteredItemTypes = (itemTypes: Array<ItemType>, filter: string): void => {
+const updateFilteredItemTypes = (itemTypes: ItemType[], filter: string): void => {
    // @Garbage
    itemTypes.length = 0;
    for (let itemType: ItemType = 0; itemType < NUM_ITEM_TYPES; itemType++) {
@@ -20,17 +20,7 @@ const updateFilteredItemTypes = (itemTypes: Array<ItemType>, filter: string): vo
    }
 }
 
-// Create inventory
-// const inventory = new Inventory(WIDTH, Math.ceil(itemTypes.length / WIDTH), InventoryName.devInventory);
-// for (let i = 0; i < itemTypes.length; i++) {
-//    const itemType = itemTypes[i];
-//    const itemSlot = i + 1;
-   
-//    const item = new Item(itemType, 1, 0, "");
-//    inventory.addItem(item, itemSlot);
-// }
-
-const fillItems = (inventoryContainerElem: HTMLElement, filteredItemTypes: Array<ItemType>): void => {
+const fillItems = (inventoryContainerElem: HTMLElement, filteredItemTypes: ItemType[]): void => {
    for (const itemType of filteredItemTypes) {
       const itemSlot = createItemSlot();
       addItemToItemSlot(itemSlot, itemType, 1);
@@ -44,12 +34,6 @@ const fillItems = (inventoryContainerElem: HTMLElement, filteredItemTypes: Array
    }
 }
 
-const destroyItems = (inventoryContainerElem: HTMLElement): void => {
-   while (inventoryContainerElem.children.length > 0) {
-      inventoryContainerElem.children[0].remove();
-   }
-}
-
 const onFilterKeyDown = (e: KeyboardEvent): void => {
    if (e.key === "Escape") {
       closeCurrentMenu();
@@ -57,17 +41,17 @@ const onFilterKeyDown = (e: KeyboardEvent): void => {
    }
 }
 
-const onFilterChange = (e: Event, inventoryContainerElem: HTMLElement, filteredItemTypes: Array<ItemType>): void => {
+const onFilterChange = (e: Event, inventoryContainerElem: HTMLElement, filteredItemTypes: ItemType[]): void => {
    const newFilter = (e.target as HTMLInputElement).value;
    updateFilteredItemTypes(filteredItemTypes, newFilter);
 
    // @SPEED!!
-   destroyItems(inventoryContainerElem);
+   inventoryContainerElem.replaceChildren();
    fillItems(inventoryContainerElem, filteredItemTypes);
 }
 
 export function createItemCatalogue(slotClickCallback: (e: MouseEvent, itemType: ItemType) => void): HTMLElement {
-   const itemTypes: Array<ItemType> = [];
+   const itemTypes: ItemType[] = [];
    updateFilteredItemTypes(itemTypes, "");
 
    const itemCatalogueElem = document.createElement("div");
@@ -87,25 +71,21 @@ export function createItemCatalogue(slotClickCallback: (e: MouseEvent, itemType:
    searchInput.type = "text";
    searchInput.placeholder = "Search for items";
    searchInput.onkeydown = onFilterKeyDown;
-   searchInput.oninput = e => onFilterChange(e, inventoryContainerElem, itemTypes);
+   searchInput.oninput = e => { onFilterChange(e, inventoryContainerElem, itemTypes); };
    searchInputContainer.appendChild(searchInput);
 
    // The items
 
    const inventoryContainerElem = createInventoryContainer(false, Var.WIDTH);
    inventoryContainerElem.onmousedown = (e): void => {
-      const itemSlotX = Math.floor(e.layerX / 80);
-      const itemSlotY = Math.floor(e.layerY / 80);
-      const idx = itemSlotY * Var.WIDTH + itemSlotX;
-
+      const idx = getClickedItemSlotIdx(e, Var.WIDTH);
       if (idx < itemTypes.length) {
          const itemType = itemTypes[idx];
          slotClickCallback(e, itemType);
       }
    };
-   itemCatalogueElem.appendChild(inventoryContainerElem);
-
    fillItems(inventoryContainerElem, itemTypes);
+   itemCatalogueElem.appendChild(inventoryContainerElem);
 
    return itemCatalogueElem;
 }

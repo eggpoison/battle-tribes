@@ -46,18 +46,18 @@ export interface Tech {
    readonly name: string;
    readonly description: string;
    readonly iconSrc: string;
-   readonly unlockedItems: ReadonlyArray<ItemType>;
+   readonly unlockedItems: readonly ItemType[];
    readonly positionX: number;
    readonly positionY: number;
-   readonly dependencies: ReadonlyArray<TechID>;
+   readonly dependencies: readonly TechID[];
    readonly researchItemRequirements: ItemTally2;
    readonly researchStudyRequirements: number;
    /** Tribes which are unable to research the tech */
-   readonly blacklistedTribes: ReadonlyArray<TribeType>
-   readonly conflictingTechs: ReadonlyArray<TechID>;
+   readonly blacklistedTribes: readonly TribeType[]
+   readonly conflictingTechs: readonly TechID[];
 }
 
-export const TECHS: ReadonlyArray<Tech> = [
+export const TECHS: readonly Tech[] = [
    {
       id: TechID.fire,
       name: "Fire",

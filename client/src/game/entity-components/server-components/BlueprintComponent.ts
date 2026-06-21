@@ -9,7 +9,7 @@ import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { BALLISTA_GEAR_X, BALLISTA_GEAR_Y, BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../../utils";
 import { WARRIOR_HUT_SIZE } from "./HutComponent";
 import { tribeComponentArray } from "./TribeComponent";
@@ -27,7 +27,7 @@ export interface BlueprintComponentData {
 }
 
 export interface BlueprintComponent {
-   readonly partialRenderParts: Array<TexturedRenderPart>;
+   readonly partialRenderParts: TexturedRenderPart[];
    
    blueprintType: BlueprintType;
    lastBlueprintProgress: number;
@@ -35,7 +35,7 @@ export interface BlueprintComponent {
 }
 
 interface ProgressTextureInfo {
-   readonly progressTextureIndexes: ReadonlyArray<TextureIndex>;
+   readonly progressTextureIndexes: readonly TextureIndex[];
    // @Cleanup: Just use the last element of the progress textures
    readonly completedTextureIndex: TextureIndex;
    readonly offsetX: number;
@@ -50,7 +50,7 @@ declare module "../component-registry" {
 
 // @Cleanup: Some of these are duplicates
 // @Robustness: Do something better than hand-writing 'blueprint-1', 'blueprint-2', etc. in an array.
-export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyArray<ProgressTextureInfo>> = {
+export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, readonly ProgressTextureInfo[]> = {
    [BlueprintType.woodenDoor]: [
       {
          progressTextureIndexes: [TextureIndex.entities_door_woodenDoorBlueprint1, TextureIndex.entities_door_woodenDoorBlueprint2],
@@ -420,7 +420,7 @@ const createStoneBlueprintWorkParticleEffects = (originX: number, originY: numbe
    }
 }
 
-class BlueprintComponentArray extends _ServerComponentArray<BlueprintComponent, BlueprintComponentData> {
+class BlueprintComponentArray extends ServerComponentArray<BlueprintComponent, BlueprintComponentData> {
    public decodeData(reader: PacketReader): BlueprintComponentData {
       const blueprintType: BlueprintType = reader.readNumber();
       const blueprintProgress = reader.readNumber();

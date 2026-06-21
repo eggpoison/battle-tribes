@@ -13,7 +13,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createEmbrasureConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {
-   const hitboxes: Array<Hitbox> = [];
+   const hitboxes: Hitbox[] = [];
    let hitboxLocalID = 0;
    
    const VERTICAL_HITBOX_WIDTH = 12;

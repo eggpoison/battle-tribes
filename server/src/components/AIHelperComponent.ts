@@ -74,15 +74,15 @@ export class AIHelperComponent {
    public readonly seeingHitbox: Hitbox;
    
    public visibleChunkBounds = [999, 999, 999, 999];
-   public visibleChunks: Array<Chunk> = [];
+   public visibleChunks: Chunk[] = [];
 
-   public readonly potentialVisibleEntities: Array<Entity> = [];
+   public readonly potentialVisibleEntities: Entity[] = [];
    /** The number of times each potential visible game object appears in the mob's visible chunks */
-   public readonly potentialVisibleEntityAppearances: Array<number> = [];
+   public readonly potentialVisibleEntityAppearances: number[] = [];
 
    public readonly ignoreDecorativeEntities = true;
    public visionRange: number;
-   public visibleEntities: Array<Entity> = [];
+   public visibleEntities: Entity[] = [];
 
    public readonly ais: AIRecord = {};
 
@@ -212,8 +212,8 @@ const entityIsVisible = (seeingHitbox: Hitbox, checkEntity: Entity, checkEntityT
 }
 
 // @Speed: I'd say a good 70% of the entities here are ice spikes and decorations - unnecessary
-const calculateVisibleEntities = (aiHelperComponent: AIHelperComponent): Array<Entity> => {
-   const visibleEntities: Array<Entity> = [];
+const calculateVisibleEntities = (aiHelperComponent: AIHelperComponent): Entity[] => {
+   const visibleEntities: Entity[] = [];
 
    const potentialVisibleEntities = aiHelperComponent.potentialVisibleEntities;
    const visionRange = aiHelperComponent.visionRange;
@@ -264,9 +264,9 @@ function onTick(entity: Entity): void {
 
    const layer = getEntityLayer(entity);
 
-   const newVisibleChunks: Array<Chunk> = [];
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+   const newVisibleChunks: Chunk[] = [];
+   for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          const chunk = layer.getChunk(chunkX, chunkY);
          newVisibleChunks.push(chunk);
       }

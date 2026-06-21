@@ -7,7 +7,7 @@ import { createWebGLProgram, gl, createTextureArray } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 // @Memory
-export const BREAK_PROGRESS_TEXTURE_SOURCES: ReadonlyArray<string> = [
+export const BREAK_PROGRESS_TEXTURE_SOURCES: readonly string[] = [
    "miscellaneous/tile-break-progress-1.png",
    "miscellaneous/tile-break-progress-2.png"
 ];
@@ -105,7 +105,7 @@ export function renderTileBreakProgress(layer: Layer): void {
    gl.bindVertexArray(null);
 
    // @Speed
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
    for (const pair of layer.wallSubtileDamageTakenMap) {
       const subtileIndex = pair[0];
       const damageTaken = pair[0];

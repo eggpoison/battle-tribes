@@ -5,7 +5,7 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
@@ -46,7 +46,7 @@ const BERRY_BUSH_TEXTURE_SOURCES = [
 const LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
 const LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
 
-class _BerryBushComponentArray extends _ServerComponentArray<BerryBushComponent, BerryBushComponentData, IntermediateInfo> {
+class _BerryBushComponentArray extends ServerComponentArray<BerryBushComponent, BerryBushComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): BerryBushComponentData {
       const numBerries = reader.readNumber();
       return {

@@ -13,8 +13,8 @@ export function tetherGlurbSegments(hitbox1: Hitbox, hitbox2: Hitbox): void {
    tetherHitboxes(hitbox1, hitbox2, tetherIdealDistance, 15, 0.5);
 }
 
-export function createGlurbConfig(x: number, y: number, angle: number, numSegments: number): ReadonlyArray<EntityConfig> {
-   const configs: Array<EntityConfig> = [];
+export function createGlurbConfig(x: number, y: number, angle: number, numSegments: number): readonly EntityConfig[] {
+   const configs: EntityConfig[] = [];
    
    const headConfig = createGlurbHeadSegmentConfig(x, y, angle, numSegments);
    configs.push(headConfig);

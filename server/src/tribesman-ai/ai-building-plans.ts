@@ -1,13 +1,13 @@
 import Tribe from "../Tribe.js";
 import { updateBuildingLayer } from "./ai-building.js";
-import { getBuildingSafety, getTribeSafety } from "./ai-building-heuristics.js";
+import { getTribeSafety } from "./ai-building-heuristics.js";
 import { createVirtualStructure, VirtualStructure } from "./building-plans/TribeBuildingLayer.js";
 import { getWallCandidates } from "./building-plans/ai-building-walls.js";
 import { EntityType } from "../../../shared/dist/entities.js";
 
 export interface WallPlaceSearchResult {
    readonly virtualBuilding: VirtualStructure;
-   readonly potentialPlans: ReadonlyArray<WallPlaceCandidate>;
+   readonly potentialPlans: readonly WallPlaceCandidate[];
 }
 
 export interface WallPlaceCandidate {
@@ -23,7 +23,7 @@ export function findIdealWallPlacePosition(tribe: Tribe): WallPlaceSearchResult 
       return null;
    }
 
-   const potentialPlans: Array<WallPlaceCandidate> = [];
+   const potentialPlans: WallPlaceCandidate[] = [];
 
    // 
    // Simulate placing each building to see which one increases safety the most

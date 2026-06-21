@@ -3,7 +3,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { getHitboxTag } from "../../hitboxes";
@@ -17,7 +17,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmokTrunk, _TukmokTrunkComponentArray> {}
 }
 
-class _TukmokTrunkComponentArray extends _ServerComponentArray<TukmokTrunkComponent, TukmokTrunkComponentData> {
+class _TukmokTrunkComponentArray extends ServerComponentArray<TukmokTrunkComponent, TukmokTrunkComponentData> {
    public decodeData(): TukmokTrunkComponentData {
       return {};
    }

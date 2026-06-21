@@ -4,7 +4,7 @@ import { randFloat } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -21,7 +21,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.moss, _MossComponentArray> {}
 }
 
-class _MossComponentArray extends _ServerComponentArray<MossComponent, MossComponentData> {
+class _MossComponentArray extends ServerComponentArray<MossComponent, MossComponentData> {
    public decodeData(reader: PacketReader): MossComponentData {
       const size = reader.readNumber();
       const colour = reader.readNumber();

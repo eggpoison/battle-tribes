@@ -8,7 +8,7 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -35,7 +35,7 @@ export interface TurretComponent {
    readonly aimingRenderPart: TexturedRenderPart;
    /** The render part which pivots as the turret aims */
    readonly pivotingRenderPart: VisualRenderPart;
-   readonly gearRenderParts: ReadonlyArray<VisualRenderPart>;
+   readonly gearRenderParts: readonly VisualRenderPart[];
    projectileRenderPart: TexturedRenderPart | null;
 }
 
@@ -146,7 +146,7 @@ const getProjectileZIndex = (entityType: TurretType): number => {
    }
 }
 
-class _TurretComponentArray extends _ServerComponentArray<TurretComponent, TurretComponentData> {
+class _TurretComponentArray extends ServerComponentArray<TurretComponent, TurretComponentData> {
    public decodeData(reader: PacketReader): TurretComponentData {
       const aimDirection = reader.readNumber();
       const chargeProgress = reader.readNumber();
@@ -165,7 +165,7 @@ class _TurretComponentArray extends _ServerComponentArray<TurretComponent, Turre
          chargeProgress: turretComponentData.chargeProgress,
          aimingRenderPart: getRenderThingByTag(renderObject, "turretComponent:aiming") as TexturedRenderPart,
          pivotingRenderPart: getRenderThingByTag(renderObject, "turretComponent:pivoting") as VisualRenderPart,
-         gearRenderParts: getRenderThingsByTag(renderObject, "turretComponent:gear") as Array<VisualRenderPart>,
+         gearRenderParts: getRenderThingsByTag(renderObject, "turretComponent:gear") as VisualRenderPart[],
          projectileRenderPart:  null
       };
    }

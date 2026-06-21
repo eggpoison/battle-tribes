@@ -35,7 +35,7 @@ const getTargetTileHeuristic = (transformComponent: TransformComponent, tileInde
 }
 
 /** Tries to generate a patrol target tile not to close and not too far */
-const generateRandomPatrolTargetTile = (transformComponent: TransformComponent, patrolArea: ReadonlyArray<TileIndex>): TileIndex => {
+const generateRandomPatrolTargetTile = (transformComponent: TransformComponent, patrolArea: readonly TileIndex[]): TileIndex => {
    let bestHeuristic = -999999;
    let bestTile = 0;
    for (let i = 0; i < 15; i++) {
@@ -52,7 +52,7 @@ const generateRandomPatrolTargetTile = (transformComponent: TransformComponent, 
    return bestTile;
 }
 
-const generatePatrolTarget = (tribesman: Entity, patrolArea: ReadonlyArray<TileIndex>): Point | null => {
+const generatePatrolTarget = (tribesman: Entity, patrolArea: readonly TileIndex[]): Point | null => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];
    
@@ -84,7 +84,7 @@ const generatePatrolTarget = (tribesman: Entity, patrolArea: ReadonlyArray<TileI
    return null;
 }
 
-export function runPatrolAI(tribeMember: Entity, patrolAI: PatrolAI, patrolArea: ReadonlyArray<TileIndex>): void {
+export function runPatrolAI(tribeMember: Entity, patrolAI: PatrolAI, patrolArea: readonly TileIndex[]): void {
    const currentTicks = getGameTicks();
    if (currentTicks > patrolAI.lastActiveTicks + 1) {
       // If more than 1 tick has passed between successive runs of the patrol AI, reset the target patrol position

@@ -37,10 +37,10 @@ function onTick(scrappy: Entity): void {
 
    // const aiHelperComponent = AIHelperComponentArray.getComponent(scrappy);
 
-   // const visibleEnemies = new Array<Entity>();
-   // const visibleEnemyBuildings = new Array<Entity>();
-   // const visibleHostileMobs = new Array<Entity>();
-   // const visibleItemEntities = new Array<Entity>();
+   // const visibleEnemies = new Entity[]();
+   // const visibleEnemyBuildings = new Entity[]();
+   // const visibleHostileMobs = new Entity[]();
+   // const visibleItemEntities = new Entity[]();
    // for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
    //    const entity = aiHelperComponent.visibleEntities[i];
 

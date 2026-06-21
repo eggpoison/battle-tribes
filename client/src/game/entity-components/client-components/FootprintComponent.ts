@@ -13,7 +13,7 @@ import { getEntityClientComponentTypes } from "../component-types";
 import { getClientComponentData } from "../component-types";
 import { hitboxIsInWater } from "../../collision";
 import { registerClientComponentArray } from "../component-registry";
-import _ClientComponentArray from "../ClientComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 
 export interface FootprintComponentData {
    readonly footstepParticleIntervalSeconds: number;
@@ -40,7 +40,7 @@ declare module "../component-registry" {
    interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.footprint, _FootprintComponentArray> {}
 }
 
-class _FootprintComponentArray extends _ClientComponentArray<FootprintComponent, FootprintComponentData> {
+class _FootprintComponentArray extends ClientComponentArray<FootprintComponent, FootprintComponentData> {
    public createComponent(entityComponentData: EntityComponentData): FootprintComponent {
       const clientComponentTypes = getEntityClientComponentTypes(entityComponentData.entityType);
       const footprintComponentData = getClientComponentData(entityComponentData.clientComponentData, clientComponentTypes, ClientComponentType.footprint);

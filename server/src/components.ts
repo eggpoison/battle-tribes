@@ -277,7 +277,7 @@ export interface LightCreationInfo {
 
 type Component<T extends ServerComponentType> = ComponentTypeMap[T];
 
-type EntityComponents = ReadonlyArray<Component<ServerComponentType>>;
+type EntityComponents = readonly Component<ServerComponentType>[];
 
 // @ASS @ASS @ASS all of this
 
@@ -306,14 +306,14 @@ export interface ChildConfigAttachInfo {
 export interface EntityConfig {
    readonly entityType: EntityType;
    readonly components: EntityComponents;
-   readonly lights: ReadonlyArray<LightCreationInfo>;
+   readonly lights: readonly LightCreationInfo[];
    /** If present, notes that upon being added to the world it should immediately be attached to an entity. */
    attachInfo?: EntityConfigAttachInfo | EntityConfigAttachInfoWithTether;
    /** Any child entities' configs. */
-   childConfigs?: ReadonlyArray<ChildConfigAttachInfo>;
+   childConfigs?: readonly ChildConfigAttachInfo[];
 }
 
-export function getConfigComponent<T extends ServerComponentType>(components: EntityComponents, componentTypes: ReadonlyArray<ServerComponentType>, componentType: T): Component<T> {
+export function getConfigComponent<T extends ServerComponentType>(components: EntityComponents, componentTypes: readonly ServerComponentType[], componentType: T): Component<T> {
    for (let i = 0; i < componentTypes.length; i++) {
       const currentComponentType = componentTypes[i];
       if (currentComponentType === componentType) {

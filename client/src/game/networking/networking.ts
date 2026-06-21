@@ -3,11 +3,11 @@ import { closeGameScreen, gameScreenIsOpen, openGameScreen } from "../../ui/Game
 import { setLoadingScreenStateToWaiting, openLoadingScreen, setLoadingScreenStateToError, setLoadingScreenStateToInitialising, closeLoadingScreen } from "../../ui/LoadingScreen";
 import { startGame, stopGame, updateGame } from "../game";
 import { playerUsername, playerTribeType, isSpectating } from "../player";
-import { setupRendering } from "../rendering/render";
+import { initialiseGame } from "../rendering/render";
 import { windowWidth, windowHeight } from "../webgl";
 import { onDevGameDataPacket } from "./dev-packets";
 import { processInitialGameDataPacket, onSyncGameDataPacket, onForcePositionUpdatePacket, onChatMessagePacket, onSimulationStatusUpdatePacket, onShieldKnockPacket } from "./packet-receiving";
-import { sendActivatePacket, sendInitialPlayerDataPacket } from "./packet-sending/packet-sending";
+import { sendInitialPlayerDataPacket } from "./packet-sending/packet-sending";
 import { createSocket } from "./socket";
 import { bufferHasEnoughForGameStart, onGameDataPacket } from "./snapshots";
 import { gameIsFocused } from "../event-handling";
@@ -34,36 +34,32 @@ function onFailedConnection(): void {
 }
 
 const monitorPacketBuffer = (time: number): void => {
-   // Once enough packets are received to show the gameplay, start the game
+   // Once enough packets are received and initialisation is complete, start the game
    if (bufferHasEnoughForGameStart()) {
-      closeLoadingScreen();
-      openGameScreen();
-
       startGame(time);
    } else {
       requestAnimationFrame(monitorPacketBuffer);
    }
 }
 
-function onInitialGameDataPacket(reader: PacketReader): void {
+async function onInitialGameDataPacket(reader: PacketReader): Promise<void> {
    setLoadingScreenStateToInitialising();
    
    // Initialise game
    const intermediateInitialisationInfo = processInitialGameDataPacket(reader);
-   setupRendering(intermediateInitialisationInfo).then(() => {
-      sendActivatePacket();
+   await initialiseGame(intermediateInitialisationInfo).then(() => {
       requestAnimationFrame(monitorPacketBuffer);
    });
 }
 
-function onPacket(msg: MessageEvent): void {
+function onPacket(msg: MessageEvent<ArrayBuffer>): void {
    // @SPEED: new reader every time!!
    // @Speed: always zero, so parameter not needed
    const reader = new PacketReader(msg.data, 0);
    
    const packetType: ServerPacketType = reader.readNumber();
    switch (packetType) {
-      case ServerPacketType.initialGameData:        onInitialGameDataPacket(reader); break;
+      case ServerPacketType.initialGameData:        void onInitialGameDataPacket(reader); break;
       case ServerPacketType.gameData: {
          // @CLEANUP!!: had to break the single-function-call-per-case for this :(
          

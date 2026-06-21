@@ -70,7 +70,7 @@ const calculateBoxAdjustment = (entity: Entity): Point => {
    // return adjustment;
 }
 
-const addRectVertices = (vertices: Array<number>, x: number, y: number, width: number, height: number, angle: number, r: number, g: number, b: number) => {
+const addRectVertices = (vertices: number[], x: number, y: number, width: number, height: number, angle: number, r: number, g: number, b: number) => {
    const halfWidth = width / 2;
    const halfHeight = height / 2;
    
@@ -175,7 +175,7 @@ const addRectVertices = (vertices: Array<number>, x: number, y: number, width: n
    }
 }
 
-const addBoxVertices = (vertices: Array<number>, box: Box, adjustment: Point, r: number, g: number, b: number): void => {
+const addBoxVertices = (vertices: number[], box: Box, adjustment: Point, r: number, g: number, b: number): void => {
    // Interpolate the hitbox render position
    const hitboxRenderPositionX = box.posX + adjustment.x;
    const hitboxRenderPositionY = box.posY + adjustment.y;
@@ -219,7 +219,7 @@ const addBoxVertices = (vertices: Array<number>, box: Box, adjustment: Point, r:
    }
 }
 
-const renderVertices = (vertices: Array<number>): void => {
+const renderVertices = (vertices: number[]): void => {
    gl.useProgram(program);
    
    gl.bindVertexArray(null);
@@ -237,7 +237,7 @@ const renderVertices = (vertices: Array<number>): void => {
 }
 
 export function renderHitboxes(layer: Layer): void {
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
    
    for (let i = 0; i < TransformComponentArray.entities.length; i++) {
       const entity = TransformComponentArray.entities[i];

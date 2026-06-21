@@ -1,6 +1,6 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { PacketReader } from "../../../../../shared/src/packets";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
@@ -18,7 +18,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.player, _PlayerComponentArray> {}
 }
 
-class _PlayerComponentArray extends _ServerComponentArray<PlayerComponent, PlayerComponentData> {
+class _PlayerComponentArray extends ServerComponentArray<PlayerComponent, PlayerComponentData> {
    public decodeData(reader: PacketReader): PlayerComponentData {
       const username = reader.readString();
       return {

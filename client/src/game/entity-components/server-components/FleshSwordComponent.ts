@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface FleshSwordComponentData {}
@@ -10,7 +10,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fleshSwordItem, _FleshSwordComponentArray> {}
 }
 
-class _FleshSwordComponentArray extends _ServerComponentArray<FleshSwordComponent, FleshSwordComponentData> {
+class _FleshSwordComponentArray extends ServerComponentArray<FleshSwordComponent, FleshSwordComponentData> {
    public decodeData(): FleshSwordComponentData {
       return {};
    }

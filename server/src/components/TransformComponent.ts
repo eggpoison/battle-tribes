@@ -30,12 +30,12 @@ export class TransformComponent {
    // @Speed: may want to re-introduce the totalMass property
    
    /** All chunks the entity is contained in */
-   public readonly chunks: Array<Chunk> = [];
+   public readonly chunks: Chunk[] = [];
    
    /** All hitboxes attached to the entity */
-   public readonly hitboxes: Array<Hitbox> = [];
+   public readonly hitboxes: Hitbox[] = [];
    /** Hitboxes not attached to any hitbox interal to the same entity. Root hitboxes can either be hitboxes with no parent, or hitboxes with a different entity's hitbox as a parent. */
-   public readonly rootHitboxes: Array<Hitbox> = [];
+   public readonly rootHitboxes: Hitbox[] = [];
    
    public boundingAreaMinX = Number.MAX_SAFE_INTEGER;
    public boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
@@ -142,8 +142,8 @@ export function getHitboxByTag(transformComponent: TransformComponent, tag: Hitb
    return null;
 }
 
-export function getHitboxesByTag(transformComponent: TransformComponent, tag: HitboxTag): Array<Hitbox> {
-   const matchingHitboxes: Array<Hitbox> = [];
+export function getHitboxesByTag(transformComponent: TransformComponent, tag: HitboxTag): Hitbox[] {
+   const matchingHitboxes: Hitbox[] = [];
    for (const hitbox of transformComponent.hitboxes) {
       if (getHitboxTag(hitbox) === tag) {
          matchingHitboxes.push(hitbox);
@@ -223,7 +223,7 @@ const updateContainingChunks = (transformComponent: TransformComponent, entity: 
    const layer = getEntityLayer(entity);
    
    // Calculate containing chunks
-   const containingChunks: Array<Chunk> = [];
+   const containingChunks: Chunk[] = [];
    for (const hitbox of transformComponent.hitboxes) {
       calculateBoxBounds(hitbox.box);
       const minChunkX = Math.max(Math.min(Math.floor(_bounds.minX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);

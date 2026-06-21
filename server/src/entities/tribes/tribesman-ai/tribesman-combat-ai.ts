@@ -143,7 +143,7 @@ const getBestBowItemSlot = (tribesman: Entity): number | null => {
    return bestItemSlot;
 }
 
-const getNearbyEmbrasureUsePoints = (tribesman: Entity): ReadonlyArray<Point> => {
+const getNearbyEmbrasureUsePoints = (tribesman: Entity): readonly Point[] => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];
    
@@ -155,9 +155,9 @@ const getNearbyEmbrasureUsePoints = (tribesman: Entity): ReadonlyArray<Point> =>
    const minChunkY = Math.max(Math.floor((tribesmanHitbox.box.posY - (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), 0);
    const maxChunkY = Math.min(Math.floor((tribesmanHitbox.box.posY + (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
 
-   const usePoints: Array<Point> = [];
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+   const usePoints: Point[] = [];
+   for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          const chunk = layer.getChunk(chunkX, chunkY);
          for (let i = 0; i < chunk.entities.length; i++) {
             const entity = chunk.entities[i];
@@ -181,7 +181,7 @@ const getNearbyEmbrasureUsePoints = (tribesman: Entity): ReadonlyArray<Point> =>
    return usePoints;
 }
 
-const getClosestEmbrasureUsePoint = (tribesman: Entity, usePoints: ReadonlyArray<Point>): Point => {
+const getClosestEmbrasureUsePoint = (tribesman: Entity, usePoints: readonly Point[]): Point => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];
 

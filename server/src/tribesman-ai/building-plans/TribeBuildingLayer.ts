@@ -16,7 +16,7 @@ import { StructureType, STRUCTURE_TYPES } from "../../../../shared/dist/structur
 import { Point, angle, clampAngleA } from "../../../../shared/dist/utils.js";
 
 /** The 4 lines of nodes directly outside a wall. */
-type WallNodeSides = [Array<SafetyNode>, Array<SafetyNode>, Array<SafetyNode>, Array<SafetyNode>];
+type WallNodeSides = [SafetyNode[], SafetyNode[], SafetyNode[], SafetyNode[]];
 
 export interface RestrictedBuildingArea {
    readonly position: Point;
@@ -40,9 +40,9 @@ interface BaseVirtualStructure {
    readonly layer: Layer;
    readonly position: Readonly<Point>;
    readonly rotation: number;
-   readonly boxes: ReadonlyArray<Box>;
+   readonly boxes: readonly Box[];
    readonly occupiedNodes: Set<SafetyNode>;
-   readonly restrictedBuildingAreas: ReadonlyArray<RestrictedBuildingArea>;
+   readonly restrictedBuildingAreas: readonly RestrictedBuildingArea[];
 }
 
 export interface VirtualUnidentifiedBuilding extends BaseVirtualStructure {
@@ -51,10 +51,10 @@ export interface VirtualUnidentifiedBuilding extends BaseVirtualStructure {
 
 export interface VirtualWall extends BaseVirtualStructure {
    readonly entityType: EntityType.wall;
-   readonly topSideNodes: Array<SafetyNode>;
-   readonly rightSideNodes: Array<SafetyNode>;
-   readonly bottomSideNodes: Array<SafetyNode>;
-   readonly leftSideNodes: Array<SafetyNode>;
+   readonly topSideNodes: SafetyNode[];
+   readonly rightSideNodes: SafetyNode[];
+   readonly bottomSideNodes: SafetyNode[];
+   readonly leftSideNodes: SafetyNode[];
    connectionBitset: number;
 }
 
@@ -71,8 +71,8 @@ export interface VirtualDoor extends BaseVirtualStructure {
 export type VirtualStructure = VirtualUnidentifiedBuilding | VirtualWall | VirtualDoor;
 
 // @Location
-export type EntitiesByEntityType = { [T in EntityType]: Array<Entity> };
-export type VirtualStructuresByEntityType = { [T in StructureType]: Array<VirtualStructure> };
+export type EntitiesByEntityType = { [T in EntityType]: Entity[] };
+export type VirtualStructuresByEntityType = { [T in StructureType]: VirtualStructure[] };
 
 const createRestrictedBuildingArea = (position: Point, width: number, height: number, rotation: number, associatedBuildingID: number): RestrictedBuildingArea => {
    const box = createRectangularBox(position.x, position.y, 0, 0, rotation, width, height);
@@ -91,7 +91,7 @@ const createRestrictedBuildingArea = (position: Point, width: number, height: nu
    };
 }
 
-export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingLayer, x: number, y: number, angle: number, entityType: StructureType, hitboxes: ReadonlyArray<Hitbox>): VirtualStructure {
+export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingLayer, x: number, y: number, angle: number, entityType: StructureType, hitboxes: readonly Hitbox[]): VirtualStructure {
    const position = new Point(x, y);
    const boxes = hitboxes.map(hitbox => cloneBox(hitbox.box));
    
@@ -123,7 +123,7 @@ export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingL
          return virtualBuilding;
       }
       case EntityType.door: {
-         const restrictedBuildingAreas: Array<RestrictedBuildingArea> = [];
+         const restrictedBuildingAreas: RestrictedBuildingArea[] = [];
          for (let i = 0; i < 2; i++) {
             const offsetAmount = 16 / 2 + 50;
             const offsetDirection = angle + (i === 1 ? Math.PI : 0);
@@ -148,7 +148,7 @@ export function createVirtualStructureFromHitboxes(buildingLayer: TribeBuildingL
          return virtualBuilding;
       }
       default: {
-         const restrictedBuildingAreas: Array<RestrictedBuildingArea> = [];
+         const restrictedBuildingAreas: RestrictedBuildingArea[] = [];
 
          switch (entityType) {
             case EntityType.workerHut: {
@@ -279,13 +279,13 @@ const getWallNodeSides = (wallPosition: Point, wallRotation: number, occupiedNod
       }
    }
    
-   const topNodes: Array<SafetyNode> = [];
-   const rightNodes: Array<SafetyNode> = [];
-   const bottomNodes: Array<SafetyNode> = [];
-   const leftNodes: Array<SafetyNode> = [];
+   const topNodes: SafetyNode[] = [];
+   const rightNodes: SafetyNode[] = [];
+   const bottomNodes: SafetyNode[] = [];
+   const leftNodes: SafetyNode[] = [];
 
    // Sort the border nodes based on their dir
-   const sortedBorderNodes: Array<SafetyNode> = [];
+   const sortedBorderNodes: SafetyNode[] = [];
    for (const node of borderNodes) {
       const nodeDir = getWallSideNodeDir(node, wallPosition, wallRotation);
       
@@ -320,7 +320,7 @@ const getWallNodeSides = (wallPosition: Point, wallRotation: number, occupiedNod
    return [topNodes, rightNodes, bottomNodes, leftNodes];
 }
 
-const wallSideIsConnected = (buildingLayer: TribeBuildingLayer, wallSideNodes: ReadonlyArray<SafetyNode>): boolean => {
+const wallSideIsConnected = (buildingLayer: TribeBuildingLayer, wallSideNodes: readonly SafetyNode[]): boolean => {
    // Make sure all nodes of the side link to another wall, except for the first and last
    for (let i = 1; i < wallSideNodes.length - 1; i++) {
       const node = wallSideNodes[i];
@@ -415,15 +415,15 @@ export default class TribeBuildingLayer {
    public occupiedSafetyNodes = new Set<SafetyNode>();
    public safetyNodes = new Set<SafetyNode>();
 
-   public occupiedNodeToVirtualStructureIDRecord: Record<SafetyNode, Array<number>> = {};
+   public occupiedNodeToVirtualStructureIDRecord: Record<SafetyNode, number[]> = {};
 
    public nodeToRoomRecord: Record<SafetyNode, TribeRoom> = {};
 
-   public virtualStructures: Array<VirtualStructure> = [];
+   public virtualStructures: VirtualStructure[] = [];
    public virtualStructureRecord: Record<number, VirtualStructure> = {};
    public virtualStructuresByEntityType = createVirtualStructuresByEntityType();
 
-   public rooms: Array<TribeRoom> = [];
+   public rooms: TribeRoom[] = [];
    
    constructor(layer: Layer, tribe: Tribe) {
       this.layer = layer;

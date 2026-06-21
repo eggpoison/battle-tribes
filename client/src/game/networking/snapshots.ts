@@ -26,10 +26,20 @@ let lastPacketTime = 0;
 let measuredServerPacketIntervalMS = 1000 / Settings.SERVER_PACKET_SEND_RATE; // Start it off at the value we expect it to be at
 
 // @Garbage: I could create a set fixed number of snapshots, and then just override their data!
-const snapshotBuffer: Array<TickSnapshot> = [];
+const snapshotBuffer: TickSnapshot[] = [];
 
 export let currentSnapshot: TickSnapshot;
 export let nextSnapshot: TickSnapshot;
+
+export function initialiseToFirstSnapshot(): void {
+   const snapshot = snapshotBuffer[0];
+
+   // So that initial chunk-rendered-entities can fill their render object without crashing, because that requires currentSnapshot and nextSnapshot when interpolating
+   nextSnapshot = snapshot;
+   
+   updateGameStateToSnapshot(snapshot);
+   clientTick = snapshot.tick; // Start the client tick off at the tick of the very first packet received.
+}
 
 // @Cleanup: this is weird. This file imports updateGameDataToSnapshot, and that function imports this from this file.
 export function setCurrentSnapshot(snapshot: TickSnapshot): void {
@@ -37,11 +47,6 @@ export function setCurrentSnapshot(snapshot: TickSnapshot): void {
    if (__DEV__) {
       debugInfoDisplay.updateCurrentSnapshot(snapshot);
    }
-}
-
-// @TEmporary? only for a hack
-export function setNextSnapshot(snapshot: TickSnapshot): void {
-   nextSnapshot = snapshot;
 }
 
 export function bufferHasEnoughForGameStart(): boolean {
@@ -59,14 +64,6 @@ export function onGameDataPacket(reader: PacketReader): void {
    // Calculate new server packet interval using la "Exponential Moving Average"
    const smoothingFactor = 2 / (Var.PACKET_INTERVAL_ADJUST_TIME + 1);
    measuredServerPacketIntervalMS = measuredServerPacketIntervalMS * (1 - smoothingFactor) + smoothingFactor * deltaMS;
-
-   // First game packet
-   // @SPEED @Hack only needed for the first packet, pointless from then on.
-   if ((currentSnapshot as TickSnapshot | undefined) === undefined) {
-      // Set currentSnapshot, and the game state, to the first game packet received.
-      updateGameStateToSnapshot(snapshot);
-      clientTick = snapshot.tick; // Start the client tick off at the tick of the very first packet received.
-   }
    
    if (__DEV__) {
       debugInfoDisplay.updateSnapshotBufferSize(snapshotBuffer.length);

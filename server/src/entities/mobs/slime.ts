@@ -24,17 +24,17 @@ export interface SlimeEntityAnger {
    readonly target: Entity;
 }
 
-export const SLIME_RADII: ReadonlyArray<number> = [32, 44, 60];
-export const SLIME_MERGE_WEIGHTS: ReadonlyArray<number> = [2, 5, 11];
-export const SLIME_MAX_MERGE_WANT: ReadonlyArray<number> = [15 * Settings.TICK_RATE, 40 * Settings.TICK_RATE, 75 * Settings.TICK_RATE];
+export const SLIME_RADII: readonly number[] = [32, 44, 60];
+export const SLIME_MERGE_WEIGHTS: readonly number[] = [2, 5, 11];
+export const SLIME_MAX_MERGE_WANT: readonly number[] = [15 * Settings.TICK_RATE, 40 * Settings.TICK_RATE, 75 * Settings.TICK_RATE];
 
 export const SLIME_MERGE_TIME = 7.5;
 
 export const SPIT_COOLDOWN_TICKS = 4 * Settings.TICK_RATE;
 export const SPIT_CHARGE_TIME_TICKS = SPIT_COOLDOWN_TICKS + secondsToTicks(0.8);
 
-const MAX_HEALTH: ReadonlyArray<number> = [10, 20, 35];
-export const SLIME_SPEED_MULTIPLIERS: ReadonlyArray<number> = [2.5, 1.75, 1];
+const MAX_HEALTH: readonly number[] = [10, 20, 35];
+export const SLIME_SPEED_MULTIPLIERS: readonly number[] = [2.5, 1.75, 1];
 const VISION_RANGES = [200, 250, 300];
 
 registerEntityLootOnDeath(EntityType.slime, {

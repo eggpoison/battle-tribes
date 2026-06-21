@@ -18,7 +18,7 @@ import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 const HEALTHS = [15, 45];
 
-export function createEmbrasureConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createEmbrasureConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
    const VERTICAL_HITBOX_WIDTH = 12;

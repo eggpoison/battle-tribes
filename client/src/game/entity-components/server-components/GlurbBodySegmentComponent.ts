@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -15,7 +15,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbBodySegment, _GlurbBodySegmentComponentArray> {}
 }
 
-class _GlurbBodySegmentComponentArray extends _ServerComponentArray<GlurbBodySegmentComponent, GlurbBodySegmentComponentData> {
+class _GlurbBodySegmentComponentArray extends ServerComponentArray<GlurbBodySegmentComponent, GlurbBodySegmentComponentData> {
    public decodeData(): GlurbBodySegmentComponentData {
       return createGlurbHeadSegmentComponentData();
    }

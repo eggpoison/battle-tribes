@@ -19,7 +19,7 @@ import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 // @HACK @MEMORY: COPYNPASTE BETWEEN FLOOR AND WALLS
 const HEALTHS = [15, 45];
 
-export function createFloorSpikesConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createFloorSpikesConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
    const box = createRectangularBox(x, y, 0, 0, angle, 48, 48);

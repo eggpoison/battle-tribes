@@ -3,7 +3,7 @@ import { EntityType, Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
@@ -29,7 +29,7 @@ export const TUNNEL_TEXTURE_SOURCES = [TextureIndex.entities_tunnel_woodenTunnel
 export const FLOOR_SPIKE_TEXTURE_SOURCES = [TextureIndex.entities_spikes_woodenFloorSpikes, TextureIndex.entities_spikes_stoneFloorSpikes];
 export const WALL_SPIKE_TEXTURE_SOURCES = [TextureIndex.entities_spikes_woodenWallSpikes, TextureIndex.entities_spikes_stoneWallSpikes];
 
-const getMaterialTextureSources = (entityType: EntityType): ReadonlyArray<TextureIndex> => {
+const getMaterialTextureSources = (entityType: EntityType): readonly TextureIndex[] => {
    // @Robustness
    switch (entityType) {
       case EntityType.wall: return WALL_TEXTURE_SOURCES;
@@ -44,7 +44,7 @@ const getMaterialTextureSources = (entityType: EntityType): ReadonlyArray<Textur
    }
 }
 
-class BuildingMaterialComponentArray extends _ServerComponentArray<BuildingMaterialComponent, BuildingMaterialComponentData> {
+class BuildingMaterialComponentArray extends ServerComponentArray<BuildingMaterialComponent, BuildingMaterialComponentData> {
    public decodeData(reader: PacketReader): BuildingMaterialComponentData {
       const material = reader.readNumber();
       return {
@@ -83,7 +83,7 @@ class BuildingMaterialComponentArray extends _ServerComponentArray<BuildingMater
             const materialRenderPart = getRenderThingByTag(renderObject, "buildingMaterialComponent:material") as TexturedRenderPart;
             materialRenderPart.switchTextureSource(textureSource);
          } else {
-            const verticals = getRenderThingsByTag(renderObject, "bracingsComponent:vertical", 2) as Array<TexturedRenderPart>;
+            const verticals = getRenderThingsByTag(renderObject, "bracingsComponent:vertical", 2) as TexturedRenderPart[];
             for (const renderPart of verticals) {
                renderPart.switchTextureSource(TextureIndex.entities_bracings_stoneVerticalPost);
             }

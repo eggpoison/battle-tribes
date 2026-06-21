@@ -19,9 +19,9 @@ import { Settings } from "../../../../shared/dist/settings.js";
 import { AIPlanType } from "../../../../shared/dist/utils.js";
 
 // @Cleanup: should this be here?
-export function getVisibleTribes(playerLayer: Layer, chunkBounds: VisibleChunkBounds): ReadonlyArray<Tribe> {
+export function getVisibleTribes(playerLayer: Layer, chunkBounds: VisibleChunkBounds): readonly Tribe[] {
    // Calculate visible tribes
-   const visibleTribes: Array<Tribe> = [];
+   const visibleTribes: Tribe[] = [];
    for (let chunkX = chunkBounds[0]; chunkX <= chunkBounds[1]; chunkX++) {
       for (let chunkY = chunkBounds[2]; chunkY <= chunkBounds[3]; chunkY++) {
          const chunk = playerLayer.getChunk(chunkX, chunkY);
@@ -39,7 +39,7 @@ export function getVisibleTribes(playerLayer: Layer, chunkBounds: VisibleChunkBo
    return visibleTribes;
 }
 
-export function getVisibleSafetyNodesData(playerClient: PlayerClient): ReadonlyArray<SafetyNodeData> {
+export function getVisibleSafetyNodesData(playerClient: PlayerClient): readonly SafetyNodeData[] {
    const tribes = getTribes();
 
    const minNodeX = Math.floor(playerClient.minVisibleX / Settings.SAFETY_NODE_SEPARATION);
@@ -47,7 +47,7 @@ export function getVisibleSafetyNodesData(playerClient: PlayerClient): ReadonlyA
    const minNodeY = Math.floor(playerClient.minVisibleY / Settings.SAFETY_NODE_SEPARATION);
    const maxNodeY = Math.floor(playerClient.maxVisibleY / Settings.SAFETY_NODE_SEPARATION);
    
-   const safetyNodesData: Array<SafetyNodeData> = [];
+   const safetyNodesData: SafetyNodeData[] = [];
    for (const tribe of tribes) {
       const buildingLayer = tribe.buildingLayers[playerClient.lastLayer.depth];
 
@@ -83,8 +83,8 @@ export function getVisibleSafetyNodesData(playerClient: PlayerClient): ReadonlyA
    return safetyNodesData;
 }
 
-// const getTribePotentialBuildingPlans = (plan: AIPlan, chunkBounds: VisibleChunkBounds): ReadonlyArray<PotentialBuildingPlanData> => {
-//    const potentialPlansData = new Array<PotentialBuildingPlanData>();
+// const getTribePotentialBuildingPlans = (plan: AIPlan, chunkBounds: VisibleChunkBounds): readonly PotentialBuildingPlanData[] => {
+//    const potentialPlansData: PotentialBuildingPlanData[] = [];
 //    for (let i = 0; i < plan.potentialPlans.length; i++) {
 //       const potentialPlanData = plan.potentialPlans[i];
    
@@ -96,7 +96,7 @@ export function getVisibleSafetyNodesData(playerClient: PlayerClient): ReadonlyA
 //    return potentialPlansData;
 // }
 
-// const addVisibleAssignmentsRecursively = (assignment: AIPlanAssignment, chunkBounds: VisibleChunkBounds, buildingPlansData: Array<BuildingPlanData>): void => {
+// const addVisibleAssignmentsRecursively = (assignment: AIPlanAssignment, chunkBounds: VisibleChunkBounds, buildingPlansData: BuildingPlanData[]): void => {
 //    const plan = assignment.plan;
    
 //    let planPosition: Point;
@@ -146,8 +146,8 @@ export function getVisibleSafetyNodesData(playerClient: PlayerClient): ReadonlyA
 //    }
 // }
 
-// export function getVisibleBuildingPlans(visibleTribes: ReadonlyArray<Tribe>, chunkBounds: VisibleChunkBounds): ReadonlyArray<BuildingPlanData> {
-//    const buildingPlansData = new Array<BuildingPlanData>();
+// export function getVisibleBuildingPlans(visibleTribes: readonly Tribe[], chunkBounds: VisibleChunkBounds): readonly BuildingPlanData[] {
+//    const buildingPlansData: BuildingPlanData[] = [];
 //    for (let i = 0; i < visibleTribes.length; i++) {
 //       const tribe = visibleTribes[i];
 
@@ -243,8 +243,8 @@ export function addTribeBuildingSafetyData(packet: Packet, playerClient: PlayerC
    }
 }
 
-export function getVisibleRestrictedBuildingAreas(visibleTribes: ReadonlyArray<Tribe>, chunkBounds: VisibleChunkBounds): ReadonlyArray<RestrictedBuildingAreaData> {
-   const restrictedAreasData: Array<RestrictedBuildingAreaData> = [];
+export function getVisibleRestrictedBuildingAreas(visibleTribes: readonly Tribe[], chunkBounds: VisibleChunkBounds): readonly RestrictedBuildingAreaData[] {
+   const restrictedAreasData: RestrictedBuildingAreaData[] = [];
    for (let i = 0; i < visibleTribes.length; i++) {
       const tribe = visibleTribes[i];
 
@@ -273,15 +273,15 @@ const getWallSideNodeData = (nodeIndex: SafetyNode, side: number): WallSideNodeD
    };
 }
 
-export function getVisibleWallsData(playerLayer: Layer, visibleTribes: ReadonlyArray<Tribe>, chunkBounds: VisibleChunkBounds): ReadonlyArray<TribeWallData> {
-   const wallDataArray: Array<TribeWallData> = [];
+export function getVisibleWallsData(playerLayer: Layer, visibleTribes: readonly Tribe[], chunkBounds: VisibleChunkBounds): readonly TribeWallData[] {
+   const wallDataArray: TribeWallData[] = [];
    for (let i = 0; i < visibleTribes.length; i++) {
       const tribe = visibleTribes[i];
       const buildingLayer = tribe.buildingLayers[playerLayer.depth];
 
       // @Incomplete: filter out areas which aren't in the chunk bounds
       // @Hack: cast
-      for (const wall of buildingLayer.virtualStructuresByEntityType[EntityType.wall] as Array<VirtualWall>) {
+      for (const wall of buildingLayer.virtualStructuresByEntityType[EntityType.wall] as VirtualWall[]) {
          const topSideNodes = wall.topSideNodes.map(nodeIndex => getWallSideNodeData(nodeIndex, 0));
          const rightSideNodes = wall.rightSideNodes.map(nodeIndex => getWallSideNodeData(nodeIndex, 1));
          const bottomSideNodes = wall.bottomSideNodes.map(nodeIndex => getWallSideNodeData(nodeIndex, 2));
@@ -300,14 +300,14 @@ export function getVisibleWallsData(playerLayer: Layer, visibleTribes: ReadonlyA
    return wallDataArray;
 }
 
-export function getVisibleWallConnections(playerLayer: Layer, visibleTribes: ReadonlyArray<Tribe>, chunkBounds: VisibleChunkBounds): ReadonlyArray<WallConnectionData> {
-   const connectionsData: Array<WallConnectionData> = [];
+export function getVisibleWallConnections(playerLayer: Layer, visibleTribes: readonly Tribe[], chunkBounds: VisibleChunkBounds): readonly WallConnectionData[] {
+   const connectionsData: WallConnectionData[] = [];
    for (let i = 0; i < visibleTribes.length; i++) {
       const tribe = visibleTribes[i];
       const buildingLayer = tribe.buildingLayers[playerLayer.depth];
 
       // @Hack: cast
-      for (const wall of buildingLayer.virtualStructuresByEntityType[EntityType.wall] as Array<VirtualWall>) {
+      for (const wall of buildingLayer.virtualStructuresByEntityType[EntityType.wall] as VirtualWall[]) {
          // @Incomplete: filter out nodes which aren't in the chunk bounds
 
          if (wall.connectionBitset & 0b0001) {

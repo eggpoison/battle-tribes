@@ -1,3 +1,5 @@
+import { assert } from "../../shared/dist/utils.js";
+
 /** Seeded random number generator, kindly stoleified from https://stackoverflow.com/questions/424292/seedable-javascript-random-number-generator */
 abstract class SRandom {
    // LCG using GCC's constants
@@ -8,18 +10,25 @@ abstract class SRandom {
    private static state = 0;
    public static num = 0;
 
+   private static _seed: number;
+   
    public static seed(n: number): void {
+      assert(this._seed === undefined);
+      
       this.num = 0;
       this.state = n;
+      this._seed = n;
+
+      console.log("seed: " + n);
 
       // Skip first 5 values
       for (let i = 0; i < 5; i++) {
-         SRandom.next();
+         SRandom.nextInt();
       }
    }
 
-   public static logSeed(): void {
-      console.log("seed: " + this.state);
+   public static reseed(): void {
+      this.state = this._seed;
    }
 
    private static nextInt(): number {

@@ -75,7 +75,7 @@ export function padBoxData(reader: PacketReader): void {
    }
 }
 
-export function readHitboxFromData(reader: PacketReader, localID: number, entityHitboxes: ReadonlyArray<Hitbox>): Hitbox {
+export function readHitboxFromData(reader: PacketReader, localID: number, entityHitboxes: readonly Hitbox[]): Hitbox {
    const box = readBoxFromData(reader);
 
    const previousPosX = reader.readNumber();
@@ -83,7 +83,7 @@ export function readHitboxFromData(reader: PacketReader, localID: number, entity
    const accelX = reader.readNumber();
    const accelY = reader.readNumber();
 
-   const tethers: Array<HitboxTether> = [];
+   const tethers: HitboxTether[] = [];
    const numTethers = reader.readNumber();
    for (let i = 0; i < numTethers; i++) {
       const originBox = readBoxFromData(reader);
@@ -121,7 +121,7 @@ export function readHitboxFromData(reader: PacketReader, localID: number, entity
       parentHitbox = findEntityHitbox(parentEntity, parentHitboxLocalID);
    }
 
-   const children: Array<Hitbox> = [];
+   const children: Hitbox[] = [];
    const numChildren = reader.readNumber();
    for (let i = 0; i < numChildren; i++) {
       const childEntity = reader.readNumber();

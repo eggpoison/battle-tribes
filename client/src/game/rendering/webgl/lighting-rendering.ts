@@ -325,14 +325,14 @@ const getAmbientLightLevel = (layer: Layer): number => {
    }
 }
 
-const getVisibleRectLights = (layer: Layer): ReadonlyArray<RectLight> => {
+const getVisibleRectLights = (layer: Layer): readonly RectLight[] => {
    // Surface has no visible rect lights
    if (layer === surfaceLayer) {
       return [];
    }
    
    // Check the surface layer for dropdown tiles
-   const rectLights: Array<RectLight> = [];
+   const rectLights: RectLight[] = [];
    for (let i = 0; i < surfaceLayer.dropdownTiles.length; i++) {
       const tileIndex = surfaceLayer.dropdownTiles[i];
       const tileX = getTileX(tileIndex);

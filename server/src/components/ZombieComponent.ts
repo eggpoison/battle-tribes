@@ -209,8 +209,8 @@ const doAttack = (zombie: Entity, target: Entity): void => {
    }
 }
 
-const findHerdMembers = (visibleEntities: ReadonlyArray<Entity>): ReadonlyArray<Entity> => {
-   const herdMembers: Array<Entity> = [];
+const findHerdMembers = (visibleEntities: readonly Entity[]): readonly Entity[] => {
+   const herdMembers: Entity[] = [];
    for (let i = 0; i < visibleEntities.length; i++) {
       const entity = visibleEntities[i];
       if (getEntityType(entity) === EntityType.zombie) {

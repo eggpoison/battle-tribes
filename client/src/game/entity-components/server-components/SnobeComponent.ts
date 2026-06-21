@@ -4,7 +4,7 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { Settings } from "../../../../../shared/src/settings";
 import { Point, randAngle, randFloat, angle, randInt } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
@@ -20,7 +20,7 @@ import { addRenderPartTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 import { TextureIndex } from "../../../texture-index";
 
-const AMBIENT_SOUNDS: ReadonlyArray<string> = ["snobe-ambient-1.mp3", "snobe-ambient-2.mp3", "snobe-ambient-3.mp3", "snobe-ambient-4.mp3"];
+const AMBIENT_SOUNDS: readonly string[] = ["snobe-ambient-1.mp3", "snobe-ambient-2.mp3", "snobe-ambient-3.mp3", "snobe-ambient-4.mp3"];
 
 export interface SnobeComponentData {
    readonly isDigging: boolean;
@@ -36,7 +36,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snobe, _SnobeComponentArray> {}
 }
 
-class _SnobeComponentArray extends _ServerComponentArray<SnobeComponent, SnobeComponentData> {
+class _SnobeComponentArray extends ServerComponentArray<SnobeComponent, SnobeComponentData> {
    public decodeData(reader: PacketReader): SnobeComponentData {
       const isDigging = reader.readBool();
       const diggingProgress = reader.readNumber();

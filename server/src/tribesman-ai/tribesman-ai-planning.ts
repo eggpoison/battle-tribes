@@ -49,7 +49,7 @@ export interface AIPlaceBuildingPlan extends AIBasePlan {
    readonly type: AIPlanType.placeBuilding;
    readonly virtualBuilding: VirtualStructure;
    /** If this plan is for a safety-related building, this contains the safety data for all the candidates considered. */
-   potentialPlans: ReadonlyArray<WallPlaceCandidate>;
+   potentialPlans: readonly WallPlaceCandidate[];
 }
 
 export interface AIUpgradeBuildingPlan extends AIBasePlan {
@@ -92,7 +92,7 @@ export type AIPlan = AIRootPlan | AICraftRecipePlan | AIPlaceBuildingPlan | AIUp
 
 export interface AIPlanAssignment<T extends AIPlan = AIPlan> {
    readonly plan: T;
-   readonly children: Array<AIPlanAssignment>;
+   readonly children: AIPlanAssignment[];
    // Stored on the assigned entity so that, when the assignment is assigned to an entity, their own personal assignment
    // of the plan doesn't have them always assigned to the root of the personal assignment.
    assignedEntity: Entity | null;
@@ -210,7 +210,7 @@ const TOOL_TYPE_FOR_MATERIAL_RECORD: Record<ItemType, ToolType | null> = {
    [ItemType.mrpebbles]: null,
 };
 
-const createAssignment = <T extends AIPlan>(plan: T, children: Array<AIPlanAssignment>): AIPlanAssignment<T> => {
+const createAssignment = <T extends AIPlan>(plan: T, children: AIPlanAssignment[]): AIPlanAssignment<T> => {
    return {
       plan: plan,
       children: children,
@@ -218,7 +218,7 @@ const createAssignment = <T extends AIPlan>(plan: T, children: Array<AIPlanAssig
    };
 }
 
-const createNewAssignmentWithSamePlan = <T extends AIPlan>(assignment: AIPlanAssignment<T> , children: Array<AIPlanAssignment>): AIPlanAssignment<T> => {
+const createNewAssignmentWithSamePlan = <T extends AIPlan>(assignment: AIPlanAssignment<T> , children: AIPlanAssignment[]): AIPlanAssignment<T> => {
    return {
       plan: assignment.plan,
       children: children,
@@ -226,7 +226,7 @@ const createNewAssignmentWithSamePlan = <T extends AIPlan>(assignment: AIPlanAss
    };
 }
 
-export function createRootPlanAssignment(children: Array<AIPlanAssignment>, isCompletable: boolean): AIPlanAssignment<AIRootPlan> {
+export function createRootPlanAssignment(children: AIPlanAssignment[], isCompletable: boolean): AIPlanAssignment<AIRootPlan> {
    return createAssignment({
       type: AIPlanType.root,
       isComplete: false,
@@ -234,7 +234,7 @@ export function createRootPlanAssignment(children: Array<AIPlanAssignment>, isCo
    }, children);
 }
 
-export function createCraftRecipePlanAssignment(children: Array<AIPlanAssignment>, isCompletable: boolean, recipe: CraftingRecipe, productAmount: number): AIPlanAssignment<AICraftRecipePlan> {
+export function createCraftRecipePlanAssignment(children: AIPlanAssignment[], isCompletable: boolean, recipe: CraftingRecipe, productAmount: number): AIPlanAssignment<AICraftRecipePlan> {
    return createAssignment({
       type: AIPlanType.craftRecipe,
       isComplete: false,
@@ -244,7 +244,7 @@ export function createCraftRecipePlanAssignment(children: Array<AIPlanAssignment
    }, children);
 }
 
-export function createPlaceBuildingPlanAssignment(children: Array<AIPlanAssignment>, isCompletable: boolean, virtualBuilding: VirtualStructure): AIPlanAssignment<AIPlaceBuildingPlan> {
+export function createPlaceBuildingPlanAssignment(children: AIPlanAssignment[], isCompletable: boolean, virtualBuilding: VirtualStructure): AIPlanAssignment<AIPlaceBuildingPlan> {
    return createAssignment({
       type: AIPlanType.placeBuilding,
       isComplete: false,
@@ -254,7 +254,7 @@ export function createPlaceBuildingPlanAssignment(children: Array<AIPlanAssignme
    }, children);
 }
 
-export function createUpgradeBuildingPlanAssignment(children: Array<AIPlanAssignment>, isCompletable: boolean, baseBuildingID: number, rotation: number, blueprintType: BlueprintType, entityType: StructureType): AIPlanAssignment<AIUpgradeBuildingPlan> {
+export function createUpgradeBuildingPlanAssignment(children: AIPlanAssignment[], isCompletable: boolean, baseBuildingID: number, rotation: number, blueprintType: BlueprintType, entityType: StructureType): AIPlanAssignment<AIUpgradeBuildingPlan> {
    return createAssignment({
       type: AIPlanType.upgradeBuilding,
       isComplete: false,
@@ -266,7 +266,7 @@ export function createUpgradeBuildingPlanAssignment(children: Array<AIPlanAssign
    }, children);
 }
 
-export function createTechStudyPlanAssignment(children: Array<AIPlanAssignment>, isCompletable: boolean, tech: Tech): AIPlanAssignment<AITechStudyPlan> {
+export function createTechStudyPlanAssignment(children: AIPlanAssignment[], isCompletable: boolean, tech: Tech): AIPlanAssignment<AITechStudyPlan> {
    return createAssignment({
       type: AIPlanType.doTechStudy,
       isComplete: false,
@@ -275,7 +275,7 @@ export function createTechStudyPlanAssignment(children: Array<AIPlanAssignment>,
    }, children);
 }
 
-export function createTechItemPlanAssignment(children: Array<AIPlanAssignment>, isCompletable: boolean, tech: Tech, itemType: ItemType): AIPlanAssignment<AITechItemPlan> {
+export function createTechItemPlanAssignment(children: AIPlanAssignment[], isCompletable: boolean, tech: Tech, itemType: ItemType): AIPlanAssignment<AITechItemPlan> {
    return createAssignment({
       type: AIPlanType.doTechItems,
       isComplete: false,
@@ -285,7 +285,7 @@ export function createTechItemPlanAssignment(children: Array<AIPlanAssignment>, 
    }, children);
 }
 
-export function createTechCompletePlanAssignment(children: Array<AIPlanAssignment>, isCompletable: boolean, tech: Tech): AIPlanAssignment<AITechCompletePlan> {
+export function createTechCompletePlanAssignment(children: AIPlanAssignment[], isCompletable: boolean, tech: Tech): AIPlanAssignment<AITechCompletePlan> {
    return createAssignment({
       type: AIPlanType.completeTech,
       isComplete: false,
@@ -294,7 +294,7 @@ export function createTechCompletePlanAssignment(children: Array<AIPlanAssignmen
    }, children);
 }
 
-export function createGatherItemPlanAssignment(children: Array<AIPlanAssignment>, isCompletable: boolean, itemType: ItemType, amount: number): AIPlanAssignment<AIGatherItemPlan> {
+export function createGatherItemPlanAssignment(children: AIPlanAssignment[], isCompletable: boolean, itemType: ItemType, amount: number): AIPlanAssignment<AIGatherItemPlan> {
    return createAssignment({
       type: AIPlanType.gatherItem,
       isComplete: false,
@@ -309,7 +309,7 @@ const craftingStationExists = (tribe: Tribe, entityType: StructureType): boolean
 }
 
 const planToCraftItem = (tribe: Tribe, recipe: CraftingRecipe, productAmount: number): AIPlanAssignment<AICraftRecipePlan> => {
-   const children: Array<AIPlanAssignment> = [];
+   const children: AIPlanAssignment[] = [];
 
    // If a tech is required for the recipe, plan to research that tech first
    const requiredTech = getTechRequiredForItem(recipe.product);
@@ -353,7 +353,7 @@ const tribeHasResearchBench = (tribe: Tribe): boolean => {
 }
 
 const planToResearchTech = (tribe: Tribe, tech: Tech): AIPlanAssignment<AITechCompletePlan> => {
-   const children: Array<AIPlanAssignment> = [];
+   const children: AIPlanAssignment[] = [];
 
    // @Incomplete?
    // If the tech has any precursor techs which aren't researched, research them first
@@ -406,7 +406,7 @@ const getStructureItemType = (entityType: EntityType): ItemType => {
 
 // @Cleanup: I feel like this should take in the entity type instead of the item type. That feels more natural
 export function planToPlaceStructure(tribe: Tribe, entityType: StructureType, virtualStructure: VirtualStructure | null): AIPlanAssignment<AIPlaceBuildingPlan> {
-   const children: Array<AIPlanAssignment> = [];
+   const children: AIPlanAssignment[] = [];
    
    let placedVirtualStructure: VirtualStructure;
    if (virtualStructure === null) {
@@ -585,7 +585,7 @@ export function checkForAvailableAssignment(tribe: Tribe): AIPlanAssignment | nu
 }
 
 export function createPersonalAssignment(entity: Entity, assignment: AIPlanAssignment): AIPlanAssignment {
-   const children: Array<AIPlanAssignment> = [];
+   const children: AIPlanAssignment[] = [];
 
    // Scrappy's can't make tools
    if (getEntityType(entity) !== EntityType.scrappy) {

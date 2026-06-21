@@ -198,7 +198,7 @@ export function createInguSerpentConfig(x: number, y: number, angle: number): En
    const inguSerpentComponent = new InguSerpentComponent();
 
    // @Speed
-   const lights: Array<LightCreationInfo> = [];
+   const lights: LightCreationInfo[] = [];
    const hitboxes = [headHitbox, body1Hitbox, body2Hitbox, tailHitbox];
    for (const hitbox of hitboxes) {
       const light = createLight(

@@ -9,9 +9,9 @@ const BORDER_WIDTH = 5;
 
 let program: WebGLProgram;
 
-let restrictedBuildingAreas: ReadonlyArray<RestrictedBuildingAreaData>;
+let restrictedBuildingAreas: readonly RestrictedBuildingAreaData[];
 
-export function setVisibleRestrictedBuildingAreas(newRestrictedBuildingAreas: ReadonlyArray<RestrictedBuildingAreaData>): void {
+export function setVisibleRestrictedBuildingAreas(newRestrictedBuildingAreas: readonly RestrictedBuildingAreaData[]): void {
    // @Speed: Garbage collection
    restrictedBuildingAreas = newRestrictedBuildingAreas;
 }
@@ -73,7 +73,7 @@ export function renderRestrictedBuildingAreas(): void {
    gl.bindVertexArray(null);
 
    // @Speed
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
    for (let i = 0; i < restrictedBuildingAreas.length; i++) {
       const restrictedArea = restrictedBuildingAreas[i];
 

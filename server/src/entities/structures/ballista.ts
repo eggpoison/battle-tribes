@@ -27,7 +27,7 @@ const turnFunc = () => {
    throw new Error();
 }
 
-export function createBallistaConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createBallistaConfig(x: number, y: number, angle: number, tribe: Tribe, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
    const box = createRectangularBox(x, y, 0, 0, angle, 100, 100);

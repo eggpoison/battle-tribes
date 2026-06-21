@@ -154,7 +154,7 @@ export function getSwingTimeMultiplier(entity: Entity, item: Item | null): numbe
 
 // @Cleanup: Rename function. shouldn't be 'attack'
 // @Cleanup: Not just for tribe members, move to different file
-export function calculateRadialAttackTargets(entity: Entity, attackOffset: number, attackRadius: number): ReadonlyArray<Entity> {
+export function calculateRadialAttackTargets(entity: Entity, attackOffset: number, attackRadius: number): readonly Entity[] {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const entityHitbox = transformComponent.hitboxes[0];
    const layer = getEntityLayer(entity);

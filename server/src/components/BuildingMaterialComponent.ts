@@ -8,9 +8,9 @@ import { Packet } from "../../../shared/dist/packets.js";
 
 export class BuildingMaterialComponent {
    public material: BuildingMaterial;
-   public readonly healths: ReadonlyArray<number>;
+   public readonly healths: readonly number[];
 
-   constructor(material: BuildingMaterial, healths: ReadonlyArray<number>) {
+   constructor(material: BuildingMaterial, healths: readonly number[]) {
       this.material = material;
       this.healths = healths;
    }

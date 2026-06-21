@@ -38,7 +38,7 @@ registerEntityLootOnDeath(EntityType.tree, {
    }
 });
 
-const TREE_RADII: ReadonlyArray<number> = [40, 50];
+const TREE_RADII: readonly number[] = [40, 50];
 
 export function createTreeConfig(x: number, y: number, angle: number, size: TreeSize): EntityConfig {
    const transformComponent = new TransformComponent();

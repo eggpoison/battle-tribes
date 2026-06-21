@@ -54,15 +54,15 @@ export interface HitboxRelativeAngleConstraint {
    readonly damping: number;
 }
 
-const tethers: Array<HitboxTether> = [];
-const tethersMap = new WeakMap<Hitbox, Array<HitboxTether>>();
+const tethers: HitboxTether[] = [];
+const tethersMap = new WeakMap<Hitbox, HitboxTether[]>();
 
-const angularTethers: Array<HitboxAngularTether> = [];
-const angularTethersMap = new WeakMap<Hitbox, Array<HitboxAngularTether>>();
+const angularTethers: HitboxAngularTether[] = [];
+const angularTethersMap = new WeakMap<Hitbox, HitboxAngularTether[]>();
 
 // @Cleanup: isn't this just an angular tether...
-const angularConstraints: Array<HitboxRelativeAngleConstraint> = [];
-const angularConstraintsMap = new WeakMap<Hitbox, Array<HitboxRelativeAngleConstraint>>();
+const angularConstraints: HitboxRelativeAngleConstraint[] = [];
+const angularConstraintsMap = new WeakMap<Hitbox, HitboxRelativeAngleConstraint[]>();
 
 const addTetherToEntity = (hitbox: Hitbox, tether: HitboxTether): void => {
    const existingTethers = tethersMap.get(hitbox);
@@ -109,15 +109,15 @@ export function addHitboxAngularConstraint(hitbox: Hitbox, constraint: HitboxRel
    addAngularConstraintToEntity(hitbox, constraint);
 }
 
-export function getHitboxTethers(hitbox: Hitbox): ReadonlyArray<HitboxTether> | undefined {
+export function getHitboxTethers(hitbox: Hitbox): readonly HitboxTether[] | undefined {
    return tethersMap.get(hitbox);
 }
 
-export function getHitboxAngularTethers(hitbox: Hitbox): Array<HitboxAngularTether> | undefined {
+export function getHitboxAngularTethers(hitbox: Hitbox): HitboxAngularTether[] | undefined {
    return angularTethersMap.get(hitbox);
 }
 
-export function getHitboxAngularConstraints(hitbox: Hitbox): Array<HitboxRelativeAngleConstraint> | undefined {
+export function getHitboxAngularConstraints(hitbox: Hitbox): HitboxRelativeAngleConstraint[] | undefined {
    return angularConstraintsMap.get(hitbox);
 }
 

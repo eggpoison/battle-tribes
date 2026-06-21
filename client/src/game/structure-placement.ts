@@ -68,7 +68,7 @@ interface SnapCandidate {
    readonly position: Point;
    readonly angle: number;
    readonly connectedEntity: Entity;
-   readonly hitboxes: ReadonlyArray<Hitbox>;
+   readonly hitboxes: readonly Hitbox[];
 }
 
 export interface StructureConnection {
@@ -80,8 +80,8 @@ export interface StructurePlaceInfo {
    readonly position: Point;
    readonly rotation: number;
    readonly entityType: EntityType;
-   readonly connections: Array<StructureConnection>;
-   readonly hitboxes: ReadonlyArray<Hitbox>;
+   readonly connections: StructureConnection[];
+   readonly hitboxes: readonly Hitbox[];
    readonly isValid: boolean;
 }
 
@@ -198,7 +198,7 @@ export function getVisibleLayerBlockingTiles(layer: Layer): Set<TileIndex> {
    return blockingTiles;
 }
 
-const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: ReadonlyArray<Hitbox>): boolean => {
+const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: readonly Hitbox[]): boolean => {
    const blockingTiles = getVisibleLayerBlockingTiles(layer);
    
    for (const hitbox of hitboxes) {
@@ -232,7 +232,7 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
 
 // @Incomplete !
 
-// const addSnapAxes = (snapAxes: Array<SnapAxis>, snapHitbox: Hitbox, placingHitbox: Hitbox): void => {
+// const addSnapAxes = (snapAxes: SnapAxis[], snapHitbox: Hitbox, placingHitbox: Hitbox): void => {
 //    // @Temporary @Hack: we assume that all hitboxes are recetangles
 
 //    for (let i = 0; i < 4; i++) {
@@ -244,7 +244,7 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
 //    }
 // }
 
-// const addEntitySnapAxes = (snapAxes: Array<SnapAxis>, entity: Entity, placingEntityHitboxes: ReadonlyArray<Hitbox>): void => {
+// const addEntitySnapAxes = (snapAxes: SnapAxis[], entity: Entity, placingEntityHitboxes: readonly Hitbox[]): void => {
 //    const transformComponent = TransformComponentArray.getComponent(entity);
 //    for (const child of transformComponent.children) {
 //       if (!entityChildIsHitbox(child)) {
@@ -260,13 +260,13 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
 //    }
 // }
 
-// const collectSnapAxes = (desiredPlacePosition: Point, desiredPlaceRotation: number, placingEntityType: EntityType, layer: Layer): ReadonlyArray<SnapAxis> => {
+// const collectSnapAxes = (desiredPlacePosition: Point, desiredPlaceRotation: number, placingEntityType: EntityType, layer: Layer): readonly SnapAxis[] => {
 //    const entityPaarams = createStructureConfig(placingEntityType, desiredPlacePosition.copy(), desiredPlaceRotation);
 //    const transformComponentPaarams = entityPaarams.serverComponentPaarams[ServerComponentType.transform]!;
 
-//    const placingEntityHitboxes = transformComponentPaarams.children.filter(child => entityChildIsHitbox(child)) as Array<Hitbox>;
+//    const placingEntityHitboxes = transformComponentPaarams.children.filter(child => entityChildIsHitbox(child)) as Hitbox[];
 
-//    const snapAxes: Array<SnapAxis> = [];
+//    const snapAxes: SnapAxis[] = [];
    
 //    const entitiesInRange = getEntitiesInRange(layer, desiredPlacePosition.x, desiredPlacePosition.y, Settings.STRUCTURE_SNAP_RANGE);
 //    for (const entity of entitiesInRange) {
@@ -274,7 +274,7 @@ const structureIntersectsWithBuildingBlockingTiles = (layer: Layer, hitboxes: Re
 //    }
 // }
 
-const structurePlaceIsValid = (hitboxes: ReadonlyArray<Hitbox>, layer: Layer): boolean => {
+const structurePlaceIsValid = (hitboxes: readonly Hitbox[], layer: Layer): boolean => {
    // @Speed @Copynpaste: already done for candidates
    // @SUPAHACK!!!!
    if (structureIntersectsWithBuildingBlockingTiles(layer, hitboxes)) {
@@ -386,7 +386,7 @@ const getStructureSnapOrigin = (structure: Entity): Point => {
    return snapOrigin;
 }
 
-const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredPlacePosition: Point, desiredPlaceRotation: number, entityType: EntityType, layer: Layer): ReadonlyArray<SnapCandidate> => {
+const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredPlacePosition: Point, desiredPlaceRotation: number, entityType: EntityType, layer: Layer): readonly SnapCandidate[] => {
    const connectingEntityTransformComponent = TransformComponentArray.getComponent(connectingEntity);
    const connectingEntityType = getEntityType(connectingEntity);
    
@@ -396,7 +396,7 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
    const placingEntityHitboxes = transformComponentData.hitboxes;
    const snapOrigin = getStructureSnapOrigin(connectingEntity);
    
-   const snapPositions: Array<SnapCandidate> = [];
+   const snapPositions: SnapCandidate[] = [];
 
    for (const placingEntityHitbox of placingEntityHitboxes) {
       const box = placingEntityHitbox.box;
@@ -460,7 +460,7 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
 
             const maxLength = Math.max(placingEntityHitboxHalfWidth * 2, (i % 2 === 0 ? hitboxHalfWidth : hitboxHalfHeight) * 2);
             const minLength = Math.min(placingEntityHitboxHalfWidth * 2, (i % 2 === 0 ? hitboxHalfWidth : hitboxHalfHeight) * 2);
-            const positions: Array<Point> = [];
+            const positions: Point[] = [];
             for (let xi = -1; xi <= 1; xi++) {
                const sideOffset = (maxLength - minLength) * 0.5 * xi;
                
@@ -557,8 +557,8 @@ const getSnapCandidatesOffConnectingEntity = (connectingEntity: Entity, desiredP
    return snapPositions;
 }
 
-const findCandidatePlacePositions = (entityType: EntityType, desiredPlacePosition: Point, desiredPlaceRotation: number, layer: Layer): Array<SnapCandidate> => {
-   const candidatePositions: Array<SnapCandidate> = [];
+const findCandidatePlacePositions = (entityType: EntityType, desiredPlacePosition: Point, desiredPlaceRotation: number, layer: Layer): SnapCandidate[] => {
+   const candidatePositions: SnapCandidate[] = [];
    
    const entitiesInSnapRange = getEntitiesInRange(layer, desiredPlacePosition.x, desiredPlacePosition.y, Settings.STRUCTURE_SNAP_RANGE);
    for (const entity of entitiesInSnapRange) {
@@ -592,7 +592,7 @@ const transformsFormGroup = (transform1: SnapCandidate, transform2: SnapCandidat
    return true;
 }
 
-const getExistingGroup = (transform: SnapCandidate, groups: ReadonlyArray<Array<SnapCandidate>>): Array<SnapCandidate> | null => {
+const getExistingGroup = (transform: SnapCandidate, groups: readonly SnapCandidate[][]): SnapCandidate[] | null => {
    for (let i = 0; i < groups.length; i++) {
       const group = groups[i];
 
@@ -606,8 +606,8 @@ const getExistingGroup = (transform: SnapCandidate, groups: ReadonlyArray<Array<
    return null;
 }
 
-const groupTransforms = (transforms: ReadonlyArray<SnapCandidate>, entityType: EntityType, layer: Layer): ReadonlyArray<StructurePlaceInfo> => {
-   const groups: Array<Array<SnapCandidate>> = [];
+const groupTransforms = (transforms: readonly SnapCandidate[], entityType: EntityType, layer: Layer): readonly StructurePlaceInfo[] => {
+   const groups: SnapCandidate[][] = [];
    
    for (let i = 0; i < transforms.length; i++) {
       const transform = transforms[i];
@@ -621,12 +621,12 @@ const groupTransforms = (transforms: ReadonlyArray<SnapCandidate>, entityType: E
       }
    }
 
-   const placeInfos: Array<StructurePlaceInfo> = [];
+   const placeInfos: StructurePlaceInfo[] = [];
    for (let i = 0; i < groups.length; i++) {
       const group = groups[i];
       const firstTransform = group[0];
       
-      const connections: Array<StructureConnection> = [];
+      const connections: StructureConnection[] = [];
       for (const transform of group) {
          // @Hack
          const connectingEntityTransformComponent = TransformComponentArray.getComponent(transform.connectedEntity);
@@ -651,7 +651,7 @@ const groupTransforms = (transforms: ReadonlyArray<SnapCandidate>, entityType: E
    return placeInfos;
 }
 
-const filterCandidatePositions = (candidates: Array<SnapCandidate>, regularPlacePosition: Readonly<Point>): void => {
+const filterCandidatePositions = (candidates: SnapCandidate[], regularPlacePosition: Readonly<Point>): void => {
    for (let i = 0; i < candidates.length; i++) {
       const transform = candidates[i];
 
@@ -662,13 +662,13 @@ const filterCandidatePositions = (candidates: Array<SnapCandidate>, regularPlace
    }
 }
 
-const getNearbyTileCornerSubtiles = (regularPlacePosition: Point): ReadonlyArray<number> => {
+const getNearbyTileCornerSubtiles = (regularPlacePosition: Point): readonly number[] => {
    const minTileX = Math.floor(regularPlacePosition.x / Settings.TILE_SIZE);
    const maxTileX = Math.ceil(regularPlacePosition.x / Settings.TILE_SIZE);
    const minTileY = Math.floor(regularPlacePosition.y / Settings.TILE_SIZE);
    const maxTileY = Math.ceil(regularPlacePosition.y / Settings.TILE_SIZE);
 
-   const tileCornerSubtiles: Array<number> = [];
+   const tileCornerSubtiles: number[] = [];
    for (let tileCornerX = minTileX; tileCornerX <= maxTileX; tileCornerX++) {
       for (let tileCornerY = minTileY; tileCornerY <= maxTileY; tileCornerY++) {
          const subtileX = tileCornerX * Settings.SUBTILES_IN_TILE;

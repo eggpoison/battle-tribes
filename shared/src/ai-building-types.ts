@@ -8,12 +8,12 @@ export interface SafetyNodeData {
 }
 
 export interface PotentialPlanSafetyData {
-   readonly buildingTypes: Array<StructureType>;
-   readonly buildingIDs: Array<number>;
-   readonly buildingMinSafetys: Array<number>;
-   readonly buildingAverageSafetys: Array<number>;
-   readonly buildingExtendedAverageSafetys: Array<number>;
-   readonly buildingResultingSafetys: Array<number>;
+   readonly buildingTypes: StructureType[];
+   readonly buildingIDs: number[];
+   readonly buildingMinSafetys: number[];
+   readonly buildingAverageSafetys: number[];
+   readonly buildingExtendedAverageSafetys: number[];
+   readonly buildingResultingSafetys: number[];
 }
 
 export interface PotentialBuildingPlanData {
@@ -30,7 +30,7 @@ export interface BuildingPlanData {
    readonly y: number;
    readonly rotation: number;
    readonly entityType: StructureType;
-   readonly potentialBuildingPlans: ReadonlyArray<PotentialBuildingPlanData>;
+   readonly potentialBuildingPlans: readonly PotentialBuildingPlanData[];
    readonly assignedTribesmanID: number;
 }
 
@@ -42,10 +42,10 @@ export interface WallSideNodeData {
 export interface TribeWallData {
    readonly wallID: number;
    // @Cleanup: merge into one array
-   readonly topSideNodes: Array<WallSideNodeData>;
-   readonly rightSideNodes: Array<WallSideNodeData>;
-   readonly bottomSideNodes: Array<WallSideNodeData>;
-   readonly leftSideNodes: Array<WallSideNodeData>;
+   readonly topSideNodes: WallSideNodeData[];
+   readonly rightSideNodes: WallSideNodeData[];
+   readonly bottomSideNodes: WallSideNodeData[];
+   readonly leftSideNodes: WallSideNodeData[];
 }
 
 export interface WallConnectionData {

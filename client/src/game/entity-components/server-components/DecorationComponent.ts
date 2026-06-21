@@ -1,6 +1,6 @@
 import { DecorationType, ServerComponentType } from "../../../../../shared/src/components";
 import { PacketReader } from "../../../../../shared/src/packets";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -36,7 +36,7 @@ const DECORATION_RENDER_INFO: Record<DecorationType, TextureIndex> = {
    [DecorationType.flower4]: TextureIndex.decorations_flower4
 };
 
-class _DecorationComponentArray extends _ServerComponentArray<DecorationComponent, DecorationComponentData> {
+class _DecorationComponentArray extends ServerComponentArray<DecorationComponent, DecorationComponentData> {
    public decodeData(reader: PacketReader): DecorationComponentData {
       const decorationType = reader.readNumber();
 

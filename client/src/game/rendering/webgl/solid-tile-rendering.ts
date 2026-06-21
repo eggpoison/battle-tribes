@@ -23,6 +23,8 @@ interface RenderInfo {
    numElements: number;
 }
 
+// @SPEED! Don't render tiles which are fully covered under subtiles.
+
 export const FLOOR_TILE_TEXTURE_SOURCE_RECORD: Partial<Record<TileType, string | null>> = {
    [TileType.grass]: "tiles/grass.png",
    [TileType.water]: null,
@@ -77,8 +79,8 @@ const WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<SubtileType, nu
    }
 })();
 
-let groundTileInfoArrays: Array<Array<RenderInfo>> = [];
-let wallTileInfoArrays: Array<Array<RenderInfo>> = [];
+let groundTileInfoArrays: RenderInfo[][] = [];
+let wallTileInfoArrays: RenderInfo[][] = [];
 
 let program: WebGLProgram;
 let floorTileTextureArray: WebGLTexture;
@@ -227,7 +229,7 @@ export function createSolidTileShaders(): void {
    sizeUniformLocation = gl.getUniformLocation(program, "u_size")!;
 
    // Floors
-   const floorTextureSources: Array<string> = [];
+   const floorTextureSources: string[] = [];
    for (let tileType: TileType = 0; tileType < NUM_TILE_TYPES; tileType++) {
       const textureSource = FLOOR_TILE_TEXTURE_SOURCE_RECORD[tileType];
       if (textureSource !== undefined && textureSource !== null) {
@@ -237,7 +239,7 @@ export function createSolidTileShaders(): void {
    floorTileTextureArray = createTextureArray(floorTextureSources, 16, 16, 5);
 
    // Walls
-   const wallTextureSources: Array<string> = [];
+   const wallTextureSources: string[] = [];
    for (let subtileType: SubtileType = 0; subtileType < SubtileType._LENGTH_; subtileType++) {
       const textureSource = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
       if (textureSource !== undefined) {
@@ -431,6 +433,10 @@ export function createTileRenderChunks(layer: Layer): void {
 }
 
 const recalculateChunkData = (info: RenderInfo, layer: Layer, renderChunkX: number, renderChunkY: number, isWallTiles: boolean): void => {
+   // @HACK @COPYNPASTE!!
+   // @HACK @COPYNPASTE!!
+   // @HACK @COPYNPASTE!!
+   
    const minTileX = getRenderChunkMinTileX(renderChunkX);
    const maxTileX = getRenderChunkMaxTileX(renderChunkX);
    const minTileY = getRenderChunkMinTileY(renderChunkY);
@@ -472,15 +478,13 @@ const recalculateChunkData = (info: RenderInfo, layer: Layer, renderChunkX: numb
       setFloorVertexData(info.vertexData, layer, renderChunkX, renderChunkY);
    }
    
-   // Not binding a VAO is ok here, as long as before all the chunks are recalculated the VAO is unbound
-
-   // @HACK @SPEED cuz something is fucking :(
    gl.bindVertexArray(info.vao);
 
    // Have to create a completely new buffer because it may have resized
    gl.bindBuffer(gl.ARRAY_BUFFER, info.buffer);
    gl.bufferData(gl.ARRAY_BUFFER, info.vertexData, gl.STATIC_DRAW);
 
+   // @HACK @SPEED cuz something is fucking :(
    gl.bindVertexArray(null);
 }
 
@@ -504,8 +508,8 @@ export function renderSolidTiles(layer: Layer, isWallTiles: boolean): void {
    const layerIdx = layers.indexOf(layer);
    
    const infoArray = isWallTiles ? wallTileInfoArrays[layerIdx] : groundTileInfoArrays[layerIdx];
-   for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
-      for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
+   for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
+      for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
          const idx = getRenderChunkIndex(renderChunkX, renderChunkY);
          const tileInfo = infoArray[idx];
 
@@ -518,7 +522,7 @@ export function renderSolidTiles(layer: Layer, isWallTiles: boolean): void {
    gl.bindVertexArray(null);
 }
 
-export function processTileUpdates(layer: Layer, tileUpdates: ReadonlyArray<TileUpdateData>): void {
+export function processTileUpdates(layer: Layer, tileUpdates: readonly TileUpdateData[]): void {
    const renderChunksToUpdate = new Set<number>();
    
    for (const tileUpdate of tileUpdates) {

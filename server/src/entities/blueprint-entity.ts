@@ -38,7 +38,7 @@ export function getBlueprintEntityType(blueprintType: BlueprintType): EntityType
    }
 }
 
-export function createBlueprintEntityConfig(x: number, y: number, angle: number, tribe: Tribe, blueprintType: BlueprintType, associatedEntityID: Entity, virtualStructure: VirtualStructure | null, connections: Array<StructureConnection>): EntityConfig {
+export function createBlueprintEntityConfig(x: number, y: number, angle: number, tribe: Tribe, blueprintType: BlueprintType, associatedEntityID: Entity, virtualStructure: VirtualStructure | null, connections: StructureConnection[]): EntityConfig {
    let transformComponent: TransformComponent;
 
    if (associatedEntityID !== 0) {

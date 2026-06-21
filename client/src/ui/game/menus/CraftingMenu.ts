@@ -1,4 +1,4 @@
-import { CraftingRecipe, CRAFTING_RECIPES, CraftingStationEntityType } from "../../../../../shared/src/items/crafting-recipes";
+import { CRAFTING_RECIPES, CraftingStationEntityType } from "../../../../../shared/src/items/crafting-recipes";
 import { Inventory, InventoryName } from "../../../../../shared/src/items/items";
 import { ItemTally2, tallyInventoryItems } from "../../../../../shared/src/items/ItemTally";
 import { getTechRequiredForItem } from "../../../../../shared/src/techs";
@@ -6,9 +6,9 @@ import { assert } from "../../../../../shared/src/utils";
 import { playHeadSound } from "../../../game/sound";
 import { sendCraftItemPacket } from "../../../game/networking/packet-sending/packet-sending";
 import { playerTribe } from "../../../game/tribes";
-import { addItemToItemSlot, createItemSlot, removeItemSlotSelection, addItemSlotSelection, makeItemSlotInteractable } from "../inventories/ItemSlot";
+import { addItemToItemSlot, createItemSlot, removeItemSlotElemSelection, addItemSlotElemSelection, makeItemSlotInteractable } from "../inventories/ItemSlot";
 import { getEntityType } from "../../../game/world";
-import { createInventoryContainer } from "../inventories/Inventory";
+import { createInventoryContainer, getClickedItemSlotIdx } from "../inventories/Inventory";
 import { getSelectedEntity } from "../../../game/entity-selection";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../game/client-item-info";
 import { playerInstance } from "../../../game/player";
@@ -21,12 +21,12 @@ const enum Var {
 
 let craftingMenuElem: HTMLElement | null = null;
 
-const availableRecipes: Array<CraftingRecipe> = [];
-const craftableRecipes: Array<CraftingRecipe> = [];
+const availableRecipes: number[] = [];
+const craftableRecipes: number[] = [];
 
-let selectedRecipe: CraftingRecipe | null = null;
+let selectedRecipeIdx: number = -1;
 
-export function updateCraftableRecipes(usableInventories: ReadonlyArray<Inventory>): void {
+export function updateCraftableRecipes(usableInventories: readonly Inventory[]): void {
    const availableItemsTally = new ItemTally2();
    for (const inventory of usableInventories) {
       tallyInventoryItems(availableItemsTally, inventory);
@@ -35,39 +35,41 @@ export function updateCraftableRecipes(usableInventories: ReadonlyArray<Inventor
    // @Garbage
    craftableRecipes.length = 0;
    // @Speed: this always goes over all crafting recipes. When it only needs to go over the ones available to the current crafting menu.
-   for (const recipe of CRAFTING_RECIPES) {
+   for (let i = 0; i < CRAFTING_RECIPES.length; i++) {
+      const recipe = CRAFTING_RECIPES[i];
       if (availableItemsTally.fullyCoversOtherTally(recipe.ingredients)) {
-         craftableRecipes.push(recipe);
+         craftableRecipes.push(i);
       }
    }
 }
 
 function craftRecipe(): void {
-   if (selectedRecipe === null || !craftableRecipes.includes(selectedRecipe)) {
+   if (selectedRecipeIdx === -1 || !craftableRecipes.includes(selectedRecipeIdx)) {
       return;
    }
 
    playHeadSound("craft.mp3", 0.25, 1);
 
-   // @Speed :\
-   sendCraftItemPacket(CRAFTING_RECIPES.indexOf(selectedRecipe));
+   sendCraftItemPacket(selectedRecipeIdx);
 }
 
-function selectRecipe(recipe: CraftingRecipe, itemSlotElem: HTMLElement): void {
-   assert(craftingMenuElem);
+function selectRecipe(itemSlotIdx: number): void {
+   assert(craftingMenuElem !== null);
    
-   if (recipe === selectedRecipe) {
+   const recipeIdx = availableRecipes[itemSlotIdx];
+   if (recipeIdx === selectedRecipeIdx) {
       return;
    }
 
-   selectedRecipe = recipe;
+   selectedRecipeIdx = recipeIdx;
 
    const previouslySelectedRecipeElem: HTMLElement | null = craftingMenuElem.querySelector(".recipe-browser .selected");
    if (previouslySelectedRecipeElem !== null) {
-      removeItemSlotSelection(previouslySelectedRecipeElem);
+      removeItemSlotElemSelection(previouslySelectedRecipeElem);
    }
 
-   addItemSlotSelection(itemSlotElem);
+   const itemSlotElem = craftingMenuElem.querySelector(".inventory")!.children[itemSlotIdx] as HTMLElement;
+   addItemSlotElemSelection(itemSlotElem);
 
    refreshCraftingArea();
 }
@@ -75,30 +77,37 @@ function selectRecipe(recipe: CraftingRecipe, itemSlotElem: HTMLElement): void {
 function deselectRecipe(): void {
    assert(craftingMenuElem);
 
-   selectedRecipe = null;
+   selectedRecipeIdx = -1;
    
    const previouslySelectedRecipeElem: HTMLElement | null = craftingMenuElem.querySelector(".recipe-browser .selected");
    if (previouslySelectedRecipeElem !== null) {
-      removeItemSlotSelection(previouslySelectedRecipeElem);
+      removeItemSlotElemSelection(previouslySelectedRecipeElem);
    }
 
    refreshCraftingArea();
 }
 
+const clickRecipeSlot = (e: MouseEvent) => {
+   const itemSlotIdx = getClickedItemSlotIdx(e, Var.RECIPE_BROWSER_WIDTH);
+   if (itemSlotIdx < availableRecipes.length) {
+      selectRecipe(itemSlotIdx);
+   } else {
+      deselectRecipe();
+   }
+}
+
 function refreshCraftingArea(): void {
    const craftingAreaElem = craftingMenuElem!.querySelector(".crafting-area")!;
-   
-   // Destroy existing crafting area
-   while (craftingAreaElem.children.length > 0) {
-      craftingAreaElem.children[0].remove();
-   }
-
+   craftingAreaElem.replaceChildren();
    // @Hack cuz linter is weird
    createCraftingArea(craftingAreaElem as HTMLElement);
 }
 
 function createCraftingArea(craftingAreaElem: HTMLElement): void {
-   if (selectedRecipe !== null) {
+   if (selectedRecipeIdx !== -1) {
+      const recipe = CRAFTING_RECIPES[selectedRecipeIdx];
+      const productInfo = CLIENT_ITEM_INFO_RECORD[recipe.product];
+      
       // Header
 
       const headerElem = document.createElement("div");
@@ -107,13 +116,13 @@ function createCraftingArea(craftingAreaElem: HTMLElement): void {
 
       const recipeProductNameElem = document.createElement("div");
       recipeProductNameElem.className = "recipe-product-name";
-      recipeProductNameElem.textContent = CLIENT_ITEM_INFO_RECORD[selectedRecipe.product].name;
+      recipeProductNameElem.textContent = productInfo.name;
       headerElem.appendChild(recipeProductNameElem);
 
       const itemImg = document.createElement("img");
       itemImg.className = "recipe-product-icon";
-      itemImg.src = getItemTypeImage(selectedRecipe.product);
-      headerElem.appendChild(recipeProductNameElem);
+      itemImg.src = getItemTypeImage(recipe.product);
+      headerElem.appendChild(itemImg);
 
       // Content
 
@@ -123,7 +132,7 @@ function createCraftingArea(craftingAreaElem: HTMLElement): void {
 
       const recipeProductDescriptionElem = document.createElement("div");
       recipeProductDescriptionElem.className = "recipe-product-description";
-      recipeProductDescriptionElem.textContent = CLIENT_ITEM_INFO_RECORD[selectedRecipe.product].description;
+      recipeProductDescriptionElem.textContent = productInfo.description;
       contentElem.appendChild(recipeProductDescriptionElem);
 
       const ingredientsTitleElem = document.createElement("div");
@@ -135,7 +144,7 @@ function createCraftingArea(craftingAreaElem: HTMLElement): void {
       ingredientsElem.className = "ingredients";
       contentElem.appendChild(ingredientsElem);
 
-      for (const ingredient of selectedRecipe.ingredients.getEntries()) {
+      for (const ingredient of recipe.ingredients.getEntries()) {
          const ingredientElem = document.createElement("li");
          ingredientElem.className = "ingredient";
          ingredientsElem.appendChild(ingredientElem);
@@ -159,6 +168,7 @@ function createCraftingArea(craftingAreaElem: HTMLElement): void {
          ingredientElem.appendChild(ingredientCountElem);
       }
 
+// @Incomplete!! The "not-enough"
 //    <span class="ingredient-count" class:not-enough={!playerHasEnoughIngredients}>x{props.amountRequiredForRecipe}</span>
 
       // Bottom
@@ -169,7 +179,7 @@ function createCraftingArea(craftingAreaElem: HTMLElement): void {
 
       const craftButton = document.createElement("button");
       craftButton.className = "craft-button";
-      if (craftableRecipes.indexOf(selectedRecipe) !== -1) {
+      if (craftableRecipes.indexOf(selectedRecipeIdx) !== -1) {
          craftButton.classList.add("craftable");
       }
       craftButton.textContent = "CRAFT";
@@ -188,6 +198,7 @@ function createCraftingArea(craftingAreaElem: HTMLElement): void {
       makeItemSlotInteractable(craftingOutputSlotElem, playerInstance, craftingOutputSlot, 1);
       bottomElem.appendChild(craftingOutputSlotElem);
 
+   // @Incomplete?
    //       <div class="content">
    //          <div class="recipe-product-description">{CLIENT_ITEM_INFO_RECORD[selectedRecipe.recipe.product].description}</div>
 
@@ -214,11 +225,11 @@ export function openCraftingMenu(): void {
    const selectedEntity = getSelectedEntity();
    const craftingStation = selectedEntity !== null ? getEntityType(selectedEntity) as CraftingStationEntityType : null;
 
-
    // Get all available recipes
    availableRecipes.length = 0; // @Garbage
    // @Speed: loops through all recipes
-   for (const recipe of CRAFTING_RECIPES) {
+   for (let i = 0; i < CRAFTING_RECIPES.length; i++) {
+      const recipe = CRAFTING_RECIPES[i];
       // Make sure the crafting station is right
       if (craftingStation !== (recipe.craftingStation || null)) {
          continue;
@@ -227,54 +238,53 @@ export function openCraftingMenu(): void {
       // Make sure the player has the tech
       const techRequired = getTechRequiredForItem(recipe.product);
       if (techRequired === null || playerTribe.unlockedTechs.includes(techRequired)) {
-         availableRecipes.push(recipe);
+         availableRecipes.push(i);
       }
    }
 
-   craftingMenuElem = document.createElement("div");
-   craftingMenuElem.id = "crafting-menu";
-   craftingMenuElem.className = "menu";
-   craftingMenuElem.oncontextmenu = (e): void => { e.preventDefault(); };
-   document.body.appendChild(craftingMenuElem);
+   const elem = document.createElement("div");
+   elem.id = "crafting-menu";
+   elem.className = "menu";
 
    const recipeBrowserElem = document.createElement("div");
    recipeBrowserElem.className = "recipe-browser";
-   craftingMenuElem.appendChild(recipeBrowserElem);
+   elem.appendChild(recipeBrowserElem);
 
    const recipeBrowserHeight = Math.max(Var.RECIPE_BROWSER_MIN_HEIGHT, Math.ceil(availableRecipes.length / Var.RECIPE_BROWSER_WIDTH));
 
    const recipeBrowserItemSlots = createInventoryContainer(false, Var.RECIPE_BROWSER_WIDTH);
+   recipeBrowserItemSlots.onmousedown = clickRecipeSlot;
    recipeBrowserElem.appendChild(recipeBrowserItemSlots);
 
    const recipeBrowserNumItemSlots = recipeBrowserHeight * Var.RECIPE_BROWSER_WIDTH;
    // Recipe slots
-   for (const recipe of availableRecipes) {
+   for (const recipeIdx of availableRecipes) {
       const itemSlotElem = createItemSlot();
-      if (recipe === selectedRecipe) {
-         addItemSlotSelection(itemSlotElem);
+      if (recipeIdx === selectedRecipeIdx) {
+         addItemSlotElemSelection(itemSlotElem);
       }
-      if (craftableRecipes.indexOf(recipe) !== -1) {
+      if (craftableRecipes.indexOf(recipeIdx) !== -1) {
          itemSlotElem.classList.add("craftable");
       }
-      addItemToItemSlot(itemSlotElem, recipe.product, recipe.yield);
 
-      // @SPEED! This is lots.
-      itemSlotElem.onmousedown = (): void => { selectRecipe(recipe, itemSlotElem); };
+      const recipe = CRAFTING_RECIPES[recipeIdx];
+      addItemToItemSlot(itemSlotElem, recipe.product, recipe.yield);
 
       recipeBrowserItemSlots.appendChild(itemSlotElem);
    }
    // Empty slots
    for (let i = 0; i < recipeBrowserNumItemSlots - availableRecipes.length; i++) {
       const itemSlotElem = createItemSlot();
-      // @SPEED! This is lots.
-      itemSlotElem.onmousedown = deselectRecipe;
       recipeBrowserItemSlots.appendChild(itemSlotElem);
    }
 
    const craftingAreaElem = document.createElement("div");
    craftingAreaElem.className = "crafting-area";
-   craftingMenuElem.appendChild(craftingAreaElem);
+   elem.appendChild(craftingAreaElem);
    createCraftingArea(craftingAreaElem);
+
+   document.body.appendChild(elem);
+   craftingMenuElem = elem;
 }
 
 export function closeCraftingMenu(): void {

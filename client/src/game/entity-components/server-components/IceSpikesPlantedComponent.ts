@@ -2,7 +2,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { randInt } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
@@ -34,7 +34,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceSpikesPlanted, _IceSpikesPlantedComponentArray> {}
 }
 
-class _IceSpikesPlantedComponentArray extends _ServerComponentArray<IceSpikesPlantedComponent, IceSpikesPlantedComponentData, IntermediateInfo> {
+class _IceSpikesPlantedComponentArray extends ServerComponentArray<IceSpikesPlantedComponent, IceSpikesPlantedComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): IceSpikesPlantedComponentData {
       const growthProgress = reader.readNumber();
       return {

@@ -2,11 +2,11 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity, EntityType } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { assert, rotatePointAroundOrigin, _point } from "../../../../../shared/src/utils";
-import { translateHitbox } from "../../hitboxes";
+import { Hitbox, translateHitbox } from "../../hitboxes";
 import { playerInstance } from "../../player";
 import { playSound } from "../../sound";
 import { entityExists, EntityComponentData, getEntityLayer, getEntityType } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
@@ -22,20 +22,20 @@ interface CarrySlot {
 }
 
 export interface RideableComponentData {
-   readonly carrySlots: ReadonlyArray<CarrySlot>;
+   readonly carrySlots: readonly CarrySlot[];
 }
 
 export interface RideableComponent {
-   readonly carrySlots: ReadonlyArray<CarrySlot>;
+   readonly carrySlots: readonly CarrySlot[];
 }
 
 declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.rideable, _RideableComponentArray> {}
 }
 
-class _RideableComponentArray extends _ServerComponentArray<RideableComponent, RideableComponentData> {
+class _RideableComponentArray extends ServerComponentArray<RideableComponent, RideableComponentData> {
    public decodeData(reader: PacketReader): RideableComponentData {
-      const carrySlots: Array<CarrySlot> = [];
+      const carrySlotsData: CarrySlot[] = [];
       
       const numCarrySlots = reader.readNumber();
       for (let i = 0; i < numCarrySlots; i++) {
@@ -57,10 +57,10 @@ class _RideableComponentArray extends _ServerComponentArray<RideableComponent, R
             dismountOffsetX: dismountOffsetX,
             dismountOffsetY: dismountOffsetY
          };
-         carrySlots.push(carrySlot);
+         carrySlotsData.push(carrySlot);
       }
       
-      return createRideableComponentData(carrySlots);
+      return createRideableComponentData(carrySlotsData);
    }
 
    public createComponent(entityComponentData: EntityComponentData): RideableComponent {
@@ -129,7 +129,7 @@ class _RideableComponentArray extends _ServerComponentArray<RideableComponent, R
 
 export const RideableComponentArray = registerServerComponentArray(ServerComponentType.rideable, _RideableComponentArray, true);
 
-export function createRideableComponentData(carrySlots: ReadonlyArray<CarrySlot>): RideableComponentData {
+export function createRideableComponentData(carrySlots: readonly CarrySlot[]): RideableComponentData {
    return {
       carrySlots: carrySlots
    };

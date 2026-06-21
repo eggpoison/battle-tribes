@@ -3,7 +3,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { Settings } from "../../../../../shared/src/settings";
 import { randAngle, randFloat, angle } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
@@ -25,7 +25,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.furnace, _FurnaceComponentArray> {}
 }
 
-class _FurnaceComponentArray extends _ServerComponentArray<FurnaceComponent, FurnaceComponentData> {
+class _FurnaceComponentArray extends ServerComponentArray<FurnaceComponent, FurnaceComponentData> {
    public decodeData(): FurnaceComponentData {
       return {};
    }

@@ -49,7 +49,7 @@ export interface BuildMenuOption {
    /** The type of the ghost which gets shown when previewing this option */
    readonly ghostType: GhostType;
    readonly optionType: OptionType;
-   readonly costs: ReadonlyArray<OptionCost>;
+   readonly costs: readonly OptionCost[];
    readonly blueprintType: BlueprintType | ((entity: Entity) => BlueprintType) | null;
    readonly isClickable?: (entity: Entity) => boolean;
    readonly isHighlighted?: (entity: Entity) => boolean;
@@ -115,7 +115,7 @@ const playerIsHoldingHammer = (): boolean => {
    return heldItem !== null && ITEM_TYPE_RECORD[heldItem.type] === "hammer";
 }
 
-export function getBuildMenuOptions(entity: Entity): ReadonlyArray<BuildMenuOption> {
+export function getBuildMenuOptions(entity: Entity): readonly BuildMenuOption[] {
    // Enemy buildings can't be selected
    const tribeComponent = tribeComponentArray.tryGetComponent(entity);
    if (tribeComponent === null || tribeComponent.tribeID !== playerTribe.id) {
@@ -130,7 +130,7 @@ export function getBuildMenuOptions(entity: Entity): ReadonlyArray<BuildMenuOpti
 
    const buildingMaterialComponent = buildingMaterialComponentArray.tryGetComponent(entity);
    
-   const options = new Array<BuildMenuOption>();
+   const options: BuildMenuOption[] = [];
 
    const entityType = getEntityType(entity);
 
@@ -348,5 +348,5 @@ export function getBuildMenuOptions(entity: Entity): ReadonlyArray<BuildMenuOpti
 }
 
 export const buildMenuState = {
-   options: [] as ReadonlyArray<BuildMenuOption>
+   options: [] as readonly BuildMenuOption[]
 };

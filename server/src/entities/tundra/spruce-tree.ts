@@ -24,7 +24,7 @@ registerEntityLootOnDeath(EntityType.spruceTree, {
    }
 });
 
-const TREE_RADII: ReadonlyArray<number> = [46, 64];
+const TREE_RADII: readonly number[] = [46, 64];
 
 export function createSpruceTreeConfig(x: number, y: number, angle: number): EntityConfig {
    const size: TreeSize = randInt(0, 1);

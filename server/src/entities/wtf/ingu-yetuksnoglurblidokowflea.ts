@@ -72,10 +72,10 @@ const turnFunc = (inguYetu: Entity, x: number, y: number, turnSpeed: number, tur
    turnHitboxToAngle(headHitbox, idealAngle, turnSpeed, turnDamping, false);
 }
 
-export function createInguYetuksnoglurblidokowfleaConfig(x: number, y: number, angle: number): ReadonlyArray<EntityConfig> {
+export function createInguYetuksnoglurblidokowfleaConfig(x: number, y: number, angle: number): readonly EntityConfig[] {
    const BODY_SEGMENT_SEPARATION = 140;
 
-   const childConfigs: Array<ChildConfigAttachInfo> = [];
+   const childConfigs: ChildConfigAttachInfo[] = [];
    
    const transformComponent = new TransformComponent();
 

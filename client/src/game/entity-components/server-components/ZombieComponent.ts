@@ -5,7 +5,7 @@ import { Settings } from "../../../../../shared/src/settings";
 import { randInt, Point, angle, randAngle, randFloat } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain } from "../../particles";
@@ -33,10 +33,10 @@ declare module "../component-registry" {
 
 const RADIUS = 32;
 
-const ZOMBIE_TEXTURE_INDEXES: ReadonlyArray<TextureIndex> = [TextureIndex.entities_zombie_zombie1, TextureIndex.entities_zombie_zombie2, TextureIndex.entities_zombie_zombie3, TextureIndex.entities_zombie_zombieGolden];
+const ZOMBIE_TEXTURE_INDEXES: readonly TextureIndex[] = [TextureIndex.entities_zombie_zombie1, TextureIndex.entities_zombie_zombie2, TextureIndex.entities_zombie_zombie3, TextureIndex.entities_zombie_zombieGolden];
 
 
-class _ZombieComponentArray extends _ServerComponentArray<ZombieComponent, ZombieComponentData> {
+class _ZombieComponentArray extends ServerComponentArray<ZombieComponent, ZombieComponentData> {
    public decodeData(reader: PacketReader): ZombieComponentData {
       const zombieType = reader.readNumber();
       return {
@@ -64,7 +64,7 @@ class _ZombieComponentArray extends _ServerComponentArray<ZombieComponent, Zombi
       // @Hack @Copynpaste
 
       // Hand render parts
-      const handRenderParts: Array<VisualRenderPart> = [];
+      const handRenderParts: VisualRenderPart[] = [];
       for (let i = 0; i < inventoryUseComponentData.limbInfos.length; i++) {
          const attachPoint = new RenderAttachPoint(
             bodyRenderPart,

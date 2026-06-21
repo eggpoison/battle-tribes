@@ -15,11 +15,11 @@ const enum Var {
 export interface RenderPartOverlayGroup {
    readonly entity: Entity;
    readonly textureSource: string;
-   readonly renderParts: Array<VisualRenderPart>;
+   readonly renderParts: VisualRenderPart[];
 }
 
 // @Cleanup: shouldn't be exported
-export const OVERLAY_TEXTURE_SOURCES: Array<string> = [
+export const OVERLAY_TEXTURE_SOURCES: string[] = [
    "overlays/dirt.png"
 ];
 
@@ -44,7 +44,7 @@ const getOverlayRenderHeight = (overlay: RenderPartOverlayGroup): number => {
    return minDepth - 0.0001;
 }
 
-export function createRenderPartOverlayGroup(entity: Entity, textureSource: string, renderParts: Array<VisualRenderPart>): RenderPartOverlayGroup {
+export function createRenderPartOverlayGroup(entity: Entity, textureSource: string, renderParts: VisualRenderPart[]): RenderPartOverlayGroup {
    const overlay: RenderPartOverlayGroup = {
       entity,
       textureSource,

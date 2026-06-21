@@ -21,36 +21,36 @@ interface WallSubtileUpdate {
 }
 
 interface TileCensus {
-   readonly types: Record<TileType, Array<TileIndex>>;
-   biomes: Record<Biome, Array<TileIndex>>;
+   readonly types: Record<TileType, TileIndex[]>;
+   biomes: Record<Biome, TileIndex[]>;
 }
 
-export type CollisionChunk = Array<Entity>;
+export type CollisionChunk = Entity[];
 
 const createTileCensus = (): TileCensus => {
    return {
       types: (() => {
-         const types: Partial<Record<TileType, Array<TileIndex>>> = {};
+         const types: Partial<Record<TileType, TileIndex[]>> = {};
          for (let tileType: TileType = 0; tileType < NUM_TILE_TYPES; tileType++) {
             types[tileType] = [];
          }
-         return types as Record<TileType, Array<TileIndex>>;
+         return types as Record<TileType, TileIndex[]>;
       })(),
       biomes: (() => {
-         const biomes: Partial<Record<Biome, Array<TileIndex>>> = {};
+         const biomes: Partial<Record<Biome, TileIndex[]>> = {};
          for (let biome: Biome = 0; biome < Biome._LENGTH_; biome++) {
             biomes[biome] = [];
          }
-         return biomes as Record<Biome, Array<TileIndex>>;
+         return biomes as Record<Biome, TileIndex[]>;
       })()
    };
 }
 
-const createNodeGroupIDs = (): Array<Array<number>> => {
-   const nodeGroupIDs: Array<Array<number>> = [];
+const createNodeGroupIDs = (): number[][] => {
+   const nodeGroupIDs: number[][] = [];
 
    for (let i = 0; i < PathfindingSettings.NODES_IN_WORLD_WIDTH * PathfindingSettings.NODES_IN_WORLD_WIDTH; i++) {
-      const groupIDs: Array<number> = [];
+      const groupIDs: number[] = [];
       nodeGroupIDs.push(groupIDs);
    }
 
@@ -80,26 +80,26 @@ const createNodeGroupIDs = (): Array<Array<number>> => {
    return nodeGroupIDs;
 }
 
-const createInitialChunksArray = (): Array<Chunk> => {
-   const chunks: Array<Chunk> = [];
+const createInitialChunksArray = (): Chunk[] => {
+   const chunks: Chunk[] = [];
    for (let i = 0; i < Settings.WORLD_SIZE_CHUNKS * Settings.WORLD_SIZE_CHUNKS; i++) {
       chunks.push(new Chunk());
    }
    return chunks;
 }
 
-const createCollisionGroupChunks = (): Record<CollisionGroup, ReadonlyArray<CollisionChunk>> => {
-   const collisionGroupChunks: Partial<Record<CollisionGroup, ReadonlyArray<CollisionChunk>>>= {};
+const createCollisionGroupChunks = (): Record<CollisionGroup, readonly CollisionChunk[]> => {
+   const collisionGroupChunks: Partial<Record<CollisionGroup, readonly CollisionChunk[]>>= {};
 
    for (let collisionGroup: CollisionGroup = 0; collisionGroup < CollisionGroup._LENGTH_; collisionGroup++) {
-      const chunks: Array<CollisionChunk> = [];
+      const chunks: CollisionChunk[] = [];
       for (let i = 0; i < Settings.WORLD_SIZE_CHUNKS * Settings.WORLD_SIZE_CHUNKS; i++) {
          chunks.push([]);
       }
       collisionGroupChunks[collisionGroup] = chunks;
    }
 
-   return collisionGroupChunks as Record<CollisionGroup, ReadonlyArray<CollisionChunk>>;
+   return collisionGroupChunks as Record<CollisionGroup, readonly CollisionChunk[]>;
 }
 
 export default class Layer {
@@ -121,7 +121,7 @@ export default class Layer {
 
    public readonly wallSubtileDamageTakenMap = new Map<number, number>();
 
-   public readonly waterRocks: Array<WaterRockData> = [];
+   public readonly waterRocks: WaterRockData[] = [];
 
    public tileUpdateCoordinates = new Set<number>();
    public wallSubtileUpdates = new Set<number>();
@@ -137,7 +137,7 @@ export default class Layer {
 
    public readonly nodeGroupIDs = createNodeGroupIDs();
 
-   public readonly localBiomes: Array<LocalBiome> = [];
+   public readonly localBiomes: LocalBiome[] = [];
    public readonly tileToLocalBiomeRecord: Record<TileIndex, LocalBiome> = {};
 
    /** For each light level node, stores how much each light contributes to the light level */
@@ -292,7 +292,7 @@ export default class Layer {
       return this.collisionGroupChunks[collisionGroup][chunkIndex];
    }
 
-   public getEntityCollisionPairs(entity: Entity): ReadonlyArray<EntityPairCollisionInfo> {
+   public getEntityCollisionPairs(entity: Entity): readonly EntityPairCollisionInfo[] {
       return this.globalCollisionInfo[entity] || [];
    }
 
@@ -302,7 +302,7 @@ export default class Layer {
    }
 
    /** Returns false if any of the tiles in the raycast don't match the inputted tile types. */
-   public tileRaytraceMatchesTileTypes(startX: number, startY: number, endX: number, endY: number, tileTypes: ReadonlyArray<TileType>): boolean {
+   public tileRaytraceMatchesTileTypes(startX: number, startY: number, endX: number, endY: number, tileTypes: readonly TileType[]): boolean {
       /*
       Kindly yoinked from https://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
       */
@@ -470,13 +470,13 @@ const tileIsInRange = (x: number, y: number, range: number, tileX: number, tileY
    return false;
 }
 
-export function getTilesInRange(x: number, y: number, range: number): ReadonlyArray<TileIndex> {
+export function getTilesInRange(x: number, y: number, range: number): readonly TileIndex[] {
    const minTileX = Math.floor((x - range) / Settings.TILE_SIZE);
    const maxTileX = Math.floor((x + range) / Settings.TILE_SIZE);
    const minTileY = Math.floor((y - range) / Settings.TILE_SIZE);
    const maxTileY = Math.floor((y + range) / Settings.TILE_SIZE);
 
-   const tiles: Array<TileIndex> = [];
+   const tiles: TileIndex[] = [];
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          if (tileIsInRange(x, y, range, tileX, tileY)) {

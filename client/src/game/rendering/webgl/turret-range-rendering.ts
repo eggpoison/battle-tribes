@@ -109,8 +109,8 @@ export function createTurretRangeShaders(): void {
    bindUBOToProgram(gl, program, UBOBindingIndex.TIME);
 }
 
-const calculateVertices = (renderingInfo: TurretRangeRenderingInfo): ReadonlyArray<number> => {
-   const vertices: Array<number> = [];
+const calculateVertices = (renderingInfo: TurretRangeRenderingInfo): readonly number[] => {
+   const vertices: number[] = [];
    
    const numTrigs = Math.ceil(CIRCLE_DETAIL * renderingInfo.rangeInfo.arc / (2 * Math.PI));
    for (let i = 0; i < numTrigs; i++) {

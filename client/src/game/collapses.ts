@@ -14,13 +14,13 @@ export interface MinedSubtile {
    readonly isCollapsing: boolean;
 }
 
-let minedSubtiles: ReadonlyArray<MinedSubtile>;
+let minedSubtiles: readonly MinedSubtile[];
 
 // @Hardcoded
 const COLLAPSE_THRESHOLD = 50;
 
-export function setMinedSubtiles(subtiles: ReadonlyArray<MinedSubtile>): void {
-   // const newMinedSubtiles: Array<number> = [];
+export function setMinedSubtiles(subtiles: readonly MinedSubtile[]): void {
+   // const newMinedSubtiles: number[] = [];
    // for (const minedSubtile of subtiles) {
    //    if (!minedSubtile.isCollapsing) {
    //       continue;

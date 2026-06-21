@@ -14,7 +14,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createFloorSpikesConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {
-   const hitboxes: Array<Hitbox> = [];
+   const hitboxes: Hitbox[] = [];
    let hitboxLocalID = 0;
 
    const box = createRectangularBox(x, y, 0, 0, angle, 48, 48);
@@ -38,7 +38,7 @@ export function createFloorSpikesConfig(x: number, y: number, angle: number, tri
 }
 
 export function createWallSpikesConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {
-   const hitboxes: Array<Hitbox> = [];
+   const hitboxes: Hitbox[] = [];
    let hitboxLocalID = 0;
 
    const box = createRectangularBox(x, y, 0, 0, angle, 56, 28);

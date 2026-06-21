@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface AIAssignmentComponentData {}
@@ -10,7 +10,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiAssignment, AIAssignmentComponentArray> {}
 }
 
-class AIAssignmentComponentArray extends _ServerComponentArray<AIAssignmentComponent, AIAssignmentComponentData> {
+class AIAssignmentComponentArray extends ServerComponentArray<AIAssignmentComponent, AIAssignmentComponentData> {
    public decodeData(): AIAssignmentComponentData {
       return {};
    }

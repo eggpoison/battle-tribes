@@ -61,7 +61,7 @@ interface BaseInteractAction {
 
 interface OpenBuildMenuAction extends BaseInteractAction {
    readonly type: InteractActionType.openBuildMenu;
-   readonly options: ReadonlyArray<BuildMenuOption>;
+   readonly options: readonly BuildMenuOption[];
 }
 
 interface PlantSeedAction extends BaseInteractAction {

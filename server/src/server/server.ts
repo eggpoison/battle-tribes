@@ -3,7 +3,7 @@ import { Entity } from "../../../shared/dist/entities.js";
 import { PacketReader, ClientPacketType } from "../../../shared/dist/packets.js";
 import { Settings } from "../../../shared/dist/settings.js";
 import { TribeType } from "../../../shared/dist/tribes.js";
-import { Point } from "../../../shared/dist/utils.js";
+import { Point, randInt } from "../../../shared/dist/utils.js";
 import WebSocket, { WebSocketServer } from "ws";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning.js";
 import Tribe from "../Tribe.js";
@@ -32,6 +32,7 @@ import { generateGrassStrands } from "../world-generation/grass-generation.js";
 import { Hitbox } from "../hitboxes.js";
 import { generateDecorations } from "../world-generation/decoration-generation.js";
 import { createDevGameDataPacket } from "./dev-packets.js";
+import { MMM } from "../perlin-noise.js";
 
 /*
 
@@ -134,11 +135,11 @@ class GameServer {
       // if (OPTIONS.inBenchmarkMode) {
       //    SRandom.seed(40404040404);
       // } else {
-      //    SRandom.seed(randInt(0, 9999999999));
+         SRandom.seed(randInt(0, Number.MAX_SAFE_INTEGER));
+         // SRandom.seed(7413558892338473);
       // }
 
-      SRandom.seed(2845700342);
-      SRandom.logSeed();
+      // SRandom.seed(2845700342);
 
       // Desert:
       // SRandom.seed(2767843904);
@@ -155,8 +156,12 @@ class GameServer {
       // slime goop
       // SRandom.seed(2965725785);
 
+      // terrain shit
+      // SRandom.seed(2131378176);
+
       const builtinRandomFunc = Math.random;
       Math.random = () => SRandom.next();
+      MMM();
 
       // Setup
       sortComponentArrays();
@@ -217,10 +222,6 @@ class GameServer {
                   const config = createPlayerConfig(spawnPosition.x, spawnPosition.y, 0, tribe, playerClient);
                   createEntity(config, layer, 0);
                }
-
-               // setTimeout(() => {
-               //    regenerateSurfaceTerrain();
-               // }, 10000);
 
                // @SQUEAM
                // setTimeout(() => {
@@ -397,6 +398,7 @@ class GameServer {
          }
       }
 
+      // @TEMPORARY
       if (getGameTicks() % 5 === 0) {
          regenerateSurfaceTerrain();
       }
@@ -405,6 +407,7 @@ class GameServer {
 
       // @HACKKK @HACK only works for this specific network send rate!!
       // seems to reduce jitters, cuz there were some moments when packets were sent at server ticks with a diff 3 instead of 2.
+      // @INCOMPLETE ^^^ investigate that!!! It should look smooth even with a tick send interval of 5!
       if (getGameTicks() % 2 === 0) {
          SERVER.sendGameDataPackets();
       }
@@ -431,7 +434,6 @@ class GameServer {
       
       // @Cleanup: should this all be in this file?
       
-      console.log("server tick " + getGameTicks());
       const playerClients = getPlayerClients();
       for (let i = 0; i < playerClients.length; i++) {
          const playerClient = playerClients[i];
@@ -471,7 +473,7 @@ class GameServer {
          }
 
          // Add removed entities - any entity that was previously visible but no longer.
-         const removedEntities: Array<Entity> = [];
+         const removedEntities: Entity[] = [];
          for (const entity of playerClient.visibleEntities) {
             if (!visibleEntities.has(entity)) {
                removedEntities.push(entity);
@@ -518,8 +520,8 @@ class GameServer {
 export const SERVER = new GameServer();
 SERVER.start();
 
-// Add this to the very bottom of your server entry file
+// need this for cpu profiling :\
 process.on("SIGINT", () => {
     console.log("Shutting down game server gracefully...");
-    process.exit(0); // This triggers Node to save the CPU profile!
+    process.exit(0);
 });

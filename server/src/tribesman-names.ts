@@ -63,7 +63,7 @@ const STRIDER_NAMES = [
    "Third-Leg"
 ];
 
-const PLAINSPEOPLE_NAMES: ReadonlyArray<string> = [
+const PLAINSPEOPLE_NAMES: readonly string[] = [
    "Oda",
    "Toffle",
    "Marny",
@@ -82,7 +82,7 @@ const PLAINSPEOPLE_NAMES: ReadonlyArray<string> = [
 // "Urgh",
 // "Blurgh",
 
-const BARBARIAN_NAMES: ReadonlyArray<string> = [
+const BARBARIAN_NAMES: readonly string[] = [
    "RAAAAGH",
    "Bjorn",
    "HOUUUURGH",
@@ -96,21 +96,21 @@ const BARBARIAN_NAMES: ReadonlyArray<string> = [
    "Biggus", // biggus diggus
 ];
 
-const FROSTLING_NAMES: ReadonlyArray<string> = [
+const FROSTLING_NAMES: readonly string[] = [
    "Fraazgakk",
    "Fruzeek",
    "Grivve",
    "Frum"
 ];
 
-const GOBLIN_NAMES: ReadonlyArray<string> = [
+const GOBLIN_NAMES: readonly string[] = [
    "Vuzz",
    "Klanzogz",
    "Striex",
    "Slokx"
 ];
 
-const DWARF_NAMES: ReadonlyArray<string> = [
+const DWARF_NAMES: readonly string[] = [
    "Durin",
    "Thorin",
    "Dugim",
@@ -144,7 +144,7 @@ const DWARF_NAMES: ReadonlyArray<string> = [
    "Harnum"
 ];
 
-const TITLE_DISPLAY_OPTIONS: Record<TribesmanTitle, ReadonlyArray<string>> = {
+const TITLE_DISPLAY_OPTIONS: Record<TribesmanTitle, readonly string[]> = {
    [TribesmanTitle.builder]: ["Builder", "Object Constructor", "Manipulator of Materials"],
    [TribesmanTitle.berrymuncher]: ["Berry-muncher", "Muncher of Berries"],
    [TribesmanTitle.bloodaxe]: ["Bloodaxe", "Shedder of Blood"],
@@ -158,7 +158,7 @@ const TITLE_DISPLAY_OPTIONS: Record<TribesmanTitle, ReadonlyArray<string>> = {
    [TribesmanTitle.yetisbane]: ["Yetisbane", "Slayer of Yetis"]
 };
 
-const TITLELESS_ADJECTIVES: ReadonlyArray<string> = [
+const TITLELESS_ADJECTIVES: readonly string[] = [
    "Useless",
    "Weak",
    "Puny",
@@ -186,19 +186,8 @@ const TITLELESS_ADJECTIVES: ReadonlyArray<string> = [
    "Lame"
 ];
 
-// @SQUEAM
-let a = false;
-
 export function generateTribesmanName(tribeType: TribeType): string {
-   // @SQUEAM
-   if (!a) {
-      a = true;
-      return "Chlamydia";
-   } else {
-      return "Claymation";
-   }
-   
-   let nameArray: ReadonlyArray<string>;
+   let nameArray: readonly string[];
    switch (tribeType) {
       case TribeType.plainspeople: {
          nameArray = PLAINSPEOPLE_NAMES;
@@ -256,7 +245,7 @@ const nameAlreadyExists = (tribe: Tribe, name: string): boolean => {
    return false;
 }
 
-const generateAutomatonName = (tribe: Tribe, names: ReadonlyArray<string>): string => {
+const generateAutomatonName = (tribe: Tribe, names: readonly string[]): string => {
    const baseName = randItem(names);
    
    for (let numDuplicates = 0; ; numDuplicates++) {

@@ -27,7 +27,7 @@ interface EntityJoinInfo {
    readonly entity: Entity;
    readonly entityConfig: EntityConfig;
    readonly layer: Layer;
-   readonly entityComponentTypes: ReadonlyArray<ServerComponentType>;
+   readonly entityComponentTypes: readonly ServerComponentType[];
    /** Number of ticks remaining until the entity will be added. */
    ticksRemaining: number;
 }
@@ -40,18 +40,18 @@ const entityTypes: Partial<Record<Entity, EntityType>> = {};
 const entityLayers: Partial<Record<Entity, Layer>> = {};
 const entitySpawnTicks: Partial<Record<Entity, number>> = {};
 
-const tribes: Array<Tribe> = [];
+const tribes: Tribe[] = [];
 
 // Array of join infos, sorted by the ticks remaining until they join.
-const entityJoinBuffer: Array<EntityJoinInfo> = [];
-const entityRemoveBuffer: Array<Entity> = [];
+const entityJoinBuffer: EntityJoinInfo[] = [];
+const entityRemoveBuffer: Entity[] = [];
 
 // Skip 0 as that is reserved as a no-entity marker
 let entityIDCounter: Entity = 1;
 
 export let surfaceLayer: Layer;
 export let undergroundLayer: Layer;
-export const layers: Array<Layer> = [];
+export const layers: Layer[] = [];
 
 // @Cleanup: this should probs be in the layers file
 export function generateLayers(): void {
@@ -111,7 +111,7 @@ export function removeTribe(tribe: Tribe): void {
    }
 }
 
-export function getTribes(): ReadonlyArray<Tribe> {
+export function getTribes(): readonly Tribe[] {
    return tribes;
 }
 
@@ -489,7 +489,7 @@ export function destroyEntity(entity: Entity): void {
    }
 }
 
-export function addEntityToJoinBuffer(entity: Entity, entityConfig: EntityConfig, layer: Layer, entityComponentTypes: ReadonlyArray<ServerComponentType>, joinDelayTicks: number): void {
+export function addEntityToJoinBuffer(entity: Entity, entityConfig: EntityConfig, layer: Layer, entityComponentTypes: readonly ServerComponentType[], joinDelayTicks: number): void {
    // Find a spot for the entity
    
    const joinInfo: EntityJoinInfo = {

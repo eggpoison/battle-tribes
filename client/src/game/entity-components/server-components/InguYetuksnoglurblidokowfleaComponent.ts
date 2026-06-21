@@ -2,7 +2,7 @@ import { HitboxTag } from "../../../../../shared/src/boxes";
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Settings } from "../../../../../shared/src/settings";
 import { randInt, randFloat } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getCurrentLayer } from "../../world";
@@ -21,7 +21,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetuksnoglurblidokowflea, _InguYetuksnoglurblidokowfleaComponentArray> {}
 }
 
-class _InguYetuksnoglurblidokowfleaComponentArray extends _ServerComponentArray<InguYetuksnoglurblidokowfleaComponent, InguYetuksnoglurblidokowfleaComponentData> {
+class _InguYetuksnoglurblidokowfleaComponentArray extends ServerComponentArray<InguYetuksnoglurblidokowfleaComponent, InguYetuksnoglurblidokowfleaComponentData> {
    public decodeData(): InguYetuksnoglurblidokowfleaComponentData {
       return {};
    }

@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -15,7 +15,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceShard, _IceShardComponentArray> {}
 }
 
-class _IceShardComponentArray extends _ServerComponentArray<IceShardComponent, IceShardComponentData> {
+class _IceShardComponentArray extends ServerComponentArray<IceShardComponent, IceShardComponentData> {
    public decodeData(): IceShardComponentData {
       return {};
    }

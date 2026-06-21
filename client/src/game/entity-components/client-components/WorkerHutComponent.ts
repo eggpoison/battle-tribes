@@ -5,7 +5,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import _ClientComponentArray from "../ClientComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { addRenderPartTag } from "../../render-parts/render-part-tags";
@@ -20,7 +20,7 @@ declare module "../component-registry" {
    interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.workerHut, _WorkerHutComponentArray> {}
 }
 
-class _WorkerHutComponentArray extends _ClientComponentArray<WorkerHutComponent, WorkerHutComponentData> {
+class _WorkerHutComponentArray extends ClientComponentArray<WorkerHutComponent, WorkerHutComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

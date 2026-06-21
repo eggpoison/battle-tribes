@@ -23,7 +23,7 @@ let program: WebGLProgram;
 let buffer: WebGLBuffer;
 
 // @Garbage: turn into array of always fixed length
-const frames: Array<FrameInfo> = [];
+const frames: FrameInfo[] = [];
 
 let rectIdx = 0;
 

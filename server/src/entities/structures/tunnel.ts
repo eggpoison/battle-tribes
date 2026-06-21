@@ -18,7 +18,7 @@ import { StatusEffect } from "../../../../shared/dist/status-effects.js";
 
 const HEALTHS = [25, 75];
 
-export function createTunnelConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createTunnelConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
    
    const HITBOX_WIDTH = 8;

@@ -2,7 +2,7 @@ import { HitboxTag } from "../../../../../shared/src/boxes";
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { Point, angle, randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createBloodPoolParticle, createBloodParticle, BloodParticleSize, createBloodParticleFountain, createKrumblidChitinParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
@@ -23,7 +23,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.krumblid, _KrumblidComponentArray> {}
 }
 
-class _KrumblidComponentArray extends _ServerComponentArray<KrumblidComponent, KrumblidComponentData> {
+class _KrumblidComponentArray extends ServerComponentArray<KrumblidComponent, KrumblidComponentData> {
    public decodeData(): KrumblidComponentData {
       return {};
    }

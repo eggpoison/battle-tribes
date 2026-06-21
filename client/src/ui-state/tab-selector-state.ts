@@ -3,12 +3,12 @@ import { InventoryName, Inventory, NUM_INVENTORY_NAMES } from "../../../shared/s
 import { TribesmanTitle } from "../../../shared/src/titles";
 
 // @Hack? @Robustness
-export const ENTITY_INVENTORY_NAME_RECORD: Partial<Record<EntityType, ReadonlyArray<InventoryName>>> = {
+export const ENTITY_INVENTORY_NAME_RECORD: Partial<Record<EntityType, readonly InventoryName[]>> = {
    [EntityType.tribeWarrior]: [InventoryName.hotbar, InventoryName.offhand, InventoryName.armourSlot, InventoryName.backpackSlot, InventoryName.gloveSlot],
    [EntityType.tribeWorker]: [InventoryName.hotbar, InventoryName.offhand, InventoryName.armourSlot, InventoryName.backpackSlot, InventoryName.gloveSlot]
 }
 
-let titles = new Array<TribesmanTitle>();
+let titles: TribesmanTitle[] = [];
 
 const summonedInventories = ((): Record<InventoryName, Inventory> => {
    const inventories: Partial<Record<InventoryName, Inventory>> = {};
@@ -27,7 +27,7 @@ export const tabSelectorState = {
    get titles() {
       return titles;
    },
-   setTitles(newTitles: Array<TribesmanTitle>): void {
+   setTitles(newTitles: TribesmanTitle[]): void {
       // @Garbage
       titles = newTitles;
    },

@@ -1,6 +1,6 @@
 import { LimbConfiguration } from "../../../../../shared/src/attack-patterns";
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { updateLimb_TEMP } from "./InventoryUseComponent";
@@ -19,7 +19,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cogwalker, CogwalkerComponentArray> {}
 }
 
-class CogwalkerComponentArray extends _ServerComponentArray<CogwalkerComponent, CogwalkerComponentData> {
+class CogwalkerComponentArray extends ServerComponentArray<CogwalkerComponent, CogwalkerComponentData> {
    public decodeData(): CogwalkerComponentData {
       return {};
    }

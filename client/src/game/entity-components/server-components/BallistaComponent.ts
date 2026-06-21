@@ -1,7 +1,7 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { randItem } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../../utils";
 import { ROCK_HIT_SOUNDS, ROCK_DESTROY_SOUNDS, playSoundOnHitbox } from "../../sound";
@@ -23,7 +23,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ballista, _BallistaComponentArray> {}
 }
 
-class _BallistaComponentArray extends _ServerComponentArray<BallistaComponent, BallistaComponentData> {
+class _BallistaComponentArray extends ServerComponentArray<BallistaComponent, BallistaComponentData> {
    public decodeData(): BallistaComponentData {
       return {};
    }
@@ -75,7 +75,7 @@ class _BallistaComponentArray extends _ServerComponentArray<BallistaComponent, B
       renderObject.attachRenderPart(shaftRenderPart);
 
       // Gears
-      const gearRenderParts: Array<RenderPart> = [];
+      const gearRenderParts: RenderPart[] = [];
       for (let i = 0; i < 2; i++) {
          const renderPart = new TexturedRenderPart(
             shaftRenderPart,

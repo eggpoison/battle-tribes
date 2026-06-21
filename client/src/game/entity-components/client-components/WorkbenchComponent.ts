@@ -1,7 +1,7 @@
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import _ClientComponentArray from "../ClientComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getTransformComponentData } from "../component-types";
 import { registerClientComponentArray } from "../component-registry";
@@ -15,7 +15,7 @@ declare module "../component-registry" {
    interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.workbench, _WorkbenchComponentArray> {}
 }
 
-class _WorkbenchComponentArray extends _ClientComponentArray<WorkbenchComponent, WorkbenchComponentData> {
+class _WorkbenchComponentArray extends ClientComponentArray<WorkbenchComponent, WorkbenchComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

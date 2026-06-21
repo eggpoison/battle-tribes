@@ -1,7 +1,7 @@
 import { TribesmanTitle } from "../../../shared/src/titles";
 
 export interface ClientTitleInfo {
-   readonly effects: ReadonlyArray<string>;
+   readonly effects: readonly string[];
 }
 
 export const CLIENT_TITLE_INFO_RECORD: Record<TribesmanTitle, ClientTitleInfo> = {

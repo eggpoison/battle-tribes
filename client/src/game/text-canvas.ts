@@ -46,11 +46,11 @@ const DAMAGE_NUMBER_LIFETIME = 1.75;
 const RESEARCH_NUMBER_LIFETIME = 1.5;
 const HEAL_NUMBER_LIFETIME = 1.75;
 
-const damageColours: ReadonlyArray<string> = ["#ddd", "#fbff2b", "#ffc130", "#ff6430"];
-const damageColourThresholds: ReadonlyArray<number> = [0, 3, 5, 7];
+const damageColours: readonly string[] = ["#ddd", "#fbff2b", "#ffc130", "#ff6430"];
+const damageColourThresholds: readonly number[] = [0, 3, 5, 7];
 
-const researchNumbers: Array<ResearchNumber> = [];
-const healNumbers: Array<HealNumber> = [];
+const researchNumbers: ResearchNumber[] = [];
+const healNumbers: HealNumber[] = [];
 
 let ctx: CanvasRenderingContext2D;
 
@@ -68,9 +68,9 @@ export interface SpawnDistributionBlock {
    readonly targetDensity: number;
 }
 
-let spawnDistributionBlocks: Array<SpawnDistributionBlock> = [];
+let spawnDistributionBlocks: SpawnDistributionBlock[] = [];
 
-export function setSpawnDistributionBlocks(newSpawnDistributionBlocks: Array<SpawnDistributionBlock>): void {
+export function setSpawnDistributionBlocks(newSpawnDistributionBlocks: SpawnDistributionBlock[]): void {
    spawnDistributionBlocks = newSpawnDistributionBlocks;
 }
 

@@ -60,7 +60,7 @@ const moveToEntity = (glurb: Entity, targetEntity: Entity): void => {
    aiHelperComponent.turnFunc(glurb, targetHitbox.box.posX, targetHitbox.box.posY, 0, 0);
 }
 
-const getFollowTarget = (followAIComponent: FollowAI, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
+const getFollowTarget = (followAIComponent: FollowAI, visibleEntities: readonly Entity[]): Entity | null => {
    const wantsToFollow = entityWantsToFollow(followAIComponent);
 
    let target: Entity | null = null;
@@ -80,7 +80,7 @@ const getFollowTarget = (followAIComponent: FollowAI, visibleEntities: ReadonlyA
    return target;
 }
 
-const getFoodTarget = (glurbHeadHitbox: Hitbox, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
+const getFoodTarget = (glurbHeadHitbox: Hitbox, visibleEntities: readonly Entity[]): Entity | null => {
    let minDist = Number.MAX_SAFE_INTEGER;
    let target: Entity | null = null;
    for (let i = 0; i < visibleEntities.length; i++) {
@@ -102,7 +102,7 @@ const getFoodTarget = (glurbHeadHitbox: Hitbox, visibleEntities: ReadonlyArray<E
 }
 
 // @Cleanup: shares a bunch of logic with the functions in glurb-head-segment.ts
-const getFinalSegment = (glurbSegment: Entity, foundSegments: Array<Entity>): Entity => {
+const getFinalSegment = (glurbSegment: Entity, foundSegments: Entity[]): Entity => {
    const transformComponent = TransformComponentArray.getComponent(glurbSegment);
    const hitbox = transformComponent.hitboxes[0];
 
@@ -126,7 +126,7 @@ const getFinalSegment = (glurbSegment: Entity, foundSegments: Array<Entity>): En
 }
 
 // @Cleanup: shares a bunch of logic with the functions in glurb-head-segment.ts
-const getNumSegments = (glurbSegment: Entity, foundSegments: Array<Entity>): number => {
+const getNumSegments = (glurbSegment: Entity, foundSegments: Entity[]): number => {
    const transformComponent = TransformComponentArray.getComponent(glurbSegment);
    const hitbox = transformComponent.hitboxes[0];
 

@@ -53,7 +53,7 @@ const MAX_TERRITORY_SIZE = 300;
 const yetiTerritoryTiles: Partial<Record<TileIndex, Entity>> = {};
 
 export class YetiComponent {
-   public readonly territory: ReadonlyArray<TileIndex>;
+   public readonly territory: readonly TileIndex[];
 
    public attackTarget: Entity = 0;
    public isThrowingSnow = false;
@@ -62,7 +62,7 @@ export class YetiComponent {
    public snowThrowCooldown = YETI_SNOW_THROW_COOLDOWN;
    public snowThrowHoldTimer = 0;
 
-   constructor(territory: ReadonlyArray<TileIndex>) {
+   constructor(territory: readonly TileIndex[]) {
       this.territory = territory;
    }
 }
@@ -80,7 +80,7 @@ const tileBelongsToYetiTerritory = (tileX: number, tileY: number): boolean => {
    return yetiTerritoryTiles.hasOwnProperty(tileIndex);
 }
 
-const tileIsValid = (territoryTiles: ReadonlyArray<TileIndex>, tileIndex: TileIndex): boolean => {
+const tileIsValid = (territoryTiles: readonly TileIndex[], tileIndex: TileIndex): boolean => {
    const tileX = getTileX(tileIndex);
    const tileY = getTileY(tileIndex);
    
@@ -93,10 +93,10 @@ const tileIsValid = (territoryTiles: ReadonlyArray<TileIndex>, tileIndex: TileIn
    return biome === Biome.tundra && !tileBelongsToYetiTerritory(tileX, tileY) && !territoryTiles.includes(tileIndex);
 }
 
-export function generateYetiTerritoryTiles(originTileX: number, originTileY: number): ReadonlyArray<TileIndex> {
-   const territoryTiles: Array<TileIndex> = [];
+export function generateYetiTerritoryTiles(originTileX: number, originTileY: number): readonly TileIndex[] {
+   const territoryTiles: TileIndex[] = [];
    // Tiles to expand the territory from
-   const spreadTiles: Array<TileIndex> = [];
+   const spreadTiles: TileIndex[] = [];
 
    const originTileIndex = getTileIndexIncludingEdges(originTileX, originTileY);
    territoryTiles.push(originTileIndex);
@@ -155,7 +155,7 @@ export function generateYetiTerritoryTiles(originTileX: number, originTileY: num
    return territoryTiles;
 }
 
-export function yetiTerritoryIsValid(territory: ReadonlyArray<TileIndex>): boolean {
+export function yetiTerritoryIsValid(territory: readonly TileIndex[]): boolean {
    return territory.length >= MIN_TERRITORY_SIZE;
 }
 
@@ -253,7 +253,7 @@ const entityIsTargetted = (yeti: Entity, entity: Entity, attackingEntitiesCompon
 }
 
 // @Speed: hasComponent in here takes up about 1% of CPU time
-const getYetiTarget = (yeti: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
+const getYetiTarget = (yeti: Entity, visibleEntities: readonly Entity[]): Entity | null => {
    const yetiComponent = YetiComponentArray.getComponent(yeti);
    const attackingEntitiesComponent = AttackingEntitiesComponentArray.getComponent(yeti);
 

@@ -147,7 +147,7 @@ const getTargetGrass = (cow: Entity): Entity | null => {
    
    let minDist = Number.MAX_SAFE_INTEGER;
    let closestGrassStrand: Entity | null = null;
-   const grasses: Array<Entity> = [];
+   const grasses: Entity[] = [];
    
    for (const chunk of aiHelperComponent.visibleChunks) {
       for (const entity of chunk.entities) {
@@ -220,8 +220,8 @@ const graze = (cow: Entity, cowComponent: CowComponent, targetGrass: Entity): vo
    }
 }
 
-const findHerdMembers = (cowComponent: CowComponent, visibleEntities: ReadonlyArray<Entity>): ReadonlyArray<Entity> => {
-   const herdMembers: Array<Entity> = [];
+const findHerdMembers = (cowComponent: CowComponent, visibleEntities: readonly Entity[]): readonly Entity[] => {
+   const herdMembers: Entity[] = [];
    for (let i = 0; i < visibleEntities.length; i++) {
       const entity = visibleEntities[i];
       if (getEntityType(entity) === EntityType.cow) {
@@ -265,7 +265,7 @@ const entityIsHoldingBerry = (entity: Entity): boolean => {
    return false;
 }
 
-const getFollowTarget = (cow: Entity, followAI: FollowAI, visibleEntities: ReadonlyArray<Entity>): [Entity | null, boolean] => {
+const getFollowTarget = (cow: Entity, followAI: FollowAI, visibleEntities: readonly Entity[]): [Entity | null, boolean] => {
    const wantsToFollow = entityWantsToFollow(followAI);
 
    let currentTargetIsHoldingBerry = false;

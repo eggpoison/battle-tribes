@@ -11,7 +11,7 @@ import { ComponentArray } from "./ComponentArray.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 
 export class TreeRootBaseComponent {
-   readonly segments: Array<Entity> = [];
+   readonly segments: Entity[] = [];
 }
 
 export const TreeRootBaseComponentArray = new ComponentArray<TreeRootBaseComponent>(ServerComponentType.treeRootBase, true, getDataLength, addDataToPacket);
@@ -57,7 +57,7 @@ function onJoin(entity: Entity): void {
    
    const layer = getEntityLayer(entity);
 
-   const spawnOffsetDirections: Array<number> = [];
+   const spawnOffsetDirections: number[] = [];
 
    const maxSegments = Math.random() < 2/3 ? 2 : 3;
    for (let i = 0, attempts = 0; i < maxSegments && attempts < 50; attempts++) {

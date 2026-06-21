@@ -24,13 +24,13 @@ export class InventoryComponent {
    /** Stores a record of all inventories associated with the inventory component. */
    public readonly inventoryRecord: Partial<Record<InventoryName, Inventory>> = {};
    /** Stores all inventories associated with the inventory component in the order of when they were added. */
-   public readonly inventories: Array<Inventory> = [];
+   public readonly inventories: Inventory[] = [];
 
-   public readonly accessibleInventories: Array<Inventory> = [];
+   public readonly accessibleInventories: Inventory[] = [];
    /** Inventories which are dropped on death */
-   public readonly droppableInventories: Array<Inventory> = [];
+   public readonly droppableInventories: Inventory[] = [];
 
-   public readonly absentItemIDs: Array<number> = [];
+   public readonly absentItemIDs: number[] = [];
 }
 
 export const InventoryComponentArray = new ComponentArray<InventoryComponent>(ServerComponentType.inventory, true, getDataLength, addDataToPacket);

@@ -17,8 +17,8 @@ import { EntityServerComponentData, getEntityServerComponentTypes, getServerComp
 import { getRenderPartShakeAmount } from "../render-parts/render-part-shake-amounts";
 
 // @HACK i've only kept this dirty array around for hacky reasons. when i make the rework where the client works off sent render parts this should go away.
-const dirtyClientInterpEntities: Array<Entity> = [];
-const dirtyServerInterpEntities: Array<Entity> = [];
+const dirtyClientInterpEntities: Entity[] = [];
+const dirtyServerInterpEntities: Entity[] = [];
 
 /* ------------------------ */
 /* Matrix Utility Functions */

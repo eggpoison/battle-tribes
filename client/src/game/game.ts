@@ -19,9 +19,11 @@ import { updateParticles } from "./rendering/webgl/particle-rendering";
 import { getEntityComponentArrays } from "./entity-components/component-types";
 import { getEntityType, } from "./world";
 import { cleanupEvents, setupEvents } from "./event-handling";
-import { updateSnapshots } from "./networking/snapshots";
+import { initialiseToFirstSnapshot, updateSnapshots } from "./networking/snapshots";
 import { updateTickCallbacks } from "./tick-callbacks";
 import { COMPONENT_ARRAYS } from "./entity-components/component-registry";
+import { openGameScreen } from "../ui/GameScreen";
+import { closeLoadingScreen } from "../ui/LoadingScreen";
 
 let lastFrameTime = 0;
 
@@ -31,6 +33,12 @@ let runFrameHandle: number;
 
 export function startGame(time: number): void {
    setupEvents();
+   initialiseToFirstSnapshot();
+   
+   // Done after as openGameScreen requires information about the player
+   closeLoadingScreen();
+   openGameScreen();
+
    frameLoop(time); // Start the game loop
 }
 

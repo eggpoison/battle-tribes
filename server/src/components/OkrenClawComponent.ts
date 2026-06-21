@@ -122,8 +122,8 @@ function onTick(okrenClaw: Entity): void {
    }
 }
 
-function onHitboxCollision(affectedHitbox: Hitbox, collidingHitbox: Hitbox, collisionPoint: Point): void {
-   if (getHitboxTag(affectedHitbox) !== HitboxTag.okrenArmSegmentOfSlashingAndDestruction) {
+function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoint: Point): void {
+   if (getHitboxTag(hitbox) !== HitboxTag.okrenArmSegmentOfSlashingAndDestruction) {
       return;
    }
 
@@ -139,7 +139,7 @@ function onHitboxCollision(affectedHitbox: Hitbox, collidingHitbox: Hitbox, coll
       return;
    }
    
-   const velocityDiff = getHitboxVelocity(affectedHitbox).distanceTo(getHitboxVelocity(collidingHitbox));
+   const velocityDiff = getHitboxVelocity(hitbox).distanceTo(getHitboxVelocity(collidingHitbox));
    // @Temporary @Hack as sometimes the slashers aren't moving fast enough... maybe just remove it completely but only have it work for one side? not the back of the hitbox/
    // if (velocityDiff < 100) {
    //    return;
@@ -149,9 +149,9 @@ function onHitboxCollision(affectedHitbox: Hitbox, collidingHitbox: Hitbox, coll
       return;
    }
 
-   const okrenClaw = affectedHitbox.entity;
+   const okrenClaw = hitbox.entity;
 
-   const hash = "okren_" + okrenClaw + "_" + affectedHitbox.localID;
+   const hash = "okren_" + okrenClaw;
    
    const healthComponent = HealthComponentArray.getComponent(collidingEntity);
    if (!canDamageEntity(healthComponent, hash)) {
@@ -160,7 +160,7 @@ function onHitboxCollision(affectedHitbox: Hitbox, collidingHitbox: Hitbox, coll
 
    const okrenClawComponent = OkrenClawComponentArray.getComponent(okrenClaw);
    
-   const hitDir = angle(collidingHitbox.box.posX - affectedHitbox.box.posX, collidingHitbox.box.posY - affectedHitbox.box.posY);
+   const hitDir = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, okrenClaw, ATTACK_DAMAGES[okrenClawComponent.size], DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
    applyAbsoluteKnockback(collidingHitbox, polarVec2(200, hitDir));

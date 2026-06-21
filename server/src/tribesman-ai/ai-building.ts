@@ -102,7 +102,7 @@ export function addRectangularSafetyNodePositions(rectX: number, rectY: number, 
    }
 }
 
-export function addBoxesOccupiedNodes(boxes: ReadonlyArray<Box>, positions: Set<SafetyNode>): void {
+export function addBoxesOccupiedNodes(boxes: readonly Box[], positions: Set<SafetyNode>): void {
    for (let i = 0; i < boxes.length; i++) {
       const box = boxes[i];
 
@@ -118,7 +118,7 @@ export function addBoxesOccupiedNodes(boxes: ReadonlyArray<Box>, positions: Set<
 
 const updateTribeOccupiedNodesInfo = (buildingLayer: TribeBuildingLayer): void => {
    const occupiedNodes = new Set<SafetyNode>();
-   const occupiedNodeToEntityIDRecord: Record<SafetyNode, Array<number>> = {};
+   const occupiedNodeToEntityIDRecord: Record<SafetyNode, number[]> = {};
 
    // Add nodes from buildings
    for (const virtualBuilding of buildingLayer.virtualStructures) {
@@ -178,7 +178,7 @@ const calculateNodeSafety = (buildingLayer: TribeBuildingLayer, minAdjacentSafet
    return safety;
 }
 
-const createAreaInfo = (buildingLayer: TribeBuildingLayer, rooms: Array<TribeRoom>, nodeToRoomRecord: Record<SafetyNode, TribeRoom>, insideNodes: Set<SafetyNode>): void => {
+const createAreaInfo = (buildingLayer: TribeBuildingLayer, rooms: TribeRoom[], nodeToRoomRecord: Record<SafetyNode, TribeRoom>, insideNodes: Set<SafetyNode>): void => {
    const occupiedNodes = buildingLayer.occupiedSafetyNodes;
    
    // Find min and max node positions
@@ -433,7 +433,7 @@ const createPaddingNodes = (buildingLayer: TribeBuildingLayer, outmostPaddingNod
    }
 }
 
-const insertNode = (surroundingNodes: Array<SafetyNode>, node: SafetyNode, safetyRecord: Record<SafetyNode, number>, nextMinSafetyIdx: number): void => {
+const insertNode = (surroundingNodes: SafetyNode[], node: SafetyNode, safetyRecord: Record<SafetyNode, number>, nextMinSafetyIdx: number): void => {
    const nodeSafety = safetyRecord[node];
    
    let low = nextMinSafetyIdx;
@@ -493,7 +493,7 @@ const createSafetyRecord = (buildingLayer: TribeBuildingLayer, outmostPaddingNod
    const safetyRecord: Record<SafetyNode, number> = {};
    
    // Calculate contained nodes' safety
-   const surroundingNodes: Array<SafetyNode> = [];
+   const surroundingNodes: SafetyNode[] = [];
    for (const node of outmostPaddingNodes) {
       // Initialise with 0 safety
       safetyRecord[node] = 0;
@@ -567,7 +567,7 @@ export function updateBuildingLayer(buildingLayer: TribeBuildingLayer): void {
    updateTribeOccupiedNodesInfo(buildingLayer);
    
    // Find inside nodes and contained buildings
-   const rooms: Array<TribeRoom> = [];
+   const rooms: TribeRoom[] = [];
    const nodeToRoomRecord: Record<SafetyNode, TribeRoom> = {};
    const insideNodes = new Set<SafetyNode>();
    createAreaInfo(buildingLayer, rooms, nodeToRoomRecord, insideNodes);

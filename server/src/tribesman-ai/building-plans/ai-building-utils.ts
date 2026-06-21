@@ -19,7 +19,7 @@ export interface BuildingCandidate {
    readonly buildingLayer: TribeBuildingLayer;
    readonly position: Point;
    readonly rotation: number;
-   readonly boxes: ReadonlyArray<Box>;
+   readonly boxes: readonly Box[];
 }
 
 export function createBuildingCandidate(entityType: StructureType, buildingLayer: TribeBuildingLayer, x: number, y: number, angle: number): BuildingCandidate {

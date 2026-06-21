@@ -3,7 +3,7 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { Settings } from "../../../../../shared/src/settings";
 import { Light, removeLight } from "../../lights";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -27,7 +27,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cooking, CookingComponentArray> {}
 }
 
-class CookingComponentArray extends _ServerComponentArray<CookingComponent, CookingComponentData> {
+class CookingComponentArray extends ServerComponentArray<CookingComponent, CookingComponentData> {
    public decodeData(reader: PacketReader): CookingComponentData {
       const heatingProgress = reader.readNumber();
       const isCooking = reader.readBool();

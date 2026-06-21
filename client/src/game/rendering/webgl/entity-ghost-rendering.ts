@@ -59,7 +59,7 @@ export interface GhostInfo {
 
 export const PARTIAL_OPACITY = 0.5;
 
-const renderObjects: Array<EntityRenderObject> = [];
+const renderObjects: EntityRenderObject[] = [];
 
 export function addGhostRenderObject(renderObject: EntityRenderObject): void {
    const idx = renderObjects.indexOf(renderObject);

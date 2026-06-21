@@ -15,7 +15,7 @@ registerEntityLootOnDeath(EntityType.mithrilOreNode, {
    getAmount: () => 1
 });
 
-export function createMithrilOreNodeConfig(x: number, y: number, angle: number, size: number, variant: number, children: ReadonlyArray<Entity>, renderHeight: number): EntityConfig {
+export function createMithrilOreNodeConfig(x: number, y: number, angle: number, size: number, variant: number, children: readonly Entity[], renderHeight: number): EntityConfig {
    const transformComponent = new TransformComponent();
 
    const hitbox = createHitbox(transformComponent, null, createRectangularBox(x, y, 0, 0, angle, 16, 16), 0.25, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);

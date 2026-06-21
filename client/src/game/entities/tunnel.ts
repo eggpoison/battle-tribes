@@ -14,7 +14,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createTunnelConfig(x: number, y: number, angle: number, tribe: Tribe, material: BuildingMaterial): EntityComponentData {
-   const hitboxes: Array<Hitbox> = [];
+   const hitboxes: Hitbox[] = [];
    let hitboxLocalID = 0;
 
    const HITBOX_WIDTH = 8;

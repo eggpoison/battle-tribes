@@ -15,9 +15,9 @@ const NODE_CIRCLE_VERTEX_COUNT = 10;
 
 let nodeProgram: WebGLProgram;
 
-let visibleSubtileSupports: ReadonlyArray<SubtileSupportInfo> = [];
+let visibleSubtileSupports: readonly SubtileSupportInfo[] = [];
 
-export function setVisibleSubtileSupports(newVisibleSubtileSupports: ReadonlyArray<SubtileSupportInfo>): void {
+export function setVisibleSubtileSupports(newVisibleSubtileSupports: readonly SubtileSupportInfo[]): void {
    visibleSubtileSupports = newVisibleSubtileSupports;
 }
 

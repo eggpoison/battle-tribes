@@ -2,7 +2,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { TextureIndex } from "../../../texture-index";
@@ -15,7 +15,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.automatonAssembler, _AutomatonAssemblerComponentArray> {}
 }
 
-class _AutomatonAssemblerComponentArray extends _ServerComponentArray<AutomatonAssemblerComponent, AutomatonAssemblerComponentData> {
+class _AutomatonAssemblerComponentArray extends ServerComponentArray<AutomatonAssemblerComponent, AutomatonAssemblerComponentData> {
    public decodeData(): AutomatonAssemblerComponentData {
       return {};
    }

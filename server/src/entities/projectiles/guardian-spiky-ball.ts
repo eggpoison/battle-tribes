@@ -31,7 +31,7 @@ export function createGuardianSpikyBallConfig(x: number, y: number, angle: numbe
    
    const guardianSpikyBallComponent = new GuardianSpikyBallComponent();
    
-   const lights: Array<LightCreationInfo> = [];
+   const lights: LightCreationInfo[] = [];
    const light = createLight(new Point(0, 0), 0.4, 0.3, 20, 0.9, 0.2, 0.9);
    lights.push({
       light: light,

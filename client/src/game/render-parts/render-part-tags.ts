@@ -2,7 +2,7 @@ import { assert } from "../../../../shared/src/utils";
 import { EntityRenderObject } from "../EntityRenderObject";
 import { RenderPart } from "./render-parts";
 
-const tagMap = new WeakMap<RenderPart, Array<string>>();
+const tagMap = new WeakMap<RenderPart, string[]>();
 
 export function addRenderPartTag(renderPart: RenderPart, tag: string): void {
    const tags = tagMap.get(renderPart);
@@ -13,7 +13,7 @@ export function addRenderPartTag(renderPart: RenderPart, tag: string): void {
    }
 }
 
-const getTags = (renderPart: RenderPart): Array<string> | undefined => {
+const getTags = (renderPart: RenderPart): string[] | undefined => {
    return tagMap.get(renderPart);
 }
 
@@ -29,8 +29,8 @@ export function getRenderThingByTag(renderObject: EntityRenderObject, tag: strin
    throw new Error("No render part with tag '" + tag + "' could be found.");
 }
 
-export function getRenderThingsByTag(renderObject: EntityRenderObject, tag: string, expectedAmount?: number): Array<RenderPart> {
-   const renderThings: Array<RenderPart> = [];
+export function getRenderThingsByTag(renderObject: EntityRenderObject, tag: string, expectedAmount?: number): RenderPart[] {
+   const renderThings: RenderPart[] = [];
    for (const renderThing of renderObject.renderPartsByZIndex) {
       const tags = getTags(renderThing);
       if (tags === undefined) {

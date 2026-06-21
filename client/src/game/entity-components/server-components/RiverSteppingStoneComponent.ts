@@ -4,7 +4,7 @@ import { randFloat } from "../../../../../shared/src/utils";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { getHitboxTag } from "../../hitboxes";
@@ -18,7 +18,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.riverSteppingStone, _RiverSteppingStoneComponentArray> {}
 }
 
-class _RiverSteppingStoneComponentArray extends _ServerComponentArray<RiverSteppingStoneComponent, RiverSteppingStoneComponentData> {
+class _RiverSteppingStoneComponentArray extends ServerComponentArray<RiverSteppingStoneComponent, RiverSteppingStoneComponentData> {
    public decodeData(): RiverSteppingStoneComponentData {
       return {};
    }

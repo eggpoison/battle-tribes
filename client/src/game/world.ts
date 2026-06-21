@@ -26,7 +26,7 @@ export interface EntityCreationInfo {
    readonly renderObject: EntityRenderObject;
 }
 
-export const layers: Array<Layer> = [];
+export const layers: Layer[] = [];
 let currentLayer: Layer;
 export let surfaceLayer: Layer;
 export let undergroundLayer: Layer;

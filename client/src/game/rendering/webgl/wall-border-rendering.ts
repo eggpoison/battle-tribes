@@ -15,7 +15,7 @@ const enum Var {
 let program: WebGLProgram;
 
 // @INCOMPLETE!
-// const visibleWallBorderInfos: Array<RenderChunkWallBorderInfo> = [];
+// const visibleWallBorderInfos: RenderChunkWallBorderInfo[] = [];
 
 export function createWallBorderShaders(): void {
    const vertexShaderText = `#version 300 es

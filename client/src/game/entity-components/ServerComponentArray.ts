@@ -2,7 +2,7 @@ import { Entity } from "../../../../shared/src/entities";
 import { PacketReader } from "../../../../shared/src/packets";
 import { ComponentArray } from "./ComponentArray";
 
-export default abstract class _ServerComponentArray<
+export default abstract class ServerComponentArray<
    Component extends object,
    ComponentData extends object,
    ComponentIntermediateInfo = void

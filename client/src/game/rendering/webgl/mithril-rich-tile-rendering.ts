@@ -60,8 +60,8 @@ export function createMithrilRichTileRenderingShaders(): void {
 }
 
 // @Garbage
-const getFloorVertices = (layer: Layer): Array<number> => {
-   const vertices: Array<number> = [];
+const getFloorVertices = (layer: Layer): number[] => {
+   const vertices: number[] = [];
 
    const minTileX = clampToBoardDimensions(Math.floor(minVisibleX / Settings.TILE_SIZE));
    const maxTileX = clampToBoardDimensions(Math.floor(maxVisibleX / Settings.TILE_SIZE));
@@ -98,8 +98,8 @@ const getFloorVertices = (layer: Layer): Array<number> => {
 }
 
 // @Garbage
-const getWallVertices = (layer: Layer): Array<number> => {
-   const vertices: Array<number> = [];
+const getWallVertices = (layer: Layer): number[] => {
+   const vertices: number[] = [];
 
    const minSubtileX = clampToBoardDimensions(Math.floor(minVisibleX / Settings.SUBTILE_SIZE));
    const maxSubtileX = clampToBoardDimensions(Math.floor(maxVisibleX / Settings.SUBTILE_SIZE));

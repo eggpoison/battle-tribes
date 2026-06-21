@@ -10,7 +10,7 @@ import { Entity, EntityType } from "../../../shared/dist/entities.js";
 import { StatusEffect } from "../../../shared/dist/status-effects.js";
 import { randFloat, randSign } from "../../../shared/dist/utils.js";
 
-const MAX_HEALTHS: ReadonlyArray<number> = [1, 3, 5, 7];
+const MAX_HEALTHS: readonly number[] = [1, 3, 5, 7];
 
 export function createSnowballConfig(x: number, y: number, angle: number, yeti: Entity, size: number): EntityConfig {
    const transformComponent = new TransformComponent();

@@ -7,6 +7,7 @@ import { shiftIsPressed } from "../../../game/event-handling";
 import { sendItemTransferPacket, sendItemPickupPacket, sendItemReleasePacket } from "../../../game/networking/packet-sending/packet-sending";
 import { playerInstance } from "../../../game/player";
 import { getOpenMenu, hasOpenMenu } from "../../menus";
+import { getClickedItemSlotIdx } from "./Inventory";
 
 // interface Props extends HTMLAttributes<HTMLDivElement> {
 //    item: Item | null;
@@ -135,7 +136,7 @@ const inventoryIsFocused = (): boolean => {
    return hasOpenMenu();
 }
 
-const onMouseDown = (e: MouseEvent, entity: Entity, inventory: Inventory, itemSlot: number): void => {
+const onItemSlotMouseDown = (e: MouseEvent, entity: Entity, inventory: Inventory, itemSlot: number): void => {
    if (!inventoryIsFocused()) {
       return;
    }
@@ -154,7 +155,21 @@ export function createItemSlot(): HTMLDivElement {
 }
 
 export function makeItemSlotInteractable(itemSlotElem: HTMLElement, entity: Entity, inventory: Inventory, itemSlot: number): void {
-   itemSlotElem.addEventListener("mousedown", e => { onMouseDown(e, entity, inventory, itemSlot); });
+   itemSlotElem.onmousedown = e => { onItemSlotMouseDown(e, entity, inventory, itemSlot); };
+}
+
+export function makeInventoryInteractable(inventoryElem: HTMLElement, entity: Entity, inventory: Inventory): void {
+   inventoryElem.onmousedown = e => {
+      const itemSlotIdx = getClickedItemSlotIdx(e, inventory.width);
+      onItemSlotMouseDown(e, entity, inventory, itemSlotIdx + 1);
+   };
+}
+
+const createItemCountElem = (itemSlotElem: HTMLElement, amount: number): void => {
+   const itemCountElem = document.createElement("div");
+   itemCountElem.className = "item-count";
+   itemCountElem.textContent = amount.toString();
+   itemSlotElem.appendChild(itemCountElem);
 }
 
 export function addItemToItemSlot(itemSlotElem: HTMLElement, itemType: ItemType, itemAmount: number): void {
@@ -164,37 +179,35 @@ export function addItemToItemSlot(itemSlotElem: HTMLElement, itemType: ItemType,
    imgElem.src = img;
    itemSlotElem.appendChild(imgElem);
 
-   const itemCountElem = document.createElement("div");
-   itemCountElem.className = "item-count";
-   // I'm thinking it will create less garbage to always create item count text for items, even if they are only stacked to one.
-   itemCountElem.textContent = itemAmount.toString();
-   if (itemAmount === 1) {
-      itemCountElem.hidden = true;
+   if (itemAmount !== 1) {
+      createItemCountElem(itemSlotElem, itemAmount);
    }
-   itemSlotElem.appendChild(itemCountElem);
 }
 
 export function updateItemSlot(itemSlotElem: HTMLElement, item: Item): void {
-   const itemCountElem = itemSlotElem.children[1] as HTMLElement;
+   const itemCountElem = itemSlotElem.children[1] as HTMLElement | undefined;
    if (item.count !== -1) {
-      itemCountElem.hidden = false;
-      (itemCountElem.firstChild as Text).data = item.count.toString();
+      if (itemCountElem === undefined) {
+         createItemCountElem(itemSlotElem, item.count);
+      } else {
+         (itemCountElem.firstChild as Text).data = item.count.toString();
+      }
    } else {
-      itemCountElem.hidden = true;
+      assert(itemCountElem !== undefined);
+      itemCountElem.remove();
    }
 }
 
 export function removeItemFromItemSlot(itemSlotElem: HTMLElement): void {
-   assert(itemSlotElem.children.length === 2);
-   itemSlotElem.children[1].remove();
-   itemSlotElem.children[0].remove();
+   assert(itemSlotElem.children.length > 0);
+   itemSlotElem.replaceChildren();
 }
 
-export function addItemSlotSelection(itemSlotElem: HTMLElement): void {
+export function addItemSlotElemSelection(itemSlotElem: HTMLElement): void {
    itemSlotElem.classList.add("selected");
 }
 
-export function removeItemSlotSelection(itemSlotElem: HTMLElement): void {
+export function removeItemSlotElemSelection(itemSlotElem: HTMLElement): void {
    itemSlotElem.classList.remove("selected");
 }
 

@@ -4,7 +4,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -18,7 +18,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spearProjectile, _SpearProjectileComponentArray> {}
 }
 
-class _SpearProjectileComponentArray extends _ServerComponentArray<SpearProjectileComponent, SpearProjectileComponentData> {
+class _SpearProjectileComponentArray extends ServerComponentArray<SpearProjectileComponent, SpearProjectileComponentData> {
    public decodeData(): SpearProjectileComponentData {
       return {};
    }

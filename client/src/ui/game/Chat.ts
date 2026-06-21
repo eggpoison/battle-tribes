@@ -15,7 +15,7 @@ let inputElem: HTMLInputElement | null = null;
 
 let numMessages = 0;
 
-const spamFilterTimestamps: Array<number> = [0, 0, 0, 0, 0];
+const spamFilterTimestamps = [0, 0, 0, 0, 0];
 /** Points to the oldest message timestamp */
 let spamFilterHead = 0;
 
@@ -30,14 +30,14 @@ export function addMessageToChat(username: string, message: string): void {
 
    // Remove a chat message if the number of messages has exceeded the maximum
    if (numMessages >= Var.MAX_MESSAGES) {
-      historyElem!.removeChild(historyElem!.firstChild!);
+      historyElem!.firstChild!.remove();
    } else {
       numMessages++;
    }
 
    // Make the chat reappear
    historyElem!.classList.remove("message-history");
-   historyElem!.offsetHeight; // Force reflow to play the animation again
+   void historyElem!.offsetHeight; // Force reflow to play the animation again
    historyElem!.classList.add("message-history");
 }
 
@@ -60,7 +60,7 @@ export function createChat(): void {
 }
 
 export function destroyChat(): void {
-   document.body.removeChild(rootElem!);
+   rootElem!.remove();
 
    rootElem = null;
    historyElem = null;

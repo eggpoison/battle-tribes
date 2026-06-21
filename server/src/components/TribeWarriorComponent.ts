@@ -5,9 +5,9 @@ import { Packet } from "../../../shared/dist/packets.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class TribeWarriorComponent {
-   public readonly scars: ReadonlyArray<ScarInfo>;
+   public readonly scars: readonly ScarInfo[];
 
-   constructor(scars: ReadonlyArray<ScarInfo>) {
+   constructor(scars: readonly ScarInfo[]) {
       this.scars = scars;
    }
 }

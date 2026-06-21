@@ -4,7 +4,7 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { playSoundOnHitbox } from "../../sound";
 import { createStructureConnection, StructureConnection } from "../../structure-placement";
 import { EntityComponentData, getEntityType } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { addFenceConnection, FenceComponentArray, removeFenceConnection } from "./FenceComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -13,23 +13,23 @@ import { registerServerComponentArray } from "../component-registry";
 
 export interface StructureComponentData {
    readonly hasActiveBlueprint: boolean;
-   readonly connections: Array<StructureConnection>;
+   readonly connections: StructureConnection[];
 }
 
 export interface StructureComponent {
    hasActiveBlueprint: boolean;
-   readonly connections: Array<StructureConnection>;
+   readonly connections: StructureConnection[];
 }
 
 declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.structure, _StructureComponentArray> {}
 }
 
-class _StructureComponentArray extends _ServerComponentArray<StructureComponent, StructureComponentData> {
+class _StructureComponentArray extends ServerComponentArray<StructureComponent, StructureComponentData> {
    public decodeData(reader: PacketReader): StructureComponentData {
       const hasActiveBlueprint = reader.readBool();
 
-      const connections: Array<StructureConnection> = [];
+      const connections: StructureConnection[] = [];
       const numConnections = reader.readNumber();
       for (let i = 0; i < numConnections; i++) {
          const entity: Entity = reader.readNumber();
@@ -107,7 +107,7 @@ class _StructureComponentArray extends _ServerComponentArray<StructureComponent,
 
       structureComponent.hasActiveBlueprint = data.hasActiveBlueprint;
 
-      const newConnectedEntities: Array<Entity> = [];
+      const newConnectedEntities: Entity[] = [];
       for (let i = 0; i < data.connections.length; i++) {
          const connectionData = data.connections[i];
          const connectedEntity = connectionData.entity;

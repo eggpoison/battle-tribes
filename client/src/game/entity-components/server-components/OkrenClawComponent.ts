@@ -5,7 +5,7 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { OkrenAgeStage } from "./OkrenComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -37,7 +37,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.okrenClaw, _OkrenClawComponentArray> {}
 }
 
-class _OkrenClawComponentArray extends _ServerComponentArray<OkrenClawComponent, OkrenClawComponentData, IntermediateInfo> {
+class _OkrenClawComponentArray extends ServerComponentArray<OkrenClawComponent, OkrenClawComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): OkrenClawComponentData {
       const size = reader.readNumber();
       const growthStage = reader.readNumber();

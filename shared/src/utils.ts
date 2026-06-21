@@ -219,7 +219,7 @@ export function slerp(startAngle: number, endAngle: number, t: number): number {
    }
 }
 
-export function randItem<T>(arr: Array<T> | ReadonlyArray<T>): T {
+export function randItem<T>(arr: T[] | readonly T[]): T {
    if (arr.length === 0) throw new Error("Array has no items in it!");
 
    return arr[Math.floor(Math.random() * arr.length)];
@@ -285,6 +285,15 @@ export function veryBadHash(seed: string): number {
       hash |= 0; // Convert to 32bit integer
    }
    return hash;
+}
+
+export function murmurHash3(x: number) {
+  x ^= x >>> 16;
+  x = Math.imul(x, 0x85ebca6b);
+  x ^= x >>> 13;
+  x = Math.imul(x, 0xc2b2ae35);
+  x ^= x >>> 16;
+  return x >>> 0; // unsigned 32-bit integer
 }
 
 export function clampToBoardDimensions(tileCoord: number): number {

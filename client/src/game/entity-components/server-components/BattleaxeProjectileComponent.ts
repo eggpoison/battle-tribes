@@ -2,7 +2,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { Settings } from "../../../../../shared/src/settings";
 import { playSoundOnHitbox } from "../../sound";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { tickIntervalHasPassed } from "../../networking/snapshots";
 import { registerServerComponentArray } from "../component-registry";
@@ -15,7 +15,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.battleaxeProjectile, _BattleaxeProjectileComponentArray> {}
 }
 
-class _BattleaxeProjectileComponentArray extends _ServerComponentArray<BattleaxeProjectileComponent, BattleaxeProjectileComponentData, never> {
+class _BattleaxeProjectileComponentArray extends ServerComponentArray<BattleaxeProjectileComponent, BattleaxeProjectileComponentData, never> {
    public decodeData(): BattleaxeProjectileComponentData {
       return {};
    }

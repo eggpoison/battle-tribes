@@ -13,6 +13,7 @@ import { resetFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { preventDefault } from "./utils";
 import { onWindowResize } from "./webgl";
 import { entityExists } from "./world";
+import { updateHeldItemPosition } from "../ui/game/HeldItem";
 
 const enum ASCIICode {
    SHIFT = 16,       // Shift key
@@ -66,6 +67,9 @@ export let gameIsFocused = true;
 export let shiftIsPressed = false;
 export let playerIsLightspeed = false;
 
+export let cursorX = 0;
+export let cursorY = 0;
+
 let movementBitfield = 0;
 const moveInputVec = new Point(0, 0);
 let moveInputDir = -999;
@@ -116,8 +120,12 @@ export function getPlayerInputDirection(): number {
 }
 
 function onMouseMove(e: MouseEvent): void {
-   gameUIState.setCursorX(e.clientX);
-   gameUIState.setCursorY(e.clientY);
+   cursorX = e.clientX;
+   cursorY = e.clientY;
+
+   // @Cleanup: is this really an ok thing to do, here?
+   updateHeldItemPosition(cursorX, cursorY);
+   
    updateCursorScreenPos(e);
 }
 
@@ -282,6 +290,7 @@ export function setupEvents(): void {
    document.onkeyup = onKeyUp;
    document.onmousemove = onMouseMove;
    document.onvisibilitychange = onVisibilityChange;
+   document.oncontextmenu = preventDefault;
    window.onresize = onWindowResize;
    // These two are outcasts :(
    document.addEventListener("focusin", onDocumentFocusIn);
@@ -299,6 +308,7 @@ export function cleanupEvents(): void {
    document.onkeyup = null;
    document.onmousemove = null;
    document.onvisibilitychange = null;
+   document.oncontextmenu = null;
    window.onresize = null;
    document.body.removeEventListener("wheel", scrollHotbarSelectedItemSlot);
    document.removeEventListener("focusin", onDocumentFocusIn);

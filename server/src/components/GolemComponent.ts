@@ -41,8 +41,8 @@ export interface GolemTargetInfo {
    timeSinceLastAggro: number;
 }
 
-const generateRockInfoArray = (hitboxes: ReadonlyArray<Hitbox>): Array<RockInfo> => {
-   const rockInfoArray: Array<RockInfo> = [];
+const generateRockInfoArray = (hitboxes: readonly Hitbox[]): RockInfo[] => {
+   const rockInfoArray: RockInfo[] = [];
    
    for (const hitbox of hitboxes) {
       const box = hitbox.box as CircularBox;
@@ -68,15 +68,15 @@ const generateRockInfoArray = (hitboxes: ReadonlyArray<Hitbox>): Array<RockInfo>
 }
 
 export class GolemComponent {
-   public readonly rockInfoArray: Array<RockInfo>;
+   public readonly rockInfoArray: RockInfo[];
    public readonly attackingEntities: Record<number, GolemTargetInfo> = {};
    public wakeTimerTicks = 0;
    public lastWakeTicks = 0;
 
-   public summonedPebblumIDs: Array<number> = [];
+   public summonedPebblumIDs: number[] = [];
    public pebblumSummonCooldownTicks: number;
    
-   constructor(hitboxes: ReadonlyArray<Hitbox>, pebblumSummonCooldownTicks: number) {
+   constructor(hitboxes: readonly Hitbox[], pebblumSummonCooldownTicks: number) {
       this.rockInfoArray = generateRockInfoArray(hitboxes);
       this.pebblumSummonCooldownTicks = pebblumSummonCooldownTicks;
    }

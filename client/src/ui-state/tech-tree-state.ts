@@ -6,7 +6,7 @@ let y = 0;
 let zoom = 1;
 
 let hoveredTech: TechID | null = null;
-let unlockedTechs = new Array<Tech>();
+let unlockedTechs: Tech[] = [];
 let selectedTech: Tech | null = null;
 let selectedTechStudyProgress = 0;
 

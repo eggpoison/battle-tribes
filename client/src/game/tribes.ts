@@ -23,17 +23,17 @@ export interface ExtendedTribe extends ShortTribe {
    readonly hasTotem: boolean;
    readonly numHuts: number;
    readonly tribesmanCap: number;
-   readonly area: ReadonlyArray<[tileX: number, tileY: number]>;
+   readonly area: readonly [tileX: number, tileY: number][];
    readonly selectedTech: Tech | null;
-   readonly unlockedTechs: ReadonlyArray<Tech>;
+   readonly unlockedTechs: readonly Tech[];
    readonly techTreeUnlockProgress: TechTreeUnlockProgress;
-   readonly tribesmen: ReadonlyArray<TribesmanInfo>;
+   readonly tribesmen: readonly TribesmanInfo[];
 }
 
 export type Tribe = ExtendedTribe | ShortTribe;
 
 export let playerTribe: ExtendedTribe;
-export const tribes: Array<Tribe> = [];
+export const tribes: Tribe[] = [];
 
 export function tribeHasExtendedInfo(tribe: Tribe): tribe is ExtendedTribe {
    return (tribe as ExtendedTribe).tribesmen !== undefined;
@@ -90,7 +90,7 @@ export function readExtendedTribeData(reader: PacketReader): ExtendedTribe {
    const numHuts = reader.readNumber();
    const tribesmanCap = reader.readNumber();
 
-   const area: Array<[tileX: number, tileY: number]> = [];
+   const area: [tileX: number, tileY: number][] = [];
    const areaLength = reader.readNumber();
    for (let i = 0; i < areaLength; i++) {
       const tileX = reader.readNumber();
@@ -101,7 +101,7 @@ export function readExtendedTribeData(reader: PacketReader): ExtendedTribe {
    const rawSelectedTechID = reader.readNumber();
    const selectedTech = rawSelectedTechID !== -1 ? getTechByID(rawSelectedTechID) : null;
 
-   const unlockedTechs: Array<Tech> = [];
+   const unlockedTechs: Tech[] = [];
    const numUnlockedTechs = reader.readNumber();
    for (let i = 0; i < numUnlockedTechs; i++) {
       const techID = reader.readNumber();
@@ -130,7 +130,7 @@ export function readExtendedTribeData(reader: PacketReader): ExtendedTribe {
       };
    }
 
-   const tribesmen: Array<TribesmanInfo> = [];
+   const tribesmen: TribesmanInfo[] = [];
    const numTribesmen = reader.readNumber();
    for (let i = 0; i < numTribesmen; i++) {
       const entity: Entity = reader.readNumber();

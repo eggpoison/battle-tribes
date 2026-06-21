@@ -19,7 +19,7 @@ interface TechTreeItem {
    readonly lifetime: number;
 }
 
-const items: Array<TechTreeItem> = [];
+const items: TechTreeItem[] = [];
 
 let program: WebGLProgram;
 let vao: WebGLVertexArrayObject;

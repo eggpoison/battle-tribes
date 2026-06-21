@@ -8,7 +8,7 @@ interface TickCallback {
    readonly callback: () => void;
 }
 
-const tickCallbacks: Array<TickCallback> = [];
+const tickCallbacks: TickCallback[] = [];
 
 export function addTickCallback(time: number, callback: () => void): void {
    tickCallbacks.push({

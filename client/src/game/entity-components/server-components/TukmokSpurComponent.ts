@@ -7,7 +7,7 @@ import { getHitboxTag, Hitbox } from "../../hitboxes";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
 import { TextureIndex } from "../../../texture-index";
@@ -20,7 +20,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmokSpur, _TukmokSpurComponentArray> {}
 }
 
-class _TukmokSpurComponentArray extends _ServerComponentArray<TukmokSpurComponent, TukmokSpurComponentData> {
+class _TukmokSpurComponentArray extends ServerComponentArray<TukmokSpurComponent, TukmokSpurComponentData> {
    public decodeData(): TukmokSpurComponentData {
       return {};
    }

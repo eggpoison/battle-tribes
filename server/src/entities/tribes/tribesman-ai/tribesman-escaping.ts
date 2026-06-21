@@ -24,7 +24,7 @@ export function tribeMemberShouldEscape(entityType: EntityType, healthComponent:
 }
 
 // @Cleanup: just pass in visibleThreats
-export function escapeFromEnemies(tribesman: Entity, visibleEnemies: ReadonlyArray<Entity>, visibleHostileMobs: ReadonlyArray<Entity>): void {
+export function escapeFromEnemies(tribesman: Entity, visibleEnemies: readonly Entity[], visibleHostileMobs: readonly Entity[]): void {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const tribesmanHitbox = transformComponent.hitboxes[0];
    

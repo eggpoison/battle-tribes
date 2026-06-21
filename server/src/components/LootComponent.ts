@@ -21,10 +21,10 @@ export interface LootEntry {
    readonly hitboxIdx?: number;
 }
 
-const lootOnHitRecord: Partial<Record<EntityType, Array<LootEntry>>> = {};
-const lootOnDeathRecord: Partial<Record<EntityType, Array<LootEntry>>> = {};
+const lootOnHitRecord: Partial<Record<EntityType, LootEntry[]>> = {};
+const lootOnDeathRecord: Partial<Record<EntityType, LootEntry[]>> = {};
 
-const itemToEntityTypesRecord: Partial<Record<ItemType, Array<EntityType>>> = {};
+const itemToEntityTypesRecord: Partial<Record<ItemType, EntityType[]>> = {};
 
 export class LootComponent {
    public localBiome: LocalBiome | null = null;
@@ -153,7 +153,7 @@ function onDeath(entity: Entity): void {
    }
 }
 
-export function getEntityTypesWhichDropItem(itemType: ItemType): ReadonlyArray<EntityType> {
+export function getEntityTypesWhichDropItem(itemType: ItemType): readonly EntityType[] {
    const entityTypes = itemToEntityTypesRecord[itemType];
    return entityTypes !== undefined ? entityTypes : [];
 }

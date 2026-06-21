@@ -9,7 +9,7 @@ import { getHitboxVelocity } from "../../hitboxes";
 import { createSandParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -33,7 +33,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.sandBall, _SandBallComponentArray> {}
 }
 
-class _SandBallComponentArray extends _ServerComponentArray<SandBallComponent, SandBallComponentData, IntermediateInfo> {
+class _SandBallComponentArray extends ServerComponentArray<SandBallComponent, SandBallComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): SandBallComponentData {
       const size = reader.readNumber();
       

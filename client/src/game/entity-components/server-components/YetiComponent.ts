@@ -10,7 +10,7 @@ import { playSoundOnHitbox } from "../../sound";
 import { randomSoundComponentArray, updateRandomSoundComponentSounds } from "../client-components/RandomSoundComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { EntityComponentData } from "../../world";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -30,14 +30,14 @@ export interface YetiComponentData {
 }
 
 interface IntermediateInfo {
-   readonly pawRenderParts: ReadonlyArray<VisualRenderPart>;
+   readonly pawRenderParts: readonly VisualRenderPart[];
 }
 
 export interface YetiComponent {
    lastAttackProgress: number;
    attackProgress: number;
 
-   readonly pawRenderParts: ReadonlyArray<VisualRenderPart>;
+   readonly pawRenderParts: readonly VisualRenderPart[];
 }
 
 declare module "../component-registry" {
@@ -53,12 +53,12 @@ const BLOOD_POOL_SIZE = 30;
 const YETI_PAW_START_ANGLE = Math.PI/3;
 const YETI_PAW_END_ANGLE = Math.PI/6;
 
-const AMBIENT_SOUNDS: ReadonlyArray<string> = ["yeti-ambient-1.mp3", "yeti-ambient-2.mp3", "yeti-ambient-3.mp3", "yeti-ambient-4.mp3", "yeti-ambient-5.mp3", "yeti-ambient-6.mp3"];
-const ANGRY_SOUNDS: ReadonlyArray<string> = ["yeti-angry-1.mp3", "yeti-angry-2.mp3", "yeti-angry-3.mp3", "yeti-angry-4.mp3", "yeti-angry-5.mp3"];
-const HURT_SOUNDS: ReadonlyArray<string> = ["yeti-hurt-1.mp3", "yeti-hurt-2.mp3", "yeti-hurt-3.mp3", "yeti-hurt-4.mp3", "yeti-hurt-5.mp3"];
-const DEATH_SOUNDS: ReadonlyArray<string> = ["yeti-death-1.mp3", "yeti-death-2.mp3"];
+const AMBIENT_SOUNDS: readonly string[] = ["yeti-ambient-1.mp3", "yeti-ambient-2.mp3", "yeti-ambient-3.mp3", "yeti-ambient-4.mp3", "yeti-ambient-5.mp3", "yeti-ambient-6.mp3"];
+const ANGRY_SOUNDS: readonly string[] = ["yeti-angry-1.mp3", "yeti-angry-2.mp3", "yeti-angry-3.mp3", "yeti-angry-4.mp3", "yeti-angry-5.mp3"];
+const HURT_SOUNDS: readonly string[] = ["yeti-hurt-1.mp3", "yeti-hurt-2.mp3", "yeti-hurt-3.mp3", "yeti-hurt-4.mp3", "yeti-hurt-5.mp3"];
+const DEATH_SOUNDS: readonly string[] = ["yeti-death-1.mp3", "yeti-death-2.mp3"];
 
-class YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiComponentData, IntermediateInfo> {
+class YetiComponentArray extends ServerComponentArray<YetiComponent, YetiComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): YetiComponentData {
       const isAttacking = reader.readBool();
       const attackProgress = reader.readNumber();
@@ -71,7 +71,7 @@ class YetiComponentArray extends _ServerComponentArray<YetiComponent, YetiCompon
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
-      const pawRenderParts: Array<VisualRenderPart> = [];
+      const pawRenderParts: VisualRenderPart[] = [];
       for (const hitbox of transformComponentData.hitboxes) {
          const tag = getHitboxTag(hitbox);
          if (tag === HitboxTag.yetiBody) {

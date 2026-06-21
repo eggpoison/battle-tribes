@@ -23,7 +23,7 @@ export interface TamingSkill {
    readonly id: TamingSkillID;
    readonly name: string;
    readonly description: string;
-   readonly requirements: ReadonlyArray<TamingSkillRequirement>;
+   readonly requirements: readonly TamingSkillRequirement[];
 }
 
 export interface TamingSkillNode {
@@ -36,7 +36,7 @@ export interface TamingSkillNode {
 
 export interface EntityTamingSpec<TamingTiers extends TamingTier = TamingTier> {
    readonly maxTamingTier: TamingTier;
-   readonly skillNodes: ReadonlyArray<TamingSkillNode>;
+   readonly skillNodes: readonly TamingSkillNode[];
    readonly foodItemType: ItemType;
    readonly tierFoodRequirements: Partial<Record<TamingTiers, number>>;
 }

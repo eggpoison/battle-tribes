@@ -10,7 +10,7 @@ interface LocalEntityCensusInfo {
 }
 
 interface LocalBiome {
-   readonly tiles: Array<TileIndex>;
+   readonly tiles: TileIndex[];
    readonly entityCensus: Map<EntityType, LocalEntityCensusInfo>;
    lastUpdateTicks: number;
 }
@@ -18,7 +18,7 @@ interface LocalBiome {
 const visibleLocalBiomes = new Map<number, LocalBiome>();
 
 const readLocalBiome = (reader: PacketReader): LocalBiome => {
-   const tiles: Array<TileIndex> = [];
+   const tiles: TileIndex[] = [];
    const numTiles = reader.readNumber();
    for (let i = 0; i < numTiles; i++) {
       const tileIndex = reader.readNumber();

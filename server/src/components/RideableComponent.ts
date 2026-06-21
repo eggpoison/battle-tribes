@@ -2,7 +2,7 @@ import { ServerComponentType } from "../../../shared/dist/components.js";
 import { Bytes } from "../../../shared/dist/constants.js";
 import { Entity } from "../../../shared/dist/entities.js";
 import { Packet } from "../../../shared/dist/packets.js";
-import { Point, rotatePointAroundOrigin, _point, rotatePoint } from "../../../shared/dist/utils.js";
+import { Point, rotatePointAroundOrigin, _point, rotatePoint, assert } from "../../../shared/dist/utils.js";
 import { Hitbox, translateHitbox } from "../hitboxes.js";
 import { entityExists } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -18,7 +18,7 @@ export interface CarrySlot {
 }
 
 export class RideableComponent {
-   readonly carrySlots: Array<CarrySlot> = [];
+   readonly carrySlots: CarrySlot[] = [];
 }
 
 export const RideableComponentArray = new ComponentArray<RideableComponent>(ServerComponentType.rideable, true, getDataLength, addDataToPacket);

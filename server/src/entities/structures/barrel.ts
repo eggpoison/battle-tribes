@@ -16,7 +16,7 @@ import { VirtualStructure } from "../../tribesman-ai/building-plans/TribeBuildin
 import { createHitbox, setHitboxIsStatic } from "../../hitboxes.js";
 import { StructureConnection } from "../../structure-placement.js";
 
-export function createBarrelConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createBarrelConfig(x: number, y: number, angle: number, tribe: Tribe, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
    const box = createCircularBox(x, y, 0, 0, angle, 40);

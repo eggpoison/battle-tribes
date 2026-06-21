@@ -11,7 +11,6 @@ import { TickSnapshot } from "../networking/snapshot-processing";
 import { getSubtileX, getSubtileY } from "../../../../shared/src/subtiles";
 import { PacketReader } from "../../../../shared/src/packets";
 import { SubtileType, TileType } from "../../../../shared/src/tiles";
-import { gl } from "../webgl";
 import { Tile } from "../Tile";
 
 export const enum RenderChunkVars {
@@ -47,8 +46,8 @@ export interface RenderChunkRiverInfo {
    readonly transitionVertexCount: number;
    // @SQUEAM
    /** IDs of all stepping stone groups resent in the render chunk */
-   // readonly riverSteppingStoneGroupIDs: ReadonlyArray<number>;
-   readonly waterRocks: Array<WaterRockData>;
+   // readonly riverSteppingStoneGroupIDs: readonly number[];
+   readonly waterRocks: WaterRockData[];
 }
 
 export const enum EdgeType {
@@ -57,7 +56,7 @@ export const enum EdgeType {
    dropdown
 }
 
-export type RenderChunkEdgeInfo = Array<number>;
+export type RenderChunkEdgeInfo = number[];
 
 export interface RenderChunkShadowInfo {
    readonly vao: WebGLVertexArrayObject;
@@ -74,14 +73,14 @@ export interface RenderChunkWallBorderInfo {
    vertexData: Float32Array;
 }
 
-export type EdgeInfoArrays = Array<Record<EdgeType, ReadonlyArray<RenderChunkEdgeInfo>>>;
+export type EdgeInfoArrays = Record<EdgeType, readonly RenderChunkEdgeInfo[]>[];
 
 // @Hack
 // @Speed: Polymorphism
-const tileShadowInfoArrays: Array<Record<TileShadowType, Array<RenderChunkShadowInfo | null>>> = [];
+const tileShadowInfoArrays: Record<TileShadowType, (RenderChunkShadowInfo | null)[]>[] = [];
 let edgeInfoArrays: EdgeInfoArrays;
 
-const wallBorderInfoArrays: Array<Array<RenderChunkWallBorderInfo | null>> = [];
+const wallBorderInfoArrays: (RenderChunkWallBorderInfo | null)[][] = [];
 
 export function getRenderChunkIndex(renderChunkX: number, renderChunkY: number): number {
    return (renderChunkY + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION) * (RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION * 2) + renderChunkX + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION;
@@ -127,7 +126,7 @@ export function setRenderChunkTileShadowInfo(layer: Layer, renderChunkIdx: numbe
    tileShadowInfoArrays[layer.idx][tileShadowType][renderChunkIdx] = newInfo;
 }
 
-export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<WaterRockData>, infoArrays: EdgeInfoArrays): void {
+export function createRenderChunks(layer: Layer, waterRocks: readonly WaterRockData[], infoArrays: EdgeInfoArrays): void {
    edgeInfoArrays = infoArrays;
    const floorEdgeInfos = infoArrays[layer.idx][EdgeType.floor];
    const wallEdgeInfos = infoArrays[layer.idx][EdgeType.wall];
@@ -138,7 +137,7 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    
    // Group water rocks
    // @Speed: Garbage collection
-   const waterRocksChunked = new Map<number, Array<WaterRockData>>();
+   const waterRocksChunked = new Map<number, WaterRockData[]>();
    for (const waterRock of waterRocks) {
       const renderChunkX = Math.floor(waterRock.position[0] / RenderChunkVars.RENDER_CHUNK_UNITS);
       const renderChunkY = Math.floor(waterRock.position[1] / RenderChunkVars.RENDER_CHUNK_UNITS);
@@ -154,7 +153,7 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
 
    // @SQUEAM
    // // Group edge stepping stones
-   // let edgeSteppingStonesChunked: Record<number, Record<number, Array<RiverSteppingStoneData>>> = {};
+   // let edgeSteppingStonesChunked: Record<number, Record<number, RiverSteppingStoneData[]>> = {};
    // for (const steppingStone of riverSteppingStones) {
    //    if (positionIsInWorld(steppingStone.positionX, steppingStone.positionY)) {
    //       continue;
@@ -196,14 +195,14 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    }
 
    // Tile shadow info
-   const dropdownShadowArray: Array<RenderChunkShadowInfo | null> = [];
-   const wallShadowArray: Array<RenderChunkShadowInfo | null> = [];
+   const dropdownShadowArray: (RenderChunkShadowInfo | null)[] = [];
+   const wallShadowArray: (RenderChunkShadowInfo | null)[] = [];
    for (let idx = 0; idx < RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE * RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE; idx++) {
       wallShadowArray.push(calculateShadowInfo(floorEdgeInfos[idx]));
       dropdownShadowArray.push(calculateShadowInfo(dropdownEdgeInfos[idx]));
    }
    
-   const tileShadowInfoArray: Record<TileShadowType, Array<RenderChunkShadowInfo | null>> = {
+   const tileShadowInfoArray: Record<TileShadowType, (RenderChunkShadowInfo | null)[]> = {
       [TileShadowType.dropdownShadow]: dropdownShadowArray,
       [TileShadowType.wallShadow]: wallShadowArray
    };
@@ -212,7 +211,7 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    tileShadowInfoArrays.push(tileShadowInfoArray);
 
    // Wall border info
-   const wallBorderInfoArray: Array<RenderChunkWallBorderInfo | null> = [];
+   const wallBorderInfoArray: (RenderChunkWallBorderInfo | null)[] = [];
    for (let idx = 0; idx < RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE * RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE; idx++) {
       wallBorderInfoArray.push(calculateWallBorderInfo(wallEdgeInfos[idx]));
    }
@@ -221,7 +220,7 @@ export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<Water
    wallBorderInfoArrays.push(wallBorderInfoArray);
 }
 
-const getSubtileEdgeInfo = (edgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subtileIndex: number): RenderChunkEdgeInfo => {
+const getSubtileEdgeInfo = (edgeInfos: readonly RenderChunkEdgeInfo[], subtileIndex: number): RenderChunkEdgeInfo => {
    const subtileX = getSubtileX(subtileIndex);
    const subtileY = getSubtileY(subtileIndex);
    const renderChunkX = Math.floor(subtileX / 4 / RenderChunkVars.RENDER_CHUNK_SIZE);
@@ -230,7 +229,7 @@ const getSubtileEdgeInfo = (edgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subti
    return edgeInfos[idx];
 }
 
-const getTileEdgeInfo = (edgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, tileIndex: number): RenderChunkEdgeInfo => {
+const getTileEdgeInfo = (edgeInfos: readonly RenderChunkEdgeInfo[], tileIndex: number): RenderChunkEdgeInfo => {
    const tileX = getTileX(tileIndex);
    const tileY = getTileY(tileIndex);
    const renderChunkX = Math.floor(tileX / RenderChunkVars.RENDER_CHUNK_SIZE);
@@ -244,6 +243,8 @@ const addEdge = (edgeInfo: RenderChunkEdgeInfo, index: number, marker: EdgeMarke
       const data = edgeInfo[i];
       const currentIndex = data >> 8;
       if (currentIndex === index) {
+         // @TEMPORARY
+         // assert((data & marker) === 0);
          edgeInfo[i] |= marker;
          return;
       }
@@ -257,10 +258,13 @@ const clearEdges = (edgeInfo: RenderChunkEdgeInfo, index: number) => {
       const data = edgeInfo[i];
       const currentIndex = data >> 8;
       if (currentIndex === index) {
+         // assert((data & 0xFF) !== 0);
          edgeInfo.splice(i, 1);
          return;
       }
    }
+
+   // Ok to not find any edges to clear, as if this is called in the middle of a clump of walls then that will be the case.
 }
 
 const removeEdge = (edgeInfo: RenderChunkEdgeInfo, index: number, marker: EdgeMarkerBit) => {
@@ -268,15 +272,20 @@ const removeEdge = (edgeInfo: RenderChunkEdgeInfo, index: number, marker: EdgeMa
       const data = edgeInfo[i];
       const currentIndex = data >> 8;
       if (currentIndex === index) {
-         edgeInfo[i] &= ~marker;
+         // assert((data & marker) !== 0);
+         if ((data & 0xFF) === marker) {
+            edgeInfo.splice(i, 1);
+         } else {
+            edgeInfo[i] &= ~marker;
+         }
          return;
       }
    }
 
-   throw new Error();
+   // assert(false);
 }
 
-const addSubtileToEdgeInfosPartial = (wallSubtileTypes: Uint8Array, floorEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, wallEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subtileIndex: number, subtileType: SubtileType): void => {
+const addSubtileToEdgeInfosPartial = (wallSubtileTypes: Uint8Array, floorEdgeInfos: readonly RenderChunkEdgeInfo[], wallEdgeInfos: readonly RenderChunkEdgeInfo[], subtileIndex: number, subtileType: SubtileType): void => {
    const rowIdx = subtileIndex % Settings.FULL_WORLD_SIZE_SUBTILES;
    const hasLeft = rowIdx > 0; 
    const hasRight = rowIdx < Settings.FULL_WORLD_SIZE_SUBTILES - 1;
@@ -323,7 +332,7 @@ const addSubtileToEdgeInfosPartial = (wallSubtileTypes: Uint8Array, floorEdgeInf
    }
 }
 
-const addSubtileToEdgeInfosComplete = (wallSubtileTypes: Uint8Array, floorEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, wallEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subtileIndex: number, subtileType: SubtileType): void => {
+const addSubtileToEdgeInfosComplete = (wallSubtileTypes: Uint8Array, floorEdgeInfos: readonly RenderChunkEdgeInfo[], wallEdgeInfos: readonly RenderChunkEdgeInfo[], subtileIndex: number, subtileType: SubtileType): void => {
    const rowIdx = subtileIndex % Settings.FULL_WORLD_SIZE_SUBTILES;
 
    const hasLeft = rowIdx > 0; 
@@ -436,7 +445,7 @@ const addSubtileToEdgeInfosComplete = (wallSubtileTypes: Uint8Array, floorEdgeIn
    }
 }
 
-const removeSubtileFromEdgeInfos = (wallSubtileTypes: Uint8Array, floorEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, wallEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, subtileIndex: number): void => {
+const removeSubtileFromEdgeInfos = (wallSubtileTypes: Uint8Array, floorEdgeInfos: readonly RenderChunkEdgeInfo[], wallEdgeInfos: readonly RenderChunkEdgeInfo[], subtileIndex: number): void => {
    const rowIdx = subtileIndex % Settings.FULL_WORLD_SIZE_SUBTILES;
 
    const hasLeft = rowIdx > 0;
@@ -519,7 +528,7 @@ const removeSubtileFromEdgeInfos = (wallSubtileTypes: Uint8Array, floorEdgeInfos
    }
 }
 
-export function addTileToEdgeInfos(tiles: Array<Tile>, dropdownEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, tileIndex: number, tileType: TileType): void {
+export function addTileToEdgeInfos(tiles: Tile[], dropdownEdgeInfos: readonly RenderChunkEdgeInfo[], tileIndex: number, tileType: TileType): void {
    const rowIdx = tileIndex % Settings.FULL_WORLD_SIZE_TILES;
    const hasLeft = rowIdx > 0;
    const hasRight = rowIdx < Settings.FULL_WORLD_SIZE_TILES - 1;
@@ -578,7 +587,7 @@ export function addTileToEdgeInfos(tiles: Array<Tile>, dropdownEdgeInfos: Readon
    }
 }
 
-export function readInitialSubtileData(reader: PacketReader, wallSubtileTypes: Uint8Array, floorEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>, wallEdgeInfos: ReadonlyArray<RenderChunkEdgeInfo>): void {
+export function readInitialSubtileData(reader: PacketReader, wallSubtileTypes: Uint8Array, floorEdgeInfos: readonly RenderChunkEdgeInfo[], wallEdgeInfos: readonly RenderChunkEdgeInfo[]): void {
    for (let subtileIndex = 0; subtileIndex < Settings.FULL_WORLD_SIZE_SUBTILES * Settings.FULL_WORLD_SIZE_SUBTILES; subtileIndex++) {
       const subtileType = reader.readNumber();
       wallSubtileTypes[subtileIndex] = subtileType;
@@ -614,11 +623,11 @@ export function processRenderChunkSubtileUpdates(snapshot: TickSnapshot): void {
             removeSubtileFromEdgeInfos(layer.wallSubtileTypes, floorEdgeInfos, wallEdgeInfos, subtileIndex);
          }
          addSubtileToEdgeInfosComplete(layer.wallSubtileTypes, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileType);
-   
-         const minRenderChunkX = Math.max(Math.floor((subtileX - 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), 0);
-         const maxRenderChunkX = Math.min(Math.floor((subtileX + 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE - 1);
-         const minRenderChunkY = Math.max(Math.floor((subtileY - 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), 0);
-         const maxRenderChunkY = Math.min(Math.floor((subtileY + 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE - 1);
+         
+         const minRenderChunkX = Math.max(Math.floor((subtileX - 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
+         const maxRenderChunkX = Math.min(Math.floor((subtileX + 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION - 1);
+         const minRenderChunkY = Math.max(Math.floor((subtileY - 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
+         const maxRenderChunkY = Math.min(Math.floor((subtileY + 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION - 1);
    
          // @Speed: We can probably batch these together
          for (let renderChunkY = minRenderChunkY; renderChunkY <= maxRenderChunkY; renderChunkY++) {
@@ -639,9 +648,6 @@ export function processRenderChunkSubtileUpdates(snapshot: TickSnapshot): void {
          const floorEdgeInfo = floorEdgeInfos[renderChunkIdx];
          const wallEdgeInfo = wallEdgeInfos[renderChunkIdx];
          
-         // @hack??1? because updateRenderChunkTileData requires it
-         gl.bindVertexArray(null);
-
          recalculateTileShadows(layer, renderChunkIdx, floorEdgeInfo, TileShadowType.wallShadow);
          recalculateWallBorders(layer, renderChunkIdx, wallEdgeInfo);
       }

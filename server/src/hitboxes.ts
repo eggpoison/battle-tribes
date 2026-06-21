@@ -22,9 +22,12 @@ export interface Hitbox {
    rootEntity: Entity;
    
    // @Memory idea for these two: group all connected hitboxes into one "HitboxGroup" / "CompositeHitbox", which isn't formed for singular hitboxes on their own.
-   // - this would get rid of rootHitbox as well.
+   // - this would get rid of rootHitbox and rootEntity as well.
    parent: Hitbox | null;
-   readonly children: Array<Hitbox>;
+   readonly children: Hitbox[];
+   
+   // @SPEED: All 6 of these following things are only required if an entity has some kind of movement. So, what if they only existed for active entities? Like some sibling arrays for active entities.
+   // - only gotcha is that activeEntities is only for... entities. This is for hitboxes.
    
    previousPosX: number;
    previousPosY: number;

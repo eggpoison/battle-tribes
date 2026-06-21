@@ -17,8 +17,8 @@ export const enum AttackEffectiveness {
 }
 
 interface EntityDamageInfo {
-   readonly effectiveDamageTypes: ReadonlyArray<DamageType>;
-   readonly stoppedDamageTypes: ReadonlyArray<DamageType>;
+   readonly effectiveDamageTypes: readonly DamageType[];
+   readonly stoppedDamageTypes: readonly DamageType[];
 }
 
 // @Cleanup: make this a parameter of the healthcomponent
@@ -505,7 +505,7 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    }
 };
 
-const getItemDamageTypes = (itemType: ItemType | null): ReadonlyArray<DamageType> => {
+const getItemDamageTypes = (itemType: ItemType | null): readonly DamageType[] => {
    if (itemType === null) {
       return [DamageType.basic];
    }

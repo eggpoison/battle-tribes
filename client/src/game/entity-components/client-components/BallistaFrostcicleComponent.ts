@@ -7,7 +7,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import _ClientComponentArray from "../ClientComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { registerClientComponentArray } from "../component-registry";
 import { getTransformComponentData } from "../component-types";
@@ -18,10 +18,10 @@ export interface BallistaFrostcicleComponentData {}
 export interface BallistaFrostcicleComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaFrostcicle, _BallistaFrostcicleComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaFrostcicle, BallistaFrostcicleComponentArray> {}
 }
 
-class _BallistaFrostcicleComponentArray extends _ClientComponentArray<BallistaFrostcicleComponent, BallistaFrostcicleComponentData> {
+class BallistaFrostcicleComponentArray extends ClientComponentArray<BallistaFrostcicleComponent, BallistaFrostcicleComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];
@@ -60,8 +60,12 @@ class _BallistaFrostcicleComponentArray extends _ClientComponentArray<BallistaFr
    }
 }
 
-export const BallistaFrostcicleComponentArray = registerClientComponentArray(ClientComponentType.ballistaFrostcicle, _BallistaFrostcicleComponentArray, true);
+export const ComponentArray = registerClientComponentArray(ClientComponentType.ballistaFrostcicle, BallistaFrostcicleComponentArray, true);
 
 export function createBallistaFrostcicleComponentData(): BallistaFrostcicleComponentData {
+   const a = BallistaFrostcicleComponentArray;
+   
    return {};
 }
+
+export { ComponentArray as BallistaFrostcicleComponentArray };

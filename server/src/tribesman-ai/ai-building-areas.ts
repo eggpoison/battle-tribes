@@ -8,8 +8,8 @@ import { createUpgradeBuildingPlanAssignment, AIPlanAssignment, AIUpgradeBuildin
 
 export interface TribeRoom {
    readonly containedNodes: Set<SafetyNode>;
-   readonly connectedWalls: ReadonlyArray<VirtualWall>;
-   readonly connectedDoors: ReadonlyArray<VirtualDoor>;
+   readonly connectedWalls: readonly VirtualWall[];
+   readonly connectedDoors: readonly VirtualDoor[];
 }
 
 const getRoundedSafetyNode = (nodeX: number, nodeY: number): number => {
@@ -49,8 +49,8 @@ const getDoorType = (buildingLayer: TribeBuildingLayer, door: VirtualStructure):
 }
 
 export function createTribeArea(buildingLayer: TribeBuildingLayer, nodes: Set<SafetyNode>, encounteredOccupiedNodeIndexes: Set<SafetyNode>): TribeRoom {
-   const connectedDoors: Array<VirtualDoor> = [];
-   const connectedWalls: Array<VirtualWall> = [];
+   const connectedDoors: VirtualDoor[] = [];
+   const connectedWalls: VirtualWall[] = [];
    const seenBuildingIDs = new Set<SafetyNode>();
 
    // @Incomplete
@@ -106,7 +106,7 @@ export function areaHasOutsideDoor(area: TribeRoom): boolean {
    return false;
 }
 
-const sidesFormValidOutsideDoor = (buildingLayer: TribeBuildingLayer, room: TribeRoom, innerSideNodes: Array<SafetyNode>, outerSideNodes: Array<SafetyNode>): boolean => {
+const sidesFormValidOutsideDoor = (buildingLayer: TribeBuildingLayer, room: TribeRoom, innerSideNodes: SafetyNode[], outerSideNodes: SafetyNode[]): boolean => {
    // Make sure the inner nodes are all in the area and aren't occupied
    // Skip the first and last side nodes so that U-type wall structures can create walls
    for (let i = 1; i < innerSideNodes.length - 1; i++) {
@@ -129,7 +129,7 @@ const sidesFormValidOutsideDoor = (buildingLayer: TribeBuildingLayer, room: Trib
 
 export function getOutsideDoorPlacePlan(buildingLayer: TribeBuildingLayer, room: TribeRoom): AIPlanAssignment<AIUpgradeBuildingPlan> | null {
    let assignment: AIPlanAssignment<AIUpgradeBuildingPlan> | null = null;
-   const potentialPlans: Array<PotentialBuildingPlanData> = []; 
+   const potentialPlans: PotentialBuildingPlanData[] = []; 
    
    for (const wall of room.connectedWalls) {
       // Make sure it has one side fully in the area, and the opposite side fully outside.

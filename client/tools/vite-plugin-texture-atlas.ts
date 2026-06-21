@@ -7,11 +7,11 @@ import path from "node:path";
 interface BaseTextureAtlasInfo {
    readonly atlasSize: number;
    /** The widths of all inputted textures, in the original order */
-   readonly textureWidths: Array<number>;
+   readonly textureWidths: number[];
    /** The heights of all inputted textures, in the original order */
-   readonly textureHeights: Array<number>;
+   readonly textureHeights: number[];
    /** The indexes of all inputted textures in the texture atlas */
-   readonly textureSlotIndexes: Array<number>;
+   readonly textureSlotIndexes: number[];
    /** Number of textures inside the atlas */
    readonly numTextures: number;
    readonly atlasSlotSize: number;
@@ -20,7 +20,7 @@ interface BaseTextureAtlasInfo {
 const ATLAS_SLOT_SIZE = 16;
 
 let unavailableSlots = new Set<number>();
-let textureSlotIndexes: Array<number>;
+let textureSlotIndexes: number[];
 
 const textureSourceToEnumMemberName = (textureSource: string): string => {
    const dotIdx = textureSource.indexOf(".");
@@ -72,7 +72,7 @@ const expand = (atlasSize: number): void => {
    unavailableSlots = newSlots;
 
    // Remap texture slot indexes
-   const newIndexes: Array<number> = [];
+   const newIndexes: number[] = [];
    for (const slotIndex of textureSlotIndexes) {
       const width = slotIndex % atlasSize;
       const height = Math.floor(slotIndex / atlasSize);
@@ -89,7 +89,7 @@ export default function TextureAtlasStitchingPlugin(): Plugin {
          const imageDir = path.resolve("src/images");
          const outDir = path.resolve("public");
 
-         const files = new Array<Dirent<string>>();
+         const files: Dirent<string>[] = [];
          const includedSubdirs = ["entities", "items", "armour", "gloves", "decorations", "projectiles", "miscellaneous/bow-charge-states", "scars"];
 
          for (const subdirectory of includedSubdirs) {
@@ -107,8 +107,8 @@ export default function TextureAtlasStitchingPlugin(): Plugin {
             )
          );
 
-         const imageFiles: Array<Dirent<string>> = [];
-         const textureImages: Array<Image> = [];
+         const imageFiles: Dirent<string>[] = [];
+         const textureImages: Image[] = [];
          for (let i = 0; i < imageLoadResults.length; i++) {
             const result = imageLoadResults[i];
             if (result.status === "rejected") {
@@ -123,8 +123,8 @@ export default function TextureAtlasStitchingPlugin(): Plugin {
          unavailableSlots.clear();
          textureSlotIndexes = [];
 
-         const textureWidths: Array<number> = [];
-         const textureHeights: Array<number> = [];
+         const textureWidths: number[] = [];
+         const textureHeights: number[] = [];
          
          let atlasSize = 1;
          

@@ -610,7 +610,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
 
    const okren = hitbox.entity;
 
-   const hash = "okrenmandible_" + okren + "_" + hitbox.localID;
+   const hash = "okrenmandible_" + okren;
    const healthComponent = HealthComponentArray.getComponent(collidingEntity);
    if (!canDamageEntity(healthComponent, hash)) {
       return;

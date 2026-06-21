@@ -41,7 +41,7 @@ export function hueShift(renderPart: _VisualRenderPart, hueAdjust: number): void
    renderPart.tintB = YPrime * kYIQToB[0] + I * kYIQToB[1] + Q * kYIQToB[2];
 }
 
-export function multiColourLerp(renderPart: _VisualRenderPart, colours: ReadonlyArray<Colour>, u: number): void {
+export function multiColourLerp(renderPart: _VisualRenderPart, colours: readonly Colour[], u: number): void {
    const progress = u * (colours.length - 1);
    
    const lowColour = colours[Math.floor(progress)];

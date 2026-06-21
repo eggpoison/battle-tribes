@@ -7,7 +7,7 @@ import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TUNNEL_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -60,7 +60,7 @@ const getTunnelDoorInfo = (doorBit: number, openProgress: number): TunnelDoorInf
    };
 }
 
-class _TunnelComponentArray extends _ServerComponentArray<TunnelComponent, TunnelComponentData> {
+class _TunnelComponentArray extends ServerComponentArray<TunnelComponent, TunnelComponentData> {
    public decodeData(reader: PacketReader): TunnelComponentData {
       const doorBitset = reader.readNumber();
       const topDoorOpenProgress = reader.readNumber();

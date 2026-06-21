@@ -3,7 +3,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { ClientComponentType } from "../client-component-types";
-import _ClientComponentArray from "../ClientComponentArray";
+import ClientComponentArray from "../ClientComponentArray";
 import { registerClientComponentArray } from "../component-registry";
 import { getTransformComponentData } from "../component-types";
 
@@ -15,7 +15,7 @@ declare module "../component-registry" {
    interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.frostshaper, _FrostshaperComponentArray> {}
 }
 
-class _FrostshaperComponentArray extends _ClientComponentArray<FrostshaperComponent, FrostshaperComponentData> {
+class _FrostshaperComponentArray extends ClientComponentArray<FrostshaperComponent, FrostshaperComponentData> {
    public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       const hitbox = transformComponentData.hitboxes[0];

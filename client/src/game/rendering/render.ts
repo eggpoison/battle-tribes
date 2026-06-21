@@ -65,82 +65,82 @@ export let gameFramebufferTexture: WebGLTexture;
 let lastTextureWidth = 0;
 let lastTextureHeight = 0;
 
-let hasSetupRendering = false;
+export let hasSetupRendering = false;
 
-export async function setupRendering(intermediateInitialisationInfo: IntermediateInitialisationInfo): Promise<void> {
+export async function initialiseGame(intermediateInitialisationInfo: IntermediateInitialisationInfo): Promise<void> {
    if (!hasSetupRendering) {
-      return new Promise(async resolve => {
-         setupWebGL();
-         createTechTreeGLContext();
-         createTextCanvasContext();
+      setupWebGL();
+      createTechTreeGLContext();
+      createTextCanvasContext();
 
-         clearSolidTileRenderingData();
-         for (let i = 0; i < layers.length; i++) {
-            const layer = layers[i];
-            createRenderChunks(layer, layer.waterRocks, intermediateInitialisationInfo.shadowInfoArrays);
-         }
+      clearSolidTileRenderingData();
+      for (let i = 0; i < layers.length; i++) {
+         const layer = layers[i];
+         createRenderChunks(layer, layer.waterRocks, intermediateInitialisationInfo.shadowInfoArrays);
+      }
 
-         await loadTextureAtlas();
+      await loadTextureAtlas();
 
-         const textureImages = preloadTextureImages();
-         await loadTextures(textureImages);
-         
-         // Done after creating texture atlases as the data from them is used in a ubo
-         createUBOs();
+      const textureImages = preloadTextureImages();
+      await loadTextures(textureImages);
+      
+      // Done after creating texture atlases as the data from them is used in a ubo
+      createUBOs();
 
-         // @Cleanup: Move to separate function
-         gameFramebuffer = gl.createFramebuffer();
+      // @Cleanup: Move to separate function
+      gameFramebuffer = gl.createFramebuffer();
 
-         // Create shaders
-         createSolidTileShaders();
-         createRiverShaders();
-         createEntityShaders();
-         await createEntityOverlayShaders();
-         createWorldBorderShaders();
-         createChunkBorderShaders();
-         createHitboxShaders();
-         createNightShaders();
-         createParticleShaders();
-         createWallBorderShaders();
-         createDarkeningShaders();
-         createTileShadowShaders();
-         createForcefieldShaders();
-         createTechTreeShaders();
-         createTechTreeItemShaders();
-         createResearchOrbShaders();
-         createStructureHighlightShaders();
-         createTurretRangeShaders();
-         createPathfindNodeShaders();
-         createSafetyNodeShaders();
-         createRestrictedBuildingAreaShaders();
-         createWallConnectionShaders();
-         createHealingBeamShaders();
-         createGrassBlockerShaders();
-         createTileBreakProgressShaders();
-         createSubtileSupportShaders();
-         createSlimeTrailShaders();
-         createBuildingBlockingTileShaders();
-         createLightLevelsBGShaders();
-         createMithrilRichTileRenderingShaders();
+      await createShaders();
+      
+      // Lazy load sound effects while the game is being played
+      beginLoadingSounds();
 
-         if (__DEV__) {
-            createDebugDataShaders();
-            createDebugImageShaders();
-            createLightDebugShaders();
-            setupFrameGraph();
-         }
-         
-         // Lazy load sound effects while the game is being played
-         beginLoadingSounds();
-
-         hasSetupRendering = true;
-         resolve();
-      });
+      hasSetupRendering = true;
    } else {
       clearSolidTileRenderingData();
       for (const layer of layers) {
          createRenderChunks(layer, layer.waterRocks, intermediateInitialisationInfo.shadowInfoArrays);
       }
+   }
+}
+
+export async function createShaders(): Promise<void> {
+   createSolidTileShaders();
+   createRiverShaders();
+   createEntityShaders();
+   await createEntityOverlayShaders();
+   createWorldBorderShaders();
+   createChunkBorderShaders();
+   createHitboxShaders();
+   createNightShaders();
+   createParticleShaders();
+   createWallBorderShaders();
+   createDarkeningShaders();
+   createTileShadowShaders();
+   createForcefieldShaders();
+   createTechTreeShaders();
+   createTechTreeItemShaders();
+   createResearchOrbShaders();
+   createStructureHighlightShaders();
+   createTurretRangeShaders();
+   createPathfindNodeShaders();
+   createSafetyNodeShaders();
+   createRestrictedBuildingAreaShaders();
+   createWallConnectionShaders();
+   createHealingBeamShaders();
+   createGrassBlockerShaders();
+   createTileBreakProgressShaders();
+   createSubtileSupportShaders();
+   createSlimeTrailShaders();
+   createBuildingBlockingTileShaders();
+   createLightLevelsBGShaders();
+   createMithrilRichTileRenderingShaders();
+
+   if (__DEV__) {
+      createDebugDataShaders();
+      createDebugImageShaders();
+      createLightDebugShaders();
+      setupFrameGraph();
    }
 }
 
@@ -196,8 +196,8 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): 
    renderNextRenderables(layer, RenderLayer.WALL_SEPARATOR);
 
    // Render walls
-   // @TEMPORARY
    renderSolidTiles(layer, true);
+   // @TEMPORARY
    renderTileShadows(layer, TileShadowType.wallShadow);
    renderMithrilRichTileOverlays(layer, true);
    renderTileBreakProgress(layer);

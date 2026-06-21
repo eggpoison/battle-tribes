@@ -12,11 +12,13 @@ import { setVisibleSafetyNodes } from "../rendering/webgl/safety-node-rendering"
 import { SubtileSupportInfo, setVisibleSubtileSupports } from "../rendering/webgl/subtile-support-rendering";
 import { setSpawnDistributionBlocks, SpawnDistributionBlock } from "../text-canvas";
 import { readGhostVirtualBuildings, pruneGhostBuildingPlans } from "../virtual-buildings";
+import { TickSnapshot } from "./snapshot-processing";
+import { currentSnapshot } from "./snapshots";
 
 const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData => {
    const entity = reader.readNumber();
 
-   const lines: Array<LineDebugData> = [];
+   const lines: LineDebugData[] = [];
    const numLines = reader.readNumber();
    for (let i = 0; i < numLines; i++) {
       const r = reader.readNumber();
@@ -33,7 +35,7 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
       });
    }
 
-   const circles: Array<CircleDebugData> = [];
+   const circles: CircleDebugData[] = [];
    const numCircles = reader.readNumber();
    for (let i = 0; i < numCircles; i++) {
       const r = reader.readNumber();
@@ -49,7 +51,7 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
       });
    }
 
-   const tileHighlights: Array<TileHighlightData> = [];
+   const tileHighlights: TileHighlightData[] = [];
    const numTileHighlights = reader.readNumber();
    for (let i = 0; i < numTileHighlights; i++) {
       const r = reader.readNumber();
@@ -64,7 +66,7 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
       });
    }
    
-   const debugEntries: Array<string> = [];
+   const debugEntries: string[] = [];
    const numDebugEntries = reader.readNumber();
    for (let i = 0; i < numDebugEntries; i++) {
       const entry = reader.readString();
@@ -78,21 +80,21 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
       const goalX = reader.readNumber();
       const goalY = reader.readNumber();
       
-      const pathNodes: Array<PathfindingNodeIndex> = [];
+      const pathNodes: PathfindingNodeIndex[] = [];
       const numPathNodes = reader.readNumber();
       for (let i = 0; i < numPathNodes; i++) {
          const nodeIndex = reader.readNumber();
          pathNodes.push(nodeIndex);
       }
    
-      const rawPathNodes: Array<PathfindingNodeIndex> = [];
+      const rawPathNodes: PathfindingNodeIndex[] = [];
       const numRawPathNodes = reader.readNumber();
       for (let i = 0; i < numRawPathNodes; i++) {
          const nodeIndex = reader.readNumber();
          rawPathNodes.push(nodeIndex);
       }
    
-      const visitedNodes: Array<PathfindingNodeIndex> = [];
+      const visitedNodes: PathfindingNodeIndex[] = [];
       const numVisitedNodes = reader.readNumber();
       for (let i = 0; i < numVisitedNodes; i++) {
          const nodeIndex = reader.readNumber();
@@ -121,10 +123,16 @@ const updateEntityDebugInfoFromPacket = (reader: PacketReader): EntityDebugData 
 }
 
 export function onDevGameDataPacket(reader: PacketReader): void {
+   // only do anything if the game has started, otherwise stuff which accesses the current tick will die
+   // @Hack-ish?
+   if ((currentSnapshot as TickSnapshot | undefined) === undefined) {
+      return;
+   }
+   
    // Subtile supports
    const numSubtiles = reader.readNumber();
    if (numSubtiles > 0) {
-      const subtileSupports: Array<SubtileSupportInfo> = [];
+      const subtileSupports: SubtileSupportInfo[] = [];
       
       for (let i = 0; i < numSubtiles; i++) {
          const subtileIndex = reader.readNumber();
@@ -142,7 +150,7 @@ export function onDevGameDataPacket(reader: PacketReader): void {
    // Pathfinding node occupances
    const numPathfindingNodes = reader.readNumber();
    if (numPathfindingNodes > 0) {
-      const visiblePathfindingNodeOccupances: Array<PathfindingNodeIndex> = [];
+      const visiblePathfindingNodeOccupances: PathfindingNodeIndex[] = [];
       
       for (let i = 0; i < numPathfindingNodes; i++) {
          const node = reader.readNumber();
@@ -155,7 +163,7 @@ export function onDevGameDataPacket(reader: PacketReader): void {
    // AI building safety nodes
    const numVisibleSafetyNodes = reader.readNumber();
    if (numVisibleSafetyNodes > 0) {
-      const visibleSafetyNodes: Array<SafetyNodeData> = [];
+      const visibleSafetyNodes: SafetyNodeData[] = [];
 
       for (let i = 0; i < numVisibleSafetyNodes; i++) {
          const index = reader.readNumber();
@@ -200,7 +208,7 @@ export function onDevGameDataPacket(reader: PacketReader): void {
 
    const hasSpawnDistribution = reader.readBool();
    if (hasSpawnDistribution) {
-      const chunkWeights: Array<SpawnDistributionBlock> = [];
+      const chunkWeights: SpawnDistributionBlock[] = [];
       
       const numBlocks = reader.readNumber();
       for (let i = 0; i < numBlocks; i++) {

@@ -2,7 +2,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { Settings } from "../../../../../shared/src/settings";
 import { randFloat, randAngle } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { TransformComponentArray } from "./TransformComponent";
 import { createSlurbParticle } from "../../particles";
@@ -27,7 +27,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slurbTorch, _SlurbTorchComponentArray> {}
 }
 
-class _SlurbTorchComponentArray extends _ServerComponentArray<SlurbTorchComponent, SlurbTorchComponentData> {
+class _SlurbTorchComponentArray extends ServerComponentArray<SlurbTorchComponent, SlurbTorchComponentData> {
    public decodeData(): SlurbTorchComponentData {
       return {};
    }

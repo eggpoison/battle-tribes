@@ -1,7 +1,7 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
@@ -29,7 +29,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.barrel, _BarrelComponentArray> {}
 }
 
-class _BarrelComponentArray extends _ServerComponentArray<BarrelComponent, BarrelComponentData, IntermediateInfo> {
+class _BarrelComponentArray extends ServerComponentArray<BarrelComponent, BarrelComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): BarrelComponentData {
       const isOpened = reader.readBool();
       

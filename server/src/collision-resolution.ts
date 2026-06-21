@@ -96,7 +96,7 @@ const resolveSoftCollision = (affectedHitbox: Hitbox, pushingHitbox: Hitbox, col
    applyForce(affectedHitbox, collisionResult.overlap.x * pushForce, collisionResult.overlap.y * pushForce);
 }
 
-export function collide(affectedEntity: Entity, collidingEntity: Entity, collidingHitboxPairs: ReadonlyArray<HitboxCollisionPair>): void {
+export function collide(affectedEntity: Entity, collidingEntity: Entity, collidingHitboxPairs: readonly HitboxCollisionPair[]): void {
    const affectedEntityTransformComponent = TransformComponentArray.getComponent(affectedEntity);
    
    const componentTypes = getEntityComponentTypes(getEntityType(affectedEntity));

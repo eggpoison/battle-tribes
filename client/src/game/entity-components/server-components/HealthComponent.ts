@@ -4,7 +4,7 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { Settings } from "../../../../../shared/src/settings";
 import { Point } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { ComponentTint, createComponentTint } from "../../EntityRenderObject";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { playerInstance } from "../../player";
@@ -35,7 +35,7 @@ declare module "../component-registry" {
 const ATTACK_HIT_FLASH_DURATION = 0.4;
 const MAX_REDNESS = 0.85;
 
-class _HealthComponentArray extends _ServerComponentArray<HealthComponent, HealthComponentData> {
+class _HealthComponentArray extends ServerComponentArray<HealthComponent, HealthComponentData> {
    public decodeData(reader: PacketReader): HealthComponentData {
       const health = reader.readNumber();
       const maxHealth = reader.readNumber();

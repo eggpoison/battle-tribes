@@ -24,18 +24,18 @@ export interface HitboxCollisionPair {
 
 interface EntityPairCollisionInfo {
    readonly collidingEntity: Entity;
-   readonly collidingHitboxPairs: Array<HitboxCollisionPair>;
+   readonly collidingHitboxPairs: HitboxCollisionPair[];
 }
 
 /** For every affected entity, stores collision info for any colliding entities */
-type GlobalCollisionInfo = Map<number, Array<EntityPairCollisionInfo>>;
+type GlobalCollisionInfo = Map<number, EntityPairCollisionInfo[]>;
 
 // @HACK!!! @HACK!!!!!! HACK!!??!
 // Convert the grass collision group from decoration to boring (so they can have collision events)
 // overrideCollisionGroup(EntityType.grassStrand, CollisionGroup.default);
 
 // Pair the colliding collision groups
-const collisionGroupPairs: Array<[pushingGroup: CollisionGroup, pushedGroup: CollisionGroup]> = [];
+const collisionGroupPairs: [pushingGroup: CollisionGroup, pushedGroup: CollisionGroup][] = [];
 for (let pushingGroup: CollisionGroup = 0; pushingGroup < CollisionGroup._LENGTH_; pushingGroup++) {
    for (let pushedGroup: CollisionGroup = 0; pushedGroup < CollisionGroup._LENGTH_; pushedGroup++) {
       if (collisionGroupsCanCollide(pushingGroup, pushedGroup)) {
@@ -75,7 +75,7 @@ const resolveSoftCollision = (affectedHitbox: Hitbox, pushingHitbox: Hitbox, col
    applyForce(affectedHitbox, collisionResult.overlap.x * pushForce, collisionResult.overlap.y * pushForce);
 }
 
-export function collide(entity: Entity, collidingEntity: Entity, collidingHitboxPairs: ReadonlyArray<HitboxCollisionPair>): void {
+export function collide(entity: Entity, collidingEntity: Entity, collidingHitboxPairs: readonly HitboxCollisionPair[]): void {
    const componentArrays = getEntityComponentArrays(getEntityType(entity));
 
    if (entity === playerInstance && entityUsesClientInterp(entity)) {
@@ -107,7 +107,7 @@ export function collide(entity: Entity, collidingEntity: Entity, collidingHitbox
    }
 }
 
-const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, globalCollisionInfo: GlobalCollisionInfo, entity: Entity, collidingEntity: Entity, transformComponent: TransformComponent, collidingTransformComponent: TransformComponent): void => {
+const markCollisions = (entityCollisionPairs: EntityCollisionPair[], globalCollisionInfo: GlobalCollisionInfo, entity: Entity, collidingEntity: Entity, transformComponent: TransformComponent, collidingTransformComponent: TransformComponent): void => {
    // AABB bounding area check
    if (transformComponent.boundingAreaMinX > collidingTransformComponent.boundingAreaMaxX || // minX(1) > maxX(2)
        transformComponent.boundingAreaMaxX < collidingTransformComponent.boundingAreaMinX || // maxX(1) < minX(2)
@@ -128,7 +128,7 @@ const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, global
       }
    }
 
-   const hitboxCollisionPairs: Array<HitboxCollisionPair> = [];
+   const hitboxCollisionPairs: HitboxCollisionPair[] = [];
    
    // More expensive hitbox check
    for (const hitbox of transformComponent.hitboxes) {
@@ -169,7 +169,7 @@ const markCollisions = (entityCollisionPairs: Array<EntityCollisionPair>, global
 }
 
 function resolveLayerCollisions(layer: Layer): void {
-   const entityCollisionPairs: Array<EntityCollisionPair> = [];
+   const entityCollisionPairs: EntityCollisionPair[] = [];
    const globalCollisionInfo: GlobalCollisionInfo = new Map();
 
    const LAYER_NUM_CHUNKS = Settings.WORLD_SIZE_CHUNKS * Settings.WORLD_SIZE_CHUNKS;
@@ -289,7 +289,7 @@ export function resolveWallCollisions(entity: Entity): boolean {
    return hasMoved;
 }
 
-const boxHasCollisionWithHitboxes = (box: Box, hitboxes: ReadonlyArray<Hitbox>, epsilon = 0): boolean => {
+const boxHasCollisionWithHitboxes = (box: Box, hitboxes: readonly Hitbox[], epsilon = 0): boolean => {
    for (let i = 0; i < hitboxes.length; i++) {
       const otherHitbox = hitboxes[i];
       const collisionResult = getBoxCollisionResult(box, otherHitbox.box, epsilon);
@@ -301,8 +301,8 @@ const boxHasCollisionWithHitboxes = (box: Box, hitboxes: ReadonlyArray<Hitbox>, 
 }
 
 // @Copynpaste
-export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArray<Hitbox>, epsilon = 0): Array<Entity> {
-   const collidingEntities: Array<Entity> = [];
+export function getHitboxesCollidingEntities(layer: Layer, hitboxes: readonly Hitbox[], epsilon = 0): Entity[] {
+   const collidingEntities: Entity[] = [];
    const seenEntities = new Set<number>();
    
    for (let i = 0; i < hitboxes.length; i++) {
@@ -359,7 +359,7 @@ export function getHitboxesCollidingEntities(layer: Layer, hitboxes: ReadonlyArr
 const testCircularBox = createCircularBox(0, 0, 0, 0, 0, 0);
 
 // @Location
-export function getEntitiesInRange(layer: Layer, x: number, y: number, range: number): Array<Entity> {
+export function getEntitiesInRange(layer: Layer, x: number, y: number, range: number): Entity[] {
    const minChunkX = Math.max(Math.min(Math.floor((x - range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor((x + range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const minChunkY = Math.max(Math.min(Math.floor((y - range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
@@ -372,7 +372,7 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
    const visionRangeSquared = Math.pow(range, 2);
    
    const seenIDs = new Set<number>();
-   const entities: Array<Entity> = [];
+   const entities: Entity[] = [];
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);

@@ -30,11 +30,11 @@ const MAX_LIMB_MOVE_INTERVAL = secondsToTicks(0.4);
 const BANDAGE_LIFETIME_TICKS = secondsToTicks(1.25);
 
 // @Incomplete: Investigate using slices of the actual item images instead of hardcoded pixel colours
-const INGREDIENT_PARTICLE_COLOURS: Partial<Record<ItemType, ReadonlyArray<ParticleColour>>> = {
+const INGREDIENT_PARTICLE_COLOURS: Partial<Record<ItemType, readonly ParticleColour[]>> = {
    [ItemType.wood]: [[114/255, 49/255, 0], [135/255, 74/255, 0], [153/255, 92/255, 6/255]]
 };
 
-const MEDICINE_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [[217/255, 26/255, 20/255], [63/255, 204/255, 91/255]];
+const MEDICINE_PARTICLE_COLOURS: readonly ParticleColour[] = [[217/255, 26/255, 20/255], [63/255, 204/255, 91/255]];
 
 export function generateRandomLimbPosition(): Point {
    const offsetDirection = randAngle();

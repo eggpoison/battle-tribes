@@ -335,7 +335,7 @@ export const enum TribesmanAIType {
 export type TurretEntityType = EntityType.slingTurret | EntityType.ballista;
 
 export type TurretAmmoType = ItemType.wood | ItemType.rock | ItemType.slimeball | ItemType.frostcicle;
-export const TURRET_AMMO_TYPES: Record<TurretEntityType, ReadonlyArray<TurretAmmoType>> = {
+export const TURRET_AMMO_TYPES: Record<TurretEntityType, readonly TurretAmmoType[]> = {
    [EntityType.slingTurret]: [ItemType.rock],
    [EntityType.ballista]: [ItemType.wood, ItemType.rock, ItemType.slimeball, ItemType.frostcicle]
 };

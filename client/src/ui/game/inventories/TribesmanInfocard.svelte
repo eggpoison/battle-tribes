@@ -42,7 +42,7 @@
       }
    }
 
-   const titleTiers = new Array<number>();
+   const titleTiers = new number[]();
    for (let tier = 1; tier <= 3; tier++) {
       titleTiers.push(tier);
    }

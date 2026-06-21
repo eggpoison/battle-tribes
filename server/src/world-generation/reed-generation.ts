@@ -15,7 +15,7 @@ const enum Vars {
 }
 
 // @Speed
-const getClosestRiverMainTile = (x: number, y: number, riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>): WaterTileGenerationInfo => {
+const getClosestRiverMainTile = (x: number, y: number, riverMainTiles: readonly WaterTileGenerationInfo[]): WaterTileGenerationInfo => {
    const tileX = x / Settings.TILE_SIZE;
    const tileY = y / Settings.TILE_SIZE;
    
@@ -32,7 +32,7 @@ const getClosestRiverMainTile = (x: number, y: number, riverMainTiles: ReadonlyA
    return closestTile;
 }
 
-export function generateReeds(surfaceLayer: Layer, riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>): void {
+export function generateReeds(surfaceLayer: Layer, riverMainTiles: readonly WaterTileGenerationInfo[]): void {
    const probabilityWeightMap1 = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 5, 3, 1.5, 0.75);
    
    // @Incomplete: generate in edges

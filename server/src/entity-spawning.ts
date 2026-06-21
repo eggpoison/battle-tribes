@@ -130,7 +130,7 @@ const entityTileTypesAreValid = (entityConfig: EntityConfig, spawnInfo: EntitySp
    return true;
 }
 
-const attemptToSpawnEntity = (spawnInfo: EntitySpawnEvent, x: number, y: number, firstEntity: ReadonlyArray<EntityConfig> | null): ReadonlyArray<EntityConfig> | null => {
+const attemptToSpawnEntity = (spawnInfo: EntitySpawnEvent, x: number, y: number, firstEntity: readonly EntityConfig[] | null): readonly EntityConfig[] | null => {
    // @Bug: If two yetis spawn at once after the server is running, they could potentially have overlapping territories
 
    const configs = spawnInfo.createEntity(x, y, randAngle(), firstEntity, spawnInfo.layer);

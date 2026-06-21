@@ -13,7 +13,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createCogwalkerConfig(x: number, y: number, angle: number, tribe: Tribe): EntityComponentData {
-   const hitboxes: Array<Hitbox> = [];
+   const hitboxes: Hitbox[] = [];
    let hitboxLocalID = 0;
 
    const hitbox = createHitboxQuick(0, hitboxLocalID++, null, createCircularBox(x, y, 0, 0, angle, 28), 1.2, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK

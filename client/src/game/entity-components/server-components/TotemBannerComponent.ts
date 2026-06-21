@@ -5,7 +5,7 @@ import { TribeType } from "../../../../../shared/src/tribes";
 import { VisualRenderPart } from "../../render-parts/render-parts";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { playBuildingHitSound, playSoundOnHitbox } from "../../sound";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { tribeComponentArray } from "./TribeComponent";
@@ -35,9 +35,9 @@ declare module "../component-registry" {
 
 const BANNER_LAYER_DISTANCES = [34, 52, 65];
 
-class _TotemBannerComponentArray extends _ServerComponentArray<TotemBannerComponent, TotemBannerComponentData, IntermediateInfo> {
+class _TotemBannerComponentArray extends ServerComponentArray<TotemBannerComponent, TotemBannerComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): TotemBannerComponentData {
-      const banners: Array<TribeTotemBanner> = [];
+      const banners: TribeTotemBanner[] = [];
       const numBanners = reader.readNumber();
       for (let i = 0; i < numBanners; i++) {
          const hutNum = reader.readNumber();
@@ -76,7 +76,7 @@ class _TotemBannerComponentArray extends _ServerComponentArray<TotemBannerCompon
       const bannerComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.totemBanner);
       const tribeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribe);
       
-      const renderParts: Array<TexturedRenderPart> = [];
+      const renderParts: TexturedRenderPart[] = [];
       
       for (const banner of Object.values(bannerComponentData.banners)) {
          const renderPart = createBannerRenderPart(tribeComponentData.tribeType, renderObject, hitbox, banner);

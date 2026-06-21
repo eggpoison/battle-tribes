@@ -31,15 +31,15 @@ export interface GrassBlocker {
    blockAmount: number;
    // @Bandwidth: unnecessary
    readonly maxBlockAmount: number;
-   readonly destroyedGrasses: ReadonlyArray<DestroyedGrassInfo>;
+   readonly destroyedGrasses: readonly DestroyedGrassInfo[];
 }
 
 let nextID = 0;
 
-const blockers: Array<GrassBlocker> = [];
-const blockerAssociatedEntities: Array<Entity> = [];
+const blockers: GrassBlocker[] = [];
+const blockerAssociatedEntities: Entity[] = [];
 
-const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {
+const getBlockerChunks = (blocker: GrassBlocker): Chunk[] => {
    calculateBoxBounds(blocker.box);
    const minX = _bounds.minX;
    const maxX = _bounds.maxX;
@@ -51,7 +51,7 @@ const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {
    const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
 
-   const chunks: Array<Chunk> = [];
+   const chunks: Chunk[] = [];
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = surfaceLayer.getChunk(chunkX, chunkY);
@@ -73,8 +73,8 @@ const addGrassBlocker = (blocker: GrassBlocker, associatedEntityID: number): voi
    blockerAssociatedEntities.push(associatedEntityID);
 }
 
-const getBlockedGrasses = (box: Box, layer: Layer): ReadonlyArray<Entity> => {
-   const grasses: Array<Entity> = [];
+const getBlockedGrasses = (box: Box, layer: Layer): readonly Entity[] => {
+   const grasses: Entity[] = [];
 
    calculateBoxBounds(box);
    const minChunkX = unitsToChunksClamped(_bounds.minX);
@@ -104,7 +104,7 @@ const getBlockedGrasses = (box: Box, layer: Layer): ReadonlyArray<Entity> => {
 export function createGrassBlocker(box: Box, layer: Layer, initialBlockAmount: number, maxBlockAmount: number, associatedEntity: Entity): void {
    const blockedGrasses = getBlockedGrasses(box, layer);
    
-   const destroyedGrasses: Array<DestroyedGrassInfo> = [];
+   const destroyedGrasses: DestroyedGrassInfo[] = [];
    for (const grass of blockedGrasses) {
       destroyEntity(grass);
 

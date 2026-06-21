@@ -743,9 +743,8 @@ export function onGameMouseDown(e: MouseEvent): void {
       }
       
       const didSelectEntity = attemptEntitySelection();
-      if (didSelectEntity) {
-         e.preventDefault();
-      } else {
+
+      if (!didSelectEntity) {
          const selectedItemInfo = getSelectedItemInfo();
          if (selectedItemInfo !== null) {
             onItemStartUse(selectedItemInfo.item.type, selectedItemInfo.inventoryName, selectedItemInfo.itemSlot);
@@ -1352,12 +1351,12 @@ const tickItem = (itemType: ItemType): void => {
 
          const serverComponentTypes = getEntityServerComponentTypes(entityType);
          
-         const components: Array<ServerComponentData> = [];
+         const components: ServerComponentData[] = [];
 
          for (const componentType of serverComponentTypes) {
             switch (componentType) {
                case ServerComponentType.transform: {
-                  const hitboxes: Array<Hitbox> = [];
+                  const hitboxes: Hitbox[] = [];
                   for (const hitbox of placeInfo.hitboxes) {
                      hitboxes.push(hitbox);
                   }

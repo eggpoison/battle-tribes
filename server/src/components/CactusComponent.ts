@@ -23,12 +23,12 @@ export interface CactusFlower {
 }
 
 export class CactusComponent {
-   public readonly flowers: ReadonlyArray<CactusFlower>;
+   public readonly flowers: readonly CactusFlower[];
 
    public remainingFruitGrowTicks = randInt(MIN_FRUIT_GROW_TICKS, MAX_FRUIT_GROW_TICKS);
    public readonly canHaveFruit: boolean;
 
-   constructor(flowers: ReadonlyArray<CactusFlower>, canHaveFruit: boolean) {
+   constructor(flowers: readonly CactusFlower[], canHaveFruit: boolean) {
       this.flowers = flowers;
       this.canHaveFruit = canHaveFruit;
    }

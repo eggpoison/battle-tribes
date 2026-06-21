@@ -57,22 +57,22 @@ class PlayerClient {
    public maxVisibleChunkY = 0;
 
    /** All hits that have occured to any entity visible to the player */
-   public visibleHits: Array<HitData> = [];
+   public visibleHits: HitData[] = [];
    /** All knockbacks given to the player */
-   public playerKnockbacks: Array<PlayerKnockbackData> = [];
+   public playerKnockbacks: PlayerKnockbackData[] = [];
    /** All healing done to any entity visible to the player */
-   public heals: Array<HealData> = [];
+   public heals: HealData[] = [];
    /** All entity tick events visible to the player */
-   public entityTickEvents: Array<EntityTickEvent> = [];
+   public entityTickEvents: EntityTickEvent[] = [];
    
-   public orbCompletes: Array<ResearchOrbCompleteData> = [];
+   public orbCompletes: ResearchOrbCompleteData[] = [];
    public hasPickedUpItem = false;
    public gameDataOptions = 0;
 
    public visibleEntities = new Set<Entity>();
-   public visibleDirtiedEntities: Array<Entity> = [];
-   public visibleRemovedEntities: Array<Entity> = [];
-   public visibleDestroyedEntities: Array<number> = [];
+   public visibleDirtiedEntities: Entity[] = [];
+   public visibleRemovedEntities: Entity[] = [];
+   public visibleDestroyedEntities: number[] = [];
 
    public viewedSpawnDistribution = -1;
 

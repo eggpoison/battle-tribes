@@ -1,12 +1,12 @@
 import { Tribe } from "../game/tribes";
 
-const tribes = new Array<Tribe>();
+const tribes: Tribe[] = [];
 
 export const tribesTabState = {
    get tribes() {
       return tribes;
    },
-   updateTribes(newTribes: ReadonlyArray<Tribe>): void {
+   updateTribes(newTribes: readonly Tribe[]): void {
       // Remove old
       for (let i = 0; i < tribes.length; i++) {
          const tribe = tribes[i];

@@ -12,7 +12,7 @@ interface TribeInfo {
    readonly maxHealthPlayer: number;
    readonly maxHealthWorker: number;
    // @Cleanup: Client doesn't need to know this
-   readonly biomes: ReadonlyArray<Biome>;
+   readonly biomes: readonly Biome[];
    readonly baseTribesmanCap: number;
    readonly moveSpeedMultiplier: number;
 }

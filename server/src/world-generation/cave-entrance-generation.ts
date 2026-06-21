@@ -15,7 +15,7 @@ const enum Vars {
    CAVE_ORIGIN_DIST = 5
 }
 
-const guardianSpawnZones: Array<Array<TileIndex>> = [];
+const guardianSpawnZones: TileIndex[][] = [];
 
 export function generateCaveEntrances(surfaceLayer: Layer, biomeDists: Uint8Array): void {
    // @Temporary
@@ -165,7 +165,7 @@ export function generateCaveEntrances(surfaceLayer: Layer, biomeDists: Uint8Arra
       }
 
       // Mark guardian spawn tiles
-      const tiles: Array<TileIndex> = [];
+      const tiles: TileIndex[] = [];
       for (let xOffset = -4; xOffset <= 3; xOffset++) {
          for (let yOffset = -4; yOffset <= 13; yOffset++) {
             let x = originX;

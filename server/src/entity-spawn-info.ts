@@ -23,17 +23,17 @@ export interface SpawnDistribution {
    readonly currentDensities: Float32Array;
    readonly targetDensities: Float32Array;
    readonly blockSize: number;
-   readonly entityDensityMap: Map<Entity, Array<EntityBlockDensityInfo>>;
+   readonly entityDensityMap: Map<Entity, EntityBlockDensityInfo[]>;
 }
 
 export interface EntitySpawnEvent {
    /** All the types of entities which are spawned by the spawn event */
-   readonly entityTypes: ReadonlyArray<EntityType>;
+   readonly entityTypes: readonly EntityType[];
    readonly layer: Layer;
    /** Average number of spawn attempts that happen each second per chunk. */
    readonly spawnRate: number;
    readonly biome: Biome;
-   readonly tileTypes: ReadonlyArray<TileType>;
+   readonly tileTypes: readonly TileType[];
    readonly onlySpawnsInNight: boolean;
    /** Minimum distance a spawn event can occur from another entity */
    readonly minSpawnDistance: number;
@@ -44,7 +44,7 @@ export interface EntitySpawnEvent {
    readonly doStrictTileTypeCheck: boolean;
    /** If true, the entity must not be overlapping with any other collideable entities. */
    readonly doStrictCollisionCheck?: boolean;
-   readonly createEntity: (x: number, y: number, angle: number, firstEntityConfig: ReadonlyArray<EntityConfig> | null, layer: Layer) => ReadonlyArray<EntityConfig> | null;
+   readonly createEntity: (x: number, y: number, angle: number, firstEntityConfig: readonly EntityConfig[] | null, layer: Layer) => readonly EntityConfig[] | null;
    readonly customSpawnIsValidFunc?: (spawnInfo: EntitySpawnEvent, spawnOriginX: number, spawnOriginY: number) => boolean;
 }
 
@@ -60,7 +60,7 @@ export interface EntitySpawnEvent {
    //    usesSpawnDistribution: true
    // },
    
-export const SPAWN_INFOS: Array<EntitySpawnEvent> = [];
+export const SPAWN_INFOS: EntitySpawnEvent[] = [];
 
 const countNumSpawnableTiles = (spawnInfo: EntitySpawnEvent, blockX: number, blockY: number): number => {
    const blockSize = spawnInfo.spawnDistribution.blockSize;
@@ -142,7 +142,7 @@ export function addEntityToSpawnDistribution(spawnDistribution: SpawnDistributio
    const blockY = Math.floor(y / Settings.TILE_SIZE / blockSize);
    
    let remainingDensity = 1;
-   const densityInfos: Array<EntityBlockDensityInfo> = [];
+   const densityInfos: EntityBlockDensityInfo[] = [];
    
    const blockIdx = blockY * BLOCKS_IN_BOARD_DIMENSIONS + blockX;
    const blockTargetDensity = spawnDistribution.targetDensities[blockIdx];

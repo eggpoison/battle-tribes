@@ -29,7 +29,7 @@ export class FollowAI {
    }
 }
 
-export function updateFollowAIComponent(followAI: FollowAI, visibleEntities: ReadonlyArray<Entity>, interestDuration: number): void {
+export function updateFollowAIComponent(followAI: FollowAI, visibleEntities: readonly Entity[], interestDuration: number): void {
    if (followAI.followCooldownTicks > 0) {
       followAI.followCooldownTicks--;
    }

@@ -46,7 +46,7 @@ const generateZombieSpawnPosition = (tombstone: Entity): Point => {
    const transformComponent = TransformComponentArray.getComponent(tombstone);
    const tombstoneHitbox = transformComponent.hitboxes[0];
    
-   const seenIs: Array<number> = [];
+   const seenIs: number[] = [];
    for (;;) {
       let i: number;
       do {

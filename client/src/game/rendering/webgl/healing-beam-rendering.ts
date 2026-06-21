@@ -129,8 +129,8 @@ interface HealingBeam {
    readonly ticksHealed: number;
 }
 
-const getVisibleHealingBeams = (): ReadonlyArray<HealingBeam> => {
-   const beams: Array<HealingBeam> = [];
+const getVisibleHealingBeams = (): readonly HealingBeam[] => {
+   const beams: HealingBeam[] = [];
    
    const entities = HealingTotemComponentArray.entities;
    for (let i = 0; i < entities.length; i++) {
@@ -156,8 +156,8 @@ const getVisibleHealingBeams = (): ReadonlyArray<HealingBeam> => {
    return beams;
 }
 
-const createData = (visibleBeams: ReadonlyArray<HealingBeam>): ReadonlyArray<number> => {
-   const vertices: Array<number> = [];
+const createData = (visibleBeams: readonly HealingBeam[]): readonly number[] => {
+   const vertices: number[] = [];
 
    for (let i = 0; i < visibleBeams.length; i++) {
       const beam = visibleBeams[i];

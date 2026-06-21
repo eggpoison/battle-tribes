@@ -64,7 +64,7 @@ const getTribeHomeLayer = (tribeType: TribeType): Layer => {
    }
 }
 
-const NOUNS: ReadonlyArray<string> = [
+const NOUNS: readonly string[] = [
    "Warmongers",
    "Savages",
    "Adventurers",
@@ -72,7 +72,7 @@ const NOUNS: ReadonlyArray<string> = [
    "Defenders",
    "Warriors"
 ];
-const ADJECTIVES: ReadonlyArray<string> = [
+const ADJECTIVES: readonly string[] = [
    "Rabid",
    "Brutal"
 ];
@@ -129,16 +129,16 @@ export default class Tribe {
    public tribesmanCap: number;
 
    public selectedTechID: TechID | null = null;
-   public readonly unlockedTechs: Array<Tech> = [];
+   public readonly unlockedTechs: Tech[] = [];
    public readonly techTreeUnlockProgress: TechTreeUnlockProgress = {};
 
-   private readonly respawnTimesRemaining: Array<number> = [];
-   private readonly respawnHutIDs: Array<number> = [];
+   private readonly respawnTimesRemaining: number[] = [];
+   private readonly respawnHutIDs: number[] = [];
 
    /** Stores building info for each layer, accessed through the layer's depth */
    public readonly buildingLayers = layers.map(layer => new TribeBuildingLayer(layer, this));
 
-   public potentialPlansData: ReadonlyArray<PotentialBuildingPlanData> = [];
+   public potentialPlansData: readonly PotentialBuildingPlanData[] = [];
 
    public availableResources: Partial<Record<ItemType, number>> = {};
 
@@ -146,12 +146,12 @@ export default class Tribe {
 
    public virtualEntityIDCounter = 0;
 
-   public entities: Array<Entity> = [];
+   public entities: Entity[] = [];
    // @Memory: stores for alll.....
    public entitiesByEntityType = createEntitiesByEntityType();
 
    // Whereas each building layer stores these only for that building layer, this stores all virtual buildings in every building layer
-   public virtualStructures: Array<VirtualStructure> = [];
+   public virtualStructures: VirtualStructure[] = [];
    public virtualStructureRecord: Record<number, VirtualStructure> = {};
    // @Memory: stores for alll.....
    public virtualStructuresByEntityType = createVirtualStructuresByEntityType();
@@ -350,7 +350,7 @@ export default class Tribe {
       }
    }
 
-   public getEntitiesByType(entityType: EntityType): ReadonlyArray<Entity> {
+   public getEntitiesByType(entityType: EntityType): readonly Entity[] {
       return this.entitiesByEntityType[entityType];
    }
 
@@ -507,9 +507,9 @@ export default class Tribe {
       return Object.keys(this.area).length;
    }
 
-   public getArea(): Array<TileIndex> {
+   public getArea(): TileIndex[] {
       // @Speed @Garbage
-      const area: Array<TileIndex> = [];
+      const area: TileIndex[] = [];
       for (const tileInfluence of Object.values(this.area)) {
          area.push(tileInfluence.tile);
       }
@@ -651,7 +651,7 @@ export function getExtendedTribeDataLength(tribe: Tribe): number {
    // Tech tree unlock progress
    lengthBytes += Bytes.Float32;
    // @Copynpaste
-   const unlockProgressEntries = Object.entries(tribe.techTreeUnlockProgress).map(([a, b]) => [Number(a), b]) as Array<[number, TechUnlockProgress]>;
+   const unlockProgressEntries = Object.entries(tribe.techTreeUnlockProgress).map(([a, b]) => [Number(a), b]) as [number, TechUnlockProgress][];
    for (const [, unlockProgress] of unlockProgressEntries) {
       lengthBytes += 3 * Bytes.Float32;
       
@@ -718,12 +718,12 @@ export function addExtendedTribeData(packet: Packet, tribe: Tribe): void {
    }
 
    // Tech tree unlock progress
-   const unlockProgressEntries = Object.entries(tribe.techTreeUnlockProgress).map(([a, b]) => [Number(a), b]) as Array<[number, TechUnlockProgress]>;
+   const unlockProgressEntries = Object.entries(tribe.techTreeUnlockProgress).map(([a, b]) => [Number(a), b]) as [number, TechUnlockProgress][];
    packet.writeNumber(unlockProgressEntries.length);
    for (const [techID, unlockProgress] of unlockProgressEntries) {
       packet.writeNumber(techID);
 
-      const itemRequirementEntries = Object.entries(unlockProgress.itemProgress).map(([a, b]) => [Number(a), b]) as Array<[ItemType, number]>;
+      const itemRequirementEntries = Object.entries(unlockProgress.itemProgress).map(([a, b]) => [Number(a), b]) as [ItemType, number][];
       packet.writeNumber(itemRequirementEntries.length);
       for (const [itemType, amount] of itemRequirementEntries) {
          packet.writeNumber(itemType);

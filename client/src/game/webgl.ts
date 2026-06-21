@@ -128,7 +128,7 @@ export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText:
    return program;
 }
 
-export function generateLine(startX: number, startY: number, endX: number, endY: number, thickness: number, r: number, g: number, b: number): Array<number> {
+export function generateLine(startX: number, startY: number, endX: number, endY: number, thickness: number, r: number, g: number, b: number): number[] {
    // @Speed: Garbage collection
    let offset = new Point(endX, endY);
    offset.x -= startX;
@@ -156,8 +156,8 @@ export function generateLine(startX: number, startY: number, endX: number, endY:
    ];
 }
 
-export function generateThickCircleWireframeVertices(x: number, y: number, radius: number, thickness: number, r: number, g: number, b: number): Array<number> {
-   const vertices: Array<number> = [];
+export function generateThickCircleWireframeVertices(x: number, y: number, radius: number, thickness: number, r: number, g: number, b: number): number[] {
+   const vertices: number[] = [];
    const step = 2 * Math.PI / CIRCLE_VERTEX_COUNT;
    
    // Add the outer vertices
@@ -221,7 +221,7 @@ export function createTexture(width: number, height: number): WebGLTexture {
    return texture;
 }
 
-export function createTextureArray(textureSources: ReadonlyArray<string>, width: number, height: number, numLevels: number): WebGLTexture {
+export function createTextureArray(textureSources: readonly string[], width: number, height: number, numLevels: number): WebGLTexture {
    const textureArray = gl.createTexture();
    gl.bindTexture(gl.TEXTURE_2D_ARRAY, textureArray);
    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, numLevels, gl.RGBA8, width, height, textureSources.length);

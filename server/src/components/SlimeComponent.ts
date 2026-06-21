@@ -52,9 +52,9 @@ export class SlimeComponent {
    public mergeTimer = SLIME_MERGE_TIME;
    public mergeWeight: number;
    public lastMergeTicks: number;
-   public readonly angeredEntities: Array<SlimeEntityAnger> = [];
+   public readonly angeredEntities: SlimeEntityAnger[] = [];
 
-   public orbSizes: Array<SlimeSize> = [];
+   public orbSizes: SlimeSize[] = [];
 
    constructor(size: SlimeSize) {
       this.size = size;
@@ -63,7 +63,7 @@ export class SlimeComponent {
    }
 }
 
-const CONTACT_DAMAGE: ReadonlyArray<number> = [1, 2, 3];
+const CONTACT_DAMAGE: readonly number[] = [1, 2, 3];
 
 export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ServerComponentType.slime, true,  getDataLength, addDataToPacket);
 SlimeComponentArray.onTick = {
@@ -358,7 +358,7 @@ const merge = (slime1: Entity, slime2: Entity): void => {
    slimeComponent1.mergeTimer = SLIME_MERGE_TIME;
 
    if (slimeComponent1.size < SlimeSize.large && slimeComponent1.mergeWeight >= SLIME_MERGE_WEIGHTS[slimeComponent1.size + 1]) {
-      const orbSizes: Array<SlimeSize> = [];
+      const orbSizes: SlimeSize[] = [];
 
       // Add orbs from the 2 existing slimes
       for (const orbSize of slimeComponent1.orbSizes) {

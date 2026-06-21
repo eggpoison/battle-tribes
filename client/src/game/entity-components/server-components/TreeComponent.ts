@@ -3,7 +3,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { TreeSize, Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { Point, randAngle, randFloat, angle, randItem, randInt } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, createWoodSpeckParticle, LEAF_SPECK_COLOUR_HIGH, LEAF_SPECK_COLOUR_LOW } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
@@ -33,14 +33,14 @@ const treeTextures: Record<TreeSize, TextureIndex> = {
    [TreeSize.large]: TextureIndex.entities_tree_treeLarge
 };
 
-export const TREE_HIT_SOUNDS: ReadonlyArray<string> = ["tree-hit-1.mp3", "tree-hit-2.mp3", "tree-hit-3.mp3", "tree-hit-4.mp3"];
-export const TREE_DESTROY_SOUNDS: ReadonlyArray<string> = ["tree-destroy-1.mp3", "tree-destroy-2.mp3", "tree-destroy-3.mp3", "tree-destroy-4.mp3"];
+export const TREE_HIT_SOUNDS: readonly string[] = ["tree-hit-1.mp3", "tree-hit-2.mp3", "tree-hit-3.mp3", "tree-hit-4.mp3"];
+export const TREE_DESTROY_SOUNDS: readonly string[] = ["tree-destroy-1.mp3", "tree-destroy-2.mp3", "tree-destroy-3.mp3", "tree-destroy-4.mp3"];
 
 const getRadius = (treeSize: TreeSize): number => {
    return 40 + treeSize * 10;
 }
 
-class _TreeComponentArray extends _ServerComponentArray<TreeComponent, TreeComponentData> {
+class _TreeComponentArray extends ServerComponentArray<TreeComponent, TreeComponentData> {
    public decodeData(reader: PacketReader): TreeComponentData {
       const treeSize = reader.readNumber();
       return {

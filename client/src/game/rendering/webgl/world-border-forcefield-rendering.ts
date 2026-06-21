@@ -76,7 +76,7 @@ export function renderForcefield(): void {
       return;
    }
    
-   const vertices: Array<number> = [];
+   const vertices: number[] = [];
 
    // Left forcefield segment
    if (minVisibleRenderChunkX < 0) {

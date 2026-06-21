@@ -26,7 +26,7 @@ const enum Vars {
    MIN_MITHRIL_GENERATION_WEIGHT = 0.5
 }
 
-const NEIGHBOUR_TILE_OFFSETS: ReadonlyArray<[number, number]> = [
+const NEIGHBOUR_TILE_OFFSETS: readonly [number, number][] = [
    [-1, 0],
    [1, 0],
    [0, -1],
@@ -84,11 +84,11 @@ const spreadDropdownCloseness = (dropdownTileX: number, dropdownTileY: number, c
    }
 }
 
-const generateDepths = (dropdowns: ReadonlyArray<TileIndex>): ReadonlyArray<number> => {
+const generateDepths = (dropdowns: readonly TileIndex[]): readonly number[] => {
    // To instill some randomness into the depths
    const weightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 35, 12, 1.75, 0.65);
    
-   const depths: Array<TileIndex> = [];
+   const depths: TileIndex[] = [];
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          let distTiles = Number.MAX_SAFE_INTEGER;
@@ -208,7 +208,7 @@ export function generateUndergroundTerrain(depth: number, surfaceLayer: Layer): 
    const weightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 35, 12, 1.75, 0.65);
 
    const dropdownClosenessArray = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
-   const dropdowns: Array<TileIndex> = [];
+   const dropdowns: TileIndex[] = [];
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
@@ -338,7 +338,7 @@ export function generateUndergroundTerrain(depth: number, surfaceLayer: Layer): 
       spawnDistribution: mossSpawnDistribution,
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number, firstEntityConfigs: ReadonlyArray<EntityConfig> | null, layer: Layer): [EntityConfig] | null => {
+      createEntity: (x: number, y: number, angle: number, firstEntityConfigs: readonly EntityConfig[] | null, layer: Layer): [EntityConfig] | null => {
          const humidity = getMossHumidity(layer, x, y);
          const minSize = lerp(0, 1, humidity);
          const maxSize = lerp(0, 3, humidity);
@@ -425,7 +425,7 @@ export function generateUndergroundTerrain(depth: number, surfaceLayer: Layer): 
    //    spawnDistribution: createRawSpawnDistribution(16, 0.025),
    //    balanceSpawnDistribution: true,
    //    doStrictTileTypeCheck: true,
-   //    createEntity: (pos: Point, angle: number): ReadonlyArray<EntityConfig> | null => {
+   //    createEntity: (pos: Point, angle: number): readonly EntityConfig[] | null => {
    //       return [createBoulderConfig(pos, angle)];
    //    }
    // });
@@ -440,7 +440,7 @@ export function generateUndergroundTerrain(depth: number, surfaceLayer: Layer): 
    //    spawnDistribution: createRawSpawnDistribution(32, 0.004),
    //    balanceSpawnDistribution: true,
    //    doStrictTileTypeCheck: true,
-   //    createEntity: (pos: Point, angle: number): ReadonlyArray<EntityConfig> | null => {
+   //    createEntity: (pos: Point, angle: number): readonly EntityConfig[] | null => {
    //       return createGlurbConfig(pos, angle);
    //    }
    // });
@@ -456,7 +456,7 @@ export function generateUndergroundTerrain(depth: number, surfaceLayer: Layer): 
       spawnDistribution: createRawSpawnDistribution(4, 0),
       balanceSpawnDistribution: false,
       doStrictTileTypeCheck: true,
-      createEntity: (x: number, y: number, angle: number): ReadonlyArray<EntityConfig> | null => {
+      createEntity: (x: number, y: number, angle: number): readonly EntityConfig[] | null => {
          return null;
       }
    });

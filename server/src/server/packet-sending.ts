@@ -92,8 +92,8 @@ export function addEntityDataToPacket(packet: Packet, entity: Entity, player: En
    }
 }
 
-const getVisibleGrassBlockers = (playerClient: PlayerClient): ReadonlyArray<GrassBlocker> => {
-   const visibleGrassBlockers: Array<GrassBlocker> = [];
+const getVisibleGrassBlockers = (playerClient: PlayerClient): readonly GrassBlocker[] => {
+   const visibleGrassBlockers: GrassBlocker[] = [];
    const seenBlockers = new Set<GrassBlocker>();
    
    for (let chunkX = playerClient.minVisibleChunkX; chunkX <= playerClient.maxVisibleChunkX; chunkX++) {
@@ -113,8 +113,8 @@ const getVisibleGrassBlockers = (playerClient: PlayerClient): ReadonlyArray<Gras
    return visibleGrassBlockers;
 }
 
-const getVisibleMinedSubtiles = (playerClient: PlayerClient): ReadonlyArray<number> => {
-   const minedSubtiles: Array<number> = [];
+const getVisibleMinedSubtiles = (playerClient: PlayerClient): readonly number[] => {
+   const minedSubtiles: number[] = [];
    
    for (let chunkX = playerClient.minVisibleChunkX; chunkX <= playerClient.maxVisibleChunkX; chunkX++) {
       for (let chunkY = playerClient.minVisibleChunkY; chunkY <= playerClient.maxVisibleChunkY; chunkY++) {
@@ -137,7 +137,7 @@ const getVisibleMinedSubtiles = (playerClient: PlayerClient): ReadonlyArray<numb
    return minedSubtiles;
 }
 
-export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<Entity>, removedEntities: Array<Entity>): ArrayBufferLike {
+export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<Entity>, removedEntities: Entity[]): ArrayBufferLike {
    // @Cleanup: The mined subtile system here exists really only to send particles. Can be entirely encompassed in a server particles system!
 
    const player = entityExists(playerClient.instance) ? playerClient.instance : null;

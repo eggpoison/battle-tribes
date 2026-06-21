@@ -4,7 +4,7 @@ import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { Settings } from "../../../../../shared/src/settings";
 import { randAngle, randFloat } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
@@ -33,7 +33,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustfleaMorphCocoon, _DustfleaMorphCocoonComponentArray> {}
 }
 
-class _DustfleaMorphCocoonComponentArray extends _ServerComponentArray<DustfleaMorphCocoonComponent, DustfleaMorphCocoonComponentData, IntermediateInfo> {
+class _DustfleaMorphCocoonComponentArray extends ServerComponentArray<DustfleaMorphCocoonComponent, DustfleaMorphCocoonComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): DustfleaMorphCocoonComponentData {
       const stage = reader.readNumber();
       

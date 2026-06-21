@@ -30,7 +30,7 @@ export function getGiftableItemSlot(tribesman: Entity): number {
    return bestItemSlot;
 }
 
-export function getRecruitTarget(tribesman: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null {
+export function getRecruitTarget(tribesman: Entity, visibleEntities: readonly Entity[]): Entity | null {
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
    
    let maxRelations = -100;

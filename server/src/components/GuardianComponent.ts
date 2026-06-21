@@ -32,8 +32,8 @@ export const enum GuardianVars {
 }
 
 export class GuardianComponent {
-   public readonly homeTiles: ReadonlyArray<TileIndex>;
-   public limbHitboxes: Array<Hitbox> = [];
+   public readonly homeTiles: readonly TileIndex[];
+   public limbHitboxes: Hitbox[] = [];
 
    public lastTargetX = -1;
    public lastTargetY = -1;
@@ -77,7 +77,7 @@ export class GuardianComponent {
       this.limbAmethystGemActivation = amethystActivation;
    }
 
-   constructor(homeTiles: ReadonlyArray<TileIndex>) {
+   constructor(homeTiles: readonly TileIndex[]) {
       this.homeTiles = homeTiles;
    }
 }

@@ -138,7 +138,7 @@ export function createOkrenConfig(x: number, y: number, angle: number, size: Okr
    setHitboxTag(bodyHitbox, HitboxTag.okrenBody);
    addHitboxToTransformComponent(transformComponent, bodyHitbox);
 
-   const childConfigs: Array<ChildConfigAttachInfo> = [];
+   const childConfigs: ChildConfigAttachInfo[] = [];
 
    for (let i = 0; i < 2; i++) {
       const sideIsFlipped = i === 1;

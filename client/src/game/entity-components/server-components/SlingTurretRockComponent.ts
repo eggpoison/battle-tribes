@@ -7,7 +7,7 @@ import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { EntityComponentData } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { getTransformComponentData } from "../component-types";
 import { registerServerComponentArray } from "../component-registry";
@@ -21,7 +21,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slingTurretRock, _SlingTurretRockComponentArray> {}
 }
 
-class _SlingTurretRockComponentArray extends _ServerComponentArray<SlingTurretRockComponent, SlingTurretRockComponentData> {
+class _SlingTurretRockComponentArray extends ServerComponentArray<SlingTurretRockComponent, SlingTurretRockComponentData> {
    public decodeData(): SlingTurretRockComponentData {
       return createSlingTurretRockComponentData();
    }

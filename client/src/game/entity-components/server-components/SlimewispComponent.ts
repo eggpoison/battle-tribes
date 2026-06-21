@@ -1,7 +1,7 @@
 import { CircularBox } from "../../../../../shared/src/boxes";
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
@@ -20,7 +20,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimewisp, _SlimewispComponentArray> {}
 }
 
-class _SlimewispComponentArray extends _ServerComponentArray<SlimewispComponent, SlimewispComponentData> {
+class _SlimewispComponentArray extends ServerComponentArray<SlimewispComponent, SlimewispComponentData> {
    public decodeData(): SlimewispComponentData {
       return {};
    }

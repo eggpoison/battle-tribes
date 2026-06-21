@@ -27,10 +27,10 @@ export interface Path {
    readonly layer: Layer;
    readonly goalX: number;
    readonly goalY: number;
-   readonly rawPath: ReadonlyArray<PathfindingNodeIndex>;
+   readonly rawPath: readonly PathfindingNodeIndex[];
    // @Cleanup: rename to something like 'active path'
-   readonly smoothPath: Array<PathfindingNodeIndex>;
-   readonly visitedNodes: ReadonlyArray<PathfindingNodeIndex>;
+   readonly smoothPath: PathfindingNodeIndex[];
+   readonly visitedNodes: readonly PathfindingNodeIndex[];
    readonly isFailed: boolean;
 }
 
@@ -48,11 +48,11 @@ export interface PathfindOptions {
    readonly nodeBudget?: number;
 }
 
-const activeGroupIDs: Array<number> = [];
+const activeGroupIDs: number[] = [];
 
-const footprintNodeOffsets: Array<Array<number>> = [];
+const footprintNodeOffsets: number[][] = [];
 
-const entityBuckets = new Array<Array<Entity>>();
+const entityBuckets: Entity[][] = [];
 for (let i = 0; i < Var.UPDATE_TICK_INTERVAL; i++) {
    entityBuckets.push([]);
 }
@@ -62,7 +62,7 @@ const MAX_FOOTPRINT = 3;
 for (let footprint = 1; footprint <= MAX_FOOTPRINT; footprint++) {
    const footprintSquared = footprint * footprint;
    
-   const offsets: Array<number> = [];
+   const offsets: number[] = [];
    for (let offsetX = -footprint; offsetX <= footprint; offsetX++) {
       for (let offsetY = -footprint; offsetY <= footprint; offsetY++) {
          if (offsetX * offsetX + offsetY * offsetY > footprintSquared) {
@@ -449,11 +449,11 @@ export function findClosestDropdownTile(startX: number, startY: number): TileInd
    return closestTileIndex;
 }
 
-const reconstructRawPath = (finalNode: PathfindingNodeIndex, cameFrom: Record<PathfindingNodeIndex, number>): Array<PathfindingNodeIndex> => {
+const reconstructRawPath = (finalNode: PathfindingNodeIndex, cameFrom: Record<PathfindingNodeIndex, number>): PathfindingNodeIndex[] => {
    let currentNode: PathfindingNodeIndex | undefined = finalNode;
    
    // Reconstruct the path
-   const path: Array<PathfindingNodeIndex> = [];
+   const path: PathfindingNodeIndex[] = [];
    // @Speed: two accesses
    while (currentNode !== undefined) {
       path.splice(0, 0, currentNode);
@@ -575,7 +575,7 @@ export function runPathfindingSingleLayer(layer: Layer, startX: number, startY: 
          // Construct the path back from that node
          // @Cleanup: Copy and paste
          let current = closestNodeToGoal;
-         const path: Array<PathfindingNodeIndex> = [current];
+         const path: PathfindingNodeIndex[] = [current];
          while (cameFrom[current] !== undefined) {
             current = cameFrom[current];
             path.splice(0, 0, current);
@@ -604,8 +604,8 @@ export function runPathfindingSingleLayer(layer: Layer, startX: number, startY: 
    }
 }
 
-export function runPathfindingMultiLayer(startLayer: Layer, endLayer: Layer, startX: number, startY: number, endX: number, endY: number, ignoredGroupID: number, pathfindingEntityFootprint: number, options: PathfindOptions): Array<Path> {
-   const paths: Array<Path> = [];
+export function runPathfindingMultiLayer(startLayer: Layer, endLayer: Layer, startX: number, startY: number, endX: number, endY: number, ignoredGroupID: number, pathfindingEntityFootprint: number, options: PathfindOptions): Path[] {
+   const paths: Path[] = [];
    
    let x1: number;
    let y1: number;
@@ -703,8 +703,8 @@ const pathBetweenNodesIsClear = (layer: Layer, node1: PathfindingNodeIndex, node
    return true;
 }
 
-export function smoothPath(layer: Layer, path: ReadonlyArray<PathfindingNodeIndex>, ignoredGroupID: number, pathfindingEntityFootprint: number): Array<PathfindingNodeIndex> {
-   const smoothedPath: Array<PathfindingNodeIndex> = [];
+export function smoothPath(layer: Layer, path: readonly PathfindingNodeIndex[], ignoredGroupID: number, pathfindingEntityFootprint: number): PathfindingNodeIndex[] {
+   const smoothedPath: PathfindingNodeIndex[] = [];
    let lastCheckpoint = path[0];
    let previousNode = path[1];
    for (let i = 2; i < path.length; i++) {
@@ -737,7 +737,7 @@ const clampPathfindingNodeXY = (x: number): number => {
    return x;
 }
 
-export function getVisiblePathfindingNodeOccupances(playerClient: PlayerClient): ReadonlyArray<PathfindingNodeIndex> {
+export function getVisiblePathfindingNodeOccupances(playerClient: PlayerClient): readonly PathfindingNodeIndex[] {
    // @Copynpaste
    const minVisibleX = playerClient.lastViewedPositionX - playerClient.screenWidth * 0.5 - PlayerClientVars.VIEW_PADDING;
    const maxVisibleX = playerClient.lastViewedPositionX + playerClient.screenWidth * 0.5 + PlayerClientVars.VIEW_PADDING;
@@ -749,7 +749,7 @@ export function getVisiblePathfindingNodeOccupances(playerClient: PlayerClient):
    const minNodeY = clampPathfindingNodeXY(Math.floor(minVisibleY / PathfindingSettings.NODE_SEPARATION));
    const maxNodeY = clampPathfindingNodeXY(Math.floor(maxVisibleY / PathfindingSettings.NODE_SEPARATION));
 
-   const occupances: Array<PathfindingNodeIndex> = [];
+   const occupances: PathfindingNodeIndex[] = [];
    for (let nodeX = minNodeX; nodeX <= maxNodeX; nodeX++) {
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
          const node = getPathfindingNode(nodeX, nodeY);

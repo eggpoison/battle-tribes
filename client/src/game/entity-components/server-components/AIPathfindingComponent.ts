@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface AIPathfindingComponentData {}
@@ -10,7 +10,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiPathfinding, _AIPathfindingComponentArray> {}
 }
 
-class _AIPathfindingComponentArray extends _ServerComponentArray<AIPathfindingComponent, AIPathfindingComponentData> {
+class _AIPathfindingComponentArray extends ServerComponentArray<AIPathfindingComponent, AIPathfindingComponentData> {
    public decodeData(): AIPathfindingComponentData {
       return {};
    }

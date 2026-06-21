@@ -8,7 +8,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../../particles";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -22,7 +22,7 @@ export interface SlimeComponentData {
    readonly eyeRotation: number;
    readonly anger: number;
    readonly spitChargeProgress: number;
-   readonly orbSizes: Array<SlimeSize>;
+   readonly orbSizes: SlimeSize[];
 }
 
 interface IntermediateInfo {
@@ -33,10 +33,10 @@ interface IntermediateInfo {
 export interface SlimeComponent {
    bodyRenderPart: VisualRenderPart;
    eyeRenderPart: VisualRenderPart;
-   readonly orbRenderParts: Array<VisualRenderPart>;
+   readonly orbRenderParts: VisualRenderPart[];
 
    size: SlimeSize;
-   readonly orbs: Array<SlimeOrbInfo>;
+   readonly orbs: SlimeOrbInfo[];
 
    internalTickCounter: number;
 }
@@ -45,7 +45,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slime, _SlimeComponentArray> {}
 }
 
-export const SLIME_SIZES: ReadonlyArray<number> = [
+export const SLIME_SIZES: readonly number[] = [
    64, // small
    88, // medium
    120 // large
@@ -60,30 +60,30 @@ interface SlimeOrbInfo {
    angularVelocity: number;
 }
 
-const EYE_OFFSETS: ReadonlyArray<number> = [16, 24, 34];
+const EYE_OFFSETS: readonly number[] = [16, 24, 34];
 
 const EYE_SHAKE_START_FREQUENCY = 0.5;
 const EYE_SHAKE_END_FREQUENCY = 1.25;
 const EYE_SHAKE_START_AMPLITUDE = 0.07;
 const EYE_SHAKE_END_AMPLITUDE = 0.2;
 
-const NUM_PUDDLE_PARTICLES_ON_HIT: ReadonlyArray<number> = [1, 2, 3];
-const NUM_PUDDLE_PARTICLES_ON_DEATH: ReadonlyArray<number> = [3, 5, 7];
-const NUM_SPECK_PARTICLES_ON_HIT: ReadonlyArray<number> = [3, 5, 7];
-const NUM_SPECK_PARTICLES_ON_DEATH: ReadonlyArray<number> = [6, 10, 15];
+const NUM_PUDDLE_PARTICLES_ON_HIT: readonly number[] = [1, 2, 3];
+const NUM_PUDDLE_PARTICLES_ON_DEATH: readonly number[] = [3, 5, 7];
+const NUM_SPECK_PARTICLES_ON_HIT: readonly number[] = [3, 5, 7];
+const NUM_SPECK_PARTICLES_ON_DEATH: readonly number[] = [6, 10, 15];
 
 const getBodyShakeAmount = (spitProgress: number): number => {
    return lerp(0, 5, spitProgress);
 }
 
-class _SlimeComponentArray extends _ServerComponentArray<SlimeComponent, SlimeComponentData, IntermediateInfo> {
+class _SlimeComponentArray extends ServerComponentArray<SlimeComponent, SlimeComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): SlimeComponentData {
       const size: SlimeSize = reader.readNumber();
       const eyeRotation = reader.readNumber();
       const anger = reader.readNumber();
       const spitChargeProgress = reader.readNumber();
 
-      const orbSizes: Array<SlimeSize> = [];
+      const orbSizes: SlimeSize[] = [];
       const numOrbs = reader.readNumber();
       for (let i = 0; i < numOrbs; i++) {
          const orbSize: SlimeSize = reader.readNumber();

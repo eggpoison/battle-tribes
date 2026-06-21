@@ -13,14 +13,14 @@ import { TileCoordinates, Point, tileIsInWorld, randFloat, randAngle, randInt, l
 // Kinda hacky, used to be just set to 20, but that meant the density of rivers changed with the world size, no good.
 const NUM_RIVERS = 20 * ((Settings.WORLD_SIZE_CHUNKS / 64) ** 2);
 
-const ADJACENT_TILE_OFFSETS: ReadonlyArray<[xOffset: number, yOffset: number]> = [
+const ADJACENT_TILE_OFFSETS: readonly [xOffset: number, yOffset: number][] = [
    [1, 0],
    [0, -1],
    [0, 1],
    [-1, 0]
 ];
 
-const NEIGHBOUR_TILE_OFFSETS: ReadonlyArray<[xOffset: number, yOffset: number]> = [
+const NEIGHBOUR_TILE_OFFSETS: readonly [xOffset: number, yOffset: number][] = [
    [1, 1],
    [1, 0],
    [1, -1],
@@ -42,8 +42,8 @@ export interface WaterTileGenerationInfo {
 }
 
 export interface RiverGenerationInfo {
-   readonly waterTiles: ReadonlyArray<WaterTileGenerationInfo>;
-   readonly riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>;
+   readonly waterTiles: readonly WaterTileGenerationInfo[];
+   readonly riverMainTiles: readonly WaterTileGenerationInfo[];
 }
 
 const getFlowDirectionIdx = (flowDirection: number): number => {
@@ -66,7 +66,7 @@ const getFlowDirectionIdx = (flowDirection: number): number => {
 }
 
 export function generateRiverTiles(): RiverGenerationInfo {
-   const rootTiles: Array<WaterTileGenerationInfo> = [];
+   const rootTiles: WaterTileGenerationInfo[] = [];
 
    for (let i = 0; i < NUM_RIVERS; i++) {
       const riverNoise = generateOctavePerlinNoise(Settings.WORLD_SIZE_TILES + BORDER_PADDING * 2, Settings.WORLD_SIZE_TILES + BORDER_PADDING * 2, 200, 5, 2, 0.5);
@@ -141,7 +141,7 @@ export function generateRiverTiles(): RiverGenerationInfo {
       });
    }
 
-   const tiles: Array<WaterTileGenerationInfo> = [];
+   const tiles: WaterTileGenerationInfo[] = [];
    
    for (const rootTile of rootTiles) {
       let minTileX = rootTile.tileX - 1;
@@ -188,7 +188,7 @@ export function generateRiverTiles(): RiverGenerationInfo {
    };
 }
 
-const tileIsWater = (tileX: number, tileY: number, riverTiles: ReadonlyArray<WaterTileGenerationInfo>): boolean => {
+const tileIsWater = (tileX: number, tileY: number, riverTiles: readonly WaterTileGenerationInfo[]): boolean => {
    for (const tile of riverTiles) {
       if (tile.tileX === tileX && tile.tileY === tileY) {
          return true;
@@ -197,7 +197,7 @@ const tileIsWater = (tileX: number, tileY: number, riverTiles: ReadonlyArray<Wat
    return false;
 }
 
-const tileIsAdjacentToLand = (tileX: number, tileY: number, riverTiles: ReadonlyArray<WaterTileGenerationInfo>): boolean => {
+const tileIsAdjacentToLand = (tileX: number, tileY: number, riverTiles: readonly WaterTileGenerationInfo[]): boolean => {
    for (const offset of ADJACENT_TILE_OFFSETS) {
       const currentTileX = tileX + offset[0];
       const currentTileY = tileY + offset[1];
@@ -209,7 +209,7 @@ const tileIsAdjacentToLand = (tileX: number, tileY: number, riverTiles: Readonly
    return false;
 }
 
-const tileAtOffsetIsWater = (startTileX: number, startTileY: number, direction: number, riverTiles: ReadonlyArray<WaterTileGenerationInfo>): boolean => {
+const tileAtOffsetIsWater = (startTileX: number, startTileY: number, direction: number, riverTiles: readonly WaterTileGenerationInfo[]): boolean => {
    const tileX = Math.floor(startTileX + 0.5 + Math.sin(direction));
    const tileY = Math.floor(startTileY + 0.5 + Math.cos(direction));
    return tileIsWater(tileX, tileY, riverTiles);
@@ -223,8 +223,8 @@ interface RiverCrossingInfo {
    readonly direction: number;
 }
 
-const calculateRiverCrossingPositions = (riverTiles: ReadonlyArray<WaterTileGenerationInfo>): ReadonlyArray<RiverCrossingInfo> => {
-   const riverCrossings: Array<RiverCrossingInfo> = [];
+const calculateRiverCrossingPositions = (riverTiles: readonly WaterTileGenerationInfo[]): readonly RiverCrossingInfo[] => {
+   const riverCrossings: RiverCrossingInfo[] = [];
    
    for (const startTile of riverTiles) {
       if (!tileIsAdjacentToLand(startTile.tileX, startTile.tileY, riverTiles)) {
@@ -291,7 +291,7 @@ const calculateRiverCrossingPositions = (riverTiles: ReadonlyArray<WaterTileGene
    return riverCrossings;
 }
 
-export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: ReadonlyArray<WaterTileGenerationInfo>, waterRocks: Array<WaterRockData>): void {
+export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: readonly WaterTileGenerationInfo[], waterRocks: WaterRockData[]): void {
    const MIN_CROSSING_DISTANCE = 325;
    /** Minimum distance between crossings */
    const RIVER_CROSSING_WIDTH = 100;
@@ -316,7 +316,7 @@ export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: ReadonlyA
    // Calculate potential river crossing positions
    const potentialRiverCrossings = calculateRiverCrossingPositions(riverTiles);
 
-   const riverCrossings: Array<RiverCrossingInfo> = [];
+   const riverCrossings: RiverCrossingInfo[] = [];
    mainLoop:
    for (const crossingInfo of potentialRiverCrossings) {
       if (Math.random() >= 0.15) {
@@ -344,7 +344,7 @@ export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: ReadonlyA
       const minY = (crossing.startTileY + 0.5) * Settings.TILE_SIZE;
       const maxY = (crossing.endTileY + 0.5) * Settings.TILE_SIZE;
 
-      const localStoneHitboxes: Array<Hitbox> = [];
+      const localStoneHitboxes: Hitbox[] = [];
 
       stoneCreationLoop:
       for (let i = 0; i < NUM_STONE_SPAWN_ATTEMPTS_PER_RIVER; i++) {

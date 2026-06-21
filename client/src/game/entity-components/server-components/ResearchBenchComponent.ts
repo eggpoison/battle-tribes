@@ -6,7 +6,7 @@ import { EntityRenderObject } from "../../EntityRenderObject";
 import { createPaperParticle } from "../../particles";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityAgeTicks } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray, getRandomPositionInEntity } from "./TransformComponent";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -25,7 +25,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.researchBench, _ResearchBenchComponentArray> {}
 }
 
-class _ResearchBenchComponentArray extends _ServerComponentArray<ResearchBenchComponent, ResearchBenchComponentData> {
+class _ResearchBenchComponentArray extends ServerComponentArray<ResearchBenchComponent, ResearchBenchComponentData> {
    public decodeData(reader: PacketReader): ResearchBenchComponentData {
       const isOccupied = reader.readBool();
       return {

@@ -16,7 +16,7 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { resetIgnoredTileSpeedMultipliers, TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { playSoundOnHitbox } from "../../sound";
 import { InventoryComponentArray, getInventory } from "./InventoryComponent";
@@ -34,24 +34,24 @@ import { TextureIndex } from "../../../texture-index";
 
 export interface TribesmanComponentData {
    readonly warpaintType: number | null;
-   readonly titles: ReadonlyArray<TitleGenerationInfo>;
+   readonly titles: readonly TitleGenerationInfo[];
 }
 
 interface IntermediateInfo {
    readonly bodyRenderPart: VisualRenderPart;
-   readonly limbRenderParts: ReadonlyArray<VisualRenderPart>;
+   readonly limbRenderParts: readonly VisualRenderPart[];
 }
 
 export interface TribesmanComponent {
    readonly bodyRenderPart: VisualRenderPart;
-   readonly handRenderParts: ReadonlyArray<VisualRenderPart>;
+   readonly handRenderParts: readonly VisualRenderPart[];
    
    warpaintType: number | null;
    
    // @Polymorphism: Make readonly
-   titles: ReadonlyArray<TitleGenerationInfo>;
+   titles: readonly TitleGenerationInfo[];
 
-   readonly deathbringerEyeLights: Array<Light>;
+   readonly deathbringerEyeLights: Light[];
 }
 
 declare module "../component-registry" {
@@ -59,8 +59,8 @@ declare module "../component-registry" {
 }
 
 // @Memory
-const GOBLIN_HURT_SOUNDS: ReadonlyArray<string> = ["goblin-hurt-1.mp3", "goblin-hurt-2.mp3", "goblin-hurt-3.mp3", "goblin-hurt-4.mp3", "goblin-hurt-5.mp3"];
-const GOBLIN_DIE_SOUNDS: ReadonlyArray<string> = ["goblin-die-1.mp3", "goblin-die-2.mp3", "goblin-die-3.mp3", "goblin-die-4.mp3"];
+const GOBLIN_HURT_SOUNDS: readonly string[] = ["goblin-hurt-1.mp3", "goblin-hurt-2.mp3", "goblin-hurt-3.mp3", "goblin-hurt-4.mp3", "goblin-hurt-5.mp3"];
+const GOBLIN_DIE_SOUNDS: readonly string[] = ["goblin-die-1.mp3", "goblin-die-2.mp3", "goblin-die-3.mp3", "goblin-die-4.mp3"];
 
 const GOBLIN_EAR_OFFSET = 4;
 const GOBLIN_EAR_ANGLE = Math.PI / 3;
@@ -83,7 +83,7 @@ const FISH_SUIT_IGNORED_TILE_MOVE_SPEEDS = [TileType.water];
    
 //    // Switch hand texture sources
 //    const handTextureSource = getFistTextureSource(entityType, tribeType);
-//    const handRenderParts = tribesman.getRenderThings("tribeMemberComponent:hand", 2) as Array<TexturedRenderPart>;
+//    const handRenderParts = tribesman.getRenderThings("tribeMemberComponent:hand", 2) as TexturedRenderPart[];
 //    for (let i = 0; i < handRenderParts.length; i++) {
 //       const renderPart = handRenderParts[i];
 //       renderPart.switchTextureSource(handTextureSource);
@@ -95,7 +95,7 @@ const FISH_SUIT_IGNORED_TILE_MOVE_SPEEDS = [TileType.water];
 //    handRenderPart.switchTextureSource(bodyTextureSource);
 
 //    // Remove any goblin ears
-//    const goblinEars = tribesman.getRenderThings("tribeMemberComponent:ear") as Array<RenderPart>;
+//    const goblinEars = tribesman.getRenderThings("tribeMemberComponent:ear") as RenderPart[];
 //    for (let i = 0; i < goblinEars.length; i++) {
 //       const renderPart = goblinEars[i];
 //       tribesman.removeRenderPart(renderPart);
@@ -106,7 +106,7 @@ const FISH_SUIT_IGNORED_TILE_MOVE_SPEEDS = [TileType.water];
 //       // @Incomplete
 //    } else {
 //       // Remove warpaint (if any)
-//       const warpaints = tribesman.getRenderThings("tribeMemberComponent:warpaint") as Array<RenderPart>;
+//       const warpaints = tribesman.getRenderThings("tribeMemberComponent:warpaint") as RenderPart[];
 //       for (let i = 0; i < warpaints.length; i++) {
 //          const renderPart = warpaints[i];
 //          tribesman.removeRenderPart(renderPart);
@@ -191,7 +191,7 @@ const getSecondsSinceLastAttack = (entity: Entity): number => {
    return ticksSinceLastAttack * Settings.DT_S;
 }
 
-const titlesArrayHasExtra = (extraCheckArray: ReadonlyArray<TitleGenerationInfo>, sourceArray: ReadonlyArray<TitleGenerationInfo>): boolean => {
+const titlesArrayHasExtra = (extraCheckArray: readonly TitleGenerationInfo[], sourceArray: readonly TitleGenerationInfo[]): boolean => {
    // Check for extra in titles1
    for (let i = 0; i < extraCheckArray.length; i++) {
       const titleGenerationInfo1 = extraCheckArray[i];
@@ -214,7 +214,7 @@ const titlesArrayHasExtra = (extraCheckArray: ReadonlyArray<TitleGenerationInfo>
    return false;
 }
 
-const titlesAreDifferent = (titles1: ReadonlyArray<TitleGenerationInfo>, titles2: ReadonlyArray<TitleGenerationInfo>): boolean => {
+const titlesAreDifferent = (titles1: readonly TitleGenerationInfo[], titles2: readonly TitleGenerationInfo[]): boolean => {
    return titlesArrayHasExtra(titles1, titles2) || titlesArrayHasExtra(titles2, titles1);
 }
 
@@ -235,11 +235,11 @@ export function tribesmanHasTitle(tribesmanComponent: TribesmanComponent, title:
    return false;
 }
 
-class TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, TribesmanComponentData, IntermediateInfo> {
+class TribesmanComponentArray extends ServerComponentArray<TribesmanComponent, TribesmanComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): TribesmanComponentData {
       const warpaintType = readWarpaint(reader);
       
-      const titles: Array<TitleGenerationInfo> = [];
+      const titles: TitleGenerationInfo[] = [];
       const numTitles = reader.readNumber();
       for (let i = 0; i < numTitles; i++) {
          const title: TribesmanTitle = reader.readNumber();
@@ -327,7 +327,7 @@ class TribesmanComponentArray extends _ServerComponentArray<TribesmanComponent, 
       }
 
       // Hands
-      const limbRenderParts: Array<VisualRenderPart> = [];
+      const limbRenderParts: VisualRenderPart[] = [];
       for (let i = 0; i < 2; i++) {
          const attachPoint = new RenderAttachPoint(
             bodyRenderPart,
@@ -489,7 +489,7 @@ const getBodyTextureIndex = (entityType: EntityType, tribeType: TribeType): Text
 const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity: Entity): void => {
    // Remove previous effects
    const renderObject = getEntityRenderObject(entity);
-   const previousRenderParts = getRenderThingsByTag(renderObject, "tribeMemberComponent:fromTitle") as Array<VisualRenderPart>;
+   const previousRenderParts = getRenderThingsByTag(renderObject, "tribeMemberComponent:fromTitle") as VisualRenderPart[];
    for (let i = 0; i < previousRenderParts.length; i++) {
       const renderPart = previousRenderParts[i];
       renderObject.removeRenderPart(renderPart);
@@ -646,7 +646,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
             const bodyOverlayGroup = createRenderPartOverlayGroup(entity, "overlays/dirt.png", [bodyRenderPart]);
             renderObject.renderPartOverlayGroups.push(bodyOverlayGroup);
 
-            const handRenderParts = getRenderThingsByTag(renderObject, "tribeMemberComponent:hand", 2) as Array<VisualRenderPart>;
+            const handRenderParts = getRenderThingsByTag(renderObject, "tribeMemberComponent:hand", 2) as VisualRenderPart[];
             for (let i = 0; i < handRenderParts.length; i++) {
                const renderPart = handRenderParts[i];
                const handOverlayGroup = createRenderPartOverlayGroup(entity, "overlays/dirt.png", [renderPart]);
@@ -674,7 +674,7 @@ const regenerateTitleEffects = (tribeMemberComponent: TribesmanComponent, entity
    }
 }
 
-const updateTitles = (tribeMemberComponent: TribesmanComponent, entity: Entity, newTitles: ReadonlyArray<TitleGenerationInfo>): void => {
+const updateTitles = (tribeMemberComponent: TribesmanComponent, entity: Entity, newTitles: readonly TitleGenerationInfo[]): void => {
    if (titlesAreDifferent(tribeMemberComponent.titles, newTitles)) {
       // If at least 1 title is added, do particle effects
       if (titlesArrayHasExtra(newTitles, tribeMemberComponent.titles)) {
@@ -774,7 +774,7 @@ function updateFromData(data: TribesmanComponentData, entity: Entity): void {
    tribesmanComponent.warpaintType = data.warpaintType;
 
    // @Temporary @Garbage
-   const titles: Array<TitleGenerationInfo> = [];
+   const titles: TitleGenerationInfo[] = [];
    for (const title of data.titles) {
       titles.push(title);
    }
@@ -788,7 +788,7 @@ function updatePlayerFromData(data: TribesmanComponentData): void {
    const tribesmanComponent = tribesmanComponentArray.getComponent(playerInstance!);
 
    // @Garbage
-   const titles: Array<TribesmanTitle> = [];
+   const titles: TribesmanTitle[] = [];
    for (let i = 0; i < titles.length; i++) {
       const titleGenerationInfo = tribesmanComponent.titles[i];
       titles.push(titleGenerationInfo.title);

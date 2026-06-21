@@ -22,7 +22,7 @@ export function createItemEntityConfig(x: number, y: number, angle: number, item
    
    const itemComponent = new ItemComponent(item, throwingEntity);
 
-   const lights: Array<LightCreationInfo> = [];
+   const lights: LightCreationInfo[] = [];
    // @Hack: hardcoded!!
    if (item.type === ItemType.slurb) {
       const light = createLight(new Point(0, 0), 0.6, 0.5, 4, 1, 0.1, 1);

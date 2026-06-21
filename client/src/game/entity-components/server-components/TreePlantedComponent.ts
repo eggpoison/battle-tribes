@@ -3,7 +3,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { Point, randAngle, randFloat, angle, randItem, randInt } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle, LEAF_SPECK_COLOUR_LOW, LEAF_SPECK_COLOUR_HIGH, createWoodSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
@@ -38,7 +38,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treePlanted, TreePlantedComponentArray> {}
 }
 
-class TreePlantedComponentArray extends _ServerComponentArray<TreePlantedComponent, TreePlantedComponentData, IntermediateInfo> {
+class TreePlantedComponentArray extends ServerComponentArray<TreePlantedComponent, TreePlantedComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): TreePlantedComponentData {
       const growthProgress = reader.readNumber();
       return {

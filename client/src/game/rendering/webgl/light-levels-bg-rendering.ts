@@ -28,8 +28,8 @@ export interface LightLevelNodeAddInfo {
 }
 
 export interface LightLevelBGUpdateInfo {
-   readonly addedNodeInfos: Array<LightLevelNodeAddInfo>;
-   readonly removedNodeInfos: Array<LightLevelNodeAddInfo>;
+   readonly addedNodeInfos: LightLevelNodeAddInfo[];
+   readonly removedNodeInfos: LightLevelNodeAddInfo[];
 }
 
 const renderingChunks = new Map<number, RenderingChunk>();

@@ -8,11 +8,11 @@ import { ComponentArray } from "./ComponentArray.js";
 export class MithrilOreNodeComponent {
    public readonly size: number;
    public readonly variant: number;
-   public readonly children: ReadonlyArray<Entity>;
+   public readonly children: readonly Entity[];
    /** To allow children to be rendered below their parents */
    public readonly renderHeight: number;
 
-   constructor(size: number, variant: number, children: ReadonlyArray<Entity>, renderHeight: number) {
+   constructor(size: number, variant: number, children: readonly Entity[], renderHeight: number) {
       this.size = size;
       this.variant = variant;
       this.children = children;

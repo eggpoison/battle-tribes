@@ -7,8 +7,12 @@ import { playerTribe } from "../../../game/tribes";
 import BackpackWireframe from "../../../images/miscellaneous/backpack-wireframe.png";
 import ArmourWireframe from "../../../images/miscellaneous/armour-wireframe.png";
 import GloveWireframe from "../../../images/miscellaneous/glove-wireframe.png";
-import { createInventory, createInventoryContainer } from "./Inventory";
-import { addItemSlotPlaceholderImage, addItemSlotSelection, addItemToItemSlot, createItemSlot, makeItemSlotInteractable, removeItemFromItemSlot, removeItemSlotSelection, updateItemSlot } from "./ItemSlot";
+import { createEntityInventoryElem, createInventoryContainer } from "./Inventory";
+import { addItemSlotPlaceholderImage, addItemSlotElemSelection, addItemToItemSlot, createItemSlot, makeItemSlotInteractable, removeItemFromItemSlot, removeItemSlotElemSelection, updateItemSlot } from "./ItemSlot";
+
+const enum Var {
+   NUM_EQUIPMENT_SLOTS = 3
+}
 
 let hotbarElem: HTMLElement | null = null;
 let hotbarInventoryElem: HTMLElement | null = null;
@@ -65,19 +69,18 @@ export function Hotbar_updateSelectedItemSlot(inventory: Inventory, itemSlot: nu
    // Remove previous selection
    const previousSelectedItemSlotElem = hotbarElem.querySelector(".selected");
    if (previousSelectedItemSlotElem) {
-      removeItemSlotSelection(previousSelectedItemSlotElem as HTMLElement);
+      removeItemSlotElemSelection(previousSelectedItemSlotElem as HTMLElement);
    }
 
    // Select new
    const itemSlotElem = getItemSlotElem(inventory, itemSlot);
    // @Hack: shouldn't try to add non-hotbar item to hotbar anyway
    if (itemSlotElem !== null) {
-      addItemSlotSelection(itemSlotElem);
+      addItemSlotElemSelection(itemSlotElem);
    }
 }
 
 export function createHotbar(inventoryComponent: InventoryComponent, playerInstance: Entity): void {
-   const offhandInventory = getInventory(inventoryComponent, InventoryName.offhand);
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
    const backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
    const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
@@ -90,51 +93,46 @@ export function createHotbar(inventoryComponent: InventoryComponent, playerInsta
    
    assert(hotbarElem === null && hotbarInventoryElem === null);
 
-   hotbarElem = document.createElement("div");
-   hotbarElem.id = "hotbar";
-   document.body.appendChild(hotbarElem);
+   const elem = document.createElement("div");
+   elem.id = "hotbar";
 
    // Left container
    const leftContainer = document.createElement("div");
    leftContainer.className = "flex-container";
-   hotbarElem.appendChild(leftContainer);
+   elem.appendChild(leftContainer);
 
    for (let i = 0; i < 2; i++) {
-      const paddingItemSlot = createItemSlot();
-      paddingItemSlot.classList.add("invis");
+      const paddingItemSlot = document.createElement("div");
+      paddingItemSlot.className = "item-slot invis";
       leftContainer.appendChild(paddingItemSlot);
    }
 
    if (playerTribe.tribeType === TribeType.barbarians) {
+      const offhandInventory = getInventory(inventoryComponent, InventoryName.offhand);
       assert(offhandInventory !== null);
-      const offhandInventoryElem = createInventory(offhandInventory, true, playerInstance);
+
+      const offhandInventoryElem = createEntityInventoryElem(offhandInventory, true, playerInstance);
       leftContainer.appendChild(offhandInventoryElem);
    } else {
       // @Copynpaste?
-      const emptyItemSlot = createItemSlot();
-      emptyItemSlot.classList.add("invis");
+      const emptyItemSlot = document.createElement("div");
+      emptyItemSlot.className = "item-slot invis";
       leftContainer.appendChild(emptyItemSlot);
    }
 
-   // Middle container
-   const middleContainer = document.createElement("div");
-   middleContainer.className = "middle";
-   hotbarElem.appendChild(middleContainer);
-
-   hotbarInventoryElem = createInventory(hotbarInventory, true, playerInstance);
-   middleContainer.appendChild(hotbarInventoryElem);
+   // Actual hotbar
+   const inventoryElem = createEntityInventoryElem(hotbarInventory, true, playerInstance);
+   elem.appendChild(inventoryElem);
 
    // Always start with the first hotbar slot being selected
-   addItemSlotSelection(hotbarInventoryElem.firstChild as HTMLElement);
+   addItemSlotElemSelection(inventoryElem.firstChild as HTMLElement);
 
    // Right container
    const rightContainer = document.createElement("div");
    rightContainer.className = "flex-container";
-   hotbarElem.appendChild(rightContainer);
+   elem.appendChild(rightContainer);
    
-   const NUM_EQUIPMENT_SLOTS = 3;
-   
-   const rightInventoryContainer = createInventoryContainer(true, NUM_EQUIPMENT_SLOTS);
+   const rightInventoryContainer = createInventoryContainer(true, Var.NUM_EQUIPMENT_SLOTS);
    rightContainer.appendChild(rightInventoryContainer);
 
    const backpackSlotElem = createItemSlot();
@@ -151,6 +149,11 @@ export function createHotbar(inventoryComponent: InventoryComponent, playerInsta
    makeItemSlotInteractable(gloveSlotElem, playerInstance, gloveSlotInventory, 1);
    addItemSlotPlaceholderImage(gloveSlotElem, GloveWireframe);
    rightInventoryContainer.appendChild(gloveSlotElem);
+
+   document.body.appendChild(elem);
+
+   hotbarElem = elem;
+   hotbarInventoryElem = inventoryElem;
 }
 
 export function hideHotbar(): void {

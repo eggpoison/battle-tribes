@@ -1,7 +1,7 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { randFloat, randAngle } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
 import { TransformComponentArray } from "./TransformComponent";
@@ -21,7 +21,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pricklyPear, _PricklyPearComponentArray> {}
 }
 
-class _PricklyPearComponentArray extends _ServerComponentArray<PricklyPearComponent, PricklyPearComponentData> {
+class _PricklyPearComponentArray extends ServerComponentArray<PricklyPearComponent, PricklyPearComponentData> {
    public decodeData(): PricklyPearComponentData {
       return {};
    }

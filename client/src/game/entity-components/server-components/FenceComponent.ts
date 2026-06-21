@@ -3,7 +3,7 @@ import { Entity } from "../../../../../shared/src/entities";
 import { assert } from "../../../../../shared/src/utils";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { RenderPart } from "../../render-parts/render-parts";
 import { StructureConnection } from "../../structure-placement";
 import { Hitbox } from "../../hitboxes";
@@ -29,7 +29,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fence, _FenceComponentArray> {}
 }
 
-class _FenceComponentArray extends _ServerComponentArray<FenceComponent, FenceComponentData, IntermediateInfo> {
+class _FenceComponentArray extends ServerComponentArray<FenceComponent, FenceComponentData, IntermediateInfo> {
    public decodeData(): FenceComponentData {
       return {};
    }

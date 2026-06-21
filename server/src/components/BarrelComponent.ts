@@ -5,7 +5,7 @@ import { Packet } from "../../../shared/dist/packets.js";
 import { ComponentArray } from "./ComponentArray.js";
 
 export class BarrelComponent {
-   public openers: Array<Entity> = [];
+   public openers: Entity[] = [];
 }
 
 export const BarrelComponentArray = new ComponentArray<BarrelComponent>(ServerComponentType.barrel, true, getDataLength, addDataToPacket);

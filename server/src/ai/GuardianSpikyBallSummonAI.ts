@@ -56,7 +56,7 @@ const createSpikyBall = (guardian: Entity, targetX: number, targetY: number): vo
 export default class GuardianSpikyBallSummonAI {
    private readonly turnSpeed: number;
    
-   private spikyBallSpawnTicks: Array<number> = [];
+   private spikyBallSpawnTicks: number[] = [];
    
    private windupProgressTicks = 0;
    private focusProgressTicks = 0;

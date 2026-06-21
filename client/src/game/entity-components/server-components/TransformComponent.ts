@@ -8,7 +8,7 @@ import { TILE_PHYSICS_INFO_RECORD, TileType } from "../../../../../shared/src/ti
 import { ServerComponentType } from "../../../../../shared/src/components";
 import Chunk from "../../Chunk";
 import { EntityComponentData, getCurrentLayer, getEntityAgeTicks, getEntityLayer, getEntityRenderObject, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../../world";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { playerInstance } from "../../player";
 import { getDistanceFromPointToHitboxIncludingChildren, getHitboxByLocalID, getHitboxTile, getHitboxTileIndex, getHitboxVelocity, getRandomPositionInBox, getRootHitbox, Hitbox, hitboxIsPartOfParent, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../../hitboxes";
 import Particle from "../../Particle";
@@ -26,16 +26,16 @@ import { registerServerComponentArray } from "../component-registry";
 
 export interface TransformComponentData {
    readonly traction: number;
-   readonly hitboxes: ReadonlyArray<Hitbox>;
+   readonly hitboxes: readonly Hitbox[];
 }
 
 export interface TransformComponent {
    readonly chunks: Set<Chunk>;
 
-   hitboxes: Array<Hitbox>;
+   hitboxes: Hitbox[];
    readonly hitboxMap: Map<number, Hitbox>;
 
-   readonly rootHitboxes: Array<Hitbox>;
+   readonly rootHitboxes: Hitbox[];
 
    boundingAreaMinX: number;
    boundingAreaMaxX: number;
@@ -45,7 +45,7 @@ export interface TransformComponent {
    traction: number;
 
    // @Garbage @Memory: used by extremely few entities.
-   ignoredTileSpeedMultipliers: ReadonlyArray<TileType>;
+   ignoredTileSpeedMultipliers: readonly TileType[];
 }
 
 declare module "../component-registry" {
@@ -54,9 +54,9 @@ declare module "../component-registry" {
 
 // We use this so that a component tries to override the empty array with the same empty
 // array, instead of a different empty array which would cause garbage collection
-const EMPTY_IGNORED_TILE_SPEED_MULTIPLIERS: Array<TileType> = [];
+const EMPTY_IGNORED_TILE_SPEED_MULTIPLIERS: TileType[] = [];
 
-export function createTransformComponentData(hitboxes: Array<Hitbox>): TransformComponentData {
+export function createTransformComponentData(hitboxes: Hitbox[]): TransformComponentData {
    return {
       traction: 1,
       hitboxes: hitboxes
@@ -428,11 +428,11 @@ const tickHitboxPhysics = (hitbox: Hitbox): void => {
    }
 }
 
-class _TransformComponentArray extends _ServerComponentArray<TransformComponent, TransformComponentData> {
+class _TransformComponentArray extends ServerComponentArray<TransformComponent, TransformComponentData> {
    public decodeData(reader: PacketReader): TransformComponentData {
       const traction = reader.readNumber();
 
-      const hitboxes: Array<Hitbox> = [];
+      const hitboxes: Hitbox[] = [];
       
       const numHitboxes = reader.readNumber();
       for (let i = 0; i < numHitboxes; i++) {
@@ -450,8 +450,8 @@ class _TransformComponentArray extends _ServerComponentArray<TransformComponent,
    public createComponent(entityComponentData: EntityComponentData): TransformComponent {
       const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
       
-      const hitboxes: Array<Hitbox> = [];
-      const rootHitboxes: Array<Hitbox> = [];
+      const hitboxes: Hitbox[] = [];
+      const rootHitboxes: Hitbox[] = [];
       const hitboxMap = new Map<number, Hitbox>();
       for (const hitbox of transformComponentData.hitboxes) {
          // Set all the hitboxes' last update ticks, since they default to 0 and it has to be done here.

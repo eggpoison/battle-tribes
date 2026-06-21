@@ -18,10 +18,10 @@ export interface HeatingRecipe {
    readonly productAmount: number;
    readonly cookTime: number;
    /** Which heating entities are able to use the recipe */
-   readonly usableHeatingEntityTypes: ReadonlyArray<EntityType>;
+   readonly usableHeatingEntityTypes: readonly EntityType[];
 }
 
-const HEATING_INFO: ReadonlyArray<HeatingRecipe> = [
+const HEATING_INFO: readonly HeatingRecipe[] = [
    {
       ingredientType: ItemType.raw_beef,
       ingredientAmount: 1,

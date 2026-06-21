@@ -13,13 +13,13 @@ export interface TotemBannerPosition {
 export class TotemBannerComponent {
    readonly banners: Record<number, TribeTotemBanner> = {};
    // @Cleanup @Memory: We don't need this, just deduce from the banners record
-   readonly availableBannerPositions: Array<TotemBannerPosition> = Array.from(new Set(TRIBE_TOTEM_POSITIONS));
+   readonly availableBannerPositions: TotemBannerPosition[] = Array.from(new Set(TRIBE_TOTEM_POSITIONS));
 }
 
 // @Memory: useless after
 const NUM_TOTEM_POSITIONS = [4, 6, 8];
 
-const TRIBE_TOTEM_POSITIONS: Array<TotemBannerPosition> = [];
+const TRIBE_TOTEM_POSITIONS: TotemBannerPosition[] = [];
 for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
    const numPositions = NUM_TOTEM_POSITIONS[layerIdx];
    for (let j = 0; j < numPositions; j++) {

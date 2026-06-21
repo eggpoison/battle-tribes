@@ -19,7 +19,7 @@ import { Point } from "../../../../shared/dist/utils.js";
 // @Cleanup: shouldn't be globally exported!
 export const FIRE_TORCH_RADIUS = 10;
 
-export function createFireTorchConfig(x: number, y: number, angle: number, tribe: Tribe, connections: Array<StructureConnection>, virtualStructure: VirtualStructure | null): EntityConfig {
+export function createFireTorchConfig(x: number, y: number, angle: number, tribe: Tribe, connections: StructureConnection[], virtualStructure: VirtualStructure | null): EntityConfig {
    const transformComponent = new TransformComponent();
 
    const box = createCircularBox(x, y, 0, 0, angle, 10);

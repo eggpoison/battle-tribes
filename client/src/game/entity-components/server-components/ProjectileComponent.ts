@@ -1,5 +1,5 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import { registerServerComponentArray } from "../component-registry";
 
 export interface ProjectileComponentData {}
@@ -10,7 +10,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.projectile, _ProjectileComponentArray> {}
 }
 
-class _ProjectileComponentArray extends _ServerComponentArray<ProjectileComponent, ProjectileComponentData> {
+class _ProjectileComponentArray extends ServerComponentArray<ProjectileComponent, ProjectileComponentData> {
    public decodeData(): ProjectileComponentData {
       return {};
    }

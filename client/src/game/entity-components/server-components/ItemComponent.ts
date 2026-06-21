@@ -4,7 +4,7 @@ import { ItemType } from "../../../../../shared/src/items/items";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { createDeepFrostHeartBloodParticles } from "../../particles";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData } from "../../world";
@@ -25,7 +25,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.item, _ItemComponentArray> {}
 }
 
-class _ItemComponentArray extends _ServerComponentArray<ItemComponent, ItemComponentData> {
+class _ItemComponentArray extends ServerComponentArray<ItemComponent, ItemComponentData> {
    public decodeData(reader: PacketReader): ItemComponentData {
       const itemType = reader.readNumber();
       return {

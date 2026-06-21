@@ -25,13 +25,13 @@ export interface Hitbox {
 
    parent: Hitbox | null;
    
-   readonly children: Array<Hitbox>;
+   readonly children: Hitbox[];
    
    previousPosX: number;
    previousPosY: number;
    accelX: number;
    accelY: number;
-   readonly tethers: Array<HitboxTether>;
+   readonly tethers: HitboxTether[];
 
    /** The angle the hitbox had last frame render. Just used to interpolate hitbox rotations. That's why this isn't present in the server definition */
    // @MEMORY: If this is only used in interpolation, then why is this needed? Why not just use the value the hitbox had last snapshot?
@@ -47,7 +47,7 @@ export interface Hitbox {
    lastUpdateTicks: number;
 }
 
-export function createHitbox(localID: number, entity: Entity, rootEntity: Entity, parent: Hitbox | null, children: Array<Hitbox>, box: Box, previousPosX: number, previousPosY: number, accelX: number, accelY: number, tethers: Array<HitboxTether>, previousRelativeAngle: number, angularAcceleration: number, mass: number, collisionBit: CollisionBit, collisionMask: number, flags: number): Hitbox {
+export function createHitbox(localID: number, entity: Entity, rootEntity: Entity, parent: Hitbox | null, children: Hitbox[], box: Box, previousPosX: number, previousPosY: number, accelX: number, accelY: number, tethers: Array<HitboxTether>, previousRelativeAngle: number, angularAcceleration: number, mass: number, collisionBit: CollisionBit, collisionMask: number, flags: number): Hitbox {
    return {
       localID,
       entity,
@@ -263,7 +263,7 @@ export function getHitboxTile(hitbox: Hitbox): Tile {
    return layer.getTile(tileIndex);
 }
 
-export function getHitboxByLocalID(hitboxes: ReadonlyArray<Hitbox>, localID: number): Hitbox | null {
+export function getHitboxByLocalID(hitboxes: readonly Hitbox[], localID: number): Hitbox | null {
    for (const hitbox of hitboxes) {
       if (hitbox.localID === localID) {
          return hitbox;

@@ -56,7 +56,7 @@ const turnFunc = (slimewisp: Entity, x: number, y: number, turnSpeed: number, tu
    turnToPosition(slimewisp, x, y, turnSpeed, turnDamping);
 }
 
-export function createYetiConfig(x: number, y: number, angle: number, territory: ReadonlyArray<TileIndex>): EntityConfig {
+export function createYetiConfig(x: number, y: number, angle: number, territory: readonly TileIndex[]): EntityConfig {
    const transformComponent = new TransformComponent();
 
    const bodyHitbox = createHitbox(transformComponent, null, createCircularBox(x, y, 0, 0, angle, 64), 3, HitboxCollisionType.soft, CollisionBit.default, DEFAULT_COLLISION_MASK);

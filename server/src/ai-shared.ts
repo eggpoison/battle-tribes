@@ -14,7 +14,7 @@ const TURN_CONSTANT = Math.PI * Settings.DT_S;
 const WALL_AVOIDANCE_MULTIPLIER = 1.5;
    
 // @Cleanup: Only used in tribesman.ts, so move there.
-export function getClosestAccessibleEntity(entity: Entity, entities: ReadonlyArray<Entity>): Entity {
+export function getClosestAccessibleEntity(entity: Entity, entities: readonly Entity[]): Entity {
    if (entities.length === 0) {
       throw new Error("No entities in array");
    }
@@ -147,7 +147,7 @@ export function entityHasPassedPosition(entity: Entity, pos: Point): boolean {
 }
 
 // @Cleanup @Robustness: Maybe separate this into 4 different functions? (for separation, alignment, etc.)
-export function runHerdAI(entity: Entity, herdMembers: ReadonlyArray<Entity>, visionRange: number, turnRate: number, minSeparationDistance: number, separationInfluence: number, alignmentInfluence: number, cohesionInfluence: number): void {
+export function runHerdAI(entity: Entity, herdMembers: readonly Entity[], visionRange: number, turnRate: number, minSeparationDistance: number, separationInfluence: number, alignmentInfluence: number, cohesionInfluence: number): void {
    // 
    // Find the closest herd member and calculate other data
    // 
@@ -346,8 +346,8 @@ export function runHerdAI(entity: Entity, herdMembers: ReadonlyArray<Entity>, vi
 }
 
 /** Gets all tiles within a given distance from a position */
-export function getPositionRadialTiles(layer: Layer, position: Point, radius: number): Array<TileIndex> {
-   const tiles: Array<TileIndex> = [];
+export function getPositionRadialTiles(layer: Layer, position: Point, radius: number): TileIndex[] {
+   const tiles: TileIndex[] = [];
 
    const minTileX = Math.max(Math.min(Math.floor((position.x - radius) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
    const maxTileX = Math.max(Math.min(Math.floor((position.x + radius) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
@@ -383,8 +383,8 @@ export function getPositionRadialTiles(layer: Layer, position: Point, radius: nu
 }
 
 /** Gets all tiles within a given distance from a position */
-export function getAllowedPositionRadialTiles(layer: Layer, position: Point, radius: number, validTileTargets: ReadonlyArray<TileType>): Array<TileIndex> {
-   const tiles: Array<TileIndex> = [];
+export function getAllowedPositionRadialTiles(layer: Layer, position: Point, radius: number, validTileTargets: readonly TileType[]): TileIndex[] {
+   const tiles: TileIndex[] = [];
 
    const minTileX = Math.max(Math.min(Math.floor((position.x - radius) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
    const maxTileX = Math.max(Math.min(Math.floor((position.x + radius) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
@@ -419,7 +419,7 @@ export function getAllowedPositionRadialTiles(layer: Layer, position: Point, rad
    return tiles;
 }
 
-export function getEntitiesInRange(layer: Layer, x: number, y: number, range: number): Array<Entity> {
+export function getEntitiesInRange(layer: Layer, x: number, y: number, range: number): Entity[] {
    const minChunkX = Math.max(Math.min(Math.floor((x - range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor((x + range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const minChunkY = Math.max(Math.min(Math.floor((y - range) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
@@ -428,7 +428,7 @@ export function getEntitiesInRange(layer: Layer, x: number, y: number, range: nu
    const visionRangeSquared = Math.pow(range, 2);
    
    const seenIDs = new Set<number>();
-   const entities: Array<Entity> = [];
+   const entities: Entity[] = [];
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = layer.getChunk(chunkX, chunkY);

@@ -3,7 +3,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { randAngle, randFloat, randInt } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { playSoundOnHitbox } from "../../sound";
 import { EntityComponentData } from "../../world";
@@ -35,7 +35,7 @@ declare module "../component-registry" {
 
 const TEXTURE_INDEXES = [TextureIndex.entities_plant_berryBushSapling1, TextureIndex.entities_plant_berryBushSapling2, TextureIndex.entities_plant_berryBushSapling3, TextureIndex.entities_plant_berryBushSapling4, TextureIndex.entities_plant_berryBushSapling5, TextureIndex.entities_plant_berryBushSapling6, TextureIndex.entities_plant_berryBushSapling7, TextureIndex.entities_plant_berryBushSapling8, TextureIndex.entities_plant_berryBushSapling9, 0];
 
-const FULLY_GROWN_TEXTURE_SOURCES: ReadonlyArray<TextureIndex> = [
+const FULLY_GROWN_TEXTURE_SOURCES: readonly TextureIndex[] = [
    TextureIndex.entities_plant_berryBushPlant1,
    TextureIndex.entities_plant_berryBushPlant2,
    TextureIndex.entities_plant_berryBushPlant3,
@@ -43,7 +43,7 @@ const FULLY_GROWN_TEXTURE_SOURCES: ReadonlyArray<TextureIndex> = [
    TextureIndex.entities_plant_berryBushPlant5
 ];
 
-class _BerryBushPlantedComponentArray extends _ServerComponentArray<BerryBushPlantedComponent, BerryBushPlantedComponentData, IntermediateInfo> {
+class _BerryBushPlantedComponentArray extends ServerComponentArray<BerryBushPlantedComponent, BerryBushPlantedComponentData, IntermediateInfo> {
    public decodeData(reader: PacketReader): BerryBushPlantedComponentData {
       const growthProgress = reader.readNumber();
       const numFruits = reader.readNumber();

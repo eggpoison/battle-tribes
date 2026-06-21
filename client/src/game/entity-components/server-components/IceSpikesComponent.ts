@@ -1,7 +1,7 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { randInt, randAngle, randFloat } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { addMonocolourParticleToBufferContainer, lowMonocolourParticles, ParticleColour, ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import Particle from "../../Particle";
@@ -26,7 +26,7 @@ const ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];
 
 const SIZE = 80;
 
-class _IceSpikesComponentArray extends _ServerComponentArray<IceSpikesComponent, IceSpikesComponentData> {
+class _IceSpikesComponentArray extends ServerComponentArray<IceSpikesComponent, IceSpikesComponentData> {
    public decodeData(): IceSpikesComponentData {
       return {};
    }

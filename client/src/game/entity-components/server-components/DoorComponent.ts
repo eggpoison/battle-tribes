@@ -4,7 +4,7 @@ import { PacketReader } from "../../../../../shared/src/packets";
 import { Point, randAngle } from "../../../../../shared/src/utils";
 import { playSoundOnHitbox } from "../../sound";
 import { TransformComponentArray } from "./TransformComponent";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { DOOR_TEXTURE_SOURCES } from "./BuildingMaterialComponent";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../../particles";
@@ -30,7 +30,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.door, _DoorComponentArray> {}
 }
 
-class _DoorComponentArray extends _ServerComponentArray<DoorComponent, DoorComponentData> {
+class _DoorComponentArray extends ServerComponentArray<DoorComponent, DoorComponentData> {
    public decodeData(reader: PacketReader): DoorComponentData {
       const toggleType = reader.readNumber();
       const openProgress = reader.readNumber();

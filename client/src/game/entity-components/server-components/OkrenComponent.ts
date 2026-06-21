@@ -3,7 +3,7 @@ import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity } from "../../../../../shared/src/entities";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { Point, randFloat, angle, randAngle } from "../../../../../shared/src/utils";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject } from "../../world";
 import { getHitboxTag, Hitbox } from "../../hitboxes";
@@ -50,7 +50,7 @@ const getBodyTextureIndex = (size: number): TextureIndex => {
    }
 }
 
-class _OkrenComponentArray extends _ServerComponentArray<OkrenComponent, OkrenComponentData> {
+class _OkrenComponentArray extends ServerComponentArray<OkrenComponent, OkrenComponentData> {
    public decodeData(reader: PacketReader): OkrenComponentData {
       const size = reader.readNumber();
       const rightEyeHardenTimer = reader.readNumber();

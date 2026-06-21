@@ -13,7 +13,7 @@ import { Tribe } from "../tribes";
 import { EntityComponentData } from "../world";
 
 export function createMithrilAnvilConfig(x: number, y: number, angle: number, tribe: Tribe): EntityComponentData {
-   const hitboxes: Array<Hitbox> = [];
+   const hitboxes: Hitbox[] = [];
    let hitboxLocalID = 0;
 
    // Middle box

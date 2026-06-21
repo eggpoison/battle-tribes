@@ -1,4 +1,4 @@
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 
 // export interface SwingAttackComponentData {}
 

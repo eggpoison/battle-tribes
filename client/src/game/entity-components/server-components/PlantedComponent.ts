@@ -5,7 +5,7 @@ import { createDirtParticle } from "../../particles";
 import { ParticleRenderLayer } from "../../rendering/webgl/particle-rendering";
 import { TransformComponentArray } from "./TransformComponent";
 import { registerServerComponentArray } from "../component-registry";
-import _ServerComponentArray from "../ServerComponentArray";
+import ServerComponentArray from "../ServerComponentArray";
 
 export interface PlantedComponentData {}
 
@@ -15,7 +15,7 @@ declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.planted, _PlantedComponentArray> {}
 }
 
-class _PlantedComponentArray extends _ServerComponentArray<PlantedComponent, PlantedComponentData> {
+class _PlantedComponentArray extends ServerComponentArray<PlantedComponent, PlantedComponentData> {
    public decodeData(): PlantedComponentData {
       return {};
    }

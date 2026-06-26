@@ -7,21 +7,22 @@ export interface FleshSwordComponentData {}
 export interface FleshSwordComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fleshSwordItem, _FleshSwordComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fleshSwordItem, typeof FleshSwordComponentArray> {}
 }
 
-class _FleshSwordComponentArray extends ServerComponentArray<FleshSwordComponent, FleshSwordComponentData> {
-   public decodeData(): FleshSwordComponentData {
-      return {};
-   }
+export const FleshSwordComponentArray = registerServerComponentArray(
+   ServerComponentType.fleshSwordItem,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(): FleshSwordComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(): FleshSwordComponentData {
+   return {};
 }
 
-export const FleshSwordComponentArray = registerServerComponentArray(ServerComponentType.fleshSwordItem, _FleshSwordComponentArray, true);
+function createComponent(): FleshSwordComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}

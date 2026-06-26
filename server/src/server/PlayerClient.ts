@@ -2,16 +2,13 @@ import Tribe from "../Tribe.js";
 import WebSocket from "ws";
 import Layer from "../Layer.js";
 import { Hitbox } from "../hitboxes.js";
-import { PlayerKnockbackData, HealData, ResearchOrbCompleteData, GameDataPacketOptions } from "../../../shared/dist/client-server-types.js";
+import { HealData, ResearchOrbCompleteData, GameDataPacketOptions } from "../../../shared/dist/client-server-types.js";
 import { Entity } from "../../../shared/dist/entities.js";
 import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
 import { EntityTickEvent } from "../../../shared/dist/entity-events.js";
 import { Settings } from "../../../shared/dist/settings.js";
 import { Point } from "../../../shared/dist/utils.js";
-
-export const enum PlayerClientVars {
-   VIEW_PADDING = 128
-}
+import { getRenderChunkIndex } from "../../../shared/dist/render-chunks.js";
 
 export interface HitData {
    readonly hitEntity: Entity;
@@ -43,8 +40,8 @@ class PlayerClient {
    public lastViewedPositionY: number;
    /** The last layer that the player was viewing. */
    public lastLayer: Layer;
-   public screenWidth: number;
-   public screenHeight: number;
+
+   public readonly deviceAspectRatio: number;
 
    public minVisibleX = 0;
    public maxVisibleX = 0;
@@ -59,7 +56,7 @@ class PlayerClient {
    /** All hits that have occured to any entity visible to the player */
    public visibleHits: HitData[] = [];
    /** All knockbacks given to the player */
-   public playerKnockbacks: PlayerKnockbackData[] = [];
+   public playerKnockbacks: Point[] = [];
    /** All healing done to any entity visible to the player */
    public heals: HealData[] = [];
    /** All entity tick events visible to the player */
@@ -76,14 +73,15 @@ class PlayerClient {
 
    public viewedSpawnDistribution = -1;
 
-   constructor(socket: WebSocket, tribe: Tribe, layer: Layer, screenWidth: number, screenHeight: number, playerPosition: Point, instance: Entity, username: string, isSpectating: boolean, isDev: boolean) {
+   public readonly nearbyRenderChunks: number[];
+
+   constructor(socket: WebSocket, tribe: Tribe, layer: Layer, deviceAspectRatio: number, playerPosition: Point, instance: Entity, username: string, isSpectating: boolean, isDev: boolean) {
       this.socket = socket;
       this.tribe = tribe;
       this.lastLayer = layer;
       this.lastViewedPositionX = playerPosition.x;
       this.lastViewedPositionY = playerPosition.y;
-      this.screenWidth = screenWidth;
-      this.screenHeight = screenHeight;
+      this.deviceAspectRatio = deviceAspectRatio;
       this.instance = instance;
       this.cameraSubject = instance;
       this.isSpectating = isSpectating;
@@ -91,13 +89,17 @@ class PlayerClient {
       this.isDev = isDev;
 
       this.updateVisibleChunkBounds();
+      this.nearbyRenderChunks = this.calculateNearbyRenderChunks();
    }
 
    private updateVisibleChunkBounds(): void {
-      this.minVisibleX = this.lastViewedPositionX - this.screenWidth * 0.5 - PlayerClientVars.VIEW_PADDING;
-      this.maxVisibleX = this.lastViewedPositionX + this.screenWidth * 0.5 + PlayerClientVars.VIEW_PADDING;
-      this.minVisibleY = this.lastViewedPositionY - this.screenHeight * 0.5 - PlayerClientVars.VIEW_PADDING;
-      this.maxVisibleY = this.lastViewedPositionY + this.screenHeight * 0.5 + PlayerClientVars.VIEW_PADDING;
+      const viewWidth = Settings.MAX_VIEW_HEIGHT * this.deviceAspectRatio;
+      const viewHeight = Settings.MAX_VIEW_HEIGHT;
+      
+      this.minVisibleX = this.lastViewedPositionX - viewWidth * 0.5 - Settings.PLAYER_VIEW_PADDING;
+      this.maxVisibleX = this.lastViewedPositionX + viewWidth * 0.5 + Settings.PLAYER_VIEW_PADDING;
+      this.minVisibleY = this.lastViewedPositionY - viewHeight * 0.5 - Settings.PLAYER_VIEW_PADDING;
+      this.maxVisibleY = this.lastViewedPositionY + viewHeight * 0.5 + Settings.PLAYER_VIEW_PADDING;
       
       this.minVisibleChunkX = Math.max(Math.min(Math.floor(this.minVisibleX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
       this.maxVisibleChunkX = Math.max(Math.min(Math.floor(this.maxVisibleX / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
@@ -113,6 +115,23 @@ class PlayerClient {
 
    public hasPacketOption(packetOption: GameDataPacketOptions): boolean {
       return (this.gameDataOptions & packetOption) !== 0;
+   }
+   
+   public calculateNearbyRenderChunks(): number[] {
+      // @HACK based on the client's definition of a render chunk...
+      const minRenderChunkX = Math.floor(this.minVisibleChunkX / 2);
+      const maxRenderChunkX = Math.floor(this.maxVisibleChunkX / 2);
+      const minRenderChunkY = Math.floor(this.minVisibleChunkY / 2);
+      const maxRenderChunkY = Math.floor(this.maxVisibleChunkY / 2);
+      
+      const chunks: number[] = [];
+      for (let renderChunkY = minRenderChunkY; renderChunkY <= maxRenderChunkY; renderChunkY++) {
+         for (let renderChunkX = minRenderChunkX; renderChunkX <= maxRenderChunkX; renderChunkX++) {
+            const chunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
+            chunks.push(chunkIdx);
+         }
+      }
+      return chunks;
    }
 }
 

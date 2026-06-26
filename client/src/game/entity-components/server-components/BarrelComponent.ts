@@ -26,70 +26,75 @@ export interface BarrelComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.barrel, _BarrelComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.barrel, typeof BarrelComponentArray> {}
 }
 
-class _BarrelComponentArray extends ServerComponentArray<BarrelComponent, BarrelComponentData, IntermediateInfo> {
-   public decodeData(reader: PacketReader): BarrelComponentData {
-      const isOpened = reader.readBool();
-      
-      return {
-         isOpened: isOpened
-      };
-   }
-
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const barrelComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.barrel);
-      
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         getTextureIndex(barrelComponentData.isOpened)
-      );
-      renderObject.attachRenderPart(renderPart);
-
-      return {
-         renderPart: renderPart
-      };
-   }
-
-   public createComponent(_entityComponentData: EntityComponentData, intermediateInfo: Readonly<IntermediateInfo>): BarrelComponent {
-      return {
-         renderPart: intermediateInfo.renderPart
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public updateFromData(data: BarrelComponentData, entity: Entity): void {
-      const barrelComponent = BarrelComponentArray.getComponent(entity);
-      const textureSource = getTextureIndex(data.isOpened);
-      barrelComponent.renderPart.switchTextureSource(textureSource);
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      playBuildingHitSound(entity, hitbox);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("building-destroy-1.mp3", 0.4, 1, entity, hitbox, false);
-   }
-}
-
-export const BarrelComponentArray = registerServerComponentArray(ServerComponentType.barrel, _BarrelComponentArray, true);
+export const BarrelComponentArray = registerServerComponentArray(
+   ServerComponentType.barrel,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+BarrelComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+BarrelComponentArray.updateFromData = updateFromData;
+BarrelComponentArray.onHit = onHit;
+BarrelComponentArray.onDie = onDie;
 
 const getTextureIndex = (isOpened: boolean): TextureIndex => {
    return isOpened ? TextureIndex.entities_barrel_barrelOpen : TextureIndex.entities_barrel_barrel;
+}
+
+function decodeData(reader: PacketReader): BarrelComponentData {
+   const isOpened = reader.readBool();
+   
+   return {
+      isOpened: isOpened
+   };
+}
+
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const barrelComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.barrel);
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      getTextureIndex(barrelComponentData.isOpened)
+   );
+   renderObject.attachRenderPart(renderPart);
+
+   return {
+      renderPart: renderPart
+   };
+}
+
+function createComponent(_entityComponentData: EntityComponentData, intermediateInfo: Readonly<IntermediateInfo>): BarrelComponent {
+   return {
+      renderPart: intermediateInfo.renderPart
+   };
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function updateFromData(data: BarrelComponentData, entity: Entity): void {
+   const barrelComponent = BarrelComponentArray.getComponent(entity);
+   const textureSource = getTextureIndex(data.isOpened);
+   barrelComponent.renderPart.switchTextureSource(textureSource);
+}
+
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   playBuildingHitSound(entity, hitbox);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   playSoundOnHitbox("building-destroy-1.mp3", 0.4, 1, entity, hitbox, false);
 }
 
 export function createBarrelComponentData(): BarrelComponentData {

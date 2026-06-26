@@ -13,62 +13,64 @@ export interface SlingTurretComponentData {}
 export interface SlingTurretComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slingTurret, _SlingTurretComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slingTurret, typeof SlingTurretComponentArray> {}
 }
 
-class _SlingTurretComponentArray extends ServerComponentArray<SlingTurretComponent, SlingTurretComponentData> {
-   public decodeData(): SlingTurretComponentData {
-      return {};
-   }
+export const SlingTurretComponentArray = registerServerComponentArray(
+   ServerComponentType.slingTurret,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+SlingTurretComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      // Base
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.entities_slingTurret_slingTurretBase
-         )
-      );
+function decodeData(): SlingTurretComponentData {
+   return {};
+}
 
-      // Plate
-      const plateRenderPart = new TexturedRenderPart(
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   // Base
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
          hitbox,
-         1,
+         0,
          0,
          0, 0,
-         TextureIndex.entities_slingTurret_slingTurretPlate
-      );
-      addRenderPartTag(plateRenderPart, "turretComponent:pivoting");
-      renderObject.attachRenderPart(plateRenderPart);
+         TextureIndex.entities_slingTurret_slingTurretBase
+      )
+   );
 
-      // Sling
-      const slingRenderPart = new TexturedRenderPart(
-         plateRenderPart,
-         2,
-         0,
-         0, 0,
-         TextureIndex.entities_slingTurret_slingTurretSling
-      );
-      addRenderPartTag(slingRenderPart, "turretComponent:aiming");
-      renderObject.attachRenderPart(slingRenderPart);
-   }
+   // Plate
+   const plateRenderPart = new TexturedRenderPart(
+      hitbox,
+      1,
+      0,
+      0, 0,
+      TextureIndex.entities_slingTurret_slingTurretPlate
+   );
+   addRenderPartTag(plateRenderPart, "turretComponent:pivoting");
+   renderObject.attachRenderPart(plateRenderPart);
 
-   public createComponent(): SlingTurretComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 3;
-   }
+   // Sling
+   const slingRenderPart = new TexturedRenderPart(
+      plateRenderPart,
+      2,
+      0,
+      0, 0,
+      TextureIndex.entities_slingTurret_slingTurretSling
+   );
+   addRenderPartTag(slingRenderPart, "turretComponent:aiming");
+   renderObject.attachRenderPart(slingRenderPart);
 }
 
-export const SlingTurretComponentArray = registerServerComponentArray(ServerComponentType.slingTurret, _SlingTurretComponentArray, true);
+function createComponent(): SlingTurretComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 3;
+}
 
 export function createSlingTurretComponentData(): SlingTurretComponentData {
    return {};

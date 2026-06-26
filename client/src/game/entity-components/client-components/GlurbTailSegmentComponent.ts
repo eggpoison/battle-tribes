@@ -12,34 +12,34 @@ export interface GlurbTailSegmentComponentData {}
 export interface GlurbTailSegmentComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry {
-      [ClientComponentType.glurbTailSegment]: GlurbTailSegmentComponentArray;
-   }
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.glurbTailSegment, typeof GlurbTailSegmentComponentArray> {}
 }
 
-class GlurbTailSegmentComponentArray extends ClientComponentArray<GlurbTailSegmentComponent, GlurbTailSegmentComponentData> {
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
+export const GlurbTailSegmentComponentArray = registerClientComponentArray(
+   ClientComponentType.glurbTailSegment,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+GlurbTailSegmentComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         // @Hack: 0.1 so that the moss ball can be z-index 0
-         0.1,
-         0,
-         0, 0,
-         TextureIndex.entities_glurb_glurbTailSegment
-      );
-      renderObject.attachRenderPart(renderPart);
-   }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
 
-   public createComponent(): GlurbTailSegmentComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      // @Hack: 0.1 so that the moss ball can be z-index 0
+      0.1,
+      0,
+      0, 0,
+      TextureIndex.entities_glurb_glurbTailSegment
+   );
+   renderObject.attachRenderPart(renderPart);
 }
 
-export const glurbTailSegmentComponentArray = registerClientComponentArray(ClientComponentType.glurbTailSegment, GlurbTailSegmentComponentArray, true);
+function createComponent(): GlurbTailSegmentComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}

@@ -2,7 +2,8 @@ import { Biome } from "../../../shared/dist/biomes.js";
 import { ServerComponentType } from "../../../shared/dist/components.js";
 import { Entity, EntityType } from "../../../shared/dist/entities.js";
 import { Settings } from "../../../shared/dist/settings.js";
-import { Point, distance, TileIndex, getTileIndexIncludingEdges, angle, lerp, randItem, getTileX, getTileY, polarVec2 } from "../../../shared/dist/utils.js";
+import { Point, distance, angle, lerp, randItem } from "../../../shared/dist/utils.js";
+import { TileIndex, getTileIndexIncludingEdges, getTileX, getTileY } from "../../../shared/dist/tiles.js";
 import { entityHasPassedPosition } from "../ai-shared.js";
 import { addHitboxVelocity } from "../hitboxes.js";
 import { getEntityType, getEntityLayer } from "../world.js";
@@ -65,8 +66,8 @@ const getTileWanderTargets = (itemEntity: Entity): TileIndex[] => {
    const maxTileY = Math.max(Math.min(Math.floor((hitbox.box.posY + aiHelperComponent.visionRange) / Settings.TILE_SIZE), Settings.WORLD_SIZE_TILES - 1), 0);
 
    const wanderTargets: TileIndex[] = [];
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+   for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          
          // @Incomplete
@@ -176,7 +177,7 @@ function onTick(fleshSword: Entity): void {
       // @Hack: should instead change angularvelocity
       const moveAngle = directMoveAngle + moveAngleOffset;
       hitbox.box.relativeAngle = moveAngle - Math.PI/4;
-      addHitboxVelocity(hitbox, polarVec2(moveSpeed!, moveAngle));
+      addHitboxVelocity(hitbox, moveSpeed! * Math.sin(moveAngle), moveSpeed! * Math.cos(moveAngle));
 
       transformComponent.isDirty = true;
    }

@@ -20,74 +20,79 @@ export interface SlimeSpitComponentData {}
 export interface SlimeSpitComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimeSpit, _SlimeSpitComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimeSpit, typeof SlimeSpitComponentArray> {}
 }
 
-class _SlimeSpitComponentArray extends ServerComponentArray<SlimeSpitComponent, SlimeSpitComponentData> {
-   public decodeData(reader: PacketReader): SlimeSpitComponentData {
-      reader.padOffset(Bytes.Float32);
-      return {};
-   }
+export const SlimeSpitComponentArray = registerServerComponentArray(
+   ServerComponentType.slimeSpit,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+SlimeSpitComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+SlimeSpitComponentArray.onLoad = onLoad;
+SlimeSpitComponentArray.onTick = onTick;
+SlimeSpitComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      // @Incomplete: SIZE DOESN'T ACTUALLY AFFECT ANYTHING
+function decodeData(reader: PacketReader): SlimeSpitComponentData {
+   reader.padOffset(Bytes.Float32);
+   return {};
+}
 
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   // @Incomplete: SIZE DOESN'T ACTUALLY AFFECT ANYTHING
 
-      const renderPart1 = new TexturedRenderPart(
-         hitbox,
-         1,
-         0,
-         0, 0,
-         TextureIndex.projectiles_slimeSpitMedium
-      );
-      renderPart1.opacity = 0.75;
-      renderObject.attachRenderPart(renderPart1);
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
 
-      const renderPart2 = new TexturedRenderPart(
-         hitbox,
-         0,
-         Math.PI/4,
-         0, 0,
-         TextureIndex.projectiles_slimeSpitMedium
-      );
-      renderPart2.opacity = 0.75;
-      renderObject.attachRenderPart(renderPart2);
-   }
+   const renderPart1 = new TexturedRenderPart(
+      hitbox,
+      1,
+      0,
+      0, 0,
+      TextureIndex.projectiles_slimeSpitMedium
+   );
+   renderPart1.opacity = 0.75;
+   renderObject.attachRenderPart(renderPart1);
 
-   public createComponent(): SlimeSpitComponent {
-      return {};
-   }
+   const renderPart2 = new TexturedRenderPart(
+      hitbox,
+      0,
+      Math.PI/4,
+      0, 0,
+      TextureIndex.projectiles_slimeSpitMedium
+   );
+   renderPart2.opacity = 0.75;
+   renderObject.attachRenderPart(renderPart2);
+}
 
-   public getMaxRenderParts(): number {
-      return 2;
-   }
+function createComponent(): SlimeSpitComponent {
+   return {};
+}
 
-   public onLoad(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("slime-spit.mp3", 0.5, 1, entity, hitbox, false);
-   }
+function getMaxRenderParts(): number {
+   return 2;
+}
 
-   public onTick(entity: Entity): void {
-      const renderObject = getEntityRenderObject(entity);
-      const rotatingRenderPart = renderObject.renderPartsByZIndex[0];
-      
-      rotatingRenderPart.angle += 1.5 * Math.PI * Settings.DT_S;
+function onLoad(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   playSoundOnHitbox("slime-spit.mp3", 0.5, 1, entity, hitbox, false);
+}
 
-      if (tickIntervalHasPassed(0.2 * Settings.TICK_RATE)) {
-         for (let i = 0; i < 5; i++) {
-            createPoisonParticle(entity);
-         }
-      }
-   }
+function onTick(entity: Entity): void {
+   const renderObject = getEntityRenderObject(entity);
+   const rotatingRenderPart = renderObject.renderPartsByZIndex[0];
+   
+   rotatingRenderPart.angle += 1.5 * Math.PI * Settings.DT_S;
 
-   public onDie(entity: Entity): void {
-      for (let i = 0; i < 15; i++) {
+   if (tickIntervalHasPassed(0.2 * Settings.TICK_RATE)) {
+      for (let i = 0; i < 5; i++) {
          createPoisonParticle(entity);
       }
    }
 }
 
-export const SlimeSpitComponentArray = registerServerComponentArray(ServerComponentType.slimeSpit, _SlimeSpitComponentArray, true);
+function onDie(entity: Entity): void {
+   for (let i = 0; i < 15; i++) {
+      createPoisonParticle(entity);
+   }
+}

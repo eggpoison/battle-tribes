@@ -26,57 +26,59 @@ export interface FenceComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fence, _FenceComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fence, typeof FenceComponentArray> {}
 }
 
-class _FenceComponentArray extends ServerComponentArray<FenceComponent, FenceComponentData, IntermediateInfo> {
-   public decodeData(): FenceComponentData {
-      return {};
-   }
+export const FenceComponentArray = registerServerComponentArray(
+   ServerComponentType.fence,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+FenceComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-      const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponent.hitboxes[0];
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            1,
-            0,
-            0, 0,
-            TextureIndex.entities_fence_fenceNode
-         )
-      );
-
-      const connectingRenderParts: Record<Entity, RenderPart> = {};
-
-      // Create initial connecting render parts
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const structureComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.structure);
-      for (const connection of structureComponentData.connections) {
-         const renderPart = createConnectingRenderPart(connection, hitbox);
-         renderObject.attachRenderPart(renderPart);
-         connectingRenderParts[connection.entity] = renderPart;
-      }
-
-      return {
-         connectingRenderParts: connectingRenderParts,
-      };
-   }
-
-   public createComponent(_entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): FenceComponent {
-      return {
-         connectingRenderParts: intermediateInfo.connectingRenderParts
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      // Fence node plus 4 connections
-      return 5;
-   }
+function decodeData(): FenceComponentData {
+   return {};
 }
 
-export const FenceComponentArray = registerServerComponentArray(ServerComponentType.fence, _FenceComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponent.hitboxes[0];
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         1,
+         0,
+         0, 0,
+         TextureIndex.entities_fence_fenceNode
+      )
+   );
+
+   const connectingRenderParts: Record<Entity, RenderPart> = {};
+
+   // Create initial connecting render parts
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const structureComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.structure);
+   for (const connection of structureComponentData.connections) {
+      const renderPart = createConnectingRenderPart(connection, hitbox);
+      renderObject.attachRenderPart(renderPart);
+      connectingRenderParts[connection.entity] = renderPart;
+   }
+
+   return {
+      connectingRenderParts: connectingRenderParts,
+   };
+}
+
+function createComponent(_entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): FenceComponent {
+   return {
+      connectingRenderParts: intermediateInfo.connectingRenderParts
+   };
+}
+
+function getMaxRenderParts(): number {
+   // Fence node plus 4 connections
+   return 5;
+}
 
 export function createFenceComponentData(): FenceComponentData {
    return {};

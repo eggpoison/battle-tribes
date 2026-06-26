@@ -3,22 +3,17 @@ import { WaterRockData } from "../../shared/dist/client-server-types.js";
 import { CollisionGroup } from "../../shared/dist/collision-groups.js";
 import { Entity } from "../../shared/dist/entities.js";
 import { LightLevelNode } from "../../shared/dist/light-levels.js";
-import { PathfindingSettings, Settings } from "../../shared/dist/settings.js";
-import { getSubtileIndex } from "../../shared/dist/subtiles.js";
-import { SubtileType, TileType, NUM_TILE_TYPES } from "../../shared/dist/tiles.js";
-import { TileIndex, getTileIndexIncludingEdges, assert, getTileX, getTileY, distance } from "../../shared/dist/utils.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { getSubtileIndex, SubtileType } from "../../shared/dist/subtiles.js";
+import { TileType, NUM_TILE_TYPES, getTileIndexIncludingEdges, getTileX, getTileY, TileIndex } from "../../shared/dist/tiles.js";
+import { assert, distance } from "../../shared/dist/utils.js";
 import Chunk from "./Chunk.js";
 import { EntityPairCollisionInfo, GlobalCollisionInfo } from "./collision-detection.js";
 import { MinedSubtileInfo } from "./collapses.js";
-import { getPathfindingNode, PathfindingServerVars } from "./pathfinding-utils.js";
 import { LocalBiome } from "./world-generation/terrain-generation-utils.js";
 import { LightID } from "./lights.js";
-
-interface WallSubtileUpdate {
-   readonly subtileIndex: number;
-   readonly subtileType: SubtileType;
-   readonly damageTaken: number;
-}
+import { createNodeGroupIDs } from "./pathfinding.js";
+import { RenderChunkVars } from "../../shared/dist/render-chunks.js";
 
 interface TileCensus {
    readonly types: Record<TileType, TileIndex[]>;
@@ -44,40 +39,6 @@ const createTileCensus = (): TileCensus => {
          return biomes as Record<Biome, TileIndex[]>;
       })()
    };
-}
-
-const createNodeGroupIDs = (): number[][] => {
-   const nodeGroupIDs: number[][] = [];
-
-   for (let i = 0; i < PathfindingSettings.NODES_IN_WORLD_WIDTH * PathfindingSettings.NODES_IN_WORLD_WIDTH; i++) {
-      const groupIDs: number[] = [];
-      nodeGroupIDs.push(groupIDs);
-   }
-
-   // Mark borders as inaccessible
-
-   // Bottom border
-   for (let nodeX = 0; nodeX < PathfindingSettings.NODES_IN_WORLD_WIDTH - 2; nodeX++) {
-      const node = getPathfindingNode(nodeX, -1);
-      nodeGroupIDs[node].push(PathfindingServerVars.WALL_TILE_OCCUPIED_ID);
-   }
-   // Top border
-   for (let nodeX = 0; nodeX < PathfindingSettings.NODES_IN_WORLD_WIDTH - 2; nodeX++) {
-      const node = getPathfindingNode(nodeX, PathfindingSettings.NODES_IN_WORLD_WIDTH - 2);
-      nodeGroupIDs[node].push(PathfindingServerVars.WALL_TILE_OCCUPIED_ID);
-   }
-   // Left border
-   for (let nodeY = -1; nodeY < PathfindingSettings.NODES_IN_WORLD_WIDTH - 1; nodeY++) {
-      const node = getPathfindingNode(-1, nodeY);
-      nodeGroupIDs[node].push(PathfindingServerVars.WALL_TILE_OCCUPIED_ID);
-   }
-   // Right border
-   for (let nodeY = -1; nodeY < PathfindingSettings.NODES_IN_WORLD_WIDTH - 1; nodeY++) {
-      const node = getPathfindingNode(PathfindingSettings.NODES_IN_WORLD_WIDTH - 2, nodeY);
-      nodeGroupIDs[node].push(PathfindingServerVars.WALL_TILE_OCCUPIED_ID);
-   }
-   
-   return nodeGroupIDs;
 }
 
 const createInitialChunksArray = (): Chunk[] => {
@@ -109,31 +70,30 @@ export default class Layer {
    public readonly tileTypes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    public readonly tileBiomes = new Uint8Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
    public readonly riverFlowDirections = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
-   public tileTemperatures: Float32Array;
-   public tileHumidities: Float32Array;
+   public readonly tileTemperatures: Float32Array;
+   public readonly tileHumidities: Float32Array;
    // @Memory: not needed for surface layer
    public readonly tileMithrilRichnesses = new Float32Array(Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
 
    public readonly tileCensus = createTileCensus();
    public readonly buildingBlockingTiles = new Set<TileIndex>();
 
-   public readonly wallSubtileTypes = new Uint8Array(16 * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   /** AAAAAABB | A = Subtile type, B = damage taken (max: 2). */
+   // @HACK shouldn't be public
+   public readonly wallSubtileDatas = new Uint8Array(16 * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES);
+   public readonly minedSubtileInfoMap = new Map<number, MinedSubtileInfo>();
 
-   public readonly wallSubtileDamageTakenMap = new Map<number, number>();
+   public readonly waterRockRenderChunks: WaterRockData[][] = [];
 
-   public readonly waterRocks: WaterRockData[] = [];
-
-   public tileUpdateCoordinates = new Set<number>();
-   public wallSubtileUpdates = new Set<number>();
+   public readonly tileUpdateCoordinates = new Set<number>();
+   private readonly wallSubtileUpdates = new Set<number>();
 
    /** Stores all entities collectively in each chunk */
-   public chunks = createInitialChunksArray();
+   public readonly chunks = createInitialChunksArray();
 
    public readonly collisionGroupChunks = createCollisionGroupChunks();
 
    public globalCollisionInfo: GlobalCollisionInfo = {};
-
-   public minedSubtileInfoMap = new Map<number, MinedSubtileInfo>();
 
    public readonly nodeGroupIDs = createNodeGroupIDs();
 
@@ -151,6 +111,10 @@ export default class Layer {
       this.depth = depth;
       this.tileTemperatures = tileTemperatures;
       this.tileHumidities = tileHumidities;
+
+      for (let i = 0; i < RenderChunkVars.FULL_WORLD_RENDER_CHUNK_SIZE ** 2; i++) {
+         this.waterRockRenderChunks.push([]);
+      }
    }
 
    public tileIsBuildingBlocking(tileIndex: TileIndex): boolean {
@@ -160,29 +124,6 @@ export default class Layer {
    public getTileMithrilRichness(tileX: number, tileY: number): number {
       const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
       return this.tileMithrilRichnesses[tileIndex];
-   }
-   
-   public getMinedSubtileType(subtileIndex: number): SubtileType {
-      const minedSubtileInfo = this.minedSubtileInfoMap.get(subtileIndex);
-      assert(minedSubtileInfo !== undefined);
-
-      return minedSubtileInfo.subtileType;
-   }
-
-   public restoreWallSubtile(subtileIndex: number, subtileType: SubtileType): void {
-      this.setSubtileType(subtileIndex, subtileType);
-      this.minedSubtileInfoMap.delete(subtileIndex);
-   }
-
-   public setSubtileType(subtileIndex: number, subtileType: SubtileType): void {
-      if (this.wallSubtileTypes[subtileIndex] === subtileType) {
-         return;
-      }
-
-      this.wallSubtileTypes[subtileIndex] = subtileType;
-
-      assert(!this.wallSubtileUpdates.has(subtileIndex));
-      this.wallSubtileUpdates.add(subtileIndex);
    }
 
    public getTileType(tileIndex: TileIndex): TileType {
@@ -206,27 +147,84 @@ export default class Layer {
    }
 
    public getSubtileType(subtileIndex: number): SubtileType {
-      return this.wallSubtileTypes[subtileIndex];
+      return this.wallSubtileDatas[subtileIndex] >> 2;
+   }
+
+   public setSubtileType(subtileIndex: number, subtileType: SubtileType): void {
+      if (this.getSubtileType(subtileIndex) === subtileType) {
+         return;
+      }
+
+      this.wallSubtileDatas[subtileIndex] &= 0b11;
+      this.wallSubtileDatas[subtileIndex] |= subtileType << 2;
+
+      assert(!this.wallSubtileUpdates.has(subtileIndex));
+      this.wallSubtileUpdates.add(subtileIndex);
+   }
+
+   public getSubtileDamageTaken(subtileIndex: number): number {
+      return this.wallSubtileDatas[subtileIndex] & 0b11;
+   }
+
+   public setSubtileDamageTaken(subtileIndex: number, damageTaken: number): void {
+      assert(this.getSubtileDamageTaken(subtileIndex) !== damageTaken);
+
+      this.wallSubtileDatas[subtileIndex] &= 0b11111100;
+      this.wallSubtileDatas[subtileIndex] |= damageTaken;
+
+      assert(!this.wallSubtileUpdates.has(subtileIndex));
+      this.wallSubtileUpdates.add(subtileIndex);
+   }
+
+   public getSubtileData(subtileIndex: number): number {
+      return this.wallSubtileDatas[subtileIndex];
+   }
+
+   public setSubtileData(subtileIndex: number, data: number): void {
+      if (this.getSubtileData(subtileIndex) === data) {
+         return;
+      }
+
+      this.wallSubtileDatas[subtileIndex] = data;
+
+      assert(!this.wallSubtileUpdates.has(subtileIndex));
+      this.wallSubtileUpdates.add(subtileIndex);
    }
 
    public getSubtileXYType(subtileX: number, subtileY: number): SubtileType {
       const subtileIndex = getSubtileIndex(subtileX, subtileY);
-      return this.wallSubtileTypes[subtileIndex];
+      return this.getSubtileType(subtileIndex);
    }
 
    public subtileIsWall(subtileIndex: number): boolean {
-      return this.wallSubtileTypes[subtileIndex] !== SubtileType.none;
+      return this.getSubtileType(subtileIndex) !== SubtileType.none;
    }
 
    public subtileCanHaveWall(subtileIndex: number): boolean {
-      return this.wallSubtileTypes[subtileIndex] !== SubtileType.none || this.wallSubtileDamageTakenMap.has(subtileIndex);
+      return this.getSubtileType(subtileIndex) !== SubtileType.none || this.minedSubtileInfoMap.has(subtileIndex);
    }
 
    /** Returns if the given subtile can support a wall but is mined out */
    public subtileIsMined(subtileIndex: number): boolean {
-      return this.wallSubtileTypes[subtileIndex] === SubtileType.none && this.wallSubtileDamageTakenMap.has(subtileIndex);
+      return this.getSubtileType(subtileIndex) === SubtileType.none && this.minedSubtileInfoMap.has(subtileIndex);
+   }
+   
+   public getMinedSubtileType(subtileIndex: number): SubtileType {
+      const minedSubtileInfo = this.minedSubtileInfoMap.get(subtileIndex);
+      assert(minedSubtileInfo !== undefined);
+
+      return minedSubtileInfo.subtileType;
    }
 
+   public restoreWallSubtile(subtileIndex: number, subtileType: SubtileType): void {
+      this.setSubtileType(subtileIndex, subtileType);
+      this.minedSubtileInfoMap.delete(subtileIndex);
+   }
+
+   public getWallSubtileUpdates(): Set<number> {
+      return this.wallSubtileUpdates;
+   }
+   
    public positionHasWall(x: number, y: number): boolean {
       const subtileX = Math.floor(x / Settings.SUBTILE_SIZE);
       const subtileY = Math.floor(y / Settings.SUBTILE_SIZE);

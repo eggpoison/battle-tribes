@@ -11,7 +11,7 @@ import { StructureComponentArray } from "./StructureComponent.js";
 import { getEntityType } from "../world.js";
 import { PlantedComponentArray } from "./PlantedComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";
-import { getHitboxTile } from "../hitboxes.js";
+import { getBoxTile } from "../hitboxes.js";
 import { PlayerComponentArray } from "./PlayerComponent.js";
 
 /** Relationships a tribe member can have, in increasing order of threat */
@@ -133,7 +133,7 @@ export function getEntityRelationship(entity: Entity, comparingEntity: Entity): 
          const transformComponent = TransformComponentArray.getComponent(entity);
          // @Hack
          const hitbox = transformComponent.hitboxes[0];
-         const tileIndex = getHitboxTile(hitbox);
+         const tileIndex = getBoxTile(hitbox.box);
 
          const tribeComponent = TribeComponentArray.getComponent(entity);
          return tribeComponent.tribe.tileIsInArea(tileIndex) || tribeComponent.tribe.attackingEntities[comparingEntity] !== undefined ? EntityRelationship.hostileMob : EntityRelationship.neutral;

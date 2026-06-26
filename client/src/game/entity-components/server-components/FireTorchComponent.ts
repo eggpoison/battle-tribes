@@ -18,67 +18,70 @@ export interface FireTorchComponentData {}
 export interface FireTorchComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fireTorch, _FireTorchComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fireTorch, typeof FireTorchComponentArray> {}
 }
 
-class _FireTorchComponentArray extends ServerComponentArray<FireTorchComponent, FireTorchComponentData> {
-   public decodeData(): FireTorchComponentData {
-      return {};
-   }
+export const FireTorchComponentArray = registerServerComponentArray(
+   ServerComponentType.fireTorch,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+FireTorchComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+FireTorchComponentArray.onTick = onTick;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         TextureIndex.entities_fireTorch_fireTorch
-      );
-      renderObject.attachRenderPart(renderPart);
-   }
-
-   public createComponent(): FireTorchComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onTick(entity: Entity): void {
-      // @Copynpaste: all of these effects from InventoryUseComponent
-      
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      
-      // Ember particles
-      if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
-         let spawnPositionX = hitbox.box.posX;
-         let spawnPositionY = hitbox.box.posY;
-
-         const spawnOffsetMagnitude = 7 * Math.random();
-         const spawnOffsetDirection = randAngle();
-         spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-
-         createEmberParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 120), 0, 0);
-      }
-
-      // Smoke particles
-      if (tickIntervalHasPassed(0.18 * Settings.TICK_RATE)) {
-         const spawnOffsetMagnitude = 5 * Math.random();
-         const spawnOffsetDirection = randAngle();
-         const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-         createSmokeParticle(spawnPositionX, spawnPositionY, 24);
-      }
-   }
+function decodeData(): FireTorchComponentData {
+   return {};
 }
 
-export const FireTorchComponentArray = registerServerComponentArray(ServerComponentType.fireTorch, _FireTorchComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      TextureIndex.entities_fireTorch_fireTorch
+   );
+   renderObject.attachRenderPart(renderPart);
+}
+
+function createComponent(): FireTorchComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onTick(entity: Entity): void {
+   // @Copynpaste: all of these effects from InventoryUseComponent
+   
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   
+   // Ember particles
+   if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
+      let spawnPositionX = hitbox.box.posX;
+      let spawnPositionY = hitbox.box.posY;
+
+      const spawnOffsetMagnitude = 7 * Math.random();
+      const spawnOffsetDirection = randAngle();
+      spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+      spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+
+      createEmberParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 120), 0, 0);
+   }
+
+   // Smoke particles
+   if (tickIntervalHasPassed(0.18 * Settings.TICK_RATE)) {
+      const spawnOffsetMagnitude = 5 * Math.random();
+      const spawnOffsetDirection = randAngle();
+      const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+      const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+      createSmokeParticle(spawnPositionX, spawnPositionY, 24);
+   }
+}
 
 export function createFireTorchComponentData(): FireTorchComponentData {
    return {};

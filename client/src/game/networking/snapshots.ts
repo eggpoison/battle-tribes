@@ -1,7 +1,7 @@
 import { PacketReader } from "../../../../shared/src/packets";
 import { Settings } from "../../../../shared/src/settings";
 import { debugInfoDisplay } from "../../ui/game/dev/debug-info-display-funcs";
-import { TickSnapshot, decodeSnapshotFromGameDataPacket, updateGameStateToSnapshot } from "./snapshot-processing";
+import { TickSnapshot, decodeGameDataPacket, updateGameStateToSnapshot } from "./snapshot-processing";
 
 const enum Var {
    SNAPSHOT_BUFFER_TARGET_SIZE = 2,
@@ -54,7 +54,7 @@ export function bufferHasEnoughForGameStart(): boolean {
 }
 
 export function onGameDataPacket(reader: PacketReader): void {
-   const snapshot = decodeSnapshotFromGameDataPacket(reader);
+   const snapshot = decodeGameDataPacket(reader);
    snapshotBuffer.push(snapshot);
    
    const timeNow = performance.now();

@@ -1,11 +1,11 @@
-import { distance, lerp, randAngle, randFloat } from "../../../shared/src/utils";
+import { _point, distance, lerp, randAngle, randFloat } from "../../../shared/src/utils";
 import { Entity, EntityType } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
 import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./webgl";
 import { getCurrentLayer, getEntityLayer, getEntityType } from "./world";
 import { getBuildingSafeties } from "./building-safety";
 import { getVisibleBuildingPlan, GhostBuildingPlan, VirtualBuildingSafetySimulation } from "./virtual-buildings";
-import { tribeMemberComponentArray } from "./entity-components/server-components/TribeMemberComponent";
+import { TribeMemberComponentArray } from "./entity-components/server-components/TribeMemberComponent";
 import { getHumanoidRadius } from "./entity-components/server-components/TribesmanComponent";
 import { playerInstance } from "./player";
 import { addGhostRenderObject, removeGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";
@@ -351,19 +351,18 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
 
    const currentLayer = getCurrentLayer();
 
-   for (let i = 0; i < tribeMemberComponentArray.entities.length; i++) {
-      const entity = tribeMemberComponentArray.entities[i];
+   for (let i = 0; i < TribeMemberComponentArray.entities.length; i++) {
+      const entity = TribeMemberComponentArray.entities[i];
       if (entity === playerInstance || getEntityLayer(entity) !== currentLayer) {
          continue;
       }
 
-      const tribeMemberComponent = tribeMemberComponentArray.components[i];
+      const tribeMemberComponent = TribeMemberComponentArray.components[i];
 
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
-      
-      renderName(hitboxRenderPosition.x, hitboxRenderPosition.y + getHumanoidRadius(entity) + 4, tribeMemberComponent.name, getEntityType(entity) === EntityType.player ? "#fff" : "#bbb");
+      calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
+      renderName(_point.x, _point.y + getHumanoidRadius(entity) + 4, tribeMemberComponent.name, getEntityType(entity) === EntityType.player ? "#fff" : "#bbb");
    }
 
    for (let i = 0; i < TamingComponentArray.entities.length; i++) {
@@ -377,9 +376,8 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
       if (name !== "") {
          const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[1];
-         const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
-         
-         renderName(hitboxRenderPosition.x, hitboxRenderPosition.y + 16 + 4, name, "#ccc");
+         calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
+         renderName(_point.x, _point.y + 16 + 4, name, "#ccc");
       }
    }
 
@@ -393,10 +391,9 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
       
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      const hitboxRenderPosition = calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
-
-      const x = hitboxRenderPosition.x;
-      const y = hitboxRenderPosition.y;
+      calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
+      const x = _point.x;
+      const y = _point.y;
       
       const cursorDist = distance(x, y, cursorWorldPos.x, cursorWorldPos.y);
       if (cursorDist < 96) {

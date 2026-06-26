@@ -12,39 +12,41 @@ export interface GlurbBodySegmentComponentData {}
 export interface GlurbBodySegmentComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbBodySegment, _GlurbBodySegmentComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbBodySegment, typeof GlurbBodySegmentComponentArray> {}
 }
 
-class _GlurbBodySegmentComponentArray extends ServerComponentArray<GlurbBodySegmentComponent, GlurbBodySegmentComponentData> {
-   public decodeData(): GlurbBodySegmentComponentData {
-      return createGlurbHeadSegmentComponentData();
-   }
+export const GlurbBodySegmentComponentArray = registerServerComponentArray(
+   ServerComponentType.glurbBodySegment,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+GlurbBodySegmentComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         // @Hack: 0.1 so that the moss ball can be z-index 0
-         0.1,
-         0,
-         0, 0,
-         TextureIndex.entities_glurb_glurbMiddleSegment
-      );
-      renderObject.attachRenderPart(renderPart);
-   }
-
-   public createComponent(): GlurbBodySegmentComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+function decodeData(): GlurbBodySegmentComponentData {
+   return createGlurbHeadSegmentComponentData();
 }
 
-export const GlurbBodySegmentComponentArray = registerServerComponentArray(ServerComponentType.glurbBodySegment, _GlurbBodySegmentComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      // @Hack: 0.1 so that the moss ball can be z-index 0
+      0.1,
+      0,
+      0, 0,
+      TextureIndex.entities_glurb_glurbMiddleSegment
+   );
+   renderObject.attachRenderPart(renderPart);
+}
+
+function createComponent(): GlurbBodySegmentComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
 
 export function createGlurbHeadSegmentComponentData(): GlurbBodySegmentComponentData {
    return {};

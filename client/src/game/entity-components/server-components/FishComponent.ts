@@ -28,7 +28,7 @@ export interface FishComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fish, _FishComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.fish, typeof FishComponentArray> {}
 }
 
 const TEXTURE_INDEXES: Record<FishColour, TextureIndex> = {
@@ -38,80 +38,85 @@ const TEXTURE_INDEXES: Record<FishColour, TextureIndex> = {
    [FishColour.lime]: TextureIndex.entities_fish_fishLime
 };
 
-class _FishComponentArray extends ServerComponentArray<FishComponent, FishComponentData> {
-   public decodeData(reader: PacketReader): FishComponentData {
-      const colour = reader.readNumber();
-      return {
-         colour: colour
-      };
-   }
+export const FishComponentArray = registerServerComponentArray(
+   ServerComponentType.fish,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+FishComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+FishComponentArray.onTick = onTick;
+FishComponentArray.onHit = onHit;
+FishComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const fishComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.fish);
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TEXTURE_INDEXES[fishComponentData.colour]
-         )
-      );
-   }
-
-   public createComponent(entityComponentData: EntityComponentData): FishComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const fishComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.fish);
-
-      return {
-         colour: fishComponentData.colour,
-         waterOpacityMultiplier: randFloat(0.6, 1)
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      
-      const tile = getHitboxTile(hitbox);
-      if (tile.type !== TileType.water && tickIntervalHasPassed(0.4 * Settings.TICK_RATE)) {
-         for (let i = 0; i < 8; i++) {
-            const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.posX + 8 * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.posY + 8 * Math.cos(spawnOffsetDirection);
-
-            createWaterSplashParticle(spawnPositionX, spawnPositionY);
-         }
-      }
-   }
-      
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      // Blood particles
-      for (let i = 0; i < 5; i++) {
-         const position = new Point(hitbox.box.posX, hitbox.box.posY).offset(16, randAngle());
-         createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, position.x, position.y, randAngle(), randFloat(150, 250), true);
-      }
-
-      playSoundOnHitbox("fish-hurt-" + randInt(1, 4) + ".mp3", 0.4, 1, entity, hitbox, false);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      createBloodParticleFountain(entity, 0.1, 0.8);
-      
-      playSoundOnHitbox("fish-die-1.mp3", 0.4, 1, entity, hitbox, false);
-   }
+function decodeData(reader: PacketReader): FishComponentData {
+   const colour = reader.readNumber();
+   return {
+      colour: colour
+   };
 }
 
-export const FishComponentArray = registerServerComponentArray(ServerComponentType.fish, _FishComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const fishComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.fish);
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TEXTURE_INDEXES[fishComponentData.colour]
+      )
+   );
+}
+
+function createComponent(entityComponentData: EntityComponentData): FishComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const fishComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.fish);
+
+   return {
+      colour: fishComponentData.colour,
+      waterOpacityMultiplier: randFloat(0.6, 1)
+   };
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onTick(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   
+   const tile = getHitboxTile(hitbox);
+   if (tile.type !== TileType.water && tickIntervalHasPassed(0.4 * Settings.TICK_RATE)) {
+      for (let i = 0; i < 8; i++) {
+         const spawnOffsetDirection = randAngle();
+         const spawnPositionX = hitbox.box.posX + 8 * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + 8 * Math.cos(spawnOffsetDirection);
+
+         createWaterSplashParticle(spawnPositionX, spawnPositionY);
+      }
+   }
+}
+   
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   // Blood particles
+   for (let i = 0; i < 5; i++) {
+      const position = new Point(hitbox.box.posX, hitbox.box.posY).offset(16, randAngle());
+      createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, position.x, position.y, randAngle(), randFloat(150, 250), true);
+   }
+
+   playSoundOnHitbox("fish-hurt-" + randInt(1, 4) + ".mp3", 0.4, 1, entity, hitbox, false);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   createBloodParticleFountain(entity, 0.1, 0.8);
+   
+   playSoundOnHitbox("fish-die-1.mp3", 0.4, 1, entity, hitbox, false);
+}

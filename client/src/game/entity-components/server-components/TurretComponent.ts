@@ -40,7 +40,7 @@ export interface TurretComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.turret, _TurretComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.turret, typeof TurretComponentArray> {}
 }
 
 const NUM_SLING_TURRET_CHARGE_TEXTURES = 5;
@@ -146,55 +146,11 @@ const getProjectileZIndex = (entityType: TurretType): number => {
    }
 }
 
-class _TurretComponentArray extends ServerComponentArray<TurretComponent, TurretComponentData> {
-   public decodeData(reader: PacketReader): TurretComponentData {
-      const aimDirection = reader.readNumber();
-      const chargeProgress = reader.readNumber();
-      const reloadProgress = reader.readNumber();
-      return {
-         aimDirection: aimDirection,
-         chargeProgress: chargeProgress,
-         reloadProgress: reloadProgress
-      };
-   }
-
-   public createComponent(entityComponentData: EntityComponentData, _: never, renderObject: EntityRenderObject): TurretComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const turretComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.turret);
-      return {
-         chargeProgress: turretComponentData.chargeProgress,
-         aimingRenderPart: getRenderThingByTag(renderObject, "turretComponent:aiming") as TexturedRenderPart,
-         pivotingRenderPart: getRenderThingByTag(renderObject, "turretComponent:pivoting") as VisualRenderPart,
-         gearRenderParts: getRenderThingsByTag(renderObject, "turretComponent:gear") as VisualRenderPart[],
-         projectileRenderPart:  null
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      // 1 for the projectile render part
-      return 1;
-   }
-
-   public updateFromData(data: TurretComponentData, entity: Entity): void {
-      const turretComponent = TurretComponentArray.getComponent(entity);
-      
-      const aimDirection = data.aimDirection;
-      const chargeProgress = data.chargeProgress;
-      const reloadProgress = data.reloadProgress;
-      
-      if (chargeProgress < turretComponent.chargeProgress) {
-         playFireSound(entity);
-      }
-      turretComponent.chargeProgress = chargeProgress;
-
-      turretComponent.aimingRenderPart.switchTextureSource(getChargeTextureIndex(getEntityType(entity) as TurretType, chargeProgress));
-      
-      updateAimDirection(turretComponent, aimDirection, chargeProgress);
-      updateProjectileRenderPart(turretComponent, entity, chargeProgress, reloadProgress);
-   }
-}
-
-export const TurretComponentArray = registerServerComponentArray(ServerComponentType.turret, _TurretComponentArray, true);
+export const TurretComponentArray = registerServerComponentArray(
+   ServerComponentType.turret,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TurretComponentArray.updateFromData = updateFromData;
 
 export function createTurretComponentData(): TurretComponentData {
    return {
@@ -273,4 +229,50 @@ const updateProjectileRenderPart = (turretComponent: TurretComponent, entity: En
       renderObject.removeRenderPart(turretComponent.projectileRenderPart);
       turretComponent.projectileRenderPart = null;
    }
+}
+
+function decodeData(reader: PacketReader): TurretComponentData {
+   const aimDirection = reader.readNumber();
+   const chargeProgress = reader.readNumber();
+   const reloadProgress = reader.readNumber();
+   return {
+      aimDirection: aimDirection,
+      chargeProgress: chargeProgress,
+      reloadProgress: reloadProgress
+   };
+}
+
+function createComponent(entityComponentData: EntityComponentData, _: unknown, renderObject: EntityRenderObject): TurretComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const turretComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.turret);
+   return {
+      chargeProgress: turretComponentData.chargeProgress,
+      aimingRenderPart: getRenderThingByTag(renderObject, "turretComponent:aiming") as TexturedRenderPart,
+      pivotingRenderPart: getRenderThingByTag(renderObject, "turretComponent:pivoting") as VisualRenderPart,
+      gearRenderParts: getRenderThingsByTag(renderObject, "turretComponent:gear") as VisualRenderPart[],
+      projectileRenderPart:  null
+   };
+}
+
+function getMaxRenderParts(): number {
+   // 1 for the projectile render part
+   return 1;
+}
+
+function updateFromData(data: TurretComponentData, entity: Entity): void {
+   const turretComponent = TurretComponentArray.getComponent(entity);
+   
+   const aimDirection = data.aimDirection;
+   const chargeProgress = data.chargeProgress;
+   const reloadProgress = data.reloadProgress;
+   
+   if (chargeProgress < turretComponent.chargeProgress) {
+      playFireSound(entity);
+   }
+   turretComponent.chargeProgress = chargeProgress;
+
+   turretComponent.aimingRenderPart.switchTextureSource(getChargeTextureIndex(getEntityType(entity) as TurretType, chargeProgress));
+   
+   updateAimDirection(turretComponent, aimDirection, chargeProgress);
+   updateProjectileRenderPart(turretComponent, entity, chargeProgress, reloadProgress);
 }

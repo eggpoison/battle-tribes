@@ -14,7 +14,7 @@ import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityType } from "../world.js";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent.js";
-import { addHitboxAngularAcceleration, addHitboxAngularVelocity, addHitboxVelocity, getHitboxAngularVelocity, getHitboxTag, getHitboxTile, Hitbox, teleportHitbox } from "../hitboxes.js";
+import { addHitboxAngularAcceleration, addHitboxAngularVelocity, addHitboxVelocity, getHitboxAngularVelocity, getHitboxTag, getBoxTile, Hitbox, teleportHitbox } from "../hitboxes.js";
 import { SNOBE_EAR_IDEAL_ANGLE } from "../entities/tundra/snobe.js";
 import { updateFollowAIComponent, entityWantsToFollow, followAISetFollowTarget, continueFollowingEntity } from "../ai/FollowAI.js";
 import { ItemComponentArray } from "./ItemComponent.js";
@@ -71,7 +71,7 @@ function onTick(snobe: Entity): void {
 
    const layer = getEntityLayer(snobe);
 
-   const tileIndex = getHitboxTile(hitbox);
+   const tileIndex = getBoxTile(hitbox.box);
    const tileType = layer.getTileType(tileIndex);
 
    // Snobes move at normal speed on snow
@@ -148,7 +148,10 @@ function onTick(snobe: Entity): void {
 
             const snowballTransformComponent = getConfigTransformComponent(snowballConfig.components);
             const snowballHitbox = snowballTransformComponent.hitboxes[0];
-            addHitboxVelocity(snowballHitbox, polarVec2(randFloat(50, 80), offsetDir + randFloat(0.1, 0.3) * randSign()))
+
+            const magnitude = randFloat(50, 80);
+            const direction = offsetDir + randFloat(0.1, 0.3) * randSign();
+            addHitboxVelocity(snowballHitbox, magnitude * Math.sin(direction), magnitude * Math.cos(direction));
             
             createEntity(snowballConfig, getEntityLayer(snobe), 0);
          }
@@ -167,7 +170,7 @@ function onTick(snobe: Entity): void {
       }
 
       // @HACK AAAAAAAAAAAAAAAAAA
-      teleportHitbox(hitbox, snobeComponent.diggingStartPosition);
+      teleportHitbox(hitbox, snobeComponent.diggingStartPosition.x, snobeComponent.diggingStartPosition.y);
 
       return;
    }

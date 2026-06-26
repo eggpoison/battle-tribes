@@ -37,14 +37,14 @@ import { getEntitiesInRange, getHitboxesCollidingEntities } from "./collision";
 import { createFloorSignConfig } from "./entities/floor-sign";
 import { getTransformComponentData } from "./entity-components/component-types";
 import { minVisibleTileX, maxVisibleTileX, minVisibleTileY, maxVisibleTileY } from "./camera";
-import { alignAngleToClosestAxis, angle, distance, getAbsAngleDiff, getTileIndexIncludingEdges, getTileX, getTileY, Point, polarVec2, TileIndex, tileIsInWorld } from "../../../shared/src/utils";
+import { alignAngleToClosestAxis, angle, distance, getAbsAngleDiff, Point, polarVec2 } from "../../../shared/src/utils";
 import { Entity, EntityType } from "../../../shared/src/entities";
 import { STRUCTURE_TYPES, StructureType } from "../../../shared/src/structures";
 import { BuildingMaterial } from "../../../shared/src/components";
-import { SubtileType, TileType } from "../../../shared/src/tiles";
+import { getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, tileIsInWorld, TileType } from "../../../shared/src/tiles";
 import { _bounds, boxIsCircular, calculateBoxBounds, createRectangularBox, getBoxCollisionResult } from "../../../shared/src/boxes";
 import { Settings } from "../../../shared/src/settings";
-import { getSubtileIndex, getSubtileX, getSubtileY, subtileIsInWorldIncludingEdges } from "../../../shared/src/subtiles";
+import { getSubtileIndex, getSubtileX, getSubtileY, subtileIsInWorldIncludingEdges, SubtileType } from "../../../shared/src/subtiles";
 import { boxIsCollidingWithSubtile } from "../../../shared/src/collision";
 import { CollisionGroup, getEntityCollisionGroup } from "../../../shared/src/collision-groups";
 
@@ -680,16 +680,12 @@ const getNearbyTileCornerSubtiles = (regularPlacePosition: Point): readonly numb
 }
 
 const checkSubtileForWall = (subtileX: number, subtileY: number, layer: Layer): boolean => {
-   // A subtile can support bracings if it both:
-   // - Is in the world
-   // - Is mined out
-   
    if (!subtileIsInWorldIncludingEdges(subtileX, subtileY)) {
       return false;
    }
 
    const subtileIndex = getSubtileIndex(subtileX, subtileY);
-   return layer.subtileIsMined(subtileIndex);
+   return !layer.subtileIsWall(subtileIndex);
 }
 
 const cornerIsPlaceable = (cornerSubtileX: number, cornerSubtileY: number, layer: Layer): boolean => {

@@ -202,8 +202,10 @@ const hitboxWithChildrenIsVisible = (seeingHitbox: Hitbox, hitbox: Hitbox, visio
    return false;
 }
 
-const entityIsVisible = (seeingHitbox: Hitbox, checkEntity: Entity, checkEntityTransformComponent: TransformComponent, visionRange: number): boolean => {
-   for (const rootHitbox of checkEntityTransformComponent.rootHitboxes) {
+const entityIsVisible = (seeingHitbox: Hitbox, checkEntityTransformComponent: TransformComponent, visionRange: number): boolean => {
+   const hitboxes = checkEntityTransformComponent.rootHitboxes;
+   for (let i = 0, len = hitboxes.length; i < len; i++) {
+      const rootHitbox = hitboxes[i];
       if (hitboxWithChildrenIsVisible(seeingHitbox, rootHitbox, visionRange)) {
          return true;
       }
@@ -222,7 +224,7 @@ const calculateVisibleEntities = (aiHelperComponent: AIHelperComponent): Entity[
       const currentEntity = potentialVisibleEntities[i];
       const currentEntityTransformComponent = TransformComponentArray.getComponent(currentEntity);
 
-      if (entityIsVisible(aiHelperComponent.seeingHitbox, currentEntity, currentEntityTransformComponent, visionRange)) {
+      if (entityIsVisible(aiHelperComponent.seeingHitbox, currentEntityTransformComponent, visionRange)) {
          visibleEntities.push(currentEntity);
       }
    }

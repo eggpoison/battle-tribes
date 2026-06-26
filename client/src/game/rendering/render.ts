@@ -2,7 +2,7 @@ import { Settings } from "../../../../shared/src/settings";
 import { maxVisibleChunkX, maxVisibleChunkY, maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleChunkX, minVisibleChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY, refreshCameraPosition, refreshCameraView } from "../camera";
 import { getHighlightedEntity, getHighlightedRenderObject, getSelectedEntity } from "../entity-selection";
 import Layer from "../Layer";
-import { updatePlayerDirection } from "../player";
+import { playerInstance, updatePlayerDirection } from "../player";
 import { RenderLayer, MAX_RENDER_LAYER } from "../render-layers";
 import { beginLoadingSounds } from "../sound";
 import { createTextCanvasContext, renderText } from "../text-canvas";
@@ -11,9 +11,9 @@ import { preloadTextureImages, loadTextures } from "../textures";
 import { gl, windowWidth, windowHeight, createTexture, setupWebGL } from "../webgl";
 import { layers, getCurrentLayer, entityExists, getEntityRenderObject } from "../world";
 import { renderLightLevelsText } from "./light-levels-text-rendering";
-import { createRenderChunks, RenderChunkVars } from "./render-chunks";
+import { clearRenderChunks, createLayerRenderChunks } from "./render-chunks";
 import { resetRenderOrder, renderNextRenderables } from "./render-loop";
-import { updateRenderPartMatrices } from "./render-part-matrices";
+import { calculateHitboxRenderPosition, getMatrixPosition, updateRenderPartMatrices } from "./render-part-matrices";
 import { createUBOs, updateUBOs } from "./ubos";
 import { createHitboxShaders, renderHitboxes } from "./webgl/box-wireframe-rendering";
 import { createBuildingBlockingTileShaders, renderBuildingBlockingTiles } from "./webgl/building-blocking-tiles-rendering";
@@ -40,7 +40,7 @@ import { createRestrictedBuildingAreaShaders, renderRestrictedBuildingAreas } fr
 import { calculateVisibleRiverInfo, createRiverShaders, renderLowerRiverFeatures, renderUpperRiverFeatures } from "./webgl/river-rendering";
 import { createSafetyNodeShaders, renderSafetyNodes } from "./webgl/safety-node-rendering";
 import { createSlimeTrailShaders, renderSlimeTrails } from "./webgl/slime-trail-rendering";
-import { clearSolidTileRenderingData, createSolidTileShaders, renderSolidTiles } from "./webgl/solid-tile-rendering";
+import { createSolidTileShaders, renderSolidTiles } from "./webgl/solid-tile-rendering";
 import { createSubtileSupportShaders, renderSubtileSupports } from "./webgl/subtile-support-rendering";
 import { createTechTreeItemShaders, renderTechTreeItems } from "./webgl/tech-tree-item-rendering";
 import { createTechTreeGLContext, createTechTreeShaders, renderTechTree } from "./webgl/tech-tree-rendering";
@@ -57,6 +57,9 @@ import { debugDisplayState } from "../../ui-state/debug-display-state";
 import { nerdVision } from "../../ui-state/nerd-vision-funcs";
 import { MenuType, menuIsOpen } from "../../ui/menus";
 import { IntermediateInitialisationInfo } from "../networking/packet-receiving";
+import { RenderChunkVars } from "../../../../shared/src/render-chunks";
+import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
+import { _point } from "../../../../shared/src/utils";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -73,10 +76,9 @@ export async function initialiseGame(intermediateInitialisationInfo: Intermediat
       createTechTreeGLContext();
       createTextCanvasContext();
 
-      clearSolidTileRenderingData();
       for (let i = 0; i < layers.length; i++) {
          const layer = layers[i];
-         createRenderChunks(layer, layer.waterRocks, intermediateInitialisationInfo.shadowInfoArrays);
+         createLayerRenderChunks(layer, intermediateInitialisationInfo);
       }
 
       await loadTextureAtlas();
@@ -97,9 +99,9 @@ export async function initialiseGame(intermediateInitialisationInfo: Intermediat
 
       hasSetupRendering = true;
    } else {
-      clearSolidTileRenderingData();
+      clearRenderChunks();
       for (const layer of layers) {
-         createRenderChunks(layer, layer.waterRocks, intermediateInitialisationInfo.shadowInfoArrays);
+         createLayerRenderChunks(layer, intermediateInitialisationInfo);
       }
    }
 }
@@ -155,7 +157,7 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): 
 
    // @Incomplete: A whole lot of these are not layer specific
 
-   renderTileShadows(layer, TileShadowType.dropdownShadow);
+   renderTileShadows(layer, TileShadowType.dropdown);
 
    renderSolidTiles(layer, false);
    renderMithrilRichTileOverlays(layer, false);
@@ -198,7 +200,7 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): 
    // Render walls
    renderSolidTiles(layer, true);
    // @TEMPORARY
-   renderTileShadows(layer, TileShadowType.wallShadow);
+   renderTileShadows(layer, TileShadowType.wall);
    renderMithrilRichTileOverlays(layer, true);
    renderTileBreakProgress(layer);
    renderWallBorders(layer);
@@ -282,14 +284,20 @@ export function renderGame(clientInterp: number, serverInterp: number): void {
    gl.clearColor(1, 0, 0, 1);
    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-   updateUBOs();
-
    refreshCameraPosition(clientInterp, serverInterp);
    refreshCameraView();
+
+   updateUBOs();
    // Done immediately following the camera position update as the player direction is reliant on it.
    updatePlayerDirection(clientInterp, serverInterp);
 
    updateRenderPartMatrices(clientInterp, serverInterp);
+   // const renderObject = getEntityRenderObject(playerInstance!);
+   // getMatrixPosition(renderObject.renderPartsByZIndex[4].modelMatrix)
+   // console.log(_point.x, _point.y);
+   // const transformComponent = TransformComponentArray.getComponent(playerInstance!);
+   // calculateHitboxRenderPosition(transformComponent.hitboxes[0], clientInterp, serverInterp);
+   // console.log(_point.x, _point.y);
 
    // Render layers
    // @Hack

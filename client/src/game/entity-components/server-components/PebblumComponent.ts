@@ -13,46 +13,48 @@ export interface PebblumComponentData {}
 export interface PebblumComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pebblum, _PebblumComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pebblum, typeof PebblumComponentArray> {}
 }
 
-class _PebblumComponentArray extends ServerComponentArray<PebblumComponent, PebblumComponentData> {
-   public decodeData(): PebblumComponentData {
-      return {};
-   }
+export const PebblumComponentArray = registerServerComponentArray(
+   ServerComponentType.pebblum,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+PebblumComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-
-      // Nose
-      const nose = new TexturedRenderPart(
-         hitbox,
-         0,
-         randAngle(),
-         0, 12,
-         TextureIndex.entities_pebblum_pebblumNose
-      )
-      renderObject.attachRenderPart(nose);
-
-      // Body
-      const body = new TexturedRenderPart(
-         hitbox,
-         1,
-         randAngle(),
-         0, -8,
-         TextureIndex.entities_pebblum_pebblumBody
-      )
-      renderObject.attachRenderPart(body);
-   }
-
-   public createComponent(): PebblumComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 2;
-   }
+function decodeData(): PebblumComponentData {
+   return {};
 }
 
-export const PebblumComponentArray = registerServerComponentArray(ServerComponentType.pebblum, _PebblumComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+
+   // Nose
+   const nose = new TexturedRenderPart(
+      hitbox,
+      0,
+      randAngle(),
+      0, 12,
+      TextureIndex.entities_pebblum_pebblumNose
+   )
+   renderObject.attachRenderPart(nose);
+
+   // Body
+   const body = new TexturedRenderPart(
+      hitbox,
+      1,
+      randAngle(),
+      0, -8,
+      TextureIndex.entities_pebblum_pebblumBody
+   )
+   renderObject.attachRenderPart(body);
+}
+
+function createComponent(): PebblumComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 2;
+}

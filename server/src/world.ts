@@ -69,7 +69,7 @@ export function generateLayers(): void {
       if (OPTIONS.generateWalls) {
          for (let tileY = 0; tileY < Settings.WORLD_SIZE_TILES; tileY++) {
             for (let tileX = 0; tileX < Settings.WORLD_SIZE_TILES; tileX++) {
-               if (tileHasWallSubtile(layer.wallSubtileTypes, tileX, tileY)) {
+               if (tileHasWallSubtile(layer.wallSubtileDatas, tileX, tileY)) {
                   // Mark which chunks have wall tiles
                   const chunkX = Math.floor(tileX / Settings.CHUNK_SIZE);
                   const chunkY = Math.floor(tileY / Settings.CHUNK_SIZE);

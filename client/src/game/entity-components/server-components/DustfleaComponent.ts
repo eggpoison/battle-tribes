@@ -17,46 +17,50 @@ export interface DustfleaComponentData {}
 export interface DustfleaComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustflea, _DustfleaComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.dustflea, typeof DustfleaComponentArray> {}
 }
 
-class _DustfleaComponentArray extends ServerComponentArray<DustfleaComponent, DustfleaComponentData> {
-   public decodeData(): DustfleaComponentData {
-      return {};
-   }
+export const DustfleaComponentArray = registerServerComponentArray(
+   ServerComponentType.dustflea,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+DustfleaComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+DustfleaComponentArray.onHit = onHit;
+DustfleaComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.entities_dustflea_dustflea
-         )
-      );
-   }
-
-   public createComponent(): DustfleaComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-      
-   public onHit(dustflea: Entity, hitbox: Hitbox): void {
-      playSoundOnHitbox("dustflea-hit.mp3", 0.4, randFloat(0.9, 1.1), dustflea, hitbox, false);
-   }
-
-   public onDie(dustflea: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(dustflea);
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("dustflea-explosion.mp3", 0.4, randFloat(0.9, 1.1), dustflea, hitbox, false);
-   }
+function decodeData(): DustfleaComponentData {
+   return {};
 }
 
-export const DustfleaComponentArray = registerServerComponentArray(ServerComponentType.dustflea, _DustfleaComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.entities_dustflea_dustflea
+      )
+   );
+}
+
+function createComponent(): DustfleaComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+   
+function onHit(dustflea: Entity, hitbox: Hitbox): void {
+   playSoundOnHitbox("dustflea-hit.mp3", 0.4, randFloat(0.9, 1.1), dustflea, hitbox, false);
+}
+
+function onDie(dustflea: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(dustflea);
+   const hitbox = transformComponent.hitboxes[0];
+   playSoundOnHitbox("dustflea-explosion.mp3", 0.4, randFloat(0.9, 1.1), dustflea, hitbox, false);
+}

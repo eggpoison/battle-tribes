@@ -7,21 +7,22 @@ export interface EnergyStoreComponentData {}
 export interface EnergyStoreComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.energyStore, _EnergyStoreComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.energyStore, typeof EnergyStoreComponentArray> {}
 }
 
-class _EnergyStoreComponentArray extends ServerComponentArray<EnergyStoreComponent, EnergyStoreComponentData, never> {
-   public decodeData(): EnergyStoreComponentData {
-      return {};
-   }
+export const EnergyStoreComponentArray = registerServerComponentArray(
+   ServerComponentType.energyStore,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(): EnergyStoreComponentData {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(): EnergyStoreComponentData {
+   return {};
 }
 
-export const EnergyStoreComponentArray = registerServerComponentArray(ServerComponentType.energyStore, _EnergyStoreComponentArray, true);
+function createComponent(): EnergyStoreComponentData {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}

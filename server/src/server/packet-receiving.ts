@@ -24,7 +24,7 @@ import { CowComponentArray } from "../components/CowComponent.js";
 import { dismountMount, mountCarrySlot, RideableComponentArray } from "../components/RideableComponent.js";
 import { getTamingSkillLearning, incrementTamingTier, skillLearningIsComplete, TamingComponentArray } from "../components/TamingComponent.js";
 import { getTamingSpec } from "../taming-specs.js";
-import { getHitboxTile, getHitboxVelocity, setHitboxAngle, setHitboxAngularVelocity } from "../hitboxes.js";
+import { getBoxTile, getHitboxVelocity, setHitboxAngle, setHitboxAngularVelocity } from "../hitboxes.js";
 import { FloorSignComponentArray } from "../components/FloorSignComponent.js";
 import { BuildingMaterialComponentArray } from "../components/BuildingMaterialComponent.js";
 import { createItemsOverEntity } from "../entities/item-entity.js";
@@ -100,7 +100,6 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
 
       const hotbarLimbInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    
-      registerDirtyEntity(player);
       playerHitbox.box.posX = x;
       playerHitbox.box.posY = y;
       
@@ -131,7 +130,6 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
       
       if (selectedHotbarItemSlot !== hotbarLimbInfo.selectedItemSlot) {
          hotbarLimbInfo.selectedItemSlot = selectedHotbarItemSlot;
-         registerDirtyEntity(player);
       }
 
       // @Bug: won't work for using medicine in offhand
@@ -570,7 +568,7 @@ export function processAscendPacket(playerClient: PlayerClient): void {
    if (currentLayer === undergroundLayer) {
       const transformComponent = TransformComponentArray.getComponent(player);
       const playerHitbox = transformComponent.hitboxes[0];
-      const tileAbove = getHitboxTile(playerHitbox);
+      const tileAbove = getBoxTile(playerHitbox.box);
       if (surfaceLayer.getTileType(tileAbove) === TileType.dropdown) {
          changeEntityLayer(player, surfaceLayer);
       }
@@ -1221,15 +1219,4 @@ export function processSetDebugEntityPacket(reader: PacketReader): void {
    const entity: Entity = reader.readNumber();
    // @Cleanup: shouldn't be in the server!
    SERVER.setTrackedGameObject(entity);
-}
-
-export function processScreenResizePacket(playerClient: PlayerClient, reader: PacketReader): void {
-   const screenWidth = reader.readNumber();
-   const screenHeight = reader.readNumber();
-
-   playerClient.screenWidth = screenWidth;
-   playerClient.screenHeight = screenHeight;
-   // @Cleanup: is super bad to have to uselessly define the same x and y
-   // @Cleanup: have to do this because this function actually relies on screenWidth and screenHeight, but that's not clear from this! maybe pass em in?? idk
-   playerClient.updatePosition(playerClient.lastViewedPositionX, playerClient.lastViewedPositionY);
 }

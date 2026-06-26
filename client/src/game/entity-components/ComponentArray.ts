@@ -36,8 +36,8 @@ export abstract class ComponentArray<
    // In reality this is just all information beyond its config which the component wishes to expose to other components
    // This is a separate layer so that, for example, components can immediately get render parts without having to wait for onLoad (introducing polymorphism)
    public populateIntermediateInfo?(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): ComponentIntermediateInfo;
-   public abstract createComponent(entityComponentData: EntityComponentData, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject): Component;
-   public abstract getMaxRenderParts(entityComponentData: EntityComponentData): number;
+   public readonly createComponent: (entityComponentData: EntityComponentData, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject) => Component;
+   public readonly getMaxRenderParts: (entityComponentData: EntityComponentData) => number;
    /** Called once when the entity is being created, just after all the components are created from their data */
    public onLoad?(entity: Entity): void;
    public onJoin?(entity: Entity): void;
@@ -55,8 +55,10 @@ export abstract class ComponentArray<
    public updateSelectedEntityState?(entity: Entity): void;
    public calculateTint?(entity: Entity): ComponentTint;
 
-   constructor(isActiveByDefault: boolean) {
+   constructor(isActiveByDefault: boolean, createComponent: (entityComponentData: EntityComponentData, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject) => Component, getMaxRenderParts: (entityComponentData: EntityComponentData) => number) {
       this.isActiveByDefault = isActiveByDefault;
+      this.createComponent = createComponent;
+      this.getMaxRenderParts = getMaxRenderParts;
    }
 
    public addComponentToRemoveBuffer(entity: Entity): void {

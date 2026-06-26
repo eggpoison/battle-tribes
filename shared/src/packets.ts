@@ -47,7 +47,6 @@ export const enum ClientPacketType {
    setSpectatingPosition, // @Hack
    startEntityInteraction,
    endEntityInteraction,
-   screenResize,
    forceCompleteTamingTier, // ((DEV))
    acquireTamingSkill,
    forceAcquireTamingSkill, // ((DEV))

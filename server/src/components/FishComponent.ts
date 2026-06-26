@@ -9,7 +9,7 @@ import { TransformComponentArray, getRandomPositionInEntity } from "./TransformC
 import { entityExists, getEntityLayer, getEntityType } from "../world.js";
 import { TribesmanComponentArray } from "./TribesmanComponent.js";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
-import { applyAccelerationFromGround, applyKnockback, getHitboxTile, Hitbox, addHitboxVelocity, addHitboxAngularVelocity } from "../hitboxes.js";
+import { applyAccelerationFromGround, applyKnockback, getBoxTile, Hitbox, addHitboxVelocity, addHitboxAngularVelocity } from "../hitboxes.js";
 import { ServerComponentType } from "../../../shared/dist/components.js";
 import { FishColour, Entity, DamageSource, EntityType } from "../../../shared/dist/entities.js";
 import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
@@ -87,7 +87,7 @@ function onTick(fish: Entity): void {
    
    const fishComponent = FishComponentArray.getComponent(fish);
 
-   const tileIndex = getHitboxTile(fishHitbox);
+   const tileIndex = getBoxTile(fishHitbox.box);
    const layer = getEntityLayer(fish)
    const tileType = layer.tileTypes[tileIndex];
 
@@ -168,7 +168,7 @@ function onTick(fish: Entity): void {
          const flailDirection = randAngle();
          
          addHitboxAngularVelocity(fishHitbox, randFloat(1.5, 2.2) * randSign());
-         addHitboxVelocity(fishHitbox, polarVec2(200, flailDirection));
+         addHitboxVelocity(fishHitbox, 200 * Math.sin(flailDirection), 200 * Math.cos(flailDirection));
    
          fishComponent.flailTimer = 0;
       }

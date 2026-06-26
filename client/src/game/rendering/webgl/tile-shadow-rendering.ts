@@ -1,18 +1,19 @@
 import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
-import { RenderChunkShadowInfo, getRenderChunkTileShadowInfo, RenderChunkEdgeInfo, setRenderChunkTileShadowInfo, getRenderChunkIndex, EdgeMarkerBit } from "../render-chunks";
+import { RenderChunkShadowInfo, getRenderChunkTileShadowInfo, RenderChunkEdgeInfo, setRenderChunkTileShadowInfo, EdgeMarkerBit } from "../render-chunks";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 import Layer from "../../Layer";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
 import { Settings } from "../../../../../shared/src/settings";
+import { getRenderChunkIndex } from "../../../../../shared/src/render-chunks";
 
 const enum Var {
    ATTRIBUTES_PER_VERTEX = 1
 }
 
 export const enum TileShadowType {
-   dropdownShadow,
-   wallShadow
+   dropdown,
+   wall
 }
 
 let program: WebGLProgram;
@@ -62,7 +63,7 @@ export function createTileShadowShaders(): void {
 
       vec2 tilePosition;
       uint tileSize;
-      if (u_shadowType == ${TileShadowType.dropdownShadow}) {
+      if (u_shadowType == ${TileShadowType.dropdown}) {
          uint tileX = getTileX(index);
          uint tileY = getTileY(index);
          tilePosition = vec2(tileX, tileY);
@@ -157,7 +158,7 @@ const calculateVertexData = (edgeInfo: RenderChunkEdgeInfo): Uint32Array => {
    return new Uint32Array(edgeInfo);
 }
 
-export function calculateShadowInfo(info: RenderChunkEdgeInfo): RenderChunkShadowInfo | null {
+export function createShadowInfo(info: RenderChunkEdgeInfo): RenderChunkShadowInfo | null {
    const vertexData = calculateVertexData(info);
    if (vertexData.byteLength === 0) {
       return null;
@@ -182,10 +183,18 @@ export function calculateShadowInfo(info: RenderChunkEdgeInfo): RenderChunkShado
    };
 }
 
+export function destroyShadowInfo(info: RenderChunkShadowInfo): void {
+   gl.deleteVertexArray(info.vao);
+   gl.deleteBuffer(info.buffer);
+}
+
 export function recalculateTileShadows(layer: Layer, renderChunkIdx: number, info: RenderChunkEdgeInfo, tileShadowType: TileShadowType): void {
    const renderChunkShadowInfo = getRenderChunkTileShadowInfo(layer, renderChunkIdx, tileShadowType);
-   if (renderChunkShadowInfo === null) {
-      setRenderChunkTileShadowInfo(layer, renderChunkIdx, tileShadowType, calculateShadowInfo(info));
+   if (renderChunkShadowInfo === undefined) {
+      const shadowInfo = createShadowInfo(info);
+      if (shadowInfo !== null) {
+         setRenderChunkTileShadowInfo(layer, renderChunkIdx, tileShadowType, shadowInfo);
+      }
       return;
    }
 
@@ -210,7 +219,7 @@ export function renderTileShadows(layer: Layer, tileShadowType: TileShadowType):
       for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
          const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
          const shadowInfo = getRenderChunkTileShadowInfo(layer, renderChunkIdx, tileShadowType);
-         if (shadowInfo === null) {
+         if (shadowInfo === undefined) {
             continue;
          }
 

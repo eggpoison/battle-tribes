@@ -102,5 +102,6 @@ export function dismountMount(entity: Entity, mount: Entity): void {
 
    const entityHitbox = transformComponent.hitboxes[0];
    const mountHitbox = carrySlot.parentHitbox;
-   translateHitbox(entityHitbox, rotatePoint(new Point(carrySlot.offset.x + carrySlot.dismountOffset.x, carrySlot.offset.y + carrySlot.dismountOffset.y), mountHitbox.box.angle));
+   const translation = rotatePoint(new Point(carrySlot.offset.x + carrySlot.dismountOffset.x, carrySlot.offset.y + carrySlot.dismountOffset.y), mountHitbox.box.angle);
+   translateHitbox(entityHitbox, translation.x, translation.y);
 }

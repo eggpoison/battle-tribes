@@ -1,6 +1,6 @@
 import { Settings } from "../../../shared/dist/settings.js";
-import { TileType } from "../../../shared/dist/tiles.js";
-import { TileIndex, tileIsInWorldIncludingEdges, distance, getTileIndexIncludingEdges } from "../../../shared/dist/utils.js";
+import { getTileIndexIncludingEdges, TileIndex, tileIsInWorldIncludingEdges, TileType } from "../../../shared/dist/tiles.js";
+import { distance } from "../../../shared/dist/utils.js";
 import Layer from "../Layer.js";
 import { createGrassStrandConfig } from "../entities/grass-strand.js";
 import { createEntityImmediate, surfaceLayer } from "../world.js";

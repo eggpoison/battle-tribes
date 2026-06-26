@@ -19,57 +19,61 @@ export interface RegularSpikesComponentData {}
 export interface RegularSpikesComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.regularSpikes, _RegularSpikesComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.regularSpikes, typeof RegularSpikesComponentArray> {}
 }
 
-class _RegularSpikesComponentArray extends ClientComponentArray<RegularSpikesComponent, RegularSpikesComponentData> {
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
+export const RegularSpikesComponentArray = registerClientComponentArray(
+   ClientComponentType.regularSpikes,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+RegularSpikesComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+RegularSpikesComponentArray.onHit = onHit;
+RegularSpikesComponentArray.onDie = onDie;
 
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const materialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
 
-      const isAttachedToWall = entityComponentData.entityType === EntityType.wallSpikes;
-      let textureIndex: number;
-      if (isAttachedToWall) {
-         textureIndex = WALL_SPIKE_TEXTURE_SOURCES[materialComponentData.material];
-      } else {
-         textureIndex = FLOOR_SPIKE_TEXTURE_SOURCES[materialComponentData.material];
-      }
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const materialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
 
-      const mainRenderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         textureIndex
-      )
-      addRenderPartTag(mainRenderPart, "buildingMaterialComponent:material");
-
-      renderObject.attachRenderPart(mainRenderPart);
+   const isAttachedToWall = entityComponentData.entityType === EntityType.wallSpikes;
+   let textureIndex: number;
+   if (isAttachedToWall) {
+      textureIndex = WALL_SPIKE_TEXTURE_SOURCES[materialComponentData.material];
+   } else {
+      textureIndex = FLOOR_SPIKE_TEXTURE_SOURCES[materialComponentData.material];
    }
 
-   public createComponent(): RegularSpikesComponent {
-      return {};
-   }
+   const mainRenderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      textureIndex
+   )
+   addRenderPartTag(mainRenderPart, "buildingMaterialComponent:material");
 
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      playSoundOnHitbox("wooden-spikes-hit.mp3", 0.2, 1, entity, hitbox, false);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("wooden-spikes-destroy.mp3", 0.4, 1, entity, hitbox, false);
-   }
+   renderObject.attachRenderPart(mainRenderPart);
 }
 
-export const RegularSpikesComponentArray = registerClientComponentArray(ClientComponentType.regularSpikes, _RegularSpikesComponentArray, true);
+function createComponent(): RegularSpikesComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   playSoundOnHitbox("wooden-spikes-hit.mp3", 0.2, 1, entity, hitbox, false);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   playSoundOnHitbox("wooden-spikes-destroy.mp3", 0.4, 1, entity, hitbox, false);
+}
 
 export function createRegularSpikesComponentData(): RegularSpikesComponentData {
    return {};

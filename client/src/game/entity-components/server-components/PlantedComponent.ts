@@ -12,35 +12,37 @@ export interface PlantedComponentData {}
 export interface PlantedComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.planted, _PlantedComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.planted, typeof PlantedComponentArray> {}
 }
 
-class _PlantedComponentArray extends ServerComponentArray<PlantedComponent, PlantedComponentData> {
-   public decodeData(): PlantedComponentData {
-      return {};
-   }
+export const PlantedComponentArray = registerServerComponentArray(
+   ServerComponentType.planted,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+PlantedComponentArray.onSpawn = onSpawn;
 
-   public createComponent(): PlantedComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
-
-   public onSpawn(entity: Entity): void {
-      // Create dirt particles
-      
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      for (let i = 0; i < 7; i++) {
-         const offsetDirection = randAngle();
-         const offsetMagnitude = randFloat(0, 10);
-         const x = hitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
-         const y = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
-         createDirtParticle(x, y, ParticleRenderLayer.high);
-      }
-   }
+function decodeData(): PlantedComponentData {
+   return {};
 }
 
-export const PlantedComponentArray = registerServerComponentArray(ServerComponentType.planted, _PlantedComponentArray, true);
+function createComponent(): PlantedComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}
+
+function onSpawn(entity: Entity): void {
+   // Create dirt particles
+   
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   for (let i = 0; i < 7; i++) {
+      const offsetDirection = randAngle();
+      const offsetMagnitude = randFloat(0, 10);
+      const x = hitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+      const y = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
+      createDirtParticle(x, y, ParticleRenderLayer.high);
+   }
+}

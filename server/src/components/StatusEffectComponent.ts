@@ -8,7 +8,8 @@ import { Bytes } from "../../../shared/dist/constants.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { damageEntity } from "./HealthComponent.js";
 import { getRandomPositionInEntity, TransformComponentArray } from "./TransformComponent.js";
-import { hitboxIsInRiver } from "../hitboxes.js";
+import { getBoxTile, hitboxIsInRiver } from "../hitboxes.js";
+import { getEntityLayer } from "../world.js";
 
 export class StatusEffectComponent {
    public readonly activeStatusEffectTypes: StatusEffect[] = [];
@@ -114,8 +115,13 @@ function onTick(entity: Entity): void {
             const transformComponent = TransformComponentArray.getComponent(entity);
             // @Hack
             const hitbox = transformComponent.hitboxes[0];
+
+            const layer = getEntityLayer(entity);
+            const tile = getBoxTile(hitbox.box);
+            const tileType = layer.getTileType(tile);
+            
             // If the entity is in a river, clear the fire effect
-            if (hitboxIsInRiver(hitbox)) {
+            if (hitboxIsInRiver(tileType, hitbox)) {
                clearStatusEffect(entity, i);
             } else {
                // Fire tick

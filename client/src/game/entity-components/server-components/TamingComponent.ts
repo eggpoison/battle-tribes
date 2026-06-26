@@ -60,7 +60,7 @@ export interface TamingComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.taming, _TamingComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.taming, typeof TamingComponentArray> {}
 }
 
 const TAMING_TIER_TEXTURE_INDEXES: Record<number, TextureIndex> = {
@@ -73,216 +73,14 @@ const TAMING_TIER_TEXTURE_INDEXES: Record<number, TextureIndex> = {
 const TAMING_TIER_RENDER_PART_Z_INDEX = 19;
 const HALO_RENDER_PART_Z_INDEX = 20;
 
-class _TamingComponentArray extends ServerComponentArray<TamingComponent, TamingComponentData, IntermediateInfo> {
-   public decodeData(reader: PacketReader): TamingComponentData {
-      const tamingTier = reader.readNumber();
-      const berriesEatenInTier = reader.readNumber();
-      const name = reader.readString();
-
-      const numAcquiredSkills = reader.readNumber();
-      const acquiredSkills: TamingSkill[] = [];
-      for (let i = 0; i < numAcquiredSkills; i++) {
-         const skillID: TamingSkillID = reader.readNumber();
-         const skill = getTamingSkill(skillID);
-         acquiredSkills.push(skill);
-      }
-
-      const numSkillLearnings = reader.readNumber();
-      const skillLearningArray: TamingSkillLearning[] = [];
-      for (let i = 0; i < numSkillLearnings; i++) {
-         const skillID: TamingSkillID = reader.readNumber();
-         const skill = getTamingSkill(skillID);
-
-         const requirementProgressArray: number[] = [];
-         for (let i = 0; i < skill.requirements.length; i++) {
-            const requirementProgress = reader.readNumber();
-            requirementProgressArray.push(requirementProgress);
-         }
-         
-         const skillLearning: TamingSkillLearning = {
-            skill: skill,
-            requirementProgressArray: requirementProgressArray
-         };
-         skillLearningArray.push(skillLearning);
-      }
-      
-      const isAttacking = reader.readBool();
-      const isFollowing = reader.readBool();
-      
-      return {
-         tamingTier: tamingTier,
-         foodEatenInTier: berriesEatenInTier,
-         name: name,
-         acquiredSkills: acquiredSkills,
-         skillLearningArray: skillLearningArray,
-         isAttacking: isAttacking,
-         isFollowing: isFollowing
-      };
-   }
-
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tamingComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.taming);
-      const tamingTier = tamingComponentData.tamingTier;
-
-      // @HACK @TEMPORARY: the entity intermediate info's render object is the wrong one to use for glurbs, sooo... we don't set it and let the updateFromData figure it out.
-      const tamingTierRenderPart = null;
-      if (1+1===3) {
-         const tamingTierRenderPart = tamingTier > 0 ? createTamingTierRenderPart(tamingTier, hitbox) : null;
-         // @Speed: 2nd comparison
-         if (tamingTierRenderPart !== null) {
-            renderObject.attachRenderPart(tamingTierRenderPart);
-         }
-      }
-      
-      // Attack halo
-      let attackHalo: RenderPart | null;
-      // if (tamingComponentData.isAttacking) {
-      //    // @Copynpaste
-      //    const headRenderPart = renderObject.getRenderThing("tamingComponent:head");
-      //    attackHalo = createAttackHalo(headRenderPart);
-      //    renderObject.attachRenderPart(attackHalo);
-      // } else {
-      //    attackHalo = null;
-      // } 
-      attackHalo = null;
-      
-      // Follow halo
-      let followHalo: RenderPart | null;
-      // if (tamingComponentData.isFollowing) {
-      //    const headRenderPart = renderObject.getRenderThing("tamingComponent:head");
-      //    followHalo = createFollowHalo(headRenderPart);
-      //    renderObject.attachRenderPart(followHalo);
-      // } else {
-      //    followHalo = null;
-      // }
-      followHalo = null;
-      
-      return {
-         tamingTierRenderPart: tamingTierRenderPart,
-         attackHalo: attackHalo,
-         followHalo: followHalo
-      };
-   }
-
-   public createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TamingComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tamingComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.taming);
-      return {
-         tamingTier: tamingComponentData.tamingTier,
-         foodEatenInTier: tamingComponentData.foodEatenInTier,
-         name: tamingComponentData.name,
-         acquiredSkills: tamingComponentData.acquiredSkills,
-         skillLearningArray: tamingComponentData.skillLearningArray,
-         tamingTierRenderPart: intermediateInfo.tamingTierRenderPart,
-         isAttacking: tamingComponentData.isAttacking,
-         isFollowing: tamingComponentData.isFollowing,
-         attackHalo: intermediateInfo.attackHalo,
-         followHalo: intermediateInfo.followHalo
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      // @Hack: shoudl be lower
-      return 5;
-   }
-
-   public onTick(entity: Entity): void {
-      // @Speed
-      const tamingComponent = TamingComponentArray.getComponent(entity);
-      if (tamingComponent.tamingTierRenderPart !== null) {
-         tamingComponent.tamingTierRenderPart.opacity = getTamingTierRenderPartOpacity();
-      }
-
-      // @Speed
-      // @Bug: Will look jittery for low TPS values.
-      if (tamingComponent.followHalo !== null) {
-         tamingComponent.followHalo.angle += 0.65 * UtilVar.PI * Settings.DT_S;
-      }
-
-      // @Copynpaste
-      if (tamingComponent.attackHalo !== null) {
-         tamingComponent.attackHalo.angle += 0.65 * UtilVar.PI * Settings.DT_S;
-      }
-   }
-
-   public updateFromData(data: TamingComponentData, entity: Entity): void {
-      const tamingComponent = TamingComponentArray.getComponent(entity);
-
-      const tamingTier = data.tamingTier;
-      if (tamingTier !== tamingComponent.tamingTier) {
-         if (tamingComponent.tamingTierRenderPart === null) {
-            const hitbox = getHeadHitbox(entity);
-            
-            tamingComponent.tamingTierRenderPart = createTamingTierRenderPart(tamingTier, hitbox);
-            const renderObject = getHeadRenderObject(entity);
-            renderObject.attachRenderPart(tamingComponent.tamingTierRenderPart);
-         } else {
-            tamingComponent.tamingTierRenderPart.textureIndex = TAMING_TIER_TEXTURE_INDEXES[tamingTier];
-         }
-      }
-      tamingComponent.tamingTier = tamingTier;
-      
-      tamingComponent.foodEatenInTier = data.foodEatenInTier;
-      tamingComponent.name = data.name;
-
-      for (let i = 0; i < data.acquiredSkills.length; i++) {
-         if (i >= tamingComponent.acquiredSkills.length) {
-            const skillData = data.acquiredSkills[i];
-            tamingComponent.acquiredSkills.push(skillData);
-         }
-      }
-
-      // @SPEED @GARBAGE
-      tamingComponent.skillLearningArray.length = 0;
-      for (const skillLearning of data.skillLearningArray) {
-         tamingComponent.skillLearningArray.push(skillLearning);
-      }
-
-      tamingComponent.isAttacking = data.isAttacking;
-      tamingComponent.isFollowing = data.isFollowing;
-      
-      // @Copynpaste
-      if (tamingComponent.isAttacking) {
-         if (tamingComponent.attackHalo === null) {
-            const renderObject = getEntityRenderObject(entity);
-            const headRenderPart = getRenderThingByTag(renderObject, "tamingComponent:head");
-            tamingComponent.attackHalo = createAttackHalo(headRenderPart);
-            renderObject.attachRenderPart(tamingComponent.attackHalo);
-         }
-      } else if (tamingComponent.attackHalo !== null) {
-         const renderObject = getEntityRenderObject(entity);
-         renderObject.removeRenderPart(tamingComponent.attackHalo);
-         tamingComponent.attackHalo = null;
-      }
-
-      if (tamingComponent.isFollowing) {
-         if (tamingComponent.followHalo === null) {
-            const renderObject = getHeadRenderObject(entity);
-            const headRenderPart = getRenderThingByTag(renderObject, "tamingComponent:head");
-            tamingComponent.followHalo = createFollowHalo(headRenderPart);
-            renderObject.attachRenderPart(tamingComponent.followHalo);
-         }
-      } else if (tamingComponent.followHalo !== null) {
-         const renderObject = getHeadRenderObject(entity);
-         renderObject.removeRenderPart(tamingComponent.followHalo);
-         tamingComponent.followHalo = null;
-      }
-   }
-
-   public updateSelectedEntityState(entity: Entity): void {
-      const tamingComponent = TamingComponentArray.getComponent(entity);
-      tamingMenuState.tamingTier = tamingComponent.tamingTier;
-      tamingMenuState.name = tamingComponent.name;
-      tamingMenuState.foodEatenInTier = tamingComponent.foodEatenInTier;
-      tamingMenuState.acquiredSkills = tamingComponent.acquiredSkills.map(skill => skill.id);
-   }
-}
-
-export const TamingComponentArray = registerServerComponentArray(ServerComponentType.taming, _TamingComponentArray, true);
+export const TamingComponentArray = registerServerComponentArray(
+   ServerComponentType.taming,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TamingComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+TamingComponentArray.onTick = onTick;
+TamingComponentArray.updateFromData = updateFromData;
+TamingComponentArray.updateSelectedEntityState = updateSelectedEntityState;
 
 const createFollowHalo = (headRenderPart: RenderPart): RenderPart => {
    const followHalo = new TexturedRenderPart(
@@ -327,6 +125,52 @@ const createTamingTierRenderPart = (tamingTier: number, parentHitbox: Hitbox): T
    renderPart.inheritParentRotation = false;
    renderPart.opacity = getTamingTierRenderPartOpacity();
    return renderPart;
+}
+
+function decodeData(reader: PacketReader): TamingComponentData {
+   const tamingTier = reader.readNumber();
+   const berriesEatenInTier = reader.readNumber();
+   const name = reader.readString();
+
+   const numAcquiredSkills = reader.readNumber();
+   const acquiredSkills: TamingSkill[] = [];
+   for (let i = 0; i < numAcquiredSkills; i++) {
+      const skillID: TamingSkillID = reader.readNumber();
+      const skill = getTamingSkill(skillID);
+      acquiredSkills.push(skill);
+   }
+
+   const numSkillLearnings = reader.readNumber();
+   const skillLearningArray: TamingSkillLearning[] = [];
+   for (let i = 0; i < numSkillLearnings; i++) {
+      const skillID: TamingSkillID = reader.readNumber();
+      const skill = getTamingSkill(skillID);
+
+      const requirementProgressArray: number[] = [];
+      for (let i = 0; i < skill.requirements.length; i++) {
+         const requirementProgress = reader.readNumber();
+         requirementProgressArray.push(requirementProgress);
+      }
+      
+      const skillLearning: TamingSkillLearning = {
+         skill: skill,
+         requirementProgressArray: requirementProgressArray
+      };
+      skillLearningArray.push(skillLearning);
+   }
+   
+   const isAttacking = reader.readBool();
+   const isFollowing = reader.readBool();
+   
+   return {
+      tamingTier: tamingTier,
+      foodEatenInTier: berriesEatenInTier,
+      name: name,
+      acquiredSkills: acquiredSkills,
+      skillLearningArray: skillLearningArray,
+      isAttacking: isAttacking,
+      isFollowing: isFollowing
+   };
 }
 
 function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
@@ -375,6 +219,119 @@ function populateIntermediateInfo(renderObject: EntityRenderObject, entityCompon
       attackHalo: attackHalo,
       followHalo: followHalo
    }
+}
+
+function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TamingComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tamingComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.taming);
+   return {
+      tamingTier: tamingComponentData.tamingTier,
+      foodEatenInTier: tamingComponentData.foodEatenInTier,
+      name: tamingComponentData.name,
+      acquiredSkills: tamingComponentData.acquiredSkills,
+      skillLearningArray: tamingComponentData.skillLearningArray,
+      tamingTierRenderPart: intermediateInfo.tamingTierRenderPart,
+      isAttacking: tamingComponentData.isAttacking,
+      isFollowing: tamingComponentData.isFollowing,
+      attackHalo: intermediateInfo.attackHalo,
+      followHalo: intermediateInfo.followHalo
+   };
+}
+
+function getMaxRenderParts(): number {
+   // @Hack: shoudl be lower
+   return 5;
+}
+
+function onTick(entity: Entity): void {
+   // @Speed
+   const tamingComponent = TamingComponentArray.getComponent(entity);
+   if (tamingComponent.tamingTierRenderPart !== null) {
+      tamingComponent.tamingTierRenderPart.opacity = getTamingTierRenderPartOpacity();
+   }
+
+   // @Speed
+   // @Bug: Will look jittery for low TPS values.
+   if (tamingComponent.followHalo !== null) {
+      tamingComponent.followHalo.angle += 0.65 * UtilVar.PI * Settings.DT_S;
+   }
+
+   // @Copynpaste
+   if (tamingComponent.attackHalo !== null) {
+      tamingComponent.attackHalo.angle += 0.65 * UtilVar.PI * Settings.DT_S;
+   }
+}
+
+function updateFromData(data: TamingComponentData, entity: Entity): void {
+   const tamingComponent = TamingComponentArray.getComponent(entity);
+
+   const tamingTier = data.tamingTier;
+   if (tamingTier !== tamingComponent.tamingTier) {
+      if (tamingComponent.tamingTierRenderPart === null) {
+         const hitbox = getHeadHitbox(entity);
+         
+         tamingComponent.tamingTierRenderPart = createTamingTierRenderPart(tamingTier, hitbox);
+         const renderObject = getHeadRenderObject(entity);
+         renderObject.attachRenderPart(tamingComponent.tamingTierRenderPart);
+      } else {
+         tamingComponent.tamingTierRenderPart.textureIndex = TAMING_TIER_TEXTURE_INDEXES[tamingTier];
+      }
+   }
+   tamingComponent.tamingTier = tamingTier;
+   
+   tamingComponent.foodEatenInTier = data.foodEatenInTier;
+   tamingComponent.name = data.name;
+
+   for (let i = 0; i < data.acquiredSkills.length; i++) {
+      if (i >= tamingComponent.acquiredSkills.length) {
+         const skillData = data.acquiredSkills[i];
+         tamingComponent.acquiredSkills.push(skillData);
+      }
+   }
+
+   // @SPEED @GARBAGE
+   tamingComponent.skillLearningArray.length = 0;
+   for (const skillLearning of data.skillLearningArray) {
+      tamingComponent.skillLearningArray.push(skillLearning);
+   }
+
+   tamingComponent.isAttacking = data.isAttacking;
+   tamingComponent.isFollowing = data.isFollowing;
+   
+   // @Copynpaste
+   if (tamingComponent.isAttacking) {
+      if (tamingComponent.attackHalo === null) {
+         const renderObject = getEntityRenderObject(entity);
+         const headRenderPart = getRenderThingByTag(renderObject, "tamingComponent:head");
+         tamingComponent.attackHalo = createAttackHalo(headRenderPart);
+         renderObject.attachRenderPart(tamingComponent.attackHalo);
+      }
+   } else if (tamingComponent.attackHalo !== null) {
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.removeRenderPart(tamingComponent.attackHalo);
+      tamingComponent.attackHalo = null;
+   }
+
+   if (tamingComponent.isFollowing) {
+      if (tamingComponent.followHalo === null) {
+         const renderObject = getHeadRenderObject(entity);
+         const headRenderPart = getRenderThingByTag(renderObject, "tamingComponent:head");
+         tamingComponent.followHalo = createFollowHalo(headRenderPart);
+         renderObject.attachRenderPart(tamingComponent.followHalo);
+      }
+   } else if (tamingComponent.followHalo !== null) {
+      const renderObject = getHeadRenderObject(entity);
+      renderObject.removeRenderPart(tamingComponent.followHalo);
+      tamingComponent.followHalo = null;
+   }
+}
+
+function updateSelectedEntityState(entity: Entity): void {
+   const tamingComponent = TamingComponentArray.getComponent(entity);
+   tamingMenuState.tamingTier = tamingComponent.tamingTier;
+   tamingMenuState.name = tamingComponent.name;
+   tamingMenuState.foodEatenInTier = tamingComponent.foodEatenInTier;
+   tamingMenuState.acquiredSkills = tamingComponent.acquiredSkills.map(skill => skill.id);
 }
 
 export function getTamingSkillLearning(tamingComponent: TamingComponent, skillID: TamingSkillID): TamingSkillLearning | null {

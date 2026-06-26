@@ -20,7 +20,7 @@ export interface RandomSoundComponent {
 }
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.randomSound, RandomSoundComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.randomSound, typeof RandomSoundComponentArray> {}
 }
 
 // @Cleanup this system is so shit
@@ -42,41 +42,43 @@ export function updateRandomSoundComponentSounds(randomSoundComponent: RandomSou
    }
 }
 
-class RandomSoundComponentArray extends ClientComponentArray<RandomSoundComponent, RandomSoundComponentData> {
-   public createComponent(): RandomSoundComponent {
-      return {
-         minSoundIntervalTicks: 0,
-         maxSoundIntervalTicks: 0,
-         volume: 0,
-         soundTimerTicks: 0,
-         sounds: []
-      };
-   }
+export const RandomSoundComponentArray = registerClientComponentArray(
+   ClientComponentType.randomSound,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+RandomSoundComponentArray.onTick = onTick;
 
-   public getMaxRenderParts(): number {
-      return 0;
-   }
-
-   public onTick(entity: Entity): void {
-      const randomSoundComponent = randomSoundComponentArray.getComponent(entity);
-      if (randomSoundComponent.maxSoundIntervalTicks === 0) {
-         return;
-      }
-      
-      randomSoundComponent.soundTimerTicks--;
-      if (randomSoundComponent.soundTimerTicks <= 0) {
-         randomSoundComponent.soundTimerTicks = randFloat(randomSoundComponent.minSoundIntervalTicks, randomSoundComponent.maxSoundIntervalTicks);
-
-         const transformComponent = TransformComponentArray.getComponent(entity);
-         const hitbox = transformComponent.hitboxes[0];
-         
-         const soundSrc = randItem(randomSoundComponent.sounds);
-         playSoundOnHitbox(soundSrc, randomSoundComponent.volume, 1, entity, hitbox, false);
-      }
-   }
+function createComponent(): RandomSoundComponent {
+   return {
+      minSoundIntervalTicks: 0,
+      maxSoundIntervalTicks: 0,
+      volume: 0,
+      soundTimerTicks: 0,
+      sounds: []
+   };
 }
 
-export const randomSoundComponentArray = registerClientComponentArray(ClientComponentType.randomSound, RandomSoundComponentArray, true);
+function getMaxRenderParts(): number {
+   return 0;
+}
+
+function onTick(entity: Entity): void {
+   const randomSoundComponent = RandomSoundComponentArray.getComponent(entity);
+   if (randomSoundComponent.maxSoundIntervalTicks === 0) {
+      return;
+   }
+   
+   randomSoundComponent.soundTimerTicks--;
+   if (randomSoundComponent.soundTimerTicks <= 0) {
+      randomSoundComponent.soundTimerTicks = randFloat(randomSoundComponent.minSoundIntervalTicks, randomSoundComponent.maxSoundIntervalTicks);
+
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      
+      const soundSrc = randItem(randomSoundComponent.sounds);
+      playSoundOnHitbox(soundSrc, randomSoundComponent.volume, 1, entity, hitbox, false);
+   }
+}
 
 export function createRandomSoundComponentData(): RandomSoundComponentData {
    return {};

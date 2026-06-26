@@ -37,60 +37,62 @@ export interface FootprintComponent {
 }
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.footprint, _FootprintComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.footprint, typeof FootprintComponentArray> {}
 }
 
-class _FootprintComponentArray extends ClientComponentArray<FootprintComponent, FootprintComponentData> {
-   public createComponent(entityComponentData: EntityComponentData): FootprintComponent {
-      const clientComponentTypes = getEntityClientComponentTypes(entityComponentData.entityType);
-      const footprintComponentData = getClientComponentData(entityComponentData.clientComponentData, clientComponentTypes, ClientComponentType.footprint);
-      
-      return {
-         footstepParticleIntervalSeconds: footprintComponentData.footstepParticleIntervalSeconds,
-         footstepOffset: footprintComponentData.footstepOffset,
-         footstepSize: footprintComponentData.footstepSize,
-         footstepLifetime: footprintComponentData.footstepLifetime,
-         footstepSoundIntervalDist: footprintComponentData.footstepSoundIntervalDist,
-         doDoubleFootprints: footprintComponentData.doDoubleFootprints,
-         numFootstepsTaken: 0,
-         distanceTracker: 0
-      }
-   }
+export const FootprintComponentArray = registerClientComponentArray(
+   ClientComponentType.footprint,
+   new ClientComponentArray<FootprintComponent, FootprintComponentData>(true, createComponent, getMaxRenderParts)
+);
+FootprintComponentArray.onTick = onTick;
 
-   public getMaxRenderParts(): number {
-      return 0;
-   }
-
-   public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      
-      const hitbox = transformComponent.hitboxes[0];
-      if (hitbox.parent === null) {
-         const footprintComponent = FootprintComponentArray.getComponent(entity);
-         
-         getHitboxVelocity(hitbox);
-         const velocity = _point;
-         
-         // Footsteps
-         if (velocity.magnitude() >= 50 && !hitboxIsInWater(hitbox) && tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds * Settings.TICK_RATE)) {
-            if (footprintComponent.doDoubleFootprints) {
-               createFootprintParticle(entity, false, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
-               createFootprintParticle(entity, true, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
-            } else {
-               createFootprintParticle(entity, footprintComponent.numFootstepsTaken % 2 === 0, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
-            }
-            footprintComponent.numFootstepsTaken++;
-         }
-         footprintComponent.distanceTracker += velocity.magnitude() * Settings.DT_S;
-         if (footprintComponent.distanceTracker > footprintComponent.footstepSoundIntervalDist) {
-            footprintComponent.distanceTracker -= footprintComponent.footstepSoundIntervalDist;
-            createFootstepSound(entity);
-         }
-      }
+function createComponent(entityComponentData: EntityComponentData): FootprintComponent {
+   const clientComponentTypes = getEntityClientComponentTypes(entityComponentData.entityType);
+   const footprintComponentData = getClientComponentData(entityComponentData.clientComponentData, clientComponentTypes, ClientComponentType.footprint);
+   
+   return {
+      footstepParticleIntervalSeconds: footprintComponentData.footstepParticleIntervalSeconds,
+      footstepOffset: footprintComponentData.footstepOffset,
+      footstepSize: footprintComponentData.footstepSize,
+      footstepLifetime: footprintComponentData.footstepLifetime,
+      footstepSoundIntervalDist: footprintComponentData.footstepSoundIntervalDist,
+      doDoubleFootprints: footprintComponentData.doDoubleFootprints,
+      numFootstepsTaken: 0,
+      distanceTracker: 0
    }
 }
 
-export const FootprintComponentArray = registerClientComponentArray(ClientComponentType.footprint, _FootprintComponentArray, true);
+function getMaxRenderParts(): number {
+   return 0;
+}
+
+function onTick(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   
+   const hitbox = transformComponent.hitboxes[0];
+   if (hitbox.parent === null) {
+      const footprintComponent = FootprintComponentArray.getComponent(entity);
+      
+      getHitboxVelocity(hitbox);
+      const velocity = _point;
+      
+      // Footsteps
+      if (velocity.magnitude() >= 50 && !hitboxIsInWater(hitbox) && tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds * Settings.TICK_RATE)) {
+         if (footprintComponent.doDoubleFootprints) {
+            createFootprintParticle(entity, false, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
+            createFootprintParticle(entity, true, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
+         } else {
+            createFootprintParticle(entity, footprintComponent.numFootstepsTaken % 2 === 0, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
+         }
+         footprintComponent.numFootstepsTaken++;
+      }
+      footprintComponent.distanceTracker += velocity.magnitude() * Settings.DT_S;
+      if (footprintComponent.distanceTracker > footprintComponent.footstepSoundIntervalDist) {
+         footprintComponent.distanceTracker -= footprintComponent.footstepSoundIntervalDist;
+         createFootstepSound(entity);
+      }
+   }
+}
 
 export function createFootprintComponentData(footstepParticleIntervalSeconds: number, footstepOffset: number, footstepSize: number, footstepLifetime: number, footstepSoundIntervalDist: number, doDoubleFootprints: boolean): FootprintComponentData {
    return {

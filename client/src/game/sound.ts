@@ -1,7 +1,7 @@
-import { assert, distance, getTileIndexIncludingEdges, randInt } from "../../../shared/src/utils";
+import { assert, distance, randInt } from "../../../shared/src/utils";
 import { Entity } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
-import { TileType } from "../../../shared/src/tiles";
+import { getTileIndexIncludingEdges, TileType } from "../../../shared/src/tiles";
 import { getCurrentLayer, getEntityLayer } from "./world";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import Layer from "./Layer";
@@ -563,6 +563,12 @@ export function playRiverSounds(): void {
       const tileX = randInt(minTileX, maxTileX);
       const tileY = randInt(minTileY, maxTileY);
       const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+
+      // @hack?
+      if (!layer.hasTileXY(tileX, tileY)) {
+         continue;
+      }
+      
       const tile = layer.getTile(tileIndex);
 
       if (tile.type === TileType.water && Math.random() < 0.1 * Settings.DT_S) {

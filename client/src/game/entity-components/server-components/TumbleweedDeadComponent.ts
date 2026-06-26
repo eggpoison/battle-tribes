@@ -17,49 +17,53 @@ export interface TumbleweedDeadComponentData {}
 export interface TumbleweedDeadComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tumbleweedDead, _TumbleweedDeadComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tumbleweedDead, typeof TumbleweedDeadComponentArray> {}
 }
 
-class _TumbleweedDeadComponentArray extends ServerComponentArray<TumbleweedDeadComponent, TumbleweedDeadComponentData> {
-   public decodeData(): TumbleweedDeadComponentData {
-      return {};
-   }
+export const TumbleweedDeadComponentArray = registerServerComponentArray(
+   ServerComponentType.tumbleweedDead,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TumbleweedDeadComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+TumbleweedDeadComponentArray.onHit = onHit;
+TumbleweedDeadComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         TextureIndex.entities_tumbleweedDead_tumbleweedDead
-      );
-      renderPart.tintR = randFloat(-0.03, 0.03);
-      renderPart.tintG = randFloat(-0.03, 0.03);
-      renderPart.tintB = randFloat(-0.03, 0.03);
-      renderObject.attachRenderPart(renderPart)
-   }
-
-   public createComponent(): TumbleweedDeadComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
-   }
+function decodeData(): TumbleweedDeadComponentData {
+   return {};
 }
 
-export const TumbleweedDeadComponentArray = registerServerComponentArray(ServerComponentType.tumbleweedDead, _TumbleweedDeadComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      TextureIndex.entities_tumbleweedDead_tumbleweedDead
+   );
+   renderPart.tintR = randFloat(-0.03, 0.03);
+   renderPart.tintG = randFloat(-0.03, 0.03);
+   renderPart.tintB = randFloat(-0.03, 0.03);
+   renderObject.attachRenderPart(renderPart)
+}
+
+function createComponent(): TumbleweedDeadComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
+}

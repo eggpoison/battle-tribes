@@ -19,73 +19,76 @@ export interface TribeWarriorComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribeWarrior, _TribeWarriorComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribeWarrior, typeof TribeWarriorComponentArray> {}
 }
 
-class _TribeWarriorComponentArray extends ServerComponentArray<TribeWarriorComponent, TribeWarriorComponentData> {
-   public decodeData(reader: PacketReader): TribeWarriorComponentData {
-      const scars: ScarInfo[] = [];
-      const numScars = reader.readNumber();
-      for (let i = 0; i < numScars; i++) {
-         const offsetX = reader.readNumber();
-         const offsetY = reader.readNumber();
-         const rotation = reader.readNumber();
-         const type = reader.readNumber();
+export const TribeWarriorComponentArray = registerServerComponentArray(
+   ServerComponentType.tribeWarrior,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TribeWarriorComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+TribeWarriorComponentArray.updateFromData = updateFromData;
 
-         scars.push({
-            offsetX: offsetX,
-            offsetY: offsetY,
-            rotation: rotation,
-            type: type
-         });
-      }
+function decodeData(reader: PacketReader): TribeWarriorComponentData {
+   const scars: ScarInfo[] = [];
+   const numScars = reader.readNumber();
+   for (let i = 0; i < numScars; i++) {
+      const offsetX = reader.readNumber();
+      const offsetY = reader.readNumber();
+      const rotation = reader.readNumber();
+      const type = reader.readNumber();
 
-      return {
-         scars: scars
-      };
+      scars.push({
+         offsetX: offsetX,
+         offsetY: offsetY,
+         rotation: rotation,
+         type: type
+      });
    }
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
-      for (let i = 0; i < tribeWarriorComponentData.scars.length; i++) {
-         const scarInfo = tribeWarriorComponentData.scars[i];
+   return {
+      scars: scars
+   };
+}
 
-         const renderPart = new TexturedRenderPart(
-            hitbox,
-            2.5,
-            scarInfo.rotation,
-            scarInfo.offsetX, scarInfo.offsetY,
-            TextureIndex.scars_scar1 + scarInfo.type
-         );
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
+   for (let i = 0; i < tribeWarriorComponentData.scars.length; i++) {
+      const scarInfo = tribeWarriorComponentData.scars[i];
 
-         renderObject.attachRenderPart(renderPart);
-      }
-   }
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         2.5,
+         scarInfo.rotation,
+         scarInfo.offsetX, scarInfo.offsetY,
+         TextureIndex.scars_scar1 + scarInfo.type
+      );
 
-   public createComponent(entityComponentData: EntityComponentData): TribeWarriorComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
-      return {
-         scars: tribeWarriorComponentData.scars
-      };
-   }
-
-   public getMaxRenderParts(entityComponentData: EntityComponentData): number {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
-      return tribeWarriorComponentData.scars.length;
-   }
-
-   public updateFromData(data: TribeWarriorComponentData, entity: Entity): void {
-      const tribeWarriorComponent = TribeWarriorComponentArray.getComponent(entity);
-      for (let i = tribeWarriorComponent.scars.length; i < data.scars.length; i++) {
-         tribeWarriorComponent.scars.push(data.scars[i]);
-      }
+      renderObject.attachRenderPart(renderPart);
    }
 }
 
-export const TribeWarriorComponentArray = registerServerComponentArray(ServerComponentType.tribeWarrior, _TribeWarriorComponentArray, true);
+function createComponent(entityComponentData: EntityComponentData): TribeWarriorComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
+   return {
+      scars: tribeWarriorComponentData.scars
+   };
+}
+
+function getMaxRenderParts(entityComponentData: EntityComponentData): number {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeWarriorComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeWarrior);
+   return tribeWarriorComponentData.scars.length;
+}
+
+function updateFromData(data: TribeWarriorComponentData, entity: Entity): void {
+   const tribeWarriorComponent = TribeWarriorComponentArray.getComponent(entity);
+   for (let i = tribeWarriorComponent.scars.length; i < data.scars.length; i++) {
+      tribeWarriorComponent.scars.push(data.scars[i]);
+   }
+}

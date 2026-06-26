@@ -1,8 +1,8 @@
 import { Biome } from "../../shared/dist/biomes.js";
 import { Entity, EntityType } from "../../shared/dist/entities.js";
 import { Settings } from "../../shared/dist/settings.js";
-import { TileType } from "../../shared/dist/tiles.js";
-import { getTileIndexIncludingEdges, assert } from "../../shared/dist/utils.js";
+import { getTileIndexIncludingEdges, TileType } from "../../shared/dist/tiles.js";
+import { assert } from "../../shared/dist/utils.js";
 import { EntityConfig } from "./components.js";
 import Layer from "./Layer.js";
 

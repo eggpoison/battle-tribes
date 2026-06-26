@@ -31,7 +31,7 @@ export interface AmmoBoxComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ammoBox, _AmmoBoxComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ammoBox, typeof AmmoBoxComponentArray> {}
 }
 
 const createAmmoWarningRenderPart = (parentHitbox: Hitbox): VisualRenderPart => {
@@ -51,59 +51,62 @@ const createAmmoWarningRenderPart = (parentHitbox: Hitbox): VisualRenderPart => 
    return renderPart;
 }
 
-class _AmmoBoxComponentArray extends ServerComponentArray<AmmoBoxComponent, AmmoBoxComponentData, IntermediateInfo> {
-   public decodeData(reader: PacketReader): AmmoBoxComponentData {
-      const ammoType = reader.readNumber();
-      const ammoRemaining = reader.readNumber();
-      return {
-         ammoType: ammoType,
-         ammoRemaining: ammoRemaining
-      };
-   }
+export const AmmoBoxComponentArray = registerServerComponentArray(
+   ServerComponentType.ammoBox,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+AmmoBoxComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+AmmoBoxComponentArray.updateFromData = updateFromData;
 
-   public createIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const ammoBoxComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.ammoBox);
-
-      let ammoWarningRenderPart: VisualRenderPart | null;
-      if (ammoBoxComponentData.ammoType === null) {
-         const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-         const hitbox = transformComponentData.hitboxes[0];
-         
-         ammoWarningRenderPart = createAmmoWarningRenderPart(hitbox);
-         renderObject.attachRenderPart(ammoWarningRenderPart);
-      } else {
-         ammoWarningRenderPart = null;
-      }
-      
-      return {
-         ammoWarningRenderPart: ammoWarningRenderPart
-      };
-   }
-
-   public createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): AmmoBoxComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const ammoBoxComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.ammoBox);
-      
-      return {
-         ammoType: ammoBoxComponentData.ammoType,
-         ammoRemaining: ammoBoxComponentData.ammoRemaining,
-         ammoWarningRenderPart: intermediateInfo.ammoWarningRenderPart
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public updateFromData(data: AmmoBoxComponentData, entity: Entity): void {
-      const ammoBoxComponent = AmmoBoxComponentArray.getComponent(entity);
-      updateAmmoType(ammoBoxComponent, entity, ammoBoxComponent.ammoRemaining > 0 ? data.ammoType : null);
-      ammoBoxComponent.ammoRemaining = data.ammoRemaining;
-   }
+function decodeData(reader: PacketReader): AmmoBoxComponentData {
+   const ammoType = reader.readNumber();
+   const ammoRemaining = reader.readNumber();
+   return {
+      ammoType: ammoType,
+      ammoRemaining: ammoRemaining
+   };
 }
 
-export const AmmoBoxComponentArray = registerServerComponentArray(ServerComponentType.ammoBox, _AmmoBoxComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const ammoBoxComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.ammoBox);
+
+   let ammoWarningRenderPart: VisualRenderPart | null;
+   if (ammoBoxComponentData.ammoType === null) {
+      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+      const hitbox = transformComponentData.hitboxes[0];
+      
+      ammoWarningRenderPart = createAmmoWarningRenderPart(hitbox);
+      renderObject.attachRenderPart(ammoWarningRenderPart);
+   } else {
+      ammoWarningRenderPart = null;
+   }
+   
+   return {
+      ammoWarningRenderPart: ammoWarningRenderPart
+   };
+}
+
+function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): AmmoBoxComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const ammoBoxComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.ammoBox);
+   
+   return {
+      ammoType: ammoBoxComponentData.ammoType,
+      ammoRemaining: ammoBoxComponentData.ammoRemaining,
+      ammoWarningRenderPart: intermediateInfo.ammoWarningRenderPart
+   };
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function updateFromData(data: AmmoBoxComponentData, entity: Entity): void {
+   const ammoBoxComponent = AmmoBoxComponentArray.getComponent(entity);
+   updateAmmoType(ammoBoxComponent, entity, ammoBoxComponent.ammoRemaining > 0 ? data.ammoType : null);
+   ammoBoxComponent.ammoRemaining = data.ammoRemaining;
+}
 
 export function createAmmoBoxComponentData(): AmmoBoxComponentData {
    return {

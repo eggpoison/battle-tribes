@@ -12,38 +12,40 @@ export interface MithrilAnvilComponentData {}
 export interface MithrilAnvilComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.mithrilAnvil, _MithrilAnvilComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.mithrilAnvil, typeof MithrilAnvilComponentArray> {}
 }
 
-class _MithrilAnvilComponentArray extends ServerComponentArray<MithrilAnvilComponent, MithrilAnvilComponentData> {
-   public decodeData(): MithrilAnvilComponentData {
-      return {};
-   }
+export const MithrilAnvilComponentArray = registerServerComponentArray(
+   ServerComponentType.mithrilAnvil,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+MithrilAnvilComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         TextureIndex.entities_mithrilAnvil_mithrilAnvil
-      );
-      renderObject.attachRenderPart(renderPart);
-   }
-
-   public createComponent(): MithrilAnvilComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+function decodeData(): MithrilAnvilComponentData {
+   return {};
 }
 
-export const MithrilAnvilComponentArray = registerServerComponentArray(ServerComponentType.mithrilAnvil, _MithrilAnvilComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      TextureIndex.entities_mithrilAnvil_mithrilAnvil
+   );
+   renderObject.attachRenderPart(renderPart);
+}
+
+function createComponent(): MithrilAnvilComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
 
 export function createMithrilAnvilComponentData(): MithrilAnvilComponentData {
    return {};

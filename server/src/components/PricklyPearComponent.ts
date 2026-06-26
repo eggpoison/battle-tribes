@@ -41,7 +41,7 @@ const explode = (pricklyPear: Entity): void => {
       const projectileTransformComponent = getConfigTransformComponent(projectileConfig.components);
       
       const projectileHitbox = projectileTransformComponent.hitboxes[0];
-      addHitboxVelocity(projectileHitbox, polarVec2(520, offsetDirection));
+      addHitboxVelocity(projectileHitbox, 520 * Math.sin(offsetDirection), 520 * Math.cos(offsetDirection));
       addHitboxAngularVelocity(projectileHitbox, randSign() * randFloat(2 * Math.PI, 3 * Math.PI));
       
       createEntity(projectileConfig, layer, 0);
@@ -69,7 +69,7 @@ const drop = (pricklyPear: Entity): void => {
 
    const itemTransformComponent = getConfigTransformComponent(itemConfig.components);
    const itemHitbox = itemTransformComponent.hitboxes[0];
-   addHitboxVelocity(itemHitbox, polarVec2(150, angleFromCactusToPear));
+   addHitboxVelocity(itemHitbox, 150 * Math.sin(angleFromCactusToPear), 150 * Math.cos(angleFromCactusToPear));
 
    createEntity(itemConfig, layer, 0);
 }

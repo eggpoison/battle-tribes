@@ -7,21 +7,22 @@ export interface EnergyStomachComponentData {}
 export interface EnergyStomachComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.energyStomach, _EnergyStomachComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.energyStomach, typeof EnergyStomachComponentArray> {}
 }
 
-class _EnergyStomachComponentArray extends ServerComponentArray<EnergyStomachComponent, EnergyStomachComponentData> {
-   public decodeData(): EnergyStomachComponentData {
-      return {};
-   }
+export const EnergyStomachComponentArray = registerServerComponentArray(
+   ServerComponentType.energyStomach,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(): EnergyStomachComponentData {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(): EnergyStomachComponentData {
+   return {};
 }
 
-export const EnergyStomachComponentArray = registerServerComponentArray(ServerComponentType.energyStomach, _EnergyStomachComponentArray, true);
+function createComponent(): EnergyStomachComponentData {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}

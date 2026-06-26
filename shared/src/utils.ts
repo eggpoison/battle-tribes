@@ -5,9 +5,6 @@ export enum UtilVar {
    PI = 3.14159265358979
 }
 
-export type TileIndex = number;
-export type SubtileIndex = number;
-
 export interface TileCoordinates {
    readonly x: number;
    readonly y: number;
@@ -439,30 +436,6 @@ export function dotAngles(angle1: number, angle2: number): number {
 // @Cleanup: rename to "unitVec2" (paired with polarVec2)
 export function angleToPoint(angle: number): Point {
    return new Point(Math.sin(angle), Math.cos(angle));
-}
-
-export function getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
-   if (tileX < -Settings.EDGE_GENERATION_DISTANCE || tileX >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE || tileY < -Settings.EDGE_GENERATION_DISTANCE || tileY >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
-      throw new Error("Outside of world bounds!");
-   }
-
-   return (tileY + Settings.EDGE_GENERATION_DISTANCE) * Settings.FULL_WORLD_SIZE_TILES + tileX + Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function getTileX(tileIndex: TileIndex): number {
-   return tileIndex % Settings.FULL_WORLD_SIZE_TILES - Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function getTileY(tileIndex: TileIndex): number {
-   return Math.floor(tileIndex / Settings.FULL_WORLD_SIZE_TILES) - Settings.EDGE_GENERATION_DISTANCE;
-}
-
-export function tileIsInWorld(tileX: number, tileY: number): boolean {
-   return tileX >= 0 && tileX < Settings.WORLD_SIZE_TILES && tileY >= 0 && tileY < Settings.WORLD_SIZE_TILES;
-}
-
-export function tileIsInWorldIncludingEdges(tileX: number, tileY: number): boolean {
-   return tileX >= -Settings.EDGE_GENERATION_DISTANCE && tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE && tileY >= -Settings.EDGE_GENERATION_DISTANCE && tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE;
 }
 
 export function positionIsInWorld(x: number, y: number): boolean {

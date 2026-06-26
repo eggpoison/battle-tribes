@@ -120,7 +120,7 @@ const addTongueSegment = (tongue: Entity, okrenHitbox: Hitbox, previousBaseHitbo
    });
    
    // Apply some initial velocity
-   addHitboxVelocity(newSegmentHitbox, polarVec2(200, okrenHitbox.box.angle));
+   addHitboxVelocity(newSegmentHitbox, 200 * Math.sin(okrenHitbox.box.angle), 200 * Math.cos(okrenHitbox.box.angle));
 }
 
 const advanceTongue = (tongue: Entity, tongueTransformComponent: TransformComponent, okrenTongueComponent: OkrenTongueComponent, okren: Entity): void => {
@@ -203,7 +203,7 @@ export function startRetractingTongue(tongue: Entity, okrenTongueComponent: Okre
    // Do an initial jerk back of the tongue as the okren reacts to whatever caused it to want to retract its tongue (be it being hit, reaching max length, or catching something)
    for (const hitbox of tongueTransformComponent.hitboxes) {
       const directionToOkren = angle(okrenHitbox.box.posX - hitbox.box.posX, okrenHitbox.box.posY - hitbox.box.posY);
-      addHitboxVelocity(hitbox, polarVec2(200, directionToOkren));
+      addHitboxVelocity(hitbox, 200 * Math.sin(directionToOkren), 200 * Math.cos(directionToOkren));
    }
 }
 

@@ -24,7 +24,7 @@ let craftingMenuElem: HTMLElement | null = null;
 const availableRecipes: number[] = [];
 const craftableRecipes: number[] = [];
 
-let selectedRecipeIdx: number = -1;
+let selectedRecipeIdx = -1;
 
 export function updateCraftableRecipes(usableInventories: readonly Inventory[]): void {
    const availableItemsTally = new ItemTally2();

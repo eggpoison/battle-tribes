@@ -1,7 +1,7 @@
 import { Settings } from "../../../../../shared/src/settings";
 import { Bytes } from "../../../../../shared/src/constants";
+import { RenderChunkVars } from "../../../../../shared/src/render-chunks";
 import { createWebGLProgram, gl } from "../../webgl";
-import { RenderChunkVars } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
 
@@ -18,7 +18,7 @@ export function createForcefieldShaders(): void {
    };
    
    layout(location = 0) in vec2 a_position;
-   
+    
    out vec2 v_position;
    
    void main() {

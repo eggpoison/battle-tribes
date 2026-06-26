@@ -9,7 +9,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent.js
 import { EscapeAI } from "../../ai/EscapeAI.js";
 import { AttackingEntitiesComponent } from "../../components/AttackingEntitiesComponent.js";
 import { LootComponent, registerEntityLootOnDeath } from "../../components/LootComponent.js";
-import { applyAccelerationFromGround, getHitboxTile, addHitboxVelocity, turnHitboxToAngle, createHitbox } from "../../hitboxes.js";
+import { applyAccelerationFromGround, getBoxTile, addHitboxVelocity, turnHitboxToAngle, createHitbox } from "../../hitboxes.js";
 import { getEntityLayer } from "../../world.js";
 import { Biome } from "../../../../shared/dist/biomes.js";
 import { createRectangularBox, HitboxCollisionType } from "../../../../shared/dist/boxes.js";
@@ -79,7 +79,7 @@ const moveFunc = (fish: Entity, x: number, y: number, acceleration: number): voi
 
    const layer = getEntityLayer(fish);
    
-   const tileIndex = getHitboxTile(fishHitbox);
+   const tileIndex = getBoxTile(fishHitbox.box);
    if (layer.tileTypes[tileIndex] === TileType.water) {
       // Swim on water
       applyAccelerationFromGround(fishHitbox, polarVec2(acceleration, moveDir));
@@ -90,7 +90,7 @@ const moveFunc = (fish: Entity, x: number, y: number, acceleration: number): voi
 
       const fishComponent = FishComponentArray.getComponent(fish);
       if (customTickIntervalHasPassed(fishComponent.secondsOutOfWater * Settings.TICK_RATE, Vars.LUNGE_INTERVAL)) {
-         addHitboxVelocity(fishHitbox, polarVec2(Vars.LUNGE_FORCE, moveDir));
+         addHitboxVelocity(fishHitbox, Vars.LUNGE_FORCE * Math.sin(moveDir), Vars.LUNGE_FORCE * Math.cos(moveDir));
       }
    }
 }
@@ -103,7 +103,7 @@ const turnFunc = (fish: Entity, x: number, y: number, turnSpeed: number, turnDam
 
    const layer = getEntityLayer(fish);
    
-   const tileIndex = getHitboxTile(fishHitbox);
+   const tileIndex = getBoxTile(fishHitbox.box);
    if (layer.tileTypes[tileIndex] === TileType.water) {
       // Swim on water
       turnHitboxToAngle(fishHitbox, direction, turnSpeed, turnDamping, false);

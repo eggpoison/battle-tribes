@@ -8,8 +8,7 @@ import { createHotSparkParticle } from "./particles";
 import { playBowFireSound } from "./player-action-handling";
 import { getRandomPositionOnBoxEdge } from "./hitboxes";
 import { Settings } from "../../../shared/src/settings";
-import { getSubtileX, getSubtileY, subtileIsInWorld } from "../../../shared/src/subtiles";
-import { SubtileType } from "../../../shared/src/tiles";
+import { SubtileType, getSubtileX, getSubtileY } from "../../../shared/src/subtiles";
 import Particle from "./Particle";
 import { addMonocolourParticleToBufferContainer, ParticleRenderLayer, lowMonocolourParticles, addTexturedParticleToBufferContainer, lowTexturedParticles } from "./rendering/webgl/particle-rendering";
 

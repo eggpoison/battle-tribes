@@ -342,7 +342,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
 
          const arrowVel = tribeMemberVelocity.copy();
          arrowVel.add(polarVec2(itemInfo.projectileSpeed, angle));
-         addHitboxVelocity(arrowHitbox, arrowVel);
+         addHitboxVelocity(arrowHitbox, arrowVel.x, arrowVel.y);
          
          createEntity(arrowConfig, getEntityLayer(tribeMember), 0);
 
@@ -403,7 +403,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const config = createWoodenArrowConfig(spawnPositionX, spawnPositionY, tribeMemberHitbox.box.angle, tribeComponent.tribe, tribeMember);
 
          const arrowHitbox = getConfigTransformComponent(config.components).hitboxes[0];
-         addHitboxVelocity(arrowHitbox, polarVec2(itemInfo.projectileSpeed, tribeMemberHitbox.box.angle));
+         addHitboxVelocity(arrowHitbox, itemInfo.projectileSpeed * Math.sin(tribeMemberHitbox.box.angle), itemInfo.projectileSpeed * Math.cos(tribeMemberHitbox.box.angle));
 
          createEntity(config, getEntityLayer(tribeMember), 0);
 
@@ -439,7 +439,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const tribeMemberVelocity = getHitboxVelocity(tribeMemberHitbox);
          const spearVel = tribeMemberVelocity.copy();
          spearVel.add(polarVec2(velocityMagnitude, tribeMemberHitbox.box.angle));
-         addHitboxVelocity(spearProjectileHitbox, spearVel);
+         addHitboxVelocity(spearProjectileHitbox, spearVel.x, spearVel.y);
 
          createEntity(config, getEntityLayer(tribeMember), 0);
 
@@ -478,7 +478,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const battleaxeProjectileHitbox = getConfigTransformComponent(config.components).hitboxes[0];
          const vel = tribeMemberVelocity.copy();
          vel.add(polarVec2(velocityMagnitude, tribeMemberHitbox.box.angle));
-         addHitboxVelocity(battleaxeProjectileHitbox, vel);
+         addHitboxVelocity(battleaxeProjectileHitbox, vel.x, vel.y);
 
          createEntity(config, getEntityLayer(tribeMember), 0);
 
@@ -741,7 +741,7 @@ export function throwItem(tribesman: Entity, inventoryName: InventoryName, itemS
 
    const vel = tribesmanVelocity.copy();
    vel.add(polarVec2(Vars.ITEM_THROW_FORCE, throwDirection));
-   addHitboxVelocity(itemHitbox, vel);
+   addHitboxVelocity(itemHitbox, vel.x, vel.y);
 
    createEntity(config, getEntityLayer(tribesman), 0);
 

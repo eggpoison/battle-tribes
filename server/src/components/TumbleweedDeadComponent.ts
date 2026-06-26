@@ -3,7 +3,7 @@ import { ServerComponentType } from "../../../shared/dist/components.js";
 import { Entity, EntityType } from "../../../shared/dist/entities.js";
 import { Settings } from "../../../shared/dist/settings.js";
 import { Point } from "../../../shared/dist/utils.js";
-import { applyAccelerationFromGround, getHitboxTile, Hitbox } from "../hitboxes.js";
+import { applyAccelerationFromGround, getBoxTile, Hitbox } from "../hitboxes.js";
 import { getWindVector } from "../wind.js";
 import { destroyEntity, getEntityLayer, getEntityType } from "../world.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -16,7 +16,7 @@ export class TumbleweedDeadComponent {
 
 const getTumbleweedDecayChance = (tumbleweed: Entity, hitbox: Hitbox): number => {
    const layer = getEntityLayer(tumbleweed);
-   const tile = getHitboxTile(hitbox);
+   const tile = getBoxTile(hitbox.box);
    if (layer.getTileBiome(tile) === Biome.desert) {
       return 0.02;
    } else {

@@ -18,55 +18,59 @@ export interface TreeRootBaseComponentData {}
 export interface TreeRootBaseComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootBase, _TreeRootBaseComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootBase, typeof TreeRootBaseComponentArray> {}
 }
 
-class _TreeRootBaseComponentArray extends ServerComponentArray<TreeRootBaseComponent, TreeRootBaseComponentData> {
-   public decodeData(): TreeRootBaseComponentData {
-      return {};
-   }
+export const TreeRootBaseComponentArray = registerServerComponentArray(
+   ServerComponentType.treeRootBase,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TreeRootBaseComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+TreeRootBaseComponentArray.onHit = onHit;
+TreeRootBaseComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.entities_treeRootBase_treeRootBase
-         )
-      );
-   }
-
-   public createComponent(): TreeRootBaseComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      for (let i = 0; i < 6; i++) {
-         createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
-      }
-
-      playSoundOnHitbox("tree-root-base-hit.mp3", randFloat(0.47, 0.53), randFloat(0.9, 1.1), entity, hitbox, false);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      for (let i = 0; i < 10; i++) {
-         createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
-      }
-
-      playSoundOnHitbox("tree-root-base-death.mp3", 0.5, 1, entity, hitbox, false);
-   }
+function decodeData(): TreeRootBaseComponentData {
+   return {};
 }
 
-export const TreeRootBaseComponentArray = registerServerComponentArray(ServerComponentType.treeRootBase, _TreeRootBaseComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.entities_treeRootBase_treeRootBase
+      )
+   );
+}
+
+function createComponent(): TreeRootBaseComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   for (let i = 0; i < 6; i++) {
+      createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
+   }
+
+   playSoundOnHitbox("tree-root-base-hit.mp3", randFloat(0.47, 0.53), randFloat(0.9, 1.1), entity, hitbox, false);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   for (let i = 0; i < 10; i++) {
+      createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
+   }
+
+   playSoundOnHitbox("tree-root-base-death.mp3", 0.5, 1, entity, hitbox, false);
+}

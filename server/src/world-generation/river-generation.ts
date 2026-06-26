@@ -8,7 +8,9 @@ import { getConfigTransformComponent } from "../components.js";
 import { CircularBox } from "../../../shared/dist/boxes.js";
 import { WaterRockData } from "../../../shared/dist/client-server-types.js";
 import { Settings } from "../../../shared/dist/settings.js";
-import { TileCoordinates, Point, tileIsInWorld, randFloat, randAngle, randInt, lerp } from "../../../shared/dist/utils.js";
+import { TileCoordinates, Point, randFloat, randAngle, randInt, lerp } from "../../../shared/dist/utils.js";
+import { tileIsInWorld } from "../../../shared/dist/tiles.js";
+import { getRenderChunkIndex } from "../../../shared/dist/render-chunks.js";
 
 // Kinda hacky, used to be just set to 20, but that meant the density of rivers changed with the world size, no good.
 const NUM_RIVERS = 20 * ((Settings.WORLD_SIZE_CHUNKS / 64) ** 2);
@@ -291,7 +293,21 @@ const calculateRiverCrossingPositions = (riverTiles: readonly WaterTileGeneratio
    return riverCrossings;
 }
 
-export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: readonly WaterTileGenerationInfo[], waterRocks: WaterRockData[]): void {
+const createWaterRock = (waterRockRenderChunks: WaterRockData[][], x: number, y: number, opacity: number): void => {
+   const renderChunkX = Math.floor(x / Settings.CHUNK_UNITS / 2);
+   const renderChunkY = Math.floor(y / Settings.CHUNK_UNITS / 2);
+   const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
+   const waterRocks = waterRockRenderChunks[renderChunkIndex];
+
+   waterRocks.push({
+      position: [x, y],
+      rotation: randAngle(),
+      size: randInt(0, 1),
+      opacity: opacity
+   });
+}
+
+export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: readonly WaterTileGenerationInfo[], waterRockRenderChunks: WaterRockData[][]): void {
    const MIN_CROSSING_DISTANCE = 325;
    /** Minimum distance between crossings */
    const RIVER_CROSSING_WIDTH = 100;
@@ -304,12 +320,7 @@ export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: readonly 
       if (Math.random() < 0.075) {
          const x = (tile.tileX + Math.random()) * Settings.TILE_SIZE;
          const y = (tile.tileY + Math.random()) * Settings.TILE_SIZE;
-         waterRocks.push({
-            position: [x, y],
-            rotation: randAngle(),
-            size: randInt(0, 1),
-            opacity: Math.random()
-         });
+         createWaterRock(waterRockRenderChunks, x, y, Math.random());
       }
    }
    
@@ -412,12 +423,7 @@ export function generateRiverFeatures(surfaceLayer: Layer, riverTiles: readonly 
             continue;
          }
 
-         waterRocks.push({
-            position: [x, y],
-            size: randInt(0, 1),
-            rotation: 2 * Math.PI * Math.random(),
-            opacity: randFloat(0.6, 1)
-         });
+         createWaterRock(waterRockRenderChunks, x, y, randFloat(0.6, 1));
       }
    }
 }

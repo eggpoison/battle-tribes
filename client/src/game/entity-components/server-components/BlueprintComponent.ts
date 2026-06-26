@@ -12,7 +12,7 @@ import { EntityComponentData, getEntityRenderObject } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
 import { BALLISTA_GEAR_X, BALLISTA_GEAR_Y, BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../../utils";
 import { WARRIOR_HUT_SIZE } from "./HutComponent";
-import { tribeComponentArray } from "./TribeComponent";
+import { TribeComponentArray } from "./TribeComponent";
 import { playerTribe } from "../../tribes";
 import { Hitbox } from "../../hitboxes";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -45,7 +45,7 @@ interface ProgressTextureInfo {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.blueprint, BlueprintComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.blueprint, typeof BlueprintComponentArray> {}
 }
 
 // @Cleanup: Some of these are duplicates
@@ -420,216 +420,17 @@ const createStoneBlueprintWorkParticleEffects = (originX: number, originY: numbe
    }
 }
 
-class BlueprintComponentArray extends ServerComponentArray<BlueprintComponent, BlueprintComponentData> {
-   public decodeData(reader: PacketReader): BlueprintComponentData {
-      const blueprintType: BlueprintType = reader.readNumber();
-      const blueprintProgress = reader.readNumber();
-      const associatedEntity = reader.readNumber();
-
-      return {
-         blueprintType: blueprintType,
-         blueprintProgress: blueprintProgress,
-         associatedEntity: associatedEntity
-      };
-   }
-
-   public createComponent(entityComponentData: EntityComponentData): BlueprintComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const blueprintComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.blueprint);
-      
-      return {
-         partialRenderParts: [],
-         blueprintType: blueprintComponentData.blueprintType,
-         lastBlueprintProgress: blueprintComponentData.blueprintProgress,
-         associatedEntity: blueprintComponentData.associatedEntity
-      };
-   }
-
-   public getMaxRenderParts(entityComponentData: EntityComponentData): number {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const blueprintComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.blueprint);
-      return 2 * BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponentData.blueprintType].length;
-   }
-
-   public onLoad(entity: Entity): void {
-      updatePartialTexture(entity);
-      
-      const blueprintComponent = blueprintComponentArray.getComponent(entity);
-      const tribeComponent = tribeComponentArray.getComponent(entity);
-      
-      // Create completed render parts
-      const progressTextureInfoArray = BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponent.blueprintType];
-      const renderObject = getEntityRenderObject(entity);
-      for (let i = 0; i < progressTextureInfoArray.length; i++) {
-         const progressTextureInfo = progressTextureInfoArray[i];
-
-         const transformComponent = TransformComponentArray.getComponent(entity);
-         const hitbox = transformComponent.hitboxes[0];
-
-         const renderPart = new TexturedRenderPart(
-            hitbox,
-            progressTextureInfo.zIndex,
-            progressTextureInfo.rotation,
-            // @HACK, this shittery is cuz the fence gate doesn't have its first hitbox at the 'core' position
-            progressTextureInfo.offsetX + (blueprintComponent.blueprintType === BlueprintType.fenceGate ? 32 : 0), progressTextureInfo.offsetY,
-            progressTextureInfo.completedTextureIndex
-         );
-         renderPart.opacity = 0.5;
-         if (tribeComponent.tribeID === playerTribe.id) {
-            renderPart.tintR = 0.2;
-            renderPart.tintG = 0.1;
-            renderPart.tintB = 0.8;
-         } else {
-            renderPart.tintR = 0.8;
-            renderPart.tintG = 0.0;
-            renderPart.tintB = 0.15;
-         }
-         renderObject.attachRenderPart(renderPart);
-      }
-   }
-
-   public onSpawn(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("blueprint-place.mp3", 0.4, 1, entity, hitbox, false);
-   }
-
-   public updateFromData(data: BlueprintComponentData, entity: Entity): void {
-      const blueprintComponent = blueprintComponentArray.getComponent(entity);
-      
-      blueprintComponent.blueprintType = data.blueprintType;
-      const blueprintProgress = data.blueprintProgress;
-      blueprintComponent.associatedEntity = data.associatedEntity;
-
-      // @Speed: don't do always, only if the data changes!
-      updatePartialTexture(entity);
-
-      if (blueprintProgress !== blueprintComponent.lastBlueprintProgress) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
-         const hitbox = transformComponent.hitboxes[0];
-
-         playSoundOnHitbox("blueprint-work.mp3", 0.4, randFloat(0.9, 1.1), entity, hitbox, false);
-
-         const progressTexture = getCurrentBlueprintProgressTexture(blueprintComponent.blueprintType, blueprintProgress);
-         
-         // @Cleanup
-         const textureAtlas = getEntityTextureAtlasInfo();
-         const textureIndex = progressTexture.completedTextureIndex;
-         const xShift = textureAtlas.textureWidths[textureIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
-         const yShift = textureAtlas.textureHeights[textureIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
-         rotatePointAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
-         const particleOriginX = hitbox.box.posX + _point.x;
-         const particleOriginY = hitbox.box.posY + _point.y;
-         
-         // @Incomplete: Change the particle effect type depending on the material of the worked-on partial texture
-         // Create particle effects
-         switch (blueprintComponent.blueprintType) {
-            case BlueprintType.woodenDoor:
-            case BlueprintType.woodenEmbrasure:
-            case BlueprintType.woodenTunnel:
-            case BlueprintType.slingTurret:
-            case BlueprintType.ballista:
-            case BlueprintType.warriorHutUpgrade:
-            case BlueprintType.fenceGate: {
-               createWoodenBlueprintWorkParticleEffects(entity);
-               break;
-            }
-            case BlueprintType.stoneDoorUpgrade:
-            case BlueprintType.stoneEmbrasure:
-            case BlueprintType.stoneEmbrasureUpgrade:
-            case BlueprintType.stoneFloorSpikes:
-            case BlueprintType.stoneTunnel:
-            case BlueprintType.stoneTunnelUpgrade:
-            case BlueprintType.stoneWallSpikes:
-            case BlueprintType.stoneWall:
-            case BlueprintType.stoneDoor:
-            case BlueprintType.stoneBracings: {
-               createStoneBlueprintWorkParticleEffects(particleOriginX, particleOriginY);
-               break;
-            }
-            case BlueprintType.scrappy:
-            case BlueprintType.cogwalker: {
-               createStoneBlueprintWorkParticleEffects(particleOriginX, particleOriginY);
-               break;
-            }
-            default: {
-               assertUnreachable(blueprintComponent.blueprintType);
-            }
-         }
-      }
-      blueprintComponent.lastBlueprintProgress = blueprintProgress;
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      playSoundOnHitbox("blueprint-work.mp3", 0.4, 1, entity, hitbox, false);
-      playSoundOnHitbox("structure-shaping.mp3", 0.4, 1, entity, hitbox, false);
-
-      // @Cleanup: Copy and pasted from blueprint component
-      const blueprintComponent = blueprintComponentArray.getComponent(entity);
-      switch (blueprintComponent.blueprintType) {
-         case BlueprintType.woodenDoor:
-         case BlueprintType.woodenEmbrasure:
-         case BlueprintType.woodenTunnel:
-         case BlueprintType.slingTurret:
-         case BlueprintType.ballista:
-         case BlueprintType.warriorHutUpgrade:
-         case BlueprintType.fenceGate: {
-            for (let i = 0; i < 5; i++) {
-               const x = hitbox.box.posX + randFloat(-32, 32);
-               const y = hitbox.box.posY + randFloat(-32, 32);
-               createSawdustCloud(x, y);
-            }
-      
-            for (let i = 0; i < 8; i++) {
-               createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32);
-            }
-            break;
-         }
-         case BlueprintType.stoneDoorUpgrade:
-         case BlueprintType.stoneEmbrasure:
-         case BlueprintType.stoneEmbrasureUpgrade:
-         case BlueprintType.stoneFloorSpikes:
-         case BlueprintType.stoneTunnel:
-         case BlueprintType.stoneTunnelUpgrade:
-         case BlueprintType.stoneWallSpikes:
-         case BlueprintType.stoneWall:
-         case BlueprintType.stoneDoor:
-         case BlueprintType.stoneBracings: {
-            for (let i = 0; i < 5; i++) {
-               const offsetDirection = randAngle();
-               const offsetAmount = 32 * Math.random();
-               createRockParticle(hitbox.box.posX + offsetAmount * Math.sin(offsetDirection), hitbox.box.posY + offsetAmount * Math.cos(offsetDirection), randAngle(), randFloat(50, 70), ParticleRenderLayer.high);
-            }
-         
-            for (let i = 0; i < 10; i++) {
-               createRockSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32 * Math.random(), 0, 0, ParticleRenderLayer.high);
-            }
-         
-            for (let i = 0; i < 3; i++) {
-               const x = hitbox.box.posX + randFloat(-32, 32);
-               const y = hitbox.box.posY + randFloat(-32, 32);
-               createDustCloud(x, y);
-            }
-            break;
-         }
-         case BlueprintType.scrappy:
-         case BlueprintType.cogwalker: {
-            break;
-         }
-         default: {
-            assertUnreachable(blueprintComponent.blueprintType);
-         }
-      }
-   }
-}
-
-export const blueprintComponentArray = registerServerComponentArray(ServerComponentType.blueprint, BlueprintComponentArray, true);
+export const BlueprintComponentArray = registerServerComponentArray(
+   ServerComponentType.blueprint,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+BlueprintComponentArray.onLoad = onLoad;
+BlueprintComponentArray.onSpawn = onSpawn;
+BlueprintComponentArray.updateFromData = updateFromData;
+BlueprintComponentArray.onDie = onDie;
 
 const updatePartialTexture = (entity: Entity): void => {
-   const blueprintComponent = blueprintComponentArray.getComponent(entity);
+   const blueprintComponent = BlueprintComponentArray.getComponent(entity);
    const blueprintType = blueprintComponent.blueprintType;
    const blueprintProgress = blueprintComponent.lastBlueprintProgress;
    
@@ -719,4 +520,208 @@ const getCurrentBlueprintProgressTexture = (blueprintType: BlueprintType, bluepr
    }
 
    return progressTextureInfoArray[progressTextureInfoArray.length - 1];
+}
+
+function decodeData(reader: PacketReader): BlueprintComponentData {
+   const blueprintType: BlueprintType = reader.readNumber();
+   const blueprintProgress = reader.readNumber();
+   const associatedEntity = reader.readNumber();
+
+   return {
+      blueprintType: blueprintType,
+      blueprintProgress: blueprintProgress,
+      associatedEntity: associatedEntity
+   };
+}
+
+function createComponent(entityComponentData: EntityComponentData): BlueprintComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const blueprintComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.blueprint);
+   
+   return {
+      partialRenderParts: [],
+      blueprintType: blueprintComponentData.blueprintType,
+      lastBlueprintProgress: blueprintComponentData.blueprintProgress,
+      associatedEntity: blueprintComponentData.associatedEntity
+   };
+}
+
+function getMaxRenderParts(entityComponentData: EntityComponentData): number {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const blueprintComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.blueprint);
+   return 2 * BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponentData.blueprintType].length;
+}
+
+function onLoad(entity: Entity): void {
+   updatePartialTexture(entity);
+   
+   const blueprintComponent = BlueprintComponentArray.getComponent(entity);
+   const tribeComponent = TribeComponentArray.getComponent(entity);
+   
+   // Create completed render parts
+   const progressTextureInfoArray = BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponent.blueprintType];
+   const renderObject = getEntityRenderObject(entity);
+   for (let i = 0; i < progressTextureInfoArray.length; i++) {
+      const progressTextureInfo = progressTextureInfoArray[i];
+
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         progressTextureInfo.zIndex,
+         progressTextureInfo.rotation,
+         // @HACK, this shittery is cuz the fence gate doesn't have its first hitbox at the 'core' position
+         progressTextureInfo.offsetX + (blueprintComponent.blueprintType === BlueprintType.fenceGate ? 32 : 0), progressTextureInfo.offsetY,
+         progressTextureInfo.completedTextureIndex
+      );
+      renderPart.opacity = 0.5;
+      if (tribeComponent.tribeID === playerTribe.id) {
+         renderPart.tintR = 0.2;
+         renderPart.tintG = 0.1;
+         renderPart.tintB = 0.8;
+      } else {
+         renderPart.tintR = 0.8;
+         renderPart.tintG = 0.0;
+         renderPart.tintB = 0.15;
+      }
+      renderObject.attachRenderPart(renderPart);
+   }
+}
+
+function onSpawn(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   playSoundOnHitbox("blueprint-place.mp3", 0.4, 1, entity, hitbox, false);
+}
+
+function updateFromData(data: BlueprintComponentData, entity: Entity): void {
+   const blueprintComponent = BlueprintComponentArray.getComponent(entity);
+   
+   blueprintComponent.blueprintType = data.blueprintType;
+   const blueprintProgress = data.blueprintProgress;
+   blueprintComponent.associatedEntity = data.associatedEntity;
+
+   // @Speed: don't do always, only if the data changes!
+   updatePartialTexture(entity);
+
+   if (blueprintProgress !== blueprintComponent.lastBlueprintProgress) {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+
+      playSoundOnHitbox("blueprint-work.mp3", 0.4, randFloat(0.9, 1.1), entity, hitbox, false);
+
+      const progressTexture = getCurrentBlueprintProgressTexture(blueprintComponent.blueprintType, blueprintProgress);
+      
+      // @Cleanup
+      const textureAtlas = getEntityTextureAtlasInfo();
+      const textureIndex = progressTexture.completedTextureIndex;
+      const xShift = textureAtlas.textureWidths[textureIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
+      const yShift = textureAtlas.textureHeights[textureIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
+      rotatePointAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
+      const particleOriginX = hitbox.box.posX + _point.x;
+      const particleOriginY = hitbox.box.posY + _point.y;
+      
+      // @Incomplete: Change the particle effect type depending on the material of the worked-on partial texture
+      // Create particle effects
+      switch (blueprintComponent.blueprintType) {
+         case BlueprintType.woodenDoor:
+         case BlueprintType.woodenEmbrasure:
+         case BlueprintType.woodenTunnel:
+         case BlueprintType.slingTurret:
+         case BlueprintType.ballista:
+         case BlueprintType.warriorHutUpgrade:
+         case BlueprintType.fenceGate: {
+            createWoodenBlueprintWorkParticleEffects(entity);
+            break;
+         }
+         case BlueprintType.stoneDoorUpgrade:
+         case BlueprintType.stoneEmbrasure:
+         case BlueprintType.stoneEmbrasureUpgrade:
+         case BlueprintType.stoneFloorSpikes:
+         case BlueprintType.stoneTunnel:
+         case BlueprintType.stoneTunnelUpgrade:
+         case BlueprintType.stoneWallSpikes:
+         case BlueprintType.stoneWall:
+         case BlueprintType.stoneDoor:
+         case BlueprintType.stoneBracings: {
+            createStoneBlueprintWorkParticleEffects(particleOriginX, particleOriginY);
+            break;
+         }
+         case BlueprintType.scrappy:
+         case BlueprintType.cogwalker: {
+            createStoneBlueprintWorkParticleEffects(particleOriginX, particleOriginY);
+            break;
+         }
+         default: {
+            assertUnreachable(blueprintComponent.blueprintType);
+         }
+      }
+   }
+   blueprintComponent.lastBlueprintProgress = blueprintProgress;
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   playSoundOnHitbox("blueprint-work.mp3", 0.4, 1, entity, hitbox, false);
+   playSoundOnHitbox("structure-shaping.mp3", 0.4, 1, entity, hitbox, false);
+
+   // @Cleanup: Copy and pasted from blueprint component
+   const blueprintComponent = BlueprintComponentArray.getComponent(entity);
+   switch (blueprintComponent.blueprintType) {
+      case BlueprintType.woodenDoor:
+      case BlueprintType.woodenEmbrasure:
+      case BlueprintType.woodenTunnel:
+      case BlueprintType.slingTurret:
+      case BlueprintType.ballista:
+      case BlueprintType.warriorHutUpgrade:
+      case BlueprintType.fenceGate: {
+         for (let i = 0; i < 5; i++) {
+            const x = hitbox.box.posX + randFloat(-32, 32);
+            const y = hitbox.box.posY + randFloat(-32, 32);
+            createSawdustCloud(x, y);
+         }
+   
+         for (let i = 0; i < 8; i++) {
+            createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32);
+         }
+         break;
+      }
+      case BlueprintType.stoneDoorUpgrade:
+      case BlueprintType.stoneEmbrasure:
+      case BlueprintType.stoneEmbrasureUpgrade:
+      case BlueprintType.stoneFloorSpikes:
+      case BlueprintType.stoneTunnel:
+      case BlueprintType.stoneTunnelUpgrade:
+      case BlueprintType.stoneWallSpikes:
+      case BlueprintType.stoneWall:
+      case BlueprintType.stoneDoor:
+      case BlueprintType.stoneBracings: {
+         for (let i = 0; i < 5; i++) {
+            const offsetDirection = randAngle();
+            const offsetAmount = 32 * Math.random();
+            createRockParticle(hitbox.box.posX + offsetAmount * Math.sin(offsetDirection), hitbox.box.posY + offsetAmount * Math.cos(offsetDirection), randAngle(), randFloat(50, 70), ParticleRenderLayer.high);
+         }
+      
+         for (let i = 0; i < 10; i++) {
+            createRockSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32 * Math.random(), 0, 0, ParticleRenderLayer.high);
+         }
+      
+         for (let i = 0; i < 3; i++) {
+            const x = hitbox.box.posX + randFloat(-32, 32);
+            const y = hitbox.box.posY + randFloat(-32, 32);
+            createDustCloud(x, y);
+         }
+         break;
+      }
+      case BlueprintType.scrappy:
+      case BlueprintType.cogwalker: {
+         break;
+      }
+      default: {
+         assertUnreachable(blueprintComponent.blueprintType);
+      }
+   }
 }

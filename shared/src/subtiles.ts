@@ -1,5 +1,26 @@
 import { Settings } from "./settings.js";
-import { SubtileIndex } from "./utils.js";
+
+export type SubtileIndex = number;
+
+export const enum SubtileType {
+   none,
+   rockWall,
+   sandstoneWall,
+   stoneWall1,
+   stoneWall2,
+   permafrostWall
+}
+
+export const SubtileTypeString: Record<SubtileType, string> = {
+   [SubtileType.none]: "None",
+   [SubtileType.rockWall]: "Rock wall",
+   [SubtileType.sandstoneWall]: "Sandstone wall",
+   [SubtileType.stoneWall1]: "Stone wall 1",
+   [SubtileType.stoneWall2]: "Stone wall 2",
+   [SubtileType.permafrostWall]: "Permafrost wall",
+}
+
+export const NUM_SUBTILE_TYPES = Object.keys(SubtileTypeString).length;
 
 export function getSubtileIndex(subtileX: number, subtileY: number): number {
    return (subtileY + Settings.EDGE_GENERATION_DISTANCE * 4) * Settings.FULL_WORLD_SIZE_TILES * 4 + subtileX + Settings.EDGE_GENERATION_DISTANCE * 4;

@@ -20,73 +20,75 @@ export interface SpitPoisonAreaComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spitPoisonArea, _SpitPoisonAreaComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.spitPoisonArea, typeof SpitPoisonAreaComponentArray> {}
 }
 
-class _SpitPoisonAreaComponentArray extends ServerComponentArray<SpitPoisonAreaComponent, SpitPoisonAreaComponentData> {
-   public decodeData(): SpitPoisonAreaComponentData {
-      return {};
+export const SpitPoisonAreaComponentArray = registerServerComponentArray(
+   ServerComponentType.spitPoisonArea,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+SpitPoisonAreaComponentArray.onJoin = onJoin;
+
+function decodeData(): SpitPoisonAreaComponentData {
+   return {};
+}
+
+function createComponent(): SpitPoisonAreaComponent {
+   return {
+      soundInfo: null
+   };
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}
+
+// @INCOMPLETE: Won't play when you walk into discovering a previously-offscreen spit poison!
+function onJoin(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   
+   const spitPoisonAreaComponent = SpitPoisonAreaComponentArray.getComponent(entity);
+   
+   spitPoisonAreaComponent.soundInfo = playSoundOnHitbox("acid-burn.mp3", 0.25, 1, entity, hitbox, true);
+   // @Temporary @Bug @Hack: FIX
+   if (spitPoisonAreaComponent.soundInfo === null) {
+      throw new Error();
    }
 
-   public createComponent(): SpitPoisonAreaComponent {
-      return {
-         soundInfo: null
-      };
+   spitPoisonAreaComponent.soundInfo.trackSource.loop = true;
+}
+
+function onTick(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const spitPoisonAreaComponent = SpitPoisonAreaComponentArray.getComponent(entity);
+
+   const hitbox = transformComponent.hitboxes[0];
+   const box = hitbox.box as CircularBox;
+   const range = box.radius;
+
+   if (spitPoisonAreaComponent.soundInfo !== null) {
+      spitPoisonAreaComponent.soundInfo.sound.volume = lerp(0.25, 0, 1 - range / Var.MAX_RANGE);
    }
 
-   public getMaxRenderParts(): number {
-      return 0;
-   }
-
-   // @INCOMPLETE: Won't play when you walk into discovering a previously-offscreen spit poison!
-   public onJoin(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      
-      const spitPoisonAreaComponent = SpitPoisonAreaComponentArray.getComponent(entity);
-      
-      spitPoisonAreaComponent.soundInfo = playSoundOnHitbox("acid-burn.mp3", 0.25, 1, entity, hitbox, true);
-      // @Temporary @Bug @Hack: FIX
-      if (spitPoisonAreaComponent.soundInfo === null) {
-         throw new Error();
-      }
-
-      spitPoisonAreaComponent.soundInfo.trackSource.loop = true;
-   }
-
-   public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const spitPoisonAreaComponent = SpitPoisonAreaComponentArray.getComponent(entity);
-
-      const hitbox = transformComponent.hitboxes[0];
-      const box = hitbox.box as CircularBox;
-      const range = box.radius;
-
-      if (spitPoisonAreaComponent.soundInfo !== null) {
-         spitPoisonAreaComponent.soundInfo.sound.volume = lerp(0.25, 0, 1 - range / Var.MAX_RANGE);
-      }
-
-      if (Var.MAX_RANGE * Math.random() < range) {
-         // Calculate spawn position
-         const offsetMagnitude = range * Math.random();
-         const moveDirection = randAngle();
-         const spawnPositionX = hitbox.box.posX + offsetMagnitude * Math.sin(moveDirection);
-         const spawnPositionY = hitbox.box.posY + offsetMagnitude * Math.cos(moveDirection);
-
-         createPoisonBubble(spawnPositionX, spawnPositionY, 1);
-      }
-
-      if (Math.random() >= range * range * Settings.DT_S / 5) {
-         return;
-      }
-
+   if (Var.MAX_RANGE * Math.random() < range) {
+      // Calculate spawn position
       const offsetMagnitude = range * Math.random();
-      const offsetDirection = randAngle();
-      const x = hitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
-      const y = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
+      const moveDirection = randAngle();
+      const spawnPositionX = hitbox.box.posX + offsetMagnitude * Math.sin(moveDirection);
+      const spawnPositionY = hitbox.box.posY + offsetMagnitude * Math.cos(moveDirection);
 
-      createAcidParticle(x, y);
+      createPoisonBubble(spawnPositionX, spawnPositionY, 1);
    }
-}
 
-export const SpitPoisonAreaComponentArray = registerServerComponentArray(ServerComponentType.spitPoisonArea, _SpitPoisonAreaComponentArray, true);
+   if (Math.random() >= range * range * Settings.DT_S / 5) {
+      return;
+   }
+
+   const offsetMagnitude = range * Math.random();
+   const offsetDirection = randAngle();
+   const x = hitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+   const y = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
+
+   createAcidParticle(x, y);
+}

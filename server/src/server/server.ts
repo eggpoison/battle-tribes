@@ -11,16 +11,16 @@ import SRandom from "../SRandom.js";
 import { updateDynamicPathfindingNodes } from "../pathfinding.js";
 import { updateGrassBlockers } from "../grass-blockers.js";
 import { broadcastSimulationStatus, createGameDataPacket } from "./packet-sending.js";
-import PlayerClient, { PlayerClientVars } from "./PlayerClient.js";
+import PlayerClient from "./PlayerClient.js";
 import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, processCommandPacket, resetDirtyEntities } from "./player-clients.js";
 import { createPlayerConfig } from "../entities/tribes/player.js";
-import { processAcquireTamingSkillPacket, processActivatePacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processEndEntityInteractionPacket, processCompleteTamingTierPacket, processDeactivatePacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processItemTransferPacket, processModifyBuildingPacket, processMountCarrySlotPacket, processStartEntityInteractionPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processScreenResizePacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetDebugEntityPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processSyncRequestPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving.js";
+import { processAcquireTamingSkillPacket, processActivatePacket, processAnimalStaffFollowCommandPacket, processAscendPacket, processEndEntityInteractionPacket, processCompleteTamingTierPacket, processDeactivatePacket, processDevChangeTribeTypePacket, processDevCreateTribePacket, processDevGiveItemPacket, processDevGiveTitlePacket, processDevRemoveTitlePacket, processDevSetViewedSpawnDistribution, processDismountCarrySlotPacket, processEntitySummonPacket, processForceAcquireTamingSkillPacket, processForceCompleteTamingTierPacket, processForceUnlockTechPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processItemTransferPacket, processModifyBuildingPacket, processMountCarrySlotPacket, processStartEntityInteractionPacket, processPickUpEntityPacket, processPlaceBlueprintPacket, processPlayerAttackPacket, processPlayerCraftingPacket, processPlayerDataPacket, processRecruitTribesmanPacket, processRenameAnimalPacket, processRespawnPacket, processRespondToTitleOfferPacket, processSelectTechPacket, processSetAttackTargetPacket, processSetAutogiveBaseResourcesPacket, processSetCarryTargetPacket, processSetDebugEntityPacket, processSetMoveTargetPositionPacket, processSetSignMessagePacket, processSetSpectatingPositionPacket, processSpectateEntityPacket, processStartItemUsePacket, processStopItemUsePacket, processStructureInteractPacket, processStructureUninteractPacket, processSyncRequestPacket, processTechStudyPacket, processTechUnlockPacket, processToggleSimulationPacket, processTPToEntityPacket, processUseItemPacket, receiveChatMessagePacket, receiveSelectRiderDepositLocation } from "./packet-receiving.js";
 import { SpikesComponentArray } from "../components/SpikesComponent.js";
 import { TribeComponentArray } from "../components/TribeComponent.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent.js";
 import { sortComponentArrays } from "../components/ComponentArray.js";
-import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, surfaceLayer, layers } from "../world.js";
+import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, surfaceLayer, layers, getEntityType } from "../world.js";
 import { resolveEntityCollisions } from "../collision-detection.js";
 import { runCollapses } from "../collapses.js";
 import { updateTribes } from "../tribes.js";
@@ -67,24 +67,29 @@ const getPlayerVisibleEntities = (playerClient: PlayerClient): Set<Entity> => {
 
    const visibleEntities = new Set<Entity>();
    
-   // @Copynpaste
-   const minVisibleX = playerClient.lastViewedPositionX - playerClient.screenWidth * 0.5 - PlayerClientVars.VIEW_PADDING;
-   const maxVisibleX = playerClient.lastViewedPositionX + playerClient.screenWidth * 0.5 + PlayerClientVars.VIEW_PADDING;
-   const minVisibleY = playerClient.lastViewedPositionY - playerClient.screenHeight * 0.5 - PlayerClientVars.VIEW_PADDING;
-   const maxVisibleY = playerClient.lastViewedPositionY + playerClient.screenHeight * 0.5 + PlayerClientVars.VIEW_PADDING;
+   const minVisibleX = playerClient.minVisibleX;
+   const maxVisibleX = playerClient.maxVisibleX;
+   const minVisibleY = playerClient.minVisibleY;
+   const maxVisibleY = playerClient.maxVisibleY;
    
-   for (let chunkX = playerClient.minVisibleChunkX; chunkX <= playerClient.maxVisibleChunkX; chunkX++) {
-      for (let chunkY = playerClient.minVisibleChunkY; chunkY <= playerClient.maxVisibleChunkY; chunkY++) {
+   for (let chunkY = playerClient.minVisibleChunkY; chunkY <= playerClient.maxVisibleChunkY; chunkY++) {
+      for (let chunkX = playerClient.minVisibleChunkX; chunkX <= playerClient.maxVisibleChunkX; chunkX++) {
          const chunk = layer.getChunk(chunkX, chunkY);
-         for (const entity of chunk.entities) {
+         const entities = chunk.entities;
+
+         for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
             if (entityIsHiddenFromPlayer(entity, playerClient.tribe)) {
                continue;
             }
 
             const transformComponent = TransformComponentArray.getComponent(entity);
-            if (transformComponent.boundingAreaMinX <= maxVisibleX && transformComponent.boundingAreaMaxX >= minVisibleX && transformComponent.boundingAreaMinY <= maxVisibleY && transformComponent.boundingAreaMaxY >= minVisibleY) {
+            // The entity's bounding area needs to be fully contained in the visible area (so that no hitboxes are over unsent tiles for the client)
+            if (transformComponent.boundingAreaMinX >= minVisibleX && transformComponent.boundingAreaMaxX <= maxVisibleX && transformComponent.boundingAreaMinY >= minVisibleY && transformComponent.boundingAreaMaxY <= maxVisibleY) {
                // Add the roots of the entity
-               for (const rootHitbox of transformComponent.rootHitboxes) {
+               const rootHitboxes = transformComponent.rootHitboxes;
+               for (let j = 0; j < rootHitboxes.length; j++) {
+                  const rootHitbox = rootHitboxes[j];
                   const rootEntity = rootHitbox.rootEntity;
                   const rootTransformComponent = TransformComponentArray.getComponent(rootEntity);
                   // @Cleanup lolllllllll
@@ -98,20 +103,6 @@ const getPlayerVisibleEntities = (playerClient: PlayerClient): Set<Entity> => {
    }
 
    return visibleEntities;
-}
-
-const estimateVisibleChunkBounds = (spawnPosition: Point, screenWidth: number, screenHeight: number): VisibleChunkBounds => {
-   const zoom = 1;
-
-   const halfScreenWidth = screenWidth * 0.5;
-   const halfScreenHeight = screenHeight * 0.5;
-   
-   const minChunkX = Math.max(Math.floor((spawnPosition.x - halfScreenWidth / zoom) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((spawnPosition.x + halfScreenWidth / zoom) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
-   const minChunkY = Math.max(Math.floor((spawnPosition.y - halfScreenHeight / zoom) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((spawnPosition.y + halfScreenHeight / zoom) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
-
-   return [minChunkX, maxChunkX, minChunkY, maxChunkY];
 }
 
 // @Cleanup: Remove class, just have functions
@@ -199,14 +190,11 @@ class GameServer {
                const username = reader.readString();
                // @Temporary
                const tribeType = reader.readNumber() as TribeType;
-               const screenWidth = reader.readNumber();
-               const screenHeight = reader.readNumber();
+               const deviceAspectRatio = reader.readNumber();
 
                const isSpectating = reader.readBool();
 
                const spawnPosition = generatePlayerSpawnPosition(tribeType);
-               // @Incomplete? Unused?
-               const visibleChunkBounds = estimateVisibleChunkBounds(spawnPosition, screenWidth, screenHeight);
    
                const tribe = new Tribe(tribeType, false, spawnPosition.copy());
                // @TEMPORARY @HACK
@@ -216,7 +204,7 @@ class GameServer {
                // @Temporary @Incomplete
                const isDev = true;
 
-               playerClient = new PlayerClient(socket, tribe, layer, screenWidth, screenHeight, spawnPosition, 0, username, isSpectating, isDev);
+               playerClient = new PlayerClient(socket, tribe, layer, deviceAspectRatio, spawnPosition, 0, username, isSpectating, isDev);
    
                if (!isSpectating) {
                   const config = createPlayerConfig(spawnPosition.x, spawnPosition.y, 0, tribe, playerClient);
@@ -270,7 +258,7 @@ class GameServer {
                //    }, 20000);
                // }
                
-               addPlayerClient(playerClient, surfaceLayer, spawnPosition);
+               addPlayerClient(playerClient, surfaceLayer, spawnPosition.x, spawnPosition.y);
 
                return;
             }
@@ -337,7 +325,6 @@ class GameServer {
                case ClientPacketType.terminalCommand:               processCommandPacket(playerClient, reader); break;
                case ClientPacketType.startEntityInteraction:        processStartEntityInteractionPacket(playerClient, reader); break;
                case ClientPacketType.endEntityInteraction:          processEndEntityInteractionPacket(playerClient, reader); break;
-               case ClientPacketType.screenResize:                  processScreenResizePacket(playerClient, reader); break;
                default: {
                   console.log("Unknown packet type: " + packetType);
                }
@@ -392,7 +379,7 @@ class GameServer {
          
          pushEntityJoinBuffer(true);
       } else {
-         // If not simulating, regularly broadcast so to all players
+         // If not simulating, regularly broadcast as such to all players
          if (tickIntervalHasPassed(0.5)) {
             broadcastSimulationStatus(SERVER.isSimulating);
          }
@@ -441,6 +428,8 @@ class GameServer {
             continue;
          }
 
+         // @Cleanup: so much logic here shouldn't be in the main server.ts file.
+
          const viewedEntity = playerClient.cameraSubject;
 
          // Update player client info
@@ -488,9 +477,33 @@ class GameServer {
             }
          }
          
+         const nearbyRenderChunks = playerClient.calculateNearbyRenderChunks();
+
+         const newRenderChunks: number[] = [];
+         const oldRenderChunks: number[] = [];
+         // Add new render chunks
+         for (let i = 0; i < nearbyRenderChunks.length; i++) {
+            const renderChunkIdx = nearbyRenderChunks[i];
+
+            if (playerClient.nearbyRenderChunks.indexOf(renderChunkIdx) === -1) {
+               newRenderChunks.push(renderChunkIdx);
+               playerClient.nearbyRenderChunks.push(renderChunkIdx);
+            }
+         }
+         // Remove old render chunks
+         for (let i = 0; i < playerClient.nearbyRenderChunks.length; i++) {
+            const renderChunkIdx = playerClient.nearbyRenderChunks[i];
+
+            if (nearbyRenderChunks.indexOf(renderChunkIdx) === -1) {
+               oldRenderChunks.push(renderChunkIdx);
+               playerClient.nearbyRenderChunks.splice(i, 1);
+               i--;
+            }
+         }
+         
          // Send the game data to the player
          playerClient.visibleEntities = visibleEntities; // Done just before creating the game data packet, as adding the lights data requires .visibleEntities to be up-to-date.
-         const gameDataPacket = createGameDataPacket(playerClient, entitiesToSend, removedEntities);
+         const gameDataPacket = createGameDataPacket(playerClient, entitiesToSend, removedEntities, newRenderChunks, oldRenderChunks);
          playerClient.socket.send(gameDataPacket);
 
          // @Cleanup: should these be here?
@@ -510,7 +523,8 @@ class GameServer {
 
       // @Hack?
       for (const layer of layers) {
-         layer.wallSubtileUpdates = new Set();
+         const wallSubtileUpdates = layer.getWallSubtileUpdates();
+         wallSubtileUpdates.clear();
       }
 
       resetDirtyEntities();

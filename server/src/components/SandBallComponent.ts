@@ -8,7 +8,7 @@ import { destroyEntity, getEntityLayer } from "../world.js";
 import { AIHelperComponentArray, AIType } from "./AIHelperComponent.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { detachHitbox, TransformComponentArray } from "./TransformComponent.js";
-import { getHitboxTile } from "../hitboxes.js";
+import { getBoxTile } from "../hitboxes.js";
 
 export class SandBallComponent {
    public size = 1;
@@ -33,7 +33,7 @@ function onTick(sandBall: Entity): void {
    }
 
    // While in water sand balls have a chance of disintegrating
-   const tile = getHitboxTile(hitbox);
+   const tile = getBoxTile(hitbox.box);
    const layer = getEntityLayer(sandBall);
    if (layer.getTileType(tile) === TileType.water && Math.random() < 0.3 * Settings.DT_S) {
       destroyEntity(sandBall);

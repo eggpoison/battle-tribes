@@ -33,7 +33,7 @@ const moveFunc = (dustflea: Entity, x: number, y: number, acceleration: number):
       const hitbox = transformComponent.hitboxes[0];
       
       const direction = angle(x - hitbox.box.posX, y - hitbox.box.posY);
-      applyAbsoluteKnockback(hitbox, polarVec2(125, direction));
+      applyAbsoluteKnockback(hitbox, 125 * Math.sin(direction), 125 * Math.cos(direction));
    }
 }
 

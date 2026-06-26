@@ -9,25 +9,26 @@ export interface AIHelperComponentData {}
 export interface AIHelperComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiHelper, _AIHelperComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiHelper, typeof AIHelperComponentArray> {}
 }
 
-class _AIHelperComponentArray extends ServerComponentArray<AIHelperComponent, AIHelperComponentData> {
-   public decodeData(reader: PacketReader): AIHelperComponentData {
-      reader.padOffset(Bytes.Float32);
-      return {};
-   }
+export const AIHelperComponentArray = registerServerComponentArray(
+   ServerComponentType.aiHelper,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(): AIHelperComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(reader: PacketReader): AIHelperComponentData {
+   reader.padOffset(Bytes.Float32);
+   return {};
 }
 
-export const AIHelperComponentArray = registerServerComponentArray(ServerComponentType.aiHelper, _AIHelperComponentArray, true);
+function createComponent(): AIHelperComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}
 
 export function createAIHelperComponentData(): AIHelperComponentData {
    return {};

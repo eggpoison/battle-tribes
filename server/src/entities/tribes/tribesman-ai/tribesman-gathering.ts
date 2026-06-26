@@ -3,7 +3,7 @@ import { TribesmanAIType } from "../../../../../shared/dist/components.js";
 import { Entity, EntityType } from "../../../../../shared/dist/entities.js";
 import { InventoryName, ItemType, ITEM_INFO_RECORD, itemInfoIsConsumable, ItemTypeString } from "../../../../../shared/dist/items/items.js";
 import { PathfindingSettings, Settings } from "../../../../../shared/dist/settings.js";
-import { distance, getTileIndexIncludingEdges, assert, randItem, getTileX, getTileY } from "../../../../../shared/dist/utils.js";
+import { distance, assert, randItem } from "../../../../../shared/dist/utils.js";
 import { HealthComponentArray } from "../../../components/HealthComponent.js";
 import { VACUUM_RANGE, tribeMemberCanPickUpItem } from "../tribe-member.js";
 import { InventoryComponent, InventoryComponentArray, addItem, countItemType, getInventory, inventoryHasItemType } from "../../../components/InventoryComponent.js";
@@ -23,9 +23,10 @@ import { entityDropsFoodItem, entityDropsItem, getEntityTypesWhichDropItem } fro
 import { getSpawnInfoForEntityType } from "../../../entity-spawn-info.js";
 import { LocalBiome } from "../../../world-generation/terrain-generation-utils.js";
 import Layer from "../../../Layer.js";
-import { getHitboxTile } from "../../../hitboxes.js";
+import { getBoxTile } from "../../../hitboxes.js";
 import { pathToEntityExists, pathfindTribesman, getFinalPath, continueCurrentPath, AIPathfindingComponentArray } from "../../../components/AIPathfindingComponent.js";
 import { createItem } from "../../../items.js";
+import { getTileIndexIncludingEdges, getTileX, getTileY } from "../../../../../shared/dist/tiles.js";
 
 // @Cleanup: unused?
 const tribesmanIsElegibleToHarvestEntityType = (tribesman: Entity, entityType: EntityType): boolean => {
@@ -352,7 +353,7 @@ export function workOnGatherPlan(tribesman: Entity, gatherPlan: AIGatherItemPlan
       // If the entity isn't in the right biome, go to the right biome
       const transformComponent = TransformComponentArray.getComponent(tribesman);
       const tribesmanHitbox = transformComponent.hitboxes[0];
-      const currentTile = getHitboxTile(tribesmanHitbox);
+      const currentTile = getBoxTile(tribesmanHitbox.box);
       if (layer.getTileBiome(currentTile) !== spawnInfo.biome) {
          moveTribesmanToBiome(tribesman, spawnInfo.layer, spawnInfo.biome);
          return;

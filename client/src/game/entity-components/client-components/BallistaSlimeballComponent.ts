@@ -17,46 +17,49 @@ export interface BallistaSlimeballComponentData {}
 export interface BallistaSlimeballComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaSlimeball, _BallistaSlimeballComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaSlimeball, typeof BallistaSlimeballComponentArray> {}
 }
 
-class _BallistaSlimeballComponentArray extends ClientComponentArray<BallistaSlimeballComponent, BallistaSlimeballComponentData> {
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.projectiles_ballistaSlimeball
-         )
-      );
-   }
+export const BallistaSlimeballComponentArray = registerClientComponentArray(
+   ClientComponentType.ballistaSlimeball,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+BallistaSlimeballComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+BallistaSlimeballComponentArray.onDie = onDie;
 
-   public createComponent(): BallistaSlimeballComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onDie(entity: Entity): void {
-      // Create arrow break particles
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      getHitboxVelocity(hitbox);
-      const velocity = _point;
-      for (let i = 0; i < 6; i++) {
-         createArrowDestroyParticle(hitbox.box.posX, hitbox.box.posY, velocity.x, velocity.y);
-      }
-   }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.projectiles_ballistaSlimeball
+      )
+   );
 }
 
-export const BallistaSlimeballComponentArray = registerClientComponentArray(ClientComponentType.ballistaSlimeball, _BallistaSlimeballComponentArray, true);
+function createComponent(): BallistaSlimeballComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onDie(entity: Entity): void {
+   // Create arrow break particles
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   getHitboxVelocity(hitbox);
+   const velocity = _point;
+   for (let i = 0; i < 6; i++) {
+      createArrowDestroyParticle(hitbox.box.posX, hitbox.box.posY, velocity.x, velocity.y);
+   }
+}
 
 export function createBallistaSlimeballComponentData(): BallistaSlimeballComponentData {
    return {};

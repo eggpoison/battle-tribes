@@ -40,7 +40,13 @@ export const enum Settings {
    SAFETY_NODES_IN_WORLD_WIDTH = WORLD_UNITS / SAFETY_NODE_SEPARATION,
    MAX_CRAFTING_STATION_USE_DISTANCE = 150,
    TIME_PASS_RATE = 150,
-   NIGHT_LIGHT_LEVEL = 0.15
+   NIGHT_LIGHT_LEVEL = 0.15,
+   SUBTILE_HEALTH = 3,
+   // @Speed: this used to be 128, but ive bumped it up to 256 so the DEV PLayer can fly around at lightspeed without crashing.
+   PLAYER_VIEW_PADDING = 256,
+   // ultrawide gaeming
+   MAX_ASPECT_RATIO = 21/9,
+   MAX_VIEW_HEIGHT = 1440 / 1.4 // 1.4 is just the zoom constant i had used before I standardised this
 }
 
 assert(Math.pow(2, Settings.CHUNK_UNITS_LOG2) === Settings.CHUNK_UNITS);

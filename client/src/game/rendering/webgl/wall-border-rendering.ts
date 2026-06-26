@@ -3,9 +3,10 @@ import { getSubtileX, getSubtileY } from "../../../../../shared/src/subtiles";
 import { Bytes } from "../../../../../shared/src/constants";
 import { maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY } from "../../camera";
 import { createWebGLProgram, gl } from "../../webgl";
-import { EdgeMarkerBit, RenderChunkEdgeInfo, RenderChunkWallBorderInfo, getRenderChunkIndex, getRenderChunkWallBorderInfo, setRenderChunkWallBorderInfo } from "../render-chunks";
+import { EdgeMarkerBit, RenderChunkEdgeInfo, RenderChunkWallBorderInfo, getRenderChunkWallBorderInfo, setRenderChunkWallBorderInfo } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import Layer from "../../Layer";
+import { getRenderChunkIndex } from "../../../../../shared/src/render-chunks";
 
 const enum Var {
    ATTRIBUTES_PER_VERTEX = 3,
@@ -354,7 +355,7 @@ const calculateVertexData = (info: RenderChunkEdgeInfo): Float32Array => {
    return vertexData;
 }
 
-export function calculateWallBorderInfo(edgeInfo: RenderChunkEdgeInfo): RenderChunkWallBorderInfo | null {
+export function createWallBorderInfo(edgeInfo: RenderChunkEdgeInfo): RenderChunkWallBorderInfo | null {
    const vertexData = calculateVertexData(edgeInfo);
    if (vertexData.length === 0) {
       return null;
@@ -381,9 +382,14 @@ export function calculateWallBorderInfo(edgeInfo: RenderChunkEdgeInfo): RenderCh
    };
 }
 
+export function destroyWallBorderInfo(info: RenderChunkWallBorderInfo): void {
+   gl.deleteVertexArray(info.vao);
+   gl.deleteBuffer(info.buffer);
+}
+
 export function recalculateWallBorders(layer: Layer, renderChunkIdx: number, edgeInfo: RenderChunkEdgeInfo): void {
    const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkIdx);
-   if (wallBorderInfo !== null) {
+   if (wallBorderInfo !== undefined) {
       wallBorderInfo.vertexData = calculateVertexData(edgeInfo);
       
       gl.bindVertexArray(wallBorderInfo.vao);
@@ -394,7 +400,7 @@ export function recalculateWallBorders(layer: Layer, renderChunkIdx: number, edg
       
       gl.bindVertexArray(null);
    } else {
-      const data = calculateWallBorderInfo(edgeInfo);
+      const data = createWallBorderInfo(edgeInfo);
       if (data !== null) {
          setRenderChunkWallBorderInfo(layer, renderChunkIdx, data);
       }
@@ -410,7 +416,7 @@ export function renderWallBorders(layer: Layer): void {
          const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
 
          const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkIdx);
-         if (wallBorderInfo !== null) {
+         if (wallBorderInfo !== undefined) {
             hasVisibleWallBorder = true;
             break;
          }
@@ -431,7 +437,7 @@ export function renderWallBorders(layer: Layer): void {
          const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
 
          const wallBorderInfo = getRenderChunkWallBorderInfo(layer, renderChunkIdx);
-         if (wallBorderInfo === null) {
+         if (wallBorderInfo === undefined) {
             continue;
          }
 

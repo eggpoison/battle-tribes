@@ -2,9 +2,9 @@ import { Box, HitboxCollisionType, HitboxFlagBit, HitboxTag, cloneBox } from "..
 import { CollisionBit } from "../../shared/dist/collision.js";
 import { Entity, EntityType } from "../../shared/dist/entities.js";
 import { Settings } from "../../shared/dist/settings.js";
-import { TILE_PHYSICS_INFO_RECORD, TileType } from "../../shared/dist/tiles.js";
-import { Point, getAngleDiff, TileIndex, getTileIndexIncludingEdges } from "../../shared/dist/utils.js";
-import { CollisionVars, entitiesAreColliding } from "./collision-detection.js";
+import { getTileIndexIncludingEdges, TILE_PHYSICS_INFO_RECORD, TileIndex, TileType } from "../../shared/dist/tiles.js";
+import { Point, getAngleDiff } from "../../shared/dist/utils.js";
+import { boxHasCollisionWithHitboxes, CollisionVars, entitiesAreColliding } from "./collision-detection.js";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent.js";
 import { registerPlayerKnockback } from "./server/player-clients.js";
 import { getEntityLayer, getEntityType } from "./world.js";
@@ -156,31 +156,49 @@ export function getRootHitbox(hitbox: Hitbox): Hitbox {
    return currentHitbox;
 }
 
-export function addHitboxVelocity(hitbox: Hitbox, addVec: Point): void {
+export function addHitboxVelocity(hitbox: Hitbox, addX: number, addY: number): void {
    const rootHitbox = getRootHitbox(hitbox);
    if (!hitboxIsStatic(rootHitbox)) {
-      rootHitbox.box.posX += addVec.x * Settings.DT_S;
-      rootHitbox.box.posY += addVec.y * Settings.DT_S;
+      rootHitbox.box.posX += addX * Settings.DT_S;
+      rootHitbox.box.posY += addY * Settings.DT_S;
    }
 }
 
-export function translateHitbox(hitbox: Hitbox, translation: Point): void {
+export function translateHitbox(hitbox: Hitbox, tx: number, ty: number): void {
    const rootHitbox = getRootHitbox(hitbox);
-   rootHitbox.box.posX += translation.x;
-   rootHitbox.box.posY += translation.y;
-   rootHitbox.previousPosX += translation.x;
-   rootHitbox.previousPosY += translation.y;
+   rootHitbox.box.posX += tx;
+   rootHitbox.box.posY += ty;
+   rootHitbox.previousPosX += tx;
+   rootHitbox.previousPosY += ty;
 
    const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
    transformComponent.isDirty = true;
 }
 
-export function teleportHitbox(hitbox: Hitbox, pos: Point): void {
+export function translateHitboxX(hitbox: Hitbox, tx: number): void {
    const rootHitbox = getRootHitbox(hitbox);
-   rootHitbox.box.posX = pos.x;
-   rootHitbox.box.posY = pos.y;
-   rootHitbox.previousPosX = pos.x;
-   rootHitbox.previousPosY = pos.y;
+   rootHitbox.box.posX += tx;
+   rootHitbox.previousPosX += tx;
+
+   const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
+   transformComponent.isDirty = true;
+}
+
+export function translateHitboxY(hitbox: Hitbox, ty: number): void {
+   const rootHitbox = getRootHitbox(hitbox);
+   rootHitbox.box.posY += ty;
+   rootHitbox.previousPosY += ty;
+
+   const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
+   transformComponent.isDirty = true;
+}
+
+export function teleportHitbox(hitbox: Hitbox, x: number, y: number): void {
+   const rootHitbox = getRootHitbox(hitbox);
+   rootHitbox.box.posX = x;
+   rootHitbox.box.posY = y;
+   rootHitbox.previousPosX = x;
+   rootHitbox.previousPosY = y;
 
    const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
    transformComponent.isDirty = true;
@@ -225,28 +243,27 @@ export function applyKnockback(hitbox: Hitbox, addVec: Point): void {
    }
    const addX = addVec.x / totalMass;
    const addY = addVec.y / totalMass;
-   const addVecProper = new Point(addX, addY);
-   addHitboxVelocity(rootHitbox, addVecProper);
+   addHitboxVelocity(rootHitbox, addX, addY);
 
    // @Hack?
    if (getEntityType(rootHitbox.entity) === EntityType.player) {
-      registerPlayerKnockback(rootHitbox.entity, addVecProper);
+      registerPlayerKnockback(rootHitbox.entity, addX, addY);
    }
 }
 
 // @Cleanup: Should be combined with previous function
-export function applyAbsoluteKnockback(hitbox: Hitbox, knockback: Point): void {
+export function applyAbsoluteKnockback(hitbox: Hitbox, knockbackX: number, knockbackY: number): void {
    const rootHitbox = getRootHitbox(hitbox);
    if (hitboxIsStatic(rootHitbox)) {
       return;
    }
 
-   addHitboxVelocity(rootHitbox, knockback);
+   addHitboxVelocity(rootHitbox, knockbackX, knockbackY);
 
    // @Hack?
    // @Copynpaste
    if (getEntityType(rootHitbox.entity) === EntityType.player) {
-      registerPlayerKnockback(rootHitbox.entity, knockback);
+      registerPlayerKnockback(rootHitbox.entity, knockbackX, knockbackY);
    }
 }
 
@@ -273,7 +290,7 @@ export function applyForce(hitbox: Hitbox, forceX: number, forceY: number): void
 export function applyAccelerationFromGround(hitbox: Hitbox, acceleration: Point): void {
    const entity = hitbox.entity;
 
-   const tileIndex = getHitboxTile(hitbox);
+   const tileIndex = getBoxTile(hitbox.box);
    const tileType = getEntityLayer(entity).getTileType(tileIndex);
    const tilePhysicsInfo = TILE_PHYSICS_INFO_RECORD[tileType];
    
@@ -283,7 +300,7 @@ export function applyAccelerationFromGround(hitbox: Hitbox, acceleration: Point)
    let moveSpeedMultiplier: number;
    if (transformComponent.overrideMoveSpeedMultiplier || !transformComponent.isAffectedByGroundFriction) {
       moveSpeedMultiplier = 1;
-   } else if (tileType === TileType.water && !hitboxIsInRiver(hitbox)) {
+   } else if (tileType === TileType.water && !hitboxIsInRiver(tileType, hitbox)) {
       moveSpeedMultiplier = transformComponent.moveSpeedMultiplier;
    } else {
       moveSpeedMultiplier = tilePhysicsInfo.moveSpeedMultiplier * transformComponent.moveSpeedMultiplier;
@@ -376,23 +393,18 @@ export function turnHitboxToAngle(hitbox: Hitbox, idealAngle: number, turnSpeed:
    hitbox.angularAcceleration += springForce + dampingForce;
 }
 
-export function getHitboxTile(hitbox: Hitbox): TileIndex {
-   const tileX = Math.floor(hitbox.box.posX / Settings.TILE_SIZE);
-   const tileY = Math.floor(hitbox.box.posY / Settings.TILE_SIZE);
+export function getBoxTile(box: Box): TileIndex {
+   const tileX = Math.floor(box.posX / Settings.TILE_SIZE);
+   const tileY = Math.floor(box.posY / Settings.TILE_SIZE);
    return getTileIndexIncludingEdges(tileX, tileY);
 }
 
-export function hitboxIsInRiver(hitbox: Hitbox): boolean {
-   const entity = hitbox.entity;
-   
-   const tileIndex = getHitboxTile(hitbox);
-   const layer = getEntityLayer(entity);
-
-   const tileType = layer.tileTypes[tileIndex];
+export function hitboxIsInRiver(tileType: TileType, hitbox: Hitbox): boolean {
    if (tileType !== TileType.water) {
       return false;
    }
 
+   const entity = hitbox.entity;
    const transformComponent = TransformComponentArray.getComponent(entity);
    if (!transformComponent.isAffectedByGroundFriction) {
       return false;
@@ -400,10 +412,12 @@ export function hitboxIsInRiver(hitbox: Hitbox): boolean {
 
    // If the entity is standing on a stepping stone they aren't in a river
    // @Speed: we only need to check the chunks the hitbox is in
+   const box = hitbox.box;
    for (const chunk of transformComponent.chunks) {
       for (const currentEntity of chunk.entities) {
          if (getEntityType(currentEntity) === EntityType.riverSteppingStone) {
-            if (entitiesAreColliding(entity, currentEntity) !== CollisionVars.NO_COLLISION) {
+            const entityTransformComponent = TransformComponentArray.getComponent(currentEntity);
+            if (boxHasCollisionWithHitboxes(box, entityTransformComponent.hitboxes)) {
                return false;
             }
          }

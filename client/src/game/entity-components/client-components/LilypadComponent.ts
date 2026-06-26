@@ -12,35 +12,37 @@ export interface LilypadComponentData {}
 export interface LilypadComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.lilypad, _LilypadComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.lilypad, typeof LilypadComponentArray> {}
 }
 
-class _LilypadComponentArray extends ClientComponentArray<LilypadComponent, LilypadComponentData> {
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.entities_lilypad_lilypad
-         )
-      );
-   }
+export const LilypadComponentArray = registerClientComponentArray(
+   ClientComponentType.lilypad,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+LilypadComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public createComponent(): LilypadComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.entities_lilypad_lilypad
+      )
+   );
 }
 
-export const LilypadComponentArray = registerClientComponentArray(ClientComponentType.lilypad, _LilypadComponentArray, true);
+function createComponent(): LilypadComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
 
 export function createLilypadComponentData(): LilypadComponentData {
    return {};

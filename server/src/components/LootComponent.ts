@@ -3,7 +3,7 @@ import { Entity, EntityType } from "../../../shared/dist/entities.js";
 import { ItemType, ITEM_TYPE_RECORD } from "../../../shared/dist/items/items.js";
 import { Settings } from "../../../shared/dist/settings.js";
 import { assert } from "../../../shared/dist/utils.js";
-import { getHitboxTile } from "../hitboxes.js";
+import { getBoxTile } from "../hitboxes.js";
 import { getEntityLayer, getEntityType } from "../world.js";
 import { LocalBiome } from "../world-generation/terrain-generation-utils.js";
 import { ComponentArray } from "./ComponentArray.js";
@@ -93,7 +93,7 @@ const addToNewLocalBiome = (entity: Entity, lootComponent: LootComponent): void 
    const hitbox = transformComponent.hitboxes[0];
    
    const layer = getEntityLayer(entity);
-   const tileIndex = getHitboxTile(hitbox);
+   const tileIndex = getBoxTile(hitbox.box);
    const localBiome = layer.getTileLocalBiome(tileIndex);
 
    lootComponent.localBiome = localBiome;

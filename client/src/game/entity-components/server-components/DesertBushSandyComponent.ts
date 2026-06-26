@@ -21,61 +21,65 @@ export interface DesertBushSandyComponentData {
 export interface DesertBushSandyComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertBushSandy, _DesertBushSandyComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.desertBushSandy, typeof DesertBushSandyComponentArray> {}
 }
 
-class _DesertBushSandyComponentArray extends ServerComponentArray<DesertBushSandyComponent, DesertBushSandyComponentData> {
-   public decodeData(reader: PacketReader): DesertBushSandyComponentData {
-      const size = reader.readNumber();
-      return {
-         size: size
-      };
-   }
+export const DesertBushSandyComponentArray = registerServerComponentArray(
+   ServerComponentType.desertBushSandy,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+DesertBushSandyComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+DesertBushSandyComponentArray.onHit = onHit;
+DesertBushSandyComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const desertBushSandyComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.desertBushSandy);
-      
-      let textureIndex: TextureIndex;
-      if (desertBushSandyComponentData.size === 0) {
-         textureIndex = TextureIndex.entities_desertBushSandy_desertBushSandy;
-      } else {
-         textureIndex = TextureIndex.entities_desertBushSandy_desertBushSandyLarge;
-      }
-      
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         textureIndex
-      );
-      renderPart.tintR = randFloat(-0.02, 0.02);
-      renderPart.tintG = randFloat(-0.02, 0.02);
-      renderPart.tintB = randFloat(-0.02, 0.02);
-      renderObject.attachRenderPart(renderPart)
-   }
-
-   public createComponent(): DesertBushSandyComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
-   }
+function decodeData(reader: PacketReader): DesertBushSandyComponentData {
+   const size = reader.readNumber();
+   return {
+      size: size
+   };
 }
 
-export const DesertBushSandyComponentArray = registerServerComponentArray(ServerComponentType.desertBushSandy, _DesertBushSandyComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const desertBushSandyComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.desertBushSandy);
+   
+   let textureIndex: TextureIndex;
+   if (desertBushSandyComponentData.size === 0) {
+      textureIndex = TextureIndex.entities_desertBushSandy_desertBushSandy;
+   } else {
+      textureIndex = TextureIndex.entities_desertBushSandy_desertBushSandyLarge;
+   }
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      textureIndex
+   );
+   renderPart.tintR = randFloat(-0.02, 0.02);
+   renderPart.tintG = randFloat(-0.02, 0.02);
+   renderPart.tintB = randFloat(-0.02, 0.02);
+   renderObject.attachRenderPart(renderPart)
+}
+
+function createComponent(): DesertBushSandyComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   playSoundOnHitbox("desert-plant-hit.mp3", randFloat(0.375, 0.425), randFloat(0.85, 1.15), entity, hitbox, false);
+}

@@ -22,60 +22,64 @@ export interface ResearchBenchComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.researchBench, _ResearchBenchComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.researchBench, typeof ResearchBenchComponentArray> {}
 }
 
-class _ResearchBenchComponentArray extends ServerComponentArray<ResearchBenchComponent, ResearchBenchComponentData> {
-   public decodeData(reader: PacketReader): ResearchBenchComponentData {
-      const isOccupied = reader.readBool();
-      return {
-         isOccupied: isOccupied
-      };
-   }
+export const ResearchBenchComponentArray = registerServerComponentArray(
+   ServerComponentType.researchBench,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+ResearchBenchComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+ResearchBenchComponentArray.onTick = onTick;
+ResearchBenchComponentArray.updateFromData = updateFromData;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.entities_researchBench_researchBench
-         )
-      );
-   }
+function decodeData(reader: PacketReader): ResearchBenchComponentData {
+   const isOccupied = reader.readBool();
+   return {
+      isOccupied: isOccupied
+   };
+}
 
-   public createComponent(entityComponentData: EntityComponentData): ResearchBenchComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const researchBenchComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.researchBench);
-      return {
-         isOccupied: researchBenchComponentData.isOccupied
-      };
-   }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.entities_researchBench_researchBench
+      )
+   );
+}
 
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+function createComponent(entityComponentData: EntityComponentData): ResearchBenchComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const researchBenchComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.researchBench);
+   return {
+      isOccupied: researchBenchComponentData.isOccupied
+   };
+}
 
-   public onTick(entity: Entity): void {
-      const researchBenchComponent = ResearchBenchComponentArray.getComponent(entity);
-      if (researchBenchComponent.isOccupied && customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.3)) {
-         const transformComponent = TransformComponentArray.getComponent(entity);
-         const pos = getRandomPositionInEntity(transformComponent);
-         createPaperParticle(pos.x, pos.y);
-      }
-   }
+function getMaxRenderParts(): number {
+   return 1;
+}
 
-   public updateFromData(data: ResearchBenchComponentData, entity: Entity): void {
-      const researchBenchComponent = ResearchBenchComponentArray.getComponent(entity);
-      researchBenchComponent.isOccupied = data.isOccupied;
+function onTick(entity: Entity): void {
+   const researchBenchComponent = ResearchBenchComponentArray.getComponent(entity);
+   if (researchBenchComponent.isOccupied && customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.3)) {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const pos = getRandomPositionInEntity(transformComponent);
+      createPaperParticle(pos.x, pos.y);
    }
 }
 
-export const ResearchBenchComponentArray = registerServerComponentArray(ServerComponentType.researchBench, _ResearchBenchComponentArray, true);
+function updateFromData(data: ResearchBenchComponentData, entity: Entity): void {
+   const researchBenchComponent = ResearchBenchComponentArray.getComponent(entity);
+   researchBenchComponent.isOccupied = data.isOccupied;
+}
 
 export function createResearchBenchComponentData(): ResearchBenchComponentData {
    return {

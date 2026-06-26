@@ -65,9 +65,10 @@ const moveFunc = (snobe: Entity, x: number, y: number, acceleration: number): vo
       const transformComponent = TransformComponentArray.getComponent(snobe);
       const hitbox = transformComponent.hitboxes[0];
       
+      const magnitude = 320 / 1600 * acceleration * transformComponent.moveSpeedMultiplier;
       const direction = angle(x - hitbox.box.posX, y - hitbox.box.posY);
       // @HACK: so that snobes get affected by freezing from ingu serpents. But this shouldn't have to be thought about here!!
-      applyAbsoluteKnockback(hitbox, polarVec2(320 / 1600 * acceleration * transformComponent.moveSpeedMultiplier, direction));
+      applyAbsoluteKnockback(hitbox, magnitude * Math.sin(direction), magnitude * Math.cos(direction));
    }
 }
 

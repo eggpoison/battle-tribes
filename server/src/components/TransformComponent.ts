@@ -13,15 +13,15 @@ import Layer from "../Layer.js";
 import Chunk from "../Chunk.js";
 import { ComponentArray } from "./ComponentArray.js";
 import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent.js";
-import { addEntityToPathfinding, clearEntityPathfindingNodes, entityCanBlockPathfinding, removeEntityFromPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding.js";
+import { addEntityToPathfinding, clearEntityPathfindingNodes, entityCanBlockPathfinding, removeEntityFromPathfinding, updateEntityPathfindingNodes } from "../pathfinding.js";
 import { resolveWallCollision } from "../collision-resolution.js";
 import { destroyEntity, entityExists, getEntityLayer, getEntityType, setEntityLayer, surfaceLayer, undergroundLayer } from "../world.js";
 import { removeEntityLights, updateEntityLights } from "../lights.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
 import { addHitboxDataToPacket, getHitboxDataLength } from "../server/packet-hitboxes.js";
-import { addHitboxAngularAcceleration, applyAcceleration, applyForce, getHitboxAngularVelocity, getHitboxTag, getHitboxTile, getHitboxTotalMassIncludingChildren, getHitboxVelocity, getRootHitbox, Hitbox, hitboxIgnoresWallCollisions, hitboxIsInRiver, hitboxIsPartOfParent, setHitboxIsPartOfParent, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../hitboxes.js";
+import { applyAcceleration, getHitboxTag, getBoxTile, getHitboxVelocity, getRootHitbox, Hitbox, hitboxIgnoresWallCollisions, hitboxIsInRiver, hitboxIsPartOfParent, setHitboxIsPartOfParent, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../hitboxes.js";
 import { EntityConfig, getConfigTransformComponent } from "../components.js";
-import { addEntityTethersToWorld, destroyTether as destroyTether, getHitboxAngularConstraints, getHitboxAngularTethers, getHitboxTethers } from "../tethers.js";
+import { addEntityTethersToWorld, destroyTether, getHitboxTethers } from "../tethers.js";
 import { CarrySlot, RideableComponentArray } from "./RideableComponent.js";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which could take advantage of that extraction?)
@@ -49,7 +49,7 @@ export class TransformComponent {
    
    public lastValidLayer = surfaceLayer;
 
-   public readonly occupiedPathfindingNodes = new Set<PathfindingNodeIndex>();
+   public readonly occupiedPathfindingNodes: PathfindingNodeIndex[] = [];
 
    public nextHitboxLocalID = 1;
 
@@ -127,7 +127,7 @@ export function addHitboxToEntity(entity: Entity, hitbox: Hitbox): void {
 
    // If the hitbox is clipping into a border, clean the entities' position so that it doesn't clip
    if (minX < 0 || maxX >= Settings.WORLD_UNITS || minY < 0 || maxY >= Settings.WORLD_UNITS) {
-      cleanEntityTransform(entity);
+      updateEntityTransform(entity);
    }
 }
 
@@ -163,11 +163,15 @@ const addToChunk = (entity: Entity, layer: Layer, chunk: Chunk): void => {
    const numViewingMobs = chunk.viewingEntities.length;
    for (let i = 0; i < numViewingMobs; i++) {
       const viewingEntity = chunk.viewingEntities[i];
+      if (viewingEntity === entity) {
+         continue;
+      }
+      
       const aiHelperComponent = AIHelperComponentArray.getComponent(viewingEntity);
 
       if (entityIsNoticedByAI(aiHelperComponent, entity)) {
          const idx = aiHelperComponent.potentialVisibleEntities.indexOf(entity);
-         if (idx === -1 && viewingEntity !== entity) {
+         if (idx === -1) {
             aiHelperComponent.potentialVisibleEntities.push(entity);
             aiHelperComponent.potentialVisibleEntityAppearances.push(1);
          } else {
@@ -322,7 +326,7 @@ const updateBoundsAndChunks = (entity: Entity, transformComponent: TransformComp
    transformComponent.boundingAreaMaxY = boundingAreaMaxY;
 }
 
-export function cleanEntityTransform(entity: Entity): void {
+export function updateEntityTransform(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
 
    assert(transformComponent.hitboxes.length > 0);
@@ -334,7 +338,6 @@ export function cleanEntityTransform(entity: Entity): void {
    updateBoundsAndChunks(entity, transformComponent);
 
    transformComponent.isDirty = false;
-   registerDirtyEntity(entity);
 }
 
 export const TransformComponentArray = new ComponentArray<TransformComponent>(ServerComponentType.transform, true, getDataLength, addDataToPacket);
@@ -349,13 +352,13 @@ TransformComponentArray.onRemove = onRemove;
 
 const collideWithVerticalWorldBorder = (hitbox: Hitbox, tx: number): void => {
    const rootHitbox = getRootHitbox(hitbox);
-   translateHitbox(rootHitbox, new Point(tx, 0));
+   translateHitbox(rootHitbox, tx, 0);
    setHitboxVelocityX(rootHitbox, 0);
 }
 
 const collideWithHorizontalWorldBorder = (hitbox: Hitbox, ty: number): void => {
    const rootHitbox = getRootHitbox(hitbox);
-   translateHitbox(rootHitbox, new Point(0, ty));
+   translateHitbox(rootHitbox, 0, ty);
    setHitboxVelocityY(rootHitbox, 0);
 }
 
@@ -406,7 +409,7 @@ export function resolveEntityBorderCollisions(transformComponent: TransformCompo
 
          // gotta clean the big 
          // @Speed i just slapped this in here so it has correct logic.
-         cleanEntityTransform(hitbox.entity);
+         updateEntityTransform(hitbox.entity);
       }
    }
 
@@ -437,23 +440,25 @@ const tickHitboxAngularPhysics = (hitbox: Hitbox, transformComponent: TransformC
    hitbox.angularAcceleration = 0;
 
    transformComponent.isDirty = true;
-   registerDirtyEntity(hitbox.entity);
 }
 
 const applyHitboxKinematics = (hitbox: Hitbox, transformComponent: TransformComponent): void => {
-   if (isNaN(hitbox.box.posX) || isNaN(hitbox.box.posY)) {
-      throw new Error();
-   }
-   
+   const box = hitbox.box;
+   const posX = box.posX;
+   const posY = box.posY;
    const entity = hitbox.entity;
+   
+   assert(!isNaN(posX) && !isNaN(posY));
+   
    const layer = getEntityLayer(entity);
    
-   const tileIndex = getHitboxTile(hitbox);
+   const tileIndex = getBoxTile(box);
    const tileType = layer.getTileType(tileIndex);
 
+   // @Cleanup: really weird for this to be here ...
    // If the game object is in a river, push them in the flow direction of the river
    // The tileMoveSpeedMultiplier check is so that game objects on stepping stones aren't pushed
-   if (hitboxIsInRiver(hitbox) && !transformComponent.overrideMoveSpeedMultiplier && transformComponent.isAffectedByGroundFriction) {
+   if (hitboxIsInRiver(tileType, hitbox) && !transformComponent.overrideMoveSpeedMultiplier && transformComponent.isAffectedByGroundFriction) {
       const flowDirectionIdx = layer.riverFlowDirections[tileIndex];
       // @HACK
       applyAcceleration(hitbox, 240 * Settings.DT_S * a[flowDirectionIdx], 240 * Settings.DT_S * b[flowDirectionIdx]);
@@ -463,8 +468,8 @@ const applyHitboxKinematics = (hitbox: Hitbox, transformComponent: TransformComp
    const tilePhysicsInfo = TILE_PHYSICS_INFO_RECORD[tileType];
    const friction = tilePhysicsInfo.friction;
    
-   let velX = hitbox.box.posX - hitbox.previousPosX;
-   let velY = hitbox.box.posY - hitbox.previousPosY;
+   let velX = posX - hitbox.previousPosX;
+   let velY = posY - hitbox.previousPosY;
 
    // Air friction
    if (transformComponent.isAffectedByAirFriction) {
@@ -475,30 +480,29 @@ const applyHitboxKinematics = (hitbox: Hitbox, transformComponent: TransformComp
 
    if (transformComponent.isAffectedByGroundFriction) {
       // Ground friction
-      const velocityMagnitude = Math.hypot(velX, velY);
-      if (velocityMagnitude > 0) {
+      const velocityMagnitudeSquared = velX * velX + velY * velY;
+      if (velocityMagnitudeSquared > 0) {
+         const velocityMagnitude = Math.sqrt(velocityMagnitudeSquared);
          const groundFriction = Math.min(friction, velocityMagnitude);
          velX -= groundFriction * velX / velocityMagnitude * Settings.DT_S;
          velY -= groundFriction * velY / velocityMagnitude * Settings.DT_S;
       }
    }
+
+   if (velX !== 0 || velY !== 0 || hitbox.accelX !== 0 || hitbox.accelY !== 0) {
+      transformComponent.isDirty = true;
+   }
    
+   hitbox.previousPosX = posX;
+   hitbox.previousPosY = posY;
+
    // Verlet integration update:
    // new position = current position + (damped implicit velocity) + acceleration * (dt^2)
-   const newX = hitbox.box.posX + velX + hitbox.accelX * Settings.DT_S * Settings.DT_S;
-   const newY = hitbox.box.posY + velY + hitbox.accelY * Settings.DT_S * Settings.DT_S;
-
-   hitbox.previousPosX = hitbox.box.posX;
-   hitbox.previousPosY = hitbox.box.posY;
-
-   hitbox.box.posX = newX;
-   hitbox.box.posY = newY;
+   box.posX += velX + hitbox.accelX * Settings.DT_S * Settings.DT_S;
+   box.posY += velY + hitbox.accelY * Settings.DT_S * Settings.DT_S;
 
    hitbox.accelX = 0;
    hitbox.accelY = 0;
-
-   transformComponent.isDirty = true;
-   registerDirtyEntity(entity);
 }
 
 const dirtifyPathfindingNodes = (entity: Entity, transformComponent: TransformComponent): void => {
@@ -544,25 +548,17 @@ const resolveWallCollisions = (entity: Entity, transformComponent: TransformComp
    }
 }
 
-const updatePosition = (entity: Entity, transformComponent: TransformComponent): void => {
-   if (!transformComponent.isDirty) {
-      return;
-   }
-   
-   cleanEntityTransform(entity);
+const cleanEntityTransform = (entity: Entity, transformComponent: TransformComponent): void => {
+   updateEntityTransform(entity);
 
-   // @Correctness: Is this correct? Or should we dirtify these things wherever the isDirty flag is set?
    dirtifyPathfindingNodes(entity, transformComponent);
-   registerDirtyEntity(entity);
 
    // (Potentially introduces dirt)
    resolveWallCollisions(entity, transformComponent);
 
    // If the object moved due to resolving wall tile collisions, recalculate
    if (transformComponent.isDirty) {
-      cleanEntityTransform(entity);
-      // @Cleanup: pointless, if always done above?
-      registerDirtyEntity(entity);
+      updateEntityTransform(entity);
    }
 
    // (Potentially introduces dirt)
@@ -570,9 +566,7 @@ const updatePosition = (entity: Entity, transformComponent: TransformComponent):
 
    // If the object moved due to resolving border collisions, recalculate
    if (transformComponent.isDirty) {
-      cleanEntityTransform(entity);
-      // @Cleanup: pointless, if always done above?
-      registerDirtyEntity(entity);
+      updateEntityTransform(entity);
    }
 
    // Check to see if the entity has descended into the underground layer
@@ -582,7 +576,7 @@ const updatePosition = (entity: Entity, transformComponent: TransformComponent):
       const layer = getEntityLayer(entity);
       // @Hack
       const hitbox = transformComponent.hitboxes[0];
-      const tileIndex = getHitboxTile(hitbox);
+      const tileIndex = getBoxTile(hitbox.box);
       if (layer.getTileType(tileIndex) !== TileType.dropdown) {
          transformComponent.lastValidLayer = layer;
       // If the layer is valid and the entity is on a dropdown, move down
@@ -595,33 +589,14 @@ const updatePosition = (entity: Entity, transformComponent: TransformComponent):
    updateEntityLights(entity);
 }
 
-const tickHitboxPhysics = (hitbox: Hitbox): void => {
-   // @CLEANUP
-   const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
-
+const tickHitboxAndChildrenAngularPhysics = (hitbox: Hitbox, transformComponent: TransformComponent): void => {
    tickHitboxAngularPhysics(hitbox, transformComponent);
 
-   updatePosition(hitbox.entity, transformComponent);
-
-   for (const childHitbox of hitbox.children) {
-      tickHitboxPhysics(childHitbox);
-   }
-}
-
-// @Hack: this function used to be called from the physicscomponent, but I realised that all entities need to tick this regardless, so it's now called from the transformcomponent's onTick function. but it's still here, i guess.
-const tickEntityPhysics = (entity: Entity): void => {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   for (const rootHitbox of transformComponent.rootHitboxes) {
-      // Apply kinematics to only the root hitboxes
-      applyHitboxKinematics(rootHitbox, transformComponent);
-      
-      tickHitboxPhysics(rootHitbox);
-   }
-
-   // @Speed: what if the hitboxes don't change?
-   // (just for carried entities)
-   if (transformComponent.rootHitboxes.length > 0) {
-      registerDirtyEntity(entity);
+   for (let i = 0, len = hitbox.children.length; i < len; i++) {
+      const childHitbox = hitbox.children[i];
+      // @Speed: this is very often the same as transformComponent.
+      const childTransformComponent = TransformComponentArray.getComponent(childHitbox.entity);
+      tickHitboxAndChildrenAngularPhysics(childHitbox, childTransformComponent);
    }
 }
 
@@ -644,17 +619,17 @@ function onJoin(entity: Entity): void {
    
    // @Cleanup: This is so similar to the updatePosition function
    
-   cleanEntityTransform(entity);
+   updateEntityTransform(entity);
 
    resolveEntityBorderCollisions(transformComponent);
    if (transformComponent.isDirty) {
-      cleanEntityTransform(entity);
+      updateEntityTransform(entity);
    }
 
    // @Cleanup: should i make a separate PathfindingOccupancyComponent?
    if (entityCanBlockPathfinding(entity)) {
       addEntityToPathfinding(entity);
-      updateEntityPathfindingNodeOccupance(entity, transformComponent);
+      updateEntityPathfindingNodes(entity, transformComponent);
    }
 
    updateEntityLights(entity);
@@ -663,15 +638,41 @@ function onJoin(entity: Entity): void {
 }
 
 function onTick(entity: Entity): void {
-   // @Speed: func call
-   tickEntityPhysics(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
+
+   // Apply kinematics to only the root hitboxes
+   const rootHitboxes = transformComponent.rootHitboxes;
+   for (let i = 0, len = rootHitboxes.length; i < len; i++) {
+      const rootHitbox = rootHitboxes[i];
+      applyHitboxKinematics(rootHitbox, transformComponent);
+      tickHitboxAndChildrenAngularPhysics(rootHitbox, transformComponent);
+   }
+
+   // If the entity was dirtied in any way during the tick, update its position
+   // @BUG: huehrh... don't think this is right. what if an entity after dirties an entity which came before in the array, which was prevously processed as clean? Then it won't be clean... .
+   if (transformComponent.isDirty) {
+      cleanEntityTransform(entity, transformComponent);
+      registerDirtyEntity(entity);
+   }
+
+   // @Speed: what if the hitboxes don't change?
+   // @HACK (just for carried entities, so that they get sent to the client too)
+   // @BUG I JUST COMMENTED THIS OUT!!
+   // if (transformComponent.rootHitboxes.length > 0) {
+   //    registerDirtyEntity(entity);
+   // }
 }
 
 function preRemove(entity: Entity): void {
    // Destroy all sub-parts
    const transformComponent = TransformComponentArray.getComponent(entity);
-   for (const hitbox of transformComponent.hitboxes) {
-      for (const childHitbox of hitbox.children) {
+   const hitboxes = transformComponent.hitboxes;
+   for (let i = 0; i < hitboxes.length; i++) {
+      const hitbox = hitboxes[i];
+      
+      const childHitboxes = hitbox.children;
+      for (let j = 0; j < childHitboxes.length; j++) {
+         const childHitbox = childHitboxes[j];
          if (hitboxIsPartOfParent(childHitbox)) {
             destroyEntity(childHitbox.entity);
          }
@@ -751,7 +752,9 @@ function addDataToPacket(packet: Packet, entity: Entity): void {
 
 const propagateRootEntityChange = (hitbox: Hitbox, rootEntity: Entity): void => {
    hitbox.rootEntity = rootEntity;
-   registerDirtyEntity(hitbox.entity);
+
+   const transformComponent = TransformComponentArray.getComponent(hitbox.entity);
+   transformComponent.isDirty = true;
    
    for (const childHitbox of hitbox.children) {
       propagateRootEntityChange(childHitbox, rootEntity);
@@ -768,8 +771,10 @@ export function attachHitboxRaw(hitbox: Hitbox, parentHitbox: Hitbox, isPartOfPa
    setHitboxIsPartOfParent(hitbox, isPartOfParent);
    hitbox.parent.children.push(hitbox);
    
-   registerDirtyEntity(hitbox.entity);
-   registerDirtyEntity(parentHitbox.entity);
+   const entityTransformComponent = TransformComponentArray.getComponent(hitbox.entity);
+   entityTransformComponent.isDirty = true;
+   const parentTransformComponent = TransformComponentArray.getComponent(parentHitbox.entity);
+   parentTransformComponent.isDirty = true;
 }
 
 export function attachHitbox(hitbox: Hitbox, parentHitbox: Hitbox, isPartOfParent: boolean): void {
@@ -888,8 +893,10 @@ export function detachHitbox(hitbox: Hitbox): void {
       }
    }
 
-   registerDirtyEntity(hitbox.parent.entity);
-   registerDirtyEntity(hitbox.entity);
+   const entityTransformComponent = TransformComponentArray.getComponent(hitbox.entity);
+   entityTransformComponent.isDirty = true;
+   const parentTransformComponent = TransformComponentArray.getComponent(hitbox.parent.entity);
+   parentTransformComponent.isDirty = true;
 
    hitbox.parent = null;
    propagateRootEntityChange(hitbox, hitbox.entity);
@@ -988,12 +995,14 @@ const changeEntityLayerImpl = (entity: Entity, newLayer: Layer): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
 
    if (newLayer !== previousLayer) {
+      const chunks = transformComponent.chunks;
+      
       // Remove from previous chunks
-      while (transformComponent.chunks.length > 0) {
-         const chunk = transformComponent.chunks[0];
+      for (let i = 0; i < chunks.length; i++) {
+         const chunk = chunks[i];
          removeFromChunk(entity, previousLayer, chunk);
-         transformComponent.chunks.splice(0, 1);
       }
+      chunks.length = 0;
 
       // Add to the new ones
       // @Cleanup: this logic should be in transformcomponent, perhaps there is a function which already does this...
@@ -1005,7 +1014,7 @@ const changeEntityLayerImpl = (entity: Entity, newLayer: Layer): void => {
          for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
             const newChunk = newLayer.getChunk(chunkX, chunkY);
             addToChunk(entity, newLayer, newChunk);
-            transformComponent.chunks.push(newChunk);
+            chunks.push(newChunk);
          }
       }
 

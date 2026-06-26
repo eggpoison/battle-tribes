@@ -24,68 +24,72 @@ export interface TreeRootSegmentComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootSegment, _TreeRootSegmentComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.treeRootSegment, typeof TreeRootSegmentComponentArray> {}
 }
 
-class _TreeRootSegmentComponentArray extends ServerComponentArray<TreeRootSegmentComponent, TreeRootSegmentComponentData> {
-   public decodeData(reader: PacketReader): TreeRootSegmentComponentData {
-      const variant = reader.readNumber();
-      return {
-         variant: variant
-      };
-   }
+export const TreeRootSegmentComponentArray = registerServerComponentArray(
+   ServerComponentType.treeRootSegment,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TreeRootSegmentComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+TreeRootSegmentComponentArray.onHit = onHit;
+TreeRootSegmentComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const treeRootSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treeRootSegment);
-      
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         TextureIndex.entities_treeRootSegment_treeRootSegment1 + treeRootSegmentComponentData.variant
-      );
-      if (Math.random() < 0.5) {
-         renderPart.setFlipX(true);
-      }
-      renderObject.attachRenderPart(renderPart);
-   }
-
-   public createComponent(entityComponentData: EntityComponentData): TreeRootSegmentComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const treeRootSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treeRootSegment);
-      return {
-         variant: treeRootSegmentComponentData.variant
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      for (let i = 0; i < 6; i++) {
-         createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
-      }
-
-      playSoundOnHitbox("tree-root-segment-hit.mp3", randFloat(0.47, 0.53), randFloat(0.9, 1.1), entity, hitbox, false);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      for (let i = 0; i < 10; i++) {
-         createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
-      }
-
-      const treeRootSegmentComponent = TreeRootSegmentComponentArray.getComponent(entity);
-      playSoundOnHitbox("tree-root-segment-death-" + (treeRootSegmentComponent.variant % 3 + 1) + ".mp3", 0.5, 1, entity, hitbox, false);
-   }
+function decodeData(reader: PacketReader): TreeRootSegmentComponentData {
+   const variant = reader.readNumber();
+   return {
+      variant: variant
+   };
 }
 
-export const TreeRootSegmentComponentArray = registerServerComponentArray(ServerComponentType.treeRootSegment, _TreeRootSegmentComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const treeRootSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treeRootSegment);
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      TextureIndex.entities_treeRootSegment_treeRootSegment1 + treeRootSegmentComponentData.variant
+   );
+   if (Math.random() < 0.5) {
+      renderPart.setFlipX(true);
+   }
+   renderObject.attachRenderPart(renderPart);
+}
+
+function createComponent(entityComponentData: EntityComponentData): TreeRootSegmentComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const treeRootSegmentComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.treeRootSegment);
+   return {
+      variant: treeRootSegmentComponentData.variant
+   };
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   for (let i = 0; i < 6; i++) {
+      createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
+   }
+
+   playSoundOnHitbox("tree-root-segment-hit.mp3", randFloat(0.47, 0.53), randFloat(0.9, 1.1), entity, hitbox, false);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   for (let i = 0; i < 10; i++) {
+      createWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 16 * Math.random());
+   }
+
+   const treeRootSegmentComponent = TreeRootSegmentComponentArray.getComponent(entity);
+   playSoundOnHitbox("tree-root-segment-death-" + (treeRootSegmentComponent.variant % 3 + 1) + ".mp3", 0.5, 1, entity, hitbox, false);
+}

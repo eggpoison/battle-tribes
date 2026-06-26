@@ -3,7 +3,8 @@ import { boxIsCollidingWithSubtile } from "../../../../shared/dist/collision.js"
 import { Settings } from "../../../../shared/dist/settings.js";
 import { StructureType } from "../../../../shared/dist/structures.js";
 import { getSubtileIndex } from "../../../../shared/dist/subtiles.js";
-import { Point, getTileIndexIncludingEdges, randFloat, randAngle } from "../../../../shared/dist/utils.js";
+import { Point, randFloat, randAngle } from "../../../../shared/dist/utils.js";
+import { getTileIndexIncludingEdges } from "../../../../shared/dist/tiles.js";
 import { boxArraysAreColliding, boxHasCollisionWithBoxes } from "../../collision-detection.js";
 import { getConfigTransformComponent } from "../../components.js";
 import { createStructureConfig } from "../../structure-placement.js";
@@ -56,8 +57,8 @@ export function buildingCandidateIsValid(candidate: BuildingCandidate): boolean 
       const minSubtileY = Math.floor(_bounds.minY / Settings.SUBTILE_SIZE);
       const maxSubtileY = Math.floor(_bounds.maxY / Settings.SUBTILE_SIZE);
 
-      for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
-         for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+         for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
             const subtileIndex = getSubtileIndex(subtileX, subtileY);
             if (layer.subtileIsWall(subtileIndex) && boxIsCollidingWithSubtile(box, subtileX, subtileY)) {
                return false;
@@ -75,8 +76,8 @@ export function buildingCandidateIsValid(candidate: BuildingCandidate): boolean 
       const minTileY = Math.floor(_bounds.minY / Settings.TILE_SIZE);
       const maxTileY = Math.floor(_bounds.maxY / Settings.TILE_SIZE);
 
-      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-         for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+         for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
             const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
             if (!layer.buildingBlockingTiles.has(tileIndex)) {
                continue;

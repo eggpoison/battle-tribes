@@ -12,35 +12,37 @@ export interface ThrownBattleaxeComponentData {}
 export interface ThrownBattleaxeComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.thrownBattleaxe, _ThrownBattleaxeComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.thrownBattleaxe, typeof ThrownBattleaxeComponentArray> {}
 }
 
-class _ThrownBattleaxeComponentArray extends ClientComponentArray<ThrownBattleaxeComponent, ThrownBattleaxeComponentData> {
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.items_large_stoneBattleaxe
-         )
-      );
-   }
+export const ThrownBattleaxeComponentArray = registerClientComponentArray(
+   ClientComponentType.thrownBattleaxe,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+ThrownBattleaxeComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public createComponent(): ThrownBattleaxeComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.items_large_stoneBattleaxe
+      )
+   );
 }
 
-export const ThrownBattleaxeComponentArray = registerClientComponentArray(ClientComponentType.thrownBattleaxe, _ThrownBattleaxeComponentArray, true);
+function createComponent(): ThrownBattleaxeComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
 
 export function createThrownBattleaxeComponentData(): ThrownBattleaxeComponentData {
    return {};

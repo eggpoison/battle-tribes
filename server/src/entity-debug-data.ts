@@ -15,7 +15,8 @@ import { EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, Pat
 import { EntityTypeString, Entity } from "../../shared/dist/entities.js";
 import { ItemTypeString } from "../../shared/dist/items/items.js";
 import { getStringLengthBytes, Packet } from "../../shared/dist/packets.js";
-import { AIPlanType, getTileX, getTileY } from "../../shared/dist/utils.js";
+import { AIPlanType } from "../../shared/dist/utils.js";
+import { getTileX, getTileY } from "../../shared/dist/tiles.js";
 
 const getPlanDebugString = (plan: AIPlan): string => {
    switch (plan.type) {

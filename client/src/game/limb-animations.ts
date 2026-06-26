@@ -4,7 +4,7 @@ import { ParticleColour } from "./rendering/webgl/particle-rendering";
 import { createColouredParticle, createSawdustCloud } from "./particles";
 import TexturedRenderPart from "./render-parts/TexturedRenderPart";
 import { VisualRenderPart } from "./render-parts/render-parts";
-import { tribesmanAIComponentArray } from "./entity-components/server-components/TribesmanAIComponent";
+import { TribesmanAIComponentArray } from "./entity-components/server-components/TribesmanAIComponent";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { getEntityAgeTicks, getEntityRenderObject } from "./world";
 import { currentSnapshot } from "./networking/snapshots";
@@ -46,7 +46,7 @@ export function generateRandomLimbPosition(): Point {
 }
 
 export function createCraftingAnimationParticles(entity: Entity, limbIdx: number): void {
-   const tribesmanComponent = tribesmanAIComponentArray.getComponent(entity);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
    
    const recipe = getItemRecipe(tribesmanComponent.craftingItemType);
    if (recipe === null) {
@@ -159,7 +159,7 @@ const getCustomItemRenderPartTextureIndex = (entity: Entity, state: CustomItemSt
          return CLIENT_ITEM_INFO_RECORD[ItemType.herbal_medicine].entityTextureIndex;
       }
       case CustomItemState.crafting: {
-         const tribesmanComponent = tribesmanAIComponentArray.getComponent(entity);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
          return CLIENT_ITEM_INFO_RECORD[tribesmanComponent.craftingItemType].entityTextureIndex;
       }
    }
@@ -188,7 +188,7 @@ const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState):
          return 1 - useProgress;
       }
       case CustomItemState.crafting: {
-         const tribesmanComponent = tribesmanAIComponentArray.getComponent(entity);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
          return tribesmanComponent.craftingProgress * 0.8;
       }
    }

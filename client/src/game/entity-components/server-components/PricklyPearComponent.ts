@@ -18,56 +18,59 @@ export interface PricklyPearComponentData {}
 export interface PricklyPearComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pricklyPear, _PricklyPearComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.pricklyPear, typeof PricklyPearComponentArray> {}
 }
 
-class _PricklyPearComponentArray extends ServerComponentArray<PricklyPearComponent, PricklyPearComponentData> {
-   public decodeData(): PricklyPearComponentData {
-      return {};
-   }
+export const PricklyPearComponentArray = registerServerComponentArray(
+   ServerComponentType.pricklyPear,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+PricklyPearComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+PricklyPearComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
+function decodeData(): PricklyPearComponentData {
+   return {};
+}
 
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.entities_pricklyPear_pricklyPear
-         )
-      );
-   }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
 
-   public createComponent(): PricklyPearComponent {
-      return {};
-   }
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.entities_pricklyPear_pricklyPear
+      )
+   );
+}
 
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-      
-   public onDie(pricklyPear: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(pricklyPear);
-      const hitbox = transformComponent.hitboxes[0];
+function createComponent(): PricklyPearComponent {
+   return {};
+}
 
-      const healthComponent = HealthComponentArray.getComponent(pricklyPear);
-      if (healthComponent.health <= 0) {
-         playSoundOnHitbox("prickly-pear-explode.mp3", 0.65, randFloat(0.9, 1.1), pricklyPear, hitbox, false);
+function getMaxRenderParts(): number {
+   return 1;
+}
+   
+function onDie(pricklyPear: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(pricklyPear);
+   const hitbox = transformComponent.hitboxes[0];
 
-         for (let i = 0; i < 7; i++) {
-            const offsetDirection = randAngle();
-            const offsetMagnitude = randFloat(4, 8);
-            const x = hitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
-            const y = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
-            createPricklyPearParticle(x, y, randAngle());
-         }
-      } else {
-         playSoundOnHitbox("prickly-pear-snap.mp3", 0.5, randFloat(0.9, 1.1), pricklyPear, hitbox, false);
+   const healthComponent = HealthComponentArray.getComponent(pricklyPear);
+   if (healthComponent.health <= 0) {
+      playSoundOnHitbox("prickly-pear-explode.mp3", 0.65, randFloat(0.9, 1.1), pricklyPear, hitbox, false);
+
+      for (let i = 0; i < 7; i++) {
+         const offsetDirection = randAngle();
+         const offsetMagnitude = randFloat(4, 8);
+         const x = hitbox.box.posX + offsetMagnitude * Math.sin(offsetDirection);
+         const y = hitbox.box.posY + offsetMagnitude * Math.cos(offsetDirection);
+         createPricklyPearParticle(x, y, randAngle());
       }
+   } else {
+      playSoundOnHitbox("prickly-pear-snap.mp3", 0.5, randFloat(0.9, 1.1), pricklyPear, hitbox, false);
    }
 }
-
-export const PricklyPearComponentArray = registerServerComponentArray(ServerComponentType.pricklyPear, _PricklyPearComponentArray, true);

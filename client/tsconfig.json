@@ -21,6 +21,6 @@
    "references": [
      { "path": "../shared" }
    ],
-   "include": ["src"],
+   "include": ["src", "../shared/src"],
    "exclude": ["node_modules/*", "__sapper__/*", "public/*", "tools/*"]
 }

@@ -16,7 +16,8 @@ import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/co
 import { EntityType, Entity } from "../../../../shared/dist/entities.js";
 import { ItemType } from "../../../../shared/dist/items/items.js";
 import { Settings } from "../../../../shared/dist/settings.js";
-import { randInt, getTileIndexIncludingEdges, TileIndex, Point } from "../../../../shared/dist/utils.js";
+import { randInt, Point } from "../../../../shared/dist/utils.js";
+import { getTileIndexIncludingEdges, TileIndex } from "../../../../shared/dist/tiles.js";
 
 export const YETI_SNOW_THROW_COOLDOWN = 7;
 

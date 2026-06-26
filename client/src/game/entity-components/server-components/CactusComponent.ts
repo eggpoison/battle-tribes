@@ -34,7 +34,7 @@ export interface CactusComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cactus, CactusComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cactus, typeof CactusComponentArray> {}
 }
 
 export const CACTUS_RADIUS = 40;
@@ -47,112 +47,116 @@ const getFlowerTextureIndex = (type: number, size: CactusFlowerSize): TextureInd
    }
 }
 
-class CactusComponentArray extends ServerComponentArray<CactusComponent, CactusComponentData> {
-   public decodeData(reader: PacketReader): CactusComponentData {
-      const flowers: CactusFlower[] = [];
-      const numFlowers = reader.readNumber();
-      for (let i = 0; i < numFlowers; i++) {
-         const parentHitboxLocalID = reader.readNumber();
-         const offsetX = reader.readNumber();
-         const offsetY = reader.readNumber();
-         const rotation = reader.readNumber();
-         const flowerType = reader.readNumber();
-         const size = reader.readNumber();
+export const CactusComponentArray = registerServerComponentArray(
+   ServerComponentType.cactus,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+CactusComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+CactusComponentArray.onHit = onHit;
+CactusComponentArray.onDie = onDie;
 
-         const flower: CactusFlower = {
-            parentHitboxLocalID: parentHitboxLocalID,
-            offsetX: offsetX,
-            offsetY: offsetY,
-            rotation: rotation,
-            flowerType: flowerType,
-            size: size
-         };
-         flowers.push(flower);
-      }
+function decodeData(reader: PacketReader): CactusComponentData {
+   const flowers: CactusFlower[] = [];
+   const numFlowers = reader.readNumber();
+   for (let i = 0; i < numFlowers; i++) {
+      const parentHitboxLocalID = reader.readNumber();
+      const offsetX = reader.readNumber();
+      const offsetY = reader.readNumber();
+      const rotation = reader.readNumber();
+      const flowerType = reader.readNumber();
+      const size = reader.readNumber();
 
-      return {
-         flowers: flowers
+      const flower: CactusFlower = {
+         parentHitboxLocalID: parentHitboxLocalID,
+         offsetX: offsetX,
+         offsetY: offsetY,
+         rotation: rotation,
+         flowerType: flowerType,
+         size: size
       };
+      flowers.push(flower);
    }
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
-         const hitbox = transformComponentData.hitboxes[i];
+   return {
+      flowers: flowers
+   };
+}
 
-         const baseRenderPart = new TexturedRenderPart(
-            hitbox,
-            i === 0 ? 2 : Math.random(),
-            0,
-            0, 0,
-            i === 0 ? TextureIndex.entities_cactus_cactus : TextureIndex.entities_cactus_cactusLimb
-         );
-         renderObject.attachRenderPart(baseRenderPart);
-      }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
+      const hitbox = transformComponentData.hitboxes[i];
 
-      // Flowers
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const cactusComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cactus);
-      for (const flower of cactusComponentData.flowers) {
-         const hitbox = getHitboxByLocalID(transformComponentData.hitboxes, flower.parentHitboxLocalID);
-         assert(hitbox !== null);
-         
-         const renderPart = new TexturedRenderPart(
-            hitbox,
-            3 + Math.random(),
-            flower.rotation,
-            flower.offsetX, flower.offsetY,
-            getFlowerTextureIndex(flower.flowerType, flower.size)
-         );
-         renderObject.attachRenderPart(renderPart);
-      }
+      const baseRenderPart = new TexturedRenderPart(
+         hitbox,
+         i === 0 ? 2 : Math.random(),
+         0,
+         0, 0,
+         i === 0 ? TextureIndex.entities_cactus_cactus : TextureIndex.entities_cactus_cactusLimb
+      );
+      renderObject.attachRenderPart(baseRenderPart);
    }
 
-   public createComponent(entityComponentData: EntityComponentData): CactusComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const cactusComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cactus);
-      return {
-         flowers: cactusComponentData.flowers
-      };
-   }
-
-   public getMaxRenderParts(entityComponentData: EntityComponentData): number {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const cactusComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cactus);
-
-      return transformComponentData.hitboxes.length + cactusComponentData.flowers.length;
-   }
-
-   public onHit(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      // Create cactus spine particles when hurt
-      const numSpines = randInt(3, 5);
-      for (let i = 0; i < numSpines; i++) {
-         createCactusSpineParticle(transformComponent, CACTUS_RADIUS - 5, randAngle());
-      }
-
-      playSoundOnHitbox("cactus-hit.mp3", 0.4, 1, entity, hitbox, false);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      const cactusComponent = cactusComponentArray.getComponent(entity);
-
-      playSoundOnHitbox("cactus-destroy.mp3", 0.4, 1, entity, hitbox, false);
+   // Flowers
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cactusComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cactus);
+   for (const flower of cactusComponentData.flowers) {
+      const hitbox = getHitboxByLocalID(transformComponentData.hitboxes, flower.parentHitboxLocalID);
+      assert(hitbox !== null);
       
-      for (const flower of cactusComponent.flowers) {
-         const spawnPositionX = hitbox.box.posX + flower.offsetX;
-         const spawnPositionY = hitbox.box.posY + flower.offsetY;
-
-         createFlowerParticle(spawnPositionX, spawnPositionY, flower.flowerType, flower.size, flower.rotation);
-      }
+      const renderPart = new TexturedRenderPart(
+         hitbox,
+         3 + Math.random(),
+         flower.rotation,
+         flower.offsetX, flower.offsetY,
+         getFlowerTextureIndex(flower.flowerType, flower.size)
+      );
+      renderObject.attachRenderPart(renderPart);
    }
 }
 
-export const cactusComponentArray = registerServerComponentArray(ServerComponentType.cactus, CactusComponentArray, true);
+function createComponent(entityComponentData: EntityComponentData): CactusComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cactusComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cactus);
+   return {
+      flowers: cactusComponentData.flowers
+   };
+}
+
+function getMaxRenderParts(entityComponentData: EntityComponentData): number {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const cactusComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.cactus);
+
+   return transformComponentData.hitboxes.length + cactusComponentData.flowers.length;
+}
+
+function onHit(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   // Create cactus spine particles when hurt
+   const numSpines = randInt(3, 5);
+   for (let i = 0; i < numSpines; i++) {
+      createCactusSpineParticle(transformComponent, CACTUS_RADIUS - 5, randAngle());
+   }
+
+   playSoundOnHitbox("cactus-hit.mp3", 0.4, 1, entity, hitbox, false);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   const cactusComponent = CactusComponentArray.getComponent(entity);
+
+   playSoundOnHitbox("cactus-destroy.mp3", 0.4, 1, entity, hitbox, false);
+   
+   for (const flower of cactusComponent.flowers) {
+      const spawnPositionX = hitbox.box.posX + flower.offsetX;
+      const spawnPositionY = hitbox.box.posY + flower.offsetY;
+
+      createFlowerParticle(spawnPositionX, spawnPositionY, flower.flowerType, flower.size, flower.rotation);
+   }
+}

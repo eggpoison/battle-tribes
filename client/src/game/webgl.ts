@@ -106,19 +106,21 @@ export function createWebGLProgram(gl: WebGL2RenderingContext, vertexShaderText:
    gl.attachShader(program, fragmentShader);
    
    gl.linkProgram(program);
-   if (__DEV__ && !gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-         console.warn("ERROR compiling vertex shader!");
-         throw new Error(gl.getShaderInfoLog(vertexShader)!);
-      }
-      if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-         console.warn("ERROR compiling fragment shader!");
-         throw new Error(gl.getShaderInfoLog(fragmentShader)!); 
-      }
-      throw new Error("ERROR linking program! " + gl.getProgramInfoLog(program));
-   }
-
+   
+   // Check for problems
    if (__DEV__) {
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+         if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+            console.warn("ERROR compiling vertex shader!");
+            throw new Error(gl.getShaderInfoLog(vertexShader)!);
+         }
+         if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+            console.warn("ERROR compiling fragment shader!");
+            throw new Error(gl.getShaderInfoLog(fragmentShader)!); 
+         }
+         throw new Error("ERROR linking program! " + gl.getProgramInfoLog(program));
+      }
+
       gl.validateProgram(program);
       if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
          throw new Error("ERROR validating program! " + gl.getProgramInfoLog(program));

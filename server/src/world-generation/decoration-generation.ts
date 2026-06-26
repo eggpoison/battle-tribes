@@ -1,7 +1,7 @@
 import { DecorationType } from "../../../shared/dist/components.js";
 import { Settings } from "../../../shared/dist/settings.js";
-import { TileType } from "../../../shared/dist/tiles.js";
-import { randAngle, getTileX, getTileY, TileIndex, getTileIndexIncludingEdges, randInt, randFloat, tileIsInWorldIncludingEdges } from "../../../shared/dist/utils.js";
+import { getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, tileIsInWorldIncludingEdges, TileType } from "../../../shared/dist/tiles.js";
+import { randAngle, randInt, randFloat } from "../../../shared/dist/utils.js";
 import { getTilesInRange } from "../Layer.js";
 import { createDecorationConfig } from "../entities/decoration.js";
 import { createEntityImmediate, surfaceLayer } from "../world.js";

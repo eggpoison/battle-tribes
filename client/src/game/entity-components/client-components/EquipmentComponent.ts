@@ -7,7 +7,7 @@ import { getEntityRenderObject, getEntityType } from "../../world";
 import { InventoryUseComponentArray } from "../server-components/InventoryUseComponent";
 import ClientComponentArray from "../ClientComponentArray";
 import { ClientComponentType } from "../client-component-types";
-import { tribeComponentArray } from "../server-components/TribeComponent";
+import { TribeComponentArray } from "../server-components/TribeComponent";
 import { TransformComponentArray } from "../server-components/TransformComponent";
 import { registerClientComponentArray } from "../component-registry";
 import { TextureIndex } from "../../../texture-index";
@@ -26,7 +26,7 @@ export interface EquipmentComponent {
 }
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.equipment, _EquipmentComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.equipment, typeof EquipmentComponentArray> {}
 }
 
 // @Cleanup: copy the file name frmo the client item info thing
@@ -66,33 +66,36 @@ const getArmourTextureIndex = (entityType: EntityType, tribeType: TribeType, ite
    return ARMOUR_TEXTURE_INDEXES_12x12[itemType] + pixelSize;
 }
 
-class _EquipmentComponentArray extends ClientComponentArray<EquipmentComponent, EquipmentComponentData> {
-   public createComponent(): EquipmentComponent {
-      return {
-         armourRenderPart: null,
-         gloveRenderParts: []
-      };
-   }
+export const EquipmentComponentArray = registerClientComponentArray(
+   ClientComponentType.equipment,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+EquipmentComponentArray.onLoad = onLoad;
+EquipmentComponentArray.onTick = onTick;
 
-   public getMaxRenderParts(): number {
-      // 1 armour, 2 gloves
-      return 3;
-   }
-
-   public onLoad(entity: Entity): void {
-      const equipmentComponent = EquipmentComponentArray.getComponent(entity);
-      updateArmourRenderPart(equipmentComponent, entity);
-      updateGloveRenderParts(equipmentComponent, entity);
-   }
-
-   public onTick(entity: Entity): void {
-      const equipmentComponent = EquipmentComponentArray.getComponent(entity);
-      updateArmourRenderPart(equipmentComponent, entity);
-      updateGloveRenderParts(equipmentComponent, entity);
-   }
+function createComponent(): EquipmentComponent {
+   return {
+      armourRenderPart: null,
+      gloveRenderParts: []
+   };
 }
 
-export const EquipmentComponentArray = registerClientComponentArray(ClientComponentType.equipment, _EquipmentComponentArray, true);
+function getMaxRenderParts(): number {
+   // 1 armour, 2 gloves
+   return 3;
+}
+
+function onLoad(entity: Entity): void {
+   const equipmentComponent = EquipmentComponentArray.getComponent(entity);
+   updateArmourRenderPart(equipmentComponent, entity);
+   updateGloveRenderParts(equipmentComponent, entity);
+}
+
+function onTick(entity: Entity): void {
+   const equipmentComponent = EquipmentComponentArray.getComponent(entity);
+   updateArmourRenderPart(equipmentComponent, entity);
+   updateGloveRenderParts(equipmentComponent, entity);
+}
 
 export function createEquipmentComponentData(): EquipmentComponentData {
    return {};
@@ -107,7 +110,7 @@ const updateArmourRenderPart = (equipmentComponent: EquipmentComponent, entity: 
    const armour = armourInventory.itemSlots[1];
    if (armour !== undefined) {
       const entityType = getEntityType(entity);
-      const tribeComponent = tribeComponentArray.getComponent(entity);
+      const tribeComponent = TribeComponentArray.getComponent(entity);
       const textureIndex = getArmourTextureIndex(entityType, tribeComponent.tribeType, armour.type as ArmourItemType);
       
       if (equipmentComponent.armourRenderPart === null) {

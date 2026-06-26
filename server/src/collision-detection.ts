@@ -257,7 +257,7 @@ export function boxHasCollisionWithBoxes(box: Box, boxes: readonly Box[], epsilo
    return false;
 }
 
-const boxHasCollisionWithHitboxes = (box: Box, hitboxes: readonly Hitbox[], epsilon: number = 0): boolean => {
+export function boxHasCollisionWithHitboxes(box: Box, hitboxes: readonly Hitbox[], epsilon: number = 0): boolean {
    for (let i = 0; i < hitboxes.length; i++) {
       const otherHitbox = hitboxes[i];
 

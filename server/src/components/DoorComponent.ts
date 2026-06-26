@@ -43,7 +43,7 @@ const updateDoorOpenProgress = (door: Entity, doorComponent: DoorComponent): voi
    const xOffset = doorHalfDiagonalLength * Math.sin(offsetDirection) - doorHalfDiagonalLength * Math.sin(doorComponent.closedAngle + Math.PI/2 + angleToCenter);
    const yOffset = doorHalfDiagonalLength * Math.cos(offsetDirection) - doorHalfDiagonalLength * Math.cos(doorComponent.closedAngle + Math.PI/2 + angleToCenter);
 
-   teleportHitbox(doorHitbox, new Point(doorComponent.originX + xOffset, doorComponent.originY + yOffset));
+   teleportHitbox(doorHitbox, doorComponent.originX + xOffset, doorComponent.originY + yOffset);
    setHitboxAngle(doorHitbox, angle);
    transformComponent.isDirty = true;
 }

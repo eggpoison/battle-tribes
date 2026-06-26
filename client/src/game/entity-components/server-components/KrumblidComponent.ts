@@ -20,90 +20,94 @@ export interface KrumblidComponentData {}
 export interface KrumblidComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.krumblid, _KrumblidComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.krumblid, typeof KrumblidComponentArray> {}
 }
 
-class _KrumblidComponentArray extends ServerComponentArray<KrumblidComponent, KrumblidComponentData> {
-   public decodeData(): KrumblidComponentData {
-      return {};
-   }
+export const KrumblidComponentArray = registerServerComponentArray(
+   ServerComponentType.krumblid,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+KrumblidComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+KrumblidComponentArray.onHit = onHit;
+KrumblidComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      for (const hitbox of transformComponentData.hitboxes) {
-         if (getHitboxTag(hitbox) === HitboxTag.krumblidBody) {
-            renderObject.attachRenderPart(
-               new TexturedRenderPart(
-                  hitbox,
-                  1,
-                  0,
-                  0, 0,
-                  TextureIndex.entities_krumblid_krumblid
-               )
-            );
-         } else {
-            renderObject.attachRenderPart(
-               new TexturedRenderPart(
-                  hitbox,
-                  0,
-                  0,
-                  0, 0,
-                  TextureIndex.entities_krumblid_mandible
-               )
-            );
-         }
+function decodeData(): KrumblidComponentData {
+   return {};
+}
+
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   for (const hitbox of transformComponentData.hitboxes) {
+      if (getHitboxTag(hitbox) === HitboxTag.krumblidBody) {
+         renderObject.attachRenderPart(
+            new TexturedRenderPart(
+               hitbox,
+               1,
+               0,
+               0, 0,
+               TextureIndex.entities_krumblid_krumblid
+            )
+         );
+      } else {
+         renderObject.attachRenderPart(
+            new TexturedRenderPart(
+               hitbox,
+               0,
+               0,
+               0, 0,
+               TextureIndex.entities_krumblid_mandible
+            )
+         );
       }
-   }
-
-   public createComponent(): KrumblidComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 3;
-   }
-
-   public onHit(krumblid: Entity, hitbox: Hitbox, hitPosition: Point): void {
-      createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 20);
-      
-      // Blood particles
-      for (let i = 0; i < 5; i++) {
-         let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
-         offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
-
-         const spawnPositionX = hitbox.box.posX + 32 * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.posY + 32 * Math.cos(offsetDirection);
-         createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
-      }
-
-      playSoundOnHitbox("krumblid-hit-shell.mp3", 0.6, randFloat(0.9, 1.1), krumblid, hitbox, false);
-      playSoundOnHitbox("krumblid-hit-flesh-" + randInt(1, 2) + ".mp3", 0.6, randFloat(0.9, 1.1), krumblid, hitbox, false);
-   }
-
-   public onDie(krumblid: Entity): void {
-      const healthComponent = HealthComponentArray.getComponent(krumblid);
-      if (healthComponent.health > 0) {
-         return;
-      }
-      
-      const transformComponent = TransformComponentArray.getComponent(krumblid);
-      const hitbox = transformComponent.hitboxes[0];
-
-      for (let i = 0; i < 2; i++) {
-         createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 35);
-      }
-
-      createBloodParticleFountain(krumblid, 0.1, 0.8);
-
-      for (let i = 0; i < 10; i++) {
-         const offsetDirection = randAngle();
-         const spawnPositionX = hitbox.box.posX + 20 * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.posY + 20 * Math.cos(offsetDirection);
-         createKrumblidChitinParticle(spawnPositionX, spawnPositionY);
-      }
-
-      playSoundOnHitbox("krumblid-death.mp3", 0.6, randFloat(0.9, 1.1), krumblid, hitbox, false);
    }
 }
 
-export const KrumblidComponentArray = registerServerComponentArray(ServerComponentType.krumblid, _KrumblidComponentArray, true);
+function createComponent(): KrumblidComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 3;
+}
+
+function onHit(krumblid: Entity, hitbox: Hitbox, hitPosition: Point): void {
+   createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 20);
+   
+   // Blood particles
+   for (let i = 0; i < 5; i++) {
+      let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
+      offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
+
+      const spawnPositionX = hitbox.box.posX + 32 * Math.sin(offsetDirection);
+      const spawnPositionY = hitbox.box.posY + 32 * Math.cos(offsetDirection);
+      createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
+   }
+
+   playSoundOnHitbox("krumblid-hit-shell.mp3", 0.6, randFloat(0.9, 1.1), krumblid, hitbox, false);
+   playSoundOnHitbox("krumblid-hit-flesh-" + randInt(1, 2) + ".mp3", 0.6, randFloat(0.9, 1.1), krumblid, hitbox, false);
+}
+
+function onDie(krumblid: Entity): void {
+   const healthComponent = HealthComponentArray.getComponent(krumblid);
+   if (healthComponent.health > 0) {
+      return;
+   }
+   
+   const transformComponent = TransformComponentArray.getComponent(krumblid);
+   const hitbox = transformComponent.hitboxes[0];
+
+   for (let i = 0; i < 2; i++) {
+      createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 35);
+   }
+
+   createBloodParticleFountain(krumblid, 0.1, 0.8);
+
+   for (let i = 0; i < 10; i++) {
+      const offsetDirection = randAngle();
+      const spawnPositionX = hitbox.box.posX + 20 * Math.sin(offsetDirection);
+      const spawnPositionY = hitbox.box.posY + 20 * Math.cos(offsetDirection);
+      createKrumblidChitinParticle(spawnPositionX, spawnPositionY);
+   }
+
+   playSoundOnHitbox("krumblid-death.mp3", 0.6, randFloat(0.9, 1.1), krumblid, hitbox, false);
+}

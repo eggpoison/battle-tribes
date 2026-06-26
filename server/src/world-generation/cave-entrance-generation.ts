@@ -6,8 +6,9 @@ import Layer from "../Layer.js";
 import { Biome } from "../../../shared/dist/biomes.js";
 import { EntityType } from "../../../shared/dist/entities.js";
 import { Settings } from "../../../shared/dist/settings.js";
-import { SubtileType, TileType } from "../../../shared/dist/tiles.js";
-import { TileIndex, getTileX, getTileY, randAngle, tileIsInWorldIncludingEdges, getTileIndexIncludingEdges, lerp, randItem } from "../../../shared/dist/utils.js";
+import { getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, tileIsInWorldIncludingEdges, TileType } from "../../../shared/dist/tiles.js";
+import { randAngle, lerp, randItem } from "../../../shared/dist/utils.js";
+import { SubtileType } from "../../../shared/dist/subtiles.js";
 
 const enum Vars {
    /** Minimum number of tiles in a mountain biome that will allow a cave to be generated */
@@ -61,8 +62,8 @@ export function generateCaveEntrances(surfaceLayer: Layer, biomeDists: Uint8Arra
       const caveDirection = randAngle();
 
       // Clear any existing walls in the cave generation area
-      for (let xOffset = -4; xOffset <= 4; xOffset++) {
-         for (let yOffset = -4; yOffset <= 20; yOffset++) {
+      for (let yOffset = -4; yOffset <= 20; yOffset++) {
+         for (let xOffset = -4; xOffset <= 4; xOffset++) {
             let x = originX;
             let y = originY;
             // X offset
@@ -74,13 +75,13 @@ export function generateCaveEntrances(surfaceLayer: Layer, biomeDists: Uint8Arra
 
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
-            setWallInSubtiles(surfaceLayer.wallSubtileTypes, tileX, tileY, SubtileType.none);
+            setWallInSubtiles(surfaceLayer.wallSubtileDatas, tileX, tileY, SubtileType.none);
          }
       }
 
       // Create a rectangle of drop-down tiles
-      for (let xOffset = -2.5; xOffset <= 2.5; xOffset++) {
-         for (let yOffset = -4; yOffset <= -1; yOffset++) {
+      for (let yOffset = -4; yOffset <= -1; yOffset++) {
+         for (let xOffset = -2.5; xOffset <= 2.5; xOffset++) {
             let x = originX;
             let y = originY;
             // X offset
@@ -126,7 +127,7 @@ export function generateCaveEntrances(surfaceLayer: Layer, biomeDists: Uint8Arra
                // @Incomplete: make into rough rock
                surfaceLayer.tileTypes[tileIndex] = TileType.rock;
 
-               setWallInSubtiles(surfaceLayer.wallSubtileTypes, tileX, tileY, SubtileType.rockWall);
+               setWallInSubtiles(surfaceLayer.wallSubtileDatas, tileX, tileY, SubtileType.rockWall);
             }
          }
       }
@@ -159,7 +160,7 @@ export function generateCaveEntrances(surfaceLayer: Layer, biomeDists: Uint8Arra
                const tileY = Math.floor(y / Settings.TILE_SIZE);
                
                // @Incomplete: make floor into rough rock
-               setWallInSubtiles(surfaceLayer.wallSubtileTypes, tileX, tileY, SubtileType.rockWall);
+               setWallInSubtiles(surfaceLayer.wallSubtileDatas, tileX, tileY, SubtileType.rockWall);
             }
          }
       }
@@ -181,7 +182,7 @@ export function generateCaveEntrances(surfaceLayer: Layer, biomeDists: Uint8Arra
             const tileY = Math.floor(y / Settings.TILE_SIZE);
             if (tileIsInWorldIncludingEdges(tileX, tileY)) {
                const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-               if (!tileHasWallSubtile(surfaceLayer.wallSubtileTypes, tileX, tileY)) {
+               if (!tileHasWallSubtile(surfaceLayer.wallSubtileDatas, tileX, tileY)) {
                   tiles.push(tileIndex);
                }
             }

@@ -344,7 +344,7 @@ export function entityDataUsesClientInterp(serverComponentData: EntityServerComp
    return rootEntity === playerInstance;
 }
 
-export function calculateHitboxRenderPosition(hitbox: Hitbox, clientInterp: number, serverInterp: number): Readonly<Point> {
+export function calculateHitboxRenderPosition(hitbox: Hitbox, clientInterp: number, serverInterp: number): void {
    // @Garbage!
    const matrix = createIdentityMatrix();
 
@@ -356,7 +356,6 @@ export function calculateHitboxRenderPosition(hitbox: Hitbox, clientInterp: numb
    }
    
    getMatrixPosition(matrix);
-   return _point;
 }
 
 export function cleanEntityRenderParts(renderObject: EntityRenderObject, clientInterp: number, serverInterp: number): void {

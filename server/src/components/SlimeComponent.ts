@@ -15,7 +15,7 @@ import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "./HealthComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { createEntity, destroyEntity, entityExists, entityIsFlaggedForDestruction, getEntityLayer, getEntityType, getGameTicks, tickIntervalHasPassed } from "../world.js";
-import { applyAccelerationFromGround, getHitboxTile, Hitbox, turnHitboxToAngle, setHitboxVelocity } from "../hitboxes.js";
+import { applyAccelerationFromGround, getBoxTile, Hitbox, turnHitboxToAngle, setHitboxVelocity } from "../hitboxes.js";
 import { getConfigComponent, getConfigTransformComponent } from "../components.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
 
@@ -141,7 +141,7 @@ const getEnemyChaseTargetID = (slime: Entity): number => {
       const entityTransformComponent = TransformComponentArray.getComponent(entity);
       const entityHitbox = entityTransformComponent.hitboxes[0];
 
-      const tileIndex = getHitboxTile(entityHitbox);
+      const tileIndex = getBoxTile(entityHitbox.box);
       
       const entityType = getEntityType(entity);
       if (entityType === EntityType.slime || entityType === EntityType.slimewisp || layer.tileBiomes[tileIndex] !== Biome.swamp || !HealthComponentArray.hasComponent(entity)) {
@@ -186,7 +186,7 @@ const getChaseTargetID = (slime: Entity): number => {
             closestMergerID = entity;
          }
       } else {
-         const tileIndex = getHitboxTile(otherHitbox);
+         const tileIndex = getBoxTile(otherHitbox.box);
          
          if (getEntityType(entity) === EntityType.slimewisp || layer.tileBiomes[tileIndex] !== Biome.swamp || !HealthComponentArray.hasComponent(entity)) {
             continue;
@@ -217,7 +217,7 @@ function onTick(slime: Entity): void {
 
    const layer = getEntityLayer(slime);
 
-   const tileIndex = getHitboxTile(slimeHitbox);
+   const tileIndex = getBoxTile(slimeHitbox.box);
    const tileType = layer.getTileType(tileIndex);
    
    // Slimes move at normal speed on slime and sludge blocks

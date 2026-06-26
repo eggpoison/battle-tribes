@@ -134,6 +134,8 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const hitDir = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, hitbox.entity, 1, DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
-   applyAbsoluteKnockback(collidingHitbox, polarVec2(200, hitDir));
+   const knockbackX = 200 * Math.sin(hitDir);
+   const knockbackY = 200 * Math.cos(hitDir);
+   applyAbsoluteKnockback(collidingHitbox, knockbackX, knockbackY);
    addLocalInvulnerabilityHash(collidingEntity, "cactus", 0.3);
 }

@@ -1,5 +1,5 @@
 import { Settings } from "../../../../../shared/src/settings";
-import { getTileX, getTileY } from "../../../../../shared/src/utils";
+import { getTileX, getTileY } from "../../../../../shared/src/tiles";
 import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";

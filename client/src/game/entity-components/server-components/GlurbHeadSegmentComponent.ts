@@ -13,55 +13,57 @@ export interface GlurbHeadSegmentComponentData {}
 export interface GlurbHeadSegmentComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbHeadSegment, _GlurbHeadSegmentComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.glurbHeadSegment, typeof GlurbHeadSegmentComponentArray> {}
 }
 
-class _GlurbHeadSegmentComponentArray extends ServerComponentArray<GlurbHeadSegmentComponent, GlurbHeadSegmentComponentData> {
-   public decodeData(): GlurbHeadSegmentComponentData {
-      return createGlurbHeadSegmentComponentData();
-   }
+export const GlurbHeadSegmentComponentArray = registerServerComponentArray(
+   ServerComponentType.glurbHeadSegment,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+GlurbHeadSegmentComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
+function decodeData(): GlurbHeadSegmentComponentData {
+   return createGlurbHeadSegmentComponentData();
+}
 
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         // @Hack: 0.1 so that the moss ball can be z-index 0
-         0.1,
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      // @Hack: 0.1 so that the moss ball can be z-index 0
+      0.1,
+      0,
+      0, 0,
+      TextureIndex.entities_glurb_glurbHeadSegment
+   );
+   addRenderPartTag(renderPart, "tamingComponent:head");
+   renderObject.attachRenderPart(renderPart);
+
+   // Eyes
+   for (let j = 0; j < 2; j++) {
+      const eyeRenderPart = new TexturedRenderPart(
+         renderPart,
          0,
-         0, 0,
-         TextureIndex.entities_glurb_glurbHeadSegment
+         0.3,
+         16, 14,
+         TextureIndex.entities_glurb_glurbEye
       );
-      addRenderPartTag(renderPart, "tamingComponent:head");
-      renderObject.attachRenderPart(renderPart);
-
-      // Eyes
-      for (let j = 0; j < 2; j++) {
-         const eyeRenderPart = new TexturedRenderPart(
-            renderPart,
-            0,
-            0.3,
-            16, 14,
-            TextureIndex.entities_glurb_glurbEye
-         );
-         if (j === 1) {
-            eyeRenderPart.setFlipX(true);
-         }
-         renderObject.attachRenderPart(eyeRenderPart);
+      if (j === 1) {
+         eyeRenderPart.setFlipX(true);
       }
-   }
-
-   public createComponent(): GlurbHeadSegmentComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 3;
+      renderObject.attachRenderPart(eyeRenderPart);
    }
 }
 
-export const GlurbHeadSegmentComponentArray = registerServerComponentArray(ServerComponentType.glurbHeadSegment, _GlurbHeadSegmentComponentArray, true);
+function createComponent(): GlurbHeadSegmentComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 3;
+}
 
 export function createGlurbHeadSegmentComponentData(): GlurbHeadSegmentComponentData {
    return {};

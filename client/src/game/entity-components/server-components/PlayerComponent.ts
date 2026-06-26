@@ -15,28 +15,29 @@ export interface PlayerComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.player, _PlayerComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.player, typeof PlayerComponentArray> {}
 }
 
-class _PlayerComponentArray extends ServerComponentArray<PlayerComponent, PlayerComponentData> {
-   public decodeData(reader: PacketReader): PlayerComponentData {
-      const username = reader.readString();
-      return {
-         username: username
-      };
-   }
+export const PlayerComponentArray = registerServerComponentArray(
+   ServerComponentType.player,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(entityComponentData: EntityComponentData): PlayerComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const playerComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.player);
-      return {
-         username: playerComponentData.username
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(reader: PacketReader): PlayerComponentData {
+   const username = reader.readString();
+   return {
+      username: username
+   };
 }
 
-export const PlayerComponentArray = registerServerComponentArray(ServerComponentType.player, _PlayerComponentArray, true);
+function createComponent(entityComponentData: EntityComponentData): PlayerComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const playerComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.player);
+   return {
+      username: playerComponentData.username
+   };
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}

@@ -1,6 +1,6 @@
 import { Settings } from "../../../shared/src/settings";
 import { getSubtileX, getSubtileY } from "../../../shared/src/subtiles";
-import { SubtileType } from "../../../shared/src/tiles";
+import { SubtileType } from "../../../shared/src/subtiles";
 import { customTickIntervalHasPassed, lerp, randAngle, randFloat, randInt } from "../../../shared/src/utils";
 import Particle from "./Particle";
 import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, highMonocolourParticles, lowMonocolourParticles, lowTexturedParticles, ParticleRenderLayer } from "./rendering/webgl/particle-rendering";

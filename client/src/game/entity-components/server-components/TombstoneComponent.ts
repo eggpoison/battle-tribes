@@ -35,151 +35,157 @@ export interface TombstoneComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tombstone, _TombstoneComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tombstone, typeof TombstoneComponentArray> {}
 }
 
-class _TombstoneComponentArray extends ServerComponentArray<TombstoneComponent, TombstoneComponentData> {
-   public decodeData(reader: PacketReader): TombstoneComponentData {
-      const tombstoneType = reader.readNumber();
-      const zombieSpawnProgress = reader.readNumber();
-      const zombieSpawnX = reader.readNumber();
-      const zombieSpawnY = reader.readNumber();
+export const TombstoneComponentArray = registerServerComponentArray(
+   ServerComponentType.tombstone,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TombstoneComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+TombstoneComponentArray.onTick = onTick;
+TombstoneComponentArray.updateFromData = updateFromData;
+TombstoneComponentArray.onHit = onHit;
+TombstoneComponentArray.onDie = onDie;
 
-      const hasDeathInfo = reader.readBool();
-      
-      let deathInfo: DeathInfo | null;
-      if (hasDeathInfo) {
-         const username = reader.readString();
-         const damageSource: DamageSource = reader.readNumber();
-         deathInfo = {
-            username: username,
-            damageSource: damageSource
-         };
+function decodeData(reader: PacketReader): TombstoneComponentData {
+   const tombstoneType = reader.readNumber();
+   const zombieSpawnProgress = reader.readNumber();
+   const zombieSpawnX = reader.readNumber();
+   const zombieSpawnY = reader.readNumber();
+
+   const hasDeathInfo = reader.readBool();
+   
+   let deathInfo: DeathInfo | null;
+   if (hasDeathInfo) {
+      const username = reader.readString();
+      const damageSource: DamageSource = reader.readNumber();
+      deathInfo = {
+         username: username,
+         damageSource: damageSource
+      };
+   } else {
+      deathInfo = null;
+   }
+
+   return {
+      tombstoneType: tombstoneType,
+      zombieSpawnProgress: zombieSpawnProgress,
+      zombieSpawnX: zombieSpawnX,
+      zombieSpawnY: zombieSpawnY,
+      deathInfo: deathInfo
+   };
+}
+
+function createComponent(entityComponentData: EntityComponentData): TombstoneComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tombstoneComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tombstone);
+   return {
+      tombstoneType: tombstoneComponentData.tombstoneType,
+      zombieSpawnProgress: tombstoneComponentData.zombieSpawnProgress,
+      zombieSpawnX: tombstoneComponentData.zombieSpawnX,
+      zombieSpawnY: tombstoneComponentData.zombieSpawnY,
+      deathInfo: tombstoneComponentData.deathInfo
+   };
+}
+
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tombstoneComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tombstone);
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.entities_tombstone_tombstone1 + tombstoneComponentData.tombstoneType
+      )
+   );
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onTick(entity: Entity): void {
+   const tombstoneComponent = TombstoneComponentArray.getComponent(entity);
+   if (tombstoneComponent.zombieSpawnProgress !== -1) {
+      // Create zombie digging particles
+      if (tombstoneComponent.zombieSpawnProgress < 0.8) {
+         if (Math.random() < 7.5 * Settings.DT_S) {
+            createDirtParticle(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY, ParticleRenderLayer.low);
+         }
       } else {
-         deathInfo = null;
-      }
-
-      return {
-         tombstoneType: tombstoneType,
-         zombieSpawnProgress: zombieSpawnProgress,
-         zombieSpawnX: zombieSpawnX,
-         zombieSpawnY: zombieSpawnY,
-         deathInfo: deathInfo
-      };
-   }
-
-   public createComponent(entityComponentData: EntityComponentData): TombstoneComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tombstoneComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tombstone);
-      return {
-         tombstoneType: tombstoneComponentData.tombstoneType,
-         zombieSpawnProgress: tombstoneComponentData.zombieSpawnProgress,
-         zombieSpawnX: tombstoneComponentData.zombieSpawnX,
-         zombieSpawnY: tombstoneComponentData.zombieSpawnY,
-         deathInfo: tombstoneComponentData.deathInfo
-      };
-   }
-
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tombstoneComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tombstone);
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.entities_tombstone_tombstone1 + tombstoneComponentData.tombstoneType
-         )
-      );
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onTick(entity: Entity): void {
-      const tombstoneComponent = TombstoneComponentArray.getComponent(entity);
-      if (tombstoneComponent.zombieSpawnProgress !== -1) {
-         // Create zombie digging particles
-         if (tombstoneComponent.zombieSpawnProgress < 0.8) {
-            if (Math.random() < 7.5 * Settings.DT_S) {
-               createDirtParticle(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY, ParticleRenderLayer.low);
-            }
-         } else {
-            if (Math.random() < 20 * Settings.DT_S) {
-               createDirtParticle(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY, ParticleRenderLayer.low);
-            }
-         }
-
-         if (getEntityAgeTicks(entity) % 6 === 0) {
-            playSound("zombie-dig-" + randInt(1, 5) + ".mp3", 0.15, 1, tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY, getEntityLayer(entity));
+         if (Math.random() < 20 * Settings.DT_S) {
+            createDirtParticle(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY, ParticleRenderLayer.low);
          }
       }
-   }
 
-   public updateFromData(data: TombstoneComponentData, entity: Entity): void {
-      const tombstoneComponent = TombstoneComponentArray.getComponent(entity);
-      
-      tombstoneComponent.zombieSpawnProgress = data.zombieSpawnProgress;
-      tombstoneComponent.zombieSpawnX = data.zombieSpawnX;
-      tombstoneComponent.zombieSpawnY = data.zombieSpawnY;
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      const width = (hitbox.box as RectangularBox).width;
-      const height = (hitbox.box as RectangularBox).height;
-      
-      for (let i = 0; i < 4; i++) {
-         const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
-         const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
-
-         // @HACK @Robustness
-         let moveDirection = Math.PI/2 - Math.atan2(spawnPositionY, spawnPositionX);
-         moveDirection += randFloat(-1, 1);
-         
-         createRockParticle(spawnPositionX, spawnPositionY, moveDirection, randFloat(80, 125), ParticleRenderLayer.low);
+      if (getEntityAgeTicks(entity) % 6 === 0) {
+         playSound("zombie-dig-" + randInt(1, 5) + ".mp3", 0.15, 1, tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY, getEntityLayer(entity));
       }
-
-      for (let i = 0; i < 8; i++) {
-         const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
-         const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
-
-         createRockSpeckParticle(spawnPositionX, spawnPositionY, 0, 0, 0, ParticleRenderLayer.low);
-      }
-
-      // @Hack @Temporary
-      playSoundOnHitbox(randItem(ROCK_HIT_SOUNDS), 0.3, 1, entity, hitbox, false);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      const width = (hitbox.box as RectangularBox).width;
-      const height = (hitbox.box as RectangularBox).height;
-
-      for (let i = 0; i < 8; i++) {
-         const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
-         const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
-
-         createRockParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 125), ParticleRenderLayer.low);
-      }
-
-      for (let i = 0; i < 5; i++) {
-         const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
-         const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
-
-         createRockSpeckParticle(spawnPositionX, spawnPositionY, 0, 0, 0, ParticleRenderLayer.low);
-      }
-
-      // @Hack @Temporary
-      playSoundOnHitbox(randItem(ROCK_DESTROY_SOUNDS), 0.4, 1, entity, hitbox, false);
    }
 }
 
-export const TombstoneComponentArray = registerServerComponentArray(ServerComponentType.tombstone, _TombstoneComponentArray, true);
+function updateFromData(data: TombstoneComponentData, entity: Entity): void {
+   const tombstoneComponent = TombstoneComponentArray.getComponent(entity);
+   
+   tombstoneComponent.zombieSpawnProgress = data.zombieSpawnProgress;
+   tombstoneComponent.zombieSpawnX = data.zombieSpawnX;
+   tombstoneComponent.zombieSpawnY = data.zombieSpawnY;
+}
+
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   const width = (hitbox.box as RectangularBox).width;
+   const height = (hitbox.box as RectangularBox).height;
+   
+   for (let i = 0; i < 4; i++) {
+      const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
+      const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
+
+      // @HACK @Robustness
+      let moveDirection = Math.PI/2 - Math.atan2(spawnPositionY, spawnPositionX);
+      moveDirection += randFloat(-1, 1);
+      
+      createRockParticle(spawnPositionX, spawnPositionY, moveDirection, randFloat(80, 125), ParticleRenderLayer.low);
+   }
+
+   for (let i = 0; i < 8; i++) {
+      const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
+      const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
+
+      createRockSpeckParticle(spawnPositionX, spawnPositionY, 0, 0, 0, ParticleRenderLayer.low);
+   }
+
+   // @Hack @Temporary
+   playSoundOnHitbox(randItem(ROCK_HIT_SOUNDS), 0.3, 1, entity, hitbox, false);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   const width = (hitbox.box as RectangularBox).width;
+   const height = (hitbox.box as RectangularBox).height;
+
+   for (let i = 0; i < 8; i++) {
+      const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
+      const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
+
+      createRockParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 125), ParticleRenderLayer.low);
+   }
+
+   for (let i = 0; i < 5; i++) {
+      const spawnPositionX = hitbox.box.posX + randFloat(-width/2, width/2);
+      const spawnPositionY = hitbox.box.posY + randFloat(-height/2, height/2);
+
+      createRockSpeckParticle(spawnPositionX, spawnPositionY, 0, 0, 0, ParticleRenderLayer.low);
+   }
+
+   // @Hack @Temporary
+   playSoundOnHitbox(randItem(ROCK_DESTROY_SOUNDS), 0.4, 1, entity, hitbox, false);
+}

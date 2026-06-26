@@ -1,31 +1,30 @@
-import { RiverFlowDirectionsRecord, WaterRockData } from "../../../shared/src/client-server-types";
+import { RiverFlowDirectionsRecord } from "../../../shared/src/client-server-types";
 import { CollisionGroup } from "../../../shared/src/collision-groups";
 import { Entity } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
-import { getSubtileIndex } from "../../../shared/src/subtiles";
-import { SubtileType, TileType } from "../../../shared/src/tiles";
-import { getTileIndexIncludingEdges, TileIndex } from "../../../shared/src/utils";
+import { SubtileIndex, SubtileType } from "../../../shared/src/subtiles";
+import { getTileIndexIncludingEdges, TileIndex } from "../../../shared/src/tiles";
 import Chunk from "./Chunk";
 import { Light } from "./lights";
 import { NUM_RENDER_LAYERS, RenderLayer } from "./render-layers";
-import { RenderChunkRiverInfo } from "./rendering/render-chunks";
+import { EdgeType, RenderChunkEdgeInfo, RenderChunkRiverInfo, RenderChunkShadowInfo, RenderChunkWallBorderInfo } from "./rendering/render-chunks";
 import { addRenderable, removeRenderable, RenderableType } from "./rendering/render-loop";
 import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity, RenderLayerModifyInfo, EntityChunkData, ChunkedRenderLayer, CHUNKED_RENDER_LAYERS, RenderLayerChunkDataRecord } from "./rendering/webgl/chunked-entity-rendering";
+import { SolidTileRenderInfo } from "./rendering/webgl/solid-tile-rendering";
+import { TileShadowType } from "./rendering/webgl/tile-shadow-rendering";
 import { Tile } from "./Tile";
 
 export default class Layer {
    public readonly idx: number;
    
-   public readonly tiles: readonly Tile[];
-   public readonly wallSubtileTypes: Uint8Array;
-   public readonly wallSubtileDamageTakenMap: Map<number, number>;
+   public readonly tiles: Map<TileIndex, Tile>;
+   public readonly wallSubtileDatas: Map<SubtileIndex, number>;
    public readonly riverFlowDirections: RiverFlowDirectionsRecord;
-   public readonly waterRocks: WaterRockData[];
-   public readonly tileTemperatures: Float32Array;
-   public readonly tileHumidities: Float32Array;
+   public readonly tileTemperatures: Map<TileIndex, number>;
+   public readonly tileHumidities: Map<TileIndex, number>;
 
    /** All dropdown tiles in the layer */
-   public readonly dropdownTiles: readonly TileIndex[];
+   public readonly dropdownTiles: TileIndex[];
 
    public readonly chunks: readonly Chunk[];
 
@@ -39,51 +38,46 @@ export default class Layer {
    /** Each render layer contains a set of which chunks have been modified */
    public readonly modifiedChunkIndicesArray: RenderLayerModifyInfo[];
 
-   // @Speed: Polymorphism
-   public riverInfoArray: (RenderChunkRiverInfo | null)[] = [];
+   public readonly riverInfoMap = new Map<number, RenderChunkRiverInfo>();
 
    public readonly slimeTrailPixels = new Map<number, number>();
+
+   public groundTileInfoMap = new Map<number, SolidTileRenderInfo>();
+   public wallTileInfoMap = new Map<number, SolidTileRenderInfo>();
+
+   public readonly edgeInfoMaps: Record<EdgeType, Map<number, RenderChunkEdgeInfo>>;
+   public readonly tileShadowInfoArrays: Record<TileShadowType, Map<number, RenderChunkShadowInfo>> = {
+      [TileShadowType.dropdown]: new Map(),
+      [TileShadowType.wall]: new Map()
+   };
+   public readonly wallBorderInfoMap = new Map<number, RenderChunkWallBorderInfo>();
    
-   constructor(idx: number, tiles: readonly Tile[], wallSubtileTypes: Uint8Array, wallSubtileDamageTakenMap: Map<number, number>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: WaterRockData[], tileTemperatures: Float32Array, tileHumidities: Float32Array) {
+   constructor(idx: number, tiles: Map<TileIndex, Tile>, wallSubtileDatas: Map<SubtileIndex, number>, riverFlowDirections: RiverFlowDirectionsRecord, tileTemperatures: Map<TileIndex, number>, tileHumidities: Map<TileIndex, number>, dropdownTiles: TileIndex[], edgeInfoMaps: Record<EdgeType, Map<number, RenderChunkEdgeInfo>>) {
       this.idx = idx;
-      this.wallSubtileTypes = wallSubtileTypes;
-      this.wallSubtileDamageTakenMap = wallSubtileDamageTakenMap;
+      this.wallSubtileDatas = wallSubtileDatas;
       this.tiles = tiles;
       this.riverFlowDirections = riverFlowDirections;
-      this.waterRocks = waterRocks;
       this.tileTemperatures = tileTemperatures;
       this.tileHumidities = tileHumidities;
 
+      this.dropdownTiles = dropdownTiles;
+      this.edgeInfoMaps = edgeInfoMaps;
+
       // Create the chunk array
       const chunks: Chunk[] = [];
-      for (let x = 0; x < Settings.WORLD_SIZE_CHUNKS; x++) {
-         for (let y = 0; y < Settings.WORLD_SIZE_CHUNKS; y++) {
-            const chunk = new Chunk(x, y);
-            chunks.push(chunk);
-         }
+      for (let i = 0; i < Settings.WORLD_SIZE_CHUNKS ** 2; i++) {
+         chunks.push(new Chunk());
       }
       this.chunks = chunks;
 
-      const LAYER_NUM_CHUNKS = Settings.WORLD_SIZE_CHUNKS * Settings.WORLD_SIZE_CHUNKS;
       for (let i = 0; i < CollisionGroup._LENGTH_; i++) {
          const collisionChunks: Entity[][] = [];
-         for (let j = 0; j < LAYER_NUM_CHUNKS; j++) {
+         for (let j = 0; j < Settings.WORLD_SIZE_CHUNKS ** 2; j++) {
             collisionChunks.push([]);
          }
          this.collisionGroupChunks.push(collisionChunks);
       }
 
-      const dropdownTiles: TileIndex[] = [];
-      for (let tileY = 0; tileY < Settings.WORLD_SIZE_TILES; tileY++) {
-         for (let tileX = 0; tileX < Settings.WORLD_SIZE_TILES; tileX++) {
-            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-            const tile = this.getTile(tileIndex);
-            if (tile.type === TileType.dropdown) {
-               dropdownTiles.push(tileIndex);
-            }
-         }
-      }
-      this.dropdownTiles = dropdownTiles;
 
       this.renderLayerChunkDataRecord = {} as RenderLayerChunkDataRecord;
       for (const renderLayer of CHUNKED_RENDER_LAYERS) {
@@ -117,37 +111,36 @@ export default class Layer {
       return this.collisionGroupChunks[collisionGroup][chunkIndex];
    }
 
-   public setSubtile(subtileIndex: number, subtileType: SubtileType, damageTaken: number): void {
-      this.wallSubtileTypes[subtileIndex] = subtileType;
-
-      if (damageTaken > 0) {
-         this.wallSubtileDamageTakenMap.set(subtileIndex, damageTaken);
-      } else {
-         this.wallSubtileDamageTakenMap.delete(subtileIndex);
-      }
+   public setSubtileData(subtileIndex: number, data: number): void {
+      this.wallSubtileDatas.set(subtileIndex, data);
    }
 
    public getTile(tileIndex: TileIndex): Tile {
-      return this.tiles[tileIndex];
+      return this.tiles.get(tileIndex)!;
+   }
+
+   public hasTileXY(tileX: number, tileY: number): boolean {
+      const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+      return this.tiles.has(tileIndex);
    }
 
    public getTileXY(tileX: number, tileY: number): Tile {
       const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-      return this.tiles[tileIndex];
+      return this.tiles.get(tileIndex)!;
    }
 
-   public subtileIsWall(subtileX: number, subtileY: number): boolean {
-      const subtileIndex = getSubtileIndex(subtileX, subtileY);
-      return this.wallSubtileTypes[subtileIndex] !== SubtileType.none;
-   }
-
-   /** Returns if the given subtile can support a wall but is mined out */
-   public subtileIsMined(subtileIndex: number): boolean {
-      return this.wallSubtileTypes[subtileIndex] === SubtileType.none && this.wallSubtileDamageTakenMap.has(subtileIndex);
+   public subtileIsWall(subtileIndex: number): boolean {
+      const subtileType = this.getSubtileType(subtileIndex);
+      return subtileType !== SubtileType.none;
    }
 
    public getSubtileType(subtileIndex: number): SubtileType {
-      return this.wallSubtileTypes[subtileIndex];
+      const data = this.wallSubtileDatas.get(subtileIndex)!;
+      return data >> 2;
+   }
+
+   public getSubtileData(subtileIndex: number): number {
+      return this.wallSubtileDatas.get(subtileIndex)!;
    }
 
    public getChunk(chunkX: number, chunkY: number): Chunk {

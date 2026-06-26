@@ -17,55 +17,58 @@ export interface TukmokSpurComponentData {}
 export interface TukmokSpurComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmokSpur, _TukmokSpurComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmokSpur, typeof TukmokSpurComponentArray> {}
 }
 
-class _TukmokSpurComponentArray extends ServerComponentArray<TukmokSpurComponent, TukmokSpurComponentData> {
-   public decodeData(): TukmokSpurComponentData {
-      return {};
-   }
+export const TukmokSpurComponentArray = registerServerComponentArray(
+   ServerComponentType.tukmokSpur,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TukmokSpurComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+TukmokSpurComponentArray.onHit = onHit;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-
-      const tag = getHitboxTag(hitbox);
-      
-      let textureIndex: TextureIndex;
-      if (tag === HitboxTag.tukmokSpurHead) {
-         textureIndex = TextureIndex.entities_tukmokSpur_spurHead;
-      } else if (tag === HitboxTag.tukmokSpurShoulderLeftFront) {
-         textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderLeftFront;
-      } else if (tag === HitboxTag.tukmokSpurShoulderLeftBack) {
-         textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderLeftBack;
-      } else if (tag === HitboxTag.tukmokSpurShoulderRightFront) {
-         textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderRightFront;
-      } else {
-         textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderRightBack;
-      }
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            textureIndex
-         )
-      );
-   }
-
-   public createComponent(): TukmokSpurComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      playSoundOnHitbox("tukmok-bone-hit.mp3", 0.4, randFloat(0.92, 1.08), entity, hitbox, false);
-   }
+function decodeData(): TukmokSpurComponentData {
+   return {};
 }
 
-export const TukmokSpurComponentArray = registerServerComponentArray(ServerComponentType.tukmokSpur, _TukmokSpurComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+
+   const tag = getHitboxTag(hitbox);
+   
+   let textureIndex: TextureIndex;
+   if (tag === HitboxTag.tukmokSpurHead) {
+      textureIndex = TextureIndex.entities_tukmokSpur_spurHead;
+   } else if (tag === HitboxTag.tukmokSpurShoulderLeftFront) {
+      textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderLeftFront;
+   } else if (tag === HitboxTag.tukmokSpurShoulderLeftBack) {
+      textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderLeftBack;
+   } else if (tag === HitboxTag.tukmokSpurShoulderRightFront) {
+      textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderRightFront;
+   } else {
+      textureIndex = TextureIndex.entities_tukmokSpur_spurShoulderRightBack;
+   }
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         textureIndex
+      )
+   );
+}
+
+function createComponent(): TukmokSpurComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   playSoundOnHitbox("tukmok-bone-hit.mp3", 0.4, randFloat(0.92, 1.08), entity, hitbox, false);
+}

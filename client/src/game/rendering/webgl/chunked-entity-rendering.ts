@@ -77,8 +77,8 @@ function createEntityRenderedChunkData(layer: Layer, chunkIdx: number): void {
 }
 
 function removeEntityRenderedChunkData(layer: Layer, chunkIdx: number, chunkData: EntityChunkData): void {
-   gl.deleteBuffer(chunkData.vertexBuffer);
    gl.deleteVertexArray(chunkData.vao);
+   gl.deleteBuffer(chunkData.vertexBuffer);
 
    for (const renderLayer of CHUNKED_RENDER_LAYERS) {
       delete layer.renderLayerChunkDataRecord[renderLayer][chunkIdx];

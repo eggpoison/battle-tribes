@@ -326,7 +326,7 @@ export function getEntityClientComponentTypes(entityType: EntityType): readonly 
    return ENTITY_CLIENT_COMPONENT_TYPES[entityType];
 }
 
-export function getEntityServerComponentArrays(entityType: EntityType): readonly ServerComponentArray<object, object, unknown>[] {
+export function getEntityServerComponentArrays(entityType: EntityType): readonly ServerComponentArray<object, object>[] {
    return SERVER_COMPONENT_ARRAYS[entityType];
 }
 

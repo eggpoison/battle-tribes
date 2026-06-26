@@ -37,7 +37,7 @@ export function createOkrenTongueConfig(x: number, y: number, angle: number, okr
    
    // @Copynpaste
    // Apply some initial velocity
-   addHitboxVelocity(tongueTipHitbox, polarVec2(200, okrenHitbox.box.angle));
+   addHitboxVelocity(tongueTipHitbox, 200 * Math.sin(okrenHitbox.box.angle), 200 * Math.cos(okrenHitbox.box.angle));
    
    return {
       entityType: EntityType.okrenTongue,

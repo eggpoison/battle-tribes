@@ -723,7 +723,7 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const cowTransformComponent = TransformComponentArray.getComponent(cow);
    const cowBodyHitbox = cowTransformComponent.hitboxes[0];
    const cowVelocity = getHitboxVelocity(cowBodyHitbox);
-   addHitboxVelocity(cowBodyHitbox, new Point(cowVelocity.x * -0.5, cowVelocity.y * -0.5));
+   addHitboxVelocity(cowBodyHitbox, cowVelocity.x * -0.5, cowVelocity.y * -0.5);
 }
 
 function onDeath() {

@@ -9,26 +9,27 @@ export interface AttackingEntitiesComponentData {}
 export interface AttackingEntitiesComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.attackingEntities, _AttackingEntitiesComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.attackingEntities, typeof AttackingEntitiesComponentArray> {}
 }
 
-class _AttackingEntitiesComponentArray extends ServerComponentArray<AttackingEntitiesComponent, AttackingEntitiesComponentData> {
-   public decodeData(reader: PacketReader): AttackingEntitiesComponentData {
-      const numAttackingEntities = reader.readNumber();
-      reader.padOffset(3 * Bytes.Float32 * numAttackingEntities);
-      return {};
-   }
+export const AttackingEntitiesComponentArray = registerServerComponentArray(
+   ServerComponentType.attackingEntities,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(): AttackingEntitiesComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(reader: PacketReader): AttackingEntitiesComponentData {
+   const numAttackingEntities = reader.readNumber();
+   reader.padOffset(3 * Bytes.Float32 * numAttackingEntities);
+   return {};
 }
 
-export const AttackingEntitiesComponentArray = registerServerComponentArray(ServerComponentType.attackingEntities, _AttackingEntitiesComponentArray, true);
+function createComponent(): AttackingEntitiesComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}
 
 export function createAttackingEntitiesComponentData(): AttackingEntitiesComponentData {
    return {};

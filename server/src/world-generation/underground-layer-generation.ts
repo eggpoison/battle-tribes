@@ -16,9 +16,9 @@ import { ServerComponentType } from "../../../shared/dist/components.js";
 import { EntityType } from "../../../shared/dist/entities.js";
 import { LightLevelVar } from "../../../shared/dist/light-levels.js";
 import { Settings } from "../../../shared/dist/settings.js";
-import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
-import { TileType, SubtileType } from "../../../shared/dist/tiles.js";
-import { distance, smoothstep, getTileIndexIncludingEdges, TileIndex, getTileX, getTileY, assert, clampToBoardDimensions, lerp, randFloat, randInt } from "../../../shared/dist/utils.js";
+import { getSubtileIndex, SubtileType } from "../../../shared/dist/subtiles.js";
+import { getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, TileType } from "../../../shared/dist/tiles.js";
+import { distance, smoothstep, assert, clampToBoardDimensions, lerp, randFloat, randInt } from "../../../shared/dist/utils.js";
 
 const enum Vars {
    DROPDOWN_TILE_WEIGHT_REDUCTION_RANGE = 9,
@@ -259,7 +259,7 @@ export function generateUndergroundTerrain(depth: number, surfaceLayer: Layer): 
             undergroundLayer.tileTypes[tileIndex] = TileType.stoneWallFloor;
 
             const subtileType = Math.random() < 0.5 ? SubtileType.stoneWall1 : SubtileType.stoneWall2;
-            setWallInSubtiles(undergroundLayer.wallSubtileTypes, tileX, tileY, subtileType);
+            setWallInSubtiles(undergroundLayer.wallSubtileDatas, tileX, tileY, subtileType);
          } else {
             if (depth > 0.4 && weight > 0.54 && mithrilGenerationWeight > Vars.MIN_MITHRIL_GENERATION_WEIGHT) {
                isMithrilRich = true;

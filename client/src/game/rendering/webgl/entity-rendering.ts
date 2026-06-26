@@ -277,8 +277,8 @@ export function createEntityRenderData(maxRenderParts: number): EntityRenderData
 
 export function deleteEntityRenderData(renderObject: EntityRenderObject): void {
    if (renderObject.vao !== null) {
-      gl.deleteBuffer(renderObject.vertexBuffer);
       gl.deleteVertexArray(renderObject.vao);
+      gl.deleteBuffer(renderObject.vertexBuffer);
    }
 }
 

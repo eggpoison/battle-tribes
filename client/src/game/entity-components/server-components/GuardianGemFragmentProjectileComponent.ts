@@ -35,93 +35,96 @@ const TEXTURE_INDEXES = [
 ];
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianGemFragmentProjectile, _GuardianGemFragmentProjectileComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianGemFragmentProjectile, typeof GuardianGemFragmentProjectileComponentArray> {}
 }
 
-class _GuardianGemFragmentProjectileComponentArray extends ServerComponentArray<GuardianGemFragmentProjectileComponent, GuardianGemFragmentProjectileComponentData, IntermediateInfo> {
-   public decodeData(reader: PacketReader): GuardianGemFragmentProjectileComponentData {
-      const fragmentShape = reader.readNumber();
-      const gemType = reader.readNumber();
-      const baseTintMultiplier = reader.readNumber();
+export const GuardianGemFragmentProjectileComponentArray = registerServerComponentArray(
+   ServerComponentType.guardianGemFragmentProjectile,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+GuardianGemFragmentProjectileComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+GuardianGemFragmentProjectileComponentArray.onDie = onDie;
 
-      return {
-         fragmentShape: fragmentShape,
-         gemType: gemType,
-         baseTintMultiplier: baseTintMultiplier
-      };
-   }
+function decodeData(reader: PacketReader): GuardianGemFragmentProjectileComponentData {
+   const fragmentShape = reader.readNumber();
+   const gemType = reader.readNumber();
+   const baseTintMultiplier = reader.readNumber();
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const guardianGemFragmentProjectileComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.guardianGemFragmentProjectile);
-      
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         TEXTURE_INDEXES[guardianGemFragmentProjectileComponentData.fragmentShape]
-      );
-
-      // Flip half of them
-      if (Math.random() < 0.5) {
-         renderPart.setFlipX(true);
-      }
-
-      const tintMultiplier = 0.85 * guardianGemFragmentProjectileComponentData.baseTintMultiplier;
-      switch (guardianGemFragmentProjectileComponentData.gemType) {
-         // Ruby
-         case 0: {
-            renderPart.tintR = tintMultiplier;
-            break;
-         }
-         // Emerald
-         case 1: {
-            renderPart.tintG = tintMultiplier;
-            break;
-         }
-         // Amethyst
-         case 2: {
-            renderPart.tintR = 0.9 * tintMultiplier;
-            renderPart.tintG = 0.2 * tintMultiplier;
-            renderPart.tintB = 0.9 * tintMultiplier;
-            break;
-         }
-      }
-
-      renderObject.attachRenderPart(renderPart);
-
-      return {
-         renderPart: renderPart
-      };
-   }
-
-   public createComponent(_entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GuardianGemFragmentProjectileComponent {
-      return {
-         renderPart: intermediateInfo.renderPart
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onDie(entity: Entity): void {
-      const guardianGemFragmentProjectileComponent = GuardianGemFragmentProjectileComponentArray.getComponent(entity);
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      for (let i = 0; i < 3; i++) {
-         createGenericGemParticle(hitbox, 4, guardianGemFragmentProjectileComponent.renderPart.tintR, guardianGemFragmentProjectileComponent.renderPart.tintG, guardianGemFragmentProjectileComponent.renderPart.tintB);
-      }
-
-      if (Math.random() < 0.5) {
-         playSoundOnHitbox("guardian-gem-fragment-death.mp3", 0.3, 1, entity, hitbox, false);
-      }
-   }
+   return {
+      fragmentShape: fragmentShape,
+      gemType: gemType,
+      baseTintMultiplier: baseTintMultiplier
+   };
 }
 
-export const GuardianGemFragmentProjectileComponentArray = registerServerComponentArray(ServerComponentType.guardianGemFragmentProjectile, _GuardianGemFragmentProjectileComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const guardianGemFragmentProjectileComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.guardianGemFragmentProjectile);
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      TEXTURE_INDEXES[guardianGemFragmentProjectileComponentData.fragmentShape]
+   );
+
+   // Flip half of them
+   if (Math.random() < 0.5) {
+      renderPart.setFlipX(true);
+   }
+
+   const tintMultiplier = 0.85 * guardianGemFragmentProjectileComponentData.baseTintMultiplier;
+   switch (guardianGemFragmentProjectileComponentData.gemType) {
+      // Ruby
+      case 0: {
+         renderPart.tintR = tintMultiplier;
+         break;
+      }
+      // Emerald
+      case 1: {
+         renderPart.tintG = tintMultiplier;
+         break;
+      }
+      // Amethyst
+      case 2: {
+         renderPart.tintR = 0.9 * tintMultiplier;
+         renderPart.tintG = 0.2 * tintMultiplier;
+         renderPart.tintB = 0.9 * tintMultiplier;
+         break;
+      }
+   }
+
+   renderObject.attachRenderPart(renderPart);
+
+   return {
+      renderPart: renderPart
+   };
+}
+
+function createComponent(_entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): GuardianGemFragmentProjectileComponent {
+   return {
+      renderPart: intermediateInfo.renderPart
+   };
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onDie(entity: Entity): void {
+   const guardianGemFragmentProjectileComponent = GuardianGemFragmentProjectileComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   for (let i = 0; i < 3; i++) {
+      createGenericGemParticle(hitbox, 4, guardianGemFragmentProjectileComponent.renderPart.tintR, guardianGemFragmentProjectileComponent.renderPart.tintG, guardianGemFragmentProjectileComponent.renderPart.tintB);
+   }
+
+   if (Math.random() < 0.5) {
+      playSoundOnHitbox("guardian-gem-fragment-death.mp3", 0.3, 1, entity, hitbox, false);
+   }
+}

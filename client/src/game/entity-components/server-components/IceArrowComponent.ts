@@ -11,44 +11,47 @@ export interface IceArrowComponentData {}
 export interface IceArrowComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceArrow, _IceArrowComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceArrow, typeof IceArrowComponentArray> {}
 }
 
-class _IceArrowComponentArray extends ServerComponentArray<IceArrowComponent, IceArrowComponentData> {
-   public decodeData(): IceArrowComponentData {
-      return {};
-   }
+export const IceArrowComponentArray = registerServerComponentArray(
+   ServerComponentType.iceArrow,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+IceArrowComponentArray.onTick = onTick;
+IceArrowComponentArray.onRemove = onRemove;
 
-   public createComponent(): IceArrowComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
-
-   public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      if (Math.random() < 30 * Settings.DT_S) {
-         createSnowflakeParticle(hitbox.box.posX, hitbox.box.posY);
-      }
-
-      if (Math.random() < 30 * Settings.DT_S) {
-         // @Incomplete: These types of particles don't fit
-         createIceSpeckProjectile(transformComponent);
-      }
-
-      // @Incomplete: Need snow speck particles
-   }
-
-   public onRemove(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      for (let i = 0; i < 6; i++) {
-         createIceSpeckProjectile(transformComponent);
-      }
-   }
+function decodeData(): IceArrowComponentData {
+   return {};
 }
 
-export const IceArrowComponentArray = registerServerComponentArray(ServerComponentType.iceArrow, _IceArrowComponentArray, true);
+function createComponent(): IceArrowComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}
+
+function onTick(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   if (Math.random() < 30 * Settings.DT_S) {
+      createSnowflakeParticle(hitbox.box.posX, hitbox.box.posY);
+   }
+
+   if (Math.random() < 30 * Settings.DT_S) {
+      // @Incomplete: These types of particles don't fit
+      createIceSpeckProjectile(transformComponent);
+   }
+
+   // @Incomplete: Need snow speck particles
+}
+
+function onRemove(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   for (let i = 0; i < 6; i++) {
+      createIceSpeckProjectile(transformComponent);
+   }
+}

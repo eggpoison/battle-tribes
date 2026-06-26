@@ -8,7 +8,7 @@ import { BREAK_PROGRESS_TEXTURE_SOURCES } from "./rendering/webgl/tile-break-pro
 // @SPEED: do the same thing in texture-atlases!!
 const itemImages = import.meta.glob("/src/images/**/*", { eager: true, query: "?url", import: "default" });
 
-let TEXTURES: { [key: string]: WebGLTexture } = {};
+const TEXTURES: Record<string, WebGLTexture> = {};
 
 const miscTextureSources: string[] = [
    "miscellaneous/river/gravel.png",

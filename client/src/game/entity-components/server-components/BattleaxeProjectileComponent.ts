@@ -12,34 +12,37 @@ export interface BattleaxeProjectileComponentData {}
 export interface BattleaxeProjectileComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.battleaxeProjectile, _BattleaxeProjectileComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.battleaxeProjectile, typeof BattleaxeProjectileComponentArray> {}
 }
 
-class _BattleaxeProjectileComponentArray extends ServerComponentArray<BattleaxeProjectileComponent, BattleaxeProjectileComponentData, never> {
-   public decodeData(): BattleaxeProjectileComponentData {
-      return {};
-   }
+export const BattleaxeProjectileComponentArray = registerServerComponentArray(
+   ServerComponentType.battleaxeProjectile,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+BattleaxeProjectileComponentArray.onLoad = onLoad;
+BattleaxeProjectileComponentArray.onTick = onTick;
 
-   public createComponent(): BattleaxeProjectileComponent {
-      return {};
-   }
+function decodeData(): BattleaxeProjectileComponentData {
+   return {};
+}
 
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function createComponent(): BattleaxeProjectileComponent {
+   return {};
+}
 
-   public onLoad(entity: Entity): void {
+function getMaxRenderParts(): number {
+   return 0;
+}
+
+function onLoad(entity: Entity): void {
+   playWhoosh(entity);
+}
+
+function onTick(entity: Entity): void {
+   if (tickIntervalHasPassed(0.25 * Settings.TICK_RATE)) {
       playWhoosh(entity);
    }
-
-   public onTick(entity: Entity): void {
-      if (tickIntervalHasPassed(0.25 * Settings.TICK_RATE)) {
-         playWhoosh(entity);
-      }
-   }
 }
-
-export const BattleaxeProjectileComponentArray = registerServerComponentArray(ServerComponentType.battleaxeProjectile, _BattleaxeProjectileComponentArray, true);
 
 const playWhoosh = (entity: Entity): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);

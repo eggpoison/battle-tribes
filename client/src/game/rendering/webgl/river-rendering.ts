@@ -1,7 +1,7 @@
 import { WaterRockSize, WaterRockData } from "../../../../../shared/src/client-server-types";
 import { Settings } from "../../../../../shared/src/settings";
-import { TileType } from "../../../../../shared/src/tiles";
-import { tileIsInWorldIncludingEdges, getTileIndexIncludingEdges, rotatePointAroundPoint, _point, lerp, randFloat, TileIndex, getTileX, getTileY } from "../../../../../shared/src/utils";
+import { getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, tileIsInWorldIncludingEdges, TileType } from "../../../../../shared/src/tiles";
+import { rotatePointAroundPoint, _point, lerp, randFloat } from "../../../../../shared/src/utils";
 import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getTexture } from "../../textures";
@@ -20,6 +20,17 @@ const WATER_VISUAL_FLOW_SPEED = 0.3;
 const FOAM_OFFSET = 3;
 /** Extra size given to the foam under stepping stones */
 const FOAM_PADDING = 3.5;
+
+const NEIGHBOUR_OFFSETS = [
+   [1, 0],
+   [-1, 0],
+   [0, -1],
+   [-1, -1],
+   [1, 1],
+   [-1, 1],
+   [0, 1],
+   [1, -1]
+];
 
 const WATER_ROCK_SIZES: Record<WaterRockSize, number> = {
    [WaterRockSize.small]: 24,
@@ -737,6 +748,24 @@ const tileIsWaterInt = (layer: Layer, tileX: number, tileY: number): number => {
    return tile.type === TileType.water ? 1 : 0;
 }
 
+const tileBordersWater = (layer: Layer, tileX: number, tileY: number): boolean => {
+   for (let i = 0; i < NEIGHBOUR_OFFSETS.length; i++) {
+      const offset = NEIGHBOUR_OFFSETS[i];
+      const neighbourTileX = tileX + offset[0];
+      const neighbourTileY = tileY + offset[1];
+
+      if (tileIsInWorldIncludingEdges(neighbourTileX, neighbourTileY)) {
+         const tileIndex = getTileIndexIncludingEdges(neighbourTileX, neighbourTileY);
+         const neighbourTile = layer.tiles.get(tileIndex)!;
+         if (neighbourTile.type === TileType.water) {
+            return true;
+         }
+      }
+   }
+
+   return false;
+}
+
 const calculateTransitionVertexData = (layer: Layer, renderChunkX: number, renderChunkY: number): Float32Array => {
    const minTileX = getRenderChunkMinTileX(renderChunkX);
    const maxTileX = getRenderChunkMaxTileX(renderChunkX);
@@ -745,11 +774,11 @@ const calculateTransitionVertexData = (layer: Layer, renderChunkX: number, rende
 
    // Find all tiles neighbouring water in the render chunk
    const edgeTiles: TileIndex[] = [];
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+   for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          const tile = layer.getTile(tileIndex);
-         if (tile.type !== TileType.water && tile.type !== TileType.ice && tile.bordersWater) {
+         if (tile.type !== TileType.water && tile.type !== TileType.ice && tileBordersWater(layer, tileX, tileY)) {
             edgeTiles.push(tileIndex);
          }
       }
@@ -1319,7 +1348,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
 
    // Left border tiles
    for (let tileY = bottomTileY - 1; tileY <= topTileY + 1; tileY++) {
-      if (tileIsInWorldIncludingEdges(leftTileX - 1, tileY)) {
+      if (tileIsInWorldIncludingEdges(leftTileX - 1, tileY) && layer.hasTileXY(leftTileX - 1, tileY)) {
          const tile = layer.getTileXY(leftTileX - 1, tileY);
          if (tile.type === TileType.water) {
             return true;
@@ -1329,7 +1358,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
    
    // Right border tiles
    for (let tileY = bottomTileY - 1; tileY <= topTileY + 1; tileY++) {
-      if (tileIsInWorldIncludingEdges(rightTileX + 1, tileY)) {
+      if (tileIsInWorldIncludingEdges(rightTileX + 1, tileY) && layer.hasTileXY(rightTileX + 1, tileY)) {
          const tile = layer.getTileXY(rightTileX + 1, tileY);
          if (tile.type === TileType.water) {
             return true;
@@ -1339,7 +1368,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
 
    // Top border tiles
    for (let tileX = leftTileX; tileX <= rightTileX; tileX++) {
-      if (tileIsInWorldIncludingEdges(tileX, topTileY + 1)) {
+      if (tileIsInWorldIncludingEdges(tileX, topTileY + 1) && layer.hasTileXY(tileX, topTileY + 1)) {
          const tile = layer.getTileXY(tileX, topTileY + 1);
          if (tile.type === TileType.water) {
             return true;
@@ -1349,7 +1378,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
 
    // Bottom border tiles
    for (let tileX = leftTileX; tileX <= rightTileX; tileX++) {
-      if (tileIsInWorldIncludingEdges(tileX, bottomTileY - 1)) {
+      if (tileIsInWorldIncludingEdges(tileX, bottomTileY - 1) && layer.hasTileXY(tileX, bottomTileY - 1)) {
          const tile = layer.getTileXY(tileX, bottomTileY - 1);
          if (tile.type === TileType.water) {
             return true;
@@ -1360,7 +1389,7 @@ const renderChunkHasBorderingWaterTiles = (layer: Layer, renderChunkX: number, r
    return false;
 }
 
-export function calculateRiverRenderChunkData(layer: Layer, renderChunkX: number, renderChunkY: number, waterRocks: readonly WaterRockData[]): RenderChunkRiverInfo | null {
+export function createRiverRenderChunkData(layer: Layer, renderChunkX: number, renderChunkY: number, waterRocks: readonly WaterRockData[]): RenderChunkRiverInfo | null {
    const waterTiles = getRenderChunkWaterTiles(layer, renderChunkX, renderChunkY);
 
    // If there are no water tiles don't calculate any data
@@ -1421,18 +1450,39 @@ export function calculateRiverRenderChunkData(layer: Layer, renderChunkX: number
 
    return {
       baseVAO: createBaseVAO(baseBuffer),
+      baseBuffer: baseBuffer,
       baseVertexCount: baseVertexData.length / 8,
       rockVAO: createRockVAO(rockBuffer),
+      rockBuffer: rockBuffer,
       rockVertexCount: rockVertexData.length / 6,
       highlightsVAO: createHighlightsVAO(highlightsBuffer),
+      highlightsBuffer: highlightsBuffer,
       highlightsVertexCount: highlightsVertexData.length / 5,
       transitionVAO: createTransitionVAO(transitionBuffer),
+      transitionBuffer: transitionBuffer,
       transitionVertexCount: transitionVertexData.length / 12,
       noiseVAO: createNoiseVAO(noiseBuffer),
-      noiseVertexCount: noiseVertexData.length / 8,
+      noiseBuffer: noiseBuffer,
+      noiseVertexCount: noiseVertexData.length / 8
       // riverSteppingStoneGroupIDs: groupIDs,
-      waterRocks: []
    };
+}
+
+export function destroyRiverRenderChunkData(riverInfo: RenderChunkRiverInfo): void {
+   gl.deleteVertexArray(riverInfo.baseVAO);
+   gl.deleteBuffer(riverInfo.baseBuffer);
+
+   gl.deleteVertexArray(riverInfo.rockVAO);
+   gl.deleteBuffer(riverInfo.rockBuffer);
+
+   gl.deleteVertexArray(riverInfo.highlightsVAO);
+   gl.deleteBuffer(riverInfo.highlightsBuffer);
+
+   gl.deleteVertexArray(riverInfo.transitionVAO);
+   gl.deleteBuffer(riverInfo.transitionBuffer);
+
+   gl.deleteVertexArray(riverInfo.noiseVAO);
+   gl.deleteBuffer(riverInfo.noiseBuffer);
 }
 
 const calculateNoiseVertexData = (layer: Layer, waterTiles: readonly TileIndex[]): Float32Array => {
@@ -1657,10 +1707,10 @@ export function calculateVisibleRiverInfo(layer: Layer): readonly RenderChunkRiv
    // @Speed: Garbage collection
    const riverInfoArray: RenderChunkRiverInfo[] = [];
 
-   for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
-      for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
+   for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
+      for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
          const riverInfo = getRenderChunkRiverInfo(layer, renderChunkX, renderChunkY);
-         if (riverInfo !== null) {
+         if (riverInfo !== undefined) {
             riverInfoArray.push(riverInfo);
          }
       }

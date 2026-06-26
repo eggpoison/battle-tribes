@@ -1,5 +1,5 @@
 import { Settings } from "../../../../../shared/src/settings";
-import { distance, getTileX, getTileY, lerp } from "../../../../../shared/src/utils";
+import { distance, lerp } from "../../../../../shared/src/utils";
 import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getLightPositionMatrix } from "../../lights";
@@ -10,6 +10,7 @@ import { currentSnapshot } from "../../networking/snapshots";
 import { cameraPosition } from "../../camera";
 import { gameFramebufferTexture } from "../render";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
+import { getTileX, getTileY } from "../../../../../shared/src/tiles";
 
 const enum Var {
    MAX_LIGHTS = 64,

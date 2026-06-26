@@ -7,21 +7,22 @@ export interface ThrowingProjectileComponentData {}
 export interface ThrowingProjectileComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.throwingProjectile, _ThrowingProjectileComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.throwingProjectile, typeof ThrowingProjectileComponentArray> {}
 }
 
-class _ThrowingProjectileComponentArray extends ServerComponentArray<ThrowingProjectileComponent, ThrowingProjectileComponentData> {
-   public decodeData(): ThrowingProjectileComponentData {
-      return {};
-   }
+export const ThrowingProjectileComponentArray = registerServerComponentArray(
+   ServerComponentType.throwingProjectile,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(): ThrowingProjectileComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(): ThrowingProjectileComponentData {
+   return {};
 }
 
-export const ThrowingProjectileComponentArray = registerServerComponentArray(ServerComponentType.throwingProjectile, _ThrowingProjectileComponentArray, true);
+function createComponent(): ThrowingProjectileComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}

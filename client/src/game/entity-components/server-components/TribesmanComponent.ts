@@ -16,11 +16,10 @@ import TexturedRenderPart from "../../render-parts/TexturedRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType } from "../../world";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { resetIgnoredTileSpeedMultipliers, TransformComponentArray } from "./TransformComponent";
-import ServerComponentArray from "../ServerComponentArray";
 import RenderAttachPoint from "../../render-parts/RenderAttachPoint";
 import { playSoundOnHitbox } from "../../sound";
 import { InventoryComponentArray, getInventory } from "./InventoryComponent";
-import { tribeComponentArray } from "./TribeComponent";
+import { TribeComponentArray } from "./TribeComponent";
 import { playerInstance } from "../../player";
 import { getHitboxTile, getHitboxVelocity, Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
@@ -31,6 +30,7 @@ import { getEntityServerComponentTypes } from "../component-types";
 import { addRenderPartTag, getRenderThingByTag, getRenderThingsByTag } from "../../render-parts/render-part-tags";
 import { registerServerComponentArray } from "../component-registry";
 import { TextureIndex } from "../../../texture-index";
+import ServerComponentArray from "../ServerComponentArray";
 
 export interface TribesmanComponentData {
    readonly warpaintType: number | null;
@@ -55,7 +55,7 @@ export interface TribesmanComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesman, TribesmanComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribesman, typeof TribesmanComponentArray> {}
 }
 
 // @Memory
@@ -235,169 +235,16 @@ export function tribesmanHasTitle(tribesmanComponent: TribesmanComponent, title:
    return false;
 }
 
-class TribesmanComponentArray extends ServerComponentArray<TribesmanComponent, TribesmanComponentData, IntermediateInfo> {
-   public decodeData(reader: PacketReader): TribesmanComponentData {
-      const warpaintType = readWarpaint(reader);
-      
-      const titles: TitleGenerationInfo[] = [];
-      const numTitles = reader.readNumber();
-      for (let i = 0; i < numTitles; i++) {
-         const title: TribesmanTitle = reader.readNumber();
-         const displayOption = reader.readNumber();
-         
-         titles.push({
-            title: title,
-            displayOption: displayOption
-         });
-      }
-
-      return {
-         warpaintType: warpaintType,
-         titles: titles
-      };
-   }
-
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tribeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribe);
-      
-      // @Temporary @Hack
-      // const radius = tribesman.type === EntityType.player || tribesman.type === EntityType.tribeWarrior ? 32 : 28;
-      const radius = 32;
-
-      // 
-      // Body render part
-      // 
-      
-      const bodyRenderPart = new TexturedRenderPart(
-         transformComponentData.hitboxes[0],
-         2,
-         0,
-         0, 0,
-         getBodyTextureIndex(entityComponentData.entityType, tribeComponentData.tribeType)
-      );
-      renderObject.attachRenderPart(bodyRenderPart);
-
-      if (tribeComponentData.tribeType === TribeType.goblins) {
-         const tribesmanComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribesman);
-         const warPaintType = tribesmanComponentData.warpaintType;
-         assert(warPaintType !== null);
-         
-         let textureIndex: TextureIndex;
-         if (entityComponentData.entityType === EntityType.tribeWarrior) {
-            textureIndex = TextureIndex.entities_goblins_warriorWarpaint1 + warPaintType - 1;
-         } else {
-            textureIndex = TextureIndex.entities_goblins_goblinWarpaint1 + warPaintType - 1;
-         }
-         
-         // Goblin warpaint
-         const warpaintRenderPart = new TexturedRenderPart(
-            bodyRenderPart,
-            4,
-            0,
-            0, 0,
-            textureIndex
-         );
-         addRenderPartTag(warpaintRenderPart, "tribeMemberComponent:warpaint");
-         renderObject.attachRenderPart(warpaintRenderPart);
-
-         // Left ear
-         const leftEarRenderPart = new TexturedRenderPart(
-            bodyRenderPart,
-            3,
-            -Math.PI/2 + GOBLIN_EAR_ANGLE,
-            (radius + GOBLIN_EAR_OFFSET) * Math.sin(GOBLIN_EAR_ANGLE), (radius + GOBLIN_EAR_OFFSET) * Math.cos(GOBLIN_EAR_ANGLE),
-            TextureIndex.entities_goblins_goblinEar
-         );
-         addRenderPartTag(leftEarRenderPart, "tribeMemberComponent:ear");
-         leftEarRenderPart.setFlipX(true);
-         renderObject.attachRenderPart(leftEarRenderPart);
-
-         // Right ear
-         const rightEarRenderPart = new TexturedRenderPart(
-            bodyRenderPart,
-            3,
-            -Math.PI/2 + GOBLIN_EAR_ANGLE,
-            (radius + GOBLIN_EAR_OFFSET) * Math.sin(GOBLIN_EAR_ANGLE), (radius + GOBLIN_EAR_OFFSET) * Math.cos(GOBLIN_EAR_ANGLE),
-            TextureIndex.entities_goblins_goblinEar
-         );
-         addRenderPartTag(rightEarRenderPart, "tribeMemberComponent:ear");
-         renderObject.attachRenderPart(rightEarRenderPart);
-      }
-
-      // Hands
-      const limbRenderParts: VisualRenderPart[] = [];
-      for (let i = 0; i < 2; i++) {
-         const attachPoint = new RenderAttachPoint(
-            bodyRenderPart,
-            1,
-            0,
-            0, 0
-         );
-         if (i === 1) {
-            attachPoint.setFlipX(true);
-         }
-         addRenderPartTag(attachPoint, "inventoryUseComponent:attachPoint");
-         renderObject.attachRenderPart(attachPoint);
-         
-         const handRenderPart = new TexturedRenderPart(
-            attachPoint,
-            1.2,
-            0,
-            0, 0,
-            getFistTextureIndex(entityComponentData.entityType, tribeComponentData.tribeType)
-         );
-         limbRenderParts.push(handRenderPart);
-         addRenderPartTag(handRenderPart, "inventoryUseComponent:hand");
-         renderObject.attachRenderPart(handRenderPart);
-      }
-
-      return {
-         bodyRenderPart: bodyRenderPart,
-         limbRenderParts: limbRenderParts
-      };
-   }
-
-   public createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TribesmanComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tribesmanComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribesman);
-      
-      return {
-         bodyRenderPart: intermediateInfo.bodyRenderPart,
-         handRenderParts: intermediateInfo.limbRenderParts,
-         warpaintType: tribesmanComponentData.warpaintType,
-         titles: tribesmanComponentData.titles,
-         deathbringerEyeLights: []
-      };
-   }
-
-   public getMaxRenderParts(entityComponentData: EntityComponentData): number {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tribeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribe);
-
-      let maxRenderParts = 0;
-
-      // Body
-      maxRenderParts++;
-
-      if (tribeComponentData.tribeType === TribeType.goblins) {
-         maxRenderParts += 3;
-      }
-
-      // @Speed: 2 of these are attach points... can they be removed?
-      maxRenderParts += 4;
-
-      return maxRenderParts;
-   }
-}
-
-export const tribesmanComponentArray = registerServerComponentArray(ServerComponentType.tribesman, TribesmanComponentArray, true);
-tribesmanComponentArray.onTick = onTick;
-tribesmanComponentArray.updateFromData = updateFromData;
-tribesmanComponentArray.updatePlayerFromData = updatePlayerFromData;
-tribesmanComponentArray.onHit = onHit;
-tribesmanComponentArray.onDie = onDie;
+export const TribesmanComponentArray = registerServerComponentArray(
+   ServerComponentType.tribesman,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TribesmanComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+TribesmanComponentArray.onTick = onTick;
+TribesmanComponentArray.updateFromData = updateFromData;
+TribesmanComponentArray.updatePlayerFromData = updatePlayerFromData;
+TribesmanComponentArray.onHit = onHit;
+TribesmanComponentArray.onDie = onDie;
 
 const getFistTextureIndex = (entityType: EntityType, tribeType: TribeType): TextureIndex => {
    switch (entityType) {
@@ -699,8 +546,163 @@ const updateTitles = (tribeMemberComponent: TribesmanComponent, entity: Entity, 
    }
 }
 
+function decodeData(reader: PacketReader): TribesmanComponentData {
+   const warpaintType = readWarpaint(reader);
+   
+   const titles: TitleGenerationInfo[] = [];
+   const numTitles = reader.readNumber();
+   for (let i = 0; i < numTitles; i++) {
+      const title: TribesmanTitle = reader.readNumber();
+      const displayOption = reader.readNumber();
+      
+      titles.push({
+         title: title,
+         displayOption: displayOption
+      });
+   }
+
+   return {
+      warpaintType: warpaintType,
+      titles: titles
+   };
+}
+
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): IntermediateInfo {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribe);
+   
+   // @Temporary @Hack
+   // const radius = tribesman.type === EntityType.player || tribesman.type === EntityType.tribeWarrior ? 32 : 28;
+   const radius = 32;
+
+   // 
+   // Body render part
+   // 
+   
+   const bodyRenderPart = new TexturedRenderPart(
+      transformComponentData.hitboxes[0],
+      2,
+      0,
+      0, 0,
+      getBodyTextureIndex(entityComponentData.entityType, tribeComponentData.tribeType)
+   );
+   renderObject.attachRenderPart(bodyRenderPart);
+
+   if (tribeComponentData.tribeType === TribeType.goblins) {
+      const tribesmanComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribesman);
+      const warPaintType = tribesmanComponentData.warpaintType;
+      assert(warPaintType !== null);
+      
+      let textureIndex: TextureIndex;
+      if (entityComponentData.entityType === EntityType.tribeWarrior) {
+         textureIndex = TextureIndex.entities_goblins_warriorWarpaint1 + warPaintType - 1;
+      } else {
+         textureIndex = TextureIndex.entities_goblins_goblinWarpaint1 + warPaintType - 1;
+      }
+      
+      // Goblin warpaint
+      const warpaintRenderPart = new TexturedRenderPart(
+         bodyRenderPart,
+         4,
+         0,
+         0, 0,
+         textureIndex
+      );
+      addRenderPartTag(warpaintRenderPart, "tribeMemberComponent:warpaint");
+      renderObject.attachRenderPart(warpaintRenderPart);
+
+      // Left ear
+      const leftEarRenderPart = new TexturedRenderPart(
+         bodyRenderPart,
+         3,
+         -Math.PI/2 + GOBLIN_EAR_ANGLE,
+         (radius + GOBLIN_EAR_OFFSET) * Math.sin(GOBLIN_EAR_ANGLE), (radius + GOBLIN_EAR_OFFSET) * Math.cos(GOBLIN_EAR_ANGLE),
+         TextureIndex.entities_goblins_goblinEar
+      );
+      addRenderPartTag(leftEarRenderPart, "tribeMemberComponent:ear");
+      leftEarRenderPart.setFlipX(true);
+      renderObject.attachRenderPart(leftEarRenderPart);
+
+      // Right ear
+      const rightEarRenderPart = new TexturedRenderPart(
+         bodyRenderPart,
+         3,
+         -Math.PI/2 + GOBLIN_EAR_ANGLE,
+         (radius + GOBLIN_EAR_OFFSET) * Math.sin(GOBLIN_EAR_ANGLE), (radius + GOBLIN_EAR_OFFSET) * Math.cos(GOBLIN_EAR_ANGLE),
+         TextureIndex.entities_goblins_goblinEar
+      );
+      addRenderPartTag(rightEarRenderPart, "tribeMemberComponent:ear");
+      renderObject.attachRenderPart(rightEarRenderPart);
+   }
+
+   // Hands
+   const limbRenderParts: VisualRenderPart[] = [];
+   for (let i = 0; i < 2; i++) {
+      const attachPoint = new RenderAttachPoint(
+         bodyRenderPart,
+         1,
+         0,
+         0, 0
+      );
+      if (i === 1) {
+         attachPoint.setFlipX(true);
+      }
+      addRenderPartTag(attachPoint, "inventoryUseComponent:attachPoint");
+      renderObject.attachRenderPart(attachPoint);
+      
+      const handRenderPart = new TexturedRenderPart(
+         attachPoint,
+         1.2,
+         0,
+         0, 0,
+         getFistTextureIndex(entityComponentData.entityType, tribeComponentData.tribeType)
+      );
+      limbRenderParts.push(handRenderPart);
+      addRenderPartTag(handRenderPart, "inventoryUseComponent:hand");
+      renderObject.attachRenderPart(handRenderPart);
+   }
+
+   return {
+      bodyRenderPart: bodyRenderPart,
+      limbRenderParts: limbRenderParts
+   };
+}
+
+function createComponent(entityComponentData: EntityComponentData, intermediateInfo: IntermediateInfo): TribesmanComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribesmanComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribesman);
+   
+   return {
+      bodyRenderPart: intermediateInfo.bodyRenderPart,
+      handRenderParts: intermediateInfo.limbRenderParts,
+      warpaintType: tribesmanComponentData.warpaintType,
+      titles: tribesmanComponentData.titles,
+      deathbringerEyeLights: []
+   };
+}
+
+function getMaxRenderParts(entityComponentData: EntityComponentData): number {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribe);
+
+   let maxRenderParts = 0;
+
+   // Body
+   maxRenderParts++;
+
+   if (tribeComponentData.tribeType === TribeType.goblins) {
+      maxRenderParts += 3;
+   }
+
+   // @Speed: 2 of these are attach points... can they be removed?
+   maxRenderParts += 4;
+
+   return maxRenderParts;
+}
+
 function onTick(entity: Entity): void {
-   const tribesmanComponent = tribesmanComponentArray.getComponent(entity);
+   const tribesmanComponent = TribesmanComponentArray.getComponent(entity);
    if (tribesmanComponent.deathbringerEyeLights.length > 0) {
       const eyeFlashProgress = Math.min(getSecondsSinceLastAttack(entity) / 0.5, 1)
       const intensity = lerp(0.6, 0.5, eyeFlashProgress);
@@ -769,7 +771,7 @@ function onTick(entity: Entity): void {
 }
 
 function updateFromData(data: TribesmanComponentData, entity: Entity): void {
-   const tribesmanComponent = tribesmanComponentArray.getComponent(entity);
+   const tribesmanComponent = TribesmanComponentArray.getComponent(entity);
 
    tribesmanComponent.warpaintType = data.warpaintType;
 
@@ -785,7 +787,7 @@ function updateFromData(data: TribesmanComponentData, entity: Entity): void {
 function updatePlayerFromData(data: TribesmanComponentData): void {
    updateFromData(data, playerInstance!);
 
-   const tribesmanComponent = tribesmanComponentArray.getComponent(playerInstance!);
+   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!);
 
    // @Garbage
    const titles: TribesmanTitle[] = [];
@@ -811,7 +813,7 @@ function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
       createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(150, 250), true);
    }
 
-   const tribeComponent = tribeComponentArray.getComponent(entity);
+   const tribeComponent = TribeComponentArray.getComponent(entity);
    switch (tribeComponent.tribeType) {
       case TribeType.goblins: {
          playSoundOnHitbox(randItem(GOBLIN_HURT_SOUNDS), 0.4, 1, entity, hitbox, true);
@@ -855,7 +857,7 @@ function onDie(entity: Entity): void {
    createBloodPoolParticle(hitbox.box.posX, hitbox.box.posY, 20);
    createBloodParticleFountain(entity, 0.1, 1);
 
-   const tribeComponent = tribeComponentArray.getComponent(entity);
+   const tribeComponent = TribeComponentArray.getComponent(entity);
    switch (tribeComponent.tribeType) {
       case TribeType.goblins: {
          playSoundOnHitbox(randItem(GOBLIN_DIE_SOUNDS), 0.4, 1, entity, hitbox, false);

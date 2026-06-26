@@ -20,109 +20,113 @@ export interface BallistaComponentData {}
 export interface BallistaComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ballista, _BallistaComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.ballista, typeof BallistaComponentArray> {}
 }
 
-class _BallistaComponentArray extends ServerComponentArray<BallistaComponent, BallistaComponentData> {
-   public decodeData(): BallistaComponentData {
-      return {};
-   }
+export const BallistaComponentArray = registerServerComponentArray(
+   ServerComponentType.ballista,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+BallistaComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+BallistaComponentArray.onHit = onHit;
+BallistaComponentArray.onDie= onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      // Base
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.entities_ballista_base
-         )
-      );
+function decodeData(): BallistaComponentData {
+   return {};
+}
 
-      // Ammo box
-      const ammoBoxRenderPart = new TexturedRenderPart(
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   // Base
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
          hitbox,
-         1,
-         Math.PI / 2,
-         BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y,
-         TextureIndex.entities_ballista_ammoBox
-      );
-      renderObject.attachRenderPart(ammoBoxRenderPart);
-
-      // Plate
-      const plateRenderPart = new TexturedRenderPart(
-         hitbox,
-         2,
+         0,
          0,
          0, 0,
-         TextureIndex.entities_ballista_plate
-      );
-      addRenderPartTag(plateRenderPart, "turretComponent:pivoting");
-      renderObject.attachRenderPart(plateRenderPart);
+         TextureIndex.entities_ballista_base
+      )
+   );
 
-      // Shaft
-      const shaftRenderPart = new TexturedRenderPart(
-         plateRenderPart,
-         3,
-         0,
-         0, 0,
-         TextureIndex.entities_ballista_shaft
-      );
-      renderObject.attachRenderPart(shaftRenderPart);
+   // Ammo box
+   const ammoBoxRenderPart = new TexturedRenderPart(
+      hitbox,
+      1,
+      Math.PI / 2,
+      BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y,
+      TextureIndex.entities_ballista_ammoBox
+   );
+   renderObject.attachRenderPart(ammoBoxRenderPart);
 
-      // Gears
-      const gearRenderParts: RenderPart[] = [];
-      for (let i = 0; i < 2; i++) {
-         const renderPart = new TexturedRenderPart(
-            shaftRenderPart,
-            2.5 + i * 0.1,
-            0,
-            i === 0 ? BALLISTA_GEAR_X : -BALLISTA_GEAR_X, BALLISTA_GEAR_Y,
-            TextureIndex.entities_ballista_gear
-         );
-         addRenderPartTag(renderPart, "turretComponent:gear");
-         renderObject.attachRenderPart(renderPart);
-         gearRenderParts.push(renderPart);
-      }
+   // Plate
+   const plateRenderPart = new TexturedRenderPart(
+      hitbox,
+      2,
+      0,
+      0, 0,
+      TextureIndex.entities_ballista_plate
+   );
+   addRenderPartTag(plateRenderPart, "turretComponent:pivoting");
+   renderObject.attachRenderPart(plateRenderPart);
 
-      // Crossbow
-      const crossbowRenderPart = new TexturedRenderPart(
+   // Shaft
+   const shaftRenderPart = new TexturedRenderPart(
+      plateRenderPart,
+      3,
+      0,
+      0, 0,
+      TextureIndex.entities_ballista_shaft
+   );
+   renderObject.attachRenderPart(shaftRenderPart);
+
+   // Gears
+   const gearRenderParts: RenderPart[] = [];
+   for (let i = 0; i < 2; i++) {
+      const renderPart = new TexturedRenderPart(
          shaftRenderPart,
-         5,
+         2.5 + i * 0.1,
          0,
-         0, 0,
-         TextureIndex.entities_ballista_crossbow01
+         i === 0 ? BALLISTA_GEAR_X : -BALLISTA_GEAR_X, BALLISTA_GEAR_Y,
+         TextureIndex.entities_ballista_gear
       );
-      addRenderPartTag(crossbowRenderPart, "turretComponent:aiming");
-      renderObject.attachRenderPart(crossbowRenderPart);
+      addRenderPartTag(renderPart, "turretComponent:gear");
+      renderObject.attachRenderPart(renderPart);
+      gearRenderParts.push(renderPart);
    }
 
-   public createComponent(): BallistaComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 7;
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      // @Temporary
-      playSoundOnHitbox(randItem(ROCK_HIT_SOUNDS), 0.3, 1, entity, hitbox, false);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      // @Temporary
-      playSoundOnHitbox(randItem(ROCK_DESTROY_SOUNDS), 0.4, 1, entity, hitbox, false);
-   }
+   // Crossbow
+   const crossbowRenderPart = new TexturedRenderPart(
+      shaftRenderPart,
+      5,
+      0,
+      0, 0,
+      TextureIndex.entities_ballista_crossbow01
+   );
+   addRenderPartTag(crossbowRenderPart, "turretComponent:aiming");
+   renderObject.attachRenderPart(crossbowRenderPart);
 }
 
-export const BallistaComponentArray = registerServerComponentArray(ServerComponentType.ballista, _BallistaComponentArray, true);
+function createComponent(): BallistaComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 7;
+}
+
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   // @Temporary
+   playSoundOnHitbox(randItem(ROCK_HIT_SOUNDS), 0.3, 1, entity, hitbox, false);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   // @Temporary
+   playSoundOnHitbox(randItem(ROCK_DESTROY_SOUNDS), 0.4, 1, entity, hitbox, false);
+}
 
 export function createBallistaComponentData(): BallistaComponentData {
    return {};

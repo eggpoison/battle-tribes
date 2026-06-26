@@ -18,60 +18,64 @@ export interface WarriorHutComponentData {}
 export interface WarriorHutComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.warriorHut, _WarriorHutComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.warriorHut, typeof WarriorHutComponentArray> {}
 }
 
-class _WarriorHutComponentArray extends ClientComponentArray<WarriorHutComponent, WarriorHutComponentData> {
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      // Hut
-      const hutRenderPart = new TexturedRenderPart(
-         hitbox,
-         2,
+export const WarriorHutComponentArray = registerClientComponentArray(
+   ClientComponentType.warriorHut,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+WarriorHutComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+WarriorHutComponentArray.onHit = onHit;
+WarriorHutComponentArray.onDie = onDie;
+
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   // Hut
+   const hutRenderPart = new TexturedRenderPart(
+      hitbox,
+      2,
+      0,
+      0, 0,
+      TextureIndex.entities_warriorHut_warriorHut
+   );
+   renderObject.attachRenderPart(hutRenderPart);
+
+   // Doors
+   const doorRenderParts: VisualRenderPart[] = [];
+   for (let i = 0; i < 2; i++) {
+      const doorRenderPart = new TexturedRenderPart(
+         hutRenderPart,
+         1,
          0,
          0, 0,
-         TextureIndex.entities_warriorHut_warriorHut
+         TextureIndex.entities_warriorHut_warriorHutDoor
       );
-      renderObject.attachRenderPart(hutRenderPart);
-
-      // Doors
-      const doorRenderParts: VisualRenderPart[] = [];
-      for (let i = 0; i < 2; i++) {
-         const doorRenderPart = new TexturedRenderPart(
-            hutRenderPart,
-            1,
-            0,
-            0, 0,
-            TextureIndex.entities_warriorHut_warriorHutDoor
-         );
-         addRenderPartTag(doorRenderPart, "hutComponent:door");
-         renderObject.attachRenderPart(doorRenderPart);
-         doorRenderParts.push(doorRenderPart);
-      }
-   }
-
-   public createComponent(): WarriorHutComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 3;
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox): void {
-      playBuildingHitSound(entity, hitbox);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("building-destroy-1.mp3", 0.4, 1, entity, hitbox, false);
+      addRenderPartTag(doorRenderPart, "hutComponent:door");
+      renderObject.attachRenderPart(doorRenderPart);
+      doorRenderParts.push(doorRenderPart);
    }
 }
 
-export const WarriorHutComponentArray = registerClientComponentArray(ClientComponentType.warriorHut, _WarriorHutComponentArray, true);
+function createComponent(): WarriorHutComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 3;
+}
+
+function onHit(entity: Entity, hitbox: Hitbox): void {
+   playBuildingHitSound(entity, hitbox);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   playSoundOnHitbox("building-destroy-1.mp3", 0.4, 1, entity, hitbox, false);
+}
 
 export function createWarriorHutComponentData(): WarriorHutComponentData {
    return {};

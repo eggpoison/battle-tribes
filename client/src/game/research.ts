@@ -8,7 +8,7 @@ import { playHeadSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
 import { getRandomPositionInEntity, TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { InventoryUseComponentArray } from "./entity-components/server-components/InventoryUseComponent";
-import { tribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
+import { TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { sendStudyTechPacket } from "./networking/packet-sending/packet-sending";
 import { playerInstance } from "./player";
 import { cursorWorldPos } from "./camera";
@@ -135,7 +135,7 @@ const completeOrb = (): void => {
 const getResearchSpeedMultiplier = (): number => {
    let multiplier = 1;
 
-   const tribesmanComponent = tribesmanComponentArray.getComponent(playerInstance!);
+   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!);
    if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.shrewd)) {
       multiplier *= 1.5;
    }

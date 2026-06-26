@@ -1,12 +1,11 @@
 import { TransformComponent } from "./components/TransformComponent.js";
 import Layer from "./Layer.js";
-import PlayerClient, { PlayerClientVars } from "./server/PlayerClient.js";
+import PlayerClient from "./server/PlayerClient.js";
 import { getGameTicks, layers } from "./world.js";
-import { registerCollapseTickEvent, registerEntityTickEvent } from "./server/player-clients.js";
+import { registerCollapseTickEvent } from "./server/player-clients.js";
 import { EntityTickEvent, EntityTickEventType } from "../../shared/dist/entity-events.js";
 import { Settings } from "../../shared/dist/settings.js";
-import { getSubtileX, getSubtileY, subtileIsInWorldIncludingEdges, getSubtileIndex } from "../../shared/dist/subtiles.js";
-import { SubtileType } from "../../shared/dist/tiles.js";
+import { getSubtileX, getSubtileY, subtileIsInWorldIncludingEdges, getSubtileIndex, SubtileType } from "../../shared/dist/subtiles.js";
 import { customTickIntervalHasPassed, distance } from "../../shared/dist/utils.js";
 
 const enum Vars {
@@ -72,7 +71,7 @@ const getNeighbourSupport = (layer: Layer, subtileIndex: number): number => {
    }
 }
 
-export function registerMinedSubtile(layer: Layer, subtileIndex: number, subtileType: SubtileType): void {
+export function registerMinedSubtile(layer: Layer, subtileIndex: number): void {
    const subtileX = getSubtileX(subtileIndex);
    const subtileY = getSubtileY(subtileIndex);
    
@@ -107,7 +106,7 @@ export function registerMinedSubtile(layer: Layer, subtileIndex: number, subtile
    }
 
    const minedSubtileInfo: MinedSubtileInfo = {
-      subtileType: subtileType,
+      subtileType: layer.getSubtileType(subtileIndex),
       support: support
    };
    layer.minedSubtileInfoMap.set(subtileIndex, minedSubtileInfo);
@@ -121,28 +120,17 @@ export function registerMinedSubtile(layer: Layer, subtileIndex: number, subtile
 }
 
 export function damageWallSubtitle(layer: Layer, subtileIndex: number, damage: number): number {
-   let damageDealt: number;
-   if (!layer.wallSubtileDamageTakenMap.has(subtileIndex)) {
-      damageDealt = Math.min(damage, 3);
-      layer.wallSubtileDamageTakenMap.set(subtileIndex, damageDealt);
+   const previousDamageTaken = layer.getSubtileDamageTaken(subtileIndex);
+   const damageTaken = previousDamageTaken + damage;
+
+   if (damageTaken >= Settings.SUBTILE_HEALTH) {
+      registerMinedSubtile(layer, subtileIndex);
+      layer.setSubtileData(subtileIndex, 0);
    } else {
-      // @Cleanup: '!'
-      const previousDamageTaken = layer.wallSubtileDamageTakenMap.get(subtileIndex)!;
-      damageDealt = Math.min(damage, 3 - previousDamageTaken);
-      layer.wallSubtileDamageTakenMap.set(subtileIndex, previousDamageTaken + damageDealt);
+      layer.setSubtileDamageTaken(subtileIndex, damageTaken);
    }
 
-   // @Cleanup: '!'
-   const damageTaken = layer.wallSubtileDamageTakenMap.get(subtileIndex)!;
-   if (damageTaken >= 3) {
-      const previousSubtileType = layer.wallSubtileTypes[subtileIndex];
-      layer.wallSubtileTypes[subtileIndex] = SubtileType.none;
-      registerMinedSubtile(layer, subtileIndex, previousSubtileType);
-   }
-
-   layer.wallSubtileUpdates.add(subtileIndex);
-
-   return damageDealt;
+   return Math.min(damage, Settings.SUBTILE_HEALTH - previousDamageTaken);
 }
 
 const startCollapse = (layer: Layer, originSubtileIndex: number): void => {
@@ -344,18 +332,12 @@ export function deregisterEntitySupports(transformComponent: TransformComponent)
 }
 
 export function getVisibleSubtileSupports(playerClient: PlayerClient): readonly number[] {
-   // @Copynpaste
-   const minVisibleX = playerClient.lastViewedPositionX - playerClient.screenWidth * 0.5 - PlayerClientVars.VIEW_PADDING;
-   const maxVisibleX = playerClient.lastViewedPositionX + playerClient.screenWidth * 0.5 + PlayerClientVars.VIEW_PADDING;
-   const minVisibleY = playerClient.lastViewedPositionY - playerClient.screenHeight * 0.5 - PlayerClientVars.VIEW_PADDING;
-   const maxVisibleY = playerClient.lastViewedPositionY + playerClient.screenHeight * 0.5 + PlayerClientVars.VIEW_PADDING;
-
    const supports: number[] = [];
    
-   const minSubtileX = (minVisibleX / Settings.TILE_SIZE) << 2;
-   const maxSubtileX = (maxVisibleX / Settings.TILE_SIZE) << 2;
-   const minSubtileY = (minVisibleY / Settings.TILE_SIZE) << 2;
-   const maxSubtileY = (maxVisibleY / Settings.TILE_SIZE) << 2;
+   const minSubtileX = (playerClient.minVisibleX / Settings.TILE_SIZE) << 2;
+   const maxSubtileX = (playerClient.maxVisibleX / Settings.TILE_SIZE) << 2;
+   const minSubtileY = (playerClient.minVisibleY / Settings.TILE_SIZE) << 2;
+   const maxSubtileY = (playerClient.maxVisibleY / Settings.TILE_SIZE) << 2;
    for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
          const subtileIndex = getSubtileIndex(subtileX, subtileY);

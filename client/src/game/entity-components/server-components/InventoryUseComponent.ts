@@ -93,7 +93,7 @@ export interface InventoryUseComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inventoryUse, _InventoryUseComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inventoryUse, typeof InventoryUseComponentArray> {}
 }
 
 /** Decimal percentage of total attack animation time spent doing the lunge part of the animation */
@@ -576,284 +576,289 @@ export function getLimbConfiguration(inventoryUseComponent: InventoryUseComponen
    // }
 }
 
-class _InventoryUseComponentArray extends ServerComponentArray<InventoryUseComponent, InventoryUseComponentData> {
-   public decodeData(reader: PacketReader): InventoryUseComponentData {
-      const limbInfos: LimbInfo[] = [];
+export const InventoryUseComponentArray = registerServerComponentArray(
+   ServerComponentType.inventoryUse,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+InventoryUseComponentArray.onLoad = onLoad;
+InventoryUseComponentArray.onTick = onTick;
+InventoryUseComponentArray.updateFromData = updateFromData;
+InventoryUseComponentArray.updatePlayerFromData = updatePlayerFromData;
 
-      const numUseInfos = reader.readNumber();
-      for (let i = 0; i < numUseInfos; i++) {
-         const usedInventoryName: InventoryName = reader.readNumber();
+function decodeData(reader: PacketReader): InventoryUseComponentData {
+   const limbInfos: LimbInfo[] = [];
 
-         const limbInfo = createZeroedLimbInfo(usedInventoryName);
-         limbInfos.push(limbInfo);
+   const numUseInfos = reader.readNumber();
+   for (let i = 0; i < numUseInfos; i++) {
+      const usedInventoryName: InventoryName = reader.readNumber();
 
-         updateLimbInfoFromData(limbInfo, reader);
-      }
+      const limbInfo = createZeroedLimbInfo(usedInventoryName);
+      limbInfos.push(limbInfo);
 
-      return {
-         limbInfos: limbInfos
-      };
+      updateLimbInfoFromData(limbInfo, reader);
    }
 
-   public createComponent(entityComponentData: EntityComponentData): InventoryUseComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const inventoryUseComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventoryUse);
+   return {
+      limbInfos: limbInfos
+   };
+}
 
-      return {
-         limbInfos: inventoryUseComponentData.limbInfos,
-         limbAttachPoints: [],
-         limbRenderParts: [],
-         activeItemRenderParts: [],
-         inactiveCrossbowArrowRenderParts: {},
-         arrowRenderParts: {},
-         customItemRenderPart: null,
-         bandageRenderParts: []
-      };
+function createComponent(entityComponentData: EntityComponentData): InventoryUseComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const inventoryUseComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventoryUse);
+
+   return {
+      limbInfos: inventoryUseComponentData.limbInfos,
+      limbAttachPoints: [],
+      limbRenderParts: [],
+      activeItemRenderParts: [],
+      inactiveCrossbowArrowRenderParts: {},
+      arrowRenderParts: {},
+      customItemRenderPart: null,
+      bandageRenderParts: []
+   };
+}
+
+function getMaxRenderParts(entityComponentData: EntityComponentData): number {
+   // Each limb can hold an active item render part
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const inventoryUseComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventoryUse);
+   // (@Hack: plus one arrow render part)
+   return inventoryUseComponentData.limbInfos.length + 1;
+}
+
+function onLoad(entity: Entity): void {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
+
+   const renderObject = getEntityRenderObject(entity);
+
+   const attachPoints = getRenderThingsByTag(renderObject, "inventoryUseComponent:attachPoint") as RenderAttachPoint[];
+   for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
+      inventoryUseComponent.limbAttachPoints.push(attachPoints[limbIdx]);
+   }
+   
+   // @Cleanup
+   const handRenderParts = getRenderThingsByTag(renderObject, "inventoryUseComponent:hand") as VisualRenderPart[];
+   for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
+      inventoryUseComponent.limbRenderParts.push(handRenderParts[limbIdx]);
    }
 
-   public getMaxRenderParts(entityComponentData: EntityComponentData): number {
-      // Each limb can hold an active item render part
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const inventoryUseComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.inventoryUse);
-      // (@Hack: plus one arrow render part)
-      return inventoryUseComponentData.limbInfos.length + 1;
+   // @Hack: use the attachPoints length in case the player is spectating cuz 'twill crash if yeah
+   for (let i = 0; i < attachPoints.length; i++) {
+      updateLimbVisuals(inventoryUseComponent, entity, i, inventoryUseComponent.limbInfos[i]);
    }
 
-   public onLoad(entity: Entity): void {
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
+   updateCustomItemRenderPart(entity);
+}
 
-      const renderObject = getEntityRenderObject(entity);
-
-      const attachPoints = getRenderThingsByTag(renderObject, "inventoryUseComponent:attachPoint") as RenderAttachPoint[];
-      for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
-         inventoryUseComponent.limbAttachPoints.push(attachPoints[limbIdx]);
-      }
-      
-      // @Cleanup
-      const handRenderParts = getRenderThingsByTag(renderObject, "inventoryUseComponent:hand") as VisualRenderPart[];
-      for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
-         inventoryUseComponent.limbRenderParts.push(handRenderParts[limbIdx]);
-      }
-
-      // @Hack: use the attachPoints length in case the player is spectating cuz 'twill crash if yeah
-      for (let i = 0; i < attachPoints.length; i++) {
-         updateLimbVisuals(inventoryUseComponent, entity, i, inventoryUseComponent.limbInfos[i]);
-      }
-
-      updateCustomItemRenderPart(entity);
+function onTick(entity: Entity): void {
+   // @Hack???
+   // @Speed: needn't check this for all billion non-player entities
+   // Used to do it in the updatePlayerFromData function. That's wrong cuz that'll only update according to the packet send rate, not tick rate.
+   // Previously was in a clientInterp >= 1 loop, but moved it into updatePlayerFromData because it makes more sense as this is the component the function works on. Felt it is strange to have this function in the critical game loop.
+   if (entity === playerInstance) {
+      tickPlayerItems();
    }
 
-   public onTick(entity: Entity): void {
-      // @Hack???
-      // @Speed: needn't check this for all billion non-player entities
-      // Used to do it in the updatePlayerFromData function. That's wrong cuz that'll only update according to the packet send rate, not tick rate.
-      // Previously was in a clientInterp >= 1 loop, but moved it into updatePlayerFromData because it makes more sense as this is the component the function works on. Felt it is strange to have this function in the critical game loop.
-      if (entity === playerInstance) {
-         tickPlayerItems();
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
+   // @Cleanup: move to separate function
+   for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
+      const limbInfo = inventoryUseComponent.limbInfos[limbIdx];
+      if (limbInfo.heldItemType === null) {
+         continue;
       }
 
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
-      // @Cleanup: move to separate function
-      for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
-         const limbInfo = inventoryUseComponent.limbInfos[limbIdx];
-         if (limbInfo.heldItemType === null) {
-            continue;
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const hitbox = transformComponent.hitboxes[0];
+      getHitboxVelocity(hitbox);
+      const velocity = _point;
+
+      switch (limbInfo.heldItemType) {
+         case ItemType.deepfrost_heart: {
+            // Make the deep frost heart item spew blue blood particles
+            const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx]!;
+            getRenderPartRenderPosition(activeItemRenderPart);
+            const renderPosition = _point;
+            createDeepFrostHeartBloodParticles(renderPosition.x, renderPosition.y, velocity.x, velocity.y);
+            break;
          }
-
-         const transformComponent = TransformComponentArray.getComponent(entity);
-         const hitbox = transformComponent.hitboxes[0];
-         getHitboxVelocity(hitbox);
-         const velocity = _point;
-
-         switch (limbInfo.heldItemType) {
-            case ItemType.deepfrost_heart: {
-               // Make the deep frost heart item spew blue blood particles
-               const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx]!;
+         case ItemType.fireTorch: {
+            const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
+            // @Hack: shouldn't happen in the first place
+            if (activeItemRenderPart === undefined) {
+               break;
+            }
+            
+            // Ember particles
+            if (tickIntervalHasPassed(0.08 * Settings.TICK_RATE)) {
                getRenderPartRenderPosition(activeItemRenderPart);
                const renderPosition = _point;
-               createDeepFrostHeartBloodParticles(renderPosition.x, renderPosition.y, velocity.x, velocity.y);
-               break;
+               let spawnPositionX = renderPosition.x;
+               let spawnPositionY = renderPosition.y;
+      
+               const spawnOffsetMagnitude = 7 * Math.random();
+               const spawnOffsetDirection = randAngle();
+               spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+               spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+      
+               const vx = velocity.x;
+               const vy = velocity.y;
+               createEmberParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 120), vx, vy);
             }
-            case ItemType.fireTorch: {
-               const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
-               // @Hack: shouldn't happen in the first place
-               if (activeItemRenderPart === undefined) {
-                  break;
-               }
-               
-               // Ember particles
-               if (tickIntervalHasPassed(0.08 * Settings.TICK_RATE)) {
-                  getRenderPartRenderPosition(activeItemRenderPart);
-                  const renderPosition = _point;
-                  let spawnPositionX = renderPosition.x;
-                  let spawnPositionY = renderPosition.y;
-         
-                  const spawnOffsetMagnitude = 7 * Math.random();
-                  const spawnOffsetDirection = randAngle();
-                  spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-                  spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-         
-                  const vx = velocity.x;
-                  const vy = velocity.y;
-                  createEmberParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 120), vx, vy);
-               }
 
-               // Smoke particles
-               if (tickIntervalHasPassed(0.18 * Settings.TICK_RATE)) {
-                  getRenderPartRenderPosition(activeItemRenderPart);
-                  const renderPosition = _point;
+            // Smoke particles
+            if (tickIntervalHasPassed(0.18 * Settings.TICK_RATE)) {
+               getRenderPartRenderPosition(activeItemRenderPart);
+               const renderPosition = _point;
 
-                  const spawnOffsetMagnitude = 5 * Math.random();
-                  const spawnOffsetDirection = randAngle();
-                  const spawnPositionX = renderPosition.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-                  const spawnPositionY = renderPosition.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-                  createSmokeParticle(spawnPositionX, spawnPositionY, 24);
-               }
-
-               break;
+               const spawnOffsetMagnitude = 5 * Math.random();
+               const spawnOffsetDirection = randAngle();
+               const spawnPositionX = renderPosition.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+               const spawnPositionY = renderPosition.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+               createSmokeParticle(spawnPositionX, spawnPositionY, 24);
             }
-            case ItemType.slurbTorch: {
-               const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
-               // @Hack: shouldn't happen in the first place
-               if (activeItemRenderPart === undefined) {
-                  break;
-               }
 
-               if (tickIntervalHasPassed(0.4 * Settings.TICK_RATE)) {
-                  getRenderPartRenderPosition(activeItemRenderPart);
-                  const renderPosition = _point;
-                  let spawnPositionX = renderPosition.x;
-                  let spawnPositionY = renderPosition.y;
-
-                  const spawnOffsetMagnitude = 7 * Math.random();
-                  const spawnOffsetDirection = randAngle();
-                  spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-                  spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-
-                  createSlurbParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 120), 0, 0);
-               }
-            }
+            break;
          }
+         case ItemType.slurbTorch: {
+            const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
+            // @Hack: shouldn't happen in the first place
+            if (activeItemRenderPart === undefined) {
+               break;
+            }
 
-         // @Incomplete: If eating multiple foods at once, shouldn't be on the same tick interval
-         if (tickIntervalHasPassed(0.25 * Settings.TICK_RATE) && limbInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[limbInfo.heldItemType] === "healing") {
-            // Create food eating particles
-            for (let i = 0; i < 3; i++) {
-               let spawnPositionX = hitbox.box.posX + 37 * Math.sin(hitbox.box.angle);
-               let spawnPositionY = hitbox.box.posY + 37 * Math.cos(hitbox.box.angle);
+            if (tickIntervalHasPassed(0.4 * Settings.TICK_RATE)) {
+               getRenderPartRenderPosition(activeItemRenderPart);
+               const renderPosition = _point;
+               let spawnPositionX = renderPosition.x;
+               let spawnPositionY = renderPosition.y;
 
-               const spawnOffsetMagnitude = randFloat(0, 6);
+               const spawnOffsetMagnitude = 7 * Math.random();
                const spawnOffsetDirection = randAngle();
                spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
                spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
-               let velocityMagnitude = randFloat(130, 170);
-               const velocityDirection = randAngle();
-               const velocityX = velocityMagnitude * Math.sin(velocityDirection) + velocity.x;
-               const velocityY = velocityMagnitude * Math.cos(velocityDirection) + velocity.y;
-               velocityMagnitude += velocity.magnitude();
-               
-               const lifetime = randFloat(0.3, 0.4);
-
-               const particle = new Particle(lifetime);
-               particle.getOpacity = () => {
-                  return 1 - Math.pow(particle.age / lifetime, 3);
-               }
-
-               const colour = randItem(FOOD_EATING_COLOURS[limbInfo.heldItemType as keyof typeof FOOD_EATING_COLOURS]);
-
-               // @Cleanup @Incomplete: move to particles file
-               addMonocolourParticleToBufferContainer(
-                  particle,
-                  ParticleRenderLayer.low,
-                  6, 6,
-                  spawnPositionX, spawnPositionY,
-                  velocityX, velocityY,
-                  0, 0,
-                  velocityMagnitude / lifetime / 1.3,
-                  randAngle(),
-                  0,
-                  0,
-                  0,
-                  colour[0], colour[1], colour[2]
-               );
-               lowMonocolourParticles.push(particle);
+               createSlurbParticle(spawnPositionX, spawnPositionY, randAngle(), randFloat(80, 120), 0, 0);
             }
          }
       }
 
-      for (let i = 0; i < inventoryUseComponent.bandageRenderParts.length; i++) {
-         const renderPart = inventoryUseComponent.bandageRenderParts[i];
-         updateBandageRenderPart(entity, renderPart);
-      }
+      // @Incomplete: If eating multiple foods at once, shouldn't be on the same tick interval
+      if (tickIntervalHasPassed(0.25 * Settings.TICK_RATE) && limbInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[limbInfo.heldItemType] === "healing") {
+         // Create food eating particles
+         for (let i = 0; i < 3; i++) {
+            let spawnPositionX = hitbox.box.posX + 37 * Math.sin(hitbox.box.angle);
+            let spawnPositionY = hitbox.box.posY + 37 * Math.cos(hitbox.box.angle);
 
-      updateCustomItemRenderPart(entity);
-   }
+            const spawnOffsetMagnitude = randFloat(0, 6);
+            const spawnOffsetDirection = randAngle();
+            spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
-   public updateFromData(data: InventoryUseComponentData, entity: Entity): void {
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
+            let velocityMagnitude = randFloat(130, 170);
+            const velocityDirection = randAngle();
+            const velocityX = velocityMagnitude * Math.sin(velocityDirection) + velocity.x;
+            const velocityY = velocityMagnitude * Math.cos(velocityDirection) + velocity.y;
+            velocityMagnitude += velocity.magnitude();
+            
+            const lifetime = randFloat(0.3, 0.4);
 
-      // @GARBAGE!!!
-      inventoryUseComponent.limbInfos.length = 0;
-      for (let i = 0; i < data.limbInfos.length; i++) {
-         const limbInfo = data.limbInfos[i];
-
-         inventoryUseComponent.limbInfos.push(limbInfo);
-         updateLimbVisuals(inventoryUseComponent, entity, i, limbInfo);
-
-         if (currentSnapshot.tick - limbInfo.lastBlockTick <= Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE) {
-            playBlockEffects(limbInfo.blockPositionX, limbInfo.blockPositionY, limbInfo.blockType, entity);
-         }
-      }
-   }
-
-   public updatePlayerFromData(data: InventoryUseComponentData): void {
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
-      
-      for (let i = 0; i < data.limbInfos.length; i++) {
-         const limbInfoData = data.limbInfos[i];
-         const usedInventoryName = limbInfoData.inventoryName;
-
-         // Don't update all of the player's limb to the data, only pieces that aren't being controlled by the client.
-         
-         let limbInfo: LimbInfo;
-         if (i >= inventoryUseComponent.limbInfos.length) {
-            // New limb info
-            limbInfo = createZeroedLimbInfo(usedInventoryName);
-            inventoryUseComponent.limbInfos.push(limbInfo);
-         } else {
-            // Existing limb info
-            limbInfo = inventoryUseComponent.limbInfos[i];
-            // @Cleanup: useless???
-            if (limbInfo.inventoryName !== usedInventoryName) {
-               throw new Error();
+            const particle = new Particle(lifetime);
+            particle.getOpacity = () => {
+               return 1 - Math.pow(particle.age / lifetime, 3);
             }
+
+            const colour = randItem(FOOD_EATING_COLOURS[limbInfo.heldItemType as keyof typeof FOOD_EATING_COLOURS]);
+
+            // @Cleanup @Incomplete: move to particles file
+            addMonocolourParticleToBufferContainer(
+               particle,
+               ParticleRenderLayer.low,
+               6, 6,
+               spawnPositionX, spawnPositionY,
+               velocityX, velocityY,
+               0, 0,
+               velocityMagnitude / lifetime / 1.3,
+               randAngle(),
+               0,
+               0,
+               0,
+               colour[0], colour[1], colour[2]
+            );
+            lowMonocolourParticles.push(particle);
          }
+      }
+   }
 
-         limbInfo.heldItemEntity = limbInfoData.heldItemEntity;
-         
-         // @INCOMPLETE no worky it brokey
-         // if (limbInfoData.lastBlockTick === currentSnapshot.tick) {
-         //    playBlockEffects(blockPositionX, blockPositionY, blockType);
-         // }
+   for (let i = 0; i < inventoryUseComponent.bandageRenderParts.length; i++) {
+      const renderPart = inventoryUseComponent.bandageRenderParts[i];
+      updateBandageRenderPart(entity, renderPart);
+   }
 
-         if (limbInfo.inventoryName === InventoryName.hotbar) {
-            limbInfo.thrownBattleaxeItemID = limbInfoData.thrownBattleaxeItemID;
-            // @INCOMPLETE since I removed inventoryState
-            // inventoryState.setHotbarThrownBattleaxeItemID(limbInfoData.thrownBattleaxeItemID);
-         }
+   updateCustomItemRenderPart(entity);
+}
 
-         updateLimbVisuals(inventoryUseComponent, playerInstance!, i, limbInfo);
+function updateFromData(data: InventoryUseComponentData, entity: Entity): void {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
-         // @Copynpaste
-         if (currentSnapshot.tick - limbInfo.lastBlockTick <= Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE) {
-            playBlockEffects(limbInfo.blockPositionX, limbInfo.blockPositionY, limbInfo.blockType, playerInstance!);
-         }
+   // @GARBAGE!!!
+   inventoryUseComponent.limbInfos.length = 0;
+   for (let i = 0; i < data.limbInfos.length; i++) {
+      const limbInfo = data.limbInfos[i];
+
+      inventoryUseComponent.limbInfos.push(limbInfo);
+      updateLimbVisuals(inventoryUseComponent, entity, i, limbInfo);
+
+      if (currentSnapshot.tick - limbInfo.lastBlockTick <= Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE) {
+         playBlockEffects(limbInfo.blockPositionX, limbInfo.blockPositionY, limbInfo.blockType, entity);
       }
    }
 }
 
-export const InventoryUseComponentArray = registerServerComponentArray(ServerComponentType.inventoryUse, _InventoryUseComponentArray, true);
+function updatePlayerFromData(data: InventoryUseComponentData): void {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
+   
+   for (let i = 0; i < data.limbInfos.length; i++) {
+      const limbInfoData = data.limbInfos[i];
+      const usedInventoryName = limbInfoData.inventoryName;
+
+      // Don't update all of the player's limb to the data, only pieces that aren't being controlled by the client.
+      
+      let limbInfo: LimbInfo;
+      if (i >= inventoryUseComponent.limbInfos.length) {
+         // New limb info
+         limbInfo = createZeroedLimbInfo(usedInventoryName);
+         inventoryUseComponent.limbInfos.push(limbInfo);
+      } else {
+         // Existing limb info
+         limbInfo = inventoryUseComponent.limbInfos[i];
+         // @Cleanup: useless???
+         if (limbInfo.inventoryName !== usedInventoryName) {
+            throw new Error();
+         }
+      }
+
+      limbInfo.heldItemEntity = limbInfoData.heldItemEntity;
+      
+      // @INCOMPLETE no worky it brokey
+      // if (limbInfoData.lastBlockTick === currentSnapshot.tick) {
+      //    playBlockEffects(blockPositionX, blockPositionY, blockType);
+      // }
+
+      if (limbInfo.inventoryName === InventoryName.hotbar) {
+         limbInfo.thrownBattleaxeItemID = limbInfoData.thrownBattleaxeItemID;
+         // @INCOMPLETE since I removed inventoryState
+         // inventoryState.setHotbarThrownBattleaxeItemID(limbInfoData.thrownBattleaxeItemID);
+      }
+
+      updateLimbVisuals(inventoryUseComponent, playerInstance!, i, limbInfo);
+
+      // @Copynpaste
+      if (currentSnapshot.tick - limbInfo.lastBlockTick <= Settings.TICK_RATE / Settings.SERVER_PACKET_SEND_RATE) {
+         playBlockEffects(limbInfo.blockPositionX, limbInfo.blockPositionY, limbInfo.blockType, playerInstance!);
+      }
+   }
+}
 
 // @Cleanup: unused
 // const updateActiveItemRenderPart = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, limbInfo: LimbInfo, activeItem: Item | null): void => {

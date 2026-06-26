@@ -36,7 +36,7 @@ export let playerTribe: ExtendedTribe;
 export const tribes: Tribe[] = [];
 
 export function tribeHasExtendedInfo(tribe: Tribe): tribe is ExtendedTribe {
-   return (tribe as ExtendedTribe).tribesmen !== undefined;
+   return (tribe as Partial<ExtendedTribe>).tribesmen !== undefined;
 }
 
 export function updatePlayerTribe(tribe: ExtendedTribe): void {

@@ -166,7 +166,7 @@ const createProjectile = (turret: Entity, transformComponent: TransformComponent
    }
 
    const projectileHitbox = getConfigTransformComponent(config.components).hitboxes[0];
-   addHitboxVelocity(projectileHitbox, polarVec2(ammoInfo.projectileSpeed, fireDirection));
+   addHitboxVelocity(projectileHitbox, ammoInfo.projectileSpeed * Math.sin(fireDirection), ammoInfo.projectileSpeed * Math.cos(fireDirection));
 
    createEntity(config, getEntityLayer(turret), 0)
 }

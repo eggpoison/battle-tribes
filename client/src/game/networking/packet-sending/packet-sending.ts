@@ -10,14 +10,16 @@ import { TribeType } from "../../../../../shared/src/tribes";
 import { Point } from "../../../../../shared/src/utils";
 import { sendData } from "../socket";
 
-export function sendInitialPlayerDataPacket(username: string, tribeType: TribeType, isSpectating: boolean, windowWidth: number, windowHeight: number): void {
+export function sendInitialPlayerDataPacket(username: string, tribeType: TribeType, isSpectating: boolean): void {
    // Send player data to the server
-   const packet = new Packet(ClientPacketType.initialPlayerData, Bytes.Float32 * 4 + getStringLengthBytes(username));
+   const packet = new Packet(ClientPacketType.initialPlayerData, Bytes.Float32 * 3 + getStringLengthBytes(username));
 
+   const displayAspectRatio = screen.width / screen.height;
+   
    packet.writeString(username);
    packet.writeNumber(tribeType);
-   packet.writeNumber(windowWidth);
-   packet.writeNumber(windowHeight);
+   console.log(displayAspectRatio);
+   packet.writeNumber(displayAspectRatio);
    packet.writeBool(isSpectating);
 
    sendData(packet.buffer);
@@ -399,25 +401,5 @@ export function sendOpenEntityInventoryPacket(entity: Entity): void {
 export function sendCloseEntityInventoryPacket(entity: Entity): void {
    const packet = new Packet(ClientPacketType.endEntityInteraction, Bytes.Float32);
    packet.writeNumber(entity);
-   sendData(packet.buffer);
-}
-
-/*///////////////
-
-Screen Resize Packet
-
-Packet type
- - 1 float || 4 bytes
-Width, height
- - 2 floats || 8 bytes + 4 = 12
-
-TOTAL = 12 BYTES (aligned)
-
-*////////////////
-
-export function sendScreenResizePacket() {
-   const packet = new Packet(ClientPacketType.screenResize, 12);
-   packet.writeNumber(window.innerWidth);
-   packet.writeNumber(window.innerHeight);
    sendData(packet.buffer);
 }

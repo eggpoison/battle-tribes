@@ -1,7 +1,8 @@
 import { TribesmanAIType } from "../../../shared/dist/components.js";
 import { Entity } from "../../../shared/dist/entities.js";
 import { Settings } from "../../../shared/dist/settings.js";
-import { Point, TileIndex, getTileX, getTileY, distance } from "../../../shared/dist/utils.js";
+import { Point, distance } from "../../../shared/dist/utils.js";
+import { TileIndex, getTileX, getTileY } from "../../../shared/dist/tiles.js";
 import { getHumanoidRadius } from "../entities/tribes/tribesman-ai/tribesman-ai-utils.js";
 import { getEntityFootprint, PathfindFailureDefault, runPathfindingSingleLayer, PathfindOptions } from "../pathfinding.js";
 import { getEntityLayer, getGameTicks } from "../world.js";

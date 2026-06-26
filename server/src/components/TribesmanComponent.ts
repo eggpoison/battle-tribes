@@ -12,7 +12,7 @@ import { EntityConfig, getConfigComponent } from "../components.js";
 import { onFishLeaderHurt } from "../entities/mobs/fish.js";
 import { useItem } from "../entities/tribes/tribe-member.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
-import { getHitboxTile, getHitboxVelocity, Hitbox } from "../hitboxes.js";
+import { getBoxTile, getHitboxVelocity, Hitbox } from "../hitboxes.js";
 import { addHumanoidInventories } from "../inventories.js";
 import { generateTitle, TITLE_REWARD_CHANCES } from "../tribesman-title-generation.js";
 import { getEntityLayer, getEntityType, getGameTicks } from "../world.js";
@@ -295,7 +295,7 @@ function onTick(tribeMember: Entity): void {
       resizeInventory(inventoryComponent, InventoryName.backpack, 0, 0);
    }
 
-   const tribeMemberTile = getHitboxTile(tribeMemberHitbox);
+   const tribeMemberTile = getBoxTile(tribeMemberHitbox.box);
    const tileType = getEntityLayer(tribeMember).getTileType(tribeMemberTile);
 
    const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot);

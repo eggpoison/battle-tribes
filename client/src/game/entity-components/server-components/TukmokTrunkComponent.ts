@@ -14,40 +14,42 @@ export interface TukmokTrunkComponentData {}
 export interface TukmokTrunkComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmokTrunk, _TukmokTrunkComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tukmokTrunk, typeof TukmokTrunkComponentArray> {}
 }
 
-class _TukmokTrunkComponentArray extends ServerComponentArray<TukmokTrunkComponent, TukmokTrunkComponentData> {
-   public decodeData(): TukmokTrunkComponentData {
-      return {};
-   }
+export const TukmokTrunkComponentArray = registerServerComponentArray(
+   ServerComponentType.tukmokTrunk,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TukmokTrunkComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+function decodeData(): TukmokTrunkComponentData {
+   return {};
+}
 
-      for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
-         const hitbox = transformComponentData.hitboxes[i];
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
 
-         renderObject.attachRenderPart(
-            new TexturedRenderPart(
-               hitbox,
-               i * 0.02,
-               0,
-               0, 0,
-               getHitboxTag(hitbox) === HitboxTag.tukmokTrunkHead ? TextureIndex.entities_tukmokTrunk_headSegment : TextureIndex.entities_tukmokTrunk_middleSegment
-            )
-         );
-      }
-   }
+   for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
+      const hitbox = transformComponentData.hitboxes[i];
 
-   public createComponent(): TukmokTrunkComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      // @HACK cuz we can't access the num segments constant defined in the server
-      return 8;
+      renderObject.attachRenderPart(
+         new TexturedRenderPart(
+            hitbox,
+            i * 0.02,
+            0,
+            0, 0,
+            getHitboxTag(hitbox) === HitboxTag.tukmokTrunkHead ? TextureIndex.entities_tukmokTrunk_headSegment : TextureIndex.entities_tukmokTrunk_middleSegment
+         )
+      );
    }
 }
 
-export const TukmokTrunkComponentArray = registerServerComponentArray(ServerComponentType.tukmokTrunk, _TukmokTrunkComponentArray, true);
+function createComponent(): TukmokTrunkComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   // @HACK cuz we can't access the num segments constant defined in the server
+   return 8;
+}

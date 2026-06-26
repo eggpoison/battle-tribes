@@ -16,39 +16,41 @@ export interface TribeMemberComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribeMember, TribeMemberComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.tribeMember, typeof TribeMemberComponentArray> {}
 }
 
-class TribeMemberComponentArray extends ServerComponentArray<TribeMemberComponent, TribeMemberComponentData> {
-   public decodeData(reader: PacketReader): TribeMemberComponentData {
-      const name = reader.readString();
-      return {
-         name: name
-      };
-   }
-
-   public createComponent(entityComponentData: EntityComponentData): TribeMemberComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const tribeMemberComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeMember);
-      return {
-         name: tribeMemberComponentData.name
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
-
-   public updateFromData(data: TribeMemberComponentData, entity: Entity): void {
-      const tribeMemberComponent = tribeMemberComponentArray.getComponent(entity);
-      tribeMemberComponent.name = data.name;
-   }
-}
-
-export const tribeMemberComponentArray = registerServerComponentArray(ServerComponentType.tribeMember, TribeMemberComponentArray, true);
+export const TribeMemberComponentArray = registerServerComponentArray(
+   ServerComponentType.tribeMember,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+TribeMemberComponentArray.updateFromData = updateFromData;
 
 export function createTribeMemberComponentData(): TribeMemberComponentData {
    return {
       name: ""
    };
+}
+
+function decodeData(reader: PacketReader): TribeMemberComponentData {
+   const name = reader.readString();
+   return {
+      name: name
+   };
+}
+
+function createComponent(entityComponentData: EntityComponentData): TribeMemberComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const tribeMemberComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.tribeMember);
+   return {
+      name: tribeMemberComponentData.name
+   };
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}
+
+function updateFromData(data: TribeMemberComponentData, entity: Entity): void {
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(entity);
+   tribeMemberComponent.name = data.name;
 }

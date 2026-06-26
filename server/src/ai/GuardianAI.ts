@@ -6,7 +6,7 @@ import { GuardianComponent, GuardianComponentArray } from "../components/Guardia
 import { GuardianSpikyBallComponentArray } from "../components/GuardianSpikyBallComponent.js";
 import { HealthComponentArray } from "../components/HealthComponent.js";
 import { TransformComponent, TransformComponentArray } from "../components/TransformComponent.js";
-import { getHitboxTile } from "../hitboxes.js";
+import { getBoxTile } from "../hitboxes.js";
 
 const entityIsTargetted = (guardianComponent: GuardianComponent, target: Entity, targetTransformComponent: TransformComponent): boolean => {
    if (!HealthComponentArray.hasComponent(target)) {
@@ -25,7 +25,7 @@ const entityIsTargetted = (guardianComponent: GuardianComponent, target: Entity,
    
    // @Hack
    const hitbox = targetTransformComponent.hitboxes[0];
-   const entityTile = getHitboxTile(hitbox);
+   const entityTile = getBoxTile(hitbox.box);
    return guardianComponent.homeTiles.includes(entityTile);
 }
 

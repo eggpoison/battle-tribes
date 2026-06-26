@@ -12,36 +12,38 @@ export interface IceShardComponentData {}
 export interface IceShardComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceShard, _IceShardComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.iceShard, typeof IceShardComponentArray> {}
 }
 
-class _IceShardComponentArray extends ServerComponentArray<IceShardComponent, IceShardComponentData> {
-   public decodeData(): IceShardComponentData {
-      return {};
-   }
+export const IceShardComponentArray = registerServerComponentArray(
+   ServerComponentType.iceShard,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+IceShardComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponent.hitboxes[0];
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.projectiles_iceShard
-         )
-      );
-   }
-
-   public createComponent() {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+function decodeData(): IceShardComponentData {
+   return {};
 }
 
-export const IceShardComponentArray = registerServerComponentArray(ServerComponentType.iceShard, _IceShardComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponent = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponent.hitboxes[0];
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.projectiles_iceShard
+      )
+   );
+}
+
+function createComponent() {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}

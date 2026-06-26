@@ -1,9 +1,8 @@
 import { Biome } from "../../../shared/dist/biomes.js";
 import { EntityType } from "../../../shared/dist/entities.js";
 import { Settings } from "../../../shared/dist/settings.js";
-import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
-import { TileType, SubtileType } from "../../../shared/dist/tiles.js";
-import { TileIndex, getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld } from "../../../shared/dist/utils.js";
+import { getSubtileIndex, SubtileType } from "../../../shared/dist/subtiles.js";
+import { getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, tileIsInWorld, TileType } from "../../../shared/dist/tiles.js";
 import Layer from "../Layer.js";
 
 export interface LocalBiome {
@@ -40,7 +39,7 @@ export function setWallInSubtiles(subtileTypes: Uint8Array, tileX: number, tileY
    for (let subtileY = startSubtileY; subtileY < startSubtileY + 4; subtileY++) {
       for (let subtileX = startSubtileX; subtileX < startSubtileX + 4; subtileX++) {
          const idx = getSubtileIndex(subtileX, subtileY);
-         subtileTypes[idx] = subtileType;
+         subtileTypes[idx] = subtileType << 2;
       }
    }
 }
@@ -49,10 +48,10 @@ export function tileHasWallSubtile(subtileTypes: Uint8Array, tileX: number, tile
    const startSubtileX = tileX * 4;
    const startSubtileY = tileY * 4;
    
-   for (let subtileX = startSubtileX; subtileX < startSubtileX + 4; subtileX++) {
-      for (let subtileY = startSubtileY; subtileY < startSubtileY + 4; subtileY++) {
+   for (let subtileY = startSubtileY; subtileY < startSubtileY + 4; subtileY++) {
+      for (let subtileX = startSubtileX; subtileX < startSubtileX + 4; subtileX++) {
          const idx = getSubtileIndex(subtileX, subtileY);
-         if (subtileTypes[idx] !== SubtileType.none) {
+         if (subtileTypes[idx] >> 2 !== SubtileType.none) {
             return true;
          }
       }

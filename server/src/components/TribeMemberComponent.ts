@@ -72,8 +72,9 @@ function onTick(tribeMember: Entity): void {
                let forceMult = 1 - dist / VACUUM_RANGE;
                forceMult = lerp(0.5, 1, forceMult);
 
+               const vacuumStrength = Vars.VACUUM_STRENGTH * forceMult;
                const vacuumDirection = angle(tribeMemberHitbox.box.posX - itemEntityHitbox.box.posX, tribeMemberHitbox.box.posY - itemEntityHitbox.box.posY);
-               addHitboxVelocity(itemEntityHitbox, polarVec2(Vars.VACUUM_STRENGTH * forceMult, vacuumDirection));
+               addHitboxVelocity(itemEntityHitbox, vacuumStrength * Math.sin(vacuumDirection), vacuumStrength * Math.cos(vacuumDirection));
             }
          }
       }

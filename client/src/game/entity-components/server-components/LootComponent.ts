@@ -7,21 +7,22 @@ export interface LootComponentData {}
 export interface LootComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.loot, _LootComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.loot, typeof LootComponentArray> {}
 }
 
-class _LootComponentArray extends ServerComponentArray<LootComponent, LootComponentData> {
-   public decodeData(): LootComponentData {
-      return {};
-   }
+export const LootComponentArray = registerServerComponentArray(
+   ServerComponentType.loot,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(): LootComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(): LootComponentData {
+   return {};
 }
 
-export const LootComponentArray = registerServerComponentArray(ServerComponentType.loot, _LootComponentArray, true);
+function createComponent(): LootComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}

@@ -13,6 +13,7 @@ import { playerInstance } from "./player";
 import { applyForce, getHitboxCollisionType, getHitboxTile, getHitboxVelocity, Hitbox, hitboxIgnoresWallCollisions, hitboxIsStatic, setHitboxVelocity, translateHitbox } from "./hitboxes";
 import { getEntityComponentArrays } from "./entity-components/component-types";
 import { entityUsesClientInterp } from "./rendering/render-part-matrices";
+import { getSubtileIndex } from "../../../shared/src/subtiles";
 
 type EntityCollisionPair = [affectedEntity: Entity, collidingEntity: Entity];
 
@@ -266,9 +267,10 @@ export function resolveWallCollisions(entity: Entity): boolean {
       const maxSubtileY = Math.min(Math.floor(_bounds.maxY / Settings.SUBTILE_SIZE), (Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) * 4 - 1);
    
       // @Incomplete
-      for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
-         for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
-            if (!layer.subtileIsWall(subtileX, subtileY)) {
+      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+         for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+            const subtileIndex = getSubtileIndex(subtileX, subtileY);
+            if (!layer.subtileIsWall(subtileIndex)) {
                continue;
             }
 

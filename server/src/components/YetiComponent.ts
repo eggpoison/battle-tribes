@@ -12,7 +12,7 @@ import { createEntity, destroyEntity, entityExists, getEntityLayer, getEntityTyp
 import { AttackingEntitiesComponent, AttackingEntitiesComponentArray } from "./AttackingEntitiesComponent.js";
 import { SnowballComponentArray } from "./SnowballComponent.js";
 import { StructureComponentArray } from "./StructureComponent.js";
-import { applyAbsoluteKnockback, applyKnockback, getHitboxTile, Hitbox, addHitboxVelocity, turnHitboxToAngle, getHitboxTag } from "../hitboxes.js";
+import { applyAbsoluteKnockback, applyKnockback, getBoxTile, Hitbox, addHitboxVelocity, turnHitboxToAngle, getHitboxTag } from "../hitboxes.js";
 import { entitiesAreColliding, CollisionVars } from "../collision-detection.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import { getConfigTransformComponent } from "../components.js";
@@ -26,7 +26,8 @@ import { ItemType } from "../../../shared/dist/items/items.js";
 import { Packet } from "../../../shared/dist/packets.js";
 import { Settings } from "../../../shared/dist/settings.js";
 import { TribeType } from "../../../shared/dist/tribes.js";
-import { UtilVar, TileIndex, getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld, randItem, randFloat, randAngle, polarVec2, angle, distance, Point } from "../../../shared/dist/utils.js";
+import { UtilVar, randItem, randFloat, randAngle, polarVec2, angle, distance, Point } from "../../../shared/dist/utils.js";
+import { TileIndex, getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld } from "../../../shared/dist/tiles.js";
 
 const enum Vars {
    SMALL_SNOWBALL_THROW_SPEED_MIN = 550,
@@ -189,7 +190,7 @@ const throwSnowball = (yeti: Entity, size: number, throwAngle: number): void => 
    const config = createSnowballConfig(positionX, positionY, randAngle(), yeti, size);
 
    const snowballHitbox = getConfigTransformComponent(config.components).hitboxes[0];
-   addHitboxVelocity(snowballHitbox, polarVec2(velocityMagnitude, angle));
+   addHitboxVelocity(snowballHitbox, velocityMagnitude * Math.sin(angle), velocityMagnitude * Math.cos(angle));
 
    createEntity(config, getEntityLayer(yeti), 0);
 }
@@ -211,7 +212,9 @@ const throwSnow = (yeti: Entity): void => {
    }
 
    // Kickback
-   applyAbsoluteKnockback(yetiHitbox, polarVec2(110, throwAngle + Math.PI));
+   const knockbackX = 110 * Math.sin(throwAngle + Math.PI);
+   const knockbackY = 110 * Math.cos(throwAngle + Math.PI);
+   applyAbsoluteKnockback(yetiHitbox, knockbackX, knockbackY);
 }
 
 const entityIsTargetted = (yeti: Entity, entity: Entity, attackingEntitiesComponent: AttackingEntitiesComponent, yetiComponent: YetiComponent): boolean => {
@@ -233,7 +236,7 @@ const entityIsTargetted = (yeti: Entity, entity: Entity, attackingEntitiesCompon
    const entityTransformComponent = TransformComponentArray.getComponent(entity);
    // @Hack
    const hitbox = entityTransformComponent.hitboxes[0];
-   const entityTileIndex = getHitboxTile(hitbox);
+   const entityTileIndex = getBoxTile(hitbox.box);
 
    // Don't attack entities which aren't attacking the yeti and aren't encroaching on its territory
    if (!attackingEntitiesComponent.attackingEntities.has(entity) && !yetiComponent.territory.includes(entityTileIndex)) {
@@ -294,7 +297,7 @@ function onTick(yeti: Entity): void {
    const yetiComponent = YetiComponentArray.getComponent(yeti);
 
    const layer = getEntityLayer(yeti);
-   const tileIndex = getHitboxTile(yetiBodyHitbox);
+   const tileIndex = getBoxTile(yetiBodyHitbox.box);
    if (layer.getTileBiome(tileIndex) !== Biome.tundra) {
       // applyStatusEffect(yeti, StatusEffect.heatSickness, 2 * Settings.TICK_RATE);
    }

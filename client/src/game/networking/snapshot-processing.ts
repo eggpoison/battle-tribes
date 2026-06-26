@@ -1,13 +1,13 @@
 import { Entity, EntityType } from "../../../../shared/src/entities";
 import { _point, assert, Point, randAngle, randFloat } from "../../../../shared/src/utils";
 import { AttackEffectiveness } from "../../../../shared/src/entity-damage-types";
-import { SubtileType, TileType } from "../../../../shared/src/tiles";
+import { getTileIndexIncludingEdges, TileType } from "../../../../shared/src/tiles";
 import { EntityTickEventType } from "../../../../shared/src/entity-events";
 import { TribesmanTitle } from "../../../../shared/src/titles";
 import { PacketReader } from "../../../../shared/src/packets";
-import { HitFlags } from "../../../../shared/src/client-server-types";
+import { HitFlags, WaterRockData } from "../../../../shared/src/client-server-types";
 import { STRUCTURE_TYPES, StructureType } from "../../../../shared/src/structures";
-import { setCameraSubject } from "../camera";
+import { addRenderChunkToVisibleArray, setCameraSubject } from "../camera";
 import { setCurrentSnapshot } from "../networking/snapshots";
 import Layer from "../Layer";
 import { playerInstance, setPlayerInstance } from "../player";
@@ -31,7 +31,12 @@ import { EntityServerComponentData, getEntityComponentArrays, getEntityServerCom
 import { getSelectedEntity } from "../entity-selection";
 import { COMPONENT_ARRAYS, ServerComponentData } from "../entity-components/component-registry";
 import { processTileUpdates } from "../rendering/webgl/solid-tile-rendering";
-import { processRenderChunkSubtileUpdates } from "../rendering/render-chunks";
+import { EdgeType, processRenderChunkSubtileUpdates, createRenderChunk } from "../rendering/render-chunks";
+import { getSubtileIndex, SubtileType } from "../../../../shared/src/subtiles";
+import { getRenderChunkX, getRenderChunkY } from "../../../../shared/src/render-chunks";
+import { Settings } from "../../../../shared/src/settings";
+import { addTileToWorld, readWaterRocksArray } from "./packet-receiving";
+import { Biome } from "../../../../shared/src/biomes";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
@@ -57,11 +62,6 @@ interface EntityHitData {
    readonly flags: number;
 }
 
-interface PlayerKnockbackData {
-   readonly knockback: number;
-   readonly knockbackDirection: number;
-}
-
 interface EntityHealData {
    readonly position: Point;
    readonly healedEntity: Entity;
@@ -74,6 +74,22 @@ interface ResearchOrbCompleteData {
    readonly amount: number;
 }
 
+interface TileData {
+   readonly tileType: TileType;
+   readonly tileBiome: Biome;
+   readonly flowDirection: number;
+   readonly temperature: number;
+   readonly humidity: number;
+   readonly mithrilRichness: number;
+}
+
+interface RenderChunkData {
+   readonly renderChunkIndex: number;
+   readonly tiles: readonly TileData[];
+   readonly subtiles: readonly number[];
+   readonly waterRocks: WaterRockData[];
+}
+
 export interface TileUpdateData {
    readonly layer: Layer;
    readonly tileIndex: number;
@@ -82,8 +98,7 @@ export interface TileUpdateData {
 
 interface WallSubtileUpdateData {
    readonly subtileIndex: number;
-   readonly subtileType: SubtileType;
-   readonly damageTaken: number;
+   readonly data: number;
 }
 
 interface EntityTickEventData {
@@ -117,9 +132,11 @@ export interface TickSnapshot {
    readonly cameraSubject: number;
    readonly lights: readonly LightData[];
    readonly hits: readonly EntityHitData[];
-   readonly playerKnockbacks: readonly PlayerKnockbackData[];
+   readonly playerKnockbacks: readonly Point[];
    readonly heals: readonly EntityHealData[];
    readonly researchOrbCompletes: readonly ResearchOrbCompleteData[];
+   readonly newRenderChunkDatas: readonly (readonly RenderChunkData[])[];
+   readonly oldRenderChunks: readonly number[];
    readonly tileUpdates: readonly (readonly TileUpdateData[])[];
    readonly wallSubtileUpdates: Map<Layer, readonly WallSubtileUpdateData[]>;
    readonly hasPickedUpItem: boolean;
@@ -170,7 +187,7 @@ const decodeEntitySnapshot = (reader: PacketReader): EntitySnapshot => {
    };
 }
 
-export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnapshot {
+export function decodeGameDataPacket(reader: PacketReader): TickSnapshot {
    const tick = reader.readNumber();
    
    const time = reader.readNumber();
@@ -236,15 +253,10 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       });
    }
 
-   const playerKnockbacks: PlayerKnockbackData[] = [];
+   const playerKnockbacks: Point[] = [];
    const numKnockbacks = reader.readNumber();
    for (let i = 0; i < numKnockbacks; i++) {
-      const knockback = reader.readNumber();
-      const knockbackDirection = reader.readNumber();
-      playerKnockbacks.push({
-         knockback: knockback,
-         knockbackDirection: knockbackDirection
-      });
+      playerKnockbacks.push(reader.readPoint());
    }
 
    const heals: EntityHealData[] = [];
@@ -274,6 +286,77 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       });
    }
 
+   const numNewRenderChunks = reader.readNumber();
+   const renderChunkDatas: RenderChunkData[][] = [];
+   for (let i = 0; i < layers.length; i++) {
+      const layerRenderChunkDatas: RenderChunkData[] = [];
+      renderChunkDatas.push(layerRenderChunkDatas);
+      
+      for (let j = 0; j < numNewRenderChunks; j++) {
+         const renderChunkIdx = reader.readNumber();
+
+         const renderChunkX = getRenderChunkX(renderChunkIdx);
+         const renderChunkY = getRenderChunkY(renderChunkIdx);
+         
+         // 
+         // Tiles
+         // 
+
+         const tiles: TileData[] = [];
+
+         const minTileX = renderChunkX * 2 * Settings.CHUNK_SIZE;
+         const maxTileX = minTileX + 2 * Settings.CHUNK_SIZE - 1;
+         const minTileY = renderChunkY * 2 * Settings.CHUNK_SIZE;
+         const maxTileY = minTileY + 2 * Settings.CHUNK_SIZE - 1;
+         for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+            for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+               const tileType: TileType = reader.readNumber();
+               const tileBiome: Biome = reader.readNumber();
+               const flowDirection = reader.readNumber();
+               const temperature = reader.readNumber();
+               const humidity = reader.readNumber();
+               const mithrilRichness = reader.readNumber();
+               tiles.push({
+                  tileType,
+                  tileBiome,
+                  flowDirection,
+                  temperature,
+                  humidity,
+                  mithrilRichness
+               });
+            }
+         }
+
+         // 
+         // Subtiles
+         // 
+
+         const subtiles: number[] = [];
+         for (let i = 0; i < (Settings.CHUNK_SIZE * 8) ** 2; i++) {
+            const data = reader.readNumber();
+            subtiles.push(data);
+         }
+
+         // Water rocks
+         const waterRocks = readWaterRocksArray(reader);
+
+         layerRenderChunkDatas.push({
+            renderChunkIndex: renderChunkIdx,
+            tiles,
+            subtiles,
+            waterRocks
+         });
+      }
+   }
+
+   // Old render chunks
+   const oldRenderChunks: number[] = [];
+   const numOldRenderChunks = reader.readNumber();
+   for (let i = 0; i < numOldRenderChunks; i++) {
+      const renderChunk = reader.readNumber();
+      oldRenderChunks.push(renderChunk);
+   }
+
    const tileUpdates: TileUpdateData[][] = [];
    for (let i = 0; i < layers.length; i++) {
       const layerTileUpdates: TileUpdateData[] = [];
@@ -299,13 +382,11 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       const numUpdates = reader.readNumber();
       for (let i = 0; i < numUpdates; i++) {
          const subtileIndex = reader.readNumber();
-         const subtileType = reader.readNumber();
-         const damageTaken = reader.readNumber();
+         const data = reader.readNumber();
 
          layerSubtileUpdates.push({
             subtileIndex: subtileIndex,
-            subtileType: subtileType,
-            damageTaken: damageTaken
+            data: data
          });
       }
 
@@ -380,6 +461,8 @@ export function decodeSnapshotFromGameDataPacket(reader: PacketReader): TickSnap
       playerKnockbacks: playerKnockbacks,
       heals: heals,
       researchOrbCompletes: researchOrbCompletes,
+      newRenderChunkDatas: renderChunkDatas,
+      oldRenderChunks: oldRenderChunks,
       tileUpdates: tileUpdates,
       wallSubtileUpdates: wallSubtileUpdates,
       hasPickedUpItem: hasPickedUpItem,
@@ -455,6 +538,7 @@ const updatePlayerFromData = (playerInstance: number, data: EntitySnapshot): voi
 }
 
 export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
+   console.log("(((TICKS: " + snapshot.tick + ")))");
    // @HACK @CLEANUP impure. Done before so that server data can override particles
    updateParticles();
 
@@ -475,6 +559,84 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
       tribes.push(tribe);
    }
    tribesTabState.updateTribes(tribes);
+
+   // Terrain update done before entities, as entities need to know what terrain they're standing on.
+   for (let i = 0; i < layers.length; i++) {
+      const layer = layers[i];
+      const renderChunkDatas = snapshot.newRenderChunkDatas[i];
+
+      const tiles = layer.tiles;
+      const riverFlowDirections = layer.riverFlowDirections;
+      const tileTemperatures = layer.tileTemperatures;
+      const tileHumidities = layer.tileHumidities;
+
+      const dropdownEdgeInfos = layer.edgeInfoMaps[EdgeType.dropdown];
+      
+      for (let j = 0; j < renderChunkDatas.length; j++) {
+         const renderChunkData = renderChunkDatas[j];
+         const renderChunkIndex = renderChunkData.renderChunkIndex;
+
+         if (i === 0) {
+            // @Hack
+            const renderChunkX = getRenderChunkX(renderChunkIndex);
+            const renderChunkY = getRenderChunkY(renderChunkIndex);
+            console.log("dynamic add:",renderChunkX,renderChunkY);
+            addRenderChunkToVisibleArray(renderChunkIndex);
+         }
+         
+         const renderChunkX = getRenderChunkX(renderChunkIndex);
+         const renderChunkY = getRenderChunkY(renderChunkIndex);
+
+         // Tiles
+
+         const tileDatas = renderChunkData.tiles;
+
+         const minTileX = renderChunkX * 2 * Settings.CHUNK_SIZE;
+         const maxTileX = minTileX + 2 * Settings.CHUNK_SIZE - 1;
+         const minTileY = renderChunkY * 2 * Settings.CHUNK_SIZE;
+         const maxTileY = minTileY + 2 * Settings.CHUNK_SIZE - 1;
+         for (let tileY = minTileY, k = 0; tileY <= maxTileY; tileY++) {
+            for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+               const tileData = tileDatas[k++];
+               addTileToWorld(tileData.tileType, tileData.tileBiome, tileData.flowDirection, tileData.temperature, tileData.humidity, tileData.mithrilRichness, tileIndex, tiles, dropdownEdgeInfos, riverFlowDirections, tileTemperatures, tileHumidities, layer.dropdownTiles);
+            }
+         }
+
+         // Subtiles
+
+         const subtiles = renderChunkData.subtiles;
+
+         const minSubtileX = minTileX * 4;
+         const maxSubtileX = (maxTileX + 1) * 4 - 1;
+         const minSubtileY = minTileY * 4;
+         const maxSubtileY = (maxTileY + 1) * 4 - 1;
+         for (let subtileY = minSubtileY, k = 0; subtileY <= maxSubtileY; subtileY++) {
+            for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+               const subtileIndex = getSubtileIndex(subtileX, subtileY);
+               const data = subtiles[k++];
+               layer.setSubtileData(subtileIndex, data);
+            }
+         }
+
+         // Render chunk data
+         createRenderChunk(layer, renderChunkIndex, renderChunkData.waterRocks);
+      }
+   }
+
+   // Old render chunks
+   for (let i = 0; i < snapshot.oldRenderChunks.length; i++) {
+      const renderChunk = snapshot.oldRenderChunks[i];
+      const renderChunkX = getRenderChunkX(renderChunk);
+      const renderChunkY = getRenderChunkY(renderChunk);
+      console.log("TRUE REMOVAL - " + renderChunkX + " " + renderChunkY);
+   }
+
+   for (let i = 0; i < layers.length; i++) {
+      processTileUpdates(layers[i], snapshot.tileUpdates[i]);
+   }
+
+   processRenderChunkSubtileUpdates(snapshot);
 
    // Must be done before the entity update, so that playerInstance is correct for when the player entity is created (required for entityHasClientInterp)
    setPlayerInstance(snapshot.playerInstance);
@@ -586,7 +748,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
          getHitboxVelocity(playerHitbox);
          setHitboxVelocity(playerHitbox, _point.x * 0.5, _point.y * 0.5);
 
-         addHitboxVelocity(playerHitbox, knockbackData.knockback * Math.sin(knockbackData.knockbackDirection), knockbackData.knockback * Math.cos(knockbackData.knockbackDirection));
+         addHitboxVelocity(playerHitbox, knockbackData.x, knockbackData.y);
       }
    }
 
@@ -628,12 +790,6 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
    for (const orbCompleteData of snapshot.researchOrbCompletes) {
       createResearchNumber(orbCompleteData.position.x, orbCompleteData.position.y, orbCompleteData.amount);
    }
-
-   for (let i = 0; i < layers.length; i++) {
-      processTileUpdates(layers[i], snapshot.tileUpdates[i]);
-   }
-
-   processRenderChunkSubtileUpdates(snapshot);
 
    // @Cleanup (this'll go away when i do the sound server-to-client)
    if (snapshot.hasPickedUpItem) {

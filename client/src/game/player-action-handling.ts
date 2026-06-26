@@ -28,7 +28,7 @@ import { StatusEffectComponentArray, createStatusEffectComponentData } from "./e
 import { createStructureComponentData } from "./entity-components/server-components/StructureComponent";
 import { TransformComponentArray, applyAccelerationFromGround, createTransformComponentData } from "./entity-components/server-components/TransformComponent";
 import { createTribeComponentData } from "./entity-components/server-components/TribeComponent";
-import { getHumanoidRadius, tribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
+import { getHumanoidRadius, TribesmanComponentArray, tribesmanHasTitle } from "./entity-components/server-components/TribesmanComponent";
 import { attemptEntitySelection, getHoveredEntity, getSelectedEntity, setSelectedEntity } from "./entity-selection";
 import { EntityRenderObject } from "./EntityRenderObject";
 import { getHitboxVelocity, Hitbox, setHitboxRelativeAngle } from "./hitboxes";
@@ -592,7 +592,7 @@ const getAttackTimeMultiplier = (itemType: ItemType | null): number => {
    }
 
    // Builders swing hammers 30% faster
-   const tribesmanComponent = tribesmanComponentArray.getComponent(playerInstance!);
+   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance!);
    if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.builder) && itemType !== null && ITEM_TYPE_RECORD[itemType] === "hammer") {
       swingTimeMultiplier /= 1.3;
    }
@@ -813,7 +813,7 @@ const getPlayerMoveSpeedMultiplier = (moveDirection: Point): number => {
 
    moveSpeedMultiplier *= TRIBE_INFO_RECORD[playerTribe.tribeType].moveSpeedMultiplier;
 
-   const tribesmanComponent = tribesmanComponentArray.getComponent(playerInstance);
+   const tribesmanComponent = TribesmanComponentArray.getComponent(playerInstance);
    if (tribesmanHasTitle(tribesmanComponent, TribesmanTitle.sprinter)) {
       moveSpeedMultiplier *= 1.2;
    }

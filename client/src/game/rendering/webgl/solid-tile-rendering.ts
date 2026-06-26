@@ -1,25 +1,25 @@
 import { Settings } from "../../../../../shared/src/settings";
-import { getSubtileIndex } from "../../../../../shared/src/subtiles";
-import { TileType, NUM_TILE_TYPES, SubtileType, TileTypeString } from "../../../../../shared/src/tiles";
-import { getTileIndexIncludingEdges, assert, getTileX, getTileY } from "../../../../../shared/src/utils";
+import { getSubtileIndex, NUM_SUBTILE_TYPES, SubtileType } from "../../../../../shared/src/subtiles";
+import { TileType, NUM_TILE_TYPES, TileTypeString, getTileIndexIncludingEdges, getTileX, getTileY } from "../../../../../shared/src/tiles";
+import { assert } from "../../../../../shared/src/utils";
 import { Bytes } from "../../../../../shared/src/constants";
 import { gl, createWebGLProgram, createTextureArray } from "../../webgl";
-import { RenderChunkVars, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkX, getRenderChunkY } from "../render-chunks";
+import { getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import Layer from "../../Layer";
-import { layers } from "../../world";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
 import { TileUpdateData } from "../../networking/snapshot-processing";
+import { getRenderChunkIndex, getRenderChunkX, getRenderChunkY, RenderChunkVars } from "../../../../../shared/src/render-chunks";
 
 const enum Var {
    ATTRIBUTES_PER_VERTEX = 6
 }
 
-interface RenderInfo {
+export interface SolidTileRenderInfo {
    readonly buffer: WebGLBuffer;
    // @Hack: make readonly
    vertexData: Float32Array;
-   vao: WebGLVertexArrayObject;
+   readonly vao: WebGLVertexArrayObject;
    numElements: number;
 }
 
@@ -70,7 +70,7 @@ export const WALL_TILE_TEXTURE_SOURCE_RECORD: Partial<Record<SubtileType, string
 const WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<SubtileType, number>> = {};
 (() => {
    let i = 0;
-   for (let subtileType: SubtileType = 0; subtileType < SubtileType._LENGTH_; subtileType++) {
+   for (let subtileType: SubtileType = 0; subtileType < NUM_SUBTILE_TYPES; subtileType++) {
       const textureSource = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
       if (textureSource !== undefined) {
          WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD[subtileType] = i;
@@ -78,9 +78,6 @@ const WALL_SUBTILE_TO_TEXTURE_ARRAY_INDEX_RECORD: Partial<Record<SubtileType, nu
       }
    }
 })();
-
-let groundTileInfoArrays: RenderInfo[][] = [];
-let wallTileInfoArrays: RenderInfo[][] = [];
 
 let program: WebGLProgram;
 let floorTileTextureArray: WebGLTexture;
@@ -240,7 +237,7 @@ export function createSolidTileShaders(): void {
 
    // Walls
    const wallTextureSources: string[] = [];
-   for (let subtileType: SubtileType = 0; subtileType < SubtileType._LENGTH_; subtileType++) {
+   for (let subtileType: SubtileType = 0; subtileType < NUM_SUBTILE_TYPES; subtileType++) {
       const textureSource = WALL_TILE_TEXTURE_SOURCE_RECORD[subtileType];
       if (textureSource !== undefined) {
          wallTextureSources.push(textureSource);
@@ -283,8 +280,8 @@ const setFloorVertexData = (data: Float32Array, layer: Layer, renderChunkX: numb
          let temperature: number;
          let humidity: number;
          if (tile.type === TileType.grass) {
-            temperature = layer.tileTemperatures[tileIndex];
-            humidity = layer.tileHumidities[tileIndex];
+            temperature = layer.tileTemperatures.get(tileIndex)!;
+            humidity = layer.tileHumidities.get(tileIndex)!;
          } else {
             temperature = -1;
             humidity = -1;
@@ -338,7 +335,7 @@ const setWallVertexData = (data: Float32Array, layer: Layer, renderChunkX: numbe
 
 // @Cleanup: A lot of the webgl calls in create and update render data are the same
 
-const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, renderChunkY: number, isWallTiles: boolean): RenderInfo => {
+export function createSolidTileRenderChunkData(layer: Layer, renderChunkX: number, renderChunkY: number, isWallTiles: boolean): SolidTileRenderInfo {
    const minTileX = getRenderChunkMinTileX(renderChunkX);
    const maxTileX = getRenderChunkMaxTileX(renderChunkX);
    const minTileY = getRenderChunkMinTileY(renderChunkY);
@@ -353,7 +350,8 @@ const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, rend
       
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
          for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
-            if (layer.subtileIsWall(subtileX, subtileY)) {
+            const subtileIndex = getSubtileIndex(subtileX, subtileY);
+            if (layer.subtileIsWall(subtileIndex)) {
                numElements++;
             }
          }
@@ -411,28 +409,12 @@ const createSolidTileRenderChunkData = (layer: Layer, renderChunkX: number, rend
    };
 }
 
-export function clearSolidTileRenderingData(): void {
-   // @Speed: Clear these instead of setting them to empty so that it remains const (good for v8)
-   groundTileInfoArrays = [];
-   wallTileInfoArrays = [];
+export function destroySolidTileRenderChunkData(info: SolidTileRenderInfo): void {
+   gl.deleteVertexArray(info.vao);
+   gl.deleteBuffer(info.buffer);
 }
 
-export function createTileRenderChunks(layer: Layer): void {
-   const groundTileInfoArray = [];
-   const wallTileInfoArray = [];
-   
-   for (let renderChunkY = -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION; renderChunkY < RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
-      for (let renderChunkX = -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION; renderChunkX < RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
-         groundTileInfoArray.push(createSolidTileRenderChunkData(layer, renderChunkX, renderChunkY, false));
-         wallTileInfoArray.push(createSolidTileRenderChunkData(layer, renderChunkX, renderChunkY, true));
-      }
-   }
-
-   groundTileInfoArrays.push(groundTileInfoArray);
-   wallTileInfoArrays.push(wallTileInfoArray);
-}
-
-const recalculateChunkData = (info: RenderInfo, layer: Layer, renderChunkX: number, renderChunkY: number, isWallTiles: boolean): void => {
+const recalculateChunkData = (info: SolidTileRenderInfo, layer: Layer, renderChunkX: number, renderChunkY: number, isWallTiles: boolean): void => {
    // @HACK @COPYNPASTE!!
    // @HACK @COPYNPASTE!!
    // @HACK @COPYNPASTE!!
@@ -451,7 +433,8 @@ const recalculateChunkData = (info: RenderInfo, layer: Layer, renderChunkX: numb
       
       for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
          for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
-            if (layer.subtileIsWall(subtileX, subtileY)) {
+            const subtileIndex = getSubtileIndex(subtileX, subtileY);
+            if (layer.subtileIsWall(subtileIndex)) {
                numElements++;
             }
          }
@@ -492,8 +475,8 @@ export function updateRenderChunkTileData(layer: Layer, renderChunkIdx: number, 
    // @Speed already calc'd
    const renderChunkX = getRenderChunkX(renderChunkIdx);
    const renderChunkY = getRenderChunkY(renderChunkIdx);
-   const infoArray = isWallTiles ? wallTileInfoArrays[layer.idx] : groundTileInfoArrays[layer.idx];
-   recalculateChunkData(infoArray[renderChunkIdx], layer, renderChunkX, renderChunkY, isWallTiles);
+   const infoMap = isWallTiles ? layer.wallTileInfoMap : layer.groundTileInfoMap;
+   recalculateChunkData(infoMap.get(renderChunkIdx)!, layer, renderChunkX, renderChunkY, isWallTiles);
 }
 
 export function renderSolidTiles(layer: Layer, isWallTiles: boolean): void {
@@ -504,14 +487,16 @@ export function renderSolidTiles(layer: Layer, isWallTiles: boolean): void {
 
    gl.uniform1f(sizeUniformLocation, isWallTiles ? Settings.SUBTILE_SIZE : Settings.TILE_SIZE);
    
-   // @Hack
-   const layerIdx = layers.indexOf(layer);
-   
-   const infoArray = isWallTiles ? wallTileInfoArrays[layerIdx] : groundTileInfoArrays[layerIdx];
+   const infoMap = isWallTiles ? layer.wallTileInfoMap : layer.groundTileInfoMap;
    for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
       for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
          const idx = getRenderChunkIndex(renderChunkX, renderChunkY);
-         const tileInfo = infoArray[idx];
+         const tileInfo = infoMap.get(idx);
+
+         // Don't throw if undefined! cuz its a useful debugging tool, to see which render chunks are sent in dev super-zoom-out mode
+         if (tileInfo === undefined) {
+            continue;
+         }
 
          gl.bindVertexArray(tileInfo.vao);
          gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, tileInfo.numElements);

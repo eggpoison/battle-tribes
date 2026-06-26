@@ -18,7 +18,7 @@ export interface DecorationComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.decoration, _DecorationComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.decoration, typeof DecorationComponentArray> {}
 }
 
 const DECORATION_RENDER_INFO: Record<DecorationType, TextureIndex> = {
@@ -36,45 +36,47 @@ const DECORATION_RENDER_INFO: Record<DecorationType, TextureIndex> = {
    [DecorationType.flower4]: TextureIndex.decorations_flower4
 };
 
-class _DecorationComponentArray extends ServerComponentArray<DecorationComponent, DecorationComponentData> {
-   public decodeData(reader: PacketReader): DecorationComponentData {
-      const decorationType = reader.readNumber();
+export const DecorationComponentArray = registerServerComponentArray(
+   ServerComponentType.decoration,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+DecorationComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-      return {
-         decorationType: decorationType
-      };
-   }
+function decodeData(reader: PacketReader): DecorationComponentData {
+   const decorationType = reader.readNumber();
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            DECORATION_RENDER_INFO[decorationComponentData.decorationType]
-         )
-      );
-   }
-
-   public createComponent(entityComponentData: EntityComponentData): DecorationComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
-
-      return {
-         decorationType: decorationComponentData.decorationType
-      };
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+   return {
+      decorationType: decorationType
+   };
 }
 
-export const DecorationComponentArray = registerServerComponentArray(ServerComponentType.decoration, _DecorationComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         DECORATION_RENDER_INFO[decorationComponentData.decorationType]
+      )
+   );
+}
+
+function createComponent(entityComponentData: EntityComponentData): DecorationComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const decorationComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.decoration);
+
+   return {
+      decorationType: decorationComponentData.decorationType
+   };
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}

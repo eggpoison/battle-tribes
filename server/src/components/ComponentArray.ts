@@ -21,12 +21,14 @@ export function getComponentArrayRecord(): typeof ComponentArrayRecord {
    return ComponentArrayRecord;
 }
 
-export class ComponentArray<T extends object = object, C extends ServerComponentType = ServerComponentType> {
+export class ComponentArray<Component extends object = object, T extends ServerComponentType = ServerComponentType> {
    public readonly componentType: ServerComponentType;
    private readonly isActiveByDefault: boolean;
    
-   public components: T[] = [];
-   private componentBuffer: T[] = [];
+   public components: Component[] = [];
+
+   private componentBuffer: Component[] = [];
+   private componentBufferEntities: Entity[] = [];
    public bufferedComponentJoinTicksRemaining: number[] = [];
 
    /** Maps entity IDs to component indexes */
@@ -34,15 +36,13 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    /** Maps component indexes to entity IDs */
    private indexToEntityMap: Partial<Record<number, Entity>> = {};
    
-   public activeComponents: T[] = [];
+   public activeComponents: Component[] = [];
    public activeEntities: Entity[] = [];
 
    /** Maps entity IDs to component indexes */
    private activeEntityToIndexMap: Record<Entity, number> = {};
    /** Maps component indexes to entity IDs */
    private activeIndexToEntityMap: Record<number, Entity> = {};
-
-   private componentBufferIDs: number[] = [];
 
    private deactivateBuffer: number[] = [];
 
@@ -97,7 +97,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    /** Called when an entity with the component kills another entity (reduces their health to 0.) */
    public onKill?(entity: Entity, killedEntity: Entity): void;
    
-   constructor(componentType: C, isActiveByDefault: boolean, getDataLength: (entity: Entity, player: Entity | null) => number, addDataToPacket: (packet: Packet, entity: Entity, player: Entity | null) => void) {
+   constructor(componentType: T, isActiveByDefault: boolean, getDataLength: (entity: Entity, player: Entity | null) => number, addDataToPacket: (packet: Packet, entity: Entity, player: Entity | null) => void) {
       this.componentType = componentType;
       this.isActiveByDefault = isActiveByDefault;
 
@@ -111,7 +111,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       ComponentArrayRecord[componentType] = this as any;
    }
    
-   public addComponentToBuffer(entity: Entity, component: T, joinDelayTicks: number): void {
+   public addComponentToBuffer(entity: Entity, component: Component, joinDelayTicks: number): void {
       if (this.entityToIndexMap[entity] !== undefined) {
          throw new Error("Component added to same entity twice.");
       }
@@ -130,11 +130,11 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       }
 
       this.componentBuffer.splice(insertIdx, 0, component);
-      this.componentBufferIDs.splice(insertIdx, 0, entity);
+      this.componentBufferEntities.splice(insertIdx, 0, entity);
       this.bufferedComponentJoinTicksRemaining.splice(insertIdx, 0, joinDelayTicks);
    }
 
-   public addComponent(entity: Entity, component: T): void {
+   public addComponent(entity: Entity, component: Component): void {
       // Put new entry at end and update the maps
       const newIndex = this.components.length;
       this.entityToIndexMap[entity] = newIndex;
@@ -156,7 +156,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
             break;
          }
          
-         const entity = this.componentBufferIDs[i];
+         const entity = this.componentBufferEntities[i];
          const component = this.componentBuffer[i];
 
          this.addComponent(entity, component);
@@ -165,23 +165,23 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
 
    public tickJoinInfos(finalJoiningIdx: number | null): void {
       const startIdx = finalJoiningIdx !== null ? finalJoiningIdx + 1 : 0;
-      for (let i = startIdx; i < this.componentBufferIDs.length; i++) {
+      for (let i = startIdx; i < this.componentBufferEntities.length; i++) {
          const ticksRemaining = this.bufferedComponentJoinTicksRemaining[i];
          this.bufferedComponentJoinTicksRemaining[i] = ticksRemaining - 1;
       }
    }
 
-   public getComponentBuffer(): readonly T[] {
+   public getComponentBuffer(): readonly Component[] {
       return this.componentBuffer;
    }
 
    public getComponentBufferIDs(): readonly number[] {
-      return this.componentBufferIDs;
+      return this.componentBufferEntities;
    }
 
    public getFinalJoiningBufferIdx(): number | null {
       let finalPushedIdx: number | null = null;
-      for (let i = 0; i < this.componentBufferIDs.length; i++) {
+      for (let i = 0; i < this.componentBufferEntities.length; i++) {
          const ticksRemaining = this.bufferedComponentJoinTicksRemaining[i];
          if (ticksRemaining > 0) {
             break;
@@ -196,12 +196,12 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       if (finalPushedIdx !== null) {
          const numPushedEntities = finalPushedIdx + 1;
          this.componentBuffer.splice(0, numPushedEntities);
-         this.componentBufferIDs.splice(0, numPushedEntities);
+         this.componentBufferEntities.splice(0, numPushedEntities);
          this.bufferedComponentJoinTicksRemaining.splice(0, numPushedEntities);
       }
    }
 
-   public getComponent(entity: Entity): T {
+   public getComponent(entity: Entity): Component {
       return this.components[this.entityToIndexMap[entity]!];
    }
 
@@ -281,7 +281,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    }
 
    /** VERY slow function. Should only be used for debugging purposes. */
-   public getEntityFromComponentNONOSQUARE(component: T): Entity {
+   public getEntityFromComponentNONOSQUARE(component: Component): Entity {
       let idx: number | undefined;
       for (let i = 0; i < this.components.length; i++) {
          const currentComponent = this.components[i];

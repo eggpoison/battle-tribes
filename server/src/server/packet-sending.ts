@@ -5,6 +5,7 @@ import { getStringLengthBytes, Packet, alignLengthBytes, ServerPacketType } from
 import { Settings } from "../../../shared/dist/settings.js";
 import { Point } from "../../../shared/dist/utils.js";
 import { Bytes } from "../../../shared/dist/constants.js";
+import { getRenderChunkIndex, getRenderChunkX, getRenderChunkY } from "../../../shared/dist/render-chunks.js";
 import Layer from "../Layer.js";
 import { getComponentArrayRecord } from "../components/ComponentArray.js";
 import PlayerClient from "./PlayerClient.js";
@@ -19,6 +20,8 @@ import { addLightData, getEntityHitboxLights, getLightDataLength } from "../ligh
 import { getPlayerClients } from "./player-clients.js";
 import { ENTITY_COMPONENT_TYPES, getEntityComponentTypes } from "../entity-component-types.js";
 import { getSubtileIndex } from "../../../shared/dist/subtiles.js";
+import { getTileIndexIncludingEdges } from "../../../shared/dist/tiles.js";
+import { WaterRockData } from "../../../shared/dist/client-server-types.js";
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Bytes.Float32;
@@ -137,7 +140,19 @@ const getVisibleMinedSubtiles = (playerClient: PlayerClient): readonly number[] 
    return minedSubtiles;
 }
 
-export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<Entity>, removedEntities: Entity[]): ArrayBufferLike {
+const writeWaterRocksArray = (packet: Packet, waterRocks: WaterRockData[]): void => {
+   packet.writeNumber(waterRocks.length);
+   for (let i = 0; i < waterRocks.length; i++) {
+      const waterRock = waterRocks[i];
+      packet.writeNumber(waterRock.position[0]);
+      packet.writeNumber(waterRock.position[1]);
+      packet.writeNumber(waterRock.rotation);
+      packet.writeNumber(waterRock.size);
+      packet.writeNumber(waterRock.opacity);
+   }
+}
+
+export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<Entity>, removedEntities: Entity[], newRenderChunks: number[], oldRenderChunks: number[]): ArrayBufferLike {
    // @Cleanup: The mined subtile system here exists really only to send particles. Can be entirely encompassed in a server particles system!
 
    const player = entityExists(playerClient.instance) ? playerClient.instance : null;
@@ -201,6 +216,23 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    lengthBytes += Bytes.Float32 + Bytes.Float32 * playerClient.visibleDestroyedEntities.length;
    // Orb completes
    lengthBytes += Bytes.Float32 + 3 * Bytes.Float32 * playerClient.orbCompletes.length;
+   // New render chunks
+   lengthBytes += Bytes.Float32;
+   for (let i = 0; i < layers.length; i++) {
+      const tilesInLayer = 4 * Settings.CHUNK_SIZE * Settings.CHUNK_SIZE * newRenderChunks.length;
+      // Tiles
+      lengthBytes += tilesInLayer * 7 * Bytes.Float32;
+      // Subtiles
+      lengthBytes += tilesInLayer * 16 * Bytes.Float32;
+      // Water rocks
+      for (let j = 0; j < newRenderChunks.length; j++) {
+         const waterRocks = layer.waterRockRenderChunks[j];
+         lengthBytes += Bytes.Float32;
+         lengthBytes += waterRocks.length * 5 * Bytes.Float32;
+      }
+   }
+   // Old render chunks
+   lengthBytes += Bytes.Float32 + oldRenderChunks.length * Bytes.Float32;
    // Tile updates
    for (const layer of layers) {
       lengthBytes += Bytes.Float32 + 3 * Bytes.Float32 * layer.tileUpdateCoordinates.size;
@@ -208,7 +240,9 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    // Wall subtile updates
    for (const layer of layers) {
-      lengthBytes += Bytes.Float32 + 3 * layer.wallSubtileUpdates.size * Bytes.Float32;
+      // @BUG: Isn't only ones local to the player!!
+      const updates = layer.getWallSubtileUpdates();
+      lengthBytes += Bytes.Float32 + 2 * updates.size * Bytes.Float32;
    }
    
    // hasPickedUpItem
@@ -310,8 +344,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    packet.writeNumber(playerClient.playerKnockbacks.length);
    for (let i = 0; i < playerClient.playerKnockbacks.length; i++) {
       const knockbackData = playerClient.playerKnockbacks[i];
-      packet.writeNumber(knockbackData.knockback);
-      packet.writeNumber(knockbackData.knockbackDirection);
+      packet.writePoint(knockbackData);
    }
 
    // Add player heals
@@ -332,6 +365,68 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
       packet.writeNumber(orbCompleteData.x);
       packet.writeNumber(orbCompleteData.y);
       packet.writeNumber(orbCompleteData.amount);
+   }
+
+   // Data for newly nearby render chunks
+   packet.writeNumber(newRenderChunks.length);
+   for (let i = 0; i < layers.length; i++) {
+      for (let j = 0; j < newRenderChunks.length; j++) {
+         const renderChunk = newRenderChunks[j];
+         packet.writeNumber(renderChunk);
+
+         const renderChunkX = getRenderChunkX(renderChunk);
+         const renderChunkY = getRenderChunkY(renderChunk);
+
+         // 
+         // Tiles
+         // 
+         
+         const tileTypes = layer.tileTypes;
+         const tileBiomes = layer.tileBiomes;
+         const riverFlowDirections = layer.riverFlowDirections;
+         const tileTemperatures = layer.tileTemperatures;
+         const tileHumidities = layer.tileHumidities;
+         const tileMithrilRichnesses = layer.tileMithrilRichnesses;
+
+         // @Copynpaste from createInitialGameDataPacket
+         const minTileX = renderChunkX * 2 * Settings.CHUNK_SIZE;
+         const maxTileX = minTileX + 2 * Settings.CHUNK_SIZE - 1;
+         const minTileY = renderChunkY * 2 * Settings.CHUNK_SIZE;
+         const maxTileY = minTileY + 2 * Settings.CHUNK_SIZE - 1;
+         for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+            for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+               packet.writeNumber(tileTypes[tileIndex]);
+               packet.writeNumber(tileBiomes[tileIndex]);
+               packet.writeNumber(riverFlowDirections[tileIndex]);
+               packet.writeNumber(tileTemperatures[tileIndex]);
+               packet.writeNumber(tileHumidities[tileIndex]);
+               packet.writeNumber(tileMithrilRichnesses[tileIndex]);
+            }
+         }
+
+         // Subtiles
+         const minSubtileX = minTileX * 4;
+         const maxSubtileX = (maxTileX + 1) * 4 - 1;
+         const minSubtileY = minTileY * 4;
+         const maxSubtileY = (maxTileY + 1) * 4 - 1;
+         for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+            for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+               const subtileIndex = getSubtileIndex(subtileX, subtileY);
+               const data = layer.getSubtileData(subtileIndex);
+               packet.writeNumber(data);
+            }
+         }
+
+         // Water rocks
+         writeWaterRocksArray(packet, layer.waterRockRenderChunks[renderChunk]);
+      }
+   }
+   // Old render chunks for posterity
+   packet.writeNumber(oldRenderChunks.length);
+   for (let i = 0; i < oldRenderChunks.length; i++) {
+      const renderChunkIdx = oldRenderChunks[i];
+      packet.writeNumber(renderChunkIdx);
    }
    
    // Tile updates
@@ -355,14 +450,14 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    // Wall subtile updates
    for (const layer of layers) {
-      packet.writeNumber(layer.wallSubtileUpdates.size);
-      for (const subtileIndex of layer.wallSubtileUpdates) {
-         const subtileType = layer.getSubtileType(subtileIndex);
-         const damageTaken = layer.wallSubtileDamageTakenMap.get(subtileIndex) || 0;
-         
+      // @BUG: Isn't only ones local to the player!!
+      const updates = layer.getWallSubtileUpdates();
+
+      packet.writeNumber(updates.size);
+      for (const subtileIndex of updates) {
+         const data = layer.getSubtileData(subtileIndex);
          packet.writeNumber(subtileIndex);
-         packet.writeNumber(subtileType);
-         packet.writeNumber(damageTaken);
+         packet.writeNumber(data);
       }
    }
 
@@ -447,24 +542,51 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    return packet.buffer;
 }
 
-export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Point): ArrayBufferLike {
+export function createInitialGameDataPacket(playerClient: PlayerClient, spawnLayer: Layer, spawnX: number, spawnY: number): ArrayBufferLike {
    const tamingSpecsMap = getTamingSpecsMap();
 
-   let lengthBytes = Bytes.Float32 * 4;
-   // Layer idx
-   lengthBytes += Bytes.Float32;
-   // Per-tile data
-   lengthBytes += layers.length * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 7 * Bytes.Float32;
-   // Subtile data
-   lengthBytes += layers.length * Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16 * Bytes.Float32;
-   // Subtile damage taken
-   for (const layer of layers) {
-      lengthBytes += Bytes.Float32 + layer.wallSubtileDamageTakenMap.size * 2 * Bytes.Float32;
+   // @COPYNPASTE from calculateNearbyRenderChunks
+   const minRenderChunkX = Math.floor(playerClient.minVisibleX / Settings.CHUNK_UNITS / 2);
+   const maxRenderChunkX = Math.floor(playerClient.maxVisibleX / Settings.CHUNK_UNITS / 2);
+   const minRenderChunkY = Math.floor(playerClient.minVisibleY / Settings.CHUNK_UNITS / 2);
+   const maxRenderChunkY = Math.floor(playerClient.maxVisibleY / Settings.CHUNK_UNITS / 2);
+   const minTileX = minRenderChunkX * 2 * Settings.CHUNK_SIZE;
+   const maxTileX = (maxRenderChunkX + 1) * 2 * Settings.CHUNK_SIZE - 1;
+   const minTileY = minRenderChunkY * 2 * Settings.CHUNK_SIZE;
+   const maxTileY = (maxRenderChunkY + 1) * 2 * Settings.CHUNK_SIZE - 1;
+   const minSubtileX = minTileX * 4;
+   const maxSubtileX = (maxTileX + 1) * 4 - 1;
+   const minSubtileY = minTileY * 4;
+   const maxSubtileY = (maxTileY + 1) * 4 - 1;
 
-      console.log(layer.wallSubtileUpdates.size);
+   let lengthBytes = Bytes.Float32 * 4;
+   // Layer idx, num layers
+   lengthBytes += 2 * Bytes.Float32;
+   // Terrain data
+   lengthBytes += 4 * Bytes.Float32;
+   for (let i = 0; i < layers.length; i++) {
+      const numTiles = (maxTileX - minTileX + 1) * (maxTileY - minTileY + 1);
+      // Tile data
+      lengthBytes += numTiles * 7 * Bytes.Float32;
+      // Subtile data
+      lengthBytes += numTiles * 16 * Bytes.Float32;
+
+      // @INCOMPLETE @BUG
+      // console.log(layer.wallSubtileUpdates.size);
    }
    // Water rocks
-   lengthBytes += Bytes.Float32 + spawnLayer.waterRocks.length * 5 * Bytes.Float32;
+   lengthBytes += Bytes.Float32;
+   let numRenderChunksWithWaterRocks = 0;
+   for (let renderChunkY = minRenderChunkY; renderChunkY <= maxRenderChunkY; renderChunkY++) {
+      for (let renderChunkX = minRenderChunkX; renderChunkX <= maxRenderChunkX; renderChunkX++) {
+         const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
+         const waterRocks = spawnLayer.waterRockRenderChunks[renderChunkIndex];
+         if (waterRocks.length !== 0) {
+            numRenderChunksWithWaterRocks++;
+            lengthBytes += 2 * Bytes.Float32 + 5 * waterRocks.length * Bytes.Float32;
+         }
+      }
+   }
    // Taming specs
    lengthBytes += Bytes.Float32;
    for (const pair of tamingSpecsMap) {
@@ -479,50 +601,66 @@ export function createInitialGameDataPacket(spawnLayer: Layer, spawnPosition: Po
    lengthBytes = alignLengthBytes(lengthBytes);
    const packet = new Packet(ServerPacketType.initialGameData, lengthBytes);
    
-   // Layer idx
+   // Layer idx, num layers
    packet.writeNumber(layers.indexOf(spawnLayer));
+   packet.writeNumber(layers.length);
    
    // Spawn position
-   packet.writeNumber(spawnPosition.x);
-   packet.writeNumber(spawnPosition.y);
+   packet.writeNumber(spawnX);
+   packet.writeNumber(spawnY);
    
+   // 
    // Layers and their terrain data
-   packet.writeNumber(layers.length);
+   // 
+
+   packet.writeNumber(minRenderChunkX);
+   packet.writeNumber(maxRenderChunkX);
+   packet.writeNumber(minRenderChunkY);
+   packet.writeNumber(maxRenderChunkY);
    for (let layerIdx = 0; layerIdx < layers.length; layerIdx++) {
       const layer = layers[layerIdx];
-      // Per-tile data
-      for (let tileIndex = 0; tileIndex < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES; tileIndex++) {
-         packet.writeNumber(layer.tileTypes[tileIndex]);
-         packet.writeNumber(layer.tileBiomes[tileIndex]);
-         packet.writeNumber(layer.riverFlowDirections[tileIndex]);
-         packet.writeNumber(layer.tileTemperatures[tileIndex]);
-         packet.writeNumber(layer.tileHumidities[tileIndex]);
-         packet.writeNumber(layer.tileMithrilRichnesses[tileIndex]);
+
+      // Tile data
+      const tileTypes = layer.tileTypes;
+      const tileBiomes = layer.tileBiomes;
+      const riverFlowDirections = layer.riverFlowDirections;
+      const tileTemperatures = layer.tileTemperatures;
+      const tileHumidities = layer.tileHumidities;
+      const tileMithrilRichnesses = layer.tileMithrilRichnesses;
+      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+         for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+            packet.writeNumber(tileTypes[tileIndex]);
+            packet.writeNumber(tileBiomes[tileIndex]);
+            packet.writeNumber(riverFlowDirections[tileIndex]);
+            packet.writeNumber(tileTemperatures[tileIndex]);
+            packet.writeNumber(tileHumidities[tileIndex]);
+            packet.writeNumber(tileMithrilRichnesses[tileIndex]);
+         }
       }
 
       // Subtiles
-      const subtiles = layer.wallSubtileTypes;
-      for (let i = 0; i < Settings.FULL_WORLD_SIZE_TILES * Settings.FULL_WORLD_SIZE_TILES * 16; i++) {
-         packet.writeNumber(subtiles[i]);
-      }
-
-      // Subtile damage taken
-      packet.writeNumber(layer.wallSubtileDamageTakenMap.size);
-      for (const [subtileIndex, damageTaken] of layer.wallSubtileDamageTakenMap) {
-         packet.writeNumber(subtileIndex);
-         packet.writeNumber(damageTaken);
+      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+         for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+            const subtileIndex = getSubtileIndex(subtileX, subtileY);
+            const data = layer.getSubtileData(subtileIndex);
+            packet.writeNumber(data);
+         }
       }
    }
 
-   packet.writeNumber(spawnLayer.waterRocks.length);
-   for (let i = 0; i < spawnLayer.waterRocks.length; i++) {
-      const waterRock = spawnLayer.waterRocks[i];
+   packet.writeNumber(numRenderChunksWithWaterRocks);
+   for (let renderChunkY = minRenderChunkY; renderChunkY <= maxRenderChunkY; renderChunkY++) {
+      for (let renderChunkX = minRenderChunkX; renderChunkX <= maxRenderChunkX; renderChunkX++) {
+         const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
+         const waterRocks = spawnLayer.waterRockRenderChunks[renderChunkIndex];
+         if (waterRocks.length === 0) {
+            continue;
+         }
 
-      packet.writeNumber(waterRock.position[0]);
-      packet.writeNumber(waterRock.position[1]);
-      packet.writeNumber(waterRock.rotation);
-      packet.writeNumber(waterRock.size);
-      packet.writeNumber(waterRock.opacity);
+         packet.writeNumber(renderChunkIndex);
+         writeWaterRocksArray(packet, waterRocks);
+      }
    }
 
    // Taming specs

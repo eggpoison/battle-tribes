@@ -4,7 +4,7 @@ import { Entity, DamageSource } from "../../../shared/dist/entities.js";
 import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
 import { Packet } from "../../../shared/dist/packets.js";
 import { Settings } from "../../../shared/dist/settings.js";
-import { UtilVar, TileIndex, randInt, getAngleDiff, lerp, Point, angle, polarVec2 } from "../../../shared/dist/utils.js";
+import { UtilVar, randInt, getAngleDiff, lerp, Point, angle, polarVec2 } from "../../../shared/dist/utils.js";
 import { Bytes } from "../../../shared/dist/constants.js";
 import { moveEntityToPosition } from "../ai-shared.js";
 import { registerDirtyEntity } from "../server/player-clients.js";
@@ -14,6 +14,7 @@ import { GuardianSpikyBallComponentArray } from "./GuardianSpikyBallComponent.js
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { applyKnockback, getHitboxTag, Hitbox } from "../hitboxes.js";
+import { TileIndex } from "../../../shared/dist/tiles.js";
 
 const enum Vars {
    VISION_RANGE = 250,

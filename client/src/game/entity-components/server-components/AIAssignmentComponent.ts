@@ -7,21 +7,22 @@ export interface AIAssignmentComponentData {}
 export interface AIAssignmentComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiAssignment, AIAssignmentComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiAssignment, typeof AIAssignmentComponentArray> {}
 }
 
-class AIAssignmentComponentArray extends ServerComponentArray<AIAssignmentComponent, AIAssignmentComponentData> {
-   public decodeData(): AIAssignmentComponentData {
-      return {};
-   }
+export const AIAssignmentComponentArray = registerServerComponentArray(
+   ServerComponentType.aiAssignment,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(): AIAssignmentComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(): AIAssignmentComponentData {
+   return {};
 }
 
-export const aiAssignmentComponentArray = registerServerComponentArray(ServerComponentType.aiAssignment, AIAssignmentComponentArray, true);
+function createComponent(): AIAssignmentComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}

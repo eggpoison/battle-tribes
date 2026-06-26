@@ -1,7 +1,7 @@
 import { ComponentArray } from "./ComponentArray";
 
-export default abstract class ClientComponentArray<
+export default class ClientComponentArray<
    Component extends object,
    ComponentData extends object,
-   ComponentIntermediateInfo = void
+   ComponentIntermediateInfo = any
 > extends ComponentArray<Component, ComponentData, ComponentIntermediateInfo> {}

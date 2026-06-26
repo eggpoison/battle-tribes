@@ -33,7 +33,7 @@ export interface StatusEffectComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.statusEffect, _StatusEffectComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.statusEffect, typeof StatusEffectComponentArray> {}
 }
 
 const BURNING_PARTICLE_COLOURS: readonly ParticleColour[] = [
@@ -61,271 +61,276 @@ const getStatusEffect = (statusEffectComponent: StatusEffectComponent, type: Sta
    return null;
 }
 
-class _StatusEffectComponentArray extends ServerComponentArray<StatusEffectComponent, StatusEffectComponentData> {
-   public decodeData(reader: PacketReader): StatusEffectComponentData {
-      const statusEffects: StatusEffectData[] = [];
-      const numStatusEffects = reader.readNumber();
-      for (let i = 0; i < numStatusEffects; i++) {
-         const type = reader.readNumber();
-         const ticksElapsed = reader.readNumber();
+export const StatusEffectComponentArray = registerServerComponentArray(
+   ServerComponentType.statusEffect,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+StatusEffectComponentArray.onTick = onTick;
+StatusEffectComponentArray.updateFromData = updateFromData;
+StatusEffectComponentArray.updatePlayerFromData = updatePlayerFromData;
+StatusEffectComponentArray.calculateTint = calculateTint;
 
-         const statusEffectData: StatusEffectData = {
-            type: type,
-            ticksElapsed: ticksElapsed
-         }
-         statusEffects.push(statusEffectData);
+function decodeData(reader: PacketReader): StatusEffectComponentData {
+   const statusEffects: StatusEffectData[] = [];
+   const numStatusEffects = reader.readNumber();
+   for (let i = 0; i < numStatusEffects; i++) {
+      const type = reader.readNumber();
+      const ticksElapsed = reader.readNumber();
+
+      const statusEffectData: StatusEffectData = {
+         type: type,
+         ticksElapsed: ticksElapsed
       }
-
-      return {
-         statusEffects: statusEffects
-      };
+      statusEffects.push(statusEffectData);
    }
 
-   public createComponent(entityComponentData: EntityComponentData): StatusEffectComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const statusEffectComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.statusEffect);
-      return {
-         statusEffects: statusEffectComponentData.statusEffects,
-         burningLight: null
-      };
-   }
+   return {
+      statusEffects: statusEffects
+   };
+}
 
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function createComponent(entityComponentData: EntityComponentData): StatusEffectComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const statusEffectComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.statusEffect);
+   return {
+      statusEffects: statusEffectComponentData.statusEffects,
+      burningLight: null
+   };
+}
 
-   public onTick(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      
-      const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
-      
-      const poisonStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.poisoned);
-      if (poisonStatusEffect !== null) {
-         // Poison particles
-         if (customTickIntervalHasPassed(poisonStatusEffect.ticksElapsed, 0.1)) {
-            const spawnOffsetMagnitude = 30 * Math.random();
-            const spawnOffsetDirection = randAngle()
-            const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+function getMaxRenderParts(): number {
+   return 0;
+}
 
-            const lifetime = 2;
-            
-            const particle = new Particle(lifetime);
-            particle.getOpacity = () => {
-               return lerp(0.75, 0, particle.age / lifetime);
-            }
+function onTick(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
+   
+   const poisonStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.poisoned);
+   if (poisonStatusEffect !== null) {
+      // Poison particles
+      if (customTickIntervalHasPassed(poisonStatusEffect.ticksElapsed, 0.1)) {
+         const spawnOffsetMagnitude = 30 * Math.random();
+         const spawnOffsetDirection = randAngle()
+         const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
-            addTexturedParticleToBufferContainer(
-               particle,
-               ParticleRenderLayer.low,
-               64, 64,
-               spawnPositionX, spawnPositionY,
-               0, 0,
-               0, 0,
-               0,
-               randAngle(),
-               0,
-               0,
-               0,
-               6,
-               0, 0, 0
-            );
-            lowTexturedParticles.push(particle);
-         }
-
-         // Poison bubbles
-         if (customTickIntervalHasPassed(poisonStatusEffect.ticksElapsed, 0.1)) {
-            const spawnOffsetMagnitude = 30 * Math.random();
-            const spawnOffsetDirection = randAngle()
-            const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-
-            createPoisonBubble(spawnPositionX, spawnPositionY, randFloat(0.4, 0.6));
-         }
-      }
-
-      const fireStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.burning);
-      if (fireStatusEffect !== null) {
-         if (statusEffectComponent.burningLight === null) {
-            // @INCOMPLETE
-            
-            // statusEffectComponent.burningLight = createLight(
-            //    new Point(0, 0),
-            //    1,
-            //    2.5,
-            //    0.3,
-            //    0,
-            //    0,
-            //    0
-            // );
-
-            // // @Hack
-            // const renderObject = getEntityRenderObject(entity);
-            // attachLightToRenderPart(statusEffectComponent.burningLight, renderObject.renderPartsByZIndex[0], entity);
-         }
+         const lifetime = 2;
          
-         // Ember particles
-         if (customTickIntervalHasPassed(fireStatusEffect.ticksElapsed, 0.1)) {
-            const spawnOffsetMagnitude = 30 * Math.random();
-            const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-
-            const lifetime = randFloat(0.6, 1.2);
-
-            const velocityMagnitude = randFloat(100, 140);
-            const velocityDirection = randAngle();
-            const velocityX = velocityMagnitude * Math.sin(velocityDirection);
-            const velocityY = velocityMagnitude * Math.cos(velocityDirection);
-
-            const accelerationMagnitude = randFloat(0, 80);
-            const accelerationDirection = randAngle();
-            const accelerationX = accelerationMagnitude * Math.sin(accelerationDirection);
-            const accelerationY = accelerationDirection * Math.cos(accelerationDirection);
-            
-            const particle = new Particle(lifetime);
-            particle.getOpacity = (): number => {
-               const opacity = 1 - particle.age / lifetime;
-               return Math.pow(opacity, 0.3);
-            }
-
-            const colour = randItem(BURNING_PARTICLE_COLOURS);
-
-            addMonocolourParticleToBufferContainer(
-               particle,
-               ParticleRenderLayer.high,
-               4, 4,
-               spawnPositionX, spawnPositionY,
-               velocityX, velocityY,
-               accelerationX, accelerationY,
-               0,
-               randAngle(),
-               0, 
-               0,
-               0,
-               colour[0], colour[1], colour[2]
-            );
-            highMonocolourParticles.push(particle);
+         const particle = new Particle(lifetime);
+         particle.getOpacity = () => {
+            return lerp(0.75, 0, particle.age / lifetime);
          }
 
-         // Smoke particles
-         if (customTickIntervalHasPassed(fireStatusEffect.ticksElapsed, 3/20)) {
-            const spawnOffsetMagnitude = 20 * Math.random();
-            const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-
-            const accelerationDirection = randAngle();
-            const accelerationX = 40 * Math.sin(accelerationDirection);
-            let accelerationY = 40 * Math.cos(accelerationDirection);
-
-            // Weight the smoke to accelerate more upwards
-            accelerationY += 10;
-
-            const lifetime = randFloat(1.75, 2.25);
-
-            const particle = new Particle(lifetime);
-            particle.getOpacity = (): number => {
-               if (particle.age <= BURNING_SMOKE_PARTICLE_FADEIN_TIME) {
-                  return particle.age / BURNING_SMOKE_PARTICLE_FADEIN_TIME;
-               }
-               return lerp(0.75, 0, (particle.age - BURNING_SMOKE_PARTICLE_FADEIN_TIME) / (lifetime - BURNING_SMOKE_PARTICLE_FADEIN_TIME));
-            }
-            particle.getScale = (): number => {
-               const deathProgress = particle.age / lifetime
-               return 1 + deathProgress * 1.5;
-            }
-
-            addTexturedParticleToBufferContainer(
-               particle,
-               ParticleRenderLayer.high,
-               64, 64,
-               spawnPositionX, spawnPositionY,
-               0, 50,
-               accelerationX, accelerationY,
-               0,
-               randAngle(),
-               randFloat(-Math.PI, Math.PI),
-               randFloat(-Math.PI, Math.PI) / 2,
-               0,
-               5,
-               0, 0, 0
-            );
-            highTexturedParticles.push(particle);
-         }
-      } else if (statusEffectComponent.burningLight !== null) {
-         removeLight(statusEffectComponent.burningLight);
-         statusEffectComponent.burningLight = null;
+         addTexturedParticleToBufferContainer(
+            particle,
+            ParticleRenderLayer.low,
+            64, 64,
+            spawnPositionX, spawnPositionY,
+            0, 0,
+            0, 0,
+            0,
+            randAngle(),
+            0,
+            0,
+            0,
+            6,
+            0, 0, 0
+         );
+         lowTexturedParticles.push(particle);
       }
 
-      const bleedingStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.bleeding);
-      if (bleedingStatusEffect !== null) {
-         if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
-            const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.posX + 32 * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.posY + 32 * Math.cos(spawnOffsetDirection);
-            createBloodParticle(Math.random() < 0.5 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(40, 60), true);
-         }
-      }
+      // Poison bubbles
+      if (customTickIntervalHasPassed(poisonStatusEffect.ticksElapsed, 0.1)) {
+         const spawnOffsetMagnitude = 30 * Math.random();
+         const spawnOffsetDirection = randAngle()
+         const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
-      const heatSicknessStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.heatSickness);
-      if (heatSicknessStatusEffect !== null) {
-         if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
-            getHitboxVelocity(hitbox);
-            const hitboxVelocity = _point;
-            
-            const spawnOffsetDirection = randAngle();
-            const spawnPositionX = hitbox.box.posX + 32 * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = hitbox.box.posY + 32 * Math.cos(spawnOffsetDirection);
-            createHeatParticle(spawnPositionX, spawnPositionY, randAngle(), hitboxVelocity.x, hitboxVelocity.y);
-         }
+         createPoisonBubble(spawnPositionX, spawnPositionY, randFloat(0.4, 0.6));
       }
    }
 
-   public updateFromData(data: StatusEffectComponentData, entity: Entity): void {
-      const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
+   const fireStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.burning);
+   if (fireStatusEffect !== null) {
+      if (statusEffectComponent.burningLight === null) {
+         // @INCOMPLETE
+         
+         // statusEffectComponent.burningLight = createLight(
+         //    new Point(0, 0),
+         //    1,
+         //    2.5,
+         //    0.3,
+         //    0,
+         //    0,
+         //    0
+         // );
 
-      const previousHasFreezing = hasStatusEffect(statusEffectComponent, StatusEffect.freezing);
-      
-      for (const statusEffectData of data.statusEffects) {
-         if (!hasStatusEffect(statusEffectComponent, statusEffectData.type)) {
-            switch (statusEffectData.type) {
-               case StatusEffect.freezing: {
-                  const transformComponent = TransformComponentArray.getComponent(entity);
-                  const hitbox = transformComponent.hitboxes[0];
-                  playSoundOnHitbox("freezing.mp3", 0.4, 1, entity, hitbox, false);
-                  break;
-               }
-            }
-         }
+         // // @Hack
+         // const renderObject = getEntityRenderObject(entity);
+         // attachLightToRenderPart(statusEffectComponent.burningLight, renderObject.renderPartsByZIndex[0], entity);
       }
       
-      // @Speed @Garbage
-      statusEffectComponent.statusEffects = data.statusEffects;
+      // Ember particles
+      if (customTickIntervalHasPassed(fireStatusEffect.ticksElapsed, 0.1)) {
+         const spawnOffsetMagnitude = 30 * Math.random();
+         const spawnOffsetDirection = randAngle();
+         const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
-      const newHasFreezing = hasStatusEffect(statusEffectComponent, StatusEffect.freezing);
-      if (newHasFreezing !== previousHasFreezing) {
-         const renderObject = getEntityRenderObject(entity);
-         renderObject.recalculateTint();
+         const lifetime = randFloat(0.6, 1.2);
+
+         const velocityMagnitude = randFloat(100, 140);
+         const velocityDirection = randAngle();
+         const velocityX = velocityMagnitude * Math.sin(velocityDirection);
+         const velocityY = velocityMagnitude * Math.cos(velocityDirection);
+
+         const accelerationMagnitude = randFloat(0, 80);
+         const accelerationDirection = randAngle();
+         const accelerationX = accelerationMagnitude * Math.sin(accelerationDirection);
+         const accelerationY = accelerationDirection * Math.cos(accelerationDirection);
+         
+         const particle = new Particle(lifetime);
+         particle.getOpacity = (): number => {
+            const opacity = 1 - particle.age / lifetime;
+            return Math.pow(opacity, 0.3);
+         }
+
+         const colour = randItem(BURNING_PARTICLE_COLOURS);
+
+         addMonocolourParticleToBufferContainer(
+            particle,
+            ParticleRenderLayer.high,
+            4, 4,
+            spawnPositionX, spawnPositionY,
+            velocityX, velocityY,
+            accelerationX, accelerationY,
+            0,
+            randAngle(),
+            0, 
+            0,
+            0,
+            colour[0], colour[1], colour[2]
+         );
+         highMonocolourParticles.push(particle);
+      }
+
+      // Smoke particles
+      if (customTickIntervalHasPassed(fireStatusEffect.ticksElapsed, 3/20)) {
+         const spawnOffsetMagnitude = 20 * Math.random();
+         const spawnOffsetDirection = randAngle();
+         const spawnPositionX = hitbox.box.posX + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+
+         const accelerationDirection = randAngle();
+         const accelerationX = 40 * Math.sin(accelerationDirection);
+         let accelerationY = 40 * Math.cos(accelerationDirection);
+
+         // Weight the smoke to accelerate more upwards
+         accelerationY += 10;
+
+         const lifetime = randFloat(1.75, 2.25);
+
+         const particle = new Particle(lifetime);
+         particle.getOpacity = (): number => {
+            if (particle.age <= BURNING_SMOKE_PARTICLE_FADEIN_TIME) {
+               return particle.age / BURNING_SMOKE_PARTICLE_FADEIN_TIME;
+            }
+            return lerp(0.75, 0, (particle.age - BURNING_SMOKE_PARTICLE_FADEIN_TIME) / (lifetime - BURNING_SMOKE_PARTICLE_FADEIN_TIME));
+         }
+         particle.getScale = (): number => {
+            const deathProgress = particle.age / lifetime
+            return 1 + deathProgress * 1.5;
+         }
+
+         addTexturedParticleToBufferContainer(
+            particle,
+            ParticleRenderLayer.high,
+            64, 64,
+            spawnPositionX, spawnPositionY,
+            0, 50,
+            accelerationX, accelerationY,
+            0,
+            randAngle(),
+            randFloat(-Math.PI, Math.PI),
+            randFloat(-Math.PI, Math.PI) / 2,
+            0,
+            5,
+            0, 0, 0
+         );
+         highTexturedParticles.push(particle);
+      }
+   } else if (statusEffectComponent.burningLight !== null) {
+      removeLight(statusEffectComponent.burningLight);
+      statusEffectComponent.burningLight = null;
+   }
+
+   const bleedingStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.bleeding);
+   if (bleedingStatusEffect !== null) {
+      if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
+         const spawnOffsetDirection = randAngle();
+         const spawnPositionX = hitbox.box.posX + 32 * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + 32 * Math.cos(spawnOffsetDirection);
+         createBloodParticle(Math.random() < 0.5 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, randAngle(), randFloat(40, 60), true);
       }
    }
 
-   public updatePlayerFromData(data: StatusEffectComponentData): void {
-      this.updateFromData(data, playerInstance!);
-   }
-
-   public calculateTint(entity: Entity): ComponentTint {
-      const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
-      if (hasStatusEffect(statusEffectComponent, StatusEffect.freezing)) {
-         return createComponentTint(-0.15, 0, 0.5);
-      } else {
-         return createComponentTint(0, 0, 0);
+   const heatSicknessStatusEffect = getStatusEffect(statusEffectComponent, StatusEffect.heatSickness);
+   if (heatSicknessStatusEffect !== null) {
+      if (tickIntervalHasPassed(0.15 * Settings.TICK_RATE)) {
+         getHitboxVelocity(hitbox);
+         const hitboxVelocity = _point;
+         
+         const spawnOffsetDirection = randAngle();
+         const spawnPositionX = hitbox.box.posX + 32 * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = hitbox.box.posY + 32 * Math.cos(spawnOffsetDirection);
+         createHeatParticle(spawnPositionX, spawnPositionY, randAngle(), hitboxVelocity.x, hitboxVelocity.y);
       }
    }
 }
 
-export const StatusEffectComponentArray = registerServerComponentArray(ServerComponentType.statusEffect, _StatusEffectComponentArray, true);
+function updateFromData(data: StatusEffectComponentData, entity: Entity): void {
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
+
+   const previousHasFreezing = hasStatusEffect(statusEffectComponent, StatusEffect.freezing);
+   
+   for (const statusEffectData of data.statusEffects) {
+      if (!hasStatusEffect(statusEffectComponent, statusEffectData.type)) {
+         switch (statusEffectData.type) {
+            case StatusEffect.freezing: {
+               const transformComponent = TransformComponentArray.getComponent(entity);
+               const hitbox = transformComponent.hitboxes[0];
+               playSoundOnHitbox("freezing.mp3", 0.4, 1, entity, hitbox, false);
+               break;
+            }
+         }
+      }
+   }
+   
+   // @Speed @Garbage
+   statusEffectComponent.statusEffects = data.statusEffects;
+
+   const newHasFreezing = hasStatusEffect(statusEffectComponent, StatusEffect.freezing);
+   if (newHasFreezing !== previousHasFreezing) {
+      const renderObject = getEntityRenderObject(entity);
+      renderObject.recalculateTint();
+   }
+}
+
+function updatePlayerFromData(data: StatusEffectComponentData): void {
+   updateFromData(data, playerInstance!);
+}
+
+function calculateTint(entity: Entity): ComponentTint {
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
+   if (hasStatusEffect(statusEffectComponent, StatusEffect.freezing)) {
+      return createComponentTint(-0.15, 0, 0.5);
+   } else {
+      return createComponentTint(0, 0, 0);
+   }
+}
 
 export function createStatusEffectComponentData(): StatusEffectComponentData {
    return {

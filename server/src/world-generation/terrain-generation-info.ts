@@ -1,5 +1,6 @@
 import { Biome } from "../../../shared/dist/biomes.js";
-import { TileType, SubtileType } from "../../../shared/dist/tiles.js";
+import { TileType } from "../../../shared/dist/tiles.js";
+import { SubtileType } from "../../../shared/dist/subtiles.js";
 
 export interface CustomTileNoiseInfo {
    readonly scale: number;

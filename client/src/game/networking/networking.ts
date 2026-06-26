@@ -1,10 +1,9 @@
 import { PacketReader, ServerPacketType } from "../../../../shared/src/packets";
-import { closeGameScreen, gameScreenIsOpen, openGameScreen } from "../../ui/GameScreen";
-import { setLoadingScreenStateToWaiting, openLoadingScreen, setLoadingScreenStateToError, setLoadingScreenStateToInitialising, closeLoadingScreen } from "../../ui/LoadingScreen";
+import { closeGameScreen, gameScreenIsOpen } from "../../ui/GameScreen";
+import { setLoadingScreenStateToWaiting, openLoadingScreen, setLoadingScreenStateToError, setLoadingScreenStateToInitialising } from "../../ui/LoadingScreen";
 import { startGame, stopGame, updateGame } from "../game";
 import { playerUsername, playerTribeType, isSpectating } from "../player";
 import { initialiseGame } from "../rendering/render";
-import { windowWidth, windowHeight } from "../webgl";
 import { onDevGameDataPacket } from "./dev-packets";
 import { processInitialGameDataPacket, onSyncGameDataPacket, onForcePositionUpdatePacket, onChatMessagePacket, onSimulationStatusUpdatePacket, onShieldKnockPacket } from "./packet-receiving";
 import { sendInitialPlayerDataPacket } from "./packet-sending/packet-sending";
@@ -17,7 +16,7 @@ export function establishNewNetworkConnection(): void {
 }
 
 function onSuccessfulConnection(): void {
-   sendInitialPlayerDataPacket(playerUsername, playerTribeType, isSpectating, windowWidth, windowHeight);
+   sendInitialPlayerDataPacket(playerUsername, playerTribeType, isSpectating);
    
    setLoadingScreenStateToWaiting();
 }

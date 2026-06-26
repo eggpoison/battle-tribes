@@ -7,8 +7,8 @@ import { addHitboxAngularAcceleration, applyAccelerationFromGround, getHitboxVel
 import { circleCollidesWithBox, CircularBox, RectangularBox, getRectangularBoxTopLeftVertexOffset, boxIsCircular } from "../../shared/dist/boxes.js";
 import { Entity, EntityType } from "../../shared/dist/entities.js";
 import { Settings } from "../../shared/dist/settings.js";
-import { TileType } from "../../shared/dist/tiles.js";
-import { distance, angle, polarVec2, Point, curveWeight, TileIndex, getTileIndexIncludingEdges, lerp, rotatePointAroundPoint, _point, clamp, distBetweenPointAndRectangle } from "../../shared/dist/utils.js";
+import { getTileIndexIncludingEdges, TileIndex, TileType } from "../../shared/dist/tiles.js";
+import { distance, angle, polarVec2, Point, curveWeight, lerp, rotatePointAroundPoint, _point, clamp, distBetweenPointAndRectangle } from "../../shared/dist/utils.js";
 
 const TURN_CONSTANT = Math.PI * Settings.DT_S;
 const WALL_AVOIDANCE_MULTIPLIER = 1.5;

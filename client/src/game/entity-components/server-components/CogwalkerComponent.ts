@@ -16,66 +16,68 @@ export interface CogwalkerComponentData {}
 export interface CogwalkerComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cogwalker, CogwalkerComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.cogwalker, typeof CogwalkerComponentArray> {}
 }
 
-class CogwalkerComponentArray extends ServerComponentArray<CogwalkerComponent, CogwalkerComponentData> {
-   public decodeData(): CogwalkerComponentData {
-      return {};
-   }
+export const CogwalkerComponentArray = registerServerComponentArray(
+   ServerComponentType.cogwalker,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+CogwalkerComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            // @Copynpaste @Hack
-            2,
-            0,
-            0, 0,
-            TextureIndex.entities_cogwalker_body
-         )
+function decodeData(): CogwalkerComponentData {
+   return {};
+}
+
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         // @Copynpaste @Hack
+         2,
+         0,
+         0, 0,
+         TextureIndex.entities_cogwalker_body
+      )
+   );
+
+   // @Copynpaste from TribesmanComponent
+   // Hands
+   for (let i = 0; i < 2; i++) {
+      const attachPoint = new RenderAttachPoint(
+         hitbox,
+         1,
+         0,
+         0, 0
       );
-
-      // @Copynpaste from TribesmanComponent
-      // Hands
-      for (let i = 0; i < 2; i++) {
-         const attachPoint = new RenderAttachPoint(
-            hitbox,
-            1,
-            0,
-            0, 0
-         );
-         if (i === 1) {
-            attachPoint.setFlipX(true);
-         }
-         addRenderPartTag(attachPoint, "inventoryUseComponent:attachPoint");
-         renderObject.attachRenderPart(attachPoint);
-         
-         const handRenderPart = new TexturedRenderPart(
-            attachPoint,
-            1.2,
-            0,
-            0, 0,
-            TextureIndex.entities_cogwalker_hand
-         );
-         addRenderPartTag(handRenderPart, "inventoryUseComponent:hand");
-         renderObject.attachRenderPart(handRenderPart);
-
-         // @Temporary: so that the hand shows correctly when the player is placing a cogwalker
-         updateLimb_TEMP(handRenderPart, attachPoint, 28, LimbConfiguration.twoHanded);
+      if (i === 1) {
+         attachPoint.setFlipX(true);
       }
-   }
+      addRenderPartTag(attachPoint, "inventoryUseComponent:attachPoint");
+      renderObject.attachRenderPart(attachPoint);
+      
+      const handRenderPart = new TexturedRenderPart(
+         attachPoint,
+         1.2,
+         0,
+         0, 0,
+         TextureIndex.entities_cogwalker_hand
+      );
+      addRenderPartTag(handRenderPart, "inventoryUseComponent:hand");
+      renderObject.attachRenderPart(handRenderPart);
 
-   public createComponent(): CogwalkerComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 3;
+      // @Temporary: so that the hand shows correctly when the player is placing a cogwalker
+      updateLimb_TEMP(handRenderPart, attachPoint, 28, LimbConfiguration.twoHanded);
    }
 }
 
-export const cogwalkerComponentArray = registerServerComponentArray(ServerComponentType.cogwalker, CogwalkerComponentArray, true);
+function createComponent(): CogwalkerComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 3;
+}

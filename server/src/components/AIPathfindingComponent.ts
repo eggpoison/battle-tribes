@@ -7,7 +7,7 @@ import { distance, polarVec2, Point, curveWeight, angle, angleToPoint, assert } 
 import { getEntitiesInRange, getVelocityClosenessAdjustmentFactor } from "../ai-shared.js";
 import { TRIBESMAN_TURN_SPEED } from "../entities/tribes/tribesman-ai/tribesman-ai.js";
 import { getHumanoidRadius, getTribesmanAcceleration } from "../entities/tribes/tribesman-ai/tribesman-ai-utils.js";
-import { Hitbox, applyAccelerationFromGround, getHitboxTile, getHitboxVelocity, turnHitboxToAngle } from "../hitboxes.js";
+import { Hitbox, applyAccelerationFromGround, getBoxTile, getHitboxVelocity, turnHitboxToAngle } from "../hitboxes.js";
 import Layer from "../Layer.js";
 import { convertEntityPathfindingGroupID, entityCanBlockPathfinding, entityHasReachedNode, runPathfindingMultiLayer, getAngleToNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, Path, PathfindFailureDefault, PathfindOptions, positionIsAccessible } from "../pathfinding.js";
 import Tribe from "../Tribe.js";
@@ -125,7 +125,7 @@ export function continueCurrentPath(tribesman: Entity): boolean {
    if (getEntityLayer(tribesman) !== finalPath.layer) {
       const transformComponent = TransformComponentArray.getComponent(tribesman);
       const hitbox = transformComponent.hitboxes[0] as Hitbox;
-      const currentTileIndex = getHitboxTile(hitbox);
+      const currentTileIndex = getBoxTile(hitbox.box);
       if (surfaceLayer.getTileType(currentTileIndex) === TileType.dropdown) {
          changeEntityLayer(tribesman, finalPath.layer);
       }

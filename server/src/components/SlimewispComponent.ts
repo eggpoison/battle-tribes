@@ -10,7 +10,7 @@ import { AIHelperComponentArray } from "./AIHelperComponent.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { createEntity, destroyEntity, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "../world.js";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
-import { getHitboxTile } from "../hitboxes.js";
+import { getBoxTile } from "../hitboxes.js";
 
 const enum Vars {
    ACCELERATION = 100,
@@ -32,7 +32,7 @@ function onTick(slimewisp: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(slimewisp);
    const slimewispHitbox = transformComponent.hitboxes[0];
 
-   const tileIndex = getHitboxTile(slimewispHitbox);
+   const tileIndex = getBoxTile(slimewispHitbox.box);
    const layer = getEntityLayer(slimewisp);
    const tileType = layer.tileTypes[tileIndex];
    

@@ -1,8 +1,8 @@
 import { Bytes } from "../../../../../shared/src/constants";
 import { Settings } from "../../../../../shared/src/settings";
-import { getSubtileIndex } from "../../../../../shared/src/subtiles";
-import { SubtileType } from "../../../../../shared/src/tiles";
-import { clampToBoardDimensions, getTileIndexIncludingEdges } from "../../../../../shared/src/utils";
+import { getSubtileIndex, SubtileType } from "../../../../../shared/src/subtiles";
+import { getTileIndexIncludingEdges } from "../../../../../shared/src/tiles";
+import { clampToBoardDimensions } from "../../../../../shared/src/utils";
 import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY } from "../../camera";
 import Layer from "../../Layer";
 import { createWebGLProgram, gl } from "../../webgl";

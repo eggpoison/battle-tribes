@@ -74,8 +74,15 @@ export function createTileBreakProgressShaders(): void {
 
 export function renderTileBreakProgress(layer: Layer): void {
    let hasVisibleTileBreak = false;
-   for (const pair of layer.wallSubtileDamageTakenMap) {
+   // @sPEED! this loop!
+   for (const pair of layer.wallSubtileDatas) {
       const subtileIndex = pair[0];
+      const subtileData = pair[1];
+
+      const damageTaken = subtileData & 0b11;
+      if (damageTaken === 0) {
+         continue;
+      }
 
       const subtileX = getSubtileX(subtileIndex);
       const subtileY = getSubtileY(subtileIndex);
@@ -106,9 +113,14 @@ export function renderTileBreakProgress(layer: Layer): void {
 
    // @Speed
    const vertices: number[] = [];
-   for (const pair of layer.wallSubtileDamageTakenMap) {
+   for (const pair of layer.wallSubtileDatas) {
       const subtileIndex = pair[0];
-      const damageTaken = pair[0];
+      const subtileData = pair[1];
+
+      const damageTaken = subtileData & 0b11;
+      if (damageTaken === 0) {
+         continue;
+      }
 
       const subtileX = getSubtileX(subtileIndex);
       const subtileY = getSubtileY(subtileIndex);

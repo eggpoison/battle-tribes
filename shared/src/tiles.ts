@@ -1,3 +1,7 @@
+import { Settings } from "./settings.js";
+
+export type TileIndex = number;
+
 export const enum TileType {
    // Index 0, because that probably maybe speeds up comparisons
    dropdown,
@@ -18,17 +22,6 @@ export const enum TileType {
    stone,
    stoneWallFloor,
    fimbultur
-}
-
-export const enum SubtileType {
-   none,
-   rockWall,
-   sandstoneWall,
-   stoneWall1,
-   stoneWall2,
-   permafrostWall,
-
-   _LENGTH_
 }
 
 export const TileTypeString: Record<TileType, string> = {
@@ -133,3 +126,27 @@ export const TILE_PHYSICS_INFO_RECORD: Record<TileType, TilePhysicsInfo> = {
       moveSpeedMultiplier: 1
    },
 };
+
+export function getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
+   if (tileX < -Settings.EDGE_GENERATION_DISTANCE || tileX >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE || tileY < -Settings.EDGE_GENERATION_DISTANCE || tileY >= Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE) {
+      throw new Error("Outside of world bounds!");
+   }
+
+   return (tileY + Settings.EDGE_GENERATION_DISTANCE) * Settings.FULL_WORLD_SIZE_TILES + tileX + Settings.EDGE_GENERATION_DISTANCE;
+}
+
+export function getTileX(tileIndex: TileIndex): number {
+   return tileIndex % Settings.FULL_WORLD_SIZE_TILES - Settings.EDGE_GENERATION_DISTANCE;
+}
+
+export function getTileY(tileIndex: TileIndex): number {
+   return Math.floor(tileIndex / Settings.FULL_WORLD_SIZE_TILES) - Settings.EDGE_GENERATION_DISTANCE;
+}
+
+export function tileIsInWorld(tileX: number, tileY: number): boolean {
+   return tileX >= 0 && tileX < Settings.WORLD_SIZE_TILES && tileY >= 0 && tileY < Settings.WORLD_SIZE_TILES;
+}
+
+export function tileIsInWorldIncludingEdges(tileX: number, tileY: number): boolean {
+   return tileX >= -Settings.EDGE_GENERATION_DISTANCE && tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE && tileY >= -Settings.EDGE_GENERATION_DISTANCE && tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE;
+}

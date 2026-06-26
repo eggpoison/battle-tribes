@@ -15,7 +15,8 @@ import { createLight } from "../../lights.js";
 import { createCircularBox, HitboxCollisionType, HitboxTag } from "../../../../shared/dist/boxes.js";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
 import { Entity, EntityType } from "../../../../shared/dist/entities.js";
-import { TileIndex, Point } from "../../../../shared/dist/utils.js";
+import { Point } from "../../../../shared/dist/utils.js";
+import { TileIndex } from "../../../../shared/dist/tiles.js";
 
 function tileIsValidCallback(entity: Entity, _layer: Layer, tileIndex: TileIndex): boolean {
    const guardianComponent = GuardianComponentArray.getComponent(entity);

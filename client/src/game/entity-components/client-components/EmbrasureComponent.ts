@@ -21,71 +21,75 @@ export interface EmbrasureComponentData {}
 export interface EmbrasureComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.embrasure, _EmbrasureComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.embrasure, typeof EmbrasureComponentArray> {}
 }
 
-class _EmbrasureComponentArray extends ClientComponentArray<EmbrasureComponent, EmbrasureComponentData> {
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
+export const EmbrasureComponentArray = registerClientComponentArray(
+   ClientComponentType.embrasure,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+EmbrasureComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+EmbrasureComponentArray.onHit = onHit;
+EmbrasureComponentArray.onDie = onDie;
 
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         EMBRASURE_TEXTURE_SOURCES[buildingMaterialComponentData.material]
-      );
-      addRenderPartTag(renderPart, "buildingMaterialComponent:material");
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const buildingMaterialComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.buildingMaterial);
 
-      renderObject.attachRenderPart(renderPart);
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      EMBRASURE_TEXTURE_SOURCES[buildingMaterialComponentData.material]
+   );
+   addRenderPartTag(renderPart, "buildingMaterialComponent:material");
+
+   renderObject.attachRenderPart(renderPart);
+}
+
+function createComponent(): EmbrasureComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
+   playSoundOnHitbox("wooden-wall-hit.mp3", 0.3, 1, entity, hitbox, false);
+
+   for (let i = 0; i < 4; i++) {
+      createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 20);
    }
 
-   public createComponent(): EmbrasureComponent {
-      return {};
-   }
+   for (let i = 0; i < 7; i++) {
+      let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
+      offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onHit(entity: Entity, hitbox: Hitbox, hitPosition: Point): void {
-      playSoundOnHitbox("wooden-wall-hit.mp3", 0.3, 1, entity, hitbox, false);
-
-      for (let i = 0; i < 4; i++) {
-         createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 20);
-      }
-
-      for (let i = 0; i < 7; i++) {
-         let offsetDirection = angle(hitPosition.x - hitbox.box.posX, hitPosition.y - hitbox.box.posY);
-         offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
-
-         const spawnPositionX = hitbox.box.posX + 20 * Math.sin(offsetDirection);
-         const spawnPositionY = hitbox.box.posY + 20 * Math.cos(offsetDirection);
-         createLightWoodSpeckParticle(spawnPositionX, spawnPositionY, 5);
-      }
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      playSoundOnHitbox("wooden-wall-break.mp3", 0.4, 1, entity, hitbox, false);
-
-      for (let i = 0; i < 7; i++) {
-         createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32 * Math.random());
-      }
-
-      for (let i = 0; i < 3; i++) {
-         createWoodShardParticle(hitbox.box.posX, hitbox.box.posY, 32);
-      }
+      const spawnPositionX = hitbox.box.posX + 20 * Math.sin(offsetDirection);
+      const spawnPositionY = hitbox.box.posY + 20 * Math.cos(offsetDirection);
+      createLightWoodSpeckParticle(spawnPositionX, spawnPositionY, 5);
    }
 }
 
-export const EmbrasureComponentArray = registerClientComponentArray(ClientComponentType.embrasure, _EmbrasureComponentArray, true);
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   playSoundOnHitbox("wooden-wall-break.mp3", 0.4, 1, entity, hitbox, false);
+
+   for (let i = 0; i < 7; i++) {
+      createLightWoodSpeckParticle(hitbox.box.posX, hitbox.box.posY, 32 * Math.random());
+   }
+
+   for (let i = 0; i < 3; i++) {
+      createWoodShardParticle(hitbox.box.posX, hitbox.box.posY, 32);
+   }
+}
 
 export function createEmbrasureComponentData(): EmbrasureComponentData {
    return {};

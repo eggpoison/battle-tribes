@@ -24,95 +24,16 @@ export interface InguSerpentComponentData {}
 export interface InguSerpentComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguSerpent, _InguSerpentComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguSerpent, typeof InguSerpentComponentArray> {}
 }
 
-class _InguSerpentComponentArray extends ServerComponentArray<InguSerpentComponent, InguSerpentComponentData> {
-   public decodeData(): InguSerpentComponentData {
-      return {};
-   }
-
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-
-      for (const hitbox of transformComponentData.hitboxes) {
-         const tag = getHitboxTag(hitbox);
-         if (tag === HitboxTag.inguSerpentHead) {
-            const renderPart = new TexturedRenderPart(
-               hitbox,
-               3,
-               0,
-               0, 0,
-               TextureIndex.entities_inguSerpent_head
-            );
-            addRenderPartTag(renderPart, "tamingComponent:head");
-            renderObject.attachRenderPart(renderPart);
-         } else if (tag === HitboxTag.inguSerpentBody1) {
-            renderObject.attachRenderPart(
-               new TexturedRenderPart(
-                  hitbox,
-                  2,
-                  0,
-                  0, 0,
-                  TextureIndex.entities_inguSerpent_body1
-               )
-            );
-         } else if (tag === HitboxTag.inguSerpentBody2) {
-            renderObject.attachRenderPart(
-               new TexturedRenderPart(
-                  hitbox,
-                  1,
-                  0,
-                  0, 0,
-                  TextureIndex.entities_inguSerpent_body2
-               )
-            );
-         } else if (tag === HitboxTag.inguSerpentTail) {
-            renderObject.attachRenderPart(
-               new TexturedRenderPart(
-                  hitbox,
-                  0,
-                  0,
-                  0, 0,
-                  TextureIndex.entities_inguSerpent_tail
-               )
-            );
-         }
-      }
-   }
-
-   public createComponent(): InguSerpentComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 4;
-   }
-
-   public onHit(serpent: Entity, hitbox: Hitbox): void {
-      // Create ice particles on hit
-      for (let i = 0; i < 10; i++) {
-         createIceSpeckProjectile(hitbox);
-      }
-
-      playSoundOnHitbox("ingu-serpent-hit.mp3", 0.4, randFloat(0.88, 1.12) * 1.3, serpent, hitbox, false);
-   }
-
-   public onDie(serpent: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(serpent);
-      const hitbox = transformComponent.hitboxes[0];
-
-      for (const hitbox of transformComponent.hitboxes) {
-         for (let i = 0; i < 15; i++) {
-            createIceSpeckProjectile(hitbox);
-         }
-      }
-      
-      playSoundOnHitbox("ingu-serpent-death.mp3", 0.3, 1, serpent, hitbox, false);
-   }
-}
-
-export const InguSerpentComponentArray = registerServerComponentArray(ServerComponentType.inguSerpent, _InguSerpentComponentArray, true);
+export const InguSerpentComponentArray = registerServerComponentArray(
+   ServerComponentType.inguSerpent,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+InguSerpentComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+InguSerpentComponentArray.onHit = onHit;
+InguSerpentComponentArray.onDie = onDie;
 
 const createIceSpeckProjectile = (hitbox: Hitbox): void => {
    const spawnOffsetDirection = randAngle();
@@ -146,4 +67,87 @@ const createIceSpeckProjectile = (hitbox: Hitbox): void => {
       ICE_SPECK_COLOUR[0], ICE_SPECK_COLOUR[1], ICE_SPECK_COLOUR[2]
    );
    highMonocolourParticles.push(particle);
+}
+
+function decodeData(): InguSerpentComponentData {
+   return {};
+}
+
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+
+   for (const hitbox of transformComponentData.hitboxes) {
+      const tag = getHitboxTag(hitbox);
+      if (tag === HitboxTag.inguSerpentHead) {
+         const renderPart = new TexturedRenderPart(
+            hitbox,
+            3,
+            0,
+            0, 0,
+            TextureIndex.entities_inguSerpent_head
+         );
+         addRenderPartTag(renderPart, "tamingComponent:head");
+         renderObject.attachRenderPart(renderPart);
+      } else if (tag === HitboxTag.inguSerpentBody1) {
+         renderObject.attachRenderPart(
+            new TexturedRenderPart(
+               hitbox,
+               2,
+               0,
+               0, 0,
+               TextureIndex.entities_inguSerpent_body1
+            )
+         );
+      } else if (tag === HitboxTag.inguSerpentBody2) {
+         renderObject.attachRenderPart(
+            new TexturedRenderPart(
+               hitbox,
+               1,
+               0,
+               0, 0,
+               TextureIndex.entities_inguSerpent_body2
+            )
+         );
+      } else if (tag === HitboxTag.inguSerpentTail) {
+         renderObject.attachRenderPart(
+            new TexturedRenderPart(
+               hitbox,
+               0,
+               0,
+               0, 0,
+               TextureIndex.entities_inguSerpent_tail
+            )
+         );
+      }
+   }
+}
+
+function createComponent(): InguSerpentComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 4;
+}
+
+function onHit(serpent: Entity, hitbox: Hitbox): void {
+   // Create ice particles on hit
+   for (let i = 0; i < 10; i++) {
+      createIceSpeckProjectile(hitbox);
+   }
+
+   playSoundOnHitbox("ingu-serpent-hit.mp3", 0.4, randFloat(0.88, 1.12) * 1.3, serpent, hitbox, false);
+}
+
+function onDie(serpent: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(serpent);
+   const hitbox = transformComponent.hitboxes[0];
+
+   for (const hitbox of transformComponent.hitboxes) {
+      for (let i = 0; i < 15; i++) {
+         createIceSpeckProjectile(hitbox);
+      }
+   }
+   
+   playSoundOnHitbox("ingu-serpent-death.mp3", 0.3, 1, serpent, hitbox, false);
 }

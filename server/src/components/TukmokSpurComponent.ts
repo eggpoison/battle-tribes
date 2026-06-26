@@ -39,6 +39,6 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const hitDir = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, hitbox.entity, 3, DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
-   applyAbsoluteKnockback(collidingHitbox, polarVec2(200, hitDir));
+   applyAbsoluteKnockback(collidingHitbox, 200 * Math.sin(hitDir), 200 * Math.cos(hitDir));
    addLocalInvulnerabilityHash(collidingEntity, "tukmok-spur", 0.3);
 }

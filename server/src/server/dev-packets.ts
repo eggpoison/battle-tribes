@@ -1,8 +1,9 @@
 import { GameDataPacketOptions } from "../../../shared/dist/client-server-types.js";
 import { Packet, ServerPacketType } from "../../../shared/dist/packets.js";
 import { Settings } from "../../../shared/dist/settings.js";
-import { TileIndex, getTileIndexIncludingEdges, clampToBoardDimensions, AIPlanType, clamp } from "../../../shared/dist/utils.js";
+import { clampToBoardDimensions, AIPlanType, clamp } from "../../../shared/dist/utils.js";
 import { Bytes } from "../../../shared/dist/constants.js";
+import { TileIndex, getTileIndexIncludingEdges } from "../../../shared/dist/tiles.js";
 import { getSubtileSupport, getVisibleSubtileSupports } from "../collapses.js";
 import { addEntityDebugDataToPacket, createEntityDebugData, getEntityDebugDataLength } from "../entity-debug-data.js";
 import {getSpawnInfoForEntityType, SpawnDistribution } from "../entity-spawn-info.js";

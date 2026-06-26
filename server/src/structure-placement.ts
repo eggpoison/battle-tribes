@@ -46,9 +46,9 @@ import { BuildingMaterial } from "../../shared/dist/components.js";
 import { Entity, EntityType } from "../../shared/dist/entities.js";
 import { Settings } from "../../shared/dist/settings.js";
 import { StructureType, STRUCTURE_TYPES } from "../../shared/dist/structures.js";
-import { getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY } from "../../shared/dist/subtiles.js";
-import { SubtileType } from "../../shared/dist/tiles.js";
-import { Point, angle, getTileIndexIncludingEdges, polarVec2, alignAngleToClosestAxis, getAbsAngleDiff, distance } from "../../shared/dist/utils.js";
+import { getSubtileIndex, subtileIsInWorldIncludingEdges, getSubtileX, getSubtileY, SubtileType } from "../../shared/dist/subtiles.js";
+import { Point, angle, polarVec2, alignAngleToClosestAxis, getAbsAngleDiff, distance } from "../../shared/dist/utils.js";
+import { getTileIndexIncludingEdges } from "../../shared/dist/tiles.js";
 
 const enum Vars {
    STRUCTURE_PLACE_DISTANCE = 60,

@@ -4,7 +4,7 @@ import { runEscapeAI } from "../ai/EscapeAI.js";
 import { updateFollowAIComponent, entityWantsToFollow, followAISetFollowTarget } from "../ai/FollowAI.js";
 import { TransformComponentArray } from "./TransformComponent.js";
 import { destroyEntity, entityExists, getEntityAgeTicks, getEntityLayer, getEntityType, ticksToGameHours } from "../world.js";
-import { applyAccelerationFromGround, getHitboxTile, hitboxIsStatic, turnHitboxToAngle } from "../hitboxes.js";
+import { applyAccelerationFromGround, getBoxTile, hitboxIsStatic, turnHitboxToAngle } from "../hitboxes.js";
 import { HealthComponentArray } from "./HealthComponent.js";
 import { CollisionVars, entitiesAreColliding } from "../collision-detection.js";
 import { addHungerEnergy, getEntityFullness } from "./EnergyStomachComponent.js";
@@ -91,7 +91,7 @@ const entityIsFollowable = (entity: Entity): boolean => {
    
    // Not interested in entities outside of the desert
    // @Incomplete: should be interested in entities oustide of the desert, just won't walk out of the desert!
-   const entityTile = getHitboxTile(hitbox);
+   const entityTile = getBoxTile(hitbox.box);
    const layer = getEntityLayer(entity);
    if (layer.getTileBiome(entityTile) !== Biome.desert) {
       return false;

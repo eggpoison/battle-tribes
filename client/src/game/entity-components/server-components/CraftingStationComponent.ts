@@ -7,24 +7,25 @@ export interface CraftingStationComponentData {}
 export interface CraftingStationComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.craftingStation, _CraftingStationComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.craftingStation, typeof CraftingStationComponentArray> {}
 }
 
-class _CraftingStationComponentArray extends ServerComponentArray<CraftingStationComponent, CraftingStationComponentData> {
-   public decodeData(): CraftingStationComponentData {
-      return {};
-   }
+export const CraftingStationComponentArray = registerServerComponentArray(
+   ServerComponentType.craftingStation,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(): CraftingStationComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(): CraftingStationComponentData {
+   return {};
 }
 
-export const CraftingStationComponentArray = registerServerComponentArray(ServerComponentType.craftingStation, _CraftingStationComponentArray, true);
+function createComponent(): CraftingStationComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}
 
 export function createCraftingStationComponentData(): CraftingStationComponentData {
    return {};

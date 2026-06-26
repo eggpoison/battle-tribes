@@ -12,35 +12,37 @@ export interface FrostshaperComponentData {}
 export interface FrostshaperComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.frostshaper, _FrostshaperComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.frostshaper, typeof FrostshaperComponentArray> {}
 }
 
-class _FrostshaperComponentArray extends ClientComponentArray<FrostshaperComponent, FrostshaperComponentData> {
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
+export const FrostshaperComponentArray = registerClientComponentArray(
+   ClientComponentType.frostshaper,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+FrostshaperComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.entities_frostshaper_frostshaper
-         )
-      );
-   }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
 
-   public createComponent(): FrostshaperComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.entities_frostshaper_frostshaper
+      )
+   );
 }
 
-export const FrostshaperComponentArray = registerClientComponentArray(ClientComponentType.frostshaper, _FrostshaperComponentArray, true);
+function createComponent(): FrostshaperComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
 
 export function createFrostshaperComponentData(): FrostshaperComponentData {
    return {};

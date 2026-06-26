@@ -1,3 +1,11 @@
+import { calculateBoxBounds, _bounds } from "../../shared/dist/boxes.js";
+import { getEntityCollisionGroup, CollisionGroup } from "../../shared/dist/collision-groups.js";
+import { boxIsCollidingWithSubtile, boxIsCollidingWithTile } from "../../shared/dist/collision.js";
+import { EntityTypeString } from "../../shared/dist/entities.js";
+import { Settings } from "../../shared/dist/settings.js";
+import { getSubtileIndex } from "../../shared/dist/subtiles.js";
+import { randAngle, randFloat, distance } from "../../shared/dist/utils.js";
+import { getTileIndexIncludingEdges } from "../../shared/dist/tiles.js";
 import Layer from "./Layer.js";
 import { addEntityToCensus, getEntityCount } from "./census.js";
 import OPTIONS from "./options.js";
@@ -8,13 +16,6 @@ import { addEntityToSpawnDistribution, EntitySpawnEvent, SPAWN_INFOS } from "./e
 import { generateMithrilOre } from "./world-generation/mithril-ore-generation.js";
 import { Hitbox, hitboxIgnoresWallCollisions, hitboxIsPartOfParent } from "./hitboxes.js";
 import { getHitboxesCollidingEntities } from "./collision-detection.js";
-import { calculateBoxBounds, _bounds } from "../../shared/dist/boxes.js";
-import { getEntityCollisionGroup, CollisionGroup } from "../../shared/dist/collision-groups.js";
-import { boxIsCollidingWithSubtile, boxIsCollidingWithTile } from "../../shared/dist/collision.js";
-import { EntityTypeString } from "../../shared/dist/entities.js";
-import { Settings } from "../../shared/dist/settings.js";
-import { getSubtileIndex } from "../../shared/dist/subtiles.js";
-import { getTileIndexIncludingEdges, randAngle, randFloat, distance } from "../../shared/dist/utils.js";
 
 const spawnConditionsAreMet = (spawnInfo: EntitySpawnEvent): boolean => {
    // Make sure there is a block which lacks density

@@ -150,7 +150,7 @@ export function openDebugInfoDisplay(parent: HTMLElement): void {
    cameraOptionsElem.className = "area";
    rootElem.appendChild(cameraOptionsElem);
 
-   addRangeOption(cameraOptionsElem, "zoom-input", "Zoom: ", "0.7", "2.5", "0.1", debugDisplayState.cameraZoom.toString(), changeZoom);
+   addRangeOption(cameraOptionsElem, "zoom-input", "Zoom: ", "0.5", "2.5", "0.1", debugDisplayState.cameraZoom.toString(), changeZoom);
 
    const aiOptionsElem = document.createElement("ul");
    aiOptionsElem.className = "area";

@@ -16,54 +16,58 @@ export interface GuardianSpikyBallComponentData {}
 export interface GuardianSpikyBallComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianSpikyBall, _GuardianSpikyBallComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.guardianSpikyBall, typeof GuardianSpikyBallComponentArray> {}
 }
 
-class _GuardianSpikyBallComponentArray extends ServerComponentArray<GuardianSpikyBallComponent, GuardianSpikyBallComponentData> {
-   public decodeData(): GuardianSpikyBallComponentData {
-      return {};
-   }
+export const GuardianSpikyBallComponentArray = registerServerComponentArray(
+   ServerComponentType.guardianSpikyBall,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+GuardianSpikyBallComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+GuardianSpikyBallComponentArray.onLoad = onLoad;
+GuardianSpikyBallComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         TextureIndex.entities_guardianSpikyBall_guardianSpikyBall
-      );
-      renderObject.attachRenderPart(renderPart);
-   }
-
-   public createComponent(): GuardianSpikyBallComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onLoad(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      playSoundOnHitbox("guardian-spiky-ball-spawn.mp3", 0.4, 1, entity, hitbox, false);
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-
-      playSoundOnHitbox("guardian-spiky-ball-death.mp3", 0.4, 1, entity, hitbox, false);
-
-      for (let i = 0; i < 10; i++) {
-         const offsetMagnitude = 10 * Math.random();
-
-         createGenericGemParticle(hitbox, offsetMagnitude, 0.7, 0.16, 0.7);
-      }
-   }
+function decodeData(): GuardianSpikyBallComponentData {
+   return {};
 }
 
-export const GuardianSpikyBallComponentArray = registerServerComponentArray(ServerComponentType.guardianSpikyBall, _GuardianSpikyBallComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      TextureIndex.entities_guardianSpikyBall_guardianSpikyBall
+   );
+   renderObject.attachRenderPart(renderPart);
+}
+
+function createComponent(): GuardianSpikyBallComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onLoad(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   playSoundOnHitbox("guardian-spiky-ball-spawn.mp3", 0.4, 1, entity, hitbox, false);
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+
+   playSoundOnHitbox("guardian-spiky-ball-death.mp3", 0.4, 1, entity, hitbox, false);
+
+   for (let i = 0; i < 10; i++) {
+      const offsetMagnitude = 10 * Math.random();
+
+      createGenericGemParticle(hitbox, offsetMagnitude, 0.7, 0.16, 0.7);
+   }
+}

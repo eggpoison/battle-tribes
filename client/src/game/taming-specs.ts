@@ -29,7 +29,7 @@ const readTamingSpecFromData = (reader: PacketReader): EntityTamingSpec => {
          skill: getTamingSkill(skillID),
          x: x,
          y: y,
-         parent: parentSkillID !== -1 ? parentSkillID as TamingSkillID : null,
+         parent: parentSkillID !== -1 ? parentSkillID : null,
          requiredTamingTier: requiredTamingTier
       });
    }

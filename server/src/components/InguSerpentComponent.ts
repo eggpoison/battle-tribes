@@ -1,6 +1,6 @@
 import { getDistanceFromPointToHitbox } from "../ai-shared.js";
 import { hitboxIsCollidingWithEntity } from "../collision-detection.js";
-import { addHitboxVelocity, applyAbsoluteKnockback, getHitboxTag, getHitboxTile, Hitbox } from "../hitboxes.js";
+import { addHitboxVelocity, applyAbsoluteKnockback, getHitboxTag, getBoxTile, Hitbox } from "../hitboxes.js";
 import { registerEntityTickEvent } from "../server/player-clients.js";
 import Tribe from "../Tribe.js";
 import { destroyEntity, entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../world.js";
@@ -23,7 +23,7 @@ import { ItemType } from "../../../shared/dist/items/items.js";
 import { Settings } from "../../../shared/dist/settings.js";
 import { StatusEffect } from "../../../shared/dist/status-effects.js";
 import { TileType } from "../../../shared/dist/tiles.js";
-import { secondsToTicks, distance, angle, getAbsAngleDiff, polarVec2, customTickIntervalHasPassed, Point } from "../../../shared/dist/utils.js";
+import { secondsToTicks, distance, angle, getAbsAngleDiff, customTickIntervalHasPassed, Point } from "../../../shared/dist/utils.js";
 
 interface TribesmanTruce {
    readonly tribe: Tribe;
@@ -77,7 +77,7 @@ InguSerpentComponentArray.onHitboxCollision = onHitboxCollision;
 function onJoin(serpent: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(serpent);
    const hitbox = transformComponent.hitboxes[0];
-   const tile = getHitboxTile(hitbox);
+   const tile = getBoxTile(hitbox.box);
    
    const layer = getEntityLayer(serpent);
    const localBiome = layer.getTileLocalBiome(tile);
@@ -104,7 +104,7 @@ const isTarget = (serpent: Entity, entity: Entity): boolean => {
    }
 
    // Once prey has moved outside of the tundra then don't pursue any longer
-   const tile = getHitboxTile(hitbox);
+   const tile = getBoxTile(hitbox.box);
    const layer = getEntityLayer(entity);
    if (layer.getTileBiome(tile) !== Biome.tundra) {
       return false;
@@ -205,10 +205,10 @@ const attackEntity = (serpent: Entity, target: Entity): void => {
       // Initial jump
       const bodyHitbox = transformComponent.hitboxes[0];
       const bodyToTargetDir = angle(targetHitbox.box.posX - bodyHitbox.box.posX, targetHitbox.box.posY - bodyHitbox.box.posY);
-      addHitboxVelocity(bodyHitbox, polarVec2(300, bodyToTargetDir));
+      addHitboxVelocity(bodyHitbox, 300 * Math.sin(bodyToTargetDir), 300 * Math.cos(bodyToTargetDir));
 
       const headToTargetDir = angle(targetHitbox.box.posX - headHitbox.box.posX, targetHitbox.box.posY - headHitbox.box.posY);
-      addHitboxVelocity(headHitbox, polarVec2(300, headToTargetDir));
+      addHitboxVelocity(headHitbox, 300 * Math.sin(headToTargetDir), 300 * Math.cos(headToTargetDir));
    }
 
    if (inguSerpentComponent.isChargingLeap) {
@@ -355,7 +355,7 @@ function onTick(serpent: Entity): void {
       const bodyHitbox = transformComponent.hitboxes[0];
 
       const layer = getEntityLayer(serpent);
-      const tile = getHitboxTile(bodyHitbox);
+      const tile = getBoxTile(bodyHitbox.box);
       if (layer.getTileType(tile) !== TileType.permafrost) {
          // @HACK this should use pathfinding to get back
          aiHelperComponent.moveFunc(serpent, inguSerpentComponent.homeBiome.centerX, inguSerpentComponent.homeBiome.centerY, SLOW_ACCELERATION);
@@ -431,7 +431,9 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const hitDir = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, serpent, 3, DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
-   applyAbsoluteKnockback(collidingHitbox, polarVec2(200, hitDir));
+   const knockbackX = 200 * Math.sin(hitDir);
+   const knockbackY = 200 * Math.cos(hitDir);
+   applyAbsoluteKnockback(collidingHitbox, knockbackX, knockbackY);
    addLocalInvulnerabilityHash(collidingEntity, localInvulnerabilityHash, 0.3);
 
    if (StatusEffectComponentArray.hasComponent(collidingEntity)) {

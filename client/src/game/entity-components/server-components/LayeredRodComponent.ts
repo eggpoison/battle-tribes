@@ -1,9 +1,9 @@
 import { Settings } from "../../../../../shared/src/settings";
 import { ServerComponentType } from "../../../../../shared/src/components";
 import { Entity, EntityType } from "../../../../../shared/src/entities";
-import { TileType } from "../../../../../shared/src/tiles";
+import { getTileIndexIncludingEdges, TileType } from "../../../../../shared/src/tiles";
 import { PacketReader } from "../../../../../shared/src/packets";
-import { angle, Colour, getTileIndexIncludingEdges, lerp } from "../../../../../shared/src/utils";
+import { angle, Colour, lerp } from "../../../../../shared/src/utils";
 import ColouredRenderPart from "../../render-parts/ColouredRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType, surfaceLayer } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
@@ -14,6 +14,7 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { hueShift, multiColourLerp } from "../../render-parts/VisualRenderPart";
 import { registerServerComponentArray } from "../component-registry";
+import { RenderChunkVars } from "../../../../../shared/src/render-chunks";
 
 const enum Var {
    SPRING_BACK_RATE = 8 * Settings.DT_S
@@ -39,7 +40,7 @@ export interface LayeredRodComponent {
 }
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.layeredRod, _LayeredRodComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.layeredRod, typeof LayeredRodComponentArray> {}
 }
 
 const MAX_BEND = 6;
@@ -89,14 +90,22 @@ const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: Ent
          
          const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
          const hitbox = transformComponentData.hitboxes[0];
+
+         // @SQUEAM @temporary
+         const renderChunkX = Math.floor(hitbox.box.posX / RenderChunkVars.RENDER_CHUNK_UNITS);
+         const renderChunkY = Math.floor(hitbox.box.posY / RenderChunkVars.RENDER_CHUNK_UNITS);
    
          const tileX = Math.floor(hitbox.box.posX / Settings.TILE_SIZE);
          const tileY = Math.floor(hitbox.box.posY / Settings.TILE_SIZE);
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         // @squeam
+         if (!surfaceLayer.hasTileXY(tileX, tileY)) {
+            console.log("BAB!",renderChunkX, renderChunkY);
+         }
          const tileType = surfaceLayer.getTile(tileIndex).type;
    
-         const grassTemperature = surfaceLayer.tileTemperatures[tileIndex];
-         const grassHumidity = surfaceLayer.tileHumidities[tileIndex];
+         const grassTemperature = surfaceLayer.tileTemperatures.get(tileIndex)!;
+         const grassHumidity = surfaceLayer.tileHumidities.get(tileIndex)!;
 
          // Lower layers are darker
          // let brightnessMultiplier = layer / data.numLayers;
@@ -143,141 +152,13 @@ const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: Ent
    }
 }
 
-class _LayeredRodComponentArray extends ServerComponentArray<LayeredRodComponent, LayeredRodComponentData> {
-   public decodeData(reader: PacketReader): LayeredRodComponentData {
-      const numLayers = reader.readNumber();
-      const naturalBendX = reader.readNumber();
-      const naturalBendY = reader.readNumber();
-
-      const r = reader.readNumber();
-      const g = reader.readNumber();
-      const b = reader.readNumber();
-
-      return {
-         numLayers: numLayers,
-         naturalBendX: naturalBendX,
-         naturalBendY: naturalBendY,
-         r: r,
-         g: g,
-         b: b
-      };
-   }
-
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const layeredRodComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.layeredRod);
-
-      const naturalBendX = layeredRodComponentData.naturalBendX;
-      const naturalBendY = layeredRodComponentData.naturalBendY;
-      
-      // Create layers
-      for (let layer = 1; layer <= layeredRodComponentData.numLayers; layer++) {
-         const zIndex = layer / 10;
-         const renderPart = new ColouredRenderPart(
-            hitbox,
-            zIndex,
-            0,
-            naturalBendX * layer, naturalBendY * layer
-         );
-
-         setLayerColour(renderPart, entityComponentData, layeredRodComponentData.r, layeredRodComponentData.g, layeredRodComponentData.b, layer, layeredRodComponentData.numLayers);
-
-         renderObject.attachRenderPart(renderPart);
-      }
-   }
-
-   public createComponent(entityComponentData: EntityComponentData): LayeredRodComponent {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const layeredRodComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.layeredRod);
-
-      const naturalBendX = layeredRodComponentData.naturalBendX;
-      const naturalBendY = layeredRodComponentData.naturalBendY;
-
-      return {
-         numLayers: layeredRodComponentData.numLayers,
-         naturalBendX: naturalBendX,
-         naturalBendY: naturalBendY,
-         bendX: naturalBendX,
-         bendY: naturalBendY
-      };
-   }
-
-   public getMaxRenderParts(entityComponentData: EntityComponentData): number {
-      const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
-      const layeredRodComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.layeredRod);
-      return layeredRodComponentData.numLayers;
-   }
-
-   public onTick(entity: Entity): void {
-      const layeredRodComponent = LayeredRodComponentArray.getComponent(entity);
-      
-      const bendMagnitude = Math.sqrt(layeredRodComponent.bendX * layeredRodComponent.bendX + layeredRodComponent.bendY * layeredRodComponent.bendY);
-
-      // Slow the return the closer to straight it is
-      let bendSmoothnessMultiplier = 1 - bendMagnitude / MAX_BEND;
-      bendSmoothnessMultiplier *= bendSmoothnessMultiplier * bendSmoothnessMultiplier;
-      bendSmoothnessMultiplier = 1 - bendSmoothnessMultiplier;
-      // Make sure it doesn't completely stop movement
-      bendSmoothnessMultiplier = bendSmoothnessMultiplier * 0.9 + 0.1;
-      
-      layeredRodComponent.bendX -= Var.SPRING_BACK_RATE * bendSmoothnessMultiplier * layeredRodComponent.bendX / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
-      layeredRodComponent.bendY -= Var.SPRING_BACK_RATE * bendSmoothnessMultiplier * layeredRodComponent.bendY / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
-
-      updateOffsets(layeredRodComponent, entity);
-
-      if (layeredRodComponent.bendX === 0 && layeredRodComponent.bendY === 0) {
-         LayeredRodComponentArray.queueComponentDeactivate(entity);
-      }
-
-      const renderObject = getEntityRenderObject(entity);
-      registerDirtyRenderObject(entity, renderObject);
-   }
-
-   public onCollision(entity: Entity, collidingEntity: Entity, affectedHitbox: Hitbox, collidingHitbox: Hitbox): void {
-      // @Hack!!
-      if (getEntityType(collidingEntity) === EntityType.tree) {
-         return;
-      }
-      
-      const layeredRodComponent = LayeredRodComponentArray.getComponent(entity);
-      LayeredRodComponentArray.activateComponent(layeredRodComponent, entity);
-      
-      const directionFromCollidingEntity = angle(affectedHitbox.box.posX - collidingHitbox.box.posX, affectedHitbox.box.posY - collidingHitbox.box.posY);
-
-      let existingPushX = bendToPushAmount(layeredRodComponent.bendX);
-      let existingPushY = bendToPushAmount(layeredRodComponent.bendY);
-      
-      let pushAmount = 50 * collidingHitbox.mass * Settings.DT_S / Math.sqrt(layeredRodComponent.numLayers);
-      
-      // Restrict the bend from going past the max bend
-      const currentBend = Math.sqrt(layeredRodComponent.bendX * layeredRodComponent.bendX + layeredRodComponent.bendY * layeredRodComponent.bendY);
-      pushAmount *= Math.pow((MAX_BEND - currentBend) / MAX_BEND, 0.5);
-
-      existingPushX += pushAmount * Math.sin(directionFromCollidingEntity);
-      existingPushY += pushAmount * Math.cos(directionFromCollidingEntity);
-
-      const bendX = pushAmountToBend(existingPushX);
-      const bendY = pushAmountToBend(existingPushY);
-
-      // @Hack
-      if (Math.sqrt(bendX * bendX + bendY * bendY) >= MAX_BEND) {
-         return;
-      }
-
-      layeredRodComponent.bendX = bendX;
-      layeredRodComponent.bendY = bendY;
-      
-      updateOffsets(layeredRodComponent, entity);
-
-      const renderObject = getEntityRenderObject(entity);
-      registerDirtyRenderObject(entity, renderObject);
-   }
-}
-
-export const LayeredRodComponentArray = registerServerComponentArray(ServerComponentType.layeredRod, _LayeredRodComponentArray, false);
+export const LayeredRodComponentArray = registerServerComponentArray(
+   ServerComponentType.layeredRod,
+   new ServerComponentArray(false, createComponent, getMaxRenderParts, decodeData)
+);
+LayeredRodComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+LayeredRodComponentArray.onTick = onTick;
+LayeredRodComponentArray.onCollision = onCollision;
 
 const updateOffsets = (layeredRodComponent: LayeredRodComponent, entity: Entity): void => {
    const bendMagnitude = Math.sqrt(layeredRodComponent.bendX * layeredRodComponent.bendX + layeredRodComponent.bendY * layeredRodComponent.bendY);
@@ -295,4 +176,136 @@ const updateOffsets = (layeredRodComponent: LayeredRodComponent, entity: Entity)
       renderPart.offsetX = bendX * i;
       renderPart.offsetY = bendY * i;
    }
+}
+
+function decodeData(reader: PacketReader): LayeredRodComponentData {
+   const numLayers = reader.readNumber();
+   const naturalBendX = reader.readNumber();
+   const naturalBendY = reader.readNumber();
+
+   const r = reader.readNumber();
+   const g = reader.readNumber();
+   const b = reader.readNumber();
+
+   return {
+      numLayers: numLayers,
+      naturalBendX: naturalBendX,
+      naturalBendY: naturalBendY,
+      r: r,
+      g: g,
+      b: b
+   };
+}
+
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const layeredRodComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.layeredRod);
+
+   const naturalBendX = layeredRodComponentData.naturalBendX;
+   const naturalBendY = layeredRodComponentData.naturalBendY;
+   
+   // Create layers
+   for (let layer = 1; layer <= layeredRodComponentData.numLayers; layer++) {
+      const zIndex = layer / 10;
+      const renderPart = new ColouredRenderPart(
+         hitbox,
+         zIndex,
+         0,
+         naturalBendX * layer, naturalBendY * layer
+      );
+
+      setLayerColour(renderPart, entityComponentData, layeredRodComponentData.r, layeredRodComponentData.g, layeredRodComponentData.b, layer, layeredRodComponentData.numLayers);
+
+      renderObject.attachRenderPart(renderPart);
+   }
+}
+
+function createComponent(entityComponentData: EntityComponentData): LayeredRodComponent {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const layeredRodComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.layeredRod);
+
+   const naturalBendX = layeredRodComponentData.naturalBendX;
+   const naturalBendY = layeredRodComponentData.naturalBendY;
+
+   return {
+      numLayers: layeredRodComponentData.numLayers,
+      naturalBendX: naturalBendX,
+      naturalBendY: naturalBendY,
+      bendX: naturalBendX,
+      bendY: naturalBendY
+   };
+}
+
+function getMaxRenderParts(entityComponentData: EntityComponentData): number {
+   const serverComponentTypes = getEntityServerComponentTypes(entityComponentData.entityType);
+   const layeredRodComponentData = getServerComponentData(entityComponentData.serverComponentData, serverComponentTypes, ServerComponentType.layeredRod);
+   return layeredRodComponentData.numLayers;
+}
+
+function onTick(entity: Entity): void {
+   const layeredRodComponent = LayeredRodComponentArray.getComponent(entity);
+   
+   const bendMagnitude = Math.sqrt(layeredRodComponent.bendX * layeredRodComponent.bendX + layeredRodComponent.bendY * layeredRodComponent.bendY);
+
+   // Slow the return the closer to straight it is
+   let bendSmoothnessMultiplier = 1 - bendMagnitude / MAX_BEND;
+   bendSmoothnessMultiplier *= bendSmoothnessMultiplier * bendSmoothnessMultiplier;
+   bendSmoothnessMultiplier = 1 - bendSmoothnessMultiplier;
+   // Make sure it doesn't completely stop movement
+   bendSmoothnessMultiplier = bendSmoothnessMultiplier * 0.9 + 0.1;
+   
+   layeredRodComponent.bendX -= Var.SPRING_BACK_RATE * bendSmoothnessMultiplier * layeredRodComponent.bendX / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
+   layeredRodComponent.bendY -= Var.SPRING_BACK_RATE * bendSmoothnessMultiplier * layeredRodComponent.bendY / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
+
+   updateOffsets(layeredRodComponent, entity);
+
+   if (layeredRodComponent.bendX === 0 && layeredRodComponent.bendY === 0) {
+      LayeredRodComponentArray.queueComponentDeactivate(entity);
+   }
+
+   const renderObject = getEntityRenderObject(entity);
+   registerDirtyRenderObject(entity, renderObject);
+}
+
+function onCollision(entity: Entity, collidingEntity: Entity, affectedHitbox: Hitbox, collidingHitbox: Hitbox): void {
+   // @Hack!!
+   if (getEntityType(collidingEntity) === EntityType.tree) {
+      return;
+   }
+   
+   const layeredRodComponent = LayeredRodComponentArray.getComponent(entity);
+   LayeredRodComponentArray.activateComponent(layeredRodComponent, entity);
+   
+   const directionFromCollidingEntity = angle(affectedHitbox.box.posX - collidingHitbox.box.posX, affectedHitbox.box.posY - collidingHitbox.box.posY);
+
+   let existingPushX = bendToPushAmount(layeredRodComponent.bendX);
+   let existingPushY = bendToPushAmount(layeredRodComponent.bendY);
+   
+   let pushAmount = 50 * collidingHitbox.mass * Settings.DT_S / Math.sqrt(layeredRodComponent.numLayers);
+   
+   // Restrict the bend from going past the max bend
+   const currentBend = Math.sqrt(layeredRodComponent.bendX * layeredRodComponent.bendX + layeredRodComponent.bendY * layeredRodComponent.bendY);
+   pushAmount *= Math.pow((MAX_BEND - currentBend) / MAX_BEND, 0.5);
+
+   existingPushX += pushAmount * Math.sin(directionFromCollidingEntity);
+   existingPushY += pushAmount * Math.cos(directionFromCollidingEntity);
+
+   const bendX = pushAmountToBend(existingPushX);
+   const bendY = pushAmountToBend(existingPushY);
+
+   // @Hack
+   if (Math.sqrt(bendX * bendX + bendY * bendY) >= MAX_BEND) {
+      return;
+   }
+
+   layeredRodComponent.bendX = bendX;
+   layeredRodComponent.bendY = bendY;
+   
+   updateOffsets(layeredRodComponent, entity);
+
+   const renderObject = getEntityRenderObject(entity);
+   registerDirtyRenderObject(entity, renderObject);
 }

@@ -1,10 +1,10 @@
 import { Settings } from "../../../shared/dist/settings.js";
-import { getTileIndexIncludingEdges, smoothstep, lerp, randInt, TileIndex, getTileX, getTileY, tileIsInWorldIncludingEdges, Point } from "../../../shared/dist/utils.js";
+import { smoothstep, lerp, randInt, Point } from "../../../shared/dist/utils.js";
 import { ServerComponentType } from "../../../shared/dist/components.js";
 import { EntityType, TreeSize } from "../../../shared/dist/entities.js";
 import { Biome } from "../../../shared/dist/biomes.js";
 import { createRectangularBox } from "../../../shared/dist/boxes.js";
-import { SubtileType, TileType } from "../../../shared/dist/tiles.js";
+import { getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, tileIsInWorldIncludingEdges, TileType } from "../../../shared/dist/tiles.js";
 import { TribeType } from "../../../shared/dist/tribes.js";
 import { generateOctavePerlinNoise, generatePerlinNoise, generatePointPerlinNoise } from "../perlin-noise.js";
 import BIOME_GENERATION_INFO, { BiomeGenerationInfo, BiomeSpawnRequirements, TileGenerationInfo } from "./terrain-generation-info.js";
@@ -467,7 +467,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
    spreadBiomeDists(biomeDists, surfaceLayer.tileBiomes, biomeBorderTiles);
 
    // Generate tiles
-   generateTileTypes(surfaceLayer.tileBiomes, biomeDists, surfaceLayer.tileTypes, surfaceLayer.wallSubtileTypes, heightMap, tileTemperatures, tileHumidities, 0);
+   generateTileTypes(surfaceLayer.tileBiomes, biomeDists, surfaceLayer.tileTypes, surfaceLayer.wallSubtileDatas, heightMap, tileTemperatures, tileHumidities, 0);
 
    // Create flow directions array and create ice rivers
    for (const tileInfo of riverTiles) {
@@ -484,7 +484,7 @@ export function generateSurfaceTerrain(depth: number): Layer {
       surfaceLayer.riverFlowDirections[tileIndex] = tileInfo.flowDirectionIdx;
    }
 
-   generateRiverFeatures(surfaceLayer, riverTiles, surfaceLayer.waterRocks);
+   generateRiverFeatures(surfaceLayer, riverTiles, surfaceLayer.waterRockRenderChunks);
 
    groupLocalBiomes(surfaceLayer);
 

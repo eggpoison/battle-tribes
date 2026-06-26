@@ -2,10 +2,11 @@ import { CollisionBit } from "../../../shared/src/collision";
 import { Entity } from "../../../shared/src/entities";
 import { Box, boxIsCircular, HitboxCollisionType, HitboxFlagBit, HitboxTag } from "../../../shared/src/boxes";
 import { Settings } from "../../../shared/src/settings";
-import { _point, distance, distBetweenPointAndRectangle, getAngleDiff, getTileIndexIncludingEdges, Mutable, Point, randAngle, randFloat, randSign, rotatePointAroundOrigin } from "../../../shared/src/utils";
+import { _point, distance, distBetweenPointAndRectangle, getAngleDiff, Mutable, Point, randAngle, randFloat, randSign, rotatePointAroundOrigin } from "../../../shared/src/utils";
 import { getEntityLayer, getEntityRenderObject } from "./world";
 import { registerDirtyRenderObject } from "./rendering/render-part-matrices";
 import { Tile } from "./Tile";
+import { getTileIndexIncludingEdges } from "../../../shared/src/tiles";
 
 export interface HitboxTether {
    readonly originBox: Box;
@@ -47,7 +48,7 @@ export interface Hitbox {
    lastUpdateTicks: number;
 }
 
-export function createHitbox(localID: number, entity: Entity, rootEntity: Entity, parent: Hitbox | null, children: Hitbox[], box: Box, previousPosX: number, previousPosY: number, accelX: number, accelY: number, tethers: Array<HitboxTether>, previousRelativeAngle: number, angularAcceleration: number, mass: number, collisionBit: CollisionBit, collisionMask: number, flags: number): Hitbox {
+export function createHitbox(localID: number, entity: Entity, rootEntity: Entity, parent: Hitbox | null, children: Hitbox[], box: Box, previousPosX: number, previousPosY: number, accelX: number, accelY: number, tethers: HitboxTether[], previousRelativeAngle: number, angularAcceleration: number, mass: number, collisionBit: CollisionBit, collisionMask: number, flags: number): Hitbox {
    return {
       localID,
       entity,

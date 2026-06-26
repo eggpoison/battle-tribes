@@ -11,7 +11,7 @@ import { destroyEntity, entityExists, surfaceLayer } from "../world.js";
 import { Hitbox } from "../hitboxes.js";
 import { PlayerComponentArray } from "../components/PlayerComponent.js";
 import { createItem } from "../items.js";
-import { PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "../../../shared/dist/client-server-types.js";
+import { HealData, ResearchOrbCompleteData } from "../../../shared/dist/client-server-types.js";
 import { Entity } from "../../../shared/dist/entities.js";
 import { AttackEffectiveness } from "../../../shared/dist/entity-damage-types.js";
 import { EntityTickEvent } from "../../../shared/dist/entity-events.js";
@@ -19,8 +19,9 @@ import { ItemType, InventoryName } from "../../../shared/dist/items/items.js";
 import { PacketReader } from "../../../shared/dist/packets.js";
 import { Settings } from "../../../shared/dist/settings.js";
 import { TribeType, TRIBE_INFO_RECORD } from "../../../shared/dist/tribes.js";
-import { Point, randItem, getTileX, getTileY, randInt } from "../../../shared/dist/utils.js";
+import { Point, randItem, randInt } from "../../../shared/dist/utils.js";
 import { EntitySummonPacket } from "../../../shared/dist/dev-packets.js";
+import { getTileX, getTileY } from "../../../shared/dist/tiles.js";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -162,22 +163,19 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
    // createEntityFromConfig(config, getEntityLayer(playerClient.instance), 0);
 }
 
-export function addPlayerClient(playerClient: PlayerClient, layer: Layer, spawnPosition: Point): void {
+export function addPlayerClient(playerClient: PlayerClient, layer: Layer, spawnX: number, spawnY: number): void {
    playerClients.push(playerClient);
 
    const socket = playerClient.socket;
 
-   const initialGameDataPacket = createInitialGameDataPacket(layer, spawnPosition);
+   const initialGameDataPacket = createInitialGameDataPacket(playerClient, layer, spawnX, spawnY);
    socket.send(initialGameDataPacket);
 
    // -------------------------- //
    //       DEV-ONLY EVENTS      //
    // -------------------------- //
 
-   socket.on("dev_give_item", (itemType: ItemType, amount: number): void => {
-      devGiveItem(playerClient, itemType, amount);
-   });
-
+   // @INCOMPLET
    socket.on("dev_summon_entity", (summonPacket: EntitySummonPacket): void => {
       devSummonEntity(playerClient, summonPacket);
    });
@@ -261,17 +259,9 @@ export function registerEntityHit(hitEntity: Entity, hitHitbox: Hitbox, attackin
    }
 }
 
-export function registerPlayerKnockback(player: Entity, knockback: Point): void {
-   // @HACK: shouldn't convert to polar at all really, should just stay cartesian
-   const polarVec = knockback.convertToVector();
-   
-   const knockbackData: PlayerKnockbackData = {
-      knockback: polarVec.magnitude,
-      knockbackDirection: polarVec.direction
-   };
-
+export function registerPlayerKnockback(player: Entity, knockbackX: number, knockbackY: number): void {
    const playerComponent = PlayerComponentArray.getComponent(player);
-   playerComponent.client.playerKnockbacks.push(knockbackData);
+   playerComponent.client.playerKnockbacks.push(new Point(knockbackX, knockbackY));
 }
 
 export function registerEntityHeal(healedEntity: Entity, healer: Entity, healAmount: number): void {

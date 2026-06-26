@@ -72,8 +72,9 @@ export function moveSeekerHeadToTarget(seekerHead: Entity, target: Entity): void
                
                const config = createInguYetukLaserConfig(laserPosition.x, laserPosition.y, angle);
                const laserHitbox = getConfigTransformComponent(config.components).hitboxes[0];
-               addHitboxVelocity(laserHitbox, polarVec2(800, angle));
-               addHitboxVelocity(laserHitbox, getHitboxVelocity(hitbox));
+               addHitboxVelocity(laserHitbox, 800 * Math.sin(angle), 800 * Math.cos(angle));
+               const velocity = getHitboxVelocity(hitbox);
+               addHitboxVelocity(laserHitbox, velocity.x, velocity.y);
                createEntity(config, getEntityLayer(seekerHead), 0);
             }
          }
@@ -106,6 +107,8 @@ function onHitboxCollision(hitbox: Hitbox, collidingHitbox: Hitbox, collisionPoi
    const hitDir = angle(collidingHitbox.box.posX - hitbox.box.posX, collidingHitbox.box.posY - hitbox.box.posY);
 
    damageEntity(collidingHitbox, hitbox.entity, 2, DamageSource.cactus, AttackEffectiveness.effective, collisionPoint, 0);
-   applyAbsoluteKnockback(collidingHitbox, polarVec2(400, hitDir));
+   const knockbackX = 400 * Math.sin(hitDir);
+   const knockbackY = 400 * Math.cos(hitDir);
+   applyAbsoluteKnockback(collidingHitbox, knockbackX, knockbackY);
    addLocalInvulnerabilityHash(collidingEntity, "yetukshit", 0.25);
 }

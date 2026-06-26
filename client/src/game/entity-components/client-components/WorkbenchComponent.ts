@@ -12,35 +12,37 @@ export interface WorkbenchComponentData {}
 export interface WorkbenchComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.workbench, _WorkbenchComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.workbench, typeof WorkbenchComponentArray> {}
 }
 
-class _WorkbenchComponentArray extends ClientComponentArray<WorkbenchComponent, WorkbenchComponentData> {
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.entities_workbench_workbench
-         )
-      );
-   }
+export const WorkbenchComponentArray = registerClientComponentArray(
+   ClientComponentType.workbench,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+WorkbenchComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public createComponent(): WorkbenchComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.entities_workbench_workbench
+      )
+   );
 }
 
-export const WorkbenchComponentArray = registerClientComponentArray(ClientComponentType.workbench, _WorkbenchComponentArray, true);
+function createComponent(): WorkbenchComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
 
 export function createWorkbenchComponentData(): WorkbenchComponentData {
    return {};

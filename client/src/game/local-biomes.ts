@@ -1,6 +1,6 @@
 import { EntityType } from "../../../shared/src/entities";
 import { PacketReader } from "../../../shared/src/packets";
-import { TileIndex } from "../../../shared/src/utils";
+import { TileIndex } from "../../../shared/src/tiles";
 import { currentSnapshot } from "./networking/snapshots";
 
 interface LocalEntityCensusInfo {

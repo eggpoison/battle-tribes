@@ -11,6 +11,7 @@ import { gameUIState } from "../ui-state/game-ui-state";
 import { destroyHealthBar } from "../ui/game/HealthBar";
 import { deathScreen } from "../ui-state/death-screen-funcs";
 import { closeCurrentMenu, hasOpenNonEmbodiedMenu } from "../ui/menus";
+import { _point } from "../../../shared/src/utils";
 
 // @Cleanup: THis might literally be able to be removed.. along with this whole file.
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
@@ -75,10 +76,10 @@ export function updatePlayerDirection(clientInterp: number, serverInterp: number
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
 
-   // Use the render position instead of the hitboxes' actual game position, as that is not up-to-date for each and every rendered frame.
-   const playerHitboxRenderPos = calculateHitboxRenderPosition(playerHitbox, clientInterp, serverInterp);
+   // Use the render position instead of the hitboxes' actual game position, as that is not up-to-date for the rendered frame.
+   calculateHitboxRenderPosition(playerHitbox, clientInterp, serverInterp);
 
-   const cursorDirection = playerHitboxRenderPos.angleTo(cursorWorldPos);
+   const cursorDirection = _point.angleTo(cursorWorldPos);
    
    const previousAngle = playerHitbox.box.angle;
 
@@ -94,6 +95,7 @@ export function updatePlayerDirection(clientInterp: number, serverInterp: number
    // Angular velocity
    // We don't use relativeAngle here cuz that wouldn't work for when the player is mounted.
    // setHitboxObservedAngularVelocity(playerHitbox, (playerHitbox.box.angle - previousAngle) * Settings.TICK_RATE);
+   // @Hack?? hm?
    setHitboxObservedAngularVelocity(playerHitbox, 0);
 
    const renderObject = getEntityRenderObject(playerInstance);

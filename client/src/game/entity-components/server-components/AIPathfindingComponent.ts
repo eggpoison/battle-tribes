@@ -4,24 +4,25 @@ import { registerServerComponentArray } from "../component-registry";
 
 export interface AIPathfindingComponentData {}
 
-export class AIPathfindingComponent {}
+export interface AIPathfindingComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiPathfinding, _AIPathfindingComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.aiPathfinding, typeof AIPathfindingComponentArray> {}
 }
 
-class _AIPathfindingComponentArray extends ServerComponentArray<AIPathfindingComponent, AIPathfindingComponentData> {
-   public decodeData(): AIPathfindingComponentData {
-      return {};
-   }
+export const AIPathfindingComponentArray = registerServerComponentArray(
+   ServerComponentType.aiPathfinding,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
 
-   public createComponent(): AIPathfindingComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 0;
-   }
+function decodeData(): AIPathfindingComponentData {
+   return {};
 }
 
-export const AIPathfindingComponentArray = registerServerComponentArray(ServerComponentType.aiPathfinding, _AIPathfindingComponentArray, true);
+function createComponent(): AIPathfindingComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 0;
+}

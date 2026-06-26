@@ -12,11 +12,6 @@ export const HitFlags = {
    HIT_BY_SPIKES: 1 << 2
 };
 
-export interface PlayerKnockbackData {
-   readonly knockback: number;
-   readonly knockbackDirection: number;
-}
-
 export interface HealData {
    readonly entityPositionX: number;
    readonly entityPositionY: number;

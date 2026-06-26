@@ -1,7 +1,6 @@
 import { Entity, EntityType } from "../../../shared/dist/entities.js";
 import { Settings } from "../../../shared/dist/settings.js";
-import { getSubtileIndex, subtileIsInWorldIncludingEdges } from "../../../shared/dist/subtiles.js";
-import { SubtileType } from "../../../shared/dist/tiles.js";
+import { getSubtileIndex, subtileIsInWorldIncludingEdges, SubtileType } from "../../../shared/dist/subtiles.js";
 import { randInt, randFloat, randSign, angle } from "../../../shared/dist/utils.js";
 import { getEntitiesInRange } from "../ai-shared.js";
 import { createMithrilOreNodeConfig } from "../entities/resources/mithril-ore-node.js";

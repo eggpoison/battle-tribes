@@ -33,7 +33,7 @@ const resolveHardCollision = (affectedHitbox: Hitbox, collisionResult: Collision
    }
 
    // Transform the entity out of the hitbox
-   translateHitbox(affectedHitbox, collisionResult.overlap);
+   translateHitbox(affectedHitbox, collisionResult.overlap.x, collisionResult.overlap.y);
 
    const previousVelocity = getHitboxVelocity(affectedHitbox);
 
@@ -61,7 +61,7 @@ const resolveHardCollisionAndFlip = (affectedHitbox: Hitbox, collisionResult: Co
    const previousVelocity = getHitboxVelocity(affectedHitbox);
    
    // Transform the entity out of the hitbox
-   translateHitbox(affectedHitbox, collisionResult.overlap);
+   translateHitbox(affectedHitbox, collisionResult.overlap.x, collisionResult.overlap.y);
 
    // Reverse the velocity going into the hitbox
    
@@ -88,7 +88,7 @@ const resolveHardCollisionAndFlip = (affectedHitbox: Hitbox, collisionResult: Co
    // Keep the velocity in the separation axis
    setHitboxVelocity(affectedHitbox, separationAxisProjY * velocitySeparationCoeff, separationAxisProjX * velocitySeparationCoeff);
    // Reverse the velocity in the push axis
-   addHitboxVelocity(affectedHitbox, new Point(-pushAxisProjX * velocityPushCoeff, -pushAxisProjY * velocityPushCoeff));
+   addHitboxVelocity(affectedHitbox, -pushAxisProjX * velocityPushCoeff, -pushAxisProjY * velocityPushCoeff);
 }
 
 const resolveSoftCollision = (affectedHitbox: Hitbox, pushingHitbox: Hitbox, collisionResult: CollisionResult): void => {

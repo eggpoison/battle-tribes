@@ -14,88 +14,90 @@ export interface InguYetuksnoglurblidokowfleaSeekerHeadComponentData {}
 export interface InguYetuksnoglurblidokowfleaSeekerHeadComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetuksnoglurblidokowfleaSeekerHead, _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inguYetuksnoglurblidokowfleaSeekerHead, typeof InguYetuksnoglurblidokowfleaSeekerHeadComponentArray> {}
 }
 
-class _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray extends ServerComponentArray<InguYetuksnoglurblidokowfleaSeekerHeadComponent, InguYetuksnoglurblidokowfleaSeekerHeadComponentData> {
-   public decodeData(): InguYetuksnoglurblidokowfleaSeekerHeadComponentData {
-      return {};
-   }
+export const InguYetuksnoglurblidokowfleaSeekerHeadComponentArray = registerServerComponentArray(
+   ServerComponentType.inguYetuksnoglurblidokowfleaSeekerHead,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+InguYetuksnoglurblidokowfleaSeekerHeadComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+function decodeData(): InguYetuksnoglurblidokowfleaSeekerHeadComponentData {
+   return {};
+}
 
-      for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
-         const hitbox = transformComponentData.hitboxes[i];
-         const tag = getHitboxTag(hitbox);
-         if (tag === HitboxTag.yetukTrunkMiddle) {
-            const renderPart = new TexturedRenderPart(
-               hitbox,
-               4.7,
-               0,
-               0, 0,
-               TextureIndex.entities_tukmokTrunk_middleSegment
-            );
-            renderObject.attachRenderPart(renderPart);
-         } else if (tag === HitboxTag.yetukTrunkHead) {
-            const renderPart = new TexturedRenderPart(
-               hitbox,
-               4.7,
-               0,
-               0, 0,
-               TextureIndex.entities_tukmokTrunk_headSegment
-            );
-            renderObject.attachRenderPart(renderPart);
-         } else if (tag === HitboxTag.cowHead) {
-            const renderPart = new TexturedRenderPart(
-               hitbox,
-               4.7,
-               0,
-               0, 0,
-               TextureIndex.entities_cow_cowHead1
-            );
-            renderObject.attachRenderPart(renderPart);
-         } else if (tag === HitboxTag.tukmokHead) {
-            const renderPart = new TexturedRenderPart(
-               hitbox,
-               4.7,
-               0,
-               0, 0,
-               TextureIndex.entities_tukmok_head
-            );
-            renderObject.attachRenderPart(renderPart);
-         } else if (tag === HitboxTag.yetukMandibleBig) {
-            const renderPart = new TexturedRenderPart(
-               hitbox,
-               4.6,
-               0,
-               0, 0,
-               TextureIndex.entities_okren_adult_mandible
-            );
-            renderObject.attachRenderPart(renderPart);
-         } else if (tag === HitboxTag.yetukMandibleMedium) {
-            const renderPart = new TexturedRenderPart(
-               hitbox,
-               4.6,
-               0,
-               0, 0,
-               TextureIndex.entities_okren_juvenile_mandible
-            );
-            renderObject.attachRenderPart(renderPart);
-         }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+
+   for (let i = 0; i < transformComponentData.hitboxes.length; i++) {
+      const hitbox = transformComponentData.hitboxes[i];
+      const tag = getHitboxTag(hitbox);
+      if (tag === HitboxTag.yetukTrunkMiddle) {
+         const renderPart = new TexturedRenderPart(
+            hitbox,
+            4.7,
+            0,
+            0, 0,
+            TextureIndex.entities_tukmokTrunk_middleSegment
+         );
+         renderObject.attachRenderPart(renderPart);
+      } else if (tag === HitboxTag.yetukTrunkHead) {
+         const renderPart = new TexturedRenderPart(
+            hitbox,
+            4.7,
+            0,
+            0, 0,
+            TextureIndex.entities_tukmokTrunk_headSegment
+         );
+         renderObject.attachRenderPart(renderPart);
+      } else if (tag === HitboxTag.cowHead) {
+         const renderPart = new TexturedRenderPart(
+            hitbox,
+            4.7,
+            0,
+            0, 0,
+            TextureIndex.entities_cow_cowHead1
+         );
+         renderObject.attachRenderPart(renderPart);
+      } else if (tag === HitboxTag.tukmokHead) {
+         const renderPart = new TexturedRenderPart(
+            hitbox,
+            4.7,
+            0,
+            0, 0,
+            TextureIndex.entities_tukmok_head
+         );
+         renderObject.attachRenderPart(renderPart);
+      } else if (tag === HitboxTag.yetukMandibleBig) {
+         const renderPart = new TexturedRenderPart(
+            hitbox,
+            4.6,
+            0,
+            0, 0,
+            TextureIndex.entities_okren_adult_mandible
+         );
+         renderObject.attachRenderPart(renderPart);
+      } else if (tag === HitboxTag.yetukMandibleMedium) {
+         const renderPart = new TexturedRenderPart(
+            hitbox,
+            4.6,
+            0,
+            0, 0,
+            TextureIndex.entities_okren_juvenile_mandible
+         );
+         renderObject.attachRenderPart(renderPart);
       }
    }
-
-   public createComponent(): InguYetuksnoglurblidokowfleaSeekerHeadComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 50;
-   }
 }
 
-export const InguYetuksnoglurblidokowfleaSeekerHeadComponentArray = registerServerComponentArray(ServerComponentType.inguYetuksnoglurblidokowfleaSeekerHead, _InguYetuksnoglurblidokowfleaSeekerHeadComponentArray, true);
+function createComponent(): InguYetuksnoglurblidokowfleaSeekerHeadComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 50;
+}
 
 export function createInguYetuksnoglurblidokowfleaSeekerHeadComponentData(): InguYetuksnoglurblidokowfleaSeekerHeadComponentData {
    return {};

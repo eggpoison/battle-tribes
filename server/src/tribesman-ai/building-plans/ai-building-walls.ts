@@ -1,6 +1,7 @@
 import { EntityType } from "../../../../shared/dist/entities.js";
 import { Settings } from "../../../../shared/dist/settings.js";
-import { getAngleDiff, TileIndex } from "../../../../shared/dist/utils.js";
+import { getAngleDiff } from "../../../../shared/dist/utils.js";
+import { TileIndex } from "../../../../shared/dist/tiles.js";
 import Tribe from "../../Tribe.js";
 import { SafetyNode } from "../ai-building.js";
 import TribeBuildingLayer from "./TribeBuildingLayer.js";

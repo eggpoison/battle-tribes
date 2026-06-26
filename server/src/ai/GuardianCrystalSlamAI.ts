@@ -43,7 +43,9 @@ export default class GuardianCrystalSlamAI {
       const transformComponent = TransformComponentArray.getComponent(guardian);
       const bodyHitbox = transformComponent.hitboxes[0];
       
-      applyAbsoluteKnockback(bodyHitbox, polarVec2(150, bodyHitbox.box.angle + Math.PI));
+      const knockbackX = 150 * Math.sin(bodyHitbox.box.angle + Math.PI);
+      const knockbackY = 150 * Math.cos(bodyHitbox.box.angle + Math.PI);
+      applyAbsoluteKnockback(bodyHitbox, knockbackX, knockbackY);
 
       const offsetMagnitude = GuardianVars.LIMB_ORBIT_RADIUS + Vars.LIMB_EXTEND_AMOUNT;
       const originX = bodyHitbox.box.posX + offsetMagnitude * Math.sin(bodyHitbox.box.angle);

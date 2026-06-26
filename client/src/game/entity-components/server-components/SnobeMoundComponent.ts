@@ -12,36 +12,38 @@ export interface SnobeMoundComponentData {}
 export interface SnobeMoundComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snobeMound, _SnobeMoundComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.snobeMound, typeof SnobeMoundComponentArray> {}
 }
 
-class _SnobeMoundComponentArray extends ServerComponentArray<SnobeMoundComponent, SnobeMoundComponentData> {
-   public decodeData(): SnobeMoundComponentData {
-      return {};
-   }
+export const SnobeMoundComponentArray = registerServerComponentArray(
+   ServerComponentType.snobeMound,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+SnobeMoundComponentArray.populateIntermediateInfo = populateIntermediateInfo;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            1,
-            0,
-            0, 0,
-            TextureIndex.entities_snobeMound_snobeMound
-         )
-      );
-   }
-
-   public createComponent(): SnobeMoundComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+function decodeData(): SnobeMoundComponentData {
+   return {};
 }
 
-export const SnobeMoundComponentArray = registerServerComponentArray(ServerComponentType.snobeMound, _SnobeMoundComponentArray, true);
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         1,
+         0,
+         0, 0,
+         TextureIndex.entities_snobeMound_snobeMound
+      )
+   );
+}
+
+function createComponent(): SnobeMoundComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}

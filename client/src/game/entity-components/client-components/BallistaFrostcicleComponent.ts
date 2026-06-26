@@ -18,54 +18,53 @@ export interface BallistaFrostcicleComponentData {}
 export interface BallistaFrostcicleComponent {}
 
 declare module "../component-registry" {
-   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaFrostcicle, BallistaFrostcicleComponentArray> {}
+   interface ClientComponentRegistry extends RegisterClientComponent<ClientComponentType.ballistaFrostcicle, typeof BallistaFrostcicleComponentArray> {}
 }
 
-class BallistaFrostcicleComponentArray extends ClientComponentArray<BallistaFrostcicleComponent, BallistaFrostcicleComponentData> {
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-
-      renderObject.attachRenderPart(
-         new TexturedRenderPart(
-            hitbox,
-            0,
-            0,
-            0, 0,
-            TextureIndex.projectiles_ballistaFrostcicle
-         )
-      );
-   }
-
-   public createComponent(): BallistaFrostcicleComponent {
-      return {};
-   }
-
-   public getMaxRenderParts(): number {
-      return 1;
-   }
-
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      getHitboxVelocity(hitbox);
-      const velocity = _point;
-
-      // Create arrow break particles
-      for (let i = 0; i < 6; i++) {
-         createArrowDestroyParticle(hitbox.box.posX, hitbox.box.posY, velocity.x, velocity.y);
-      }
-
-      playSoundOnHitbox("ice-break.mp3", 0.4, 1, entity, hitbox, false);
-   }
-}
-
-export const ComponentArray = registerClientComponentArray(ClientComponentType.ballistaFrostcicle, BallistaFrostcicleComponentArray, true);
+export const BallistaFrostcicleComponentArray = registerClientComponentArray(
+   ClientComponentType.ballistaFrostcicle,
+   new ClientComponentArray(true, createComponent, getMaxRenderParts)
+);
+BallistaFrostcicleComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+BallistaFrostcicleComponentArray.onDie = onDie;
 
 export function createBallistaFrostcicleComponentData(): BallistaFrostcicleComponentData {
-   const a = BallistaFrostcicleComponentArray;
-   
    return {};
 }
 
-export { ComponentArray as BallistaFrostcicleComponentArray };
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+
+   renderObject.attachRenderPart(
+      new TexturedRenderPart(
+         hitbox,
+         0,
+         0,
+         0, 0,
+         TextureIndex.projectiles_ballistaFrostcicle
+      )
+   );
+}
+
+function createComponent(): BallistaFrostcicleComponent {
+   return {};
+}
+
+function getMaxRenderParts(): number {
+   return 1;
+}
+
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   getHitboxVelocity(hitbox);
+   const velocity = _point;
+
+   // Create arrow break particles
+   for (let i = 0; i < 6; i++) {
+      createArrowDestroyParticle(hitbox.box.posX, hitbox.box.posY, velocity.x, velocity.y);
+   }
+
+   playSoundOnHitbox("ice-break.mp3", 0.4, 1, entity, hitbox, false);
+}

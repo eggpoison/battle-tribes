@@ -17,58 +17,62 @@ export interface SlimewispComponentData {}
 export interface SlimewispComponent {}
 
 declare module "../component-registry" {
-   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimewisp, _SlimewispComponentArray> {}
+   interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.slimewisp, typeof SlimewispComponentArray> {}
 }
 
-class _SlimewispComponentArray extends ServerComponentArray<SlimewispComponent, SlimewispComponentData> {
-   public decodeData(): SlimewispComponentData {
-      return {};
-   }
+export const SlimewispComponentArray = registerServerComponentArray(
+   ServerComponentType.slimewisp,
+   new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
+);
+SlimewispComponentArray.populateIntermediateInfo = populateIntermediateInfo;
+SlimewispComponentArray.onHit = onHit;
+SlimewispComponentArray.onDie = onDie;
 
-   public populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
-      const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
-      const hitbox = transformComponentData.hitboxes[0];
-      
-      const renderPart = new TexturedRenderPart(
-         hitbox,
-         0,
-         0,
-         0, 0,
-         TextureIndex.entities_slimewisp_slimewisp
-      );
-      renderPart.opacity = 0.8;
-      renderObject.attachRenderPart(renderPart);
-   }
+function decodeData(): SlimewispComponentData {
+   return {};
+}
 
-   public createComponent(): SlimewispComponent {
-      return {};
-   }
+function populateIntermediateInfo(renderObject: EntityRenderObject, entityComponentData: EntityComponentData): void {
+   const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
+   const hitbox = transformComponentData.hitboxes[0];
+   
+   const renderPart = new TexturedRenderPart(
+      hitbox,
+      0,
+      0,
+      0, 0,
+      TextureIndex.entities_slimewisp_slimewisp
+   );
+   renderPart.opacity = 0.8;
+   renderObject.attachRenderPart(renderPart);
+}
 
-   public getMaxRenderParts(): number {
-      return 1;
-   }
+function createComponent(): SlimewispComponent {
+   return {};
+}
 
-   public onHit(_entity: Entity, hitbox: Hitbox): void {
-      const radius = (hitbox.box as CircularBox).radius;
-      
-      createSlimePoolParticle(hitbox.box.posX, hitbox.box.posY, radius);
+function getMaxRenderParts(): number {
+   return 1;
+}
 
-      for (let i = 0; i < 2; i++) {
-         createSlimeSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius * Math.random());
-      }
-   }
+function onHit(_entity: Entity, hitbox: Hitbox): void {
+   const radius = (hitbox.box as CircularBox).radius;
+   
+   createSlimePoolParticle(hitbox.box.posX, hitbox.box.posY, radius);
 
-   public onDie(entity: Entity): void {
-      const transformComponent = TransformComponentArray.getComponent(entity);
-      const hitbox = transformComponent.hitboxes[0];
-      const radius = (hitbox.box as CircularBox).radius;
-
-      createSlimePoolParticle(hitbox.box.posX, hitbox.box.posY, radius);
-
-      for (let i = 0; i < 3; i++) {
-         createSlimeSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius * Math.random());
-      }
+   for (let i = 0; i < 2; i++) {
+      createSlimeSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius * Math.random());
    }
 }
 
-export const SlimewispComponentArray = registerServerComponentArray(ServerComponentType.slimewisp, _SlimewispComponentArray, true);
+function onDie(entity: Entity): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const hitbox = transformComponent.hitboxes[0];
+   const radius = (hitbox.box as CircularBox).radius;
+
+   createSlimePoolParticle(hitbox.box.posX, hitbox.box.posY, radius);
+
+   for (let i = 0; i < 3; i++) {
+      createSlimeSpeckParticle(hitbox.box.posX, hitbox.box.posY, radius * Math.random());
+   }
+}

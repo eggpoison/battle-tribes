@@ -1,8 +1,7 @@
 import { Entity } from "../../../../../shared/src/entities";
 import { Inventory, InventoryName } from "../../../../../shared/src/items/items";
-import { assert } from "../../../../../shared/src/utils";
 import { InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
-import { getSelectedEntity } from "../../../game/entity-selection";
+import { MenuInventoryElemMap, MenuInventoryElemInfo } from "../../menus";
 import { createEntityInventoryElem } from "./Inventory";
 
 // @Hack
@@ -16,7 +15,9 @@ function getBarrelInventory(barrel: Entity): Inventory {
    throw new Error();
 }
 
-export function createBarrelInventory(): void {
+export function createBarrelInventory(barrel: Entity): MenuInventoryElemMap {
+   const inventoryElemMap = new Map<InventoryName, MenuInventoryElemInfo>();
+   
    const elem = document.createElement("div");
    elem.id = "barrel-inventory";
    elem.className = "menu";
@@ -30,13 +31,17 @@ export function createBarrelInventory(): void {
    flexContainer.className = "flex-container center";
    elem.appendChild(flexContainer);
 
-   const barrel = getSelectedEntity();
-   assert(barrel !== null);
    const inventory = getBarrelInventory(barrel);
    const inventoryElem = createEntityInventoryElem(inventory, true, barrel);
    flexContainer.appendChild(inventoryElem);
+   inventoryElemMap.set(inventory.name, {
+      elem: inventoryElem,
+      isItemSlotContainer: false
+   });
 
    document.body.appendChild(elem);
+
+   return inventoryElemMap;
 }
 
 export function destroyBarrelInventory(): void {

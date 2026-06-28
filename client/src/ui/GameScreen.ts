@@ -1,11 +1,11 @@
 import { assert } from "../../../shared/src/utils";
-import { InventoryComponentArray } from "../game/entity-components/server-components/InventoryComponent";
 import { playerInstance } from "../game/player";
 import { createChat, destroyChat } from "./game/Chat";
 import { createFrameGraph, destroyFrameGraph } from "./game/dev/FrameGraph";
 import { closeGameInteractableLayer, openGameInteractableLayer } from "./game/GameInteractableLayer";
 import { createHealthBar, destroyHealthBar } from "./game/HealthBar";
-import { createHotbar, destroyHotbar } from "./game/inventories/Hotbar";
+import { destroyHotbar } from "./game/inventories/Hotbar";
+import { getMenu, MenuType, openMenu } from "./menus";
 
 let canvas: HTMLCanvasElement | undefined;
 
@@ -13,8 +13,8 @@ export function openGameScreen(): void {
    canvas!.hidden = false;
 
    if (playerInstance !== null) {
-      const inventoryComponent = InventoryComponentArray.getComponent(playerInstance);
-      createHotbar(inventoryComponent, playerInstance);
+      openMenu(getMenu(MenuType.hotbar), playerInstance);
+      openMenu(getMenu(MenuType.heldItem), playerInstance);
       createHealthBar();
    }
    openGameInteractableLayer();

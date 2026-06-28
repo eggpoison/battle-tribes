@@ -11,7 +11,7 @@ export default class ServerComponentArray<
 > extends ComponentArray<Component, ComponentData, ComponentIntermediateInfo> {
    public readonly decodeData: (reader: PacketReader) => ComponentData;
    // Note: data is before entity as every function will need the data, but not all are guaranteed to need the entity
-   public updateFromData?(data: ComponentData, entity: Entity): void;
+   public updateFromData?(data: ComponentData, entity: Entity, isSelected: boolean): void;
    public updatePlayerFromData?(data: ComponentData, isInitialData: boolean): void;
 
    constructor(isActiveByDefault: boolean, createComponent: (entityComponentData: EntityComponentData, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject) => Component, getMaxRenderParts: (entityComponentData: EntityComponentData) => number, decodeData: (reader: PacketReader) => ComponentData) {

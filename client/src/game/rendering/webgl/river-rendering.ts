@@ -10,6 +10,7 @@ import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 import Layer from "../../Layer";
 import { undergroundLayer } from "../../world";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
+import { getRenderChunkIndex } from "../../../../../shared/src/render-chunks";
 
 const SHALLOW_WATER_COLOUR = [118/255, 185/255, 242/255] as const;
 const DEEP_WATER_COLOUR = [86/255, 141/255, 184/255] as const;
@@ -1709,7 +1710,8 @@ export function calculateVisibleRiverInfo(layer: Layer): readonly RenderChunkRiv
 
    for (let renderChunkY = minVisibleRenderChunkY; renderChunkY <= maxVisibleRenderChunkY; renderChunkY++) {
       for (let renderChunkX = minVisibleRenderChunkX; renderChunkX <= maxVisibleRenderChunkX; renderChunkX++) {
-         const riverInfo = getRenderChunkRiverInfo(layer, renderChunkX, renderChunkY);
+         const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
+         const riverInfo = getRenderChunkRiverInfo(layer, renderChunkIndex);
          if (riverInfo !== undefined) {
             riverInfoArray.push(riverInfo);
          }

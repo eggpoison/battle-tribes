@@ -1,19 +1,17 @@
 import { ServerComponentType } from "../../../../../shared/src/components";
-import { LimbAction, Entity } from "../../../../../shared/src/entities";
-import { Inventory, Item, ITEM_TYPE_RECORD, InventoryName, ItemType } from "../../../../../shared/src/items/items";
+import { Entity } from "../../../../../shared/src/entities";
+import { Inventory, Item, InventoryName, ItemType } from "../../../../../shared/src/items/items";
 import { PacketReader } from "../../../../../shared/src/packets";
 import { assert } from "../../../../../shared/src/utils";
 import { playerInstance } from "../../player";
-import { getPlayerSelectedItemSlot, onItemDeselect, onItemSelect } from "../../player-action-handling";
 import { EntityComponentData } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
-import { LimbInfo, InventoryUseComponentArray, inventoryUseComponentHasLimbInfo, getLimbByInventoryName } from "./InventoryUseComponent";
+import { InventoryUseComponentArray, getLimbByInventoryName } from "./InventoryUseComponent";
 import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
-import { updateCraftableRecipes } from "../../../ui/game/menus/CraftingMenu";
-import { Hotbar_addItem, Hotbar_removeItem, Hotbar_updateItem } from "../../../ui/game/inventories/Hotbar";
 import { registerServerComponentArray } from "../component-registry";
-import { createHeldItemElem, destroyHeldItemElem } from "../../../ui/game/HeldItem";
+import { getMenuInventoryElemInfo, getMenuItemSlotElem } from "../../../ui/menus";
+import { addItemToItemSlot, removeItemFromItemSlot, updateItemSlot } from "../../../ui/game/inventories/ItemSlot";
 
 export interface InventoryComponentData {
    readonly inventories: readonly Inventory[];
@@ -25,45 +23,6 @@ export interface InventoryComponent {
 
 declare module "../component-registry" {
    interface ServerComponentRegistry extends RegisterServerComponent<ServerComponentType.inventory, typeof InventoryComponentArray> {}
-}
-
-/** Checks if the player is doing a legal action for a given item. */
-// @HACK
-const playerActionIsLegal = (limb: LimbInfo, item: Item | null): boolean => {
-   const action = limb.action;
-
-   // All items can be idle and attack
-   if (action === LimbAction.none || action === LimbAction.windAttack || action === LimbAction.attack || action === LimbAction.returnAttackToRest) {
-      return true;
-   }
-   
-   if (item !== null) {
-      switch (ITEM_TYPE_RECORD[item.type]) {
-         case "spear": {
-            if (action === LimbAction.chargeSpear) {
-               return true;
-            }
-            break;
-         }
-      }
-   }
-
-   return false;
-}
-
-const validatePlayerAction = (inventoryName: InventoryName, item: Item | null): void => {
-   // @SPEED: If everything worked flawlessly this wouldn't even be needed.
-   
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
-   if (!inventoryUseComponentHasLimbInfo(inventoryUseComponent, inventoryName)) {
-      return;
-   }
-
-   const limb = getLimbByInventoryName(inventoryUseComponent, inventoryName);
-   if (!playerActionIsLegal(limb, item)) {
-      // Reset the action
-      limb.action = LimbAction.none;
-   }
 }
 
 const readInventory = (reader: PacketReader): Inventory => {
@@ -88,9 +47,7 @@ const readInventory = (reader: PacketReader): Inventory => {
    return inventory;
 }
 
-const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory, isPlayer: boolean): boolean => {
-   let itemsHaveChanged = false;
-   
+const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory, entity: Entity, isSelected: boolean): void => {
    if (inventory.width !== inventoryData.width || inventory.height !== inventoryData.height) {
       inventory.width = inventoryData.width;
       inventory.height = inventoryData.height;
@@ -110,21 +67,15 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
       if (itemData === undefined || itemData.id !== item.id) {
          inventory.removeItem(itemSlot);
 
-         if (isPlayer) {
-            Hotbar_removeItem(inventory, itemSlot);
-            itemsHaveChanged = true;
+         if (isSelected) {
+            const inventoryElemInfo = getMenuInventoryElemInfo(entity, inventory.name);
+            if (inventoryElemInfo !== null) {
+               const itemSlotElem = getMenuItemSlotElem(inventoryElemInfo, itemSlot);
+               removeItemFromItemSlot(itemSlotElem);
 
-            if (itemSlot === getPlayerSelectedItemSlot(inventory.name)) {
-               updatePlayerHeldItem(inventory.name, itemSlot);
-               onItemDeselect(item.type, inventory.name === InventoryName.offhand);
-               
-               validatePlayerAction(inventory.name, null);
-            } else if (inventory.name === InventoryName.craftingOutputSlot) {
-               // @HACK @CLEANUP
-               
-            } else if (inventory.name === InventoryName.heldItemSlot) {
-               // @HACK @CLEANUP
-               destroyHeldItemElem();
+               if (inventoryElemInfo.menu.onItemRemove !== undefined) {
+                  inventoryElemInfo.menu.onItemRemove(itemSlot, item, inventory.name);
+               }
             }
          }
       }
@@ -143,18 +94,15 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
          const item = new Item(itemData.type, itemData.count, itemData.id, itemData.nickname, itemData.namer);
          inventory.addItem(item, itemSlot);
 
-         if (isPlayer) {
-            Hotbar_addItem(inventory, itemSlot, item);
-            itemsHaveChanged = true;
+         if (isSelected) {
+            const inventoryElemInfo = getMenuInventoryElemInfo(entity, inventory.name);
+            if (inventoryElemInfo !== null) {
+               const itemSlotElem = getMenuItemSlotElem(inventoryElemInfo, itemSlot);
+               addItemToItemSlot(itemSlotElem, item.type, item.count);
 
-            if (itemSlot === getPlayerSelectedItemSlot(inventory.name)) {
-               onItemSelect(item.type);
-               updatePlayerHeldItem(inventory.name, itemSlot);
-               
-               validatePlayerAction(inventory.name, item);
-            } else if (inventory.name === InventoryName.heldItemSlot) {
-               // @HACK @CLEANUP
-               createHeldItemElem(item);
+               if (inventoryElemInfo.menu.onItemAdd !== undefined) {
+                  inventoryElemInfo.menu.onItemAdd(itemSlot, item, inventory.name);
+               }
             }
          }
       } else if (item.count !== itemData.count || item.nickname !== itemData.nickname || item.namer !== itemData.namer) {
@@ -163,14 +111,15 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
          item.nickname = itemData.nickname;
          item.namer = itemData.namer;
 
-         if (isPlayer) {
-            Hotbar_updateItem(inventory, itemSlot, item);
-            itemsHaveChanged = true;
+         if (isSelected) {
+            const inventoryElemInfo = getMenuInventoryElemInfo(entity, inventory.name);
+            if (inventoryElemInfo !== null) {
+               const itemSlotElem = getMenuItemSlotElem(inventoryElemInfo, itemSlot);
+               updateItemSlot(itemSlotElem, item);
+            }
          }
       }
    }
-
-   return itemsHaveChanged;
 }
 
 export function updatePlayerHeldItem(inventoryName: InventoryName, heldItemSlot: number): void {
@@ -201,6 +150,8 @@ export const InventoryComponentArray = registerServerComponentArray(
    ServerComponentType.inventory,
    new ServerComponentArray(true, createComponent, getMaxRenderParts, decodeData)
 );
+InventoryComponentArray.updateFromData = updateFromData;
+InventoryComponentArray.updatePlayerFromData = updatePlayerFromData;
 
 function decodeData(reader: PacketReader): InventoryComponentData {
    const inventories: Inventory[] = [];
@@ -227,45 +178,26 @@ function getMaxRenderParts(): number {
    return 0;
 }
 
-function updateFromData(data: InventoryComponentData, entity: Entity): void {
+function updateInventories(inventoryComponent: InventoryComponent, data: InventoryComponentData, entity: Entity, isSelected: boolean): void {
+   assert(inventoryComponent.inventories.length === data.inventories.length);
+
+   for (let i = 0; i < inventoryComponent.inventories.length; i++) {
+      updateInventoryFromData(inventoryComponent.inventories[i], data.inventories[i], entity, isSelected);
+   }
+}
+
+function updateFromData(data: InventoryComponentData, entity: Entity, isSelected: boolean): void {
    const inventoryComponent = InventoryComponentArray.getComponent(entity);
-   updateInventories(inventoryComponent, data, false);
+   updateInventories(inventoryComponent, data, entity, isSelected);
 }
 
 function updatePlayerFromData(data: InventoryComponentData): void {
    const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
-   const itemsHaveChanged = updateInventories(inventoryComponent, data, true);
-   if (itemsHaveChanged) {
-      updateCraftableRecipes(inventoryComponent.inventories);
-   }
-}
-
-function updateSelectedEntityState(entity: Entity): void {
-   // @Speed: this is happening every tick for some reason, causing refreshes every tick. baad!!
-   
-   // @INCOMPLETE
-   // const inventoryComponent = InventoryComponentArray.getComponent(entity);
-   // // @Garbage: extra bad cuz it has to be a semi-deep copy of the inventories to actually register!!
-   // selectedEntityInventoryState.setInventories(inventoryComponent.inventories.map(copyInventoryDeep));
+   updateInventories(inventoryComponent, data, playerInstance!, true);
 }
 
 export function createInventoryComponentData(inventories: readonly Inventory[]): InventoryComponentData {
    return {
       inventories: inventories
    };
-}
-
-function updateInventories(inventoryComponent: InventoryComponent, data: InventoryComponentData, isPlayer: boolean): boolean {
-   assert(inventoryComponent.inventories.length === data.inventories.length);
-
-   let itemsHaveChanged = false;
-   
-   for (let i = 0; i < inventoryComponent.inventories.length; i++) {
-      const changed = updateInventoryFromData(inventoryComponent.inventories[i], data.inventories[i], isPlayer);
-      if (changed) {
-         itemsHaveChanged = true;
-      }
-   }
-
-   return itemsHaveChanged;
 }

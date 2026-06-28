@@ -67,9 +67,8 @@ export interface RenderChunkWallBorderInfo {
    vertexData: Float32Array;
 }
 
-export function getRenderChunkRiverInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkRiverInfo | undefined {
-   const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
-   return layer.riverInfoMap.get(renderChunkIndex);
+export function getRenderChunkRiverInfo(layer: Layer, renderChunkIdx: number): RenderChunkRiverInfo | undefined {
+   return layer.riverInfoMap.get(renderChunkIdx);
 }
 
 export function getRenderChunkWallBorderInfo(layer: Layer, renderChunkIdx: number): RenderChunkWallBorderInfo | undefined {
@@ -123,7 +122,6 @@ export function createLayerRenderChunks(layer: Layer, intermediateInfo: Intermed
 
          // @Hack! so its only added once
          if (layer.idx === 0) {
-            console.log("add from initial",renderChunkX,renderChunkY);
             addRenderChunkToVisibleArray(renderChunkIndex);
          }
       }

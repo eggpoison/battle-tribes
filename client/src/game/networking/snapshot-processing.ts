@@ -7,7 +7,7 @@ import { TribesmanTitle } from "../../../../shared/src/titles";
 import { PacketReader } from "../../../../shared/src/packets";
 import { HitFlags, WaterRockData } from "../../../../shared/src/client-server-types";
 import { STRUCTURE_TYPES, StructureType } from "../../../../shared/src/structures";
-import { addRenderChunkToVisibleArray, setCameraSubject } from "../camera";
+import { addRenderChunkToVisibleArray, removeRenderChunkFromVisibleArray, setCameraSubject } from "../camera";
 import { setCurrentSnapshot } from "../networking/snapshots";
 import Layer from "../Layer";
 import { playerInstance, setPlayerInstance } from "../player";
@@ -31,11 +31,11 @@ import { EntityServerComponentData, getEntityComponentArrays, getEntityServerCom
 import { getSelectedEntity } from "../entity-selection";
 import { COMPONENT_ARRAYS, ServerComponentData } from "../entity-components/component-registry";
 import { processTileUpdates } from "../rendering/webgl/solid-tile-rendering";
-import { EdgeType, processRenderChunkSubtileUpdates, createRenderChunk } from "../rendering/render-chunks";
+import { EdgeType, processRenderChunkSubtileUpdates, createRenderChunk, destroyRenderChunk, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../rendering/render-chunks";
 import { getSubtileIndex, SubtileType } from "../../../../shared/src/subtiles";
 import { getRenderChunkX, getRenderChunkY } from "../../../../shared/src/render-chunks";
 import { Settings } from "../../../../shared/src/settings";
-import { addTileToWorld, readWaterRocksArray } from "./packet-receiving";
+import { addTileToWorld, readWaterRocksArray, removeTileFromWorld } from "./packet-receiving";
 import { Biome } from "../../../../shared/src/biomes";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
@@ -497,13 +497,17 @@ const updateEntityFromData = (entity: Entity, data: EntitySnapshot): void => {
    const componentTypes = getEntityServerComponentTypes(entityType);
    const componentArrays = getEntityServerComponentArrays(entityType);
    
+   // @cleanup: weerd
+   const isSelected = entity === getSelectedEntity();
+
    // Update server components from data
    for (let i = 0; i < componentArrays.length; i++) {
       const componentArray = componentArrays[i];
       if (componentArray.updateFromData !== undefined) {
          const componentType = componentTypes[i];
          const componentData = getServerComponentData(data.componentData, componentTypes, componentType);
-         componentArray.updateFromData(componentData, entity);
+
+         componentArray.updateFromData(componentData, entity, isSelected);
       }
    }
 
@@ -538,7 +542,6 @@ const updatePlayerFromData = (playerInstance: number, data: EntitySnapshot): voi
 }
 
 export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
-   console.log("(((TICKS: " + snapshot.tick + ")))");
    // @HACK @CLEANUP impure. Done before so that server data can override particles
    updateParticles();
 
@@ -577,10 +580,6 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
          const renderChunkIndex = renderChunkData.renderChunkIndex;
 
          if (i === 0) {
-            // @Hack
-            const renderChunkX = getRenderChunkX(renderChunkIndex);
-            const renderChunkY = getRenderChunkY(renderChunkIndex);
-            console.log("dynamic add:",renderChunkX,renderChunkY);
             addRenderChunkToVisibleArray(renderChunkIndex);
          }
          
@@ -626,10 +625,26 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
 
    // Old render chunks
    for (let i = 0; i < snapshot.oldRenderChunks.length; i++) {
-      const renderChunk = snapshot.oldRenderChunks[i];
-      const renderChunkX = getRenderChunkX(renderChunk);
-      const renderChunkY = getRenderChunkY(renderChunk);
-      console.log("TRUE REMOVAL - " + renderChunkX + " " + renderChunkY);
+      const renderChunkIndex = snapshot.oldRenderChunks[i];
+      const renderChunkX = getRenderChunkX(renderChunkIndex);
+      const renderChunkY = getRenderChunkY(renderChunkIndex);
+
+      removeRenderChunkFromVisibleArray(renderChunkIndex);
+
+      for (const layer of layers) {
+         destroyRenderChunk(layer, renderChunkIndex);
+
+         const minTileX = getRenderChunkMinTileX(renderChunkX);
+         const maxTileX = getRenderChunkMaxTileX(renderChunkX);
+         const minTileY = getRenderChunkMinTileY(renderChunkY);
+         const maxTileY = getRenderChunkMaxTileY(renderChunkY);
+         for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+            for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+               removeTileFromWorld(layer, tileIndex);
+            }
+         }
+      }
    }
 
    for (let i = 0; i < layers.length; i++) {
@@ -657,21 +672,6 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
             updateEntityFromData(entity, entitySnapshot);
          } else {
             createEntityFromData(entity, entitySnapshot);
-         }
-      }
-   }
-
-   // @Cleanup!!
-   const selectedEntity = getSelectedEntity();
-   if (selectedEntity !== null) {
-      const snapshotData = snapshot.entities.get(selectedEntity);
-      if (snapshotData !== undefined) {
-         const componentArrays = getEntityServerComponentArrays(getEntityType(selectedEntity));
-         for (const componentArray of componentArrays) {
-            if (componentArray.updateSelectedEntityState !== undefined) {
-               // @Speed: until I make component data only send on change this will run every tick for selected entities!! which is bad not only for performance but for proofchecking - what if a component isn't having its data registered as changed when it's changed, but it's masked up cuz all the data is sent anyway???
-               componentArray.updateSelectedEntityState(selectedEntity);
-            }
          }
       }
    }

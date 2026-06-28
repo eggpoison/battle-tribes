@@ -51,8 +51,6 @@ export abstract class ComponentArray<
    /** Called when the entity dies, not when the entity leaves the player's vision. */
    public onDie?(entity: Entity): void;
    public onRemove?(entity: Entity): void;
-   /** Called whenever the entity is first selected or its data is changed while selected. */
-   public updateSelectedEntityState?(entity: Entity): void;
    public calculateTint?(entity: Entity): ComponentTint;
 
    constructor(isActiveByDefault: boolean, createComponent: (entityComponentData: EntityComponentData, intermediateInfo: Readonly<ComponentIntermediateInfo>, renderObject: EntityRenderObject) => Component, getMaxRenderParts: (entityComponentData: EntityComponentData) => number) {

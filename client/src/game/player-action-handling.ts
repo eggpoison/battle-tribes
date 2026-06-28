@@ -939,7 +939,7 @@ const unuseItem = (itemType: ItemType): void => {
       return;
    }
 
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance!);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerInstance);
    
    switch (ITEM_TYPE_RECORD[itemType]) {
       case "healing": {
@@ -1051,7 +1051,7 @@ const onItemStartUse = (itemType: ItemType, itemInventoryName: InventoryName, it
          break;
       }
       case "crossbow": {
-         if (!hotbarCrossbowLoadProgressRecord.hasOwnProperty(itemSlot) || hotbarCrossbowLoadProgressRecord[itemSlot]! < 1) {
+         if (hotbarCrossbowLoadProgressRecord[itemSlot] === undefined || hotbarCrossbowLoadProgressRecord[itemSlot] < 1) {
             // Start loading crossbow
             const limb = getLimbByInventoryName(inventoryUseComponent, itemInventoryName);
             limb.action = LimbAction.loadCrossbow;
@@ -1271,7 +1271,7 @@ export function selectItemSlot(itemSlot: number): void {
    const previousItem = hotbarInventory.itemSlots[hotbarSelectedItemSlot];
 
    hotbarSelectedItemSlot = itemSlot;
-   Hotbar_updateSelectedItemSlot(hotbarInventory, itemSlot);
+   Hotbar_updateSelectedItemSlot(itemSlot);
 
    // Clear any buffered inputs
    attackBufferTime = 0;
@@ -1535,7 +1535,7 @@ const tickItem = (itemType: ItemType): void => {
          const entityComponentData: EntityComponentData = {
             entityType: entityType,
             // @Hack: cast
-            serverComponentData: components as any,
+            serverComponentData: components,
             // @HACK
             clientComponentData: getEntityClientComponentConfigs(entityType)
          };

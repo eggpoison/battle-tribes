@@ -1,7 +1,7 @@
 import { _point, assert, Point } from "../../../shared/src/utils";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import Layer from "./Layer";
-import { entityExists, getCurrentLayer, layers } from "./world";
+import { entityExists, getCurrentLayer } from "./world";
 import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
 import { Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
@@ -11,9 +11,7 @@ import { Tile } from "./Tile";
 import { Entity } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
 import { tileIsInWorld, getTileIndexIncludingEdges } from "../../../shared/src/tiles";
-import { getRenderChunkX, getRenderChunkY, RenderChunkVars } from "../../../shared/src/render-chunks";
-import { destroyRenderChunk, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "./rendering/render-chunks";
-import { removeTileFromWorld } from "./networking/packet-receiving";
+import { RenderChunkVars } from "../../../shared/src/render-chunks";
 
 let cameraSubjectHitbox: Hitbox | null = null;
 
@@ -97,6 +95,16 @@ export function addRenderChunkToVisibleArray(renderChunkIndex: number): void {
    visibleRenderChunks.push(renderChunkIndex);
 }
 
+export function removeRenderChunkFromVisibleArray(renderChunkIndex: number): void {
+   const idx = visibleRenderChunks.indexOf(renderChunkIndex);
+   assert(idx !== -1);
+   visibleRenderChunks.splice(idx, 1);
+}
+
+export function getVisibleRenderChunks(): readonly number[] {
+   return visibleRenderChunks;
+}
+
 export function setCameraZoom(zoom: number): void {
    cameraZoom = zoom;
    debugDisplayState.cameraZoom = zoom;
@@ -164,28 +172,6 @@ export function refreshCameraPosition(clientInterp: number, serverInterp: number
    setCameraPosition(_point);
 }
 
-const renderChunkHasEntities = (layer: Layer, renderChunkX: number, renderChunkY: number): boolean => {
-   const minTileX = getRenderChunkMinTileX(renderChunkX);
-   const maxTileX = getRenderChunkMaxTileX(renderChunkX);
-   const minTileY = getRenderChunkMinTileY(renderChunkY);
-   const maxTileY = getRenderChunkMaxTileY(renderChunkY);
-   
-   const minChunkX = Math.floor(minTileX / Settings.CHUNK_SIZE);
-   const maxChunkX = Math.floor(maxTileX / Settings.CHUNK_SIZE);
-   const minChunkY = Math.floor(minTileY / Settings.CHUNK_SIZE);
-   const maxChunkY = Math.floor(maxTileY / Settings.CHUNK_SIZE);
-   for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-         const chunk = layer.getChunk(chunkX, chunkY);
-         if (chunk.entities.length > 0) {
-            return true;
-         }
-      }
-   }
-
-   return false;
-}
-
 export function refreshCameraView(): void {
    // const previousChunks = getChunksFromRange(layer, this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
    
@@ -221,53 +207,6 @@ export function refreshCameraView(): void {
    maxVisibleRenderChunkX = Math.min(Math.floor(maxVisibleX / RenderChunkVars.RENDER_CHUNK_UNITS), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION - 1);
    minVisibleRenderChunkY = Math.max(Math.floor(minVisibleY / RenderChunkVars.RENDER_CHUNK_UNITS), -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
    maxVisibleRenderChunkY = Math.min(Math.floor(maxVisibleY / RenderChunkVars.RENDER_CHUNK_UNITS), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION - 1);
-
-   const displayAspectRatio = screen.width / screen.height;
-
-   const viewWidth = Settings.MAX_VIEW_HEIGHT * displayAspectRatio;
-   const viewHeight = Settings.MAX_VIEW_HEIGHT;
-   
-   // Look for render chunks far away enough to remove
-   const minNearbyRenderChunkX = Math.max(Math.floor((cameraPosition.x - viewWidth * 0.5 - Settings.PLAYER_VIEW_PADDING) / RenderChunkVars.RENDER_CHUNK_UNITS), -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
-   const maxNearbyRenderChunkX = Math.min(Math.floor((cameraPosition.x + viewWidth * 0.5 + Settings.PLAYER_VIEW_PADDING) / RenderChunkVars.RENDER_CHUNK_UNITS), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION - 1);
-   const minNearbyRenderChunkY = Math.max(Math.floor((cameraPosition.y - viewHeight * 0.5 - Settings.PLAYER_VIEW_PADDING) / RenderChunkVars.RENDER_CHUNK_UNITS), -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
-   const maxNearbyRenderChunkY = Math.min(Math.floor((cameraPosition.y + viewHeight * 0.5 + Settings.PLAYER_VIEW_PADDING) / RenderChunkVars.RENDER_CHUNK_UNITS), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION - 1);
-   outer:
-   for (let i = 0; i < visibleRenderChunks.length; i++) {
-      const renderChunkIndex = visibleRenderChunks[i];
-      const renderChunkX = getRenderChunkX(renderChunkIndex);
-      const renderChunkY = getRenderChunkY(renderChunkIndex);
-
-      // Important that this check is always less strict than the one which removes entities, otherwise entities will be sitting on tile-less chunks and the game will crash.
-      if (renderChunkX < minNearbyRenderChunkX || renderChunkX > maxNearbyRenderChunkX || renderChunkY < minNearbyRenderChunkY || renderChunkY > maxNearbyRenderChunkY) {
-         // @HACK the entity removal process is sent by the server, and so lags behind this client-led render chunk removal. Since they both operate on the same bounds naturally there will be times where the player unloads a render chunk while there are still entities there, so this is here to fix
-         for (const layer of layers) {
-            if (renderChunkHasEntities(layer, renderChunkX, renderChunkY)) {
-               continue outer;
-            }
-         }
-
-         console.log("delete",renderChunkX,renderChunkY);
-         
-         for (const layer of layers) {
-            destroyRenderChunk(layer, renderChunkIndex);
-
-            const minTileX = getRenderChunkMinTileX(renderChunkX);
-            const maxTileX = getRenderChunkMaxTileX(renderChunkX);
-            const minTileY = getRenderChunkMinTileY(renderChunkY);
-            const maxTileY = getRenderChunkMaxTileY(renderChunkY);
-            for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-               for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-                  const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-                  removeTileFromWorld(layer, tileIndex);
-               }
-            }
-         }
-
-         visibleRenderChunks.splice(i, 1);
-         i--;
-      }
-   }
 }
 
 /** X position in the screen (0, 0) = bottom left, (windowWidth, windowHeight) = top right) */

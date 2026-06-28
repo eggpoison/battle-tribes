@@ -6,7 +6,7 @@ import { getInventory, InventoryComponentArray } from "../../../game/entity-comp
 import { shiftIsPressed } from "../../../game/event-handling";
 import { sendItemTransferPacket, sendItemPickupPacket, sendItemReleasePacket } from "../../../game/networking/packet-sending/packet-sending";
 import { playerInstance } from "../../../game/player";
-import { getOpenMenu, hasOpenMenu } from "../../menus";
+import { getFirstOpenInventory, hasOpenMenu } from "../../menus";
 import { getClickedItemSlotIdx } from "./Inventory";
 
 // interface Props extends HTMLAttributes<HTMLDivElement> {
@@ -63,23 +63,20 @@ const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: numbe
       if (heldItem === undefined) {
          // If shift is held, transfer the item between the player's inventory and the opened inventory
          if (shiftIsPressed) {
-            const openMenu = getOpenMenu();
-            if (openMenu !== null) {
-               const inventoryInfo = openMenu.inventoryInfo;
-               if (inventoryInfo !== undefined) {
-                  let otherOpenMenuInventory: Inventory;
-                  let otherOpenMenuEntity: Entity;
-                  if (inventoryInfo.entity === entity) {
-                     otherOpenMenuInventory = getInventory(playerInventoryComponent, InventoryName.hotbar)!;
-                     otherOpenMenuEntity = playerInstance!;
-                  } else {
-                     const entityInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
-                     otherOpenMenuInventory = getInventory(entityInventoryComponent, inventoryInfo.inventoryName)!;
-                     otherOpenMenuEntity = inventoryInfo.entity;
-                  }
-
-                  sendItemTransferPacket(entity, inventory.name, itemSlot, otherOpenMenuEntity, otherOpenMenuInventory.name);
+            const openInventoryInfo = getFirstOpenInventory();
+            if (openInventoryInfo !== null) {
+               let otherOpenMenuInventory: Inventory;
+               let otherOpenMenuEntity: Entity;
+               if (openInventoryInfo.entity === entity) {
+                  otherOpenMenuInventory = getInventory(playerInventoryComponent, InventoryName.hotbar)!;
+                  otherOpenMenuEntity = playerInstance!;
+               } else {
+                  const entityInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
+                  otherOpenMenuInventory = getInventory(entityInventoryComponent, openInventoryInfo.inventoryName)!;
+                  otherOpenMenuEntity = openInventoryInfo.entity;
                }
+
+               sendItemTransferPacket(entity, inventory.name, itemSlot, otherOpenMenuEntity, otherOpenMenuInventory.name);
             }
          } else {
             sendItemPickupPacket(entity, inventory.name, itemSlot, clickedItem.count);

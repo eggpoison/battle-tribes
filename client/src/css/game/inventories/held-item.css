@@ -9,11 +9,8 @@
 }
 #held-item img {
    width: var(--item-image-size);
-   height: var(--item-image-size);
+   /* @Copynpaste from .item-slot img */
+   margin: calc(var(--item-slot-size) * 0.125) calc(var(--item-slot-size) * 0.125);
    image-rendering: pixelated;
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
    z-index: 1;
 }

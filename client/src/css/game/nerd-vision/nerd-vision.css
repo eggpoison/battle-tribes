@@ -104,7 +104,6 @@
 
 .tab-selector img {
    width: 32px;
-   height: 32px;
    image-rendering: pixelated;
    margin-left: 50%;
    transform: translateX(-50%);
@@ -159,7 +158,6 @@
 }
 .devmode-scrollable-options .option .selection-marker {
    width: 10px;
-   height: 10px;
    background-image: radial-gradient(#fff 0%, #888 100%);
    border-radius: 100%;
    position: absolute;

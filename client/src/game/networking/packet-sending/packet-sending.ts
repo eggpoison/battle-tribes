@@ -18,7 +18,6 @@ export function sendInitialPlayerDataPacket(username: string, tribeType: TribeTy
    
    packet.writeString(username);
    packet.writeNumber(tribeType);
-   console.log(displayAspectRatio);
    packet.writeNumber(displayAspectRatio);
    packet.writeBool(isSpectating);
 

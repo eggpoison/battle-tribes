@@ -36,7 +36,6 @@
 }
 #taming-menu .taming-tier img {
    width: 28px;
-   height: 28px;
    image-rendering: pixelated;
    margin-left: 3px;
 }
@@ -104,7 +103,6 @@
 }
 #taming-menu .berry-progress-bar .progress-counter img {
    width: 32px;
-   height: 32px;
    image-rendering: pixelated;
    margin-left: 4px;
 }
@@ -175,7 +173,6 @@
 }
 #taming-menu .skill .skill-icon {
    width: 52px;
-   height: 52px;
    image-rendering: pixelated;
    position: absolute;
    top: 0;

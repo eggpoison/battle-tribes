@@ -14,7 +14,6 @@ import { getServerComponentData, getTransformComponentData } from "../component-
 import { getEntityServerComponentTypes } from "../component-types";
 import { hueShift, multiColourLerp } from "../../render-parts/VisualRenderPart";
 import { registerServerComponentArray } from "../component-registry";
-import { RenderChunkVars } from "../../../../../shared/src/render-chunks";
 
 const enum Var {
    SPRING_BACK_RATE = 8 * Settings.DT_S
@@ -91,17 +90,9 @@ const setLayerColour = (renderPart: ColouredRenderPart, entityComponentData: Ent
          const transformComponentData = getTransformComponentData(entityComponentData.serverComponentData);
          const hitbox = transformComponentData.hitboxes[0];
 
-         // @SQUEAM @temporary
-         const renderChunkX = Math.floor(hitbox.box.posX / RenderChunkVars.RENDER_CHUNK_UNITS);
-         const renderChunkY = Math.floor(hitbox.box.posY / RenderChunkVars.RENDER_CHUNK_UNITS);
-   
          const tileX = Math.floor(hitbox.box.posX / Settings.TILE_SIZE);
          const tileY = Math.floor(hitbox.box.posY / Settings.TILE_SIZE);
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-         // @squeam
-         if (!surfaceLayer.hasTileXY(tileX, tileY)) {
-            console.log("BAB!",renderChunkX, renderChunkY);
-         }
          const tileType = surfaceLayer.getTile(tileIndex).type;
    
          const grassTemperature = surfaceLayer.tileTemperatures.get(tileIndex)!;

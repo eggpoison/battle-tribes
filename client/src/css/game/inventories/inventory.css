@@ -112,13 +112,12 @@
 .item-slot img {
    /* 16px image size, times 3.75 (@Hack why this specifically) */
    width: 60px;
-   height: 60px;
    image-rendering: pixelated;
    margin: calc(var(--item-slot-size) * 0.125) calc(var(--item-slot-size) * 0.125);
 }
 
 /* @HACK: #held-item */
-.item-slot .item-count, #held-item .held-item-count {
+.item-slot .item-count, #held-item .item-count {
    color: #fff;
    font-family: "Inconsolata";
    font-size: 1.5rem;

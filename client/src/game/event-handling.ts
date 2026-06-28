@@ -3,7 +3,7 @@ import { Settings } from "../../../shared/src/settings";
 import { gameUIState } from "../ui-state/game-ui-state";
 import { nerdVision } from "../ui-state/nerd-vision-funcs";
 import { openChatMessageInput } from "../ui/game/Chat";
-import { closeCurrentMenu, hasOpenNonEmbodiedMenu, MenuType, openMenu, toggleMenu } from "../ui/menus";
+import { closeCurrentMenu, getMenu, hasOpenBlockingMenu, MenuType, openMenu, toggleMenu } from "../ui/menus";
 import { updateCursorScreenPos } from "./camera";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { sendAscendPacket, sendDismountCarrySlotPacket, sendItemDropPacket } from "./networking/packet-sending/packet-sending";
@@ -132,7 +132,7 @@ function onMouseMove(e: MouseEvent): void {
 function openCraftingMenu(): void {
    const didCloseMenu = closeCurrentMenu();
    if (!didCloseMenu) {
-      openMenu(MenuType.craftingMenu);
+      openMenu(getMenu(MenuType.craftingMenu), playerInstance!);
    }
 }
 
@@ -208,7 +208,7 @@ function onShiftStart(): void {
    shiftIsPressed = true;
    
    // Dismount current mount if the player isn't shift clicking an item in an inventory
-   if (!hasOpenNonEmbodiedMenu() && playerInstance !== null) {
+   if (!hasOpenBlockingMenu() && playerInstance !== null) {
       const transformComponent = TransformComponentArray.getComponent(playerInstance);
       const playerHitbox = transformComponent.hitboxes[0];
       if (playerHitbox.parent !== null && entityExists(playerHitbox.parent.entity)) {

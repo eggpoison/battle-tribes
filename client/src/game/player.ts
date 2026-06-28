@@ -10,7 +10,7 @@ import { getEntityRenderObject } from "./world";
 import { gameUIState } from "../ui-state/game-ui-state";
 import { destroyHealthBar } from "../ui/game/HealthBar";
 import { deathScreen } from "../ui-state/death-screen-funcs";
-import { closeCurrentMenu, hasOpenNonEmbodiedMenu } from "../ui/menus";
+import { closeCurrentMenu, hasOpenBlockingMenu } from "../ui/menus";
 import { _point } from "../../../shared/src/utils";
 
 // @Cleanup: THis might literally be able to be removed.. along with this whole file.
@@ -69,7 +69,7 @@ export function updatePlayerDirection(clientInterp: number, serverInterp: number
    if (playerInstance === null) return;
 
    // Don't turn the player if they're meddling about in an inventory, cuz they're not actually looking at stuff while they're doing that
-   if (hasOpenNonEmbodiedMenu()) {
+   if (hasOpenBlockingMenu()) {
       return;
    }
 

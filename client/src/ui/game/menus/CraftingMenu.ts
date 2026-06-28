@@ -13,6 +13,7 @@ import { getSelectedEntity } from "../../../game/entity-selection";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../game/client-item-info";
 import { playerInstance } from "../../../game/player";
 import { getInventory, InventoryComponentArray } from "../../../game/entity-components/server-components/InventoryComponent";
+import { MenuInventoryElemInfo, MenuInventoryElemMap } from "../../menus";
 
 const enum Var {
    RECIPE_BROWSER_WIDTH = 3,
@@ -219,8 +220,10 @@ function createCraftingArea(craftingAreaElem: HTMLElement): void {
    }
 }
 
-export function openCraftingMenu(): void {
+export function openCraftingMenu(): MenuInventoryElemMap {
    assert(craftingMenuElem === null);
+   
+   const inventoryElemMap = new Map<InventoryName, MenuInventoryElemInfo>();
 
    const selectedEntity = getSelectedEntity();
    const craftingStation = selectedEntity !== null ? getEntityType(selectedEntity) as CraftingStationEntityType : null;
@@ -285,6 +288,8 @@ export function openCraftingMenu(): void {
 
    document.body.appendChild(elem);
    craftingMenuElem = elem;
+
+   return inventoryElemMap;
 }
 
 export function closeCraftingMenu(): void {

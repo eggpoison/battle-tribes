@@ -42,9 +42,7 @@
    align-items: center;
 }
 #crafting-menu .ingredient .ingredient-icon {
-   --size: 2rem;
-   width: var(--size);
-   height: var(--size);
+   width: 2rem;
    image-rendering: pixelated;
    margin-left: 8px;
 }
@@ -83,9 +81,7 @@
    opacity: 0.5;
 }
 #crafting-menu .crafting-station-image {
-   --size: 32px;
-   width: var(--size);
-   height: var(--size);
+   width: 32px;
    image-rendering: pixelated;
 }
 
@@ -138,9 +134,7 @@
    align-items: center;
 }
 #crafting-menu .recipe-viewer .header .recipe-product-icon {
-   --size: 32px;
-   width: var(--size);
-   height: var(--size);
+   width: 32px;
    image-rendering: pixelated;
 }
 #crafting-menu .recipe-viewer .header .recipe-product-name {
@@ -195,10 +189,8 @@
    text-shadow: 3px 3px 0 #000;
 }
 #crafting-menu .crafting-area .recipe-product-icon {
-   --size: 32px;
-   width: var(--size);
-   height: var(--size);
-   image-rendering:pixelated;
+   width: 32px;
+   image-rendering: pixelated;
 }
 #crafting-menu .crafting-area .content {
    padding: 0.25rem;

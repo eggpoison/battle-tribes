@@ -1,6 +1,5 @@
 import { MenuType } from "../../menus";
 import { createTab } from "./Tab";
-import { createItemsTab, destroyItemsTab } from "./tabs/ItemsTab";
 import ItemTabImage from "/src/images/ui/item-tab.png";
 import SummonTabImage from "/src/images/ui/summon-tab.png";
 import TitlesTabImage from "/src/images/ui/titles-tab.png";

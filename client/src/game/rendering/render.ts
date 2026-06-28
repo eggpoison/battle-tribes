@@ -1,8 +1,8 @@
 import { Settings } from "../../../../shared/src/settings";
-import { maxVisibleChunkX, maxVisibleChunkY, maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleChunkX, minVisibleChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY, refreshCameraPosition, refreshCameraView } from "../camera";
+import { getVisibleRenderChunks, maxVisibleChunkX, maxVisibleChunkY, maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleChunkX, minVisibleChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY, refreshCameraPosition, refreshCameraView } from "../camera";
 import { getHighlightedEntity, getHighlightedRenderObject, getSelectedEntity } from "../entity-selection";
 import Layer from "../Layer";
-import { playerInstance, updatePlayerDirection } from "../player";
+import { updatePlayerDirection } from "../player";
 import { RenderLayer, MAX_RENDER_LAYER } from "../render-layers";
 import { beginLoadingSounds } from "../sound";
 import { createTextCanvasContext, renderText } from "../text-canvas";
@@ -13,7 +13,7 @@ import { layers, getCurrentLayer, entityExists, getEntityRenderObject } from "..
 import { renderLightLevelsText } from "./light-levels-text-rendering";
 import { clearRenderChunks, createLayerRenderChunks } from "./render-chunks";
 import { resetRenderOrder, renderNextRenderables } from "./render-loop";
-import { calculateHitboxRenderPosition, getMatrixPosition, updateRenderPartMatrices } from "./render-part-matrices";
+import { updateRenderPartMatrices } from "./render-part-matrices";
 import { createUBOs, updateUBOs } from "./ubos";
 import { createHitboxShaders, renderHitboxes } from "./webgl/box-wireframe-rendering";
 import { createBuildingBlockingTileShaders, renderBuildingBlockingTiles } from "./webgl/building-blocking-tiles-rendering";
@@ -55,11 +55,9 @@ import { playerIsHoldingPlaceableItem } from "../player-action-handling";
 import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { debugDisplayState } from "../../ui-state/debug-display-state";
 import { nerdVision } from "../../ui-state/nerd-vision-funcs";
-import { MenuType, menuIsOpen } from "../../ui/menus";
+import { MenuType, getMenu, menuIsOpen } from "../../ui/menus";
 import { IntermediateInitialisationInfo } from "../networking/packet-receiving";
 import { RenderChunkVars } from "../../../../shared/src/render-chunks";
-import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
-import { _point } from "../../../../shared/src/utils";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -146,7 +144,7 @@ export async function createShaders(): Promise<void> {
    }
 }
 
-const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number): void => {
+const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number, visibleRenderChunks: readonly number[]): void => {
    if (layer === getCurrentLayer()) {
       renderText(clientInterp, serverInterp);
    }
@@ -292,21 +290,16 @@ export function renderGame(clientInterp: number, serverInterp: number): void {
    updatePlayerDirection(clientInterp, serverInterp);
 
    updateRenderPartMatrices(clientInterp, serverInterp);
-   // const renderObject = getEntityRenderObject(playerInstance!);
-   // getMatrixPosition(renderObject.renderPartsByZIndex[4].modelMatrix)
-   // console.log(_point.x, _point.y);
-   // const transformComponent = TransformComponentArray.getComponent(playerInstance!);
-   // calculateHitboxRenderPosition(transformComponent.hitboxes[0], clientInterp, serverInterp);
-   // console.log(_point.x, _point.y);
 
    // Render layers
+   const visibleRenderChunks = getVisibleRenderChunks();
    // @Hack
    if (layers.indexOf(getCurrentLayer()) === 0) {
-      renderLayer(layers[1], clientInterp, serverInterp);
+      renderLayer(layers[1], clientInterp, serverInterp, visibleRenderChunks);
       renderLayerDarkening();
-      renderLayer(layers[0], clientInterp, serverInterp);
+      renderLayer(layers[0], clientInterp, serverInterp, visibleRenderChunks);
    } else {
-      renderLayer(layers[1], clientInterp, serverInterp);
+      renderLayer(layers[1], clientInterp, serverInterp, visibleRenderChunks);
    }
 
    if (debugDisplayState.showSubtileSupports) {
@@ -321,7 +314,7 @@ export function renderGame(clientInterp: number, serverInterp: number): void {
    // @INCOMPLETE @SQUEAM
    // updateInspectHealthBar();
    
-   if (menuIsOpen(MenuType.techTree)) {
+   if (menuIsOpen(getMenu(MenuType.techTree))) {
       renderTechTree();
       renderTechTreeItems();
    }

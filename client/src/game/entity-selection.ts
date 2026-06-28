@@ -24,14 +24,13 @@ import { HealthComponentArray } from "./entity-components/server-components/Heal
 import { entityIsTameableByPlayer, hasTamingSkill, TamingComponentArray } from "./entity-components/server-components/TamingComponent";
 import { createHitboxQuick, getHitboxVelocity } from "./hitboxes";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
-import { closeCurrentMenu, hasOpenEmbodiedMenu, MenuType, menuIsInventory, openMenu } from "../ui/menus";
+import { closeCurrentMenu, MenuType, menuIsInventory, openMenu, getMenu, hasOpenAutoClosingMenu } from "../ui/menus";
 import { getPlayerSelectedItem, playerIsPlacingEntity } from "./player-action-handling";
 import { cameraPosition, cameraZoom, cursorWorldPos } from "./camera";
 import { GameInteractState, gameUIState } from "../ui-state/game-ui-state";
 import { AnimalStaffCommandType, createControlCommandParticles } from "./particles";
 import { BuildMenuOption, buildMenuState, getBuildMenuOptions } from "../ui-state/build-menu-state";
 import { setActiveResearchBench } from "./research";
-import { getEntityComponentArrays } from "./entity-components/component-types";
 import { TextureIndex } from "../texture-index";
 
 const enum InteractActionType {
@@ -42,6 +41,7 @@ const enum InteractActionType {
    startResearching,
    toggleDoor,
    openMenu,
+   openInventoryMenu,
    openCraftingStation,
    openAnimalStaffMenu,
    mountCarrySlot,
@@ -189,12 +189,13 @@ export function setSelectedEntity(newSelectedEntity: Entity | null): void {
       selectedEntity = newSelectedEntity;
 
       // Update UI state
-      const componentArrays = getEntityComponentArrays(getEntityType(selectedEntity));
-      for (const componentArray of componentArrays) {
-         if (componentArray.updateSelectedEntityState !== undefined) {
-            componentArray.updateSelectedEntityState(selectedEntity);
-         }
-      }
+      // @INCOMPLETE!!!
+      // const componentArrays = getEntityComponentArrays(getEntityType(selectedEntity));
+      // for (const componentArray of componentArrays) {
+      //    if (componentArray.updateSelectedEntityState !== undefined) {
+      //       componentArray.updateSelectedEntityState(selectedEntity);
+      //    }
+      // }
    } else {
       selectedEntity = 0;
    }
@@ -503,7 +504,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       case InteractActionType.openBuildMenu: {
          setSelectedEntity(entity);
          buildMenuState.options = action.options;
-         openMenu(MenuType.buildMenu);
+         openMenu(getMenu(MenuType.buildMenu));
          break;
       }
       case InteractActionType.plantSeed: {
@@ -554,7 +555,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       }
       case InteractActionType.openMenu: {
          setSelectedEntity(entity);
-         openMenu(action.menu);
+         openMenu(getMenu(action.menu), entity);
 
          if (menuIsInventory(action.menu)) {
             sendStartEntityInteractionPacket(entity);
@@ -563,12 +564,12 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       }
       case InteractActionType.openCraftingStation: {
          setSelectedEntity(entity);
-         openMenu(MenuType.craftingMenu);
+         openMenu(getMenu(MenuType.craftingMenu), entity);
          break;
       }
       case InteractActionType.openAnimalStaffMenu: {
          setSelectedEntity(entity);
-         openMenu(MenuType.animalStaffOptions);
+         openMenu(getMenu(MenuType.animalStaffOptions));
          break;
       }
       case InteractActionType.mountCarrySlot: {
@@ -599,12 +600,12 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       }
       case InteractActionType.openTamingMenu: {
          setSelectedEntity(entity);
-         openMenu(MenuType.tamingMenu);
+         openMenu(getMenu(MenuType.tamingMenu));
          break;
       }
       case InteractActionType.inscribeFloorSign: {
          setSelectedEntity(entity);
-         openMenu(MenuType.signInscribeMenu);
+         openMenu(getMenu(MenuType.signInscribeMenu));
          break;
       }
       case InteractActionType.pickUpDustfleaEgg: {
@@ -677,7 +678,7 @@ export function updateEntitySelections(): void {
       }
 
       if (newHighlightedEntity === null) {
-         if ((hasOpenEmbodiedMenu() && !gameUIState.isHoveringOnMenu) || isTooFarAwayFromPlayer) {
+         if ((hasOpenAutoClosingMenu() && !gameUIState.isHoveringOnMenu) || isTooFarAwayFromPlayer) {
             // EXCEPT when the game is in select carry target mode, we want the controlled entity to remain selected
             if (gameUIState.gameInteractState !== GameInteractState.selectCarryTarget && gameUIState.gameInteractState !== GameInteractState.selectAttackTarget && gameUIState.gameInteractState !== GameInteractState.selectMoveTargetPosition && gameUIState.gameInteractState !== GameInteractState.selectRiderDepositLocation) {
                // We do this by deselected the selected entity instead of the closeCurrentMenu function, as some selected entities such as the research bench don't have a menu and so it won't work for them.

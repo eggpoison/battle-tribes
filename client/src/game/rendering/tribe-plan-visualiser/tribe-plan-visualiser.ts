@@ -1,6 +1,6 @@
 import { tribePlanVisualiserState } from "../../../ui-state/tribe-plan-visualiser-state";
 import { ExtendedTribe, getTribeByID } from "../../tribes";
-import { MenuType, openMenu } from "../../../ui/menus";
+import { getMenu, MenuType, openMenu } from "../../../ui/menus";
 import { Entity, EntityType } from "../../../../../shared/src/entities";
 import { AIPlanType } from "../../../../../shared/src/utils";
 import { CRAFTING_RECIPES, CraftingRecipe } from "../../../../../shared/src/items/crafting-recipes";
@@ -294,6 +294,6 @@ export function setRenderedTribePlanID(renderedTribeID: number | null): void {
       tribePlanVisualiserState.setTribeAssignmentInfo(tribeAssignmentInfo);
       tribePlanVisualiserState.setTribe(getTribeByID(renderedTribeID) as ExtendedTribe);
       
-      openMenu(MenuType.tribePlanVisualiser);
+      openMenu(getMenu(MenuType.tribePlanVisualiser));
    }
 }

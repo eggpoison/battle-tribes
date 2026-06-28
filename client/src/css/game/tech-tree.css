@@ -68,7 +68,6 @@
 
 #tech-tree .tech .icon {
    width: 64px;
-   height: 64px;
    image-rendering: pixelated;
 }
 
@@ -128,7 +127,6 @@
 }
 #tech-tooltip .unlocks img {
    width: 20px;
-   height: 20px;
    image-rendering: pixelated;
    margin-bottom: -4px;
 }
@@ -162,7 +160,6 @@
 
 #tech-tooltip ul img.item-image {
    width: 32px;
-   height: 32px;
    image-rendering: pixelated;
    margin-right: 5px;
 }
@@ -191,7 +188,6 @@
 
 #tech-tooltip li .item-research-star-container img {
    width: 20px;
-   height: 20px;
    image-rendering: pixelated;
 }
 

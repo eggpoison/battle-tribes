@@ -36,7 +36,7 @@
 }
 
 #terminal .line-reader .line-input {
-   width: 0;
+   width: 100%;
    background-color: #000;
    display: inline-block;
    padding: 0;

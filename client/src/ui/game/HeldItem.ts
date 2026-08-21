@@ -27,8 +27,8 @@ export function createHeldItemElem(playerInstance: Entity): MenuInventoryElemMap
    }
 
    // @copynpaste
-   elem.style.top = cursorY + "px";
    elem.style.left = cursorX + "px";
+   elem.style.top = cursorY + "px";
    document.body.appendChild(elem);
    rootElem = elem;
 
@@ -37,8 +37,8 @@ export function createHeldItemElem(playerInstance: Entity): MenuInventoryElemMap
 
 export function updateHeldItemPosition(x: number, y: number): void {
    if (rootElem !== null) {
-      rootElem.style.top = y + "px";
       rootElem.style.left = x + "px";
+      rootElem.style.top = y + "px";
    }
 }
 

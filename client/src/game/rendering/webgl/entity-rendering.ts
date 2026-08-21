@@ -3,6 +3,7 @@ import { getEntityTextureAtlas } from "../../texture-atlases";
 import { bindUBOToProgram, getEntityTextureAtlasUBO, UBOBindingIndex } from "../ubos";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { VisualRenderPart, renderPartIsTextured, thingIsVisualRenderPart } from "../../render-parts/render-parts";
+import { assert } from "../../../../../shared/src/utils";
 
 const enum Var {
    ATTRIBUTES_PER_VERTEX = 12
@@ -20,8 +21,6 @@ export interface EntityRenderData {
 
 let program: WebGLProgram;
 let overrideAlphaWithOneUniformLocation: WebGLUniformLocation;
-
-let previousOverrideAlphaWithOne = false;
 
 let indexBuffer: WebGLBuffer;
 
@@ -210,7 +209,6 @@ export function createEntityShaders(): void {
    gl.uniform1i(textureUniformLocation, 0);
 
    overrideAlphaWithOneUniformLocation = gl.getUniformLocation(program, "u_overrideAlphaWithOne")!;
-   gl.uniform1f(overrideAlphaWithOneUniformLocation, previousOverrideAlphaWithOne ? 1 : 0);
    
    const indicesData = new Uint16Array(6);
    indicesData[1] = 1;
@@ -227,9 +225,7 @@ export function createEntityShaders(): void {
 
 export function createEntityRenderData(maxRenderParts: number): EntityRenderData {
    // The Uint16 index buffer puts a cap on maxRenderParts before the indices wrap around silently, a limit of 65535 / 4
-   if (maxRenderParts >= 16383) {
-      throw new Error();
-   }
+   assert(maxRenderParts < 16383);
    
    const vao = gl.createVertexArray();
    gl.bindVertexArray(vao);
@@ -329,7 +325,9 @@ export function setRenderObjectInVertexData(renderObject: EntityRenderObject, ve
 
 export function clearEntityInVertexData(vertexData: Float32Array, firstRenderPartIdx: number, numRenderParts: number): void {
    const vertexDataOffset = firstRenderPartIdx * Var.ATTRIBUTES_PER_VERTEX;
-   vertexData.fill(0, vertexDataOffset, vertexDataOffset + numRenderParts * Var.ATTRIBUTES_PER_VERTEX - 1);
+   // @Speed: don't need to fill everything, just need to zero enough that it isn't rendered.
+   // or, one step further, don't clear it at all and just don't render render parts which don't exist.
+   vertexData.fill(0, vertexDataOffset, vertexDataOffset + numRenderParts * Var.ATTRIBUTES_PER_VERTEX);
 }
 
 export function setupEntityRendering(): void {
@@ -343,7 +341,14 @@ export function setupEntityRendering(): void {
 
 /** NOTE: Callers must control the blending. */
 export function renderEntity(renderObject: Readonly<EntityRenderObject>): void {
-   const numRenderParts = renderObject.renderPartsByZIndex.length;
+   const renderParts = renderObject.renderPartsByZIndex;
+   // @Speed!
+   let numRenderParts = 0;
+   for (let i = 0; i < renderParts.length; i++) {
+      if (thingIsVisualRenderPart(renderParts[i])) {
+         numRenderParts++;
+      }
+   }
    
    gl.bindVertexArray(renderObject.vao);
    gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, numRenderParts);

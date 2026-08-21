@@ -630,8 +630,8 @@ export function updateEntitySelections(): void {
    let newHoveredEntityDist = HIGHLIGHT_CURSOR_RANGE;
    let newHighlightedEntity: Entity | null = null;
    let newHighlightedEntityDist = HIGHLIGHT_CURSOR_RANGE;
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+   for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          const chunk = layer.getChunk(chunkX, chunkY);
          for (const currentEntity of chunk.nonGrassEntities) {
             const distToCursor = getDistanceFromPointToEntity(cursorWorldPos.x, cursorWorldPos.y, currentEntity);

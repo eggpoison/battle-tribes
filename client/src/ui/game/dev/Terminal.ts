@@ -1,7 +1,6 @@
 import { assert } from "../../../../../shared/src/utils";
 import { commandIsValid, CommandPermissions } from "../../../../../shared/src/commands";
 import { sendTerminalCommandPacket } from "../../../game/networking/packet-sending/packet-sending";
-import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 
 const terminalLines: string[] = [];
 
@@ -9,42 +8,50 @@ const previousCommands: string[] = [];
 let selectedCommandIndex = 0;
 
 let terminalElem: HTMLDivElement | null = null;
+let linesElem: HTMLDivElement | null = null;
 let lineInputElem: HTMLInputElement | null = null;
-let lineInputValue = "";
 
-let isFocused = true;
+const focusTerminal = (): void => {
+// const focusTerminal = (e: MouseEvent): void => {
+   lineInputElem!.focus();
 
-const focusTerminal = (e?: MouseEvent): void => {
-   isFocused = true;
+   terminalElem!.className = "focused";
 
-   assert(terminalElem !== null);
-   terminalElem.className = "focused";
-
-   // Focus the line input
-   if (lineInputElem !== null) {
-      if (e !== undefined) {
-         // Stop the click from registering so the focus is given to the line input
-         e.preventDefault();
-      }
-      
-      lineInputElem.focus();
-   }
+   // Stop the click from registering so the focus is given to the line input
+   // e.preventDefault();
 };
 
 const unfocusTerminal = (): void => {
-   isFocused = false;
+   lineInputElem!.blur();
 };
 
-function updateLineInputWidth(): void {
-   if (lineInputElem !== null) {
-      lineInputElem.style.width = Math.max(lineInputValue.length, 1) + "ch"; // Keep the input at least one character long
-   }
+const createTerminalLineElem = (line: string): HTMLElement => {
+   const lineElem = document.createElement("div");
+   lineElem.className = "line";
+   lineElem.textContent = line;
+   return lineElem;
+}
+
+function addTerminalLine(line: string): void {
+   assert(linesElem !== null);
+
+   const elem = createTerminalLineElem(line);
+   linesElem.appendChild(elem);
+
+   terminalLines.push(line);
+}
+
+function clearTerminalLines(): void {
+   assert(linesElem !== null);
+   linesElem.replaceChildren();
+   terminalLines.length = 0;
 }
 
 const enterCommand = (): void => {
-   const command = lineInputValue;
+   assert(lineInputElem !== null);
+   const command = lineInputElem.value;
 
-   terminalLines.push(">" + command);
+   addTerminalLine(">" + command);
    previousCommands.push(command);
    
    if (command.length === 0) {
@@ -57,24 +64,25 @@ const enterCommand = (): void => {
    if (isValidResult.isValid) {
       // @Hack @Cleanup
       if (command.split(" ")[0] === "clear") {
-         terminalLines.length = 0;
+         clearTerminalLines();
       } else {
          sendTerminalCommandPacket(command);
       }
    } else {
-      terminalLines.push(isValidResult.errorMessage);
+      addTerminalLine(isValidResult.errorMessage);
    }
 
    // Clear the line input
-   lineInputValue = "";
+   lineInputElem.value = "";
 
    selectedCommandIndex = previousCommands.length;
 }
 
 const enterKey = (e: KeyboardEvent): void => {
+   assert(lineInputElem !== null);
    switch (e.key) {
       case "Escape": {
-         nerdVision.setTerminalIsVisible(false);
+         destroyTerminal();
          break;
       }
       case "Enter": {
@@ -92,7 +100,7 @@ const enterKey = (e: KeyboardEvent): void => {
          selectedCommandIndex--;
          
          const command = previousCommands[selectedCommandIndex];
-         lineInputValue = command;
+         lineInputElem.value = command;
          break;
       }
       case "ArrowDown": {
@@ -114,7 +122,7 @@ const enterKey = (e: KeyboardEvent): void => {
             command = previousCommands[selectedCommandIndex];
          }
 
-         lineInputValue = command;
+         lineInputElem.value = command;
          break;
       }
    }
@@ -134,45 +142,64 @@ const checkForTerminalUnfocus = (e: MouseEvent): void => {
    }
 }
 
-export function openTerminal(): void {
+export function createTerminal(): void {
    assert(terminalElem === null);
+   assert(linesElem === null);
    assert(lineInputElem === null);
    
    terminalElem = document.createElement("div");
    terminalElem.id = "terminal";
-   terminalElem.addEventListener("mousedown", focusTerminal);
-   
-   // @Speed
-   terminalElem.innerHTML = `
-   <div class="lines">
-      {#each terminalLines as line}
-         <div class="line">
-            {line}
-         </div>
-      {/each}
-   </div>
+   terminalElem.onmousedown = focusTerminal;
+   document.body.appendChild(terminalElem);
 
-   <div class="line-reader">
-      <span>&gt;</span>
+   linesElem = document.createElement("div");
+   linesElem.className = "lines";
+   for (const line of terminalLines) {
+      const lineElem = createTerminalLineElem(line);
+      linesElem.appendChild(lineElem);
+   }
+   terminalElem.appendChild(linesElem);
 
-      <div class="line-input-wrapper">
-         <input name="line-input" type="text" class="line-input" autofocus />
-         <div class="dummy-line-input"></div>
-      </div>
-   </div>
-   `;
+   const lineReaderElem = document.createElement("div");
+   lineReaderElem.className = "line-reader";
+   terminalElem.appendChild(lineReaderElem);
 
-   lineInputElem = terminalElem.querySelector(`input[name="line-input"]`)!;
-   lineInputElem.addEventListener("change", updateLineInputWidth);
-   lineInputElem.addEventListener("keydown", enterKey);
+   const gtElem = document.createElement("span");
+   gtElem.textContent = ">";
+   lineReaderElem.append(gtElem);
 
-   window.addEventListener("mousedown", checkForTerminalUnfocus);
+   lineInputElem = document.createElement("input");
+   lineInputElem.className = "line-input";
+   lineInputElem.name = "line-input";
+   lineInputElem.type = "text";
+   lineInputElem.onkeydown = enterKey;
+   lineReaderElem.appendChild(lineInputElem);
+
+   focusTerminal();
+
+   window.onmousedown = checkForTerminalUnfocus;
 }
 
-export function closeTerminal(): void {
+function destroyTerminal(): void {
    assert(terminalElem);
    terminalElem.remove();
    terminalElem = null;
+   linesElem = null;
+   lineInputElem = null;
    
-   window.removeEventListener("mousedown", checkForTerminalUnfocus);
+   window.onmousedown = null;
+}
+
+export function openTerminal(e: KeyboardEvent): void {
+   if (terminalElem === null) {
+      createTerminal();
+      // Stop the character "~" being typed into the terminal on open
+      e.preventDefault();
+   }
+}
+
+export function closeTerminal(): void {
+   if (terminalElem !== null) {
+      destroyTerminal();
+   }
 }

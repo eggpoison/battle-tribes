@@ -15,12 +15,20 @@ export function createInventoryContainer(hasBorder: boolean, inventoryWidth: num
    return containerElem;
 }
 
-export function getClickedItemSlotIdx(e: MouseEvent, width: number): number {
+export function getClickedItemSlotIdx(e: MouseEvent, width: number, height: number): number {
    // @Hack: has to be manually synced with the .item-slot width property
    const slotSize = 80 * uiZoom;
    
-   const itemSlotX = Math.floor(e.layerX / slotSize);
-   const itemSlotY = Math.floor(e.layerY / slotSize);
+   let itemSlotX = Math.floor(e.layerX / slotSize);
+   let itemSlotY = Math.floor(e.layerY / slotSize);
+   // An 80 unit wide div (for example) will let you get a mouse event with x coord 80, so this has to clamp that case down.
+   // @Cleanup: find a clever way to elide this. would be so much cleaner, even one less parameter!
+   if (itemSlotX >= width) {
+      itemSlotX = width - 1;
+   }
+   if (itemSlotY >= height) {
+      itemSlotY = height - 1;
+   }
    return itemSlotY * width + itemSlotX;
 }
 

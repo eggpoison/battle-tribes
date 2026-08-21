@@ -54,10 +54,10 @@ import { createWorldBorderShaders, renderWorldBorder } from "./webgl/world-borde
 import { playerIsHoldingPlaceableItem } from "../player-action-handling";
 import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { debugDisplayState } from "../../ui-state/debug-display-state";
-import { nerdVision } from "../../ui-state/nerd-vision-funcs";
 import { MenuType, getMenu, menuIsOpen } from "../../ui/menus";
 import { IntermediateInitialisationInfo } from "../networking/packet-receiving";
 import { RenderChunkVars } from "../../../../shared/src/render-chunks";
+import { nerdVisionIsVisible } from "../../ui/game/dev/NerdVision";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -164,14 +164,14 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number, v
    renderTurretRange();
 
    const entityDebugData = hoverDebugState.entityDebugData;
-   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
+   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
       renderTriangleDebugData(entityDebugData);
    }
    renderRestrictedBuildingAreas();
-   if (nerdVision.isVisible() && debugDisplayState.showChunkBorders) {
+   if (nerdVisionIsVisible() && debugDisplayState.showChunkBorders) {
       renderChunkBorders(minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY, Settings.CHUNK_SIZE, 1);
    }
-   if (nerdVision.isVisible() && debugDisplayState.showRenderChunkBorders) {
+   if (nerdVisionIsVisible() && debugDisplayState.showRenderChunkBorders) {
       renderChunkBorders(minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY, RenderChunkVars.RENDER_CHUNK_SIZE, 2);
    }
 
@@ -237,7 +237,7 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number, v
    if (debugDisplayState.showHitboxes) {
       renderHitboxes(layer);
    }
-   if (nerdVision.isVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
+   if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
       renderLineDebugData(entityDebugData);
    }
 
@@ -318,4 +318,8 @@ export function renderGame(clientInterp: number, serverInterp: number): void {
       renderTechTree();
       renderTechTreeItems();
    }
+
+   // @Temporary
+   gl.clearColor(0, 1, 0, 1);
+   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }

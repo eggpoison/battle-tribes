@@ -8,6 +8,8 @@ const enum Var {
    WIDTH = 6
 }
 
+const getHeight = (filteredItemTypes: readonly ItemType[]): number => Math.ceil(filteredItemTypes.length / Var.WIDTH);
+
 const updateFilteredItemTypes = (itemTypes: ItemType[], filter: string): void => {
    // @Garbage
    itemTypes.length = 0;
@@ -26,8 +28,8 @@ const fillItems = (inventoryContainerElem: HTMLElement, filteredItemTypes: ItemT
       addItemToItemSlot(itemSlot, itemType, 1);
       inventoryContainerElem.appendChild(itemSlot);
    }
-   const numRows = Math.ceil(filteredItemTypes.length / Var.WIDTH);
-   const numItemSlots = numRows * Var.WIDTH;
+   const height = getHeight(filteredItemTypes);
+   const numItemSlots = height * Var.WIDTH;
    for (let i = 0; i < numItemSlots - filteredItemTypes.length; i++) {
       const itemSlot = createItemSlot();
       inventoryContainerElem.appendChild(itemSlot);
@@ -77,8 +79,9 @@ export function createItemCatalogue(slotClickCallback: (e: MouseEvent, itemType:
    // The items
 
    const inventoryContainerElem = createInventoryContainer(false, Var.WIDTH);
+   const height = getHeight(itemTypes);
    inventoryContainerElem.onmousedown = (e): void => {
-      const idx = getClickedItemSlotIdx(e, Var.WIDTH);
+      const idx = getClickedItemSlotIdx(e, Var.WIDTH, height);
       if (idx < itemTypes.length) {
          const itemType = itemTypes[idx];
          slotClickCallback(e, itemType);

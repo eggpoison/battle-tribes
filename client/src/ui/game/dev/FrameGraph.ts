@@ -1,4 +1,5 @@
 import { assert } from "../../../../../shared/src/utils";
+import { createWebGLCanvas } from "../../../game/webgl";
 import { frameGraph } from "../../../ui-state/frame-graph-funcs";
 
 let fps = 0;
@@ -6,6 +7,8 @@ let average = 0;
 let min = 0;
 let max = 0;
 
+// @Memory
+let canvasElem: HTMLElement;
 let frameGraphElem: HTMLElement | null = null;
 
 frameGraph.setMetrics = (newFPS: number, newAverage: number, newMin: number, newMax: number): void => {
@@ -14,6 +17,11 @@ frameGraph.setMetrics = (newFPS: number, newAverage: number, newMin: number, new
    min = newMin;
    max = newMax;
 };
+
+export function createFrameGraphCanvas(): HTMLElement {
+   canvasElem = createWebGLCanvas("frame-graph-canvas", false);
+   return canvasElem;
+}
 
 export function createFrameGraph(): void {
    assert(frameGraphElem === null);
@@ -24,9 +32,10 @@ export function createFrameGraph(): void {
    // @Speed
    frameGraphElem.innerHTML = `
       <p class="info"><span class="highlight">fps=${fps}</span> <span class="highlight">t_avg=${average.toFixed(2)}</span> <span class="highlight">t_min=${min.toFixed(2)}</span> <span class="highlight">t_max=${max.toFixed(2)}</span></p>
-      <canvas id="frame-graph-canvas"></canvas>
    `;
    document.body.appendChild(frameGraphElem);
+
+   frameGraphElem.appendChild(canvasElem);
 }
 
 export function destroyFrameGraph(): void {

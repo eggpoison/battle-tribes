@@ -8,18 +8,7 @@ import { sendItemTransferPacket, sendItemPickupPacket, sendItemReleasePacket } f
 import { playerInstance } from "../../../game/player";
 import { getFirstOpenInventory, hasOpenMenu } from "../../menus";
 import { getClickedItemSlotIdx } from "./Inventory";
-
-// interface Props extends HTMLAttributes<HTMLDivElement> {
-//    item: Item | null;
-//    isSelected?: boolean;
-//    placeholderImg?: any;
-//    restTime?: ItemRestTime;
-//    onmousedown?(e: MouseEvent): void;
-//    onmouseover?(e: MouseEvent): void;
-//    onmouseout?(e: MouseEvent): void;
-//    onmousemove?(e: MouseEvent): void;
-//    oncontextmenu?(e: MouseEvent): void;
-// }
+import { clearTooltipItem, setTooltipItem } from "./ItemTooltip";
 
 // let { item, isSelected, placeholderImg, restTime, onmousedown, onmouseover, onmouseout, onmousemove, oncontextmenu, ...rest }: Props = $props();
 
@@ -27,24 +16,24 @@ import { getClickedItemSlotIdx } from "./Inventory";
 
 // let isShowingTooltip = $state(false);
 
-// const onMouseOver = (e: MouseEvent): void => {
-//    onmouseover?.(e);
+const onMouseOver = (item: Item): void => {
+   // onmouseover?.(e);
 
-//    itemTooltipState.setItem(item);
-//    isShowingTooltip = true;
-// }
+   setTooltipItem(item);
+   // isShowingTooltip = true;
+}
 
 // const onMouseMove = (e: MouseEvent): void => {
 //    onmousemove?.(e);
 // }
 
-// const onMouseOut = (e: MouseEvent): void => {
-//    onmouseout?.(e);
-//    isShowingTooltip = false;
+const onMouseOut = (): void => {
+   // onmouseout?.(e);
+   // isShowingTooltip = false;
 
-//    // @Bug? what if this overrides it?
-//    itemTooltipState.setItem(null);
-// }
+   // @Bug? what if this overrides it?
+   clearTooltipItem();
+}
 
 // onDestroy(() => {
 //    // If the player is hovering over the item when the menu is closed, the onMouseOut function won't be triggered, so we have to also clear the item tooltip when it's destroyed
@@ -54,10 +43,11 @@ import { getClickedItemSlotIdx } from "./Inventory";
 // });
 
 const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: number): void => {
+   const playerInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
+
    const clickedItem = inventory.itemSlots[itemSlot];
    if (clickedItem !== undefined) {
       // Attempt to pick up the item if there isn't a held item
-      const playerInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
       const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot)!;
       const heldItem = heldItemInventory.itemSlots[1];
       if (heldItem === undefined) {
@@ -71,7 +61,7 @@ const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: numbe
                   otherOpenMenuInventory = getInventory(playerInventoryComponent, InventoryName.hotbar)!;
                   otherOpenMenuEntity = playerInstance!;
                } else {
-                  const entityInventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
+                  const entityInventoryComponent = InventoryComponentArray.getComponent(openInventoryInfo.entity);
                   otherOpenMenuInventory = getInventory(entityInventoryComponent, openInventoryInfo.inventoryName)!;
                   otherOpenMenuEntity = openInventoryInfo.entity;
                }
@@ -91,8 +81,7 @@ const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: numbe
       // There is no item in the item slot
 
       // Attempt to release the held item into the item slot if there is a held item
-      const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
-      const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot)!;
+      const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot)!;
       const heldItem = heldItemInventory.itemSlots[1];
       if (heldItem !== undefined) {
          sendItemReleasePacket(entity, inventory.name, itemSlot, heldItem.count);
@@ -101,10 +90,11 @@ const leftClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: numbe
 }
 
 const rightClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: number): void => {
+   const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
+   const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot)!;
+   
    const clickedItem = inventory.itemSlots[itemSlot];
    if (clickedItem !== undefined) {
-      const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
-      const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot)!;
       const heldItem = heldItemInventory.itemSlots[1];
       if (heldItem === undefined) {
          const numItemsInSlot = clickedItem.count;
@@ -120,8 +110,6 @@ const rightClickItemSlot = (entity: Entity, inventory: Inventory, itemSlot: numb
    } else {
       // There is no item in the clicked item slot
       
-      const inventoryComponent = InventoryComponentArray.getComponent(playerInstance!);
-      const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot)!;
       if (heldItemInventory.hasItem(1)) {
          // Attempt to place one of the held item into the clicked item slot
          sendItemReleasePacket(entity, inventory.name, itemSlot, 1);
@@ -153,13 +141,32 @@ export function createItemSlot(): HTMLDivElement {
 
 export function makeItemSlotInteractable(itemSlotElem: HTMLElement, entity: Entity, inventory: Inventory, itemSlot: number): void {
    itemSlotElem.onmousedown = e => { onItemSlotMouseDown(e, entity, inventory, itemSlot); };
+   itemSlotElem.onmouseover = () => {
+      const item = inventory.itemSlots[itemSlot];
+      if (item !== undefined) {
+         onMouseOver(item);
+      }
+   };
+   itemSlotElem.onmouseout = onMouseOut;
 }
 
 export function makeInventoryInteractable(inventoryElem: HTMLElement, entity: Entity, inventory: Inventory): void {
    inventoryElem.onmousedown = e => {
-      const itemSlotIdx = getClickedItemSlotIdx(e, inventory.width);
+      const itemSlotIdx = getClickedItemSlotIdx(e, inventory.width, inventory.height);
       onItemSlotMouseDown(e, entity, inventory, itemSlotIdx + 1);
    };
+   // Note: This is on mouse MOVE, instead of mouse over.
+   inventoryElem.onmousemove = e => {
+      const itemSlotIdx = getClickedItemSlotIdx(e, inventory.width, inventory.height);
+      
+      const item = inventory.itemSlots[itemSlotIdx + 1];
+      if (item !== undefined) {
+         onMouseOver(item);
+      } else {
+         onMouseOut();
+      }
+   };
+   inventoryElem.onmouseout = onMouseOut;
 }
 
 const createItemCountElem = (itemSlotElem: HTMLElement, amount: number): void => {
@@ -183,7 +190,7 @@ export function addItemToItemSlot(itemSlotElem: HTMLElement, itemType: ItemType,
 
 export function updateItemSlot(itemSlotElem: HTMLElement, item: Item): void {
    const itemCountElem = itemSlotElem.children[1] as HTMLElement | undefined;
-   if (item.count !== -1) {
+   if (item.count !== 1) {
       if (itemCountElem === undefined) {
          createItemCountElem(itemSlotElem, item.count);
       } else {

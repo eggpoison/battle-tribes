@@ -1,7 +1,6 @@
 import { Point } from "../../../shared/src/utils";
 import { Settings } from "../../../shared/src/settings";
 import { gameUIState } from "../ui-state/game-ui-state";
-import { nerdVision } from "../ui-state/nerd-vision-funcs";
 import { openChatMessageInput } from "../ui/game/Chat";
 import { closeCurrentMenu, getMenu, hasOpenBlockingMenu, MenuType, openMenu, toggleMenu } from "../ui/menus";
 import { updateCursorScreenPos } from "./camera";
@@ -14,6 +13,10 @@ import { preventDefault } from "./utils";
 import { onWindowResize } from "./webgl";
 import { entityExists } from "./world";
 import { updateHeldItemPosition } from "../ui/game/HeldItem";
+import { updateItemTooltipPosition } from "../ui/game/inventories/ItemTooltip";
+import { closeNerdVision, nerdVisionIsVisible, openNerdVision } from "../ui/game/dev/NerdVision";
+import { closeTerminal, openTerminal } from "../ui/game/dev/Terminal";
+import { toggleCinematicMode } from "../ui/GameScreen";
 
 const enum ASCIICode {
    SHIFT = 16,       // Shift key
@@ -62,7 +65,10 @@ const enum ASCIICode {
 
    */
 
-export let gameIsFocused = true;
+// @Cleanup: just return to the ol system, but with ascii instead of strings
+
+export let gameIsVisible = true;
+let gameIsFocused = true;
 
 export let shiftIsPressed = false;
 export let playerIsLightspeed = false;
@@ -125,6 +131,7 @@ function onMouseMove(e: MouseEvent): void {
 
    // @Cleanup: is this really an ok thing to do, here?
    updateHeldItemPosition(cursorX, cursorY);
+   updateItemTooltipPosition(cursorX, cursorY);
    
    updateCursorScreenPos(e);
 }
@@ -160,20 +167,7 @@ function ascendLayer(): void {
 }
 
 function toggleTechTree(): void {
-   toggleMenu(MenuType.techTree);
-}
-
-function toggleCinematicMode(): void {
-   gameUIState.setCinematicModeIsEnabled(!gameUIState.cinematicModeIsEnabled);
-}
-
-function toggleNerdVision(): void {
-   nerdVision.setIsVisible(!nerdVision.isVisible());
-}
-
-function openTerminal(): void {
-   nerdVision.setIsVisible(true);
-   nerdVision.setTerminalIsVisible(true);
+   toggleMenu(getMenu(MenuType.techTree));
 }
 
 export function scrollHotbarSelectedItemSlot(e: WheelEvent): void {
@@ -194,9 +188,9 @@ export function scrollHotbarSelectedItemSlot(e: WheelEvent): void {
 
 function onVisibilityChange(): void {
    if (document.visibilityState === "visible") {
-      gameIsFocused = true;
+      gameIsVisible = true;
    } else {
-      gameIsFocused = false;
+      gameIsVisible = false;
       
       // @Cleanup: unnecessary??
       // So that when the player returns to the game the dev frame graph doesn't show a maaassive frame
@@ -229,60 +223,89 @@ function onLEnd(): void {
    playerIsLightspeed = false;
 }
 
+const clearPressedKeys = (): void => {
+   shiftIsPressed = false;
+   playerIsLightspeed = false;
+
+   // @Copynpaste
+   updatePlayerInputInfo(1, false);
+   updatePlayerInputInfo(4, false);
+   updatePlayerInputInfo(2, false);
+   updatePlayerInputInfo(8, false);
+}
+
+function toggleDev(): void {
+   if (nerdVisionIsVisible()) {
+      closeNerdVision();
+      closeTerminal();
+   } else {
+      openNerdVision();
+   }
+}
+
 export function onKeyDown(e: KeyboardEvent): void {
    if (e.repeat) {
       return;
    }
 
+   // eslint-disable-next-line @typescript-eslint/no-deprecated
    switch (e.keyCode) {
-      case ASCIICode.SHIFT:  onShiftStart(); break;
-      case ASCIICode.ESCAPE: closeCurrentMenu(); break;
-      case ASCIICode.SPACE: ascendLayer(); break;
-      case ASCIICode.ONE: selectItemSlot(1); break;
-      case ASCIICode.TWO: selectItemSlot(2); break;
-      case ASCIICode.THREE: selectItemSlot(3); break;
-      case ASCIICode.FOUR: selectItemSlot(4); break;
-      case ASCIICode.FIVE: selectItemSlot(5); break;
-      case ASCIICode.SIX: selectItemSlot(6); break;
-      case ASCIICode.SEVEN: selectItemSlot(7); break;
-      case ASCIICode.A: updatePlayerInputInfo(1, true); break;
-      case ASCIICode.D: updatePlayerInputInfo(4, true); break;
-      case ASCIICode.E: openCraftingMenu(); break;
+      case ASCIICode.SHIFT: onShiftStart(); break;
       case ASCIICode.L: if (__DEV__) { onLStart(); } break;
-      case ASCIICode.O: if (__DEV__) { toggleCinematicMode(); } break;
-      case ASCIICode.P: toggleTechTree(); break;
-      case ASCIICode.Q: dropItem(); break;
-      case ASCIICode.S: updatePlayerInputInfo(2, true); break;
-      case ASCIICode.T: openChatMessageInput(e); break;
-      case ASCIICode.W: updatePlayerInputInfo(8, true); break;
-      case ASCIICode.TILDE: if (__DEV__) { openTerminal(); } break;
-      case ASCIICode.GRAVE: if (__DEV__) { toggleNerdVision(); } break;
+   }
+
+   if (gameIsFocused) {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      switch (e.keyCode) {
+         case ASCIICode.ESCAPE: closeCurrentMenu(); break;
+         case ASCIICode.SPACE: ascendLayer(); break;
+         case ASCIICode.ONE: selectItemSlot(1); break;
+         case ASCIICode.TWO: selectItemSlot(2); break;
+         case ASCIICode.THREE: selectItemSlot(3); break;
+         case ASCIICode.FOUR: selectItemSlot(4); break;
+         case ASCIICode.FIVE: selectItemSlot(5); break;
+         case ASCIICode.SIX: selectItemSlot(6); break;
+         case ASCIICode.SEVEN: selectItemSlot(7); break;
+         case ASCIICode.A: updatePlayerInputInfo(1, true); break;
+         case ASCIICode.D: updatePlayerInputInfo(4, true); break;
+         case ASCIICode.E: openCraftingMenu(); break;
+         case ASCIICode.O: if (__DEV__) { toggleCinematicMode(); } break;
+         case ASCIICode.P: toggleTechTree(); break;
+         case ASCIICode.Q: dropItem(); break;
+         case ASCIICode.S: updatePlayerInputInfo(2, true); break;
+         case ASCIICode.T: openChatMessageInput(e); break;
+         case ASCIICode.W: updatePlayerInputInfo(8, true); break;
+         case ASCIICode.GRAVE: if (__DEV__) { if (e.shiftKey) { openNerdVision(); openTerminal(e); } else { toggleDev(); } } break;
+      }
    }
 }
 
 export function onKeyUp(e: KeyboardEvent): void {
+   // eslint-disable-next-line @typescript-eslint/no-deprecated
    switch (e.keyCode) {
       case ASCIICode.SHIFT: onShiftEnd(); break;
-      case ASCIICode.A: updatePlayerInputInfo(1, false); break;
-      case ASCIICode.D: updatePlayerInputInfo(4, false); break;
       case ASCIICode.L: if (__DEV__) { onLEnd(); } break;
-      case ASCIICode.S: updatePlayerInputInfo(2, false); break;
-      case ASCIICode.W: updatePlayerInputInfo(8, false); break;
+   }
+   
+   if (gameIsFocused) {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      switch (e.keyCode) {
+         case ASCIICode.A: updatePlayerInputInfo(1, false); break;
+         case ASCIICode.D: updatePlayerInputInfo(4, false); break;
+         case ASCIICode.S: updatePlayerInputInfo(2, false); break;
+         case ASCIICode.W: updatePlayerInputInfo(8, false); break;
+      }
    }
 }
 
 function onDocumentFocusIn(): void {
-   // Disable key events when inputting text
-   document.onkeydown = null;
-   document.onkeyup = null;
+   gameIsFocused = false;
+
+   clearPressedKeys();
 }
 
 function onDocumentFocusOut(): void {
-   // Re-enable key events
-   document.onkeydown = onKeyDown;
-   document.onkeyup = onKeyUp;
-
-   // @BUG investigate if in the item catalogue, when the player was holding shift before they entered text, stopped holding it after, and then clicked an item, it gives a stack of that item when it should give just 1.
+   gameIsFocused = true;
 }
 
 export function setupEvents(): void {
@@ -292,6 +315,7 @@ export function setupEvents(): void {
    document.onvisibilitychange = onVisibilityChange;
    document.oncontextmenu = preventDefault;
    window.onresize = onWindowResize;
+   window.onblur = clearPressedKeys;
    // These two are outcasts :(
    document.addEventListener("focusin", onDocumentFocusIn);
    document.addEventListener("focusout", onDocumentFocusOut);
@@ -310,6 +334,7 @@ export function cleanupEvents(): void {
    document.onvisibilitychange = null;
    document.oncontextmenu = null;
    window.onresize = null;
+   window.onblur = null;
    document.body.removeEventListener("wheel", scrollHotbarSelectedItemSlot);
    document.removeEventListener("focusin", onDocumentFocusIn);
    document.removeEventListener("focusout", onDocumentFocusOut);

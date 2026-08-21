@@ -1,52 +1,50 @@
 import { assert } from "../../../../../shared/src/utils";
 import { openDebugInfoDisplay } from "./DebugInfoDisplay";
-import { nerdVision } from "../../../ui-state/nerd-vision-funcs";
 import { hideFrameGraph, showFrameGraph } from "./FrameGraph";
 import { createTabSelector, destroyTabSelector } from "./TabSelector";
 
-let isVisible = false;
-let _terminalIsVisible = false;
+let nerdVisionElem: HTMLElement | null = null;
 
-nerdVision.isVisible = (): boolean => {
-   return isVisible;
-}
-nerdVision.setIsVisible = (newIsVisible: boolean): void => {
-   if (!isVisible && newIsVisible) {
-      openNerdVision();
-   } else if (isVisible && !newIsVisible) {
-      closeNerdVision();
-   }
+const createNerdVision = (): void => {
+   assert(nerdVisionElem === null);
    
-   isVisible = newIsVisible;
-}
+   const rootElem = document.createElement("div");
+   rootElem.id = "nerd-vision-wrapper";
+   document.body.appendChild(rootElem);
 
-nerdVision.terminalIsVisible = (): boolean => {
-   return _terminalIsVisible;
-}
-nerdVision.setTerminalIsVisible = (newTerminalIsVisible: boolean): void => {
-   _terminalIsVisible =  newTerminalIsVisible;
-}
-
-function openNerdVision(): void {
-   const nerdVisionElem = document.createElement("div");
-   nerdVisionElem.id = "nerd-vision-wrapper";
-   document.body.appendChild(nerdVisionElem);
-
-   openDebugInfoDisplay(nerdVisionElem);
-   createTabSelector(nerdVisionElem);
+   openDebugInfoDisplay(rootElem);
+   createTabSelector(rootElem);
    
    showFrameGraph();
+
+   nerdVisionElem = rootElem;
 };
 
-function closeNerdVision(): void {
-   const nerdVisionElem = document.getElementById("nerd-vision-wrapper");
+function destroyNerdVision(): void {
    assert(nerdVisionElem !== null);
    nerdVisionElem.remove();
+   nerdVisionElem = null;
 
    destroyTabSelector();
    
    hideFrameGraph();
 };
+
+export function openNerdVision(): void {
+   if (nerdVisionElem === null) {
+      createNerdVision();
+   }
+}
+
+export function closeNerdVision(): void {
+   if (nerdVisionElem !== null) {
+      destroyNerdVision();
+   }
+}
+
+export function nerdVisionIsVisible(): boolean {
+   return nerdVisionElem !== null;
+}
 
 // @SQUEAM
 // {#if nerdVisionState.isVisible}

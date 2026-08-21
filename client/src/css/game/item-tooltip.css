@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
+
+#item-tooltip {
+   max-width: 320px;
+   font-family: "Noto Sans";
+   border: 3px solid #000;
+   background-color: #808080;
+   padding: 4px;
+   position: absolute;
+   pointer-events: none;
+   z-index: 3;
+   transform: scale(var(--zoom));
+   transform-origin: 0% 0%;
+   box-shadow: -3px -3px 0 0 #606060 inset, 3px 3px 0 0 #a5a5a5 inset;
+}
+
+#item-tooltip p {
+   color: #ddd;
+   font-size: 0.9rem;
+   margin: 0;
+   text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.6);
+}
+
+#item-tooltip p.item-name {
+   font-size: 1rem;
+   color: #fff;
+}
+
+#item-tooltip p:not(:first-child) {
+   margin: 0.2rem 0 0 2px;
+}
+
+#item-tooltip p.flavour-text {
+   /* @Temporary? For the berryboy sad shot */
+   /* font-size: 0.8rem; */
+   font-size: 0.9rem;
+   /* font-style: italic; */
+   /* @Temporary? For the berryboy sad shot */
+   /* color: #bbb; */
+   color: #cfcfcf;
+}
+
+#item-tooltip p.namer {
+   font-size: 0.8rem;
+   font-style: italic;
+   color: #bbb;
+   margin-top: 0.4rem;
+   /* shifted 1px in x y instead of 2px */
+   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+}

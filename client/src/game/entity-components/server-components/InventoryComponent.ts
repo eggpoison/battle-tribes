@@ -106,16 +106,22 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
             }
          }
       } else if (item.count !== itemData.count || item.nickname !== itemData.nickname || item.namer !== itemData.namer) {
+         // @hack: shouldn't be even a temp variable!!
+         const itemCountIsDifferent = item.count !== itemData.count;
+         
          // Otherwise the item needs to be updated with the new server data
          item.count = itemData.count;
          item.nickname = itemData.nickname;
          item.namer = itemData.namer;
 
          if (isSelected) {
-            const inventoryElemInfo = getMenuInventoryElemInfo(entity, inventory.name);
-            if (inventoryElemInfo !== null) {
-               const itemSlotElem = getMenuItemSlotElem(inventoryElemInfo, itemSlot);
-               updateItemSlot(itemSlotElem, item);
+            // The updateItemSlot function should only happen when the item count changes - otherwise it's pointless.
+            if (itemCountIsDifferent) {
+               const inventoryElemInfo = getMenuInventoryElemInfo(entity, inventory.name);
+               if (inventoryElemInfo !== null) {
+                  const itemSlotElem = getMenuItemSlotElem(inventoryElemInfo, itemSlot);
+                  updateItemSlot(itemSlotElem, item);
+               }
             }
          }
       }

@@ -27,13 +27,9 @@ export function createBarrelInventory(barrel: Entity): MenuInventoryElemMap {
    titleElem.textContent = "Barrel";
    elem.appendChild(titleElem);
 
-   const flexContainer = document.createElement("div");
-   flexContainer.className = "flex-container center";
-   elem.appendChild(flexContainer);
-
    const inventory = getBarrelInventory(barrel);
    const inventoryElem = createEntityInventoryElem(inventory, true, barrel);
-   flexContainer.appendChild(inventoryElem);
+   elem.appendChild(inventoryElem);
    inventoryElemMap.set(inventory.name, {
       elem: inventoryElem,
       isItemSlotContainer: false

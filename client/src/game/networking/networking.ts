@@ -9,7 +9,7 @@ import { processInitialGameDataPacket, onSyncGameDataPacket, onForcePositionUpda
 import { sendInitialPlayerDataPacket } from "./packet-sending/packet-sending";
 import { createSocket } from "./socket";
 import { bufferHasEnoughForGameStart, onGameDataPacket } from "./snapshots";
-import { gameIsFocused } from "../event-handling";
+import { gameIsVisible } from "../event-handling";
 
 export function establishNewNetworkConnection(): void {
    createSocket(onPacket, onSuccessfulConnection, onFailedConnection);
@@ -66,7 +66,7 @@ function onPacket(msg: MessageEvent<ArrayBuffer>): void {
 
          // When the game isn't focused, there is no animation loop to consume snapshots. So this has to be done to keep the game state updated and prevent snapshots from queuing up endlessly.
          // @BUG: If gameIsFocused changes mid-frame, updateGame could be called twice
-         if (!gameIsFocused) {
+         if (!gameIsVisible) {
             updateGame();
          }
          break;

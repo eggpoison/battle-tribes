@@ -42,6 +42,11 @@ export function destroyHealthBar(): void {
 }
 
 export function HealthBar_setHealth(health: number): void {
+   if (__DEV__ && healthBarElem === null) {
+      // For cinematic mode
+      return;
+   }
+
    assert(healthBarElem !== null && healthCounterNode !== null);
 
    const previousHealthStr = healthBarElem.style.getPropertyValue("--current-health");

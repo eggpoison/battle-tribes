@@ -7,7 +7,7 @@ import { TransformComponentArray } from "./entity-components/server-components/T
 import Layer from "./Layer";
 import { Hitbox } from "./hitboxes";
 import { cameraPosition, maxVisibleChunkX, maxVisibleChunkY, minVisibleChunkX, minVisibleChunkY } from "./camera";
-import { gameIsFocused } from "./event-handling";
+import { gameIsVisible } from "./event-handling";
 
 type SoundID = number;
 
@@ -407,7 +407,7 @@ export interface SoundInfo {
 // @Speed: Garbage collection, unbox the source from a point
 export function playSound(filePath: string, volume: number, pitchMultiplier: number, x: number, y: number, layer: Layer): SoundInfo | null {
    // Don't play sounds when the game isn't open because god is that crushing for your mental health. maybe that is an overexaggeration
-   if (!gameIsFocused) {
+   if (!gameIsVisible) {
       return null;
    }
    

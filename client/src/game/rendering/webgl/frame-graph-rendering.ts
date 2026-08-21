@@ -1,7 +1,8 @@
 import { lerp } from "../../../../../shared/src/utils";
 import { Bytes } from "../../../../../shared/src/constants";
-import { createWebGLCanvas, createWebGLProgram, createWebGLRenderingContext } from "../../webgl";
+import { createWebGLProgram, createWebGLRenderingContext } from "../../webgl";
 import { frameGraph } from "../../../ui-state/frame-graph-funcs";
+import { createFrameGraphCanvas } from "../../../ui/game/dev/FrameGraph";
 
 export interface FrameInfo {
    readonly startTime: number;
@@ -84,7 +85,7 @@ export function updateFrameMetrics(frameStartTime: number, frameEndTime: number)
 }
 
 const createGLContext = (): void => {
-   const canvas = createWebGLCanvas("frame-graph-canvas", false);
+   const canvas = createFrameGraphCanvas();
    gl = createWebGLRenderingContext(canvas, false);
 }
 

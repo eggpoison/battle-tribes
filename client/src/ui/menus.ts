@@ -306,7 +306,7 @@ export function getMenuItemSlotElem(inventoryElemInfo: InventoryElemInfo, itemSl
 
 export function openMenu<M extends Menu>(menu: M, ...args: M extends InventoryMenu ? [Entity] : []): void {
    // Make sure the menu isn't already open
-   assert(!menuStack.some(currentMenu => currentMenu === menu));
+   assert(!menuStack.includes(menu));
    menuStack.push(menu);
    
    if (menu.isInventory) {

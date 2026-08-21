@@ -91,7 +91,9 @@
    position: relative;
 }
 .inventory.border {
-   border: 5px solid #000;
+   /* Do this instead of a border so that the border doesn't pollute the area that mouse events can be done on */
+   margin: 5px;
+   box-shadow: 0 0 0 5px #000;
 }
 
 .item-slot {

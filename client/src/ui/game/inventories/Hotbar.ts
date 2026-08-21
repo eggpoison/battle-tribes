@@ -133,3 +133,7 @@ export function destroyHotbar(): void {
    hotbarElem = null;
    hotbarInventoryElem = null;
 }
+
+export function hotbarIsVisible(): boolean {
+   return hotbarElem !== null;
+}

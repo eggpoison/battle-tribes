@@ -4,7 +4,6 @@
 @import "./game/inventories/hotbar.css";
 @import "./game/inventories/cooking-inventory.css";
 @import "./game/inventories/tribesman-inventory.css";
-@import "./game/inventories/barrel-inventory.css";
 @import "./game/inventories/tombstone-epitaph.css";
 @import "./game/inventories/ammo-box-inventory.css";
 @import "./game/inventories/held-item.css";
@@ -31,6 +30,7 @@
 @import "./game/death-screen.css";
 @import "./game/chat.css";
 @import "./game/dev/frame-graph.css";
+@import "./game/item-tooltip.css";
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
@@ -63,7 +63,6 @@ canvas {
    width: 100%;
    height: 100%;
    background-color: red;
-   /* inset: 0; */
 }
 
 #text-canvas {

@@ -89,7 +89,7 @@ function deselectRecipe(): void {
 }
 
 const clickRecipeSlot = (e: MouseEvent) => {
-   const itemSlotIdx = getClickedItemSlotIdx(e, Var.RECIPE_BROWSER_WIDTH);
+   const itemSlotIdx = getClickedItemSlotIdx(e, Var.RECIPE_BROWSER_WIDTH, getRecipeBrowserHeight());
    if (itemSlotIdx < availableRecipes.length) {
       selectRecipe(itemSlotIdx);
    } else {
@@ -220,6 +220,10 @@ function createCraftingArea(craftingAreaElem: HTMLElement): void {
    }
 }
 
+const getRecipeBrowserHeight = (): number => {
+   return Math.max(Var.RECIPE_BROWSER_MIN_HEIGHT, Math.ceil(availableRecipes.length / Var.RECIPE_BROWSER_WIDTH));
+}
+
 export function openCraftingMenu(): MenuInventoryElemMap {
    assert(craftingMenuElem === null);
    
@@ -253,7 +257,7 @@ export function openCraftingMenu(): MenuInventoryElemMap {
    recipeBrowserElem.className = "recipe-browser";
    elem.appendChild(recipeBrowserElem);
 
-   const recipeBrowserHeight = Math.max(Var.RECIPE_BROWSER_MIN_HEIGHT, Math.ceil(availableRecipes.length / Var.RECIPE_BROWSER_WIDTH));
+   const recipeBrowserHeight = getRecipeBrowserHeight();
 
    const recipeBrowserItemSlots = createInventoryContainer(false, Var.RECIPE_BROWSER_WIDTH);
    recipeBrowserItemSlots.onmousedown = clickRecipeSlot;

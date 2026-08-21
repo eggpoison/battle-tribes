@@ -4,8 +4,8 @@ import { createChat, destroyChat } from "./game/Chat";
 import { createFrameGraph, destroyFrameGraph } from "./game/dev/FrameGraph";
 import { closeGameInteractableLayer, openGameInteractableLayer } from "./game/GameInteractableLayer";
 import { createHealthBar, destroyHealthBar } from "./game/HealthBar";
-import { destroyHotbar } from "./game/inventories/Hotbar";
-import { getMenu, MenuType, openMenu } from "./menus";
+import { destroyHotbar, hotbarIsVisible } from "./game/inventories/Hotbar";
+import { closeMenu, getMenu, MenuType, openMenu } from "./menus";
 
 let canvas: HTMLCanvasElement | undefined;
 
@@ -19,24 +19,28 @@ export function openGameScreen(): void {
    }
    openGameInteractableLayer();
    createChat();
-   // @Speed: only if dev!
-   createFrameGraph();
    
-   // const gameScreenElem = document.createElement("div");
-   // gameScreenElem.id = "game-screen";
-   // gameScreenElem.innerHTML = `
-   // `;
+   if (__DEV__) {
+      createFrameGraph();
+   }
 }
 
 export function closeGameScreen(): void {
-   // document.getElementById("game-canvas")?.classList.add("invis");
-   // document.getElementById("game-screen")?.remove();
-
    destroyHotbar();
    destroyHealthBar();
    closeGameInteractableLayer();
    destroyChat();
    destroyFrameGraph();
+}
+
+export function toggleCinematicMode(): void {
+   if (hotbarIsVisible()) {
+      closeMenu(getMenu(MenuType.hotbar));
+      destroyHealthBar();
+   } else if (playerInstance !== null) {
+      openMenu(getMenu(MenuType.hotbar), playerInstance);
+      createHealthBar();
+   }
 }
 
 export function setGameScreenCanvas(gameCanvas: HTMLCanvasElement): void {
@@ -48,15 +52,11 @@ export function gameScreenIsOpen(): boolean {
    return canvas !== undefined;
 }
 
-/*
+/* @INCOMPLETE
 
 {#if !gameUIState.cinematicModeIsEnabled}
    <HealthBar />
    <Infocards />
-{/if}
-
-{#if gameUIState.isDead}
-   <DeathScreen />
 {/if}
 
 {#if gameUIState.gameInteractState !== GameInteractState.summonEntity}

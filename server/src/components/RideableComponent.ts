@@ -60,11 +60,12 @@ export function getAvailableCarrySlot(rideableComponent: RideableComponent): Car
 
 export function mountCarrySlot(entity: Entity, carrySlot: CarrySlot): void {
    // Set the entity to the carry slot's position
+   // @HACK!!: Necessary because the attachHitbox function calculates the actual offsetX/Y automatically. But should be the opposite!! Should just set offset here and dirty it.
    const entityTransformComponent = TransformComponentArray.getComponent(entity);
    const entityHitbox = entityTransformComponent.hitboxes[0];
    rotatePointAroundOrigin(carrySlot.offset.x, carrySlot.offset.y, carrySlot.parentHitbox.box.angle);
    entityHitbox.box.posX = carrySlot.parentHitbox.box.posX + _point.x;
-   entityHitbox.box.posX = carrySlot.parentHitbox.box.posY + _point.y;
+   entityHitbox.box.posY = carrySlot.parentHitbox.box.posY + _point.y;
    
    // attachEntityWithTether(entity, mount, carrySlot.parentHitbox, 0, 10, 0.4, false);
    // @INCOMPLETE: SHOULD USE TETHER!!!!

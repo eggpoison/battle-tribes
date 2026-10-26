@@ -68,9 +68,15 @@ const getFloorVertices = (layer: Layer): number[] => {
    const minTileY = clampToBoardDimensions(Math.floor(minVisibleY / Settings.TILE_SIZE));
    const maxTileY = clampToBoardDimensions(Math.floor(maxVisibleY / Settings.TILE_SIZE));
 
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+   for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         // @HACK!
+         if (!layer.hasTileXY(tileX, tileY)) {
+            console.warn("no tile!!!!!");
+            continue;
+         }
+         
          const tile = layer.getTile(tileIndex);
          if (tile.mithrilRichness === 0) {
             continue;
@@ -106,8 +112,8 @@ const getWallVertices = (layer: Layer): number[] => {
    const minSubtileY = clampToBoardDimensions(Math.floor(minVisibleY / Settings.SUBTILE_SIZE));
    const maxSubtileY = clampToBoardDimensions(Math.floor(maxVisibleY / Settings.SUBTILE_SIZE));
 
-   for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
-      for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+   for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+      for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
          const subtileIndex = getSubtileIndex(subtileX, subtileY);
          if (layer.getSubtileType(subtileIndex) === SubtileType.none) {
             continue;
@@ -115,6 +121,12 @@ const getWallVertices = (layer: Layer): number[] => {
          
          const tileX = Math.floor(subtileX / 4);
          const tileY = Math.floor(subtileY / 4);
+         // @HACK
+         if (!layer.hasTileXY(tileX, tileY)) {
+            console.warn("no tile!!!!!");
+            continue;
+         }
+         
          const tile = layer.getTileXY(tileX, tileY);
          const mithrilRichness = tile.mithrilRichness;
          if (mithrilRichness === 0) {

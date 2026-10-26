@@ -1,5 +1,5 @@
 import { VisibleChunkBounds } from "../../../shared/dist/client-server-types.js";
-import { Entity } from "../../../shared/dist/entities.js";
+import { CowSpecies, Entity, EntityType } from "../../../shared/dist/entities.js";
 import { PacketReader, ClientPacketType } from "../../../shared/dist/packets.js";
 import { Settings } from "../../../shared/dist/settings.js";
 import { TribeType } from "../../../shared/dist/tribes.js";
@@ -20,7 +20,7 @@ import { TribeComponentArray } from "../components/TribeComponent.js";
 import { TransformComponentArray } from "../components/TransformComponent.js";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent.js";
 import { sortComponentArrays } from "../components/ComponentArray.js";
-import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, surfaceLayer, layers, getEntityType } from "../world.js";
+import { destroyFlaggedEntities, entityExists, getEntityLayer, pushEntityJoinBuffer, tickGameTime, tickEntities, generateLayers, preDestroyFlaggedEntities, createEntity, getGameTicks, tickIntervalHasPassed, surfaceLayer, layers, getEntityType, undergroundLayer } from "../world.js";
 import { resolveEntityCollisions } from "../collision-detection.js";
 import { runCollapses } from "../collapses.js";
 import { updateTribes } from "../tribes.js";
@@ -33,6 +33,12 @@ import { Hitbox } from "../hitboxes.js";
 import { generateDecorations } from "../world-generation/decoration-generation.js";
 import { createDevGameDataPacket } from "./dev-packets.js";
 import { MMM } from "../perlin-noise.js";
+import { createCowConfig } from "../entities/mobs/cow.js";
+import { TamingComponent, TamingComponentArray } from "../components/TamingComponent.js";
+import { ServerComponentType } from "../../../shared/dist/components.js";
+import { getTamingSkill, TamingSkillID } from "../../../shared/dist/taming.js";
+import { getConfigComponent } from "../components.js";
+import { getEntityComponentTypes } from "../entity-component-types.js";
 
 /*
 
@@ -126,7 +132,7 @@ class GameServer {
       // if (OPTIONS.inBenchmarkMode) {
       //    SRandom.seed(40404040404);
       // } else {
-         SRandom.seed(randInt(0, Number.MAX_SAFE_INTEGER));
+         // SRandom.seed(randInt(0, Number.MAX_SAFE_INTEGER));
          // SRandom.seed(7413558892338473);
       // }
 
@@ -139,7 +145,7 @@ class GameServer {
       // SRandom.seed(2763196645);
 
       // Cave:
-      // SRandom.seed(2950872542);
+      SRandom.seed(2950872542);
 
       // br river
       // SRandom.seed(9028422602);
@@ -199,7 +205,8 @@ class GameServer {
                const tribe = new Tribe(tribeType, false, spawnPosition.copy());
                // @TEMPORARY @HACK
                // const layer = isSpectating ? undergroundLayer : surfaceLayer;
-               const layer = surfaceLayer;
+               // const layer = surfaceLayer;
+               const layer = undergroundLayer;
    
                // @Temporary @Incomplete
                const isDev = true;
@@ -212,11 +219,15 @@ class GameServer {
                }
 
                // @SQUEAM
-               // setTimeout(() => {
-               //    if (username === "Clementus") {
-               //       const config = createCowConfig(new Point(spawnPosition.x + 200, spawnPosition.y), 0, CowSpecies.brown);
-               //       createEntity(config, layer, 0);
-               //    }
+               setTimeout(() => {
+                  if (username === "Clementus") {
+                     const config = createCowConfig(spawnPosition.x + 200, spawnPosition.y, 0, CowSpecies.brown);
+                     const tamingComponent = getConfigComponent(config.components, getEntityComponentTypes(EntityType.cow), ServerComponentType.taming);
+                     tamingComponent.tameTribe = tribe;
+                     tamingComponent.acquiredSkills.push(getTamingSkill(TamingSkillID.riding));
+                     createEntity(config, layer, 0);
+                  }
+               }, 1000);
 
                //    let ox = 1731.304931640625 + 10;
                //    let oy = 1931.582763671875;

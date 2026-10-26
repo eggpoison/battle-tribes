@@ -54,10 +54,10 @@ export interface HitboxRelativeAngleConstraint {
    readonly damping: number;
 }
 
-const tethers: HitboxTether[] = [];
+const worldTethers: HitboxTether[] = [];
 const tethersMap = new WeakMap<Hitbox, HitboxTether[]>();
 
-const angularTethers: HitboxAngularTether[] = [];
+const worldAngularTethers: HitboxAngularTether[] = [];
 const angularTethersMap = new WeakMap<Hitbox, HitboxAngularTether[]>();
 
 // @Cleanup: isn't this just an angular tether...
@@ -123,16 +123,30 @@ export function getHitboxAngularConstraints(hitbox: Hitbox): HitboxRelativeAngle
 
 const tetherIsInWorld = (tether: HitboxTether): boolean => {
    // @SPEED
-   return tethers.indexOf(tether) !== -1;
+   return worldTethers.indexOf(tether) !== -1;
+}
+
+const angularTetherIsInWorld = (tether: HitboxAngularTether): boolean => {
+   // @SPEED
+   return worldAngularTethers.indexOf(tether) !== -1;
 }
 
 export function addEntityTethersToWorld(transformComponent: TransformComponent): void {
    for (const hitbox of transformComponent.hitboxes) {
-      const hitboxTethers = tethersMap.get(hitbox);
-      if (hitboxTethers !== undefined) {
-         for (const tether of hitboxTethers) {
+      const tethers = tethersMap.get(hitbox);
+      if (tethers !== undefined) {
+         for (const tether of tethers) {
             if (!tetherIsInWorld(tether)) {
-               tethers.push(tether);
+               worldTethers.push(tether);
+            }
+         }
+      }
+
+      const angularTethers = angularTethersMap.get(hitbox);
+      if (angularTethers !== undefined) {
+         for (const tether of angularTethers) {
+            if (!angularTetherIsInWorld(tether)) {
+               worldAngularTethers.push(tether);
             }
          }
       }
@@ -140,9 +154,9 @@ export function addEntityTethersToWorld(transformComponent: TransformComponent):
 }
 
 export function destroyTether(tether: HitboxTether): void {
-   let idx = tethers.indexOf(tether);
+   let idx = worldTethers.indexOf(tether);
    assert(idx !== -1);
-   tethers.splice(idx, 1);
+   worldTethers.splice(idx, 1);
    
    const hitbox1Tethers = tethersMap.get(tether.hitbox1);
    assert(hitbox1Tethers !== undefined);
@@ -155,6 +169,24 @@ export function destroyTether(tether: HitboxTether): void {
    idx = hitbox2Tethers.indexOf(tether);
    assert(idx !== -1);
    hitbox2Tethers.splice(idx, 1);
+}
+
+export function destroyAngularTether(tether: HitboxAngularTether): void {
+   let idx = worldAngularTethers.indexOf(tether);
+   assert(idx !== -1);
+   worldTethers.splice(idx, 1);
+   
+   const hitboxTethers = angularTethersMap.get(tether.hitbox);
+   assert(hitboxTethers !== undefined);
+   idx = hitboxTethers.indexOf(tether);
+   assert(idx !== -1);
+   hitboxTethers.splice(idx, 1);
+   
+   const originHitboxTethers = angularTethersMap.get(tether.originHitbox);
+   assert(originHitboxTethers !== undefined);
+   idx = originHitboxTethers.indexOf(tether);
+   assert(idx !== -1);
+   originHitboxTethers.splice(idx, 1);
 }
 
 const applyTether = (tether: HitboxTether): void => {
@@ -271,13 +303,13 @@ const applyRelativeAngleConstraint = (constraint: HitboxRelativeAngleConstraint)
 }
 
 export function applyTethers(): void {
-   for (const tether of tethers) {
+   for (const tether of worldTethers) {
       applyTether(tether);
    }
 }
 
 export function applyAngularTethers(): void {
-   for (const tether of angularTethers) {
+   for (const tether of worldAngularTethers) {
       applyAngularTether(tether);
    }
 }

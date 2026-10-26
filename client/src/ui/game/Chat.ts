@@ -36,9 +36,9 @@ export function addMessageToChat(username: string, message: string): void {
    }
 
    // Make the chat reappear
-   historyElem!.classList.remove("message-history");
-   void historyElem!.offsetHeight; // Force reflow to play the animation again
-   historyElem!.classList.add("message-history");
+   // historyElem!.classList.remove("message-history");
+   // void historyElem!.offsetHeight; // Force reflow to play the animation again
+   // historyElem!.classList.add("message-history");
 }
 
 export function createChat(): void {
@@ -46,7 +46,6 @@ export function createChat(): void {
    
    rootElem = document.createElement("div");
    rootElem.id = "chat";
-   document.body.appendChild(rootElem);
 
    inputElem = document.createElement("input");
    inputElem.name = "chat-input";
@@ -57,6 +56,8 @@ export function createChat(): void {
    historyElem = document.createElement("div");
    historyElem.className = "message-history";
    rootElem.appendChild(historyElem);
+   
+   document.body.appendChild(rootElem);
 }
 
 export function destroyChat(): void {
@@ -72,12 +73,22 @@ export function destroyChat(): void {
 }
 
 export function openChatMessageInput(e: Event): void {
-   if (inputElem !== null) {
-      inputElem.focus();
-      e.preventDefault();
-      // clearPressedKeys();
-      // @Incomplete
-   }
+   assert(rootElem !== null && inputElem !== null);
+
+   rootElem.classList.add("open");
+   
+   inputElem.focus();
+   e.preventDefault();
+   
+   // clearPressedKeys();
+   // @Incomplete
+}
+
+function closeChat(): void {
+   assert(rootElem !== null && inputElem !== null);
+
+   rootElem.classList.remove("open");
+   inputElem.blur();
 }
 
 function onInputKeydown(e: KeyboardEvent): void {
@@ -92,7 +103,7 @@ function onInputKeydown(e: KeyboardEvent): void {
    switch (e.key) {
       // Cancel the chat message
       case "Escape": {
-         inputElem!.blur();
+         closeChat();
          break;
       }
       // Send the chat message
@@ -115,7 +126,7 @@ function onInputKeydown(e: KeyboardEvent): void {
             }
          }
 
-         inputElem!.blur();
+         closeChat();
          break;
       }
    }

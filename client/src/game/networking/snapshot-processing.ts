@@ -31,12 +31,14 @@ import { EntityServerComponentData, getEntityComponentArrays, getEntityServerCom
 import { getSelectedEntity } from "../entity-selection";
 import { COMPONENT_ARRAYS, ServerComponentData } from "../entity-components/component-registry";
 import { processTileUpdates } from "../rendering/webgl/solid-tile-rendering";
-import { EdgeType, processRenderChunkSubtileUpdates, createRenderChunk, destroyRenderChunk, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../rendering/render-chunks";
+import { EdgeType, processRenderChunkSubtileUpdates, createRenderChunk, destroyRenderChunk, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, addSubtileToEdgeInfos, removeSubtileFromEdgeInfos, RenderChunkEdgeInfo } from "../rendering/render-chunks";
 import { getSubtileIndex, SubtileType } from "../../../../shared/src/subtiles";
-import { getRenderChunkX, getRenderChunkY } from "../../../../shared/src/render-chunks";
+import { getRenderChunkIndex, getRenderChunkX, getRenderChunkY, RenderChunkVars } from "../../../../shared/src/render-chunks";
 import { Settings } from "../../../../shared/src/settings";
 import { addTileToWorld, readWaterRocksArray, removeTileFromWorld } from "./packet-receiving";
 import { Biome } from "../../../../shared/src/biomes";
+import { recalculateTileShadows, TileShadowType } from "../rendering/webgl/tile-shadow-rendering";
+import { recalculateWallBorders } from "../rendering/webgl/wall-border-rendering";
 
 // @Speed @Memory I cause a lot of GC right now by reading things in the snapshot decoding process which aren't necessary for snapshots (e.g. data for all tribes), instead of reading that when updating the game state to that.
 
@@ -541,6 +543,26 @@ const updatePlayerFromData = (playerInstance: number, data: EntitySnapshot): voi
    }
 }
 
+export function addDirtiedRenderChunks(dirtiedRenderChunks: Set<number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileX: number, subtileY: number): void {
+   const minRenderChunkX = Math.max(Math.floor((subtileX - 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
+   const maxRenderChunkX = Math.min(Math.floor((subtileX + 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION - 1);
+   const minRenderChunkY = Math.max(Math.floor((subtileY - 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), -RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION);
+   const maxRenderChunkY = Math.min(Math.floor((subtileY + 1) / 4 / RenderChunkVars.RENDER_CHUNK_SIZE), RenderChunkVars.WORLD_RENDER_CHUNK_SIZE + RenderChunkVars.RENDER_CHUNK_EDGE_GENERATION - 1);
+
+   // @Speed: We can probably batch these together
+   for (let renderChunkY = minRenderChunkY; renderChunkY <= maxRenderChunkY; renderChunkY++) {
+      for (let renderChunkX = minRenderChunkX; renderChunkX <= maxRenderChunkX; renderChunkX++) {
+         const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
+         if (floorEdgeInfos.has(renderChunkIdx) || wallEdgeInfos.has(renderChunkIdx)) {
+            // console.log("gode");
+            dirtiedRenderChunks.add(renderChunkIdx);
+         } else {
+            // console.log("bade");
+         }
+      }
+   }
+}
+
 export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
    // @HACK @CLEANUP impure. Done before so that server data can override particles
    updateParticles();
@@ -563,6 +585,11 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
    }
    tribesTabState.updateTribes(tribes);
 
+   const layerDirtiedEdgeRenderChunks: Set<number>[] = [];
+   for (let i = 0; i < layers.length; i++) {
+      layerDirtiedEdgeRenderChunks.push(new Set<number>());
+   }
+
    // Terrain update done before entities, as entities need to know what terrain they're standing on.
    for (let i = 0; i < layers.length; i++) {
       const layer = layers[i];
@@ -573,6 +600,8 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
       const tileTemperatures = layer.tileTemperatures;
       const tileHumidities = layer.tileHumidities;
 
+      const floorEdgeInfos = layer.edgeInfoMaps[EdgeType.floor];
+      const wallEdgeInfos = layer.edgeInfoMaps[EdgeType.wall];
       const dropdownEdgeInfos = layer.edgeInfoMaps[EdgeType.dropdown];
       
       for (let j = 0; j < renderChunkDatas.length; j++) {
@@ -614,7 +643,14 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
             for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
                const subtileIndex = getSubtileIndex(subtileX, subtileY);
                const data = subtiles[k++];
+               
                layer.setSubtileData(subtileIndex, data);
+
+               // Here we have to pass in the subtileData that is currently represented in the edge info, which is 0.
+               removeSubtileFromEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, 0);
+               addSubtileToEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, data);
+
+               addDirtiedRenderChunks(layerDirtiedEdgeRenderChunks[layer.idx], floorEdgeInfos, wallEdgeInfos, subtileX, subtileY);
             }
          }
 
@@ -644,6 +680,27 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
                removeTileFromWorld(layer, tileIndex);
             }
          }
+
+         const floorEdgeInfos = layer.edgeInfoMaps[EdgeType.floor];
+         const wallEdgeInfos = layer.edgeInfoMaps[EdgeType.wall];
+         
+         // Subtiles
+         const minSubtileX = minTileX * 4;
+         const maxSubtileX = maxTileX * 4;
+         const minSubtileY = minTileY * 4;
+         const maxSubtileY = maxTileY * 4;
+         for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
+            for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
+               const subtileIndex = getSubtileIndex(subtileX, subtileY);
+               const data = layer.getSubtileData(subtileIndex);
+               
+               layer.removeSubtileData(data);
+
+               removeSubtileFromEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, data);
+
+               // No point dirtying them here, can't affect what the player sees anyway
+            }
+         }
       }
    }
 
@@ -651,7 +708,26 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
       processTileUpdates(layers[i], snapshot.tileUpdates[i]);
    }
 
-   processRenderChunkSubtileUpdates(snapshot);
+   processRenderChunkSubtileUpdates(snapshot, layerDirtiedEdgeRenderChunks);
+
+   // Recalculate render chunks
+   for (const layer of layers) {
+      const floorEdgeInfos = layer.edgeInfoMaps[EdgeType.floor];
+      const wallEdgeInfos = layer.edgeInfoMaps[EdgeType.wall];
+      
+      const dirtiedEdgeRenderChunks = layerDirtiedEdgeRenderChunks[layer.idx];
+      for (const renderChunkIdx of dirtiedEdgeRenderChunks) {
+         const floorEdgeInfo = floorEdgeInfos.get(renderChunkIdx);
+         const wallEdgeInfo = wallEdgeInfos.get(renderChunkIdx);
+         
+         if (floorEdgeInfo !== undefined) {
+            recalculateTileShadows(layer, renderChunkIdx, floorEdgeInfo, TileShadowType.wall);
+         }
+         if (wallEdgeInfo !== undefined) {
+            recalculateWallBorders(layer, renderChunkIdx, wallEdgeInfo);
+         }
+      }
+   }
 
    // Must be done before the entity update, so that playerInstance is correct for when the player entity is created (required for entityHasClientInterp)
    setPlayerInstance(snapshot.playerInstance);

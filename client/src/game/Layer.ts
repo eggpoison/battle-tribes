@@ -4,6 +4,7 @@ import { Entity } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
 import { SubtileIndex, SubtileType } from "../../../shared/src/subtiles";
 import { getTileIndexIncludingEdges, TileIndex } from "../../../shared/src/tiles";
+import { assert } from "../../../shared/src/utils";
 import Chunk from "./Chunk";
 import { Light } from "./lights";
 import { NUM_RENDER_LAYERS, RenderLayer } from "./render-layers";
@@ -113,6 +114,10 @@ export default class Layer {
 
    public setSubtileData(subtileIndex: number, data: number): void {
       this.wallSubtileDatas.set(subtileIndex, data);
+   }
+
+   public removeSubtileData(subtileIndex: number): void {
+      this.wallSubtileDatas.delete(subtileIndex);
    }
 
    public getTile(tileIndex: TileIndex): Tile {

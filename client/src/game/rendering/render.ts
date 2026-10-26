@@ -319,7 +319,7 @@ export function renderGame(clientInterp: number, serverInterp: number): void {
       renderTechTreeItems();
    }
 
-   // @Temporary
-   gl.clearColor(0, 1, 0, 1);
-   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+   // @SQUEAM
+   // gl.clearColor(0, 1, 0, 1);
+   // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }

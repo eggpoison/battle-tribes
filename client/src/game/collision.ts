@@ -456,8 +456,8 @@ export function hitboxIsInWater(hitbox: Hitbox): boolean {
    const minChunkY = Math.max(Math.min(Math.floor(_bounds.minY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    const maxChunkY = Math.max(Math.min(Math.floor(_bounds.maxY / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1), 0);
    
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+   for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          const chunk = layer.getChunk(chunkX, chunkY);
          for (const currentEntity of chunk.nonGrassEntities) {
             if (getEntityType(currentEntity) === EntityType.riverSteppingStone) {

@@ -401,7 +401,7 @@ const spreadBiomeDists = (biomeDists: Uint8Array, biomes: Uint8Array, biomeBorde
 
 export function generateSurfaceTerrain(depth: number): Layer {
    // @SQUEAM
-   SRandom.reseed();
+   // SRandom.reseed();
 
    const heightMap = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, HEIGHT_NOISE_SCALE, 3, 1.5, 0.75);
    // const tileTemperatures = generateOctavePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, TEMPERATURE_NOISE_SCALE, 3, 1.5, 0.75);
@@ -424,7 +424,9 @@ export function generateSurfaceTerrain(depth: number): Layer {
       const humidity = tileHumidities[tileIndex];
       const height = heightMap[tileIndex];
       
+      // @SQUEAM
       const biome = calculateMatchingBiome(height, temperature, humidity);
+      // const biome = Biome.grasslands;
 
       surfaceLayer.tileBiomes[tileIndex] = biome;
 

@@ -247,6 +247,7 @@ if (import.meta.hot) {
    }
 
    import.meta.hot.dispose(() => {
+      // !SPEED: 
       document.getElementById("debug-info-display")?.remove();
    });
    

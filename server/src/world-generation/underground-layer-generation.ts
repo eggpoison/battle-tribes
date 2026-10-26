@@ -229,7 +229,7 @@ export function generateUndergroundTerrain(depth: number, surfaceLayer: Layer): 
 
    const waterGenerationNoise = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 8, 0);
    const mithrilGenerationNoise = generatePerlinNoise(Settings.FULL_WORLD_SIZE_TILES, Settings.FULL_WORLD_SIZE_TILES, 16, 0);
-   
+
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.WORLD_SIZE_TILES + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);

@@ -21,7 +21,7 @@ import { registerDirtyEntity } from "../server/player-clients.js";
 import { addHitboxDataToPacket, getHitboxDataLength } from "../server/packet-hitboxes.js";
 import { applyAcceleration, getHitboxTag, getBoxTile, getHitboxVelocity, getRootHitbox, Hitbox, hitboxIgnoresWallCollisions, hitboxIsInRiver, hitboxIsPartOfParent, setHitboxIsPartOfParent, setHitboxVelocity, setHitboxVelocityX, setHitboxVelocityY, translateHitbox } from "../hitboxes.js";
 import { EntityConfig, getConfigTransformComponent } from "../components.js";
-import { addEntityTethersToWorld, destroyTether, getHitboxTethers } from "../tethers.js";
+import { addEntityTethersToWorld, destroyAngularTether, destroyTether, getHitboxAngularTethers, getHitboxTethers } from "../tethers.js";
 import { CarrySlot, RideableComponentArray } from "./RideableComponent.js";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which could take advantage of that extraction?)
@@ -698,6 +698,13 @@ function onRemove(entity: Entity): void {
             destroyTether(tether);
          }
       }
+      const angularTethers = getHitboxAngularTethers(hitbox);
+      if (angularTethers !== undefined) {
+         for (let i = angularTethers.length - 1; i >= 0; i--) {
+            const tether = angularTethers[i];
+            destroyAngularTether(tether);
+         }
+      }
 
       // Detach all children
       for (let i = hitbox.children.length - 1; i >= 0; i--) {
@@ -888,6 +895,17 @@ export function detachHitbox(hitbox: Hitbox): void {
          const otherHitbox = tether.getOtherHitbox(hitbox);
          if (otherHitbox === hitbox.parent) {
             destroyTether(tether);
+            break;
+         }
+      }
+   }
+   const angularTethers = getHitboxAngularTethers(hitbox);
+   if (angularTethers !== undefined) {
+      for (let i = angularTethers.length - 1; i >= 0; i--) {
+         const tether = angularTethers[i];
+         const otherHitbox = tether.originHitbox;
+         if (otherHitbox === hitbox.parent) {
+            destroyAngularTether(tether);
             break;
          }
       }

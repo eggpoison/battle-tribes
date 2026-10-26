@@ -304,31 +304,31 @@ const BIOME_GENERATION_INFO: readonly BiomeGenerationInfo[] = [
       ]
    },
    // @TEMPORARY
-   // {
-   //    biome: Biome.mountains,
-   //    spawnRequirements: {
-   //       minHeight: 0.7
-   //    },
-   //    floorTiles: [
-   //       {
-   //          tileType: TileType.rock
-   //       }
-   //    ],
-   //    wallTiles: [
-   //       {
-   //          subtileType: SubtileType.rockWall,
-   //          requirements: {
-   //             customNoise: [
-   //                {
-   //                   scale: 7,
-   //                   minWeight: 0.8,
-   //                }
-   //             ],
-   //             minDist: 4
-   //          }
-   //       }
-   //    ]
-   // },
+   {
+      biome: Biome.mountains,
+      spawnRequirements: {
+         minHeight: 0.7
+      },
+      floorTiles: [
+         {
+            tileType: TileType.rock
+         }
+      ],
+      wallTiles: [
+         {
+            subtileType: SubtileType.rockWall,
+            requirements: {
+               customNoise: [
+                  {
+                     scale: 7,
+                     minWeight: 0.8,
+                  }
+               ],
+               minDist: 4
+            }
+         }
+      ]
+   },
    {
       biome: Biome.swamp,
       spawnRequirements: {

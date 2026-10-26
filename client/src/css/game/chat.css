@@ -1,7 +1,8 @@
 #chat {
    --message-height: 1.3rem;
    min-width: 15rem;
-   max-width: 25rem;
+   max-width: 31rem;
+   background-color: rgba(0, 0, 0, 0.4);
    position: absolute;
    left: calc(1rem * var(--zoom));
    bottom: calc(9rem * var(--zoom));
@@ -10,15 +11,28 @@
    transform-origin: 0% 100%;
    display: flex;
    flex-direction: column-reverse;
+   visibility: hidden;
+}
+#chat.open {
+   visibility: visible;
 }
 #chat .message-history {
-   animation: Disappear 5s forwards;
+   max-height: calc(var(--message-height) * 10);
+   overflow-x: hidden;
+   overflow-y: auto;
+   /* Hide the scrollbar */
+   /* Firefox */
+   scrollbar-width: none;
+   /* Hide the scrollbar */
+   /* IE/old Edge */
+   -ms-overflow-style: none;
 }
-#chat input:focus + .message-history {
-   animation: none;
+/* Chrome, Safari, newer Edge */
+.message-history::-webkit-scrollbar {
+   /* Hide the scrollbar */
+  display: none;
 }
 #chat :is(.msg, input) {
-   width: 100%;
    color: #fff;
    text-shadow: 2px 2px #000;
    font-family: "Noto Sans";
@@ -31,20 +45,24 @@
 }
 #chat .msg {
    background-color: rgba(0, 0, 0, 0.6);
+   animation: Disappear 5s forwards;
+}
+#chat.open .msg {
+   /* Override the Disappear animation */
+   opacity: 1 !important;
+   visibility: visible !important;
 }
 #chat input {
+   background-color: rgba(0, 0, 0, 0.4);
    border: none;
    outline: none;
-   /* background-color: rgba(0, 0, 0, 0.4); */
-   opacity: 0;
 }
 #chat input:focus {
    background-color: rgba(0, 0, 0, 0.6);
-   opacity: 1;
 }
 
 @keyframes Disappear {
-   0%, 80% {
+   0%, 75% {
       opacity: 1;
       visibility: visible;
    }

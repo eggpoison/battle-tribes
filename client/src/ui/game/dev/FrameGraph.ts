@@ -8,7 +8,7 @@ let min = 0;
 let max = 0;
 
 // @Memory
-let canvasElem: HTMLElement;
+let canvasElem: HTMLCanvasElement;
 let frameGraphElem: HTMLElement | null = null;
 
 frameGraph.setMetrics = (newFPS: number, newAverage: number, newMin: number, newMax: number): void => {
@@ -18,7 +18,7 @@ frameGraph.setMetrics = (newFPS: number, newAverage: number, newMin: number, new
    max = newMax;
 };
 
-export function createFrameGraphCanvas(): HTMLElement {
+export function createFrameGraphCanvas(): HTMLCanvasElement {
    canvasElem = createWebGLCanvas("frame-graph-canvas", false);
    return canvasElem;
 }

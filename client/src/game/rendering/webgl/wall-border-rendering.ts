@@ -15,9 +15,6 @@ const enum Var {
 
 let program: WebGLProgram;
 
-// @INCOMPLETE!
-// const visibleWallBorderInfos: RenderChunkWallBorderInfo[] = [];
-
 export function createWallBorderShaders(): void {
    const vertexShaderText = `#version 300 es
    precision mediump float;
@@ -357,6 +354,7 @@ const calculateVertexData = (info: RenderChunkEdgeInfo): Float32Array => {
 
 export function createWallBorderInfo(edgeInfo: RenderChunkEdgeInfo): RenderChunkWallBorderInfo | null {
    const vertexData = calculateVertexData(edgeInfo);
+   console.log("create",vertexData.length);
    if (vertexData.length === 0) {
       return null;
    }

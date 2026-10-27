@@ -1,7 +1,7 @@
 import { PacketReader } from "../../../../shared/src/packets";
 import { RiverFlowDirectionsRecord, WaterRockData, WaterRockSize } from "../../../../shared/src/client-server-types";
 import { Settings } from "../../../../shared/src/settings";
-import { getTileIndexIncludingEdges, TileIndex, TileType } from "../../../../shared/src/tiles";
+import { getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, TileType } from "../../../../shared/src/tiles";
 import { Biome } from "../../../../shared/src/biomes";
 import { InventoryName } from "../../../../shared/src/items/items";
 import { AttackVar } from "../../../../shared/src/attack-patterns";
@@ -35,7 +35,9 @@ export function addTileToWorld(tileType: TileType, tileBiome: Biome, flowDirecti
    const tile = new Tile(tileType, tileBiome, mithrilRichness);
    tiles.set(tileIndex, tile);
 
-   addTileToEdgeInfos(tiles, dropdownEdgeInfos, tileIndex, tileType);
+   const tileX = getTileX(tileIndex);
+   const tileY = getTileY(tileIndex);
+   addTileToEdgeInfos(tiles, dropdownEdgeInfos, tileIndex, tileX, tileY, tileType);
 
    if (flowDirections[tileIndex] === undefined) {
       flowDirections[tileIndex] = flowDirection;
@@ -147,7 +149,7 @@ export function processInitialGameDataPacket(reader: PacketReader): Intermediate
             const data = reader.readNumber();
 
             wallSubtileDatas.set(subtileIndex, data);
-            addSubtileToEdgeInfosPartial(wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, data);
+            addSubtileToEdgeInfosPartial(wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileX, subtileY, data);
          }
       }
 

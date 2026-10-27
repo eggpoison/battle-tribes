@@ -145,7 +145,9 @@ export default class Layer {
    }
 
    public getSubtileData(subtileIndex: number): number {
-      return this.wallSubtileDatas.get(subtileIndex)!;
+      const data = this.wallSubtileDatas.get(subtileIndex);
+      assert(data !== undefined);
+      return data;
    }
 
    public getChunk(chunkX: number, chunkY: number): Chunk {

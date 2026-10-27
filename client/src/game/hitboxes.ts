@@ -257,10 +257,9 @@ export function getHitboxTileIndex(hitbox: Hitbox): number {
 export function getHitboxTile(hitbox: Hitbox): Tile {
    const tileX = Math.floor(hitbox.box.posX / Settings.TILE_SIZE);
    const tileY = Math.floor(hitbox.box.posY / Settings.TILE_SIZE);
+   const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
    
    const layer = getEntityLayer(hitbox.entity);
-   
-   const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
    return layer.getTile(tileIndex);
 }
 

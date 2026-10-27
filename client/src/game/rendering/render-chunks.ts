@@ -1,6 +1,6 @@
 import { Settings } from "../../../../shared/src/settings";
 import { WaterRockData } from "../../../../shared/src/client-server-types";
-import { getTileX, getTileY, TileIndex, TileType } from "../../../../shared/src/tiles";
+import { getTileIndexIncludingEdges, TileIndex, tileIsInWorldIncludingEdges, TileType } from "../../../../shared/src/tiles";
 import { assert } from "../../../../shared/src/utils";
 import { createSolidTileRenderChunkData, destroySolidTileRenderChunkData, updateRenderChunkTileData } from "./webgl/solid-tile-rendering";
 import { createRiverRenderChunkData, destroyRiverRenderChunkData } from "./webgl/river-rendering";
@@ -9,7 +9,7 @@ import { createWallBorderInfo, destroyWallBorderInfo } from "./webgl/wall-border
 import Layer from "../Layer";
 import { layers } from "../world";
 import { addDirtiedRenderChunks, TickSnapshot } from "../networking/snapshot-processing";
-import { getSubtileX, getSubtileY, SubtileIndex } from "../../../../shared/src/subtiles";
+import { getSubtileIndex, getSubtileX, getSubtileY, SubtileIndex, subtileIsInWorldIncludingEdges } from "../../../../shared/src/subtiles";
 import { Tile } from "../Tile";
 import { IntermediateInitialisationInfo } from "../networking/packet-receiving";
 import { getRenderChunkIndex, getRenderChunkX, getRenderChunkY, RenderChunkVars } from "../../../../shared/src/render-chunks";
@@ -66,6 +66,12 @@ export interface RenderChunkWallBorderInfo {
    // @Hack: make readonly
    vertexData: Float32Array;
 }
+
+// @Location should be global
+const NEIGHBOUR_X_OFFSETS = [-1, 0, 1, -1, 1, 0, -1, 1];
+const NEIGHBOUR_Y_OFFSETS = [-1, -1, -1, 0, 1, 1, 1, 0];
+
+const NEIGHBOUR_EDGE_DIRECTIONS = [EdgeMarkerBit.bottomLeft, EdgeMarkerBit.bottom, EdgeMarkerBit.bottomRight, EdgeMarkerBit.left, EdgeMarkerBit.topRight, EdgeMarkerBit.top, EdgeMarkerBit.topLeft, EdgeMarkerBit.right];
 
 export function getRenderChunkRiverInfo(layer: Layer, renderChunkIdx: number): RenderChunkRiverInfo | undefined {
    return layer.riverInfoMap.get(renderChunkIdx);
@@ -212,17 +218,13 @@ export function destroyRenderChunk(layer: Layer, renderChunkIndex: number): void
    }
 }
 
-const getTileRenderChunkIndex = (index: TileIndex): number => {
-   const tileX = getTileX(index);
-   const tileY = getTileY(index);
+const getTileRenderChunkIndex = (tileX: number, tileY: number): number => {
    const renderChunkX = Math.floor(tileX / RenderChunkVars.RENDER_CHUNK_SIZE);
    const renderChunkY = Math.floor(tileY / RenderChunkVars.RENDER_CHUNK_SIZE);
    return getRenderChunkIndex(renderChunkX, renderChunkY);
 }
 
-const getSubtileRenderChunkIndex = (subtileIndex: SubtileIndex): number => {
-   const subtileX = getSubtileX(subtileIndex);
-   const subtileY = getSubtileY(subtileIndex);
+const getSubtileRenderChunkIndex = (subtileX: number, subtileY: number): number => {
    const renderChunkX = Math.floor(subtileX / 4 / RenderChunkVars.RENDER_CHUNK_SIZE);
    const renderChunkY = Math.floor(subtileY / 4 / RenderChunkVars.RENDER_CHUNK_SIZE);
    return getRenderChunkIndex(renderChunkX, renderChunkY);
@@ -240,8 +242,8 @@ const getOrCreateEdgeInfo = (edgeInfos: Map<TileIndex, RenderChunkEdgeInfo>, ren
    }
 }
 
-const addTileEdge = (edgeInfos: Map<TileIndex, RenderChunkEdgeInfo>, tileIndex: TileIndex, marker: EdgeMarkerBit) => {
-   const idx = getTileRenderChunkIndex(tileIndex);
+const addTileEdge = (edgeInfos: Map<TileIndex, RenderChunkEdgeInfo>, tileIndex: TileIndex, tileX: number, tileY: number, marker: EdgeMarkerBit) => {
+   const idx = getTileRenderChunkIndex(tileX, tileY);
    const edgeInfo = getOrCreateEdgeInfo(edgeInfos, idx);
    
    for (let i = 0; i < edgeInfo.length; i++) {
@@ -257,8 +259,8 @@ const addTileEdge = (edgeInfos: Map<TileIndex, RenderChunkEdgeInfo>, tileIndex: 
    edgeInfo.push(tileIndex << 8 | marker);
 }
 
-const addSubtileEdge = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, marker: EdgeMarkerBit) => {
-   const idx = getSubtileRenderChunkIndex(subtileIndex);
+const addSubtileEdge = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, subtileX: number, subtileY: number, marker: EdgeMarkerBit) => {
+   const idx = getSubtileRenderChunkIndex(subtileX, subtileY);
    const edgeInfo = getOrCreateEdgeInfo(edgeInfos, idx);
    
    for (let i = 0; i < edgeInfo.length; i++) {
@@ -274,8 +276,8 @@ const addSubtileEdge = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, subti
    edgeInfo.push(subtileIndex << 8 | marker);
 }
 
-const clearSubtileEdges = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex) => {
-   const idx = getSubtileRenderChunkIndex(subtileIndex);
+const clearSubtileEdges = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, subtileX: number, subtileY: number) => {
+   const idx = getSubtileRenderChunkIndex(subtileX, subtileY);
    const edgeInfo = edgeInfos.get(idx);
    
    if (edgeInfo !== undefined) {
@@ -293,8 +295,8 @@ const clearSubtileEdges = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, su
    // Ok to not find any edges to clear, as if this is called in the middle of a clump of walls then that will be the case.
 }
 
-const removeSubtileEdge = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, marker: EdgeMarkerBit) => {
-   const idx = getSubtileRenderChunkIndex(subtileIndex);
+const removeSubtileEdge = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, subtileX: number, subtileY: number, marker: EdgeMarkerBit) => {
+   const idx = getSubtileRenderChunkIndex(subtileX, subtileY);
    const edgeInfo = edgeInfos.get(idx)!;
 
    for (let i = 0; i < edgeInfo.length; i++) {
@@ -311,335 +313,78 @@ const removeSubtileEdge = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, su
       }
    }
 
+   // Couldn't find the subtile edge to remove
    assert(false);
 }
 
-// @Cleanup: Compress this all from 300 lines to 30
+export function addSubtileToEdgeInfosPartial(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileX: number, subtileY: number, subtileData: number): void {
+   for (let i = 0; i < 4; i++) {
+      const xOffset = NEIGHBOUR_X_OFFSETS[i];
+      const yOffset = NEIGHBOUR_Y_OFFSETS[i];
 
-export function addSubtileToEdgeInfosPartial(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileData: number): void {
-   const rowIdx = subtileIndex % Settings.FULL_WORLD_SIZE_SUBTILES;
-
-   const hasLeft = rowIdx > 0;
-   const hasRight = rowIdx < Settings.FULL_WORLD_SIZE_SUBTILES - 1;
-   const hasBottom = subtileIndex >= Settings.FULL_WORLD_SIZE_SUBTILES;
-
-   // Left
-   if (hasLeft) {
-      const leftSubtileIndex = subtileIndex - 1;
-      const leftSubtileData = wallSubtileDatas.get(leftSubtileIndex);
-      if (leftSubtileData !== undefined && (leftSubtileData === 0) !== (subtileData === 0)) {
-         addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.left);
-         addSubtileEdge(leftSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, leftSubtileIndex, EdgeMarkerBit.right);
-      }
-   }
-
-   // Bottom
-   if (hasBottom) {
-      const bottomSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES;
-      const bottomSubtileData = wallSubtileDatas.get(bottomSubtileIndex);
-      if (bottomSubtileData !== undefined && (bottomSubtileData === 0) !== (subtileData === 0)) {
-         addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.bottom);
-         addSubtileEdge(bottomSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, bottomSubtileIndex, EdgeMarkerBit.top);
-      }
-   }
-
-   // Bottom left
-   if (hasBottom && hasLeft) {
-      const bottomLeftSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES - 1;
-      const bottomLeftSubtileData = wallSubtileDatas.get(bottomLeftSubtileIndex);
-      if (bottomLeftSubtileData !== undefined && (bottomLeftSubtileData === 0) !== (subtileData === 0)) {
-         addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.bottomLeft);
-         addSubtileEdge(bottomLeftSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, bottomLeftSubtileIndex, EdgeMarkerBit.topRight);
-      }
-   }
-
-   // Bottom right
-   if (hasBottom && hasRight) {
-      const bottomRightSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES + 1;
-      const bottomRightSubtileData = wallSubtileDatas.get(bottomRightSubtileIndex);
-      if (bottomRightSubtileData !== undefined && (bottomRightSubtileData === 0) !== (subtileData === 0)) {
-         addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.bottomRight);
-         addSubtileEdge(bottomRightSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, bottomRightSubtileIndex, EdgeMarkerBit.topLeft);
+      if (subtileIsInWorldIncludingEdges(subtileX + xOffset, subtileY + yOffset)) {
+         const neighbourSubtileIndex = getSubtileIndex(subtileX + xOffset, subtileY + yOffset);
+         const neighbourSubtileData = wallSubtileDatas.get(neighbourSubtileIndex);
+         if (neighbourSubtileData !== undefined && (neighbourSubtileData === 0) !== (subtileData === 0)) {
+            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, subtileX, subtileY, NEIGHBOUR_EDGE_DIRECTIONS[i]);
+            addSubtileEdge(neighbourSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, neighbourSubtileIndex, subtileX + xOffset, subtileY + yOffset, NEIGHBOUR_EDGE_DIRECTIONS[i + 4]);
+         }
       }
    }
 }
 
 /** Adds a subtile which currently has zero presence to the edge infos. */
-export function addSubtileToEdgeInfos(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileData: number): void {
-   const rowIdx = subtileIndex % Settings.FULL_WORLD_SIZE_SUBTILES;
+export function addSubtileToEdgeInfos(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileX: number, subtileY: number, subtileData: number): void {
+   for (let i = 0; i < 8; i++) {
+      const xOffset = NEIGHBOUR_X_OFFSETS[i];
+      const yOffset = NEIGHBOUR_Y_OFFSETS[i];
 
-   // @Copynpaste
-   const hasLeft = rowIdx > 0;
-   const hasRight = rowIdx < Settings.FULL_WORLD_SIZE_SUBTILES - 1;
-   const hasBottom = subtileIndex >= Settings.FULL_WORLD_SIZE_SUBTILES;
-   const hasTop = subtileIndex < Settings.FULL_WORLD_SIZE_SUBTILES * (Settings.FULL_WORLD_SIZE_SUBTILES - 1);
-
-   // Left
-   if (hasLeft) {
-      const leftSubtileIndex = subtileIndex - 1;
-      const leftSubtileData = wallSubtileDatas.get(leftSubtileIndex);
-      if (leftSubtileData !== undefined) {
-         if ((leftSubtileData === 0) !== (subtileData === 0)) {
-            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.left);
-            addSubtileEdge(leftSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, leftSubtileIndex, EdgeMarkerBit.right);
-         }
-      }
-   }
-
-   // Right
-   if (hasRight) {
-      const rightSubtileIndex = subtileIndex + 1;
-      const rightSubtileData = wallSubtileDatas.get(rightSubtileIndex);
-      if (rightSubtileData !== undefined) {
-         if ((rightSubtileData === 0) !== (subtileData === 0)) {
-            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.right);
-            addSubtileEdge(rightSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, rightSubtileIndex, EdgeMarkerBit.left);
-         }
-      }
-   }
-
-   // Bottom
-   if (hasBottom) {
-      const bottomSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES;
-      const bottomSubtileData = wallSubtileDatas.get(bottomSubtileIndex);
-      if (bottomSubtileData !== undefined) {
-         if ((bottomSubtileData === 0) !== (subtileData === 0)) {
-            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.bottom);
-            addSubtileEdge(bottomSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, bottomSubtileIndex, EdgeMarkerBit.top);
-         }
-      }
-   }
-
-   // Top
-   if (hasTop) {
-      const topSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES;
-      const topSubtileData = wallSubtileDatas.get(topSubtileIndex);
-      if (topSubtileData !== undefined) {
-         if ((topSubtileData === 0) !== (subtileData === 0)) {
-            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.top);
-            addSubtileEdge(topSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, topSubtileIndex, EdgeMarkerBit.bottom);
-         }
-      }
-   }
-
-   // Bottom left
-   if (hasBottom && hasLeft) {
-      const bottomLeftSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES - 1;
-      const bottomLeftSubtileData = wallSubtileDatas.get(bottomLeftSubtileIndex);
-      if (bottomLeftSubtileData !== undefined) {
-         if ((bottomLeftSubtileData === 0) !== (subtileData === 0)) {
-            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.bottomLeft);
-            addSubtileEdge(bottomLeftSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, bottomLeftSubtileIndex, EdgeMarkerBit.topRight);
-         }
-      }
-   }
-
-   // Bottom right
-   if (hasBottom && hasRight) {
-      const bottomRightSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES + 1;
-      const bottomRightSubtileData = wallSubtileDatas.get(bottomRightSubtileIndex);
-      if (bottomRightSubtileData !== undefined) {
-         if ((bottomRightSubtileData === 0) !== (subtileData === 0)) {
-            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.bottomRight);
-            addSubtileEdge(bottomRightSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, bottomRightSubtileIndex, EdgeMarkerBit.topLeft);
-         }
-      }
-   }
-
-   // Top left
-   if (hasTop && hasLeft) {
-      const topLeftSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES - 1;
-      const topLeftSubtileData = wallSubtileDatas.get(topLeftSubtileIndex);
-      if (topLeftSubtileData !== undefined) {
-         if ((topLeftSubtileData === 0) !== (subtileData === 0)) {
-            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.topLeft);
-            addSubtileEdge(topLeftSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, topLeftSubtileIndex, EdgeMarkerBit.bottomRight);
-         }
-      }
-   }
-
-   // Top right
-   if (hasTop && hasRight) {
-      const topRightSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES + 1;
-      const topRightSubtileData = wallSubtileDatas.get(topRightSubtileIndex);
-      if (topRightSubtileData !== undefined) {
-         if ((topRightSubtileData === 0) !== (subtileData === 0)) {
-            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, EdgeMarkerBit.topRight);
-            addSubtileEdge(topRightSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, topRightSubtileIndex, EdgeMarkerBit.bottomLeft);
+      if (subtileIsInWorldIncludingEdges(subtileX + xOffset, subtileY + yOffset)) {
+         const neighbourSubtileIndex = getSubtileIndex(subtileX + xOffset, subtileY + yOffset);
+         const neighbourSubtileData = wallSubtileDatas.get(neighbourSubtileIndex);
+         if (neighbourSubtileData !== undefined && (neighbourSubtileData === 0) !== (subtileData === 0)) {
+            // Adds for both the wall tile AND its neighbour, so that already existing tiles get added to
+            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, subtileX, subtileY, NEIGHBOUR_EDGE_DIRECTIONS[i]);
+            addSubtileEdge(neighbourSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, neighbourSubtileIndex, subtileX + xOffset, subtileY + yOffset, NEIGHBOUR_EDGE_DIRECTIONS[(i + 4) % 8]);
          }
       }
    }
 }
 
 // Removes a subtile, which might be a wall or not, from the edge infos.
-export function removeSubtileFromEdgeInfos(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileData: number): void {
-   const rowIdx = subtileIndex % Settings.FULL_WORLD_SIZE_SUBTILES;
+export function removeSubtileFromEdgeInfos(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileX: number, subtileY: number, subtileData: number): void {
+   // IMPORTANT: subtileData has to be the data currently represented in the edge infos.'
+   
+   clearSubtileEdges(floorEdgeInfos, subtileIndex, subtileX, subtileY);
+   clearSubtileEdges(wallEdgeInfos, subtileIndex, subtileX, subtileY);
 
-   // @Copynpaste
-   const hasLeft = rowIdx > 0;
-   const hasRight = rowIdx < Settings.FULL_WORLD_SIZE_SUBTILES - 1;
-   const hasBottom = subtileIndex >= Settings.FULL_WORLD_SIZE_SUBTILES;
-   const hasTop = subtileIndex < Settings.FULL_WORLD_SIZE_SUBTILES * (Settings.FULL_WORLD_SIZE_SUBTILES - 1);
+   for (let i = 0; i < 8; i++) {
+      const xOffset = NEIGHBOUR_X_OFFSETS[i];
+      const yOffset = NEIGHBOUR_Y_OFFSETS[i];
 
-   clearSubtileEdges(wallEdgeInfos, subtileIndex);
-
-   // Left
-   if (hasLeft) {
-      const leftSubtileIndex = subtileIndex - 1;
-      const leftSubtileData = wallSubtileDatas.get(leftSubtileIndex);
-      if (leftSubtileData !== undefined) {
-         if (subtileData !== 0 && leftSubtileData === 0) {
-            removeSubtileEdge(floorEdgeInfos, leftSubtileIndex, EdgeMarkerBit.right);
-            // removeSubtileEdge(floorEdgeInfos, subtileIndex, EdgeMarkerBit.left);
-            // removeSubtileEdge(wallEdgeInfos, leftSubtileIndex, EdgeMarkerBit.right);
-         }
-      }
-   }
-
-   // Right
-   if (hasRight) {
-      const rightSubtileIndex = subtileIndex + 1;
-      const rightSubtileData = wallSubtileDatas.get(rightSubtileIndex);
-      if (rightSubtileData !== undefined) {
-         if (subtileData !== 0 && rightSubtileData === 0) {
-            removeSubtileEdge(floorEdgeInfos, rightSubtileIndex, EdgeMarkerBit.left);
-         }
-      }
-   }
-
-   // Top
-   if (hasTop) {
-      const topSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES;
-      const topSubtileData = wallSubtileDatas.get(topSubtileIndex);
-      if (topSubtileData !== undefined) {
-         if (subtileData !== 0 && topSubtileData === 0) {
-            removeSubtileEdge(floorEdgeInfos, topSubtileIndex, EdgeMarkerBit.bottom);
-         }
-      }
-   }
-
-   // Bottom
-   if (hasBottom) {
-      const bottomSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES;
-      const bottomSubtileData = wallSubtileDatas.get(bottomSubtileIndex);
-      if (bottomSubtileData !== undefined) {
-         if (subtileData !== 0 && bottomSubtileData === 0) {
-            removeSubtileEdge(floorEdgeInfos, bottomSubtileIndex, EdgeMarkerBit.top);
-         }
-      }
-   }
-
-   // Bottom left
-   if (hasBottom && hasLeft) {
-      const bottomLeftSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES - 1;
-      const bottomLeftSubtileData = wallSubtileDatas.get(bottomLeftSubtileIndex);
-      if (bottomLeftSubtileData !== undefined) {
-         if (subtileData !== 0 && bottomLeftSubtileData === 0) {
-            removeSubtileEdge(floorEdgeInfos, bottomLeftSubtileIndex, EdgeMarkerBit.topRight);
-         }
-      }
-   }
-
-   // Bottom right
-   if (hasBottom && hasRight) {
-      const bottomRightSubtileIndex = subtileIndex - Settings.FULL_WORLD_SIZE_SUBTILES + 1;
-      const bottomRightSubtileData = wallSubtileDatas.get(bottomRightSubtileIndex);
-      if (bottomRightSubtileData !== undefined) {
-         if (subtileData !== 0 && bottomRightSubtileData === 0) {
-            removeSubtileEdge(floorEdgeInfos, bottomRightSubtileIndex, EdgeMarkerBit.topLeft);
-         }
-      }
-   }
-
-   // Top left
-   if (hasTop && hasLeft) {
-      const topLeftSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES - 1;
-      const topLeftSubtileData = wallSubtileDatas.get(topLeftSubtileIndex);
-      if (topLeftSubtileData !== undefined) {
-         if (subtileData !== 0 && topLeftSubtileData === 0) {
-            removeSubtileEdge(floorEdgeInfos, topLeftSubtileIndex, EdgeMarkerBit.bottomRight);
-         }
-      }
-   }
-
-   // Top right
-   if (hasTop && hasRight) {
-      const topRightSubtileIndex = subtileIndex + Settings.FULL_WORLD_SIZE_SUBTILES + 1;
-      const topRightSubtileData = wallSubtileDatas.get(topRightSubtileIndex);
-      if (topRightSubtileData !== undefined) {
-         if (subtileData !== 0 && topRightSubtileData === 0) {
-            removeSubtileEdge(floorEdgeInfos, topRightSubtileIndex, EdgeMarkerBit.bottomLeft);
+      if (subtileIsInWorldIncludingEdges(subtileX + xOffset, subtileY + yOffset)) {
+         const neighbourSubtileIndex = getSubtileIndex(subtileX + xOffset, subtileY + yOffset);
+         const neighbourSubtileData = wallSubtileDatas.get(neighbourSubtileIndex);
+         if (neighbourSubtileData !== undefined && (neighbourSubtileData === 0) !== (subtileData === 0)) {
+            removeSubtileEdge(neighbourSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, neighbourSubtileIndex, subtileX + xOffset, subtileY + yOffset, NEIGHBOUR_EDGE_DIRECTIONS[(i + 4) % 8]);
          }
       }
    }
 }
 
-export function addTileToEdgeInfos(tiles: Map<TileIndex, Tile>, dropdownEdgeInfos: Map<number, RenderChunkEdgeInfo>, tileIndex: number, tileType: TileType): void {
-   const rowIdx = tileIndex % Settings.FULL_WORLD_SIZE_TILES;
+export function addTileToEdgeInfos(tiles: Map<TileIndex, Tile>, dropdownEdgeInfos: Map<number, RenderChunkEdgeInfo>, tileIndex: number, tileX: number, tileY: number, tileType: TileType): void {
+   for (let i = 0; i < 4; i++) {
+      const xOffset = NEIGHBOUR_X_OFFSETS[i];
+      const yOffset = NEIGHBOUR_Y_OFFSETS[i];
 
-   const hasLeft = rowIdx > 0;
-   const hasRight = rowIdx < Settings.FULL_WORLD_SIZE_TILES - 1;
-   const hasBottom = tileIndex >= Settings.FULL_WORLD_SIZE_TILES;
-
-   // Left
-   if (hasLeft) {
-      const leftTileIndex = tileIndex - 1;
-      const leftTile = tiles.get(leftTileIndex);
-      if (leftTile !== undefined) {
-         const leftTileType = leftTile.type;
-         if ((leftTileType === TileType.dropdown) !== (tileType === TileType.dropdown)) {
+      if (tileIsInWorldIncludingEdges(tileX + xOffset, tileY + yOffset)) {
+         const neighbourTileIndex = getTileIndexIncludingEdges(tileX + xOffset, tileY + yOffset);
+         const neighbourTile = tiles.get(neighbourTileIndex);
+         if (neighbourTile !== undefined && (neighbourTile.type === TileType.dropdown) !== (tileType === TileType.dropdown)) {
             if (tileType === TileType.dropdown) {
-               addTileEdge(dropdownEdgeInfos, tileIndex, EdgeMarkerBit.left);
+               addTileEdge(dropdownEdgeInfos, tileIndex, tileX, tileY, NEIGHBOUR_EDGE_DIRECTIONS[i]);
             } else {
-               addTileEdge(dropdownEdgeInfos, leftTileIndex, EdgeMarkerBit.right);
-            }
-         }
-      }
-   }
-
-   // Bottom
-   if (hasBottom) {
-      const bottomTileIndex = tileIndex - Settings.FULL_WORLD_SIZE_TILES;
-      const bottomTile = tiles.get(bottomTileIndex);
-      if (bottomTile !== undefined) {
-         const bottomTileType = bottomTile.type;
-         if ((bottomTileType === TileType.dropdown) !== (tileType === TileType.dropdown)) {
-            if (tileType === TileType.dropdown) {
-               addTileEdge(dropdownEdgeInfos, tileIndex, EdgeMarkerBit.bottom);
-            } else {
-               addTileEdge(dropdownEdgeInfos, bottomTileIndex, EdgeMarkerBit.top);
-            }
-         }
-      }
-   }
-
-   // Bottom left
-   if (hasBottom && hasLeft) {
-      const bottomLeftTileIndex = tileIndex - Settings.FULL_WORLD_SIZE_TILES - 1;
-      const bottomLeftTile = tiles.get(bottomLeftTileIndex);
-      if (bottomLeftTile !== undefined) {
-         const bottomLeftTileType = bottomLeftTile.type;
-         if ((bottomLeftTileType === TileType.dropdown) !== (tileType === TileType.dropdown)) {
-            if (tileType === TileType.dropdown) {
-               addTileEdge(dropdownEdgeInfos, tileIndex, EdgeMarkerBit.bottomLeft);
-            } else {
-               addTileEdge(dropdownEdgeInfos, bottomLeftTileIndex, EdgeMarkerBit.topRight);
-            }
-         }
-      }
-   }
-
-   // Bottom right
-   if (hasBottom && hasRight) {
-      const bottomRightTileIndex = tileIndex - Settings.FULL_WORLD_SIZE_TILES + 1;
-      const bottomRightTile = tiles.get(bottomRightTileIndex);
-      if (bottomRightTile !== undefined) {
-         const bottomRightTileType = bottomRightTile.type;
-         if ((bottomRightTileType === TileType.dropdown) !== (tileType === TileType.dropdown)) {
-            if (tileType === TileType.dropdown) {
-               addTileEdge(dropdownEdgeInfos, tileIndex, EdgeMarkerBit.bottomRight);
-            } else {
-               addTileEdge(dropdownEdgeInfos, bottomRightTileIndex, EdgeMarkerBit.topLeft);
+               addTileEdge(dropdownEdgeInfos, neighbourTileIndex, tileX + xOffset, tileY + yOffset, NEIGHBOUR_EDGE_DIRECTIONS[(i + 4) % 8]);
             }
          }
       }
@@ -659,19 +404,18 @@ export function processRenderChunkSubtileUpdates(snapshot: TickSnapshot, layerDi
          const subtileIndex = subtileUpdateData.subtileIndex;
          const data = subtileUpdateData.data;
 
+         const previousSubtileData = layer.getSubtileData(subtileIndex);
+
          layer.setSubtileData(subtileIndex, data);
 
          const subtileX = getSubtileX(subtileIndex);
          const subtileY = getSubtileY(subtileIndex);
 
-         const renderChunkX = Math.floor(subtileX / 4 / RenderChunkVars.RENDER_CHUNK_SIZE);
-         const renderChunkY = Math.floor(subtileY / 4 / RenderChunkVars.RENDER_CHUNK_SIZE);
-         const renderChunkIdx = getRenderChunkIndex(renderChunkX, renderChunkY);
+         const renderChunkIdx = getSubtileRenderChunkIndex(subtileX, subtileY);
          dirtiedSolidTileRenderChunks.add(renderChunkIdx);
 
-         const subtileData = layer.getSubtileData(subtileIndex);
-         removeSubtileFromEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileData);
-         addSubtileToEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileData);
+         removeSubtileFromEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileX, subtileY, previousSubtileData);
+         addSubtileToEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileX, subtileY, data);
          
          addDirtiedRenderChunks(dirtiedEdgeRenderChunks, floorEdgeInfos, wallEdgeInfos, subtileX, subtileY);
       }

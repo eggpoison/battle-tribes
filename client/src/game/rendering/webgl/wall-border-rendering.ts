@@ -354,7 +354,6 @@ const calculateVertexData = (info: RenderChunkEdgeInfo): Float32Array => {
 
 export function createWallBorderInfo(edgeInfo: RenderChunkEdgeInfo): RenderChunkWallBorderInfo | null {
    const vertexData = calculateVertexData(edgeInfo);
-   console.log("create",vertexData.length);
    if (vertexData.length === 0) {
       return null;
    }

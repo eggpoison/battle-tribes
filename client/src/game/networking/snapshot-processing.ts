@@ -13,7 +13,7 @@ import Layer from "../Layer";
 import { playerInstance, setPlayerInstance } from "../player";
 import { playHeadSound, playSound } from "../sound";
 import { ExtendedTribe, readExtendedTribeData, readShortTribeData, Tribe, tribes, updatePlayerTribe } from "../tribes";
-import { createEntity, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityLayer, getEntityRenderObject, getEntityType, layers, destroyEntity, setCurrentLayer } from "../world";
+import { createEntity, createEntityCreationInfo, EntityComponentData, entityExists, getCurrentLayer, getEntityLayer, getEntityRenderObject, getEntityType, layers, destroyEntity, setCurrentLayer, undergroundLayer } from "../world";
 import { getEntityClientComponentConfigs } from "../entity-components/client-components";
 import { registerDirtyRenderObject } from "../rendering/render-part-matrices";
 import { LightData, readLightsFromData, updateLightsFromData } from "../lights";
@@ -634,7 +634,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
          // Subtiles
 
          const subtiles = renderChunkData.subtiles;
-
+         
          const minSubtileX = minTileX * 4;
          const maxSubtileX = (maxTileX + 1) * 4 - 1;
          const minSubtileY = minTileY * 4;
@@ -646,9 +646,7 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
                
                layer.setSubtileData(subtileIndex, data);
 
-               // Here we have to pass in the subtileData that is currently represented in the edge info, which is 0.
-               removeSubtileFromEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, 0);
-               addSubtileToEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, data);
+               addSubtileToEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileX, subtileY, data);
 
                addDirtiedRenderChunks(layerDirtiedEdgeRenderChunks[layer.idx], floorEdgeInfos, wallEdgeInfos, subtileX, subtileY);
             }
@@ -683,20 +681,20 @@ export function updateGameStateToSnapshot(snapshot: TickSnapshot): void {
 
          const floorEdgeInfos = layer.edgeInfoMaps[EdgeType.floor];
          const wallEdgeInfos = layer.edgeInfoMaps[EdgeType.wall];
-         
+
          // Subtiles
          const minSubtileX = minTileX * 4;
-         const maxSubtileX = maxTileX * 4;
+         const maxSubtileX = maxTileX * 4 + 3;
          const minSubtileY = minTileY * 4;
-         const maxSubtileY = maxTileY * 4;
+         const maxSubtileY = maxTileY * 4 + 3;
          for (let subtileY = minSubtileY; subtileY <= maxSubtileY; subtileY++) {
             for (let subtileX = minSubtileX; subtileX <= maxSubtileX; subtileX++) {
                const subtileIndex = getSubtileIndex(subtileX, subtileY);
                const data = layer.getSubtileData(subtileIndex);
                
-               layer.removeSubtileData(data);
+               layer.removeSubtileData(subtileIndex);
 
-               removeSubtileFromEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, data);
+               removeSubtileFromEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileX, subtileY, data);
 
                // No point dirtying them here, can't affect what the player sees anyway
             }
